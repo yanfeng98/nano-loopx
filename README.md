@@ -359,6 +359,7 @@ Kernel 把控制面归结为五个用户可以直接行动的问题。每个问�
 | Quota 与 interaction contract | 决定一轮应该执行、提问、等待、自修复还是静默。 | `loopx quota should-run`、[Quota Allocation](docs/quota-allocation.md) |
 | Agent runtime bridge | 让 Codex App、Codex CLI、Claude Code 和 generic worker 服从同一 guard。 | `loopx heartbeat-prompt`、`loopx codex-cli-bootstrap-message`、`loopx worker-bridge` |
 | Operator surface | 呈现紧凑状态，但不让浏览器成为状态事实源。 | `loopx serve-status`、[Dashboard](apps/presentation/dashboard/README.md) |
+| Session dash | 启动一个实时单页面板跟踪车队进度：会话、它们的 Goal 与每个 Goal 的状态/todo 进度，带结果统计；原地自动刷新。 | `loopx dash`、[Session dash 设计](docs/product/surfaces/session-dash-panel-design.md) |
 | External projection | 把 todo / gate 投影到协作表面，同时保持 LoopX 权威。 | `loopx lark-kanban`、[Lark Kanban adapter](docs/integrations/lark-kanban-control-plane-adapter.md) |
 | Domain capability | 打包 Issue Fix、内容运营、value connector、ML 实验、benchmark 与 Explore 等可重复泳道。 | `loopx issue-fix`、`loopx content-ops`、`loopx value-connectors`、`loopx ml-experiment`、`loopx benchmark`、[Explore](loopx/capabilities/explore/README.md) |
 | 实验性上下文学习 | 通过 ignored、默认关闭的项目配置，为明确注册的 agent 试用 provider-neutral Reward Memory；OpenViking 是 provider 之一，不是全局依赖。 | `loopx reward-memory experiment-status`、[Reward Memory 中文架构](loopx/capabilities/reward_memory/README.md) |

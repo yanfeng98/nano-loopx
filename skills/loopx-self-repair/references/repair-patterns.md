@@ -190,3 +190,25 @@
 | `repository_delivery_gate_projection_gap` | Git 通过有效全局或仓库本地守卫拒绝提交或推送，而 quota 只暴露宽泛 `delivery_allowed=true`，因此准备资格被误认为仓库交付接纳。 | 无路径 `change-window status` 诊断、provider 验证检查、typed 政策决策、交互契约仓库交付 gate、typed hook 注册/结果、链接 worktree 与分离克隆回读。 | Provider 发现只暴露仓库本地安装状态，而 Kernel 交互状态无受信任、provider-neutral 衔接点做 capability 拥有的提交/推送决策。 | 不返回路径或推断政策地检测配置外部守卫界面；预览优先分层只识别有界遗留签名。在组合根注册有界只读交互投影 hook；typed 验证、槽冲突与失败隔离保持核心拥有。仅从完全验证 typed 仓库 provider 投影提交/推送接纳，保持准备/验证分离，携带 `next_eligible_at`，绝不授予远端写权威。 |
 | `dashboard_verified_mutation_projection_gap` | 预览锁定 dashboard 变更报告成功共享状态回读，但发起控件仍显示旧值；第二次点击随后说请求设置已存在。 | 精确 apply receipt、无变更规范预览、共享状态回读验证、状态投影代际/修订、渲染控件状态、刷新结果。 | 数据适配器验证规范写或无变更状态，然后 UI 丢弃该 receipt 并立即重绑到分离陈旧状态投影。 | 通过 apply 与无变更预览回调返回验证配置，并把它用作同 Goal 的抽屉作用域读模型；独立刷新正常投影，不撤销验证结果地呈现刷新失败，抽屉选择变化时清除覆盖。预览状态保持可见待处理而非呈现为已应用。浏览器冒烟中覆盖故意陈旧 status 响应。 |
 | `dashboard_open_token_picker_gap` | 有界 dashboard 设置要求用户键入协议 token（如 `task_domain`）；占位符像当前值，用户无法发现合法选择，或无标签工作 Goals 无法启用运行时把 token 过滤视为可选的能力。 | 当前 Goal Todo 索引、配置 token 允许列表、选项到 Todo 匹配计数、规范空过滤语义、预览负载、空状态、打包浏览器行为。 | 有意开放的、可选后端词汇被暴露为必需产品权威边界；只读紧凑 Goal 卡 Todo 切片也可隐藏有效选择。 | 把开放 typed token 契约保留在拥有控制面边界，但作为可选每 Goal 多选呈现，派生自权威 Todo 索引加已配置值，紧凑 Goal Todo 行仅兼容回退。空表示无 token 过滤，而每个独立接纳边界仍强制；非空选择保持严格允许列表。显示匹配计数、保留配置零匹配值，并覆盖未受限、受限、无效 token、预览、回读、空状态与打包对齐行为。 |
+
+## 最小证据包
+
+对大多数修复，捕获：
+
+```text
+goal_id:
+observed_surprise:
+quota_state:
+interaction_contract:
+user_todo_open_count:
+agent_todo_open_count:
+recommended_action:
+goal_boundary_write_scope:
+active_state_next_action:
+recent_history_summary:
+responsible_layer:
+repair:
+validation:
+```
+
+保持该包紧凑且公开安全。公开文档只存摘要；原始日志与私有 trace 保留在被忽略的本地路径。
