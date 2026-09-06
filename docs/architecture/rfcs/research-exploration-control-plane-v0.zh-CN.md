@@ -731,7 +731,7 @@ promotion。
 scheduler/harness、matched starting state、repeated arm、事先声明的 stopping
 rule，以及 model variance 与 control-plane failure 的分离。
 
-## 16. Milestone
+## 16. Milestones
 
 | Milestone | 交付物 | Promotion gate | 状态 |
 |---|---|---|---|
