@@ -651,6 +651,47 @@ transition、claim/lease fencing、Turn admission、quota 语义、settlement �
 receipt 的含义。特别是，adapter 不得把 provider transaction result 重新解释为领域
 判断。
 
+Stage 1 的 TypeScript contract 让读取失败类别显式化：已证明的 `missing` head 与
+`unavailable` 存储不同；损坏字节或无效 lineage 是 `failed`；只有证明不存在才允许
+bootstrap。Commit 具有封闭的存储结果 `applied | conflict | ambiguous | failed`。
+`ambiguous` 意味着发布已尝试、但无法从响应证明持久性，因此 authority 必须通过
+`read_receipt` 与一次新的 head 读取进行 reconcile。Provider exception 或人类可读的
+error string 本身永远不是 commit proof。
+
+三个 adapter 通过不同原生原语实现这些逻辑动词；本 contract 不假装它们是可互换的
+数据库：
+
+| Concern | File Stage 1 | NoKV Stage 2A | PostgreSQL Stage 2B |
+| --- | --- | --- | --- |
+| 条件 revision | 跨进程文档锁下比较 revision chain | path `generation` 传入 compare-and-publish | 每租户/每 goal 的 head-row revision，在 row lock 或 conditional update 下检查 |
+| 原子 event/projection/receipt commit | 一个完整 journal 文档、文件 fsync、原子 rename、目录 fsync | 一个 generation-CAS envelope；合格 multi-record protocol 存在前，receipt 与 scan 数据保持嵌入 | 一笔 SQL transaction：更新 head 并插入有序 event/receipt row |
+| operation 唯一性 | retained journal 拒绝重复 `operation_id` | CAS envelope 中的 authority receipt index | `(tenant_id, goal_id, operation_id)` unique constraint，作为存储 fencing 而非领域判断 |
+| cursor | 文档内单调递增 opaque string | 内嵌 journal cursor，仍受 capacity qualification 约束 | 同一 transaction 内分配的 per-goal sequence；绝不是全局排序声明 |
+| lineage | durable directory `store-identity` | workbench 加永不复用的 `workspace_incarnation_id` | 服务托管的 database incarnation，绑定 provider deployment |
+| trust boundary | 可信的 embedded LoopX process | LoopX-authority 持有的 NoKV credentials | 已认证、tenant-scoped 的 LoopX service role；Agent 绝不获得 table credentials |
+
+对 PostgreSQL 而言，`commit_authority` 是一笔 transaction，而不是一系列独立
+repository 调用：锁定或条件更新 scoped head、校验期望的 provider revision、分配下一个
+scoped cursor、插入已提交 transaction/events/receipts、更新 projection head，然后提交。
+任何写入发生前的 connection failure 是已证明的 `failed` 结果；commit 开始后失去连接
+属于 `ambiguous`，通过 unique operation row 与 receipt read 进行 reconcile。
+`READ COMMITTED` 加显式 per-head row lock/conditional update 可以实现本合同；选择
+`SERIALIZABLE` 是 adapter decision，不是 LoopX CAS、operation identity 或 lease
+fencing 的替代品。Authentication、tenant routing、audit、pool exhaustion、
+cancellation、timeout 与 failover 必须在 service boundary 全部 fail closed。
+
+对 NoKV 而言，现有 `load` / `compare_and_put` reference 已经覆盖 missing、
+generation conflict、ambiguous publication 与 workbench-incarnation lineage。它**尚不**
+证明扩宽后的 event/receipt/cursor service contract。在 capacity、retention、
+restart/restore、availability 与 HA 通过资格验证之前，`read_receipt` 与
+`scan_committed` 只能通过读取单一 CAS envelope 内保留的 journal 实现；绝不能静默映射到
+最终一致的 listing API。
+
+file provider 因此只是 conformance evidence，不是生产规模 event store。其保留的
+journal 有意让原子性与历史 receipt replay 容易检查，代价是整文档增长。这一取舍对
+Stage 1 可接受，并且明确不被继承为 PostgreSQL 物理 schema，也不作为 NoKV capacity
+证明被接受。
+
 ### 6.3 三个版本号不是一回事
 
 | 版本域 | Owner | 含义 | Consumer |
@@ -749,6 +790,8 @@ receipt-per-object 替代方案被全面支配：每笔迁移多付一次对象�
 运行其上。
 
 ### 7.2 十天 Goal：本地存储资格化目标（提案）
+
+<a id="72-ten-day-goals-local-storage-qualification-target-proposal"></a>
 
 受支持的 goal 必须能**至少持续十个自然日**，跨进程重启、主机休眠、迟到回执和
 二进制升级继续执行，不依赖人工截断历史或因存储问题重建 goal。十天是最低资格化
@@ -1842,7 +1885,7 @@ integrity chain、确定性 scan 与 recovery readback。物理 profile 可以�
 ### 增长是晋升前置
 
 最低支持周期是十个自然日。负载、修正后的全历史成本模型、本地存储方向和资格化预算
-统一由[第 7.2 节](#72-十天-goal本地存储资格化目标提案)维护。file-v0 仍是有界
+统一由[第 7.2 节](#72-ten-day-goals-local-storage-qualification-target-proposal)维护。file-v0 仍是有界
 conformance/bootstrap profile；bootstrap 成功或短时微实验都不证明长程容量。本地首次
 晋升必须具备已资格化的历史有界热路径和自然时间 soak，不等待 PostgreSQL service 就绪。
 
