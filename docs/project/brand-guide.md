@@ -1,5 +1,7 @@
 # LoopX Brand Guide For External Use
 
+> [简体中文](brand-guide.zh-CN.md)
+
 This guide is for open-source projects, commercial companies, users, writers,
 and event organizers that want to mention LoopX, describe an integration, or
 show the LoopX name or artwork. It is practical project guidance, not legal
