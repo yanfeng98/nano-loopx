@@ -8,11 +8,7 @@
 
 <sub>在 Codex、Claude Code、Cursor 等 agent harness 之上，持久保存目标、gate、todo、证据、quota 与交接状态。LoopX 负责跨轮次的状态与执行边界，harness 负责有界执行。</sub>
 
-<a href="https://trendshift.io/repositories/102379?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-102379"><img src="https://trendshift.io/api/badge/repositories/102379" alt="huangruiteng/loopx 在 Trendshift 的趋势排名" width="220" height="48"></a>
-
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/huangruiteng/loopx?filter=v*&display_name=tag)](https://github.com/huangruiteng/loopx/releases/latest) [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/XmGgQyCFZd) [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml) [![Local first](https://img.shields.io/badge/control--plane-local--first-brightgreen.svg)](docs/public-private-boundary.md) [![Loop Agents](https://img.shields.io/badge/status-loop%20agents%20active-brightgreen.svg)](docs/product/release-readiness.md)
-
-[产品首页](https://huangruiteng.github.io/loopx/) · [文档](https://huangruiteng.github.io/loopx/docs/) · [开发者手册](https://huangruiteng.github.io/loopx/docs/book/) · [试用 LoopX](#试用-loopx) · [查看真实 Loop](#证据) · [理解工作原理](#为什么需要-loopx) · [用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg)
+[产品首页](https://huangruiteng.github.io/loopx/) · [文档](https://huangruiteng.github.io/loopx/docs/) · [开发者手册](https://huangruiteng.github.io/loopx/docs/book/) · [用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg)
 
 </div>
 
@@ -24,12 +20,6 @@ LoopX 是开放且 Provider-neutral 的轻量 state kernel，也是 local-first
 跨工具、跨 agent 的工作可审阅、可恢复、可接力。
 
 > 让 Loop 持续向前，让关键判断留在人手里。
-
-## 学习 LoopX
-
-- **开发者手册** - 从控制面基础到项目接入和开发者贡献的中文学习路径。[简体中文](https://huangruiteng.github.io/loopx/docs/book/) · [English](https://huangruiteng.github.io/loopx/docs/book/)
-- **快速开始** - 安装、连接项目并运行第一个受治理的 Loop。[指南](docs/guides/getting-started.md)
-- **文档站** - 完整参考与运维文档。[LoopX Docs](https://huangruiteng.github.io/loopx/docs/)
 
 ## 认识个人 Agent 工作区
 
@@ -129,11 +119,6 @@ LoopX 不是生产自动化控制器。危险权限、生产写入、公开发�
 
 ## 证据
 
-OpenViking 的公开贡献序列与脱敏的 owner-run Auto ML showcase 各自跨越
-**200+ 小时自然时长**，保留多轮 Todo、决策和证据更新。这里衡量的是项目经过的
-wall-clock 时间，不是连续模型执行时长或无人值守的生产自治。点击原图查看
-公开安全的任务图、证据分支和跨轮决策；各案例分别说明来源与可复现边界。
-
 ### 开源 Issue Fix
 
 **超过 200 小时的公开贡献轨迹：Focused PR 交付与可复用修复知识互相反哺。**
@@ -177,33 +162,6 @@ deterministic CPU evaluator、dev / held-out 命令均在仓库内。可按
 [showcase walkthrough](docs/product/use-cases/auto-research/decentralized-auto-research-showcase.md)
 或 [demo 命令路径](demo/auto_research/README.md)复现工作流；它是 demo
 结果，不是生产研究结论。
-
-### 真实项目中的使用
-
-- **外部独立用户 · `>13h` C++ 精度修复。** 用户报告多阶段任务持续对齐目标，
-  触发 public research 后采用[公开代码记忆工具](https://github.com/DeusData/codebase-memory-mcp)，
-  最终精度明显提升。[查看证据边界](docs/showcases/cases/independent-cpp-accuracy-long-run.md)。
-- **外部独立用户 · `4d` 无人干预运行。** 用户报告 Agent 连续四天无需人工
-  干预，持续处理有价值的工作，并提供周期报告入口。
-  [查看脱敏案例](docs/showcases/cases/independent-four-day-unattended-agent.md)。
-- **外部独立用户 · `7` 个合并 PR。** 一次归因于 LoopX 的 Engine 重构可由
-  [公开 Issue](https://github.com/zilliztech/mfs/issues/166)和七个合并 PR 检查；
-  LoopX 归因与用户报告的 `10 亿+` token 规模仍按用户自述标记。
-  [检查完整案例](docs/showcases/cases/independent-public-engine-refactor.md)。
-
-这里长期只维护当前最强的三个案例，不复制全量清单。完整的 contributor case、
-creator dogfooding、reproducible demo 和证据强度标签见
-[Showcase 全量目录](docs/showcases/README.md)。
-
-更多可检查入口：
-
-- [产品首页](https://huangruiteng.github.io/loopx/)：查看产品叙事、快速开始和长程证据；
-- [Showcase 全量目录](docs/showcases/README.md)和
-  [中英双语托管索引](docs/showcases/index.html)；
-- [跨 runtime 实现审阅演示](docs/product/use-cases/cross-runtime/cross-runtime-impl-review-demo.md)；
-- 公开[用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg)。
-
-<a id="快速开始"></a>
 
 ## 试用 LoopX
 
