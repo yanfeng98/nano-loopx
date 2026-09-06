@@ -67,6 +67,8 @@ npm run dev
 
 [阅读桌面 shell 指南](apps/desktop/loopx-control-plane/README.md)。关闭窗口时，
 shell 只停止由自己启动的服务进程；已有 LoopX 服务与持久化 Goal 状态不会受影响。
+两个入口共用同一组 loopback 服务，可以按任意顺序启动：`loopx dashboard` 会复用
+已在运行的 LoopX Chat 服务，而不是再启动一个。
 
 [观看 32 秒完整演示](docs/assets/personal-workspace/loopx-dashboard-launch.mp4)
 · [阅读工作区指南](docs/guides/personal-workspace-user-guide.md)
@@ -359,6 +361,7 @@ Kernel 把控制面归结为五个用户可以直接行动的问题。每个问�
 | Quota 与 interaction contract | 决定一轮应该执行、提问、等待、自修复还是静默。 | `loopx quota should-run`、[Quota Allocation](docs/quota-allocation.md) |
 | Agent runtime bridge | 让 Codex App、Codex CLI、Claude Code 和 generic worker 服从同一 guard。 | `loopx heartbeat-prompt`、`loopx codex-cli-bootstrap-message`、`loopx worker-bridge` |
 | Operator surface | 呈现紧凑状态，但不让浏览器成为状态事实源。 | `loopx serve-status`、[Dashboard](apps/presentation/dashboard/README.md) |
+| Session dash | 启动实时单页面板，追踪 fleet 进程：会话、各自的 goal 与每个 goal 的 status/todo 进度，并附结果统计；页面内自动刷新。 | `loopx dash`、[session dash design](docs/product/surfaces/session-dash-panel-design.md) |
 | External projection | 把 todo / gate 投影到协作表面，同时保持 LoopX 权威。 | `loopx lark-kanban`、[Lark Kanban adapter](docs/integrations/lark-kanban-control-plane-adapter.md) |
 | Domain capability | 打包 Issue Fix、内容运营、value connector、ML 实验、benchmark 与 Explore 等可重复泳道。 | `loopx issue-fix`、`loopx content-ops`、`loopx value-connectors`、`loopx ml-experiment`、`loopx benchmark`、[Explore](loopx/capabilities/explore/README.md) |
 | 实验性上下文学习 | 通过 ignored、默认关闭的项目配置，为明确注册的 agent 试用 provider-neutral Reward Memory；OpenViking 是 provider 之一，不是全局依赖。 | `loopx reward-memory experiment-status`、[Reward Memory 中文架构](loopx/capabilities/reward_memory/README.zh-CN.md) |
@@ -629,18 +632,19 @@ agent 项目里的反馈：控制面帮到了哪里、哪里太重，哪些 gate
 
 ## 贡献
 
-公开、可认领的任务见 [Contributor Tasks](docs/development/contributor-tasks.md)。贡献前请读
-[Contributing](CONTRIBUTING.md)，尤其是 public/private 边界、smoke 保留规则和
-benchmark 证据边界。
+公开、可认领的任务见 [Contributor Tasks](docs/development/contributor-tasks.md)。
+贡献前请读 [Contributing](CONTRIBUTING.md)，了解安装配置、验证与边界规则，
+尤其是 public/private 边界、smoke 保留规则和 benchmark 证据边界。
 
 项目角色与维护权限见 [Governance](.github/GOVERNANCE.md)，创建者与贡献者归属见
 [Authors and Contributors](docs/project/authors.md)，关键公开演进见
 [Project History](docs/project/history.md)，名称与标识使用见
 [Name and Marks](docs/project/trademarks.md)。
 
-不要提交 `.loopx/`、`.codex/goals/`、live `ACTIVE_GOAL_STATE.md`、内部链接、
-raw benchmark task/log/trajectory/verifier output、credentials、token、私有路径或
-未脱敏的用户与团队信息。
+LoopX 把本地活动状态与公开仓库保持分离。不要提交 `.loopx/`、`.codex/goals/`、
+live `ACTIVE_GOAL_STATE.md`、内部链接、raw benchmark task/log/trajectory/verifier
+output、credentials、token、私有路径或日志、未脱敏的用户或团队信息，以及
+operator artifact。
 
 ## 当前状态
 
