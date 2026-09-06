@@ -7,7 +7,7 @@ Computer-use agent 可以操作浏览器、桌面与企业工具，但原始执�
 
 本契约把 computer-use provider 视为 LoopX 身旁的执行界面，而非新的 LoopX 产品 capability。一个 host 已通过驱动它的任意 agent 运行时提供足够的 computer-use 原语（浏览器工具、无障碍树、页内动作集）。LoopX 不需要拥有或重新实现那套像素级循环。LoopX 拥有的是围绕它的边界：capability 被允许发出的请求、provider 被允许报告的事实，以及随后发生的持久化状态迁移。
 
-## 都称为「Capability」的两种东西
+## 都称为「Capability」的两种东西 {#two-things-both-called-capability}
 
 「capability」一词在此领域被过载，而这种过载正是本契约早期草稿中大部分命名混淆的来源：
 
@@ -229,7 +229,7 @@ Provider 在以下情况应返回 blocker 而非即兴行事：
 
 实时 provider 测试可以在以后添加，但必须使用相同紧凑包形状，并把原始 host 证据留在 host 或私有项目存储中。
 
-## 相关契约
+## 相关契约 {#related-contracts}
 
 - 具体垂直切片应属于拥有结局的 capability（例如 `content-ops` 对应草稿直到关卡的发布流程，或 `explore` 对应长程研究浏览），而不在本协议中也不在 `value-connectors` 中。该切片落地后见 capability 自身文档的 reducer 与 CLI 界面。
 - `computer_use_session_v0`、`computer_use_replay_handle_v0` 与 `computer_use_handoff_gate_v0` 只有在第二个真实 capability 消费者需要相同形状时才提升进本协议——抽取跟随证明，而非预期。

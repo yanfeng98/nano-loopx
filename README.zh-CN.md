@@ -74,7 +74,7 @@ shell 只停止由自己启动的服务进程；已有 LoopX 服务与持久化 
 · [阅读工作区指南](docs/guides/personal-workspace-user-guide.md)
 · [开始五分钟体验](docs/guides/personal-workspace-trial-guide.md)
 
-## 为什么需要 LoopX
+## 为什么需要 LoopX {#为什么需要-loopx}
 
 一个 agent 可以在单次会话里完成任务。长程工作更难：目标会变化，用户决策会出现，
 证据会过期，平级 agent 会交接，scheduler 也可能在已经没有有效状态迁移时继续消耗。
@@ -128,7 +128,7 @@ LoopX 不是生产自动化控制器。危险权限、生产写入、公开发�
 
 <a id="看几个例子"></a>
 
-## 证据
+## 证据 {#证据}
 
 这些不是单轮 demo。OpenViking 的公开贡献序列与经过脱敏的 owner-run Auto ML
 showcase 各自跨越 **200+ 小时自然时长**，持续保留多轮 todo、决策和证据更新。
@@ -208,7 +208,7 @@ creator dogfooding、reproducible demo 和证据强度标签见
 
 <a id="快速开始"></a>
 
-## 试用 LoopX
+## 试用 LoopX {#试用-loopx}
 
 要求：Python 3.11+。使用 console scripts 已加入 `PATH` 的 Python 环境；macOS
 和 Linux 使用 POSIX shell，原生 Windows 使用 PowerShell 7。普通用户不需要

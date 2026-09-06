@@ -735,7 +735,7 @@ benchmark 协作应产生可 review 的 upstream value：
 目标不是 fork 出每个 benchmark 的 LoopX edition，而是让 LoopX 成为行为规范的 harness
 participant，其结果可以被 benchmark maintainer 复现和审计。
 
-## 11. 工程建设计划
+## 11. 工程建设计划 {#11-工程建设计划}
 
 上面的研究合同定义 benchmark 结果可以证明什么；本节定义仓库应该如何建设、验证和
 运行这些工程。两条阶梯刻意保持正交：

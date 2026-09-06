@@ -102,7 +102,7 @@ LoopX 正在被其他开源项目采样、集成和再实现。本页是这份�
   agents-radar 等）属于认知信号，不作为采用证据列出。
 - 无关的同名匹配（如 x86 `LOOPx` 指令、音频 loop 工具）不收录。
 
-## 维护
+## 维护 {#维护}
 
 - 每周扫描（7d）由 LoopX value-explorer monitor
   （`github-loopx-mention-scan`）执行：`gh search code "huangruiteng/loopx"`、
