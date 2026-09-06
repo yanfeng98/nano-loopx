@@ -1,5 +1,7 @@
 # Exploration Result Layer
 
+[中文](README.zh-CN.md)
+
 Status: supported optional capability; default-off harness execution contract.
 
 ## At a Glance
