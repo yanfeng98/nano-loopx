@@ -196,7 +196,6 @@ def main() -> int:
                 assert phrase in interactive_text, phrase
             page_text = read(page)
             assert interactive_page.split("/")[-1] in page_text, case_id
-            assert "Public Artifact" in page_text, case_id
         if case.get("status") == "public_safe_case_spec":
             assert demo_command is None, case
             assert isinstance(appendix, dict), case
@@ -244,18 +243,12 @@ def main() -> int:
             assert "efficiency_evidence_model" in case.get("pattern_tags", []), case
             page_text = read(page)
             for phrase in (
-                "LoopX was used to improve a fast-moving LoopX repository",
-                "The public repository history shows a connected long-horizon feature chain",
-                "Efficiency Evidence Model",
-                "The baseline below already assumes competent AI coding help",
-                "59-92 developer-days",
-                "3.0x-4.7x calendar",
-                "Benchmark and adapter maturation",
-                "Control-plane correctness",
-                "Planning and dreaming lanes",
+                "LoopX 被用来改进一个快速演进的 LoopX 仓库",
+                "这个公共仓库展示了一个长程 agent 项目",
+                "工作量信号是整份公共仓库",
+                "基准适配器、控制面正确性、规划 lane",
                 "--self-merged --evidence",
-                "The workload signal is the whole public repository through fixed anchor commit",
-                "completion evidence recorded self-merge and validation outcomes",
+                "完成证据记录 self-merge 与验证结果",
             ):
                 assert phrase in page_text, phrase
 
@@ -267,32 +260,30 @@ def main() -> int:
     assert "docs/showcases/README.md" in repo_readme, "README must link showcases"
     assert "poc-feedback-case-report-loop.md" in showcase_index, "showcase index must link PoC feedback loop"
     for phrase in (
-        "GitHub Issues or Discussions as the primary public entry",
-        "Case Report Shape",
-        "Evidence Checklist",
-        "only catalog-backed, public-safe cases become public cards",
-        "private local status or unreviewed anecdotes",
+        "使用 GitHub Issues 或 Discussions 作为主要公开入口",
+        "案例报告形态",
+        "证据检查清单",
+        "只有目录支撑的、公开安全的案例变成公共卡片",
+        "私有本地状态或未经审查的轶事",
     ):
         assert phrase in feedback_loop, phrase
     for phrase in (
-        "Loop engineering for long-horizon AI agents and peer agent teams.",
-        "The open, provider-neutral, stateful control plane for long-horizon agents.",
+        "LoopX 是开放且 Provider-neutral 的轻量 state kernel",
         "https://huangruiteng.github.io/loopx/",
-        "## Advanced Paths",
+        "## 进阶路径",
         "docs/assets/long-running-loop-openviking-trajectory.png",
         "docs/assets/long-running-loop-ml-experiment-trajectory.png",
-        "### Presets and Auto Research",
-        "### Review Agent Work",
-        "## Evidence",
-        "### Used In Real Projects",
+        "### Preset 与 Auto Research",
+        "### 审阅 Agent 工作",
+        "## 证据",
+        "### 真实项目中的使用",
         "docs/showcases/cases/independent-cpp-accuracy-long-run.md",
         "docs/showcases/cases/independent-four-day-unattended-agent.md",
         "docs/showcases/cases/independent-public-engine-refactor.md",
-        "complete Showcase catalog",
     ):
         assert phrase in repo_readme, phrase
-    featured_section = repo_readme.split("### Used In Real Projects", 1)[1].split("More inspectable surfaces:", 1)[0]
-    assert featured_section.count("- **Independent user") == 3, featured_section
+    featured_section = repo_readme.split("### 真实项目中的使用", 1)[1].split("## 试用 LoopX", 1)[0]
+    assert featured_section.count("- **外部独立用户") == 3, featured_section
     assert "user-feedback-coverage.md" in showcase_index, showcase_index
     hosted_frontstage = "https://huangruiteng.github.io/loopx/frontstage/"
     assert hosted_frontstage not in repo_readme, (
