@@ -35,3 +35,20 @@
 ## 提交
 - `742a753b` Merge upstream/main(11 commits)
 - `0dcd8b3f` fix(imports): tests/docs __init__.py
+
+## 复查确认(后续追加,无问题)
+
+复查范围与结论(全部通过):
+1. upstream/main 已是 HEAD 祖先;11 commit 全覆盖。
+2. 上游 zh-CN 文件清单核对:均为旧双语批次(002 已删)+ reward_memory
+   双语对(本批处理);merge 后工作树 zh-CN 残留 0。
+3. periodic-report-v0:标题 9/9 与上游英文一一对应(产品激活/受众策略/
+   拆分相位/发布投影/触发决策/后写 hook/请求与身份/状态与重试/所有权);
+   limit/offset 有界窗口段已并入中文。
+4. agent_turn_recall README:标题 3/3(Turn Contract/Usage/Freshness And
+   Failure),结尾与上游 88 行全文一致(中文密度下 80 行,无缺块)。
+5. reward_memory README/OUTBOUND:官方中文全文采用,残留引用
+   (【English】横幅/README.zh-CN/OUTBOUND.zh-CN)全部清零;
+   catalog_entry aliases 仅保留 README.md 一条(无 zh-CN)。
+6. 回归验证:agent_turn_recall/outbound/capability-docs 27 passed;
+   007 修复的 9 个代表性 smoke 重跑全部 exit=0(无 merge 回归)。
