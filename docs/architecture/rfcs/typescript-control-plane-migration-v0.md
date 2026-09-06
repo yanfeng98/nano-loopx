@@ -38,8 +38,13 @@ decision 处理 actor、registration、role、status、archive、exclusion 与�
 同样在 head CAS 下持久化终态 receipt：存储 revision 可以前进，但 Todo 状态、
 `updated_at` 和 domain events 不变。结构合法的空注册名单允许历史回放，不能发起
 新 claim；非法名单仍失败。preview 保持零写入，非法 preview boolean 在访问 provider
-前失败。CLI 每次调用仍生成新的 operation id；跨调用重试身份和 claim/lease
-联合获取仍是后续工作，不能视为当前 claim-only 事务已提供的保证。
+前失败。CLI 默认仍为每次调用生成新 operation id。在已经 promotion 的 canonical
+authority 上，可显式使用
+`loopx todo claim --goal-id <goal> --todo-id <todo> --claimed-by <agent> --agent-id <agent> --claim-operation-id <public-safe-id>`
+进行跨进程重试：响应丢失后复用相同 id 和请求意图；同 id 搭配不同意图会失败。
+preview 不消耗该 id。legacy 模式会拒绝此选项，不写入也不自动 promotion；省略
+选项即可保持默认行为。历史 replay 不授予 lease 或当前所有权，claim/lease 联合
+获取仍是后续工作。
 
 下一 replacement slice 让 promotion 后的 `todo add` 成为同一 authority owner 上的
 原生 create transaction。Python 只校验既有 CLI 参数并一次性适配为带版本的 domain
@@ -260,7 +265,6 @@ replay、receipt 与 settlement。这个架构选择已经落地，不再是假�
 | Quota monitor-poll commit transaction | TypeScript 拥有 monitor admission 复核、target/event/result 构造、effect replay/index CAS、provider intent，以及可修复的 JSON/Markdown/index persistence | Python 投影 compact `should-run` facts，在最多两次 reduction 之间调用真实 Todo provider，刷新 legacy status，并持有 cross-writer index lock |
 | Runtime decoder（[#3443](https://github.com/huangruiteng/loopx/pull/3443)） | 稳定 primitive decoding 进入一个很小的共享模块；domain decoder 仍留在本地 | 没有理由建设更大的 schema framework |
 | Transaction 兑现（[#3464](https://github.com/huangruiteng/loopx/pull/3464)、[#3481](https://github.com/huangruiteng/loopx/pull/3481) 与 Todo completion） | Turn settlement、quota delivery routing 与 Todo completion 均只跨一个粗粒度 TS boundary；Todo transaction 拥有 identity、replay fence、validation planning/result reduction、continuation/recovery 与 completion metadata | Python 仍执行显式 external provider，并物化 legacy Markdown/event result；其他 domain 仍需各自的 bounded cutover |
-| Promoted-authority Todo claim | TypeScript 拥有 provider-head 读取、lifecycle 校验、完整记录更新、hard-lease 检查、CAS、receipt，以及 authority promotion 后 claim 的 readback-safe 结果 | 默认本地 Markdown 模式仍由 legacy writer 持有；其余 Todo mutation 与 Markdown 再生仍是有界 follow-up |
 
 Scheduler facade exit 已交付第一段有边界的 Stage 3 路径。带版本的
 `heartbeat_followup_cli.ts` 从生成的 ACK/failure hint 接收有大小上限的 compact host

@@ -121,7 +121,7 @@ host 专属 wake API 与操作者呈现仍是后续 adapter，让每个切片保
 | ID | 领域 | 任务 | 验证 |
 | --- | --- | --- | --- |
 | GH-C02 | tests | 已认领：一个 PR 已经打开 (#3623)，用 archive-completed 覆盖扩展 todo-lifecycle smoke。在 exact head 审阅，或补上审阅发现缺失的 omit/archive 反例。 | `python3 examples/control_plane/todo-lifecycle-cli-smoke.py` 与 `python3 -m py_compile loopx/*.py` |
-| GH-C04 | docs | 保持 release 文档更新到 v0.5.4：将安装、激活与恢复指引与 PyPI 默认完整安装路径 (#3301) 和显式安装属主 (#3566) 对齐，保留 tagged stable 与 post-tag `main` 及 release-snapshot 与 canary 的区分，覆盖已安装 runtime 的激活恢复与 extension-doctor readiness (#3556)，并保持公开 release 时间线（v0.1.3-v0.5.4）与 tagged 证据同步，而不是重复 release body 的双语可选能力使用指引。 | `python3 examples/fresh-clone-quickstart-smoke.py`、`python3 examples/loopx-update-smoke.py`、`python3 examples/release/release-readiness-doc-smoke.py`、`python3 examples/release/release-version-contract-smoke.py`，以及 `loopx check --scan-path docs/product/release-readiness.md --scan-path CONTRIBUTING.md` |
+| GH-C04 | docs | 已认领：分支 `docs/release-readiness-v0.5.4` 把六个公开时间线日期修正为 tagged 证据（`v0.2.7`、`v0.2.12`、`v0.4.0`、`v0.4.2`、`v0.4.3`、`v0.4.5`），并在首次 PyPI 安装块旁添加重启 host 激活说明；#3301/#3566/#3556 的安装、属主、激活恢复与 extension-doctor 对齐早前经 #3810 落地，并已在此 head 对照该指南重新验证。 | `python3 examples/fresh-clone-quickstart-smoke.py`、`python3 examples/loopx-update-smoke.py`、`python3 examples/release/release-readiness-doc-smoke.py`、`python3 examples/release/release-version-contract-smoke.py`，以及 `loopx check --scan-path docs/product/release-readiness.md --scan-path CONTRIBUTING.md` |
 
 ### 聚焦实现
 

@@ -81,11 +81,17 @@ LoopX 通过在代理回合（agent turn）之间保留目标、待办、门控�
 \fBloopx evidence\-log \-\-goal\-id <goal\-id> \-\-agent\-id <agent\-id> \-\-thin\fR
 在重新规划或交接前读取当前代理的精简公开安全账本。
 .TP
+\fBloopx machine\-config \-\-help\fR
+检查类型化的机器策略，预览变更，并应用一个精确的计划修订。
+.TP
 \fBloopx todo \-\-help\fR
 显示待办生命周期命令。
 .TP
 \fBloopx task\-lease \-\-help\fR
 获取、续期、转移、释放或检查一个强制的按待办租约。
+.TP
+\fBloopx coordination\-shadow \-\-help\fR
+检查、引导默认关闭的 Stage 2C 文件影子，或对其执行带修订围栏的回滚。
 .TP
 \fBloopx quota should\-run\fR
 判断下一个代理回合是否应该运行。
@@ -137,8 +143,8 @@ LoopX 通过在代理回合（agent turn）之间保留目标、待办、门控�
 将一个稳定的宿主线程绑定持久化到已注册的 LoopX 代理。
 .TP
 \fBloopx resolve\-agent\-thread\fR
-在不修改权威数据的前提下，跨当前项目读取
-一个精确的宿主线程绑定。
+从一个不透明（opaque）id 或复制的 Codex 任务深度链接中
+读取一个精确的宿主线程绑定，不修改权威数据。
 .TP
 \fBloopx unbind\-agent\-thread\fR
 移除一个精确的宿主线程绑定，而不注销其代理或对等会话。

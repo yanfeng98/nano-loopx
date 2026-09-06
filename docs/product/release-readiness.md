@@ -1,6 +1,5 @@
 # 发布就绪度
 
-
 状态:v0.x 维护者契约。
 
 LoopX 可以快速前进,而不必让每个合并的 PR 都感觉像一次产品发布。本笔记定义维护者在提升发布快照、推荐安装路径或告知用户哪些控制面界面可以安全构建之前应使用的小型思维模型。
@@ -14,6 +13,8 @@ python3 -m pip install --upgrade loopx
 loopx workflow-skills --install
 loopx doctor
 ```
+
+首次安装后重启 agent host,使新交付的 workflow skills 生效。
 
 PyPI 负责常规发布获取与依赖解析。`loopx update
 apply` 使用同一持有环境,然后刷新 LoopX host 材料与读回;它不切换通道。
@@ -173,20 +174,20 @@ PyPI 发布是同一构建的显式、失败关闭扩展。发布工作流仅在
 - `v0.2.4` 于 2026-07-14:匹配 `v0.2.4` tag 的 Explore 呈现与交付可靠性发布。Explore 看板布局现在是头等 `board_style` 产品参数,有两个受支持值:`auto_flow` 使用 Mermaid 自动图布局用于拓扑导向视图,而 `semantic_lane_columns` 为具有有意义并行车道的运维者看板输出确定性阶段 SVG(#2062)。Lark 视觉 sink 可以按 evidence 阶段发布一个托管看板,把所选样式投影进每个阶段,保持标签位于车道节点内,重试最终视觉读回,并调和生成的文档分节,使陈旧或重复阶段不累积(#2051, #2063, #2065-#2066, #2068)。同一规范 Explore 结果图对两种样式都是权威,现有仅 Mermaid 的配置继续解析为 `auto_flow`。此版本还包括同源规范/执行视图、显式 issue-fix 语义偏好调用点、provider 诊断,以及进一步 monitor、调度器、安装器、接入与公开 smoke 加固(#2002, #2005-#2006, #2018-#2021, #2027-#2028, #2032, #2036, #2052-#2061)。无需持久 state 迁移;Explore 与其 Lark 视觉 sink 保持选择加入。
 - `v0.2.5` 于 2026-07-15:匹配 `v0.2.5` tag 的奖励记忆与跨运行时可靠性发布。LoopX 现在交付 provider-neutral Reward Memory 路径,从已评审语料与健康契约到候选评审、选择加入的召回/应用、评估、dogfood 控制,以及在 Issue-Fix 规划边界的显式 actor 对等路由(#2076-#2085, #2096, #2100, #2103, #2128)。运行时投影路由成为共享运行时上实质事件、刷新与 Explore 命令的头等真相源,并修复源镜像歧义与紧凑诊断(#2091, #2094, #2097, #2099, #2102, #2129)。Issue-Fix 获得更强 commit evidence、evidence 支撑的关闭计数、候选去重、评审者回退与交付窗口排队(#2071, #2087, #2098, #2105, #2107, #2111)。Monitor、调度器、对等重规划、Lark 收件箱、Explore 读回与长程 SkillsBench 路径在重复 host 失败、有范围 gate、传输丢失、设置漂移与计数歧义上加固(#2101, #2104, #2108-#2127, #2130-#2131)。无需持久 state 迁移;Reward Memory 与高级 fixer 执行保持显式激活且有界。
 - `v0.2.6` 于 2026-07-16:匹配 `v0.2.6` tag 的类型化交互权威与隔离 Turn 运行时发布。调度器决策现在遵循类型化交互契约,精确的受阻后继可以触发有界自主重规划,用户 gate 不再死锁无关 agent 车道([#2136](https://github.com/huangruiteng/loopx/pull/2136), [#2177](https://github.com/huangruiteng/loopx/pull/2177), [#2187](https://github.com/huangruiteng/loopx/pull/2187), [#2188](https://github.com/huangruiteng/loopx/pull/2188), [#2198](https://github.com/huangruiteng/loopx/pull/2198), [#2203](https://github.com/huangruiteng/loopx/pull/2203), [#2204](https://github.com/huangruiteng/loopx/pull/2204))。LoopX Turn 成为交付的隔离 headless 路由,含可执行 envelopes、会话恢复、独立校验、真实 CLI 资格确认与 SkillsBench 集成([#2158](https://github.com/huangruiteng/loopx/pull/2158), [#2166](https://github.com/huangruiteng/loopx/pull/2166), [#2169](https://github.com/huangruiteng/loopx/pull/2169), [#2171](https://github.com/huangruiteng/loopx/pull/2171), [#2173](https://github.com/huangruiteng/loopx/pull/2173), [#2193](https://github.com/huangruiteng/loopx/pull/2193), [#2199](https://github.com/huangruiteng/loopx/pull/2199), [#2202](https://github.com/huangruiteng/loopx/pull/2202))。新用户接入由确定性生命周期 canary 与对实际默认包的重复单臂 Doubao 资格确认保护,而 CLI 输出预算与发布结果契约在提升前让语义回归可见([#2144](https://github.com/huangruiteng/loopx/pull/2144), [#2148](https://github.com/huangruiteng/loopx/pull/2148), [#2153](https://github.com/huangruiteng/loopx/pull/2153), [#2157](https://github.com/huangruiteng/loopx/pull/2157), [#2159](https://github.com/huangruiteng/loopx/pull/2159), [#2167](https://github.com/huangruiteng/loopx/pull/2167), [#2168](https://github.com/huangruiteng/loopx/pull/2168), [#2201](https://github.com/huangruiteng/loopx/pull/2201))。Explore 源调和、可选 Reward Memory 实验与评审者 gate、Lark 交付也得到加固而不使其成为首次运行要求([#2200](https://github.com/huangruiteng/loopx/pull/2200))。无需持久 state 迁移;高级能力保持显式激活。
-- `v0.2.7` 于 2026-07-17:匹配 `v0.2.7` tag 的控制面收敛与精确发布 evidence 发布。调度器、quota 与 todo 决策共享一个 agent/runtime/capability/ACK 范围;monitor 独立收敛而不互相重置;阻碍型用户 gate 使用一个类型化响应计划;Reward Memory v1 交付项目语料配置与有界 Issue-Fix 召回。
+- `v0.2.7` 于 2026-07-18:匹配 `v0.2.7` tag 的控制面收敛与精确发布 evidence 发布。调度器、quota 与 todo 决策共享一个 agent/runtime/capability/ACK 范围;monitor 独立收敛而不互相重置;阻碍型用户 gate 使用一个类型化响应计划;Reward Memory v1 交付项目语料配置与有界 Issue-Fix 召回。
 - `v0.2.8` 于 2026-07-19:匹配 `v0.2.8` tag 的类型化 Codex App 自动化契约与周期报告控制面发布。Agent 范围调度器、quota、todo、monitor、用户 gate 与前沿决策成为类型化运行时契约,同时交付 provider-neutral 周期报告控制面用于计划或实质性进展报告,而不授予外部写入权威。
 - `v0.2.9` 于 2026-07-20:匹配 `v0.2.9` tag 的车道隔离调度与 OpenCode host 支持发布。一个 agent 车道不能再消费或抑制另一车道的前沿,OpenCode 成为头等 Turn 支撑 host,周期报告获得密集的自包含 HTML 呈现。
 - `v0.2.10` 于 2026-07-20:匹配 `v0.2.10` tag 的会话内周报快速开始。普通项目会话可以请求本地报告,无需 profile、RRULE、host Automation、provider 或外部 sink;owner 暂停对仅 monitor 的配额工作保持权威。
 - `v0.2.11` 于 2026-07-20:匹配 `v0.2.11` tag 的打包周报 preset。`loopx periodic-report inspect-profile --preset weekly` 暴露内置 provider-neutral preset;它不创建调度、不调用外部 sink、不授予外部写入权威。
-- `v0.2.12` 于 2026-07-23:匹配 `v0.2.12` tag 的心跳凭据与评审质量发布。每个心跳 Turn 持久一个配额凭据,monitor/重规划路由保持新鲜,`loopx pr-review` 获得代码量与简化透镜,自适应多 Turn 活跃 worker 生命周期阶段通过紧凑 run 与台账视图保持可见。
+- `v0.2.12` 于 2026-07-24:匹配 `v0.2.12` tag 的心跳凭据与评审质量发布。每个心跳 Turn 持久一个配额凭据,monitor/重规划路由保持新鲜,`loopx pr-review` 获得代码量与简化透镜,自适应多 Turn 活跃 worker 生命周期阶段通过紧凑 run 与台账视图保持可见。
 - `v0.2.13` 于 2026-07-24:匹配 `v0.2.13` tag 的 monitor 跟进发布。实质性 monitor 写回在目标键回退前解析精确 todo,立即暴露新可运行后继,并在仅投影重载失败时返回结构化的陈旧投影警告而非报告写入失败。连续 monitor todo 不再携带 `resume_when`。
 - `v0.3.0` 于 2026-07-30:匹配 `v0.3.0` tag 的能力与控制契约发布。LoopX 提升 simplify-first 变更资格确认、provider-neutral 决策上下文、受治理的实质生命周期工作流、受管项目交付与 Ark Managed Agent host 支持,同时对配额规则排序并使可恢复 Turn 阶段显式。
-- `v0.4.0` 于 2026-08-01:匹配 `v0.4.0` tag 的接入与 Turn 权威发布。Goal 启动投影能力拥有的准入路由,重规划确认需要规范的 agent 可见 evidence,默认 `quota should-run` JSON 保持在有界面向模型预算内,README 前台展示两个可查证的 200+ 小时 Loop 轨迹。
+- `v0.4.0` 于 2026-08-02:匹配 `v0.4.0` tag 的接入与 Turn 权威发布。Goal 启动投影能力拥有的准入路由,重规划确认需要规范的 agent 可见 evidence,默认 `quota should-run` JSON 保持在有界面向模型预算内,README 前台展示两个可查证的 200+ 小时 Loop 轨迹。
 - `v0.4.1` 于 2026-08-04:匹配 `v0.4.1` tag 的持久工作选择与 Goal-host 延续发布。能力准入的 Todo 路由跨 Turn 持久,Goal host 在最早的实质前沿转换唤醒,分组 Issue Fix PR monitor 显式物化,默认关闭的 Agent Turn Recall 交付 agent/goal/project/Todo/authority 作用域。
-- `v0.4.2` 于 2026-08-06:匹配 `v0.4.2` tag 的 host 与工作流界面发布。Pi 与 TraeX 成为头等 host 路径,自适应子准入强制领域/能力/仓库/写入范围就绪,交付 provider-neutral PR 队列观察与 PR program 工作流,Issue Fix 把工作固定到已批准的基快照。
-- `v0.4.3` 于 2026-08-08:匹配 `v0.4.3` tag 的效果解释器演进发布。第二个真实 `EffectTurn` 解释器消费 Turn 结果,数据编码执行与有序效果程序形态落地,运行时计划是替换优先,统一双语 Dev Book 添加独立 Control-Plane Course 章节。
+- `v0.4.2` 于 2026-08-07:匹配 `v0.4.2` tag 的 host 与工作流界面发布。Pi 与 TraeX 成为头等 host 路径,自适应子准入强制领域/能力/仓库/写入范围就绪,交付 provider-neutral PR 队列观察与 PR program 工作流,Issue Fix 把工作固定到已批准的基快照。
+- `v0.4.3` 于 2026-08-09:匹配 `v0.4.3` tag 的效果解释器演进发布。第二个真实 `EffectTurn` 解释器消费 Turn 结果,数据编码执行与有序效果程序形态落地,运行时计划是替换优先,统一双语 Dev Book 添加独立 Control-Plane Course 章节。
 - `v0.4.4` 于 2026-08-09:匹配 `v0.4.4` tag 的 M6 效果程序质量 gate 完成。热控制面模块有界,`EffectTurn`/`EffectProgram` 被真实运行时路径消费,M6 RFC 以审计 evidence 标记为 Complete。
-- `v0.4.5` 于 2026-08-12:匹配 `v0.4.5` tag 的安全加固与控制面发布。LoopX 修复五个私下报告的安全公告,添加调用方批准的完成校验,交付持久 smoke 评审 gate,并继续以 16 位贡献者的社区贡献推进重规划/evidence/结算加固。
+- `v0.4.5` 于 2026-08-13:匹配 `v0.4.5` tag 的安全加固与控制面发布。LoopX 修复五个私下报告的安全公告,添加调用方批准的完成校验,交付持久 smoke 评审 gate,并继续以 16 位贡献者的社区贡献推进重规划/evidence/结算加固。
 - `v0.4.6` 于 2026-08-13:匹配 `v0.4.6` tag 的重规划与通知加固发布。重规划收尾变为语义化,配额/心跳通知正确性被修复,refresh-state 写回护栏落地,两个架构 RFC 记录效果程序方向。
 - `v0.4.7` 于 2026-08-15:匹配 `v0.4.7` tag 的受治理 host 延续发布。OpenCode 1/2 goal Loop 不再因用户消息或任务收尾而中断,DeepSeek Harness 通过受管 Turn connector 连接,逐 goal 交接模式在 state 文件中 gate claim/租约权威,Explore 可以在一个自动化步骤中发布多个 Feishu 视觉看板。
 - `v0.4.8` 于 2026-08-16:匹配 `v0.4.8` tag 的开源核心打包与资格确认发布。LoopX 为开源核心采用 Apache-2.0,作为头等 PyPI 发行交付,添加逐 Todo 校验预算,并收紧基准完整性资格确认与 Content Ops 呈现密度。
@@ -362,7 +363,7 @@ CLI/install 提升失败,或悄然把 dashboard 路径当作已覆盖。
 | `**How to verify:**` | 说明升级后期望结果,并包含一个证明包身份与受影响行为的最小可运行 `bash` 块。 |
 | `**Contributors:**` | 命名发布维护者与 tag 范围的社区贡献者,或明确说明本发布无社区贡献。 |
 
-在中文摘要中以 `**谁需要升级：**`、`**解决了什么：**`、`**是否有破坏性变更：**`、
+在中文摘要的 `### 升级决策` 下,以 `**谁需要升级：**`、`**解决了什么：**`、`**是否有破坏性变更：**`、
 `**如何验证：**` 与 `**贡献者：**` 镜像同样决策。摘要是决策辅助,不是对下方
 详细产品分组、逐声明 PR evidence、可选能力生命周期或精确提交校验 evidence 的替代。
 

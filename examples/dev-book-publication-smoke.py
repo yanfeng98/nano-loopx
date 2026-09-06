@@ -267,6 +267,8 @@ def main() -> int:
 
     project_version = tomllib.loads(read(REPO_ROOT / "pyproject.toml"))["project"]["version"]
     release_tag = f"v{project_version}"
+    # Historical migration milestones must not move with the package version.
+    migration_baseline_tag = "v0.5.4"
     release_markers = {
         "index.md": (
             f"LoopX 发布锚点：`{release_tag}`",
@@ -333,7 +335,7 @@ def main() -> int:
     assert_zh_concepts(
         "chapters/03-one-turn.md",
         (
-            f"`{release_tag}` 仍提供",
+            f"`{migration_baseline_tag}` 仍提供",
             "显式 opt-in 集成",
             "Turn settlement",
             "Todo completion",
@@ -349,7 +351,7 @@ def main() -> int:
     assert_zh_concepts(
         "chapters/state-substrate.md",
         (
-            f"`{release_tag}` 的 shared-authority 工作",
+            f"`{migration_baseline_tag}` 的 shared-authority 工作",
             "provider-neutral TypeScript `AuthorityStore` contract",
             "不自动获得 runtime authority",
             "不应倒推成",
@@ -368,7 +370,7 @@ def main() -> int:
     assert_zh_concepts(
         "chapters/source-protocol-map.md",
         (
-            f"在 `{release_tag}` 的迁移基线上",
+            f"在 `{migration_baseline_tag}` 的迁移基线上",
             "bounded context 和实现语言是两个维度",
             "本地 task-lease lifecycle",
             "receipt-bound scheduler follow-up",
@@ -390,7 +392,7 @@ def main() -> int:
         "chapters/appendix-reference.md",
         (
             "loopx todo list --goal-id <goal-id> --thin --format json",
-            f"`{release_tag}` 新增的 `todo list --thin`",
+            f"`{migration_baseline_tag}` 新增的 `todo list --thin`",
             "不改变默认 list 的选择、排序、quota 或 lifecycle 语义",
         ),
     )
