@@ -1,0 +1,267 @@
+.TH LOOPX 1 "" "简体中文" "用户命令"
+.SH NAME
+loopx \- 面向长期运行代理工作的控制平面辅助工具
+.SH SYNOPSIS
+.B loopx
+[\fB\-\-registry\fR \fIPATH\fR]
+[\fB\-\-runtime\-root\fR \fIPATH\fR]
+[\fB\-\-format\fR \fImarkdown|json\fR]
+\fICOMMAND\fR
+[\fIARGS\fR]
+.br
+.B loopx
+\fICOMMAND\fR
+\fB\-\-help\fR
+.br
+.B loopx commands
+.SH DESCRIPTION
+LoopX 通过在代理回合（agent turn）之间保留目标、待办、门控、配额与证据，
+让长期运行的代理工作持续推进。
+.PP
+下面的命令章节由 \fBloopx commands\fR 所使用的同一份规范目录生成。
+各命令特有的标志仍可通过 \fBloopx COMMAND \-\-help\fR 查看。
+.SH 从这里开始
+.TP
+\fB/loopx\fR
+请求代理检查 LoopX 状态、门控、待办与下一步行动。
+.TP
+\fB/loopx <goal text>\fR
+通过代理启动或继续一个具体的长期运行目标。
+.TP
+\fBloopx doctor\fR
+检查安装、PATH、发布快照、技能与导入健康状态。
+.TP
+\fBloopx first\-run\-report\fR
+打印一份本地首次运行回执，以及可选的公开反馈问题链接。
+.TP
+\fBloopx slash\-commands \-\-install\fR
+刷新宿主斜杠命令提示文件与技能文件。
+.TP
+\fBloopx preset list\fR
+显示适合初学者的安全预设与可选的进阶循环启动数据包。
+.TP
+\fBloopx ready\-score \-\-goal\-id <goal\-id>\fR
+在不写入徽章的情况下，为安装、状态、配额、调度器、
+待办与证据的就绪度打分。
+.TP
+\fBloopx start\-goal \-\-guided \-\-project . \-\-goal\-text "<goal>"\fR
+预览面向同一代理安全的 `/loopx <goal>` 路径的 shell 回退方案。
+.TP
+\fBloopx agent\-onboard \-\-agent\-type codex\-cli \-\-project .\fR
+为某一个代理运行时生成精确的宿主循环激活数据包。
+.TP
+\fBloopx agent\-onboard \-\-agent\-type codex\-app\-ssh \-\-project .\fR
+当 Codex App 通过 SSH 运行且没有自动化工具时，使用可见的 /goal。
+.TP
+\fBloopx bootstrap\-command\-pack \-\-project .\fR
+生成更低层的宿主交接数据包。
+.SH 日常运维命令
+.TP
+\fBloopx status\fR
+显示目标、门控、关注队列与下一步行动。
+.TP
+\fBloopx dashboard\fR
+用一条命令启动本地看板、状态服务与 Agent Chat 服务。
+.TP
+\fBloopx chat \-\-goal\-id <goal\-id>\fR
+打开 Goal Studio，向只读 Agent 请求一个受限的待办，并在写回前批准其预览。
+.TP
+\fBloopx diagnose \-\-goal\-id <goal\-id>\fR
+当行为异常时构造一份精简的证据数据包。
+.TP
+\fBloopx review\-packet \-\-goal\-id <goal\-id>\fR
+渲染一份交接或评审数据包，并附带所需的证据日志读取内容。
+.TP
+\fBloopx goal\-channel \-\-help\fR
+设置、检查、同步或通知绑定到某一个目标的提供者通道。
+.TP
+\fBloopx goal\-lifecycle \-\-help\fR
+预览、停止或恢复一个目标，而不删除其历史、待办或证据。
+.TP
+\fBloopx evidence\-log \-\-goal\-id <goal\-id> \-\-agent\-id <agent\-id> \-\-thin\fR
+在重新规划或交接前读取当前代理的精简公开安全账本。
+.TP
+\fBloopx todo \-\-help\fR
+显示待办生命周期命令。
+.TP
+\fBloopx task\-lease \-\-help\fR
+获取、续期、转移、释放或检查一个强制的按待办租约。
+.TP
+\fBloopx quota should\-run\fR
+判断下一个代理回合是否应该运行。
+.TP
+\fBloopx history \-\-goal\-id <goal\-id>\fR
+读取精简的运行历史。
+.TP
+\fBloopx history trajectory\-hygiene \-\-goal\-id <goal\-id> \-\-limit 100\fR
+在无需读取原始会话的情况下，根据精简历史评估
+控制器密度与归因缺口。
+.SH 循环驱动提示
+.TP
+\fBCodex App automation\fR
+使用 `/loopx <goal>`，并让应用创建或刷新心跳自动化。
+.TP
+\fBCodex CLI visible goal\fR
+保持在可见的 TUI 中；需要时使用 `loopx codex\-cli\-bootstrap\-message` 完成设置。
+.TP
+\fBClaude Code /loop\fR
+为 `/loopx` 使用已安装的斜杠技能；仅当原生 `/loop` 需要由 LoopX 门控时才启用适配器。
+.TP
+\fBOpenCode goal bridge\fR
+接入 `\-\-with\-goal\-bridge`，然后使用 `loopx_goal_activate` 绑定受配额门控的桥接。
+.TP
+\fBKunlunCode native Goal controller\fR
+运行 `loopx\-kunluncode connect`，验证受管理的 MCP 入口，然后让 `loopx\-kunluncode run` 创建或恢复一个由验证者门控的原生 Goal Pro。
+.TP
+\fBOther agent or shell\fR
+使用 CLI、任务、自动化、心跳或调度器钩子；否则手动驱动 LoopX。
+.TP
+\fBloopx turn plan \-\-goal\-id <goal\-id> \-\-agent\-id <agent\-id>\fR
+在不启动代理、不写入状态的情况下，基于实时 LoopX 状态规划一次受治理的外部宿主回合。
+.TP
+\fBloopx host\-mode\-plan \-\-goal\-id <goal\-id> \-\-intent <intent> \-\-host\-capability <capability>\fR
+选择一个安全的宿主模式（可见、隔离无头回合、网关、
+定时器、混合），并显示匹配的回合/配额预览命令。
+.SH 设置与自动化命令
+.TP
+\fBloopx bootstrap / loopx connect\fR
+创建或连接项目本地状态。
+.TP
+\fBloopx project \-\-help\fR
+注册一个持久的 Project，并绑定、解绑或解析其前台目标。
+.TP
+\fBloopx new\-project\-prompt\fR
+生成一段供代理使用的可复制粘贴的项目连接提示。
+.TP
+\fBloopx bind\-agent\-thread\fR
+将一个稳定的宿主线程绑定持久化到已注册的 LoopX 代理。
+.TP
+\fBloopx resolve\-agent\-thread\fR
+在不修改权威数据的前提下，跨当前项目读取
+一个精确的宿主线程绑定。
+.TP
+\fBloopx unbind\-agent\-thread\fR
+移除一个精确的宿主线程绑定，而不注销其代理或对等会话。
+.TP
+\fBloopx codex\-cli\-bootstrap\-message\fR
+生成可见的 Codex CLI TUI 设置消息。
+.TP
+\fBloopx codex\-cli\-tui\-bootstrap\-smoke\-bundle\fR
+生成一份不含转录文稿的 Codex CLI 首次运行冒烟测试数据包。
+.TP
+\fBloopx codex\-cli\-visible\-attach\-acceptance\fR
+检查公开安全的可见 Codex CLI 附加证据。
+.TP
+\fBloopx heartbeat\-prompt\fR
+生成一份受守护的心跳自动化正文。
+.TP
+\fBloopx supervisor\-prompt\fR
+为可选的仅提案对等监督者生成专用任务正文。
+.TP
+\fBloopx supervisor\-observe\fR
+读取一份关于对等状态与证据的公开安全监督者数据包。
+.TP
+\fBloopx supervisor\-event\fR
+预览、追加或读取监督者提案与宿主执行回执。
+.TP
+\fBloopx upgrade\-plan\fR
+规划默认心跳升级的传播。
+.TP
+\fBloopx update [check|plan|apply]\fR
+检查安装归属，然后显式应用归档更新。
+.TP
+\fBloopx project\-skill \-\-help\fR
+在选定的项目代理宿主中安装、检查或移除发行版拥有的技能。
+.TP
+\fBloopx workflow\-skills\fR
+检查、安装或移除打包的用户级 LoopX 工作流技能。
+.SH 维护者与适配器命令
+.TP
+\fBloopx check\fR
+运行契约检查与公开/私有边界检查。
+.TP
+\fBloopx change\-quality \-\-help\fR
+对照启用的项目策略与回执契约，核定一份精确的最终差异。
+.TP
+\fBloopx integration\-branch \-\-help\fR
+检测已评审源分支的漂移，并重建一个本地集成分支。
+.TP
+\fBloopx change\-window \-\-help\fR
+应用一个仓库本地的调度，并检查共享账本中被阻塞的未合并工作。
+.TP
+\fBloopx registry\fR
+检查已注册的目标与适配器。
+.TP
+\fBloopx sync\-global\fR
+将项目状态合并进共享注册表。
+.TP
+\fBloopx retire\-global\-goal\fR
+安全地退役显式命名的孤立全局目标路由。
+.TP
+\fBloopx register\-agent\fR
+注册一个自动化代理。
+.TP
+\fBloopx lark\-kanban\fR
+将 LoopX 状态投射到飞书/Lark Base 看板。
+.TP
+\fBloopx presentation\fR
+打包、回滚并验证提供者中立的静态演示工件。
+.TP
+\fBloopx explore\fR
+记录探索拓扑（节点、边、发现），并将其投射到飞书/Lark 结果看板。
+.TP
+\fBloopx extension\fR
+检查并管理经 doctor 验证的子进程扩展激活。
+.TP
+\fBloopx connector\fR
+列出、注册、排序并记录公开连接器提供者的使用情况。
+.TP
+\fBloopx issue\-fix\fR
+构建公开安全的 issue 或 PR 修复工作流数据包。
+.TP
+\fBloopx review\-batch\fR
+组合提供者中立的有界评审数据包，并绑定精确的决策。
+.TP
+\fBloopx periodic\-report\fR
+解析一个可移植的周度配置文件，评估报告触发器，并组合
+提供者中立的运行回执。
+.TP
+\fBloopx auto\-research\fR
+将公开安全的研究前沿投射出来。
+.TP
+\fBloopx deepresearch\fR
+运行一个受限的、可引用审计的研究账本与报告工作流。
+.TP
+\fBloopx agent\-turn\-recall\fR
+为一个获准的自主代理回合准备目标范围的记忆指引。
+.TP
+\fBloopx multi\-agent\fR
+启动可见的角色定向 Codex TUI 代理。
+.TP
+\fBloopx canary\fR
+规划或运行基于目录信息的冒烟配置文件。
+.TP
+\fBloopx promotion\-readiness\fR
+在共享运行时账本中记录发布范围的金丝雀就绪证据。
+.TP
+\fBloopx benchmark\fR
+默认使用仅限夹具（fixture）的基准测试运行器骨架。
+.SH 更多信息
+.TP
+\fBloopx COMMAND \-\-help\fR
+显示单个命令的标志。
+.TP
+\fBman loopx\fR
+打开这份已安装的手册页。
+.TP
+\fBdocs/guides/getting\-started.md#command\-reference\fR
+阅读更长的运维与贡献者指南。
+.SH 安装说明
+LoopX 本地安装器默认将此手册写入
+\fI$HOME/.local/share/man/man1/loopx.1.gz\fR，并在所选的 shell 配置文件中
+将 \fI$HOME/.local/share/man\fR 添加到 MANPATH。
+如果当前 shell 尚未重新加载该配置文件，请运行：
+.PP
+\fBMANPATH=\"$HOME/.local/share/man:${MANPATH:\-}\" man loopx\fR
+.SH SEE ALSO
+.BR man (1)
