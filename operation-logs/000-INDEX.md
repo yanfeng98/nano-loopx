@@ -12,6 +12,7 @@
 | 008 | [008-upstream-merge-3.md](008-upstream-merge-3.md) | 上游三次 merge(11 commits):双语回退、官方中文采用、环境 4 目录初始化 |
 | 009 | [009-upstream-merge-4.md](009-upstream-merge-4.md) | 上游四次 merge(22 commits):5 文档重译、pytest 导入模式修复 |
 | 010 | [010-upstream-merge-5.md](010-upstream-merge-5.md) | 上游五次 merge(3 commits):官方中文 README 采用、CORS 时序修复 |
+| 011 | [011-upstream-merge-6.md](011-upstream-merge-6.md) | 上游六次 merge(1 commit,零冲突) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。
