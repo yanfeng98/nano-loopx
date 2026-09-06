@@ -162,10 +162,10 @@ def test_heartbeat_guide_matches_parent_turn_replay_contract() -> None:
         Path(__file__).parents[1] / "docs/heartbeat-automation-prompt.md"
     ).read_text(encoding="utf-8")
 
-    assert "reuses the provided parent Turn" in guide
-    assert "same-Turn replay preserves the committed" in guide
-    assert "bound Todo, observed capabilities, and settlement identity" in guide
-    assert "explicitly conflicting identity still fails closed" in guide
+    assert "复用提供的父 Turn" in guide
+    assert "同一 Turn 重放" in guide
+    assert "保留已提交收据的绑定 Todo、观察到的能力与结算身份" in guide
+    assert "显式冲突身份仍 fail closed" in guide
     assert "derives a stable child receipt id" not in guide
     assert "does not reuse the already-settled heartbeat receipt" not in guide
 
