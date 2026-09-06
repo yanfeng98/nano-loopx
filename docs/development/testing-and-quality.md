@@ -75,7 +75,19 @@ git diff --check
 它刻意不包含真实模型调用和 full smoke catalog，因此普通迭代不依赖凭证、网络
 时延、模型服务可用性或两小时级测试矩阵。
 
+Linux 全套测试分到两台 hosted runner，每台保留两个 xdist worker。`pytest-split`
+按完整 collection 分片；没有历史耗时时，等权测试交替分配。lint、类型检查和 CLI
+预算独立执行。必需的 `pytest` 汇总检查会拒绝失败／跳过的分片和缺失的 coverage，
+合并后再执行原有 19.6% 门槛；不要求单个分片达到全套覆盖率。coverage 使用相对路径，
+Sonar 只复用同一次 run 的 XML，不重复测试、不跨 run 取产物。缺少 token 仍成功跳过
+Sonar，测试 job 不接收 Sonar secret。触发范围取原有两套 workflow 的并集，因此仅改
+前端或 Sonar 配置也走此通道，包括没有 token 的 fork。
+
+Reproduce one shard locally with `python -m pytest -q -n 2 --splits 2 --group 1
+--splitting-algorithm least_duration --cov=loopx`。省略分片参数即可在本地运行完整套件。
+
 ## Smoke 与 Canary
+
 
 Durable smoke 应保护已交付行为、可复用合同、公开/私有边界，或曾让自动化卡死的
 回归；不应固化某次研究文案或原始执行证据。

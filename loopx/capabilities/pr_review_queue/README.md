@@ -147,8 +147,14 @@ LoopX Todo authority、`loopx-pr-review` 与 `loopx-pr-merge` policy。
 100 项队列中的每个 PR 复制一个巨型 prompt。它要求这些 typed 证据组,然后才给出
 verdict:
 
+D
 - 问题上下文与活跃 caller;
 - 架构与 ownership 流;
+- 仓库复用：按 caller outcome／资源搜索 base 与 exact-head 代码（包括未变的
+    兄弟文件），而非只看新文件名。记录修订、查询、路径与候选 caller；比较
+    scope／过滤器、排序／分页、权限／去敏与状态／重试 ownership。优先最近的
+    既有 owner；用证据（而非绿色 CI 或无冲突共存）证明独立边界。对一个资源的
+    替代视图，酌情验证 consumer 切换与并发更新。base 集成或 head 变更后重复对比；
 - 跨生产、测试/fixtures、docs、生成输出与机械挪动的确切行级分类;
 - 对改动代码的 PR 的 2-5 项确切 head 符号映射,包括 caller、state、branch、副作用、
   consumer 与失败 ownership;
@@ -180,11 +186,21 @@ Reviewer 请求的添加本身不是向批准推进;当收益不证明累积机�
 风险提示与绿色 CI 不能把证据升级为 `verified`。Stale-head verdict 被禁止。缺失
 证据保持 `unverified` 并带原因,而不是被自信散文替换。
 
+D
 使用 `--state all` 时,命令必须保留两个生命周期组。`--limit` 值按组应用,使忙碌
 开放队列不能吞掉整个 packet、在窗口存在 merged PRs 时让 `review_groups.merged`
 为空。默认每组 100 PRs。每个 packet 携带 `result_completeness`;穷举请求必须要求
 `complete=true`,并在源扫描或 packet 分片被截断时用其 `recommended_limit` 重跑。
 Live GitHub 读取应在构造分组 packet 前分开 fetch 开放与关闭/合并窗口。
+
+`repository_reuse` 在每个适用计划中从 `unverified` 开始。其结论为
+`reused`、`separation_justified`、`no_existing_candidate`、
+`unjustified_duplication` 或 `not_yet_proven`。负向搜索必须说明其范围与
+局限；空候选列表不证明不存在。无根据的重复或缺失证据需要 request-changes
+结论。具有不同不变量或兼容性需求的相似代码可以合法地保持独立。普通 docs
+保留既有 review 路径；纯 smoke 变更保留 `durable_smoke_value` 覆盖评审。
+这是评审者执行的、由 packet 投影的合同，而不是自动仓库搜索或发布散文的语义
+校验器。测试确立 packet 适用性与 verdict 策略，而非保证模型遵从。
 
 Agent 响应不得停在队列表。对于 `/loopx-pr-review`,队列只是前言;最终答案应逐个
 审阅选中的 PRs,包含五段:`动机`、`改动思路`、`具体改动`、`对主干的风险` 与

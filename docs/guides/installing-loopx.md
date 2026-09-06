@@ -124,8 +124,20 @@ loopx update plan        # read-only command, validation, and rollback plan
 loopx update apply       # explicit local-environment mutation
 ```
 
+archive 安装时，`update apply` 会先把 bootstrap 安装器下载到私有临时文件再执行。
+下载限制为三次尝试、60 秒总下载预算（或更小的命令超时）与每次传输 20 秒，
+重试间隔为 1 秒和 2 秒。瞬态 403/408/429/500/502/503/504 响应与选中的连接／传输
+失败会重试；401/404 与证书校验失败会立即停止。安装器执行从不重试，部分下载从不执行。
+命令超时同时覆盖下载与安装器执行。
+
+JSON `execution.installer_download` 与文本执行报告显示阶段与每次尝试的 HTTP 状态和
+curl 退出码。HTTP `0` 表示未收到可用 HTTP 状态。下载诊断排除 URL、响应体、请求头与
+原始 curl 错误，以免代理凭据与签名参数泄漏。这些重试只覆盖 bootstrap 下载，不覆盖
+后续 archive 下载或失败安装。Pip/pipx 与只读计划保持原有行为。
+
 裸 `loopx update` 仍是只读计划。较旧的 `--check`、`--dry-run` 与 `--execute`
 拼写仍作为兼容别名保留，但新指令应使用命名动作。
+
 
 人类可读输出以 **No update was applied** 和一个可复制的 **Next Action** 命令开头。
 JSON 输出把同一决策暴露为 `requested_action`、`changes_applied` 与一个带 mutation
