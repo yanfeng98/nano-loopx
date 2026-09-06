@@ -22,3 +22,14 @@ Doubao 行为限定、书与手册版本对齐(0.5.4→1.0.0)、历史迁移里�
 
 ## 提交
 - Merge upstream/main(14 commits)。
+
+## 复查确认(无问题)
+
+1. upstream/main 已是 HEAD 祖先;14 commit 全覆盖。
+2. 书 en/** 在 HEAD 完全不存在(维持"只保留中文版"删除,未随上游恢复)。
+3. 书 zh 与上游结构 1:1:index(4/4 标题)、00-reading-guide(9/9 标题、
+   46/46 表格),无 en 残留;01/12 章节与上游 diff=0(上游未改)。
+4. man 宏结构 97/97、转义 184/184 与上游逐字节一致,仅 .TH 语义更新为
+   LoopX 1.0.0。
+5. book 双 smoke(publication/welcome-wagon)exit=0;pytest 12 passed。
+6. 全树英文文档残留:仅排除区测试 fixtures(预期)。
