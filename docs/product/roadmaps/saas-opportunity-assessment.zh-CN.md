@@ -60,7 +60,7 @@ Discovery、集成、评测与上线可能需要 FDE 进入客户 workflow。协
 | 项目 | 公开商业证据 | 价值捕获路径 | 当前判断 | 对 LoopX 的启示 |
 | --- | --- | --- | --- | --- |
 | Letta | 公司在 2024 年[完成 1000 万美元种子轮](https://www.prnewswire.com/news-releases/berkeley-ai-research-lab-spinout-letta-raises-10m-seed-financing-led-by-felicis-to-build-ai-with-memory-302257004.html)。当前 [API 方案](https://docs.letta.com/pricing)包含基础订阅、active agent、tool execution 与模型用量计费；team / enterprise 档增加共享、访问控制、SSO 和支持。[厂商案例](https://www.letta.com/case-studies/bilt/)称 Bilt 已运行超过 100 万个 Agent。 | 托管 stateful agent、执行、协作与企业控制 | Persistent agent state 已出现真实定价与生产信号；但没有公开审计 ARR，Bilt 数据来自厂商案例。 | Durable state 在被持续运行、并绑定生产 workload 后，可以成为计费 primitive。 |
-| Mastra | Mastra 于 2026 年 4 月[宣布 2200 万美元 A 轮、累计融资 3500 万美元](https://mastra.ai/blog/series-a)。其[定价](https://mastra.ai/pricing)包括 250 美元/月 team 档、观测/算力/memory/storage/retention 用量，以及按年收费的 self-hosted enterprise 方案。 | 开源框架 + 托管平台、运维与企业部署 | 这组对标中最强的独立平台商业信号。融资、客户案例与 packaging 有意义，但不等于已披露收入。 | 开源开发框架可以扩张到 Managed Operations，前提是付费层真正承担可靠性、留存、评测与交付。 |
+| Mastra | Mastra 于 2026 年 4 月[宣布 2200 万美元 A 轮、累计融资 3500 万美元](https://mastra.ai/blog/series-a)。其[定价](https://mastra.ai/pricing)包括 250 美元/月 team 档、观测/算力/memory/storage/retention/enterprise support 用量，以及固定费用的 self-hosted enterprise 方案。 | 开源框架 + 托管平台、运维与企业部署 | 这组对标中最强的独立平台商业信号。融资、客户案例与 packaging 有意义，但不等于已披露收入。 | 开源开发框架可以扩张到 Managed Operations，前提是付费层真正承担可靠性、留存、评测与交付。 |
 | AgentScope | AgentScope 是[阿里通义实验室 SysML 团队](https://github.com/agentscope-ai/agentscope/blob/main/pyproject.toml)维护的 Apache-2.0 项目，不是一家单独披露的创业公司。它可部署到阿里云体系；[AgentRun](https://www.alibabacloud.com/help/en/functioncompute/what-is-agentrun)销售 serverless runtime、sandbox、模型治理、观测和成本管理，并明确集成 AgentScope。 | 云消费、生态拉动与平台留存 | 在阿里云体系内可能有很高战略价值，但不存在有意义的独立 AgentScope 估值或收入单元。 | OSS 框架可以创造可观的平台价值，而直接经济回报主要被外围云平台捕获。 |
 | CAMEL / Eigent | [CAMEL-AI](https://www.camel-ai.org/about)建立多 Agent 研究与类别心智，关联产品 Eigent [自报上线不到三个月收入超过 25 万美元](https://www.eigent.ai/about)，并提供[年付折算 19.90 / 99.99 美元月费与 enterprise 部署](https://www.eigent.ai/pricing)；条款中还包含[商业生产许可与专业服务](https://www.eigent.ai/terms-of-use)。 | C 端/个人订阅、企业许可、私有化与服务 | 已有早期、具体的应用变现，但收入是公司自报的短窗口数据，不能证明稳定 recurring revenue。 | 研究与 OSS 热度可以通过有明确主张的应用转化，但它与基础设施的销售和毛利结构不同。 |
 
@@ -90,13 +90,13 @@ Discovery、集成、评测与上线可能需要 FDE 进入客户 workflow。协
 | 科研组或实验室 | Community、赞助支持或共享科研 Harness | 模板与 enablement；只有有经费的机构 workflow 才做 FDE | 可复现、实验监督与恢复很适合 LoopX，但多数科研组承受不了企业销售和定制成本 |
 | 中型企业 | 付费 discovery + 一次有边界的 FDE 上线，之后转年度私有/BYOC 许可 | 明确 outcome、验收、集成与交接 | 客户愿意为 workflow 改造付费，但会先要求直接价值，而不是购买抽象平台 |
 | 大型或强监管企业 | Enterprise Harness、FDE、托管运维、治理与 SLA | 私有/BYOC，包含安全、审计和采购工作 | 高客单价可以覆盖集成与控制要求，但销售周期和服务负担明显更高 |
-| 海外开发者团队 | Team Cloud 或 Managed Control Plane | 产品试用 + 远程 solution engineering | 对公有云和软件订阅的接受度更高，纯 SaaS 路径更成立 |
+| 海外开发者团队 | Team Cloud 或 Managed Control Plane（随用量扩张） | 产品试用 + 远程 solution engineering | 对公有云和软件订阅的接受度更高，纯 SaaS 路径更成立 |
 
 这是一种先后顺序，不是放弃 recurring revenue。国内的第一收入形态更可能是“软件许可 + 有边界交付 + 年度托管运维”；SaaS 更适合低摩擦团队、海外客户，以及多次交付后被证明共性的运行面。
 
 ### 成熟 Harness 是第一个付费产品
 
-成熟 Agent harness 的公开实践说明，客户购买的是一套完整可运行的产品，而不是协议图。OpenAI 称 Codex 已有超过 200 万周活开发者，并通过[按用量计费](https://openai.com/index/codex-flexible-pricing-for-teams/)服务团队；Anthropic 为 Claude Code 打包了[统一账单、支出控制、用量分析、tool / MCP 策略和 Compliance API](https://www.anthropic.com/news/claude-code-on-team-and-enterprise)，也[支持通过现有 Bedrock 或 Vertex AI 基础设施做企业部署](https://docs.anthropic.com/en/docs/claude-code/getting-started)。这些数据不证明 LoopX 已经有需求，但证明了企业对 harness 的完整度预期：安装、执行、策略、观测、管理与支持必须组成一个可运维产品。
+成熟 Agent harness 的公开实践说明，客户购买的是一套完整可运行的产品，而不是协议图。OpenAI 称 Codex 已有超过 200 万周活开发者，Business 与 Enterprise Codex 用户增长六倍，并通过[按用量计费](https://openai.com/index/codex-flexible-pricing-for-teams/)服务团队；Anthropic 为 Claude Code 打包了[统一账单、支出控制、用量分析、tool / MCP 策略和 Compliance API](https://www.anthropic.com/news/claude-code-on-team-and-enterprise)，也[支持通过现有 Bedrock 或 Vertex AI 基础设施做企业部署](https://docs.anthropic.com/en/docs/claude-code/getting-started)。这些数据不证明 LoopX 已经有需求，但证明了企业对 harness 的完整度预期：安装、执行、策略、观测、管理与支持必须组成一个可运维产品。
 
 LoopX 的第一个付费产品因此应当是 **LoopX Enterprise Agent Harness**，而不是一组 schema，也不是另一个模型或 IDE。它应当包含：
 
