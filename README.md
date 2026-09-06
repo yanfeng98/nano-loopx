@@ -463,9 +463,11 @@ copyable commands without changing project state.
 
 ### Presets and Auto Research
 
-Safe presets cover daily triage, changelog drafts, and PR watching. The
-one-command research path coordinates proposer, executor, and
-evaluator/promoter roles while keeping quota and evidence visible. See the
+Safe presets cover daily triage, changelog drafts, and PR watching. Advanced
+CI / Dependency Sweeper presets require explicit authorization, an isolated
+worktree, a verifier, quota/cost gates, and human review. The one-command
+research path coordinates proposer, executor, and evaluator/promoter roles
+while keeping quota and evidence visible. See the
 [beginner preset guide](docs/product/foundations/beginner-loop-presets.md) and
 [Auto Research demo path](demo/auto_research/README.md).
 
@@ -706,15 +708,19 @@ official publication sources.
 
 External contributors should start with
 [Contributor Tasks](docs/development/contributor-tasks.md) for public, claimable work and
-[Contributing](CONTRIBUTING.md) for setup, validation, and boundary rules.
-Project roles and public history are recorded in
+[Contributing](CONTRIBUTING.md) for setup, validation, and boundary rules,
+especially the public/private boundary, smoke retention rules, and benchmark
+evidence boundaries. Project roles and public history are recorded in
 [Governance](.github/GOVERNANCE.md),
 [Authors and Contributors](docs/project/authors.md), and
-[Project History](docs/project/history.md).
+[Project History](docs/project/history.md); name and mark usage is documented in
+[Name and Marks](docs/project/trademarks.md).
 
 LoopX keeps local active state separate from the public repository. Do not
-commit `.loopx/`, `.codex/goals/`, live `ACTIVE_GOAL_STATE.md`, raw benchmark
-traces, credentials, private logs, or operator artifacts.
+commit `.loopx/`, `.codex/goals/`, live `ACTIVE_GOAL_STATE.md`, internal links,
+raw benchmark task/log/trajectory/verifier output, credentials, tokens,
+private paths or logs, unredacted user or team information, or operator
+artifacts.
 
 ## Current Status
 
