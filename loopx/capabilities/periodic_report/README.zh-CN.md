@@ -58,7 +58,7 @@ host 调度应匹配该自定义 profile 的 RRULE。暂停 Automation 或把 pr
 
 外部投递与归档是独立 opt-ins。普通会话内 weekly report 无 sink,不执行外部写。
 但对于 machine/Goal `periodic_report` 订阅,`enabled: true` 加显式 `route_ref`
-是在验证过的 stage 边界投递报告的持久 authority。选中的 extension、运行时
+是在验证过的阶段边界投递报告的持久 authority。选中的 extension、运行时
 capability、配置的 route、sender 身份与精确 readback 仍必须各自通过 fail-closed
 gates。
 
@@ -81,8 +81,9 @@ post-writeback producer 不发报告意图。本地生成与失败或部分投�
 成功的 Goal Channel 投递记录前驱发布身份,供下一个报告使用。
 
 启用的自定义 profile 还可以声明带 `window_seconds` 上界与
-`stage_completion_required=true` 的 `trigger_policy.aggregation`。Stage completion
-复用现有 goal-vision、outcome-checkpoint 与 frontier-replan 事实:当前 vision
+`stage_completion_required=true` 的 `trigger_policy.aggregation`。阶段完成
+(Stage completion)复用现有 goal-vision、outcome-checkpoint 与 frontier-replan
+事实:当前 vision
 必须通过 evidence-linked material checkpoint 关闭,且 Goal 必须变为 terminal,或把
 现有 `vision_successor_required` 转换持久地归入 successor vision 与其所拥有的
 frontier。`evaluate-runtime-trigger` 只把该派生的成功路径 receipt 提升为
