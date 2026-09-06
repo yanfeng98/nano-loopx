@@ -181,3 +181,16 @@ commit 不能包含原始素材、私有路径、私有链接、provider payload
 
 Packet schema 和详细不变量见
 [Material Lifecycle 架构协议](../../../docs/reference/protocols/material-lifecycle-architecture-v0.zh-CN.md)。
+
+## 验证
+
+```bash
+python3 examples/material-lifecycle-contract-smoke.py
+python3 examples/decision-material-walkthrough-smoke.py
+python3 -m pytest -q tests/test_decision_context_material.py
+```
+
+contract smoke 覆盖 Material Lifecycle packet 与 architecture 回读；walkthrough smoke
+消费带 revision 的 Decision Context 证据并喂进 rerank preview，保留过期/冲突证据可见，
+省略 source body 与私有 locator，并把 apply/cursor commit 留作独立 owner-gated
+动作。
