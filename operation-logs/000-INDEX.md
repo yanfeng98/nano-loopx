@@ -8,6 +8,7 @@
 | 004 | [004-upstream-merge.md](004-upstream-merge.md) | 上游 7 commits merge(中文融合) |
 | 005 | [005-merge-self-review-fix.md](005-merge-self-review-fix.md) | merge 复查与修复(chat server 时序等) |
 | 006 | [006-upstream-merge-2.md](006-upstream-merge-2.md) | 上游二次 merge(3 commits,SSH remote)+ 遗留 smoke 适配 |
+| 007 | [007-merge2-self-review-fix.md](007-merge2-self-review-fix.md) | 二次 merge 复查与修复(doctor 产品缺陷、42 smoke、demo README) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。
