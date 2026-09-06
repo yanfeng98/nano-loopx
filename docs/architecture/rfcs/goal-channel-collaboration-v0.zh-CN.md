@@ -1,5 +1,8 @@
 # RFC: Goal Channel 协作模型 v0
 
+> 语言说明：本文与
+> [英文版](./goal-channel-collaboration-v0.md)互为语义镜像；两者不一致属于缺陷。
+
 - 状态：Draft
 - 范围：绑定到单个 LoopX goal 的 provider-backed 外部协作通道
 - 决策类型：产品架构与分阶段集成契约
@@ -80,9 +83,14 @@ loopx goal-channel configure --goal-id <goal-id> --auto-notify-human-gates
 loopx goal-channel doctor --goal-id <goal-id>
 loopx goal-channel sync --goal-id <goal-id>
 loopx goal-channel notify-gate --goal-id <goal-id>
+loopx goal-channel runtime setup --goal-id <goal-id> --bot-id <bot-id> --chat-id <chat-id>
 ```
 
-`goal-channel` 同时作为持久控制面对象和用户可见 CLI。
+`goal-channel` 同时作为持久控制面对象和用户可见 CLI。可选的
+[botmux runtime integration](../../integrations/botmux-goal-channel-runtime.md)
+把 IM 投递与持久 agent session 委托给 botmux，而不改变 Goal Channel 或 LoopX
+state authority。投递本身不产生状态迁移；配置的 agent runtime 仍必须显式调用
+LoopX。
 
 ## 所有权模型
 
