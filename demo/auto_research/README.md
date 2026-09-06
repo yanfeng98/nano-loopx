@@ -4,14 +4,14 @@
 
 只有在这条路径清楚之后,才使用更深入的展示与协议文档:
 
-- [Multi-agent 产品配方](../../../docs/guides/multi-agent-product-recipe.md)
-- [停止、接管与状态感知唤醒漫游](../../../docs/guides/auto-research-stop-takeover-wake-walkthrough.md)
-- [分布式 auto-research 展示](../../../docs/product/use-cases/auto-research/decentralized-auto-research-showcase.md)
-- [auto_research_role_state_machine_v0](../../../docs/reference/protocols/auto-research-role-state-machine-v0.md)
-- [auto_research_role_profile_v0](../../../docs/reference/protocols/auto-research-role-profile-v0.md)
+- [Multi-agent 产品配方](../../docs/guides/multi-agent-product-recipe.md)
+- [停止、接管与状态感知唤醒漫游](../../docs/guides/auto-research-stop-takeover-wake-walkthrough.md)
+- [分布式 auto-research 展示](../../docs/product/use-cases/auto-research/decentralized-auto-research-showcase.md)
+- [auto_research_role_state_machine_v0](../../docs/reference/protocols/auto-research-role-state-machine-v0.md)
+- [auto_research_role_profile_v0](../../docs/reference/protocols/auto-research-role-profile-v0.md)
 
 实现边界:auto-research 是通用多 agent 内核之上的一个薄预设。`demo/auto_research/preset.py` 只拥有研究角色、交接提示、指标/证据循环默认值与 seed todo 措辞。通用内核拥有真实的 Codex TUI 面板、面板本地 A2A tick、工作区/信任安全启动、todo/evidence/status 协议与紧凑人工状态。面向开发者的配方证明也遵循该边界:`preset.py` 调用通用的 `multi_agent.recipe` 辅助函数,而不是自己定义分布式 A2A 证明机制。
-新产品想复制该模式而不复制 auto-research 代码时,请使用[multi-agent 产品配方](../../../docs/guides/multi-agent-product-recipe.md)。
+新产品想复制该模式而不复制 auto-research 代码时,请使用[multi-agent 产品配方](../../docs/guides/multi-agent-product-recipe.md)。
 
 ## 晋升决策
 
@@ -286,7 +286,7 @@ dry-run 显示选定通道工作安全时,添加 `--execute` 与 `--complete-sel
 - 在 `auto-research start` 上传入 `--execute --attach`,可在无后台唤醒的情况下立即 tmux 接管;
 - 想要跳过 quiet-completion、empty-frontier 或 quota-blocked 通道的状态感知唤醒时,传入 `--no-attach --wake-visible-after-launch`。
 
-`--attach` 与 `--wake-visible-after-launch` 不能组合。完整的停止 → 接管 → 恢复循环及固定它的合成 smokes,见[停止/接管/唤醒漫游](../../../docs/guides/auto-research-stop-takeover-wake-walkthrough.md)。
+`--attach` 与 `--wake-visible-after-launch` 不能组合。完整的停止 → 接管 → 恢复循环及固定它的合成 smokes,见[停止/接管/唤醒漫游](../../docs/guides/auto-research-stop-takeover-wake-walkthrough.md)。
 
 ## 4. 启动可见演练
 
