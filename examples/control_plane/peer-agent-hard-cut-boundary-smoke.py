@@ -18,7 +18,7 @@ SCAN_ROOTS = (
 )
 SCAN_FILES = (
     REPO_ROOT / "README.md",
-    REPO_ROOT / "README.zh-CN.md",
+    REPO_ROOT / "README.md",
     REPO_ROOT / "docs/development/contributor-tasks.md",
     REPO_ROOT / "apps" / "presentation" / "dashboard" / "README.md",
     REPO_ROOT / "examples" / "status.example.json",

@@ -797,7 +797,7 @@ export function App() {
         <nav className="desktop-nav" aria-label="Primary navigation">
           <a href="#product">{copy.nav[0]}</a>
           <a href="#workflow">{copy.nav[1]}</a>
-          <a href={`${basePath}docs/book/${language === "en" ? "en/" : ""}`}>{copy.nav[2]}</a>
+          <a href={`${basePath}docs/book/`}>{copy.nav[2]}</a>
           <a href="#showcases">{language === "zh" ? "案例" : "Showcases"}</a>
           <a href={`${basePath}docs/`}>Docs</a>
         </nav>
@@ -1013,7 +1013,7 @@ export function App() {
               <h2 id="learn-title">{copy.learn.title}</h2>
               <div className="section-copy-link">
                 <p>{copy.learn.body}</p>
-                <a href={`${basePath}docs/book/${language === "en" ? "en/" : ""}`}>
+                <a href={`${basePath}docs/book/`}>
                   {copy.learn.open} <ArrowRight size={15} />
                 </a>
               </div>
@@ -1029,7 +1029,7 @@ export function App() {
                   <a
                     className="learn-card"
                     key={number}
-                    href={`${basePath}docs/book/${language === "en" ? "en/" : ""}${paths[index]}`}
+                    href={`${basePath}docs/book/${paths[index]}`}
                   >
                     <span>{number}</span>
                     <BookOpen size={20} />

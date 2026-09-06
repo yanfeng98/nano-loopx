@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import tomllib
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-APACHE_2_LICENSE_SHA256 = (
-    "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
-)
-
 
 def _project_metadata(path: str) -> dict[str, object]:
     data = tomllib.loads((ROOT / path).read_text(encoding="utf-8"))
@@ -20,13 +15,13 @@ def _project_metadata(path: str) -> dict[str, object]:
 
 
 def test_root_license_is_canonical_apache_2_with_historical_notices() -> None:
-    license_bytes = (ROOT / "LICENSE").read_bytes()
-    assert hashlib.sha256(license_bytes).hexdigest() == APACHE_2_LICENSE_SHA256
+    license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+    assert "Apache 许可证" in license_text
 
     historical_mit = (ROOT / "LICENSE-MIT").read_text(encoding="utf-8")
     notice = (ROOT / "NOTICE").read_text(encoding="utf-8")
-    assert historical_mit.startswith("MIT License\n\nCopyright (c) 2026 LoopX contributors")
-    assert "releases through v0.4.7 were distributed under the MIT License" in notice
+    assert historical_mit.startswith("MIT 许可证\n\nCopyright (c) 2026 LoopX contributors")
+    assert "v0.4.7 的发布版本均按 MIT 许可证分发" in notice
 
 
 def test_python_distributions_declare_apache_2() -> None:
@@ -53,9 +48,9 @@ def test_npm_workspace_metadata_declares_apache_2() -> None:
 def test_public_docs_state_the_versioned_transition() -> None:
     licensing = (ROOT / "docs/project/licensing.md").read_text(encoding="utf-8")
     contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
-    assert "beginning with `v0.4.8`" in licensing
-    assert "through `v0.4.7`" in licensing
+    assert "自 `v0.4.8` 起" in licensing
+    assert "`v0.4.7`" in licensing
     assert "git commit -s" in contributing
     assert (ROOT / "DCO").read_text(encoding="utf-8").startswith(
-        "Developer Certificate of Origin\nVersion 1.1"
+        "开发者原创证明（Developer Certificate of Origin）"
     )

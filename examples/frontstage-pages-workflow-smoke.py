@@ -105,7 +105,6 @@ def main() -> int:
         "npm run export:frontstage-share -- --base /loopx/ --out-dir ../../../output/frontstage-pages",
         "mkdocs build --strict --site-dir output/frontstage-pages/site/docs",
         "mkdocs build --strict --config-file docs/book/mkdocs.zh.yaml --site-dir ../../output/frontstage-pages/site/docs/book",
-        "mkdocs build --strict --config-file docs/book/mkdocs.en.yaml --site-dir ../../output/frontstage-pages/site/docs/book/en",
         "actions/configure-pages@v6",
         "enablement: true",
         "actions/upload-pages-artifact@v5",
@@ -134,7 +133,6 @@ def main() -> int:
 
     for path in [
         "docs/book/mkdocs.zh.yaml",
-        "docs/book/mkdocs.en.yaml",
         "examples/dev-book-publication-smoke.py",
         "examples/dev-book-welcome-wagon-smoke.py",
     ]:

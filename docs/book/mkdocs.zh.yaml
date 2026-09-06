@@ -54,9 +54,6 @@ extra:
     - name: 简体中文
       link: /loopx/docs/book/
       lang: zh
-    - name: English
-      link: /loopx/docs/book/en/
-      lang: en
 
 nav:
   - 首页: index.md

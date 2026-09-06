@@ -12,9 +12,7 @@ from urllib.parse import urlparse
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BOOK = REPO_ROOT / "docs" / "book"
 ZH_PAGE = BOOK / "welcome-wagon.md"
-EN_PAGE = BOOK / "en" / "welcome-wagon.md"
 ZH_CONFIG = BOOK / "mkdocs.zh.yaml"
-EN_CONFIG = BOOK / "mkdocs.en.yaml"
 
 SECTION_IDS = (
     "choose-finish-line",
@@ -103,26 +101,18 @@ def rendered_route_for_absolute_link(site_root: Path, target: str) -> Path | Non
 
 def validate_source() -> None:
     welcome_zh = read(ZH_PAGE)
-    welcome_en = read(EN_PAGE)
 
     assert explicit_section_ids(welcome_zh) == list(SECTION_IDS)
-    assert explicit_section_ids(welcome_en) == list(SECTION_IDS)
     assert semantic_checkpoints(welcome_zh) == list(SEMANTIC_CHECKPOINTS)
-    assert semantic_checkpoints(welcome_en) == list(SEMANTIC_CHECKPOINTS)
-    assert markdown_link_targets(welcome_zh) == markdown_link_targets(welcome_en)
 
     for command in SHARED_COMMANDS:
         assert command in welcome_zh, f"welcome-wagon.md: missing command {command}"
-        assert command in welcome_en, f"en/welcome-wagon.md: missing command {command}"
 
     for marker in SHARED_BOUNDARY_MARKERS:
         assert marker in welcome_zh, f"welcome-wagon.md: missing semantic marker {marker}"
-        assert marker in welcome_en, f"en/welcome-wagon.md: missing semantic marker {marker}"
 
     zh_config = read(ZH_CONFIG)
-    en_config = read(EN_CONFIG)
     assert "Welcome Wagon: welcome-wagon.md" in zh_config
-    assert "Welcome Wagon: welcome-wagon.md" in en_config
 
 
 def validate_rendered_site(book_site_dir: Path) -> None:
@@ -133,13 +123,6 @@ def validate_rendered_site(book_site_dir: Path) -> None:
             "反馈一次",
             "贡献一次",
             "评审一次",
-        ),
-        book_site_dir / "en" / "welcome-wagon" / "index.html": (
-            "Welcome Wagon: From Reader to Participant in 30 Minutes",
-            "Run it once",
-            "Share feedback",
-            "Make a contribution",
-            "Review something",
         ),
     }
     for path, markers in rendered_pages.items():
@@ -153,7 +136,7 @@ def validate_rendered_site(book_site_dir: Path) -> None:
             )
 
     docs_site_dir = book_site_dir.parent
-    for source in (ZH_PAGE, EN_PAGE):
+    for source in (ZH_PAGE,):
         for link in markdown_link_targets(read(source)):
             rendered_target = rendered_route_for_absolute_link(docs_site_dir, link)
             if rendered_target is not None:

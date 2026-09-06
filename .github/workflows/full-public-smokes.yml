@@ -17,7 +17,6 @@ on:
     paths:
       - ".github/workflows/full-public-smokes.yml"
       - "README.md"
-      - "README.zh-CN.md"
       - "docs/**"
       - "examples/**"
       - "loopx/**"

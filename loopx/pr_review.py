@@ -438,7 +438,6 @@ def _file_area(path: str) -> str:
         return "agent_instruction_surface"
     if path in {
         "README.md",
-        "README.zh-CN.md",
         "AGENTS.md",
         "CONTRIBUTING.md",
         "CHANGELOG.md",

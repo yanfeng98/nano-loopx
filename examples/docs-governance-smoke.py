@@ -86,11 +86,9 @@ DOCS_CATALOG_NAV_ALLOWLIST = {
     "architecture/README.md": "architecture tree index; RFCs linked from Reference nav",
     "archive/README.md": "excluded from hosted site via exclude_docs",
     "community/open-strategy-reviews.md": "community process; catalog-only entry",
-    "community/open-strategy-reviews.zh-CN.md": "zh locale sibling for community reviews",
     "development/contributor-tasks.md": "contributor board; not a hosted docs primary page",
     "project/authors.md": "project meta linked from README community section",
     "project/brand-guide.md": "project meta linked from README community section",
-    "project/brand-guide.zh-CN.md": "zh locale sibling for brand guide",
     "project/history.md": "project meta linked from README community section",
     "project/licensing.md": "project meta linked from README community section",
     "project/trademarks.md": "project meta linked from README community section",
@@ -275,13 +273,9 @@ def assert_hosted_docs_nav_parity() -> None:
             allowlist=DOCS_CATALOG_NAV_ALLOWLIST,
         )
 
-    book_zh = read("docs/book/index.md")
-    book_en = read("docs/book/en/index.md")
-    assert "[English edition](/loopx/docs/book/en/)" in book_zh, (
-        "docs/book/index.md must cross-link the English edition"
-    )
-    assert "[简体中文版](/loopx/docs/book/)" in book_en, (
-        "docs/book/en/index.md must cross-link the Chinese edition"
+    book_index = read("docs/book/index.md")
+    assert "/loopx/docs/book/en/" not in book_index, (
+        "docs/book/index.md must not cross-link the deleted English edition"
     )
 
 
@@ -330,7 +324,7 @@ def assert_effect_interpreter_docs_are_canonical() -> None:
         "EffectObservation",
         "EffectNext",
         "EffectTurn",
-        "Around Semantics",
+        "Around 语义",
         "execution_mode",
         "interpret_turn_result_packet",
     ):
@@ -338,16 +332,16 @@ def assert_effect_interpreter_docs_are_canonical() -> None:
 
     rfc = compact(read("docs/architecture/rfcs/agent-loop-effect-interpreter-v0.md"))
     for required in (
-        "Composition And Around Semantics",
-        "Handler Is Data, Not a Callable",
-        "General Effect-Program Abstraction",
-        "M6: General Effect-Program Abstraction",
-        "Milestone Status",
+        "组合与 Around 语义",
+        "Handler 是数据，不是 Callable",
+        "通用 Effect-Program 抽象",
+        "M6 通用 effect-program 抽象",
+        "里程碑状态",
     ):
         assert required in rfc, required
 
     architecture = compact(read("docs/architecture.md"))
-    assert "Control Plane As Effect Interpreter" in architecture
+    assert "控制面即 Effect Interpreter" in architecture
 
     lecture = compact(
         read("docs/development/control-plane-course/01-agent-loop-effectful-program.md")
@@ -362,12 +356,12 @@ def assert_effect_interpreter_docs_are_canonical() -> None:
 def assert_contributor_task_board_is_current() -> None:
     tasks = compact(read("docs/development/contributor-tasks.md"))
     for required in (
-        "The four canonical global manager CLI commands are shipped",
-        "`/loop-goal-summary` remains host-only and outside this contributor slice",
-        "A shared typed Effect Program drives quota, Turn, task-lease, and todo-completion settlement",
-        "The scheduler remains outside settlement",
-        "M7 parity fixtures plus a read-only journal inspection/`interpret_turn_journal` lens shipped",
-        "do not extract a shared executor until two adapters share execution ownership",
+        "四个 canonical 全局 manager CLI 命令已交付",
+        "`/loop-goal-summary` 仍是 host-only，不属于这个贡献者切片",
+        "共用的 typed Effect Program 驱动 quota、Turn、task-lease 与 todo-completion settlement",
+        "Scheduler 仍在 settlement 之外",
+        "M7 parity fixture 外加只读 journal 检查/`interpret_turn_journal` lens 已交付",
+        "在两个 adapter 共享执行属主之前不要抽取共用 executor",
     ):
         assert required in tasks, required
     for stale in (
@@ -404,9 +398,7 @@ def assert_contributor_task_links_are_current() -> None:
         ".github/ISSUE_TEMPLATE/config.yml",
         ".github/SUPPORT.md",
         "docs/book/chapters/source-protocol-map.md",
-        "docs/book/en/chapters/source-protocol-map.md",
         "docs/book/chapters/source-validation-to-pr.md",
-        "docs/book/en/chapters/source-validation-to-pr.md",
     ):
         assert "docs/development/contributor-tasks.md" in read(path), path
 
@@ -425,28 +417,11 @@ def assert_contributor_task_links_are_current() -> None:
 
 def assert_technical_direction_governance_is_current() -> None:
     direction = read("docs/project/technical-directions.md")
-    direction_zh = read("docs/project/technical-directions.zh-CN.md")
     rfc_index = read("docs/architecture/rfcs/README.md")
     tasks = read("docs/development/contributor-tasks.md")
     issue_template = read(".github/ISSUE_TEMPLATE/contributor-task.yml")
     pr_template = read(".github/PULL_REQUEST_TEMPLATE.md")
     governance = read(".github/GOVERNANCE.md")
-
-    for required in (
-        "Long-Horizon Benchmarks and Evidence",
-        "Operator Surface and IM Integration",
-        "Shared Goal Authority and Cross-host Coordination",
-        "Architecture and Research Incubator",
-        "Stable Foundation: Control-Plane Reliability",
-        "frontend-control-plane-im-prototype-rfc",
-        "@maxliux5",
-        "NoKV is an unpromoted optional provider candidate",
-        "#3243",
-        "#3244",
-        "#3245",
-        "#3246",
-    ):
-        assert required in direction, required
 
     for required in (
         "长程 Benchmark 与证据",
@@ -462,28 +437,28 @@ def assert_technical_direction_governance_is_current() -> None:
         "#3245",
         "#3246",
     ):
-        assert required in direction_zh, required
+        assert required in direction, required
 
     for required in (
-        "## Control-Plane Kernel, State, And Migration",
-        "## Planning, Research, And Adaptive Intelligence",
-        "## Runtime, Capability, And Collaboration Integration",
-        "## Operator Experience And Observability",
-        "## Benchmark And Reliability Engineering",
-        "Current Technical Directions",
+        "## 控制面内核、状态与迁移",
+        "## 规划、研究与自适应智能",
+        "## Runtime、能力与协同集成",
+        "## 操作者体验与可观测性",
+        "## Benchmark 与可靠性工程",
+        "当前技术方向",
     ):
         assert required in rfc_index, required
     assert "## Status matrix" not in rfc_index
 
     for required in (
-        "Long-Horizon Benchmarks and Evidence",
-        "Operator Surface and IM Integration",
-        "Shared Goal Authority and Cross-host Coordination",
-        "Architecture and Research Incubator",
+        "长程 Benchmark 与证据",
+        "Operator Surface 与 IM 集成",
+        "共享 Goal 权威与跨 Host 协调",
+        "架构与研究孵化器",
     ):
         assert required in tasks, required
 
-    for content in (issue_template, pr_template):
+    for content in (issue_template,):
         for required in (
             "Long-horizon benchmark evidence",
             "Operator surface and IM integration",
@@ -493,17 +468,24 @@ def assert_technical_direction_governance_is_current() -> None:
             assert required in content, required
 
     for required in (
-        "## Technical Direction Governance",
+        "长程 benchmark 证据",
+        "操作员界面与 IM 集成",
+        "Shared Goal Authority 与跨宿主协调",
+        "架构与研究孵化器",
+    ):
+        assert required in pr_template, required
+
+    for required in (
+        "## 技术方向治理",
         "direction/*",
-        "does not override merged runtime and stable reference contracts",
     ):
         assert required in governance, required
+    assert "不覆盖已合并的运行时与稳定参考契约" in "".join(governance.split())
 
 
 def main() -> int:
     docs_index = read("docs/README.md")
     root_readme = read("README.md")
-    root_readme_zh = read("README.zh-CN.md")
     governance = read(".github/GOVERNANCE.md")
     support = read(".github/SUPPORT.md")
     auto_research_command_path = read("demo/auto_research/README.md")
@@ -524,25 +506,25 @@ def main() -> int:
     ):
         assert not (REPO_ROOT / retired_root_policy).exists(), retired_root_policy
     for governance_contract in (
-        "## Subsystem Maintainers",
-        "### Lark Integration",
-        "### Shared Host Integration Seams",
-        "### Changing A Subsystem Appointment",
+        "## 子系统维护者",
+        "### Lark 集成",
+        "### 共享宿主集成衔接点",
+        "### 变更子系统任命",
     ):
         assert governance_contract in governance, governance_contract
     for support_contract in (
-        "## Choose A Channel",
-        "## Official Publication Sources",
-        "## Account Authenticity",
-        "## Make A Useful Request",
+        "## 选择渠道",
+        "## 官方发布来源",
+        "## 账号真实性",
+        "## 提出有用的请求",
     ):
         assert support_contract in support, support_contract
 
     for required in [
-        "## Choose Your Path",
-        "## Core References",
-        "## Browse By Subject",
-        "## Documentation Policy",
+        "## 选择你的路径",
+        "## 核心参考",
+        "## 按主题浏览",
+        "## 文档策略",
         "architecture/README.md",
         "concepts/README.md",
         "operations/README.md",
@@ -557,34 +539,34 @@ def main() -> int:
         assert required in docs_index, required
 
     navigation_contracts = {
-        "Use and Operate": [
+        "使用与运维": [
             "docs/operations/README.md",
             "docs/quota-allocation.md",
             "docs/heartbeat-automation-prompt.md",
             "docs/status-data-contract.md",
         ],
-        "Understand the Control Plane": [
+        "理解控制面": [
             "docs/concepts/README.md",
             "docs/product/foundations/README.md",
             "docs/product/vision.md",
         ],
-        "Integrate and Extend": [
+        "集成与扩展": [
             "docs/integration.md",
             "docs/integrations/README.md",
         ],
-        "Build and Review LoopX": [
+        "构建与评审 LoopX": [
             "docs/development/README.md",
             "docs/reference/README.md",
             "docs/development/control-plane-course/README.md",
             "docs/development/testing-and-quality.md",
             "docs/public-private-boundary.md",
         ],
-        "Inspect Outcomes": [
+        "查看结果与证据": [
             "docs/showcases/README.md",
             "docs/research/README.md",
             "docs/update-notes/README.md",
         ],
-        "Project and Community": [
+        "项目与社区": [
             "docs/project/technical-directions.md",
             ".github/GOVERNANCE.md",
             "CONTRIBUTING.md",
@@ -596,45 +578,21 @@ def main() -> int:
             "ADOPTERS.md",
         ],
     }
-    navigation_contracts_zh = {
-        "使用与运维": navigation_contracts["Use and Operate"],
-        "理解控制面": navigation_contracts["Understand the Control Plane"],
-        "集成与扩展": navigation_contracts["Integrate and Extend"],
-        "构建与评审 LoopX": navigation_contracts["Build and Review LoopX"],
-        "查看结果与证据": navigation_contracts["Inspect Outcomes"],
-        "项目与社区": [
-            "docs/project/technical-directions.zh-CN.md",
-            *navigation_contracts["Project and Community"][1:7],
-            "docs/project/brand-guide.zh-CN.md",
-            "ADOPTERS.md",
-        ],
-    }
-    for readme, contracts in (
-        (root_readme, navigation_contracts),
-        (root_readme_zh, navigation_contracts_zh),
-    ):
-        for heading, required_links in contracts.items():
-            section = subsection(readme, heading)
-            for required in required_links:
-                assert required in section, f"{heading}: {required}"
+    for heading, required_links in navigation_contracts.items():
+        section = subsection(root_readme, heading)
+        for required in required_links:
+            assert required in section, f"{heading}: {required}"
 
     assert "### Validate and Govern" not in root_readme
-    assert "### 验证与治理" not in root_readme_zh
-    advanced_docs = root_readme.split("## Advanced Documentation", 1)[1].split(
-        "\n## ", 1
-    )[0]
-    advanced_docs_zh = root_readme_zh.split("## 进阶文档", 1)[1].split(
-        "\n## ", 1
-    )[0]
+    assert "### 验证与治理" not in root_readme
+    advanced_docs = root_readme.split("## 进阶文档", 1)[1].split("\n## ", 1)[0]
     for deep_link in [
         "benchmark/README.md",
         "deprecate/benchmark-legacy/README.md",
         "docs/product/foundations/project-level-reward-model.md",
         "loopx/capabilities/reward_memory/README.md",
-        "loopx/capabilities/reward_memory/README.zh-CN.md",
     ]:
         assert deep_link not in advanced_docs
-        assert deep_link not in advanced_docs_zh
 
     for path in [
         "docs/archive/README.md",
@@ -669,9 +627,7 @@ def main() -> int:
         "docs/showcases/README.md",
         "docs/product/runtimes/codex-cli/codex-cli-tui-loop.md",
         "docs/project/technical-directions.md",
-        "docs/project/technical-directions.zh-CN.md",
         "docs/project/brand-guide.md",
-        "docs/project/brand-guide.zh-CN.md",
     ]:
         assert (REPO_ROOT / path).is_file(), path
 
@@ -682,15 +638,15 @@ def main() -> int:
     for required in [
         "testing-and-quality.md",
         "Model behavior qualification v0",
-        "Benchmark research",
+        "Benchmark 研究",
     ]:
         assert required in developer_index, required
     for required in [
-        "Quality Layers",
-        "Agent-Facing Output Budgets",
-        "Decision Replay And Issue #2191",
-        "Doubao Model-Behavior Gate",
-        "Benchmark Research Evidence",
+        "质量分层",
+        "Agent 输出预算",
+        "Issue #2191",
+        "Doubao 模型行为门",
+        "Benchmark 研究证据",
     ]:
         assert required in quality_guide, required
 
@@ -726,9 +682,9 @@ def main() -> int:
     ]:
         assert forbidden not in collaboration_rfc, forbidden
     for required in [
-        "The direct runtime-to-LoopX path is primary",
-        "OpenViking receives scoped resources",
-        "Public References",
+        "直达 LoopX 的 runtime 路径是主路径",
+        "OpenViking 接收 scoped 资源",
+        "公开参考",
     ]:
         assert required in collaboration_rfc, required
 
@@ -764,26 +720,26 @@ def main() -> int:
         ), new_path
 
     for required in [
-        "Do not append a follow-up goal-level `surface_only` sync",
+        "不要在已验证的 `outcome_progress` 切片后再追加一个目标级 `surface_only` 同步",
         "--delivery-outcome outcome_progress",
     ]:
         assert required in compact_project_agent_contract, required
 
     for required in [
-        "The best first-run experience is one TUI setup message",
-        "Session-Attached Automation",
-        "Headless Disabled Boundary",
+        "最佳首次运行体验是一条 TUI 设置消息",
+        "Session-Attached 自动化",
+        "Headless 禁止边界",
     ]:
         assert required in compact_codex_cli_tui_loop, required
 
     for required in [
-        "A later `surface_only` project-level sync will become the latest non-agent-lane run",
+        "后来的 `surface_only` 项目级同步会成为最新非 Agent lane run",
         "agent_lane_recommendation",
     ]:
         assert required in compact_status_contract, required
 
     for required in [
-        "Start From A Clean Workspace",
+        "从干净工作区开始",
         "loopx-auto-research-demo",
         "auto-research demo-e2e",
         "auto-research demo-supervisor",
@@ -794,23 +750,23 @@ def main() -> int:
         "evaluator-promoter",
         "tmux attach -t loopx-auto-research",
         "tmux kill-session -t loopx-auto-research",
-        "not a leader agent",
+        "不是 leader agent",
     ]:
         assert required in compact_auto_research_command_path, required
 
     multi_agent_product_recipe = read("docs/guides/multi-agent-product-recipe.md")
     compact_multi_agent_product_recipe = compact(multi_agent_product_recipe)
     for required in [
-        "Multi-Agent Product Recipe",
-        "Product preset",
-        "Multi-agent kernel",
-        "role list",
-        "agent scope",
-        "worker-local skill snippet",
-        "handoff/todo hints",
-        "One-Command Launch",
-        "Attach, Stop, Retry",
-        "Auto-research should stay a reference preset, not the kernel",
+        "多 Agent 产品配方",
+        "产品预设",
+        "多 Agent 内核",
+        "角色列表",
+        "agent 范围",
+        "worker skill 片段",
+        "交接/todo 提示",
+        "单命令启动",
+        "附加、停止、重试",
+        "Auto-research 应保持为参考预设，而不是内核",
     ]:
         assert required in compact_multi_agent_product_recipe, required
 

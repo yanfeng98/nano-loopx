@@ -99,7 +99,7 @@ README 最终应使用三层形态:
 2. 快速开始:创建或检查真实 LoopX state 的真实 LoopX 命令。
 3. 深层部分:与 agent 无关的控制面、团队 agent 车道、轻量 state 内核、调度器/配额、evidence gate 与 L2 选择加入预设。
 
-这让前门保持简单,而不把 LoopX 矮化为模板集合。README 与 README.zh-CN 首屏编辑应先预览供 owner 评审再提交,因为它们改变主要公开呈现。
+这让前门保持简单,而不把 LoopX 矮化为模板集合。README 首屏编辑应先预览供 owner 评审再提交,因为它们改变主要公开呈现。
 
 ## 非目标
 

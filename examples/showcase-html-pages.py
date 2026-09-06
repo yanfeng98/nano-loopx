@@ -803,13 +803,11 @@ def case_html_path(case: dict[str, Any], lang: str) -> Path:
         base = repo_path(case_page[:-3] + ".html")
     else:
         base = CASES_DIR / f"{slug(case.get('id') or case.get('title'))}.html"
-    if lang == "en":
-        return base.with_name(f"{base.stem}.en{base.suffix}")
     return base
 
 
-def index_path(lang: str) -> Path:
-    return SHOWCASE_DIR / ("index.en.html" if lang == "en" else "index.html")
+def index_path() -> Path:
+    return SHOWCASE_DIR / "index.html"
 
 
 def is_hardware_canonical(case: dict[str, Any], lang: str) -> bool:
@@ -977,12 +975,11 @@ def html_head(title: str, *, current: Path | None = None, shared_asset: bool = F
 </head>"""
 
 
-def nav(current: Path, lang: str, alternate: Path) -> str:
+def nav(current: Path, lang: str) -> str:
     return f"""
     <nav class="nav" aria-label="Showcase navigation">
-      <a href="{esc(rel_href(current, index_path(lang)))}">{esc(ui(lang, "home"))}</a>
+      <a href="{esc(rel_href(current, index_path()))}">{esc(ui(lang, "home"))}</a>
       <a href="{esc(rel_href(current, CATALOG))}">{esc(ui(lang, "catalog"))}</a>
-      <a href="{esc(rel_href(current, alternate))}">{esc(ui(lang, "alternate"))}</a>
     </nav>
 """
 
@@ -1076,7 +1073,6 @@ def metrics(case: dict[str, Any], lang: str) -> str:
 
 def render_case_page(case: dict[str, Any], lang: str, primary: bool) -> str:
     output = case_html_path(case, lang)
-    alternate = case_html_path(case, "en" if lang == "zh" else "zh")
     title = localized(case, lang, "title")
     headline = localized(case, lang, "headline")
     table = table_for(case, lang)
@@ -1116,7 +1112,7 @@ def render_case_page(case: dict[str, Any], lang: str, primary: bool) -> str:
 <div class="gh">
   <div class="grain"></div>
   <article>
-    {nav(output, lang, alternate)}
+    {nav(output, lang)}
     <div class="mlab">{esc(case.get("date") or "")} · {esc(case.get("domain") or "")}</div>
     <h1>{esc(title)}</h1>
     <div class="accent">{esc(headline)}</div>
@@ -1203,8 +1199,7 @@ def experimental_lane(lang: str) -> str:
 
 def render_index(cases: list[dict[str, Any]], lang: str) -> str:
     primary, appendix = ordered_cases(cases)
-    current = index_path(lang)
-    alternate = index_path("en" if lang == "zh" else "zh")
+    current = index_path()
     primary_cards = "\n".join(index_card(case, current, lang) for case in primary)
     appendix_cards = "\n".join(index_card(case, current, lang) for case in appendix)
     return f"""<!doctype html>
@@ -1214,7 +1209,7 @@ def render_index(cases: list[dict[str, Any]], lang: str) -> str:
 <div class="gh">
   <div class="grain"></div>
   <article>
-    {nav(current, lang, alternate)}
+    {nav(current, lang)}
     <div class="mlab">LoopX · public-safe case surface</div>
     <h1>{esc(ui(lang, "index_title"))}</h1>
     <div class="accent">{esc(ui(lang, "index_subtitle"))}</div>
@@ -1255,11 +1250,9 @@ def update_catalog(catalog: dict[str, Any]) -> dict[str, Any]:
     reordered.extend(by_id.values())
     for rank, case in enumerate(reordered, start=1):
         zh_path = case_html_path(case, "zh").relative_to(REPO_ROOT).as_posix()
-        en_path = case_html_path(case, "en").relative_to(REPO_ROOT).as_posix()
         case["interactive_page"] = zh_path
         case["interactive_page_zh"] = zh_path
-        case["interactive_page_en"] = en_path
-        case["localized_pages"] = {"zh": zh_path, "en": en_path}
+        case["localized_pages"] = {"zh": zh_path}
         case_id = str(case.get("id"))
         if case_id in PRIMARY_CASE_ORDER:
             case["showcase_rank"] = rank
@@ -1303,19 +1296,17 @@ def generate(write_files: bool) -> list[Path]:
         write(SHARED_STYLESHEET, css(shared_asset=True))
     outputs.append(SHARED_STYLESHEET)
     for case in primary + appendix:
-        for lang in ("zh", "en"):
-            output = case_html_path(case, lang)
-            outputs.append(output)
-            if is_hardware_canonical(case, lang):
-                assert_hardware_canonical()
-                continue
-            if write_files:
-                write(output, render_case_page(case, lang, primary=case in primary))
-    for lang in ("zh", "en"):
-        output = index_path(lang)
+        output = case_html_path(case, "zh")
         outputs.append(output)
+        if is_hardware_canonical(case, "zh"):
+            assert_hardware_canonical()
+            continue
         if write_files:
-            write(output, render_index(cases, lang))
+            write(output, render_case_page(case, "zh", primary=case in primary))
+    output = index_path()
+    outputs.append(output)
+    if write_files:
+        write(output, render_index(cases, "zh"))
     return outputs
 
 
@@ -1330,19 +1321,17 @@ def check() -> None:
     cases = catalog["cases"]
     primary, appendix = ordered_cases(cases)
     for case in primary + appendix:
-        for lang in ("zh", "en"):
-            output = case_html_path(case, lang)
-            if is_hardware_canonical(case, lang):
-                assert_hardware_canonical()
-                continue
-            expected = clean(render_case_page(case, lang, primary=case in primary))
-            if output.read_text(encoding="utf-8") != expected:
-                raise AssertionError(f"{output.relative_to(REPO_ROOT)} is not generated from the catalog")
-    for lang in ("zh", "en"):
-        output = index_path(lang)
-        expected = clean(render_index(cases, lang))
+        output = case_html_path(case, "zh")
+        if is_hardware_canonical(case, "zh"):
+            assert_hardware_canonical()
+            continue
+        expected = clean(render_case_page(case, "zh", primary=case in primary))
         if output.read_text(encoding="utf-8") != expected:
             raise AssertionError(f"{output.relative_to(REPO_ROOT)} is not generated from the catalog")
+    output = index_path()
+    expected = clean(render_index(cases, "zh"))
+    if output.read_text(encoding="utf-8") != expected:
+        raise AssertionError(f"{output.relative_to(REPO_ROOT)} is not generated from the catalog")
 
 
 def main() -> int:

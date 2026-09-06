@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test the bilingual public issue-fix capability entry surface."""
+"""Smoke-test the public issue-fix capability entry surface."""
 
 from __future__ import annotations
 
@@ -8,11 +8,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ENGLISH_GUIDE = ROOT / "loopx/capabilities/issue_fix/README.md"
-CHINESE_GUIDE = ROOT / "loopx/capabilities/issue_fix/README.zh-CN.md"
+GUIDE = ROOT / "loopx/capabilities/issue_fix/README.md"
 CAPABILITY_INDEX = ROOT / "loopx/capabilities/README.md"
-ENGLISH_README = ROOT / "README.md"
-CHINESE_README = ROOT / "README.zh-CN.md"
+README = ROOT / "README.md"
 REVIEWER_PROTOCOL = (
     ROOT
     / "loopx/capabilities/issue_fix/docs/protocols/issue-fix-reviewer-recommendation-v0.md"
@@ -46,25 +44,22 @@ def assert_markers(text: str, markers: tuple[str, ...]) -> None:
 
 
 def main() -> int:
-    english = ENGLISH_GUIDE.read_text(encoding="utf-8")
-    chinese = CHINESE_GUIDE.read_text(encoding="utf-8")
+    guide = GUIDE.read_text(encoding="utf-8")
     capability_index = CAPABILITY_INDEX.read_text(encoding="utf-8")
-    english_readme = ENGLISH_README.read_text(encoding="utf-8")
-    chinese_readme = CHINESE_README.read_text(encoding="utf-8")
+    readme = README.read_text(encoding="utf-8")
     reviewer_protocol = REVIEWER_PROTOCOL.read_text(encoding="utf-8")
     reviewer_request_protocol = REVIEWER_REQUEST_PROTOCOL.read_text(encoding="utf-8")
     reviewer_notification_sink_protocol = REVIEWER_NOTIFICATION_SINK_PROTOCOL.read_text(
         encoding="utf-8"
     )
 
-    assert english.startswith("# Issue-Fix Capability")
-    assert chinese.startswith("# Issue-Fix 能力")
-    assert "[中文](README.zh-CN.md)" in english
-    assert "[English](README.md)" in chinese
+    assert guide.startswith("# Issue-Fix 能力")
+    assert "README.zh-CN.md" not in guide
+    assert "[English](README.md)" not in guide
     assert "[issue-fix](issue_fix/README.md)" in capability_index
-    assert "[中文](issue_fix/README.zh-CN.md)" in capability_index
-    assert "loopx/capabilities/issue_fix/README.md" in english_readme
-    assert "loopx/capabilities/issue_fix/README.zh-CN.md" in chinese_readme
+    assert "issue_fix/README.zh-CN.md" not in capability_index
+    assert "loopx/capabilities/issue_fix/README.md" in readme
+    assert "loopx/capabilities/issue_fix/README.zh-CN.md" not in readme
 
     shared_markers = (
         "issue_fix_repository_context_input_v0",
@@ -107,39 +102,9 @@ def main() -> int:
         "https://github.com/huangruiteng/loopx/pull/1995",
         "https://github.com/huangruiteng/loopx/pull/2000",
     )
-    assert_markers(english, shared_markers)
-    assert_markers(chinese, shared_markers)
+    assert_markers(guide, shared_markers)
     assert_markers(
-        english,
-        (
-            "## Product Position",
-            "## What LoopX Provides Underneath",
-            "Durable goal state",
-            "Kanban/status projection",
-            "Quota and scheduler policy",
-            "Authority and interaction gates",
-            "## End-To-End Design",
-            "## Implemented Surfaces",
-            "## Reviewer Routing Contract",
-            "## Human Interaction Model",
-            "## Roadmap",
-            "## Success Metrics",
-            "## Conversational `/loopx` Entry",
-            "concrete blocker",
-            "structured no-follow-up",
-            "permission-only comment fallback",
-            "avoid duplicates",
-            "project-dedicated",
-            "## Public OpenViking Usage And Evidence",
-            "Event-backed wait and resume",
-            "Merge-triggered resume",
-            "Three OpenViking knowledge lanes",
-            "Workspace-scoped user memory",
-            "Generic inbound feedback",
-        ),
-    )
-    assert_markers(
-        chinese,
+        guide,
         (
             "## 产品定位",
             "## LoopX 底座提供什么",
@@ -171,10 +136,10 @@ def main() -> int:
     assert_markers(
         reviewer_protocol,
         (
-            "repository's first supported `CODEOWNERS`",
-            "changed path",
-            "nearest module directory",
-            "recommendation is not assignment",
+            "仓库第一个受支持 `CODEOWNERS`",
+            "变更路径",
+            "最近 module 目录",
+            "推荐不是指派",
             "automatic_review_request_allowed: true",
             "request_top_requestable_when_authorized",
             "review_request_performed: false",
@@ -186,10 +151,10 @@ def main() -> int:
         reviewer_request_protocol,
         (
             "request_top_requestable_when_authorized",
-            "exclude the PR author",
+            "排除 PR author",
             "external_review_request",
-            "post-write verification",
-            "permission-only comment fallback",
+            "写后验证",
+            "仅权限 fallback 评论",
             "issue_fix_reviewer_comment_fallback_verified",
             "python3 examples/issue-fix-reviewer-request-smoke.py",
         ),
@@ -201,10 +166,10 @@ def main() -> int:
         reviewer_notification_sink_protocol,
         (
             "reader/user binding",
-            "sender/bot binding",
+            "Sender/bot binding",
             "config_pointer_registered",
-            "auto-materializes",
-            "local capability packet",
+            "自动物化",
+            "刻意是本地 capability",
             "lark_bot_group_access_required",
             "private_destination_captured",
             "python3 examples/issue-fix-reviewer-notification-sink-smoke.py",
@@ -212,11 +177,9 @@ def main() -> int:
     )
 
     for text in (
-        english,
-        chinese,
+        guide,
         capability_index,
-        english_readme,
-        chinese_readme,
+        readme,
         reviewer_protocol,
         reviewer_request_protocol,
         reviewer_notification_sink_protocol,

@@ -52,43 +52,35 @@ MATERIAL_LIFECYCLE_CATALOG_ENTRY: dict[str, Any] = {
         {
             "schema_version": "material_store_inventory_v0",
             "module": "loopx.capabilities.material_lifecycle.inventory",
-            "doc": "docs/reference/protocols/material-lifecycle-architecture-v0.md",
         },
         {
             "schema_version": "material_migration_plan_v0",
             "module": "loopx.capabilities.material_lifecycle.inventory",
-            "doc": "docs/reference/protocols/material-lifecycle-architecture-v0.md",
         },
         {
             "schema_version": "material_lifecycle_receipt_v0",
             "module": "loopx.capabilities.material_lifecycle.lifecycle",
-            "doc": "docs/reference/protocols/material-lifecycle-architecture-v0.md",
         },
         {
             "schema_version": "material_rerank_proposal_v0",
             "module": "loopx.capabilities.material_lifecycle.ranking",
-            "doc": "docs/reference/protocols/material-lifecycle-architecture-v0.md",
         },
         {
             "schema_version": "material_rerank_apply_receipt_v0",
             "module": "loopx.capabilities.material_lifecycle.ranking",
-            "doc": "docs/reference/protocols/material-lifecycle-architecture-v0.md",
         },
         {
             "schema_version": "material_ranked_entry_rebuild_plan_v0",
             "module": "loopx.capabilities.material_lifecycle.rebuild",
-            "doc": "docs/reference/protocols/material-lifecycle-architecture-v0.md",
         },
         {
             "schema_version": "material_ranked_entry_rebuild_apply_receipt_v0",
             "module": "loopx.capabilities.material_lifecycle.rebuild",
-            "doc": "docs/reference/protocols/material-lifecycle-architecture-v0.md",
         },
     ],
     "smokes": ["python3 examples/material-lifecycle-contract-smoke.py"],
     "docs": [
         "docs/reference/protocols/material-lifecycle-architecture-v0.md",
-        "docs/reference/protocols/material-lifecycle-architecture-v0.zh-CN.md",
     ],
     "boundaries": [
         "The capability is default-off and cannot create action authority or mutate Core state.",

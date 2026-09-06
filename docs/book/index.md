@@ -5,7 +5,7 @@
 面向外部开发者的双语 Dev Book：先理解 LoopX 的状态、权限与 Turn，再选择接入现有项目或参与
 开发者贡献。
 
-[English edition](/loopx/docs/book/)
+[中文版](/loopx/docs/book/)
 
 <div class="grid cards" markdown>
 

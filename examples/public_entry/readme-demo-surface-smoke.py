@@ -19,69 +19,45 @@ def compact(text: str) -> str:
 
 def main() -> int:
     readme = read("README.md")
-    readme_zh = read("README.zh-CN.md")
     demo = read("docs/product/use-cases/cross-runtime/cross-runtime-impl-review-demo.md")
     product_index = read("docs/product/README.md")
     cross_runtime_index = read("docs/product/use-cases/cross-runtime/README.md")
     getting_started = read("docs/guides/getting-started.md")
     compact_readme = compact(readme)
-    compact_readme_zh = "".join(readme_zh.split())
+    compact_no_space_readme = "".join(readme.split())
     compact_demo = compact(demo)
     auto_research = readme.split("### Auto Research", 1)[1].split(
-        "### Used In Real Projects", 1
-    )[0]
-    auto_research_zh = readme_zh.split("### Auto Research", 1)[1].split(
         "### 真实项目中的使用", 1
     )[0]
 
     for required in [
         '<div align="center">',
         "docs/assets/loopx-social-preview.png",
-        "LoopX loop engineering social preview banner",
-        "Loop engineering for long-horizon AI agents and peer agent teams.",
-        "The open, provider-neutral, stateful control plane for long-horizon agents.",
-        "Objectives, gates, todos, evidence, quota, and handoffs stay stable",
-        "## Why LoopX",
-        "objective / issue / project",
-        "LoopX state: objective + gates + todos + scope + evidence + quota",
-        "## Try LoopX",
-        "### Start From Your Agent",
+        "LoopX Loop Engineering 展示图",
+        "面向长程 Agent 的开放、有状态、Provider-neutral 控制面。",
+        "目标、gate、todo、证据、quota 和交接跨轮次保持稳定",
+        "## 为什么需要 LoopX",
+        "目标 / issue / project",
+        "LoopX state：objective + gate + todo + scope + evidence + quota",
+        "## 试用 LoopX",
+        "### 从你已经在用的 Agent 启动",
         "Codex App",
         "Codex CLI",
         "Claude Code",
-        "Cursor, shell, or custom runner",
-        "Claude implements and Codex reviews",
-        "docs/product/use-cases/cross-runtime/cross-runtime-impl-review-demo.md",
-        "## Advanced Paths",
-        "200+ hours of elapsed loop lifetime",
-        "200+ hour public contribution arc",
-        "Redacted owner-run showcase",
-        "not 200 hours of continuous model execution",
-        "docs/assets/long-running-loop-openviking-trajectory.png",
-        "docs/assets/long-running-loop-ml-experiment-trajectory.png",
-        "### Presets and Auto Research",
-        "### Review Agent Work",
-        "### App and Projection Paths",
-        '<a id="how-it-works"></a>',
-        '<a id="quick-start"></a>',
-        '<a id="see-it-in-action"></a>',
-        '<a id="capability-surface"></a>',
-        '<a id="community--feedback"></a>',
-        "The v0.4.x line is a usable local control plane",
-        "docs/assets/loopx-lark-developer-group.png",
-        "docs/assets/loopx-wechat-contact.png",
-        "WeChat: <code>huangrt00</code>",
-        "loopx configure-goal --goal-id <goal-id>",
-        "loopx preset show daily-triage",
-    ]:
-        assert required in readme, required
-
-    for required in [
+        "Cursor、shell、自有 runner",
         '<a id="快速开始"></a>',
         '<a id="看几个例子"></a>',
+        "docs/product/use-cases/cross-runtime/cross-runtime-impl-review-demo.md",
+        "## 进阶路径",
         "200+ 小时自然时长",
         "超过 200 小时的公开贡献轨迹",
         "经过脱敏的 owner-run showcase",
+        "不等于 200 小时连续模型执行",
+        "docs/assets/long-running-loop-openviking-trajectory.png",
+        "docs/assets/long-running-loop-ml-experiment-trajectory.png",
+        "### Preset 与 Auto Research",
+        "### 审阅 Agent 工作",
+        "### App 与 Projection",
         "`0.4.x` 已经是一套可用的长程 Agent 本地控制面",
         "docs/assets/loopx-lark-developer-group.png",
         "docs/assets/loopx-wechat-contact.png",
@@ -89,59 +65,47 @@ def main() -> int:
         "loopx configure-goal --goal-id <goal-id>",
         "loopx preset show daily-triage",
     ]:
-        assert required in readme_zh, required
+        assert required in readme, required
 
-    first_screen = readme.split("## Why LoopX", 1)[0]
+    first_screen = readme.split("## 为什么需要 LoopX", 1)[0]
     assert "docs/assets/loopx-logo.png" not in first_screen
 
-    for required in [
-        "company or employer endorsement",
-        "independent reproduction",
-    ]:
-        assert required in compact_readme, required
     for required in [
         "不等于 200 小时连续模型执行",
         "公司或雇主背书",
         "第三方独立复现",
     ]:
-        assert required.replace(" ", "") in compact_readme_zh, required
-
-    for required in [
-        "Reproducible public KNN demo",
-        "deterministic CPU evaluator",
-        "docs/product/use-cases/auto-research/decentralized-auto-research-showcase.md",
-    ]:
-        assert required in auto_research, required
-    assert "redacted" not in auto_research.lower()
+        assert required.replace(" ", "") in compact_no_space_readme, required
 
     for required in [
         "可复现的公开 KNN demo",
         "deterministic CPU evaluator",
         "docs/product/use-cases/auto-research/decentralized-auto-research-showcase.md",
     ]:
-        assert required in auto_research_zh, required
-    assert "脱敏" not in auto_research_zh
+        assert required in auto_research, required
+    assert "redacted" not in auto_research.lower()
+    assert "脱敏" not in auto_research
 
     for required in [
-        "`$loopx <complex task>`",
+        "`$loopx <复杂任务>`",
         "`loopx todo claim`",
         "`loopx review-packet`",
     ]:
         assert required in compact_readme, required
 
     for required in [
-        "# Cross-Runtime Implement/Review Demo",
-        "Claude Code owns an implementation todo",
-        "Codex owns a review todo",
-        "LoopX owns todo claims, gates, evidence, quota, and the next handoff",
+        "# 跨 Runtime 实现/评审演示",
+        "Claude Code 拥有一个实现 todo",
+        "Codex 拥有一个评审 todo",
+        "LoopX 拥有 todo claims、gates、evidence、quota 与下一个 handoff",
         "loopx todo add --goal-id <goal> --role agent",
         "loopx demo impl-review --preset claude-codex --dry-run",
         "loopx --format json quota should-run --goal-id <goal> --agent-id claude-code-impl",
         "loopx review-packet --goal-id <goal>",
         "cross_runtime_impl_review_demo_packet_v0",
-        "Review Verdict Contract",
-        "Forbidden evidence",
-        "raw Claude or Codex transcripts",
+        "评审判定契约",
+        "禁止的 evidence",
+        "原始 Claude 或 Codex transcripts",
     ]:
         assert required in demo, required
 
@@ -151,13 +115,13 @@ def main() -> int:
         "suggestions",
         "verifier",
         "handoff",
-        "docs plus fixture validation",
+        "文档加夹具验证",
     ]:
         assert required in compact_demo, required
 
     assert "use-cases/README.md" in product_index
     assert "cross-runtime-impl-review-demo.md" in cross_runtime_index
-    assert "### Recover History Index Collisions" in getting_started
+    assert "### 恢复历史索引碰撞" in getting_started
     assert "history rebuild-index-collisions" in getting_started
     assert "--review-plan-json reviewed-plan.json" in getting_started
 

@@ -205,7 +205,6 @@ DECISION_CONTEXT_CATALOG_ENTRY: dict[str, Any] = {
     "smokes": ["python3 examples/decision-context-contract-smoke.py"],
     "docs": [
         "docs/reference/protocols/decision-context-architecture-v0.md",
-        "docs/reference/protocols/decision-context-architecture-v0.zh-CN.md",
     ],
     "boundaries": [
         "The capability is default-off and cannot create action authority or mutate Core state.",

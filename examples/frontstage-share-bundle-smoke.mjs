@@ -299,10 +299,7 @@ if (!interactivePages.includes("docs/showcases/cases/0619-dynamic-workflow-hardw
 }
 for (const pagePath of [
   "docs/showcases/index.html",
-  "docs/showcases/index.en.html",
   "docs/showcases/cases/0624-pr-issue-auto-fix.html",
-  "docs/showcases/cases/0624-pr-issue-auto-fix.en.html",
-  "docs/showcases/cases/0619-dynamic-workflow-hardware-agent.en.html",
 ]) {
   if (!interactivePages.includes(pagePath)) {
     throw new Error(`share bundle did not include expected showcase page ${pagePath}: ${JSON.stringify(interactivePages)}`);

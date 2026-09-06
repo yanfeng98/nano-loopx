@@ -1,4 +1,4 @@
-# Codex 多 App 隔离与运维最佳实践（zh-CN）
+# Codex 多 App 隔离与运维最佳实践
 
 ## 定位
 

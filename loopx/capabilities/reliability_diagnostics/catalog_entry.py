@@ -83,7 +83,6 @@ RELIABILITY_DIAGNOSTICS_CATALOG_ENTRY: dict[str, Any] = {
         "python3 examples/reliability_diagnostics/dsh-shadow-observer-fixture-smoke.py",
         "python3 -m pytest tests/capabilities/test_reliability_diagnostics.py -q",
     ],
-    "docs": [_README, "loopx/capabilities/reliability_diagnostics/README.zh-CN.md"],
     "boundaries": [
         "L1 only: the observer consumes read-only harness events and owns no send, schedule, retry, stop, resume, gate, tool, or worker-state path.",
         "Envelopes are a strict allowlist; control-shaped and raw-material-shaped fields are rejected and counted, never persisted.",

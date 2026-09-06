@@ -135,7 +135,7 @@ def main() -> int:
             assert appendix.get("public_surface") == "appendix_only", case
         localized_pages = case.get("localized_pages")
         assert isinstance(localized_pages, dict), case
-        for lang in ("zh", "en"):
+        for lang in ("zh",):
             localized_page = localized_pages.get(lang)
             assert isinstance(localized_page, str), case
             assert localized_page.startswith("docs/showcases/"), case

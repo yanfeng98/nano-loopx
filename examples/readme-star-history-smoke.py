@@ -99,8 +99,7 @@ def main() -> int:
         assert "snapshot is incomplete: expected 2, got 1" in mismatch.stderr
 
     readme_sections = {
-        ROOT / "README.md": ("## Current Status", "## Star History", "## License"),
-        ROOT / "README.zh-CN.md": ("## 当前状态", "## Star 趋势", "## License"),
+        ROOT / "README.md": ("## 当前状态", "## Star 趋势", "## License"),
     }
     for readme, sections in readme_sections.items():
         text = readme.read_text(encoding="utf-8")

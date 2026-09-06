@@ -17,10 +17,6 @@ REWARD_MEMORY_CATALOG_ENTRY: dict[str, Any] = {
                 "source": "README.md",
                 "site": "reference/protocols/reward-memory-architecture-v0.md",
             },
-            {
-                "source": "README.zh-CN.md",
-                "site": "reference/protocols/reward-memory-architecture-v0.zh-CN.md",
-            },
         ],
     },
     "title": "Reward-memory candidate, recall, application, and utility-attribution foundation",

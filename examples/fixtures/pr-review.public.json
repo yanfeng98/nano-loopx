@@ -51,7 +51,7 @@
       "deletions": 42,
       "files": [
         {"path": "README.md", "additions": 20, "deletions": 5},
-        {"path": "README.zh-CN.md", "additions": 20, "deletions": 5},
+        {"path": "docs/README.md", "additions": 20, "deletions": 5},
         {"path": "docs/showcases/index.html", "additions": 150, "deletions": 20},
         {"path": "docs/showcases/showcase-catalog.json", "additions": 190, "deletions": 5},
         {"path": "apps/presentation/dashboard/src/views/frontstage-page.tsx", "additions": 80, "deletions": 4}

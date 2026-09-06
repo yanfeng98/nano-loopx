@@ -168,18 +168,11 @@ def test_configure_goal_cli_exposes_default_off_shadow_boundary(
 
 
 def test_rfc_disambiguates_historical_and_current_stage_numbering() -> None:
-    english = (
+    doc = (
         REPO_ROOT
         / "docs/architecture/rfcs/shared-goal-authority-state-provider-v0.md"
     ).read_text(encoding="utf-8")
-    chinese = (
-        REPO_ROOT
-        / "docs/architecture/rfcs/shared-goal-authority-state-provider-v0.zh-CN.md"
-    ).read_text(encoding="utf-8")
 
-    assert "historical #3669 implementation sequence" in english
-    assert "part of the Stage 0 reference foundation" in english
-    assert "not the Stage 3 remote-shadow phase in Section 11" in english
-    assert "#3669 历史实施序列" in chinese
-    assert "属于 Stage 0 reference foundation" in chinese
-    assert "不是第 11 节的 Stage 3 远端 shadow 阶段" in chinese
+    assert "#3669 历史实施序列" in doc
+    assert "属于 Stage 0 reference foundation" in doc
+    assert "不是第 11 节的 Stage 3 远端 shadow 阶段" in doc

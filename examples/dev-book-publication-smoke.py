@@ -14,7 +14,6 @@ BOOK = REPO_ROOT / "docs" / "book"
 CONTROL_PLANE_COURSE = REPO_ROOT / "docs" / "development" / "control-plane-course"
 MKDOCS = REPO_ROOT / "mkdocs.yaml"
 MKDOCS_ZH = BOOK / "mkdocs.zh.yaml"
-MKDOCS_EN = BOOK / "mkdocs.en.yaml"
 BRAND_STYLES = REPO_ROOT / "docs" / "stylesheets" / "loopx.css"
 HOMEPAGE = REPO_ROOT / "apps" / "presentation" / "site" / "src" / "App.tsx"
 
@@ -85,23 +84,18 @@ def marked_section(markdown: str, section_id: str) -> str:
     return markdown.split(start, 1)[1].split(end, 1)[0]
 
 
-def assert_bilingual_concepts(
+def assert_zh_concepts(
     zh_path: str,
-    en_path: str,
-    concepts: tuple[tuple[str, str], ...],
+    markers: tuple[str, ...],
 ) -> None:
     zh_text = compact(read(BOOK / zh_path))
-    en_text = compact(read(BOOK / en_path))
-    for zh_marker, en_marker in concepts:
-        assert zh_marker in zh_text, f"{zh_path}: missing bilingual marker {zh_marker}"
-        assert en_marker in en_text, f"{en_path}: missing bilingual marker {en_marker}"
+    for marker in markers:
+        assert marker in zh_text, f"{zh_path}: missing semantic marker {marker}"
 
 
-def assert_community_casebook_is_bilingual() -> None:
+def assert_community_casebook() -> None:
     protocol_map_zh = read(BOOK / "chapters" / "source-protocol-map.md")
-    protocol_map_en = read(BOOK / "en" / "chapters" / "source-protocol-map.md")
     validation_zh = read(BOOK / "chapters" / "source-validation-to-pr.md")
-    validation_en = read(BOOK / "en" / "chapters" / "source-validation-to-pr.md")
 
     expected_protocol_checkpoints = [
         "signal-to-bounded-work:start",
@@ -128,14 +122,11 @@ def assert_community_casebook_is_bilingual() -> None:
         "review-repair:end",
     ]
     assert semantic_checkpoints(protocol_map_zh) == expected_protocol_checkpoints
-    assert semantic_checkpoints(protocol_map_en) == expected_protocol_checkpoints
     assert semantic_checkpoints(validation_zh) == expected_validation_checkpoints
-    assert semantic_checkpoints(validation_en) == expected_validation_checkpoints
 
-    for zh_text, en_text, section_id, required_targets in (
+    for zh_text, section_id, required_targets in (
         (
             protocol_map_zh,
-            protocol_map_en,
             "signal-to-bounded-work",
             (
                 "https://github.com/huangruiteng/loopx/discussions/3069",
@@ -146,7 +137,6 @@ def assert_community_casebook_is_bilingual() -> None:
         ),
         (
             protocol_map_zh,
-            protocol_map_en,
             "rfc-review-lab",
             (
                 "https://github.com/huangruiteng/loopx/blob/main/docs/architecture/rfcs/README.md",
@@ -156,28 +146,23 @@ def assert_community_casebook_is_bilingual() -> None:
         ),
         (
             validation_zh,
-            validation_en,
             "small-pr",
             ("https://github.com/huangruiteng/loopx/pull/3540",),
         ),
         (
             validation_zh,
-            validation_en,
             "review-repair",
             ("https://github.com/huangruiteng/loopx/pull/3529",),
         ),
     ):
         zh_targets = markdown_link_targets(marked_section(zh_text, section_id))
-        en_targets = markdown_link_targets(marked_section(en_text, section_id))
-        assert zh_targets == en_targets, section_id
         for target in required_targets:
             assert zh_targets.count(target) == 1, target
-            assert en_targets.count(target) == 1, target
 
 
 def validate_rendered_site(site_dir: Path) -> None:
     routes = {
-        "index.html": ("LoopX Developer Book", "English edition", "MkDocs Material"),
+        "index.html": ("LoopX Developer Book", "MkDocs Material"),
         "chapters/00-reading-guide/index.html": (
             "Dev Book 与 Control-Plane Course 如何配合",
             "/loopx/docs/development/control-plane-course/06-quota-decision-kernel/",
@@ -188,20 +173,6 @@ def validate_rendered_site(site_dir: Path) -> None:
         "chapters/05-connect-existing-project/index.html": (
             "快速阅读路线",
             "让 Agent 帮你接入",
-        ),
-    }
-    english_routes = {
-        "index.html": ("LoopX Developer Book", "简体中文版", "MkDocs Material"),
-        "chapters/00-reading-guide/index.html": (
-            "How the Dev Book and Control-Plane Course work together",
-            "/loopx/docs/development/control-plane-course/06-quota-decision-kernel/",
-        ),
-        "chapters/01-from-session-to-loop/index.html": (
-            "From one session to long-running work",
-        ),
-        "chapters/05-connect-existing-project/index.html": (
-            "Fast reading path",
-            "Delegate onboarding to an Agent",
         ),
     }
     for relative_path, markers in routes.items():
@@ -224,32 +195,6 @@ def validate_rendered_site(site_dir: Path) -> None:
             )
         assert "English Chapters" not in html
         assert "Part I — Control-plane foundations" not in html
-
-    english_site_dir = site_dir / "en"
-    for relative_path, markers in english_routes.items():
-        target = english_site_dir / relative_path
-        assert target.is_file(), f"missing rendered English Developer Book route: {relative_path}"
-        html = read(target)
-        for marker in markers:
-            assert marker in html, f"en/{relative_path}: missing rendered marker {marker}"
-        assert 'data-md-color-scheme="slate"' in html, f"en/{relative_path}: not dark by default"
-        if relative_path == "index.html":
-            chapter_links = set(re.findall(r'href="[^"]*chapters/[^"#?]+/?(?:index\.html)?"', html))
-            assert len(chapter_links) == len(CHAPTERS), (
-                f"en/{relative_path}: expected {len(CHAPTERS)} English chapter links, "
-                f"found {len(chapter_links)}"
-            )
-        else:
-            assert html.count("md-nav__item--active md-nav__item--section") == 1, (
-                f"en/{relative_path}: expected exactly one expanded English Part"
-            )
-        for chinese_section in (
-            "第一部分：控制面基础",
-            "第二部分：接入现有项目",
-            "第三部分：开发者贡献",
-            "第四部分：工程边界",
-        ):
-            assert chinese_section not in html
 
     main_docs_dir = site_dir.parent
     for page in COURSE_PAGES:
@@ -274,27 +219,20 @@ def main() -> int:
     docs_readme = read(REPO_ROOT / "docs" / "README.md")
     assert "Developer Book](/loopx/docs/book/)" in docs_home
     assert "Developer Book](/loopx/docs/book/)" in docs_readme
-    assert "English edition](/loopx/docs/book/en/)" in docs_readme
+    assert "/loopx/docs/book/en/" not in docs_readme
 
     zh_config = read(MKDOCS_ZH)
-    en_config = read(MKDOCS_EN)
-    for config in (zh_config, en_config):
-        assert "INHERIT: ../../mkdocs.yaml" in config
-        assert config.index("scheme: slate") < config.index("scheme: default")
-        assert "navigation.sections" in config
-        assert "navigation.expand" not in config
+    assert "INHERIT: ../../mkdocs.yaml" in zh_config
+    assert zh_config.index("scheme: slate") < zh_config.index("scheme: default")
+    assert "navigation.sections" in zh_config
+    assert "navigation.expand" not in zh_config
     assert "docs_dir: ." in zh_config
     assert "site_dir: ../../output/docs-book-zh" in zh_config
     assert "language: zh" in zh_config
     assert "en/**" in zh_config
-    assert "docs_dir: en" in en_config
-    assert "site_dir: ../../output/docs-book-en" in en_config
-    assert "language: en" in en_config
-    assert "中文:" not in en_config
 
     for chapter in CHAPTERS:
         assert f"chapters/{chapter}.md" in zh_config, chapter
-        assert f"chapters/{chapter}.md" in en_config, f"en/{chapter}"
 
     styles = read(BRAND_STYLES)
     for marker in (
@@ -318,16 +256,14 @@ def main() -> int:
         "chapters/source-protocol-map/",
     ):
         assert path in homepage
-    assert 'language === "en" ? "en/" : ""' in homepage
 
-    for locale_root in (BOOK / "index.md", BOOK / "en" / "index.md"):
-        text = read(locale_root)
-        assert "layout: home" not in text
-        assert "theme: brand" not in text
-        assert "VitePress" not in text
-        assert "MkDocs Material" in text
-    assert "/loopx/docs/book/en/" in read(BOOK / "index.md")
-    assert "/loopx/docs/book/" in read(BOOK / "en" / "index.md")
+    book_index = read(BOOK / "index.md")
+    assert "layout: home" not in book_index
+    assert "theme: brand" not in book_index
+    assert "VitePress" not in book_index
+    assert "MkDocs Material" in book_index
+    assert "/loopx/docs/book/" in book_index
+    assert "/loopx/docs/book/en/" not in book_index
 
     project_version = tomllib.loads(read(REPO_ROOT / "pyproject.toml"))["project"]["version"]
     release_tag = f"v{project_version}"
@@ -340,14 +276,6 @@ def main() -> int:
             f"release `{release_tag}`",
             "transaction-payoff phase",
         ),
-        "en/index.md": (
-            f"LoopX release anchor: `{release_tag}`",
-            "TypeScript Control-Plane Migration RFC",
-        ),
-        "en/chapters/00-reading-guide.md": (
-            f"release `{release_tag}`",
-            "transaction-payoff phase",
-        ),
     }
     for relative_path, markers in release_markers.items():
         text = read(BOOK / relative_path)
@@ -357,123 +285,113 @@ def main() -> int:
     for page in COURSE_PAGES:
         assert (CONTROL_PLANE_COURSE / f"{page}.md").is_file(), page
 
-    assert_community_casebook_is_bilingual()
+    assert_community_casebook()
 
     reading_guides = (
         read(BOOK / "chapters" / "00-reading-guide.md"),
-        read(BOOK / "en" / "chapters" / "00-reading-guide.md"),
     )
     for guide in reading_guides:
         assert "/loopx/docs/development/control-plane-course/" in guide
         for page in COURSE_PAGES:
             assert f"/loopx/docs/development/control-plane-course/{page}/" in guide, page
 
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "index.md",
-        "en/index.md",
         (
-            (f"LoopX 发布锚点：`{release_tag}`", f"LoopX release anchor: `{release_tag}`"),
-            ("运行时前提：Python 3.11+ 与 Node.js 22.6+", "Runtime prerequisites: Python 3.11+ and Node.js 22.6+"),
-            ("TypeScript owner", "TypeScript owners"),
-            ("这不是两套可独立演进的 控制面", "These are not two independently evolving control planes"),
+            f"LoopX 发布锚点：`{release_tag}`",
+            "运行时前提：Python 3.11+ 与 Node.js 22.6+",
+            "TypeScript owner",
+            "这不是两套可独立演进的 控制面",
         ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/00-reading-guide.md",
-        "en/chapters/00-reading-guide.md",
         (
-            ("语义镜像", "semantic mirrors"),
-            ("Python 3.11+", "Python 3.11+"),
-            ("Node.js 22.6+", "Node.js 22.6+"),
-            ("用户不需要手工维护 daemon", "users do not operate that runtime as a manual daemon"),
-            ("TypeScript 已拥有", "TypeScript owns"),
-            ("Python CLI 仍负责", "Python CLI still owns"),
-            ("不能再实现第二套独立 decision", "must not become a second independent decision implementation"),
-            ("transaction-payoff phase", "transaction-payoff phase"),
-            ("Stage 3 的第一个 receipt-bound scheduler follow-up 切片", "first receipt-bound scheduler follow-up slice of Stage 3"),
-            ("Stage 4 distribution cleanup 仍是后续方向", "Stage 4 distribution cleanup remain future work"),
-            ("安装 Provider 不会改变默认本地 authority", "installing a Provider does not change the default local authority"),
+            "语义镜像",
+            "Python 3.11+",
+            "Node.js 22.6+",
+            "用户不需要手工维护 daemon",
+            "TypeScript 已拥有",
+            "Python CLI 仍负责",
+            "不能再实现第二套独立 decision",
+            "transaction-payoff phase",
+            "Stage 3 的第一个 receipt-bound scheduler follow-up 切片",
+            "Stage 4 distribution cleanup 仍是后续方向",
+            "安装 Provider 不会改变默认本地 authority",
         ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/02-session-goal-loopx.md",
-        "en/chapters/02-session-goal-loopx.md",
-        tuple((marker, marker) for marker in (
+        (
             "OpenCode 1/2",
             "Pi",
             "KunlunCode Goal Pro",
             "DeepSeek Harness",
             "Runtime Connector Catalog",
-        )),
+        ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/03-one-turn.md",
-        "en/chapters/03-one-turn.md",
         (
-            (f"`{release_tag}` 仍提供", f"`{release_tag}` still ships"),
-            ("显式 opt-in 集成", "explicit opt-in integrations"),
-            ("Turn settlement", "Turn settlement"),
-            ("Todo completion", "Todo completion"),
-            ("Host Todo settlement", "Host Todo settlement"),
-            ("spend/void/monitor-poll commit", "spend/void/monitor-poll commit"),
-            ("本地 task-lease 完整生命周期", "full local task-lease lifecycle"),
-            ("Vision refresh", "Vision refresh"),
-            ("receipt-bound scheduler follow-up", "receipt-bound scheduler follow-up"),
-            ("Python 已被移除", "Python has been removed"),
-            ("TypeScript Control-Plane Migration RFC", "TypeScript Control-Plane Migration RFC"),
+            f"`{release_tag}` 仍提供",
+            "显式 opt-in 集成",
+            "Turn settlement",
+            "Todo completion",
+            "Host Todo settlement",
+            "spend/void/monitor-poll commit",
+            "本地 task-lease 完整生命周期",
+            "Vision refresh",
+            "receipt-bound scheduler follow-up",
+            "Python 已被移除",
+            "TypeScript Control-Plane Migration RFC",
         ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/state-substrate.md",
-        "en/chapters/state-substrate.md",
         (
-            (f"`{release_tag}` 的 shared-authority 工作", f"Shared-authority work in `{release_tag}`"),
-            ("provider-neutral TypeScript `AuthorityStore` contract", "provider-neutral TypeScript `AuthorityStore` contract"),
-            ("不自动获得 runtime authority", "do not acquire runtime authority automatically"),
-            ("不应倒推成", "are not evidence that"),
+            f"`{release_tag}` 的 shared-authority 工作",
+            "provider-neutral TypeScript `AuthorityStore` contract",
+            "不自动获得 runtime authority",
+            "不应倒推成",
         ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/05-connect-existing-project.md",
-        "en/chapters/05-connect-existing-project.md",
         (
-            ("Node.js 22.6", "Node.js 22.6"),
-            ("Windows PowerShell 7", "Windows PowerShell 7"),
-            ("loopx doctor --deep", "loopx doctor --deep"),
-            ("用户不需要手工维护 daemon", "users do not supervise a daemon manually"),
-            ("`missing`、`unsupported` 或 `probe_failed`", "`missing`, `unsupported`, or `probe_failed`"),
+            "Node.js 22.6",
+            "Windows PowerShell 7",
+            "loopx doctor --deep",
+            "用户不需要手工维护 daemon",
+            "`missing`、`unsupported` 或 `probe_failed`",
         ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/source-protocol-map.md",
-        "en/chapters/source-protocol-map.md",
         (
-            (f"在 `{release_tag}` 的迁移基线上", f"On the `{release_tag}` migration baseline"),
-            ("bounded context 和实现语言是两个维度", "bounded context and implementation language are separate dimensions"),
-            ("本地 task-lease lifecycle", "local task-lease lifecycle"),
-            ("receipt-bound scheduler follow-up", "receipt-bound scheduler follow-up"),
-            ("Python facade", "Python facade"),
-            ("loopx capability list --format json", "loopx capability list --format json"),
-            ("仅有 目录或 README 不证明能力已经发布", "A directory or README alone does not prove that a capability is shipped"),
+            f"在 `{release_tag}` 的迁移基线上",
+            "bounded context 和实现语言是两个维度",
+            "本地 task-lease lifecycle",
+            "receipt-bound scheduler follow-up",
+            "Python facade",
+            "loopx capability list --format json",
+            "仅有 目录或 README 不证明能力已经发布",
         ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/11-engineering-boundaries.md",
-        "en/chapters/11-engineering-boundaries.md",
         (
-            ("loopx doctor --deep", "loopx doctor --deep"),
-            ("loopx capability list --format json", "loopx capability list --format json"),
-            ("TypeScript migration RFC", "TypeScript migration RFC"),
-            ("facade exit condition", "facade exit conditions"),
+            "loopx doctor --deep",
+            "loopx capability list --format json",
+            "TypeScript migration RFC",
+            "facade exit condition",
         ),
     )
-    assert_bilingual_concepts(
+    assert_zh_concepts(
         "chapters/appendix-reference.md",
-        "en/chapters/appendix-reference.md",
         (
-            ("loopx todo list --goal-id <goal-id> --thin --format json", "loopx todo list --goal-id <goal-id> --thin --format json"),
-            (f"`{release_tag}` 新增的 `todo list --thin`", f"The `todo list --thin` option added in `{release_tag}`"),
-            ("不改变默认 list 的选择、排序、quota 或 lifecycle 语义", "without changing default selection, ordering, quota, or lifecycle semantics"),
+            "loopx todo list --goal-id <goal-id> --thin --format json",
+            f"`{release_tag}` 新增的 `todo list --thin`",
+            "不改变默认 list 的选择、排序、quota 或 lifecycle 语义",
         ),
     )
 
@@ -494,24 +412,6 @@ def main() -> int:
             "Material Evidence Delta",
             "Goal / Acceptance",
             "六条收敛不变量",
-            "/loopx/docs/development/control-plane-course/topic-long-horizon-convergence/",
-        ),
-        "en/chapters/01-from-session-to-loop.md": (
-            "PR Issue Fix",
-            "Single-Agent Auto ML",
-            "Multi-Agent Auto Research",
-            "/loopx/docs/development/control-plane-course/02-goal-control-plane-architecture/",
-        ),
-        "en/chapters/03-one-turn.md": (
-            "Decision pipeline",
-            "Identity",
-            "capability and workspace eligibility",
-            "/loopx/docs/development/control-plane-course/06-quota-decision-kernel/",
-        ),
-        "en/chapters/04-runtime-boundaries.md": (
-            "Material evidence delta",
-            "Goal or Acceptance",
-            "Six convergence invariants",
             "/loopx/docs/development/control-plane-course/topic-long-horizon-convergence/",
         ),
     }

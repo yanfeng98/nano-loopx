@@ -130,7 +130,7 @@ function validateShowcaseHtmlPath(path) {
 async function copyInteractiveCasePages(siteDir) {
   const catalog = JSON.parse(await readFile(resolve(repoRoot, showcaseCatalogPath), "utf8"));
   const interactivePages = new Set();
-  for (const pagePath of ["docs/showcases/index.html", "docs/showcases/index.en.html"]) {
+  for (const pagePath of ["docs/showcases/index.html"]) {
     interactivePages.add(validateShowcaseHtmlPath(pagePath));
   }
   for (const item of catalog.cases ?? []) {

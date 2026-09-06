@@ -176,10 +176,8 @@
       },
       "interactive_page": "docs/showcases/cases/independent-cpp-accuracy-long-run.html",
       "interactive_page_zh": "docs/showcases/cases/independent-cpp-accuracy-long-run.html",
-      "interactive_page_en": "docs/showcases/cases/independent-cpp-accuracy-long-run.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/independent-cpp-accuracy-long-run.html",
-        "en": "docs/showcases/cases/independent-cpp-accuracy-long-run.en.html"
+        "zh": "docs/showcases/cases/independent-cpp-accuracy-long-run.html"
       },
       "showcase_rank": 1
     },
@@ -286,10 +284,8 @@
       },
       "interactive_page": "docs/showcases/cases/independent-four-day-unattended-agent.html",
       "interactive_page_zh": "docs/showcases/cases/independent-four-day-unattended-agent.html",
-      "interactive_page_en": "docs/showcases/cases/independent-four-day-unattended-agent.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/independent-four-day-unattended-agent.html",
-        "en": "docs/showcases/cases/independent-four-day-unattended-agent.en.html"
+        "zh": "docs/showcases/cases/independent-four-day-unattended-agent.html"
       },
       "showcase_rank": 2
     },
@@ -435,10 +431,8 @@
       },
       "interactive_page": "docs/showcases/cases/independent-public-engine-refactor.html",
       "interactive_page_zh": "docs/showcases/cases/independent-public-engine-refactor.html",
-      "interactive_page_en": "docs/showcases/cases/independent-public-engine-refactor.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/independent-public-engine-refactor.html",
-        "en": "docs/showcases/cases/independent-public-engine-refactor.en.html"
+        "zh": "docs/showcases/cases/independent-public-engine-refactor.html"
       },
       "showcase_rank": 3
     },
@@ -493,10 +487,8 @@
       "evidence_boundary": "Public Git evidence only; no private documents, internal screenshots, raw chats, local active-state bodies, raw logs, credentials, or machine-specific paths.",
       "interactive_page": "docs/showcases/cases/0627-overnight-pr-batch.html",
       "interactive_page_zh": "docs/showcases/cases/0627-overnight-pr-batch.html",
-      "interactive_page_en": "docs/showcases/cases/0627-overnight-pr-batch.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0627-overnight-pr-batch.html",
-        "en": "docs/showcases/cases/0627-overnight-pr-batch.en.html"
+        "zh": "docs/showcases/cases/0627-overnight-pr-batch.html"
       },
       "showcase_rank": 4,
       "showcase_table": {
@@ -583,10 +575,8 @@
       "evidence_boundary": "Public-safe pattern case only; no private screenshots, raw gated issue bodies, internal review notes, local paths, raw logs, credentials, or unpublished repository artifacts.",
       "interactive_page": "docs/showcases/cases/0624-pr-issue-auto-fix.html",
       "interactive_page_zh": "docs/showcases/cases/0624-pr-issue-auto-fix.html",
-      "interactive_page_en": "docs/showcases/cases/0624-pr-issue-auto-fix.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0624-pr-issue-auto-fix.html",
-        "en": "docs/showcases/cases/0624-pr-issue-auto-fix.en.html"
+        "zh": "docs/showcases/cases/0624-pr-issue-auto-fix.html"
       },
       "showcase_rank": 5,
       "showcase_table": {
@@ -673,10 +663,8 @@
       "evidence_boundary": "Public-safe pattern case only; no private screenshots, raw chats, internal review notes, local state, credentials, or unpublished artifacts.",
       "interactive_page": "docs/showcases/cases/0623-agent-to-agent-pr-comments.html",
       "interactive_page_zh": "docs/showcases/cases/0623-agent-to-agent-pr-comments.html",
-      "interactive_page_en": "docs/showcases/cases/0623-agent-to-agent-pr-comments.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0623-agent-to-agent-pr-comments.html",
-        "en": "docs/showcases/cases/0623-agent-to-agent-pr-comments.en.html"
+        "zh": "docs/showcases/cases/0623-agent-to-agent-pr-comments.html"
       },
       "showcase_rank": 6,
       "showcase_table": {
@@ -763,10 +751,8 @@
       "evidence_boundary": "Public-safe pattern case only; no private screenshots, raw chats, internal planning notes, local paths, credentials, raw logs, or unpublished project artifacts.",
       "interactive_page": "docs/showcases/cases/0623-overnight-project-refactor.html",
       "interactive_page_zh": "docs/showcases/cases/0623-overnight-project-refactor.html",
-      "interactive_page_en": "docs/showcases/cases/0623-overnight-project-refactor.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0623-overnight-project-refactor.html",
-        "en": "docs/showcases/cases/0623-overnight-project-refactor.en.html"
+        "zh": "docs/showcases/cases/0623-overnight-project-refactor.html"
       },
       "showcase_rank": 7,
       "showcase_table": {
@@ -868,10 +854,8 @@
         ]
       },
       "interactive_page_zh": "docs/showcases/cases/0619-dynamic-workflow-hardware-agent.html",
-      "interactive_page_en": "docs/showcases/cases/0619-dynamic-workflow-hardware-agent.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0619-dynamic-workflow-hardware-agent.html",
-        "en": "docs/showcases/cases/0619-dynamic-workflow-hardware-agent.en.html"
+        "zh": "docs/showcases/cases/0619-dynamic-workflow-hardware-agent.html"
       },
       "showcase_rank": 8,
       "showcase_table": {
@@ -1027,10 +1011,8 @@
       },
       "interactive_page": "docs/showcases/cases/0619-loopx-self-iteration.html",
       "interactive_page_zh": "docs/showcases/cases/0619-loopx-self-iteration.html",
-      "interactive_page_en": "docs/showcases/cases/0619-loopx-self-iteration.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0619-loopx-self-iteration.html",
-        "en": "docs/showcases/cases/0619-loopx-self-iteration.en.html"
+        "zh": "docs/showcases/cases/0619-loopx-self-iteration.html"
       },
       "showcase_rank": 9,
       "showcase_table": {
@@ -1117,10 +1099,8 @@
       },
       "interactive_page": "docs/showcases/cases/0617-blocked-p0-safe-rotation.html",
       "interactive_page_zh": "docs/showcases/cases/0617-blocked-p0-safe-rotation.html",
-      "interactive_page_en": "docs/showcases/cases/0617-blocked-p0-safe-rotation.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0617-blocked-p0-safe-rotation.html",
-        "en": "docs/showcases/cases/0617-blocked-p0-safe-rotation.en.html"
+        "zh": "docs/showcases/cases/0617-blocked-p0-safe-rotation.html"
       },
       "showcase_rank": 10,
       "showcase_table": {
@@ -1216,8 +1196,7 @@
         ]
       },
       "localized_pages": {
-        "zh": "docs/showcases/cases/dsh-loopx-replan-demo.html",
-        "en": "docs/showcases/cases/dsh-loopx-replan-demo.en.html"
+        "zh": "docs/showcases/cases/dsh-loopx-replan-demo.html"
       },
       "localizations": {
         "zh": {
@@ -1273,8 +1252,7 @@
         }
       ],
       "interactive_page": "docs/showcases/cases/dsh-loopx-replan-demo.html",
-      "interactive_page_zh": "docs/showcases/cases/dsh-loopx-replan-demo.html",
-      "interactive_page_en": "docs/showcases/cases/dsh-loopx-replan-demo.en.html"
+      "interactive_page_zh": "docs/showcases/cases/dsh-loopx-replan-demo.html"
     },
     {
       "id": "2026-06-20-creator-operator-case-spec",
@@ -1323,10 +1301,8 @@
       },
       "interactive_page": "docs/showcases/cases/0620-creator-operator-case-spec.html",
       "interactive_page_zh": "docs/showcases/cases/0620-creator-operator-case-spec.html",
-      "interactive_page_en": "docs/showcases/cases/0620-creator-operator-case-spec.en.html",
       "localized_pages": {
-        "zh": "docs/showcases/cases/0620-creator-operator-case-spec.html",
-        "en": "docs/showcases/cases/0620-creator-operator-case-spec.en.html"
+        "zh": "docs/showcases/cases/0620-creator-operator-case-spec.html"
       },
       "evidence_metrics": [
         {

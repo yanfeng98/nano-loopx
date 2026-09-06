@@ -120,7 +120,7 @@ def _run_offline() -> int:
         "/wiki/Home",
         "/blob/main/docs/guide.md",
         "/tree/main/docs",
-        "/huangruiteng/loopx/blob/main/README.zh-CN.md",
+        "/huangruiteng/loopx/blob/main/README.md",
         "/huangruiteng/loopx/blob/main/docs/guides/getting-started.md",
         "/huangruiteng/loopx/tree/main/docs",
     ]
