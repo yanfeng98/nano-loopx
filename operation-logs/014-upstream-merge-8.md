@@ -16,3 +16,14 @@
 
 ## 验证
 - pytest 14 passed;mkdocs exit=0;zh-CN 残留 0;工作树干净。
+
+## 复查确认(无问题)
+
+1. upstream/main 是 HEAD 祖先;#4005 增量(claim-neutral)核对:
+   官方中文版用"保留不改变认领关系的文案修正"措辞(31-38 行),
+   与英文 34-45 行语义完全对应——**无内容丢失**(初查关键词计数 0 为
+   译法差异误报,已核实)。
+2. RFC 结构 1:1:标题 32/32、代码块 2/2、链接 10/10;无 zh-CN 残留;
+   交叉锚点修复正确(指向目标 `<a id>` 英文 slug,目标存在)。
+3. TS 测试(todo_update/authority_store_conformance)8 passed;
+   pytest 14 passed;mkdocs exit=0;工作树干净。
