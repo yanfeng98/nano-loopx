@@ -1,5 +1,7 @@
 import json
+import socket
 import threading
+import time
 from urllib.request import urlopen
 from urllib.request import Request
 from urllib.error import HTTPError
@@ -74,6 +76,16 @@ def test_http_history_reads_real_markdown_without_writes(tmp_path, count):
     server.verbose = False
     worker = threading.Thread(target=server.serve_forever, daemon=True)
     worker.start()
+    # 等待服务器线程实际开始接受连接；否则在异步环境(如 WSL)下请求可能过早被拒。
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        try:
+            with socket.create_connection(
+                ("127.0.0.1", server.server_port), timeout=0.2
+            ):
+                break
+        except OSError:
+            time.sleep(0.05)
     try:
         url = f"http://127.0.0.1:{server.server_port}/api/chat/completed-todos?goal_id=history-goal"
         with urlopen(url) as response:

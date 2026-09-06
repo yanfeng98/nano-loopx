@@ -1,6 +1,5 @@
 # 安装 LoopX
 
-
 PyPI 是 LoopX 的默认发布通道。在激活的虚拟环境、受管的用户环境或另一个 console
 脚本已位于 `PATH` 上且使用 Python 3.11 及更高版本的环境中安装：
 
@@ -137,7 +136,6 @@ curl 退出码。HTTP `0` 表示未收到可用 HTTP 状态。下载诊断排除
 
 裸 `loopx update` 仍是只读计划。较旧的 `--check`、`--dry-run` 与 `--execute`
 拼写仍作为兼容别名保留，但新指令应使用命名动作。
-
 
 人类可读输出以 **No update was applied** 和一个可复制的 **Next Action** 命令开头。
 JSON 输出把同一决策暴露为 `requested_action`、`changes_applied` 与一个带 mutation

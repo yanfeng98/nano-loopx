@@ -1,6 +1,5 @@
 # 测试与质量体系
 
-
 LoopX 协调长程 agent。一个局部正确的改动，仍可能改变 agent 选择哪项工作、是否
 向用户提问，或 host 是否继续运行。因此质量体系从不同距离验证同一套已交付行为：
 快速、确定性的检查保护每个 PR；更广、更昂贵的检查只在信号值得成本时运行。
@@ -87,7 +86,6 @@ Reproduce one shard locally with `python -m pytest -q -n 2 --splits 2 --group 1
 --splitting-algorithm least_duration --cov=loopx`。省略分片参数即可在本地运行完整套件。
 
 ## Smoke 与 Canary
-
 
 Durable smoke 应保护已交付行为、可复用合同、公开/私有边界，或曾让自动化卡死的
 回归；不应固化某次研究文案或原始执行证据。
