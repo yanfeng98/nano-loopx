@@ -54,7 +54,7 @@ artifact 与稳定契约定义；
 主持人应优先让贡献者讲自己的工作。战略 review 不应变成 maintainer 单人演讲，也不
 应该巡礼仓库中的所有想法。
 
-## Review Disposition
+## Review Dispositions
 
 每个议题只落入一个本期 disposition：
 
