@@ -55,6 +55,11 @@ Context asks which facts should be trusted for the current decision.
 - Reward Memory may be one optional input to Decision Context.
 - A verified Decision Context outcome may create a Reward Memory candidate, but
   the candidate still follows Reward Memory review and activation.
+- Reward Memory stores policies, preferences, and procedural experience;
+  Decision Context carries facts, judgments, assumptions, conflicts, decisions,
+  and outcomes.
+- Reward Memory accepts a write only after verification and authority review; a
+  Decision Context decision and its result are appended as an auditable record.
 - Neither capability creates action authority.
 
 ## Four packets
