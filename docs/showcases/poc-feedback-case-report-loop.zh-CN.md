@@ -26,17 +26,17 @@ LoopX 还很早。最有用的快速反馈不是一篇长文评论,而是一份�
 一份有用的案例报告很短:
 
 ```text
-Title:
-Domain:
-Agent surface:
-Loop length:
-What became hard:
-What LoopX made visible:
-Human decision:
-Safe side work:
-Evidence pointer:
-Private boundary:
-Suggested public claim:
+标题:
+领域:
+Agent 界面:
+Loop 长度:
+什么变难了:
+LoopX 让什么可见:
+人类决定:
+安全旁路工作:
+证据指向:
+私有边界:
+建议的公开声明:
 ```
 
 报告应在不阅读日志的情况下也能理解。如果某个字段不能公开分享,写出边界,而不是原始细节。
