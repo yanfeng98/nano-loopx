@@ -151,6 +151,16 @@ provider 调用数、新增候选数与显式 stop condition。它仅用于分�
 不会调用 provider，也不会推进 source cursor。policy 不可用或输出非法时，
 规划会 fail open 为可审计的 no-change proposal，并丢弃不完整的探索输出。
 
+`execute_material_explore_intent(...)` 是显式的只读执行边界。私有宿主提供
+瞬时 query、已配置的 `ContextProvider` 与 execution-authority 引用。执行器
+强制 intent 的调用与候选预算，query、资源位置与正文都留在进程内，只输出
+含不透明结果引用与紧凑 telemetry 的 `material_explore_execution_receipt_v0`。
+Provider 失败时 fail open。
+
+该 receipt 不能授权重排、插入候选、推进 cursor 或任何源改动。任何命中都只是
+候选，必须经过独立的 managed-material exact read 对照当前 authority 验证后
+才会生效。
+
 搜索引擎、联网客户端、消息和仓库 scanner 仍是可替换 provider；其 raw query、
 输出、凭据和私有位置都不能进入公开 packet。
 
@@ -158,11 +168,11 @@ provider 调用数、新增候选数与显式 stop condition。它仅用于分�
 来源清单、增量 cursor、排序规则与探索预算应位于 ignored 的 goal-scoped
 配置和受验证 receipt 中，而不是写进 automation prompt。
 
-## 本阶段不做什么
+## 阶段边界
 
 当前 capability 交付确定性契约、provider-neutral 的只读准备路径、owner-gated
-apply/rollback 编排、受限决策规划、catalog、架构 CLI、聚焦测试和公开 smoke，
-不交付：
+apply/rollback 编排、受限决策规划与探索执行、catalog 可见性、架构 CLI、聚焦
+测试和公开 smoke，不交付：
 
 - 内置 legacy 素材 parser 或私有写 adapter；
 - 原始素材持久化；
