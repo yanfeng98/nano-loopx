@@ -143,6 +143,7 @@
 | `pr_review_feature_gate_counterfactual_gap` | 评审证明功能开启路径并批准 opt-in 或默认关闭变更，但永不启用它的用户仍收到新 schema 要求、提示指令、接受输入、持久投影、调度决策或效果；范围子 agent 行为也可能以更宽多 agent 协议名发布。 | 权威 gate 与默认、相同禁用/启用 fixtures、变更前禁用输出、每个共享变更 builder 或序列化器、发出 schema/提示/journal/效果差异、公开协议 ids、实际 actor 生命周期、授予或排除的权威。 | 评审从单一启用拓扑或操作列表缺失推断整体变更隔离，并把宽协议术语当作装饰，即使它暗示实现未授予的注册 peers 或持久协调。功能开启测试随后把默认关闭泄漏编码为预期行为。 | 每个代码变更要求 typed `default_off_isolation` 与 `authority_semantics` 证据，检查范围后显式 `not_applicable`。追踪所有共享界面，运行配对功能关闭/功能开启反事实，把禁用侧与变更前契约比较，并阻塞 `not_isolated`、`misleading` 或 `not_yet_proven`。短暂范围执行优先既有子 agent/子术语，并在兼容成本累积前重命名未发布 v0 协议。 |
 | `slash_command_packet_projection_drift` | 斜杠命令工具被调用，但 agent 把其 JSON 管道或总结为窄视图（如 `.summary` / `.review_sequence`），然后忽略包的响应契约、模板、证据命令或最终答案要求。 | 原始会话工具调用、命令 stdout、斜杠命令目录 `agent_contract`、完整 CLI JSON 包、skill 回退指令、最终答案形状。 | Agent 把 CLI 当作队列/统计 helper，而非权威交互契约；关键机器字段从未进入模型上下文。 | 让 skill 点出保留契约/模板字段的精确 JSON 命令，添加机器可读 `required_packet_fields_to_preserve`，禁止首轮仅摘要投影，并用聚焦冒烟测试覆盖必需字段。 |
 | `loop_surface_activation_gap` | 线程报告 LoopX 设置成功，因为 `register-agent` 或 `quota should-run --agent-id` 可用，但尚未为该 goal 安装 Codex App heartbeat 自动化、Codex CLI `/goal` 或其他宿主循环。 | `upgrade-plan` / 宿主循环激活状态、`$CODEX_HOME/automations/*/automation.toml`、生成 `heartbeat-prompt`、目标线程 id、近期设置最终答案、registry 协调字段。 | 控制面身份层被当作宿主调度器层；设置成功标准停在 registry/quota，而非证明 `host_loop_activation.activated=true` 或暴露具体宿主工具 gate。 | 设置与 agent 注册投影必须暴露 `host_loop_activation`；从生成范围 `heartbeat-prompt` 创建/更新宿主循环，或报告精确缺失宿主 capability。宿主循环活跃前绝不声称"已连接"为自主。 |
+| `codex_app_automation_toml_contract_gap` | 多行 Codex App 心跳在宽松行读取器下可见，引入符合标准的 TOML 读取器后从 upgrade 或 RRULE 解析中消失；含反斜杠、引号分隔符或类似转义文本的 prompt 是常见触发。 | 精确写入器输出、标准库 TOML 回读、prompt 摘要／计数、manifest 解析错误投影、读取器变更前后 RRULE 解析。 | 写入器把任意 prompt 文本以内插方式拼进 TOML basic string 而未序列化；旧的宽松读取器掩盖无效文件，严格读取器的 catch-and-skip 路径抹掉了"缺失"与"畸形"automation 的差异。 | 把写入器与读取器视作一个存储契约：所有字符串经 TOML 安全序列化器编码，所有读取点用标准库解析，畸形内容失败关闭，并暴露有界、无内容的解析诊断。在真实写入器到读取器路径上覆盖反斜杠、内嵌分隔符、行尾转义、精确 prompt 身份与有上限的畸形文件报告。 |
 | `scheduler_host_update_retry_loop` | 同一 Codex App heartbeat 在应用同一推荐 RRULE 时对同一观察宿主 RRULE 反复挂起或失败，包括活跃工作与 monitor 等待目标交替时。 | `scheduler_hint.codex_app`、持久调度器状态、宿主 RRULE 观察、近期 heartbeat 历史、宿主工具超时/失败。 | 宿主更新失败被当作轮次本地建议或持久为单标量，因此节奏阶段变更覆盖先前失败对，下一阶段重试它。 | 持久化有界、过期的失败目标/观察宿主对集带 `failure_hint.cli_args`，最新标量仅兼容保留，无 ACK 或消耗抑制每个保留精确对，观察变化时作废旧宿主条目，并在成功 ACK 后清缓存。 |
 | `scheduler_implicit_host_default` | 通用或 CLI 调用方省略调度器所有字段却收到 Codex App RRULE/退避动作，测试因此无需证明真实宿主路径用同一契约就通过。 | `scheduler_hint.execution_context`、quota CLI argv、heartbeat 生成器输出、宿主循环激活包、调度器测试。 | 共享解析器把缺失上下文当作遗留 Codex App 默认，而非在真实 App 边界分配兼容性。 | 让缺失通用上下文失败关闭；仅通过 Codex App 生成器发出的显式紧凑运行时 profile 保留 App 行为；其他宿主传 typed 上下文；覆盖裸失败、profile 行为、生成命令与真实 CLI 集成。 |
 | `scheduler_followup_runtime_binding_gap` | Codex App quota 决策发出 ACK 或失败命令，但执行生成命令重算通用失败关闭调度器包并拒绝写回。 | `scheduler_hint.codex_app.ack_hint.cli_args`、`failure_hint.cli_args`、重算 `before.scheduler_hint.execution_context`、真实生成命令 CLI 冒烟。 | 初始 `quota should-run` 携带显式 App 运行时 profile，但跟进命令与当前 hint 处理器在重算时丢弃它。 | 在生成 ACK/失败命令携带紧凑 App profile，每个重算调度器状态的 quota 命令解析同一 typed 上下文，并在声收敛前把生成命令在持久 CLI 冒烟中执行。 |
@@ -189,26 +190,3 @@
 | `repository_delivery_gate_projection_gap` | Git 通过有效全局或仓库本地守卫拒绝提交或推送，而 quota 只暴露宽泛 `delivery_allowed=true`，因此准备资格被误认为仓库交付接纳。 | 无路径 `change-window status` 诊断、provider 验证检查、typed 政策决策、交互契约仓库交付 gate、typed hook 注册/结果、链接 worktree 与分离克隆回读。 | Provider 发现只暴露仓库本地安装状态，而 Kernel 交互状态无受信任、provider-neutral 衔接点做 capability 拥有的提交/推送决策。 | 不返回路径或推断政策地检测配置外部守卫界面；预览优先分层只识别有界遗留签名。在组合根注册有界只读交互投影 hook；typed 验证、槽冲突与失败隔离保持核心拥有。仅从完全验证 typed 仓库 provider 投影提交/推送接纳，保持准备/验证分离，携带 `next_eligible_at`，绝不授予远端写权威。 |
 | `dashboard_verified_mutation_projection_gap` | 预览锁定 dashboard 变更报告成功共享状态回读，但发起控件仍显示旧值；第二次点击随后说请求设置已存在。 | 精确 apply receipt、无变更规范预览、共享状态回读验证、状态投影代际/修订、渲染控件状态、刷新结果。 | 数据适配器验证规范写或无变更状态，然后 UI 丢弃该 receipt 并立即重绑到分离陈旧状态投影。 | 通过 apply 与无变更预览回调返回验证配置，并把它用作同 Goal 的抽屉作用域读模型；独立刷新正常投影，不撤销验证结果地呈现刷新失败，抽屉选择变化时清除覆盖。预览状态保持可见待处理而非呈现为已应用。浏览器冒烟中覆盖故意陈旧 status 响应。 |
 | `dashboard_open_token_picker_gap` | 有界 dashboard 设置要求用户键入协议 token（如 `task_domain`）；占位符像当前值，用户无法发现合法选择，或无标签工作 Goals 无法启用运行时把 token 过滤视为可选的能力。 | 当前 Goal Todo 索引、配置 token 允许列表、选项到 Todo 匹配计数、规范空过滤语义、预览负载、空状态、打包浏览器行为。 | 有意开放的、可选后端词汇被暴露为必需产品权威边界；只读紧凑 Goal 卡 Todo 切片也可隐藏有效选择。 | 把开放 typed token 契约保留在拥有控制面边界，但作为可选每 Goal 多选呈现，派生自权威 Todo 索引加已配置值，紧凑 Goal Todo 行仅兼容回退。空表示无 token 过滤，而每个独立接纳边界仍强制；非空选择保持严格允许列表。显示匹配计数、保留配置零匹配值，并覆盖未受限、受限、无效 token、预览、回读、空状态与打包对齐行为。 |
-
-## 最小证据包
-
-对大多数修复，捕获：
-
-```text
-goal_id:
-observed_surprise:
-quota_state:
-interaction_contract:
-user_todo_open_count:
-agent_todo_open_count:
-recommended_action:
-goal_boundary_write_scope:
-active_state_next_action:
-recent_history_summary:
-responsible_layer:
-repair:
-validation:
-```
-
-保持此包紧凑且公开安全。公开 docs 只存摘要；原始日志与私有轨迹留在被忽略
-本地路径。
