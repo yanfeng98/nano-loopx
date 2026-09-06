@@ -1,5 +1,9 @@
 # RFC: LoopX Desktop Execution Frontends v0
 
+> Language note: the
+> [Chinese version](./desktop-execution-frontends-v0.zh-CN.md) and this
+> English version are semantic mirrors. A difference between them is a defect.
+
 - Status: Draft
 - Decision boundary: support both attachment to an externally owned Agent
   session and an end-to-end LoopX-managed desktop runtime
@@ -702,6 +706,35 @@ authoritative or require the document provider to become a task database.
 
 This is the short path for adopting Desktop around work that is already
 running.
+
+The first phase's executable broker contract settles in the Chat
+session/store and the generic `worker-bridge attached-session-*` commands
+rather than inside a Lark provider:
+
+- `agent_id` always refers to a registered LoopX Agent within the Goal;
+- `executor_endpoint_id` separately identifies `codex`, `claude-code`, or
+  another execution endpoint;
+- attach succeeds only when `(host_surface, host_session_id)` is exactly bound
+  to that Agent;
+- Web and Lark messages for an attached session enter one bounded FIFO and
+  preserve `origin=web|lark`;
+- an existing host may hold a claim wait for at most 30 minutes and obtain the
+  oldest-first, idempotent claim immediately when a message appears in the
+  queue; a timeout only returns an empty result and never starts or resumes any
+  runtime;
+- the originating host claims messages through stable claim/completion ids and
+  writes them back; repeated calls do not duplicate an Agent reply; and
+- no attached-session path may invoke a managed runtime's start/resume
+  functions.
+
+This phase already supports `session_queue` and reply readback.
+`live_steering` still requires the host to provide a push transport for the
+running Turn; until then the capability is explicitly `false`, ingress fails
+closed, and a freshly started app-server or a silent switch to another mode
+cannot masquerade as completion. Desktop next needs to project bind/list/claim
+state as first-screen attach management interactions, and hosts such as Codex
+App should complete claim/complete automatically instead of requiring a human
+to run the CLI manually.
 
 ### Slice C: managed reference vertical
 
