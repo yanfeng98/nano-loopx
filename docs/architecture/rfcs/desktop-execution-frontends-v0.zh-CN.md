@@ -1,5 +1,8 @@
 # RFC：LoopX 桌面执行前端 v0
 
+> 语言说明：本文与
+> [英文版](./desktop-execution-frontends-v0.md)互为语义镜像；两者不一致属于缺陷。
+
 - 状态：Draft
 - 决策边界：同时支持挂接到外部拥有的 Agent 会话，以及端到端由 LoopX 托管的桌面运行时
 - 初始挂接运行时：Codex App / app-server
