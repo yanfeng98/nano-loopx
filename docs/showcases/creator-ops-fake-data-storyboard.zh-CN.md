@@ -191,10 +191,10 @@
 
 | 按钮 | 效果 |
 | --- | --- |
-| This angle is useful | reward / 偏好提示 |
-| Too salesy | 草稿修订 todo |
-| Do not use this source | 边界修正 |
-| Publish after tone review | 关卡决定 |
+| 这个角度有用 | reward / 偏好提示 |
+| 太销售腔了 | 草稿修订 todo |
+| 不要使用这个来源 | 边界修正 |
+| 语调审查后发布 | 关卡决定 |
 
 反馈类别与来源状态规则在
 [creator-ops-feedback-boundary-contract.md](creator-ops-feedback-boundary-contract.md) 中定义。
