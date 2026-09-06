@@ -569,7 +569,7 @@ authority。测试不能仅因输出包含某个关键词就通过。
 第一版应扩展最近的现有 Turn/status read model，不能新建 built-in capability、
 executor、scheduler 或 generic policy framework。
 
-## 12. Milestone
+## 12. Milestones
 
 ### M0：RFC 与 baseline taxonomy
 
