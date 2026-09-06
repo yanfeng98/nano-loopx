@@ -1,5 +1,9 @@
 # RFC: Goal Channel Collaboration v0
 
+> Language note: the
+> [Chinese version](./goal-channel-collaboration-v0.zh-CN.md) and this
+> English version are semantic mirrors. A difference between them is a defect.
+
 - Status: Draft
 - Scope: provider-backed collaboration channels for one LoopX goal
 - Decision type: product architecture and staged integration contract
