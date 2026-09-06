@@ -143,7 +143,7 @@ def assert_doc_contract() -> None:
         "source_ref_redacted=true",
         "private_redacted",
         "--no-global-sync",
-        "Do not read or summarize the source body",
+        "不要把读取或摘要来源正文当作注册的一部分",
     ):
         assert marker in text, marker
 

@@ -21,32 +21,32 @@ def main() -> int:
         "loopx turn run-once",
         "interactive-visible",
         "isolated-headless",
-        "must never switch",
-        "independent validation",
-        "durable writeback",
+        "绝不能把 `interactive-visible` 回退切换",
+        "独立校验",
+        "持久写回",
         "quota",
-        "scheduler state",
+        "scheduler 状态",
         "generic-cli",
-        "typed candidate result",
+        "类型化候选结果",
     ]
     for phrase in required_contracts:
         assert phrase in doc, phrase
 
     boundary_terms = [
-        "Raw host material stays outside LoopX state",
-        "raw task text",
-        "raw trajectories",
-        "credentials",
-        "local artifact paths",
+        "原始 host 资料留在 LoopX 状态之外",
+        "原始任务文本",
+        "原始轨迹",
+        "凭据",
+        "本地 artifact 路径",
     ]
     for phrase in boundary_terms:
         assert phrase in doc, phrase
 
     unfinished_boundaries = [
-        "interactive-visible` still needs",
-        "Trae still needs a thin adapter",
-        "recurring external scheduling must compose",
-        "benchmark promotion still requires",
+        "`interactive-visible` 在集齐 attach、idle、interruption 与 takeover 证据之前还不能成为受支持的",
+        "Trae 等非 Codex 对话式 CLI 还需要一个",
+        "周期性外部调度必须组合",
+        "benchmark 晋升仍需要",
     ]
     for phrase in unfinished_boundaries:
         assert phrase in doc, phrase

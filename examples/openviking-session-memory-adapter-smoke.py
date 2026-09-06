@@ -85,11 +85,11 @@ def main() -> int:
     for needle in [
         "openviking_session_memory_adapter_v0",
         "session_runtime_loopx_projection_v0",
-        "live OpenViking retrieval",
-        "memory writeback",
-        "raw trajectories",
-        "comment bodies",
-        "tool outputs",
+        "实时 OpenViking 检索",
+        "记忆 writeback",
+        "原始轨迹",
+        "评论正文",
+        "工具输出",
     ]:
         assert_contains(contract, needle, "contract")
     assert_contains(protocol_index, "openviking_session_memory_adapter_v0", "protocol index")

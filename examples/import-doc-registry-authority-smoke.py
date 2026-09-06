@@ -149,19 +149,19 @@ def import_args(doc_registry: Path, *, dry_run: bool = False) -> list[str]:
 def assert_doc_contract() -> None:
     text = DOC.read_text(encoding="utf-8")
     for marker in (
-        "Project-Local Doc Registry Mechanism",
-        "Doc registry is a general LoopX mechanism",
-        "not an agent-harness-specific",
-        "Identify the target project and goal first",
-        "project's own doc registry",
-        "Executor Skill Contract",
-        "doc-registry skill trigger",
-        "Run the relevant smoke or status refresh before spending heartbeat quota",
+        "项目本地文档注册表机制",
+        "Doc registry 是通用的 LoopX 机制",
+        "不是 Agent-harness 特定的",
+        "先识别目标项目和 goal",
+        "项目自己的文档注册表",
+        "执行者 Skill 契约",
+        "文档注册表 skill 触发",
+        "在花 heartbeat 配额前运行相关 smoke 或状态刷新",
         "import-doc-registry-authority",
         "doc_registry_authority_import_v0",
         "default_entry_count",
         "topic_authority_count",
-        "raw `DOC_REGISTRY.yaml` path is hashed",
+        "原始 `DOC_REGISTRY.yaml` 路径被哈希",
     ):
         assert marker in text, marker
 

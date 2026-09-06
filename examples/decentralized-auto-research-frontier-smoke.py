@@ -149,7 +149,7 @@ def main() -> None:
         encoding="utf-8"
     )
     assert "decentralized_research_frontier_v0" in docs, docs
-    assert "shared control plane" in docs, docs
+    assert "共享控制面" in docs, docs
 
     live_payload = build_live_auto_research_projection(
         goal_id="loopx-meta",

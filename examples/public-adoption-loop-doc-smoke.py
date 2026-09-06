@@ -52,19 +52,19 @@ def main() -> None:
 
     doc = compact(read(DOC))
     for required in [
-        "Status: docs-first product contract.",
-        "## Issue Template Copy",
-        "## Discussion Template Copy",
-        "## Triage Labels",
+        "状态:文档优先的产品契约。",
+        "## Issue 模板文案",
+        "## 讨论模板文案",
+        "## 分诊标签",
         "adoption:try-loopx",
         "workflow:issue-fix",
         "privacy:needs-redaction",
-        "## Lightweight Metrics",
+        "## 轻量指标",
         "workflow_type",
         "attention_cost",
         "would_repeat",
-        "## Promotion To GitHub Templates",
-        "owner-approved boundary decision",
+        "## 提升为 GitHub 模板",
+        "owner 批准的边界决策",
     ]:
         assert_contains(doc, required, "public adoption loop doc")
 

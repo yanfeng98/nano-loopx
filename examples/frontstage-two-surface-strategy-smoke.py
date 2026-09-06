@@ -33,31 +33,31 @@ def main() -> int:
     compact_showcase_note = compact(showcase_note)
 
     for needle in [
-        "Public showcase and homepage",
+        "公开 showcase 与首页",
         "Personal Workspace",
-        "`/frontstage` without `mode=ops` belongs to the public showcase surface",
-        "`/deprecated/frontstage/ops?statusUrl=...` belongs to local ops inspection",
+        "不带 `mode=ops` 的 `/frontstage` 属于公开 showcase surface",
+        "`/deprecated/frontstage/ops?statusUrl=...` 属于本地 ops 检查",
         "`apps/presentation/dashboard/src/views/deprecated/`",
         "`docs/showcases/showcase-catalog.json`",
         "`loopx serve-status --global-registry`",
-        "The public showcase surface must not read",
-        "The ops surface should still default to read-only",
-        "Public visual experiments must not depend on live state",
-        "showcase mode ignores `statusUrl`",
+        "公开 showcase surface 不得读取",
+        "Ops surface 仍应默认只读",
+        "公开视觉实验不得依赖实时状态",
+        "showcase 模式忽略 `statusUrl`",
         "frontstage-private-status-trap.public.json",
-        "`GH_FAKE_*` markers",
-        "`/frontstage/developer` is a read-only contributor cockpit",
-        "Phase 1, public showcase polish",
-        "Phase 2, local ops data layer",
-        "Phase 3, controlled local write affordances",
+        "`GH_FAKE_*` 标记",
+        "`/frontstage/developer` 是只读 contributor cockpit",
+        "阶段 1，公开 showcase 打磨",
+        "阶段 2，本地 ops 数据层",
+        "阶段 3，受控本地写辅助",
     ]:
         assert_contains(strategy, needle)
 
     for forbidden in [
-        "public ops-mode URLs",
-        "remote live status service",
-        "browser write authority by default",
-        "marketing claims without public evidence",
+        "公开 ops-mode URL",
+        "远端实时 status 服务",
+        "默认浏览器写权限",
+        "没有公开 evidence 的营销声明",
     ]:
         assert_contains(compact_strategy, forbidden)
 
@@ -65,39 +65,39 @@ def main() -> int:
     assert_contains(surface_index, "frontstage-two-surface-strategy.md")
 
     for existing_contract in [
-        "The default frontstage route is public showcase mode",
-        "ignores `statusUrl`",
-        "relative or loopback URLs",
-        "Do not use ops-mode URLs as public links",
-        "Neither surface is browser write authority",
+        "默认的 frontstage 路由是公开 showcase 模式",
+        "忽略 `statusUrl`",
+        "相对或回环 URL",
+        "不要把 ops 模式 URL 当作公开链接",
+        "两个组件面都没有浏览器写入权威",
         "frontstage-private-status-trap.public.json",
-        "synthetic `GH_FAKE_*` trap markers",
-        "developer extension cockpit lives at `/frontstage/developer`",
+        "合成的 `GH_FAKE_*` 陷阱标记",
+        "开发者扩展驾驶舱位于 `/frontstage/developer`",
     ]:
         assert_contains(compact_dashboard_readme, existing_contract)
 
     for public_source_contract in [
-        "The frontend should read `showcase-catalog.json`",
-        "Do not render raw run logs",
-        "It is a product explanation surface, not the local operator dashboard",
+        "前端应读取 `showcase-catalog.json`",
+        "不要渲染原始运行日志",
+        "它是产品说明界面,不是本地操作者仪表盘",
     ]:
         assert_contains(compact_showcase_note, public_source_contract)
 
-    route_row = "| Public showcase and homepage | Explain LoopX"
-    ops_row = "| Personal Workspace | Help the operator inspect"
+    route_row = "| 公开 showcase 与首页 | 通过 public-safe 案例、演示、动画与产品叙事解释 LoopX"
+    ops_row = "| Personal Workspace | 帮助 operator 检查"
     assert_contains(compact_strategy, compact(route_row))
     assert_contains(compact_strategy, compact(ops_row))
     assert_contains(
         compact_strategy,
-        "Ops widgets must not be promoted to public homepage content",
+        "不得晋升到公开首页内容",
     )
     assert_contains(
         compact_strategy,
-        "ops mode accepts only relative or loopback feeds",
+        "ops 模式只接受相对或 loopback feed",
     )
     assert_contains(
         compact_strategy,
-        "does not change the Codex CLI/TUI loop priority",
+        "不改变 Codex CLI/TUI loop 优先级",
     )
 
     print("frontstage-two-surface-strategy-smoke ok")

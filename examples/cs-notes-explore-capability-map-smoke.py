@@ -22,11 +22,11 @@ REQUIRED_CAPABILITIES = (
 )
 
 REQUIRED_SECTIONS = (
-    "## Boundary",
-    "## Selected Capabilities",
-    "## Scenario Fit",
-    "## Not Imported",
-    "## Recommended Next Step",
+    "## 边界",
+    "## 已选能力",
+    "## 场景适配",
+    "## 未导入",
+    "## 推荐下一步",
 )
 
 PRIVATE_PATTERNS = (
@@ -62,9 +62,9 @@ def main() -> int:
     for capability in REQUIRED_CAPABILITIES:
         assert capability in text, capability
     assert "exploration_plan_packet_v0" in text, text
-    assert "Repo issue fix" in text, text
-    assert "Self-media and creator operations" in text, text
-    assert "Experiment and other vertical state surfaces" in text, text
+    assert "仓库 issue-fix" in text, text
+    assert "自媒体与创作者运维" in text, text
+    assert "实验与其他垂直状态界面" in text, text
 
     for pattern in PRIVATE_PATTERNS:
         assert not pattern.search(text), pattern.pattern

@@ -38,44 +38,44 @@ def assert_doc() -> None:
     normalized = normalize(text)
 
     must_have = (
-        "Codex CLI Live TUI First-Message Pilot",
-        "Status: blocker recorded; manual TUI bootstrap remains primary.",
-        "Recorded: 2026-06-21.",
-        "disposable public-safe repo",
+        "Codex CLI 实时 TUI 首消息试点",
+        "状态：已记录 blocker；手动 TUI 引导保持为主要路径。",
+        "记录时间：2026-06-21。",
+        "一次性的 public-safe 仓库",
         "codex [OPTIONS] [PROMPT]",
         "--no-alt-screen",
         "--cd <DIR>",
         "resume",
         "remote-control",
         "codex doctor",
-        "did not produce bounded output before manual interrupt",
-        "no bounded first-response or completion signal",
-        "capture output exceeded the automation budget",
-        "process remained active",
-        "process command line",
+        "在手动中断前没有产生有界输出",
+        "没有有界的首响应或完成信号",
+        "捕获输出超出自动化预算",
+        "仍保持活跃",
+        "进程命令行",
         "live_tui_first_message_blocked_by_bounded_visible_completion_missing",
-        "manual TUI bootstrap remains primary",
-        "the user pastes one LoopX start message",
-        "without leaking project-specific prompt text through process arguments",
-        "raw transcript or session-file reads",
-        "Codex CLI bounded visible pilot adapter",
+        "手动 TUI 引导保持为主要路径",
+        "用户粘贴一条 LoopX 开始消息",
+        "而不通过进程参数泄露项目特定 prompt 文本",
+        "不读 transcript、不读 session 文件",
+        "Codex CLI 有界可见 pilot adapter",
     )
     for phrase in must_have:
         assert phrase in normalized, phrase
 
-    assert "LoopX should not advertise automated `codex [PROMPT]` launch" in text
-    assert "raw TUI output, Codex transcripts, session files" in normalized, text
-    assert "without raw transcript or session-file reads" in normalized, text
+    assert "LoopX 不应把自动化 `codex [PROMPT]` 启动宣传" in text
+    assert "原始 TUI 输出、Codex transcript、session 文件" in normalized, text
+    assert "不读 transcript、不读 session 文件" in normalized, text
 
 
 def assert_indexes() -> None:
     product = PRODUCT_README.read_text(encoding="utf-8")
     first_run = FIRST_RUN.read_text(encoding="utf-8")
     assert "codex-cli-live-tui-first-message-pilot.md" in product, product
-    assert "Codex CLI live TUI first-message pilot" in product, product
-    assert "Live TUI Pilot Note" in first_run, first_run
+    assert "Codex CLI 实时 TUI 首条消息试点" in product, product
+    assert "实时 TUI 试点说明" in first_run, first_run
     assert (
-        "Automated live launch needs a bounded visible completion proof first." in first_run
+        "自动化实时启动需要先有有界的可见完成证据。" in first_run
     ), first_run
 
 

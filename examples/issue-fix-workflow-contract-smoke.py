@@ -82,7 +82,7 @@ def main() -> int:
     assert doc.startswith("# issue_fix_workflow_contract_v0")
     assert "issue-fix-workflow-contract-v0.md" in readme
     assert "python3 examples/issue-fix-workflow-contract-smoke.py" in readme
-    assert "## Conversational `/loopx` Entry" in readme
+    assert "## 对话式 `/loopx` 入口" in readme
     assert (
         "/loopx --capability-route issue-fix Fix "
         "https://github.com/owner/repo/issues/123"
@@ -90,45 +90,43 @@ def main() -> int:
     assert "loopx bootstrap-command-pack --project ." in readme
     assert "--capability-route issue-fix" in readme
     assert "--slash-command-arguments=" in readme
-    assert "CLI owns route parsing" in readme
+    assert "路由解析都由 CLI 负责" in readme
     assert "loopx issue-fix workflow-plan" in readme
     assert "loopx issue-fix feasibility" in readme
     assert "loopx issue-fix pr-lifecycle" in readme
-    assert "selects exactly one" in readme
-    assert "## Feasibility Decision" in readme
+    assert "唯一选择一条 route" in readme
+    assert "## Feasibility 决策" in readme
     assert "## Repository Context" in readme
     assert "openviking-pilot-handoff.md" in readme
     assert "## PR Lifecycle Monitor" in readme
     assert "runnable_successor" in readme
-    assert "examples/issue-fix-pr-lifecycle-smoke.py" in readme
-    assert "explicit gates" in readme
-    assert "## Explicit Issue-Fix Capability Route" in loopx_goal_command
-    assert "Goal text never selects a product capability" in loopx_goal_command
+    assert "explicit gate" in readme
+    assert "## 显式 Issue-Fix 能力路由" in loopx_goal_command
+    assert "Goal 文本绝不选择产品 capability" in loopx_goal_command
     assert "start-goal --slash-command-arguments" in loopx_goal_command
-    assert "switches fail closed before the guided transaction" in loopx_goal_command
-    assert "Only the leading `--capability-route` switch is parsed" in loopx_goal_command
-    assert "is ordinary goal text and is not an" in loopx_goal_command
-    assert "error." in loopx_goal_command
+    assert "路由开关在构建引导事务前失效关闭" in loopx_goal_command
+    assert "只有前导 `--capability-route` 开关被解析" in loopx_goal_command
+    assert "是普通 goal 文本，不是错误" in loopx_goal_command
     assert "loopx issue-fix workflow-plan" in loopx_goal_command
     assert "--repository-context-json <compact-context.json>" in loopx_goal_command
     assert "--goal-id <goal-id>" in loopx_goal_command
-    assert "before writing todos" in loopx_goal_command
-    assert "priority and planner order" in loopx_goal_command
-    assert "must not invoke feasibility" in loopx_goal_command
-    assert "gates must cover private repro material" in loopx_goal_command
+    assert "在写入 todos 之前" in loopx_goal_command
+    assert "优先级与规划器顺序" in loopx_goal_command
+    assert "不得调用可行性" in loopx_goal_command
+    assert "必须覆盖私有复现物料" in loopx_goal_command
     assert_ordered(
         doc,
         [
-            "**Metadata preview:**",
-            "**Intake classification:**",
+            "**元数据预览:**",
+            "**Intake 分类:**",
             "**Workflow plan:**",
-            "**Feasibility checkpoint:**",
-            "**LoopX todo writeback:**",
-            "**Caller repo branch:**",
-            "**Validation:**",
+            "**Feasibility 检查点:**",
+            "**LoopX todo 回写:**",
+            "**Caller 仓库分支:**",
+            "**校验:**",
             "**PR review packet:**",
-            "**PR lifecycle monitor:**",
-            "**Gate handling:**",
+            "**PR 生命周期 monitor:**",
+            "**Gate 处理:**",
         ],
     )
     for schema in (

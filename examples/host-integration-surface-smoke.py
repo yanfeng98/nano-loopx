@@ -32,61 +32,61 @@ def main() -> int:
     require(
         protocol,
         [
-            "Hook activation",
-            "MCP adapter",
-            "Loopback server adapter",
-            "CLI fallback",
-            "## Thin Hook Activation",
-            "## Lifecycle Reads",
-            "## Controlled Writes",
-            "## Compact Status Projection",
-            "## CLI Fallback",
-            "## Public/Private Boundary",
-            "thin `/goal` body",
-            "visible TUI as the primary surface",
-            "controlled todo/gate writes",
-            "optional explicit lease writes",
-            "does not prove that any adapter is installed",
-            "does not\n grant write authority beyond the existing CLI-equivalent",
+            "Hook 激活",
+            "MCP 适配器",
+            "回环 server 适配器",
+            "CLI 回退",
+            "## 薄 Hook 激活",
+            "## 生命周期读取",
+            "## 受控写入",
+            "## 紧凑状态投影",
+            "## CLI 回退",
+            "## 公开/私有边界",
+            "薄 `/goal` 正文",
+            "把可见 TUI 保持为主界面",
+            "受控 todo/gate 写入",
+            "可选显式 lease 写入",
+            "它不证明任何适配器已安装",
+            "也不授予超出既有 CLI 等价 LoopX 生命周期的写权限",
             "loopx --format json --registry",
             "loopx todo claim",
             "loopx todo complete",
             "loopx quota spend-slot",
             "task_graph_projection_v0",
             "cadence_hint_v0",
-            "do not add graph write authority",
+            "不增加图写权限",
             "task_lease_v0",
-            "explicit `loopx task-lease acquire/renew/transfer/release/inspect`",
-            "is not enforced by `quota should-run`",
-            "Acquiring a hard lease does not replace todo claim",
-            "Browser/frontstage/server writes remain non-authoritative",
+            "显式 `loopx task-lease acquire/renew/transfer/release/inspect`",
+            "不被 `quota should-run` 强制",
+            "获取硬 lease 不替换 todo claim",
+            "浏览器/frontstage/server 写入默认保持非权威",
             "raw_transcripts_copied",
             "credentials_copied",
             "private_paths_copied",
             "remote_bind_default",
-            "duplicate todo claim",
-            "daemon-down cases fail\n   closed or fall back to CLI",
-            "marks optional\n   projections as read-only inputs rather than authority",
+            "重复 todo claim",
+            "daemon 下线情况失效关闭或回退到 CLI",
+            "把可选投影标记为只读输入而非权限",
         ],
         source=PROTOCOL,
     )
     forbidden = [
-        "replace the user's visible TUI/control surface",
-        "silently switch to hidden\n`codex exec`",
-        "invent host-specific permission rules",
-        "Bind remotely by default",
+        "替换用户可见 TUI/控制界面",
+        "静默切换到隐藏 `codex exec`",
+        "发明 host 特定权限规则",
+        "默认远程绑定",
     ]
     require(protocol, forbidden, source=PROTOCOL)
-    assert protocol.index("## Roles") < protocol.index("## Thin Hook Activation")
-    assert protocol.index("## Thin Hook Activation") < protocol.index("## Lifecycle Reads")
-    assert protocol.index("## Lifecycle Reads") < protocol.index("## Controlled Writes")
-    assert protocol.index("## Controlled Writes") < protocol.index("## Compact Status Projection")
-    assert protocol.index("## Compact Status Projection") < protocol.index("## CLI Fallback")
-    assert protocol.index("## CLI Fallback") < protocol.index("## Public/Private Boundary")
+    assert protocol.index("## 角色") < protocol.index("## 薄 Hook 激活")
+    assert protocol.index("## 薄 Hook 激活") < protocol.index("## 生命周期读取")
+    assert protocol.index("## 生命周期读取") < protocol.index("## 受控写入")
+    assert protocol.index("## 受控写入") < protocol.index("## 紧凑状态投影")
+    assert protocol.index("## 紧凑状态投影") < protocol.index("## CLI 回退")
+    assert protocol.index("## CLI 回退") < protocol.index("## 公开/私有边界")
 
     require(
         protocol_index,
-        ["Host integration surface v0", "host-integration-surface-v0.md"],
+        ["Host 集成界面 v0", "host-integration-surface-v0.md"],
         source=PROTOCOL_INDEX,
     )
     require(
@@ -97,11 +97,11 @@ def main() -> int:
     require(
         architecture,
         [
-            "host-integration surface",
-            "hook/MCP/server adapters",
+            "host 集成面",
+            "hook/MCP/server adapter",
             "host-integration-surface-v0",
-            "optional derived projections remain read-only",
-            "CLI fallback remains available",
+            "可选派生投影保持只读",
+            "CLI fallback 依然可用",
         ],
         source=ARCHITECTURE,
     )

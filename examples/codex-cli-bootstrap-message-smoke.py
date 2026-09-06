@@ -129,7 +129,7 @@ def assert_docs_surface_codex_cli_quickstart() -> None:
     product_contract = (REPO_ROOT / "docs/product/runtimes/codex-cli/codex-cli-tui-loop.md").read_text(encoding="utf-8")
 
     assert "Codex CLI" in readme, readme[:500]
-    assert "Visible `/goal <task_body>`; no hidden headless execution by default" in readme
+    assert "可见 `/goal <task_body>`；默认不走隐藏 headless 执行" in readme
     assert "docs/product/runtimes/codex-cli/codex-cli-packaged-install.md" in readme
     assert "docs/product/runtimes/codex-cli/loopx-turn-codex-cli-quickstart.md" in readme
     assert "loopx codex-cli-bootstrap-message" in readme
@@ -150,14 +150,14 @@ def assert_docs_surface_codex_cli_quickstart() -> None:
     assert "<项目仓库链接或当前 repo>" not in readme, readme
     assert "<项目仓库链接或当前 repo>" not in getting_started, getting_started
     assert "Connect the current project to LoopX." in getting_started, getting_started
-    assert "do not use hidden headless execution" in normalized_getting_started
-    assert "one TUI setup message" in normalized_product_contract
-    assert "install or reuse LoopX" in normalized_getting_started
-    assert "starts at 3 minutes" in normalized_getting_started
+    assert "不提供 headless 回退" in normalized_getting_started
+    assert "一条 TUI 设置消息" in normalized_product_contract
+    assert "安装或复用 LoopX" in normalized_getting_started
+    assert "从 3 分钟开始" in normalized_getting_started
     assert (
-        "set the current Codex CLI goal to `/goal <thin task_body>`"
+        "把当前 Codex CLI goal 设置为 `/goal <thin task_body>`"
         in normalized_product_contract
-        or "set the current Codex CLI goal to `/goal <thin task_body>`"
+        or "把当前 Codex CLI goal 设置为 `/goal <thin task_body>`"
         in normalized_getting_started
     ), product_contract
     assert "reuse it" in normalized_getting_started, getting_started
@@ -166,18 +166,18 @@ def assert_docs_surface_codex_cli_quickstart() -> None:
         "report the active state id, current user gate, top agent todo, and next safe action"
         in normalized_getting_started
     ), getting_started
-    assert "first-run path should not require you to understand registry paths" in normalized_getting_started, getting_started
-    assert "setup-first rewrite of the App onboarding experience" in normalized_getting_started, getting_started
-    assert "Codex App gets a heartbeat automation body that starts at 3 minutes" in normalized_getting_started, getting_started
-    assert "transcript-free validation checklist" in normalized_getting_started, getting_started
-    assert "installs the thin LoopX goal/heartbeat body immediately" in normalized_product_contract, product_contract
-    assert "optional automation checks after the setup path works" in normalized_getting_started, getting_started
-    assert "first useful TUI response should be a control-plane snapshot" in normalized_product_contract, product_contract
-    assert "setup-only work" in normalized_product_contract, product_contract
+    assert "首次运行路径不应要求你理解 registry 路径" in normalized_getting_started, getting_started
+    assert 'App 上手体验的"先设置"改写' in normalized_getting_started, getting_started
+    assert "Codex App 得到从 3 分钟开始" in normalized_getting_started, getting_started
+    assert "无记录验证清单" in normalized_getting_started, getting_started
+    assert "立即安装薄的 LoopX goal/heartbeat 正文" in normalized_product_contract, product_contract
+    assert "设置路径可用后的可选自动化检查" in normalized_getting_started, getting_started
+    assert "第一个有用的 TUI 响应应当是控制面快照" in normalized_product_contract, product_contract
+    assert "纯设置工作" in normalized_product_contract, product_contract
     assert "loopx codex-cli-session-probe" in getting_started, getting_started
     assert "loopx codex-cli-exec-handoff --project . --goal-id <goal-id>" in getting_started, getting_started
-    assert "headless-disabled boundary" in normalized_getting_started, getting_started
-    assert "This command no longer prints a runnable `codex exec` handoff script" in product_contract, product_contract
+    assert "无 headless 边界" in normalized_getting_started, getting_started
+    assert "该命令不再打印可运行的 `codex exec` 交接脚本" in product_contract, product_contract
 
 
 def main() -> int:

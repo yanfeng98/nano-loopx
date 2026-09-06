@@ -60,30 +60,30 @@ def main() -> int:
 
     required_skill_terms = [
         "name: loopx-auto-research",
-        "worker-local role playbook",
-        "not a global LoopX skill",
-        "Identity comes from LoopX control-plane metadata",
-        "Pane Tick Contract",
-        "generic multi-agent kernel owns the default LoopX project/doc-registry skills",
-        "fixed A2A wake prompt",
+        "worker 本地角色 playbook",
+        "它不是普通项目 agent 的全局 LoopX skill",
+        "身份来自 LoopX 控制面元数据",
+        "面板 Tick 契约",
+        "通用多 agent 内核拥有默认的 LoopX 项目/文档 registry skills",
+        "固定 A2A 唤醒 prompt",
         "auto_research_role_profile_v0",
         'loopx --format json auto-research frontier --goal-id "$LOOPX_GOAL_ID" --agent-id "$LOOPX_AGENT_ID"',
-        "No role owns the full graph",
-        "Do not infer role from pane title",
+        "没有角色拥有完整图",
+        "不要从面板标题",
         "Research Curator",
         "Hypothesis Proposer",
         "Research Executor",
         "Evaluator/Promoter",
         "Projection Narrator",
         "Control-Plane Guard",
-        "Shared Stop Conditions",
+        "共享停止条件",
         "research_contract_v0",
         "research_hypothesis_v0",
         "auto_research_evidence_packet_v0",
         "research_evidence_graph_v0",
         "quota should-run",
         "role_profile.continuation_policy",
-        "No-follow-up is only valid",
+        "无后续任务才有效",
         "demo-supervisor",
         "--execute",
     ]
@@ -106,16 +106,16 @@ def main() -> int:
 
     assert "required_skill\": \"loopx-auto-research\"" in role_profile, role_profile
     assert "continuation_policy" in role_profile, role_profile
-    assert "no-follow-up depend on evidence" in role_profile, role_profile
-    assert "worker-local" in role_profile, role_profile
+    assert "no-follow-up 取决于对继续目标的证据" in role_profile, role_profile
+    assert "worker 局部" in role_profile, role_profile
     assert "auto_research_role_profile_v0" in role_state_machine, role_state_machine
-    assert "single promoted branch does not close" in role_state_machine, role_state_machine
+    assert "单个已提升分支不会单独关闭多轮目标" in role_state_machine, role_state_machine
     assert "product_narrator" in lane_contract, lane_contract
     assert (
         "`loopx-auto-research` | Running role-scoped auto-research lanes"
         not in getting_started
     ), getting_started
-    assert "worker-local" in getting_started, getting_started
+    assert "worker 本地" in getting_started, getting_started
     assert "~/.codex/skills/loopx-auto-research" not in getting_started, getting_started
 
     print("auto-research-skill-contract-smoke ok")

@@ -24,8 +24,8 @@ def main() -> int:
     assert len(text.splitlines()) <= 110, "quickstart must remain one page"
     for required in [
         "Agent CLI adapter",
-        "Independent validator",
-        "One Turn command",
+        "独立校验器",
+        "一条 Turn 命令",
         "loopx turn run-once",
         "--host codex-cli",
         "--validation-command-json",
@@ -35,9 +35,9 @@ def main() -> int:
         "result_kind=wait",
         "result_kind=user_action_required",
         "turn_key",
-        "raw event stream",
-        "they do not become new Turn states",
-        "scenario owner",
+        "原始事件流",
+        "它们不会变成新的 Turn 状态",
+        "场景 owner",
         "loopx-turn-codex-cli-e2e-smoke.py",
         "codex_cli_model_requires_newer_codex",
         "--real-codex-cli",
@@ -45,7 +45,7 @@ def main() -> int:
         "validation_status=passed",
         "session_resumed=true",
         "committed_turn_count=3",
-        "three quota spends",
+        "三次 quota spend",
     ]:
         assert required in compact_text, required
 
@@ -62,7 +62,7 @@ def main() -> int:
     link = "loopx-turn-codex-cli-quickstart.md"
     assert link in runtime_index, "runtime index link"
     assert "docs/product/runtimes/codex-cli/loopx-turn-codex-cli-quickstart.md" in readme
-    assert "LoopX Turn for Codex CLI" in readme
+    assert "LoopX Turn Codex CLI Quickstart" in readme
 
     print("loopx-turn-codex-cli-quickstart-smoke ok")
     return 0

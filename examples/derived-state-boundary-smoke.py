@@ -122,13 +122,13 @@ def main() -> int:
 
     docs = (REPO_ROOT / "docs" / "concepts" / "field-derived-patterns.md").read_text(encoding="utf-8")
     for required in (
-        "## 3. Bounded Derived State Inheritance",
+        "## 3. 有界衍生状态继承",
         "canonical source",
-        "inheritance rule",
-        "item limits",
-        "archive/prune rule",
-        "projection semantics",
-        "Model-created state must not become a second source of truth",
+        "继承规则",
+        "条目上限",
+        "归档/裁剪规则",
+        "投影语义",
+        "模型创建的状态不得成为第二个真相源",
     ):
         assert required in docs, required
 

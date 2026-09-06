@@ -32,11 +32,11 @@ def main() -> int:
         assert DEFAULT_STATUS_URL in normalized, label
 
     installed_run = compact(
-        documents["dashboard README"].split("## Run", 1)[1].split(
-            "Source-checkout development is a separate mode:", 1
+        documents["dashboard README"].split("## 运行", 1)[1].split(
+            "源码检出的开发是另一种模式:", 1
         )[0]
     )
-    assert "does not require a separate `loopx serve-status` process" in installed_run
+    assert "不需要单独的 `loopx serve-status` 进程" in installed_run
     assert "127.0.0.1:5173" not in installed_run
     assert "installs the dashboard's npm dependencies" not in installed_run
 

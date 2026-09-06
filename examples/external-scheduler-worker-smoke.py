@@ -259,7 +259,7 @@ def test_end_to_end_loop_stops_after_limit(tmp_path: Path) -> None:
             once=False,
             error_backoff_seconds=5.0,
         )
-        rc = run_worker(args)
+        rc = run_worker(args, sleep=worker.time.sleep)  # type: ignore[arg-type]
     finally:
         worker.time.sleep = original_sleep  # type: ignore[assignment]
 
@@ -313,7 +313,7 @@ def test_end_to_end_token_change_resets_count(tmp_path: Path) -> None:
                 raise KeyboardInterrupt
         worker.time.sleep = stop_after_four  # type: ignore[assignment]
         try:
-            run_worker(args)
+            run_worker(args, sleep=worker.time.sleep)  # type: ignore[arg-type]
         except KeyboardInterrupt:
             pass
     finally:
@@ -397,7 +397,7 @@ def test_end_to_end_should_run_invokes_wake_cmd(tmp_path: Path) -> None:
             error_backoff_seconds=5.0,
         )
         try:
-            run_worker(args)
+            run_worker(args, sleep=worker.time.sleep)  # type: ignore[arg-type]
         except KeyboardInterrupt:
             pass
     finally:

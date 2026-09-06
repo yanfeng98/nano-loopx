@@ -219,6 +219,7 @@ def main() -> None:
             chats = request(base, "/api/chat/lark/chats?app_ref=mew&query=product")
             assert chats["chats"] == [{"chat_id": CHAT_ID, "chat_name": "Product group"}], chats
 
+            connected_ids: dict[str, str] = {}
             for goal_id in ("goal-alpha", "goal-beta"):
                 body = {
                     "app_ref": "mew",
@@ -232,6 +233,7 @@ def main() -> None:
                 assert preview["status"] == "preview_ready", preview
                 connected = request(base, "/api/chat/lark/connections", method="POST", body={**body, "execute": True})
                 assert connected["status"] == "connected" and connected["readback_verified"] is True, connected
+                connected_ids[goal_id] = connected["details"]["connection_id"]
 
             connections = request(base, "/api/chat/lark/connections")
             assert len(connections["connections"]) == 2, connections
@@ -244,11 +246,17 @@ def main() -> None:
             binding_path = registry_path.parent / "goal-channel.json"
             assert len(read_goal_channel_targets(target_path)["targets"]) == 1
             bindings = read_goal_channel_binding(binding_path)["bindings"]
-            assert bindings["goal-alpha"]["topic"]["root_message_id"] != bindings["goal-beta"]["topic"]["root_message_id"]
+            alpha_topic = next(
+                iter(bindings["goal-alpha"]["connections"].values())
+            )["topic"]["root_message_id"]
+            beta_topic = next(
+                iter(bindings["goal-beta"]["connections"].values())
+            )["topic"]["root_message_id"]
+            assert alpha_topic != beta_topic
 
             disconnected = request(
                 base,
-                "/api/chat/lark/connections?goal_id=goal-alpha",
+                f"/api/chat/lark/connections?goal_id=goal-alpha&connection_id={connected_ids['goal-alpha']}",
                 method="DELETE",
             )
             assert disconnected["status"] == "disconnected", disconnected

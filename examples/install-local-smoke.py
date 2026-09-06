@@ -364,33 +364,33 @@ def main() -> int:
         skill_text = skill.read_text(encoding="utf-8")
         compact_skill_text = " ".join(skill_text.split())
         for phrase in (
-            "Set Up Recurring Heartbeats",
+            "设置周期 Heartbeat",
             "loopx heartbeat-prompt",
-            "run a short steering audit before choosing work",
-            "at least three plausible next-action candidates",
-            "continuation check",
-            "compute quota separate from focus quota",
-            "Register Project Authority And Material Sources",
-            "doc-registry skill trigger",
-            "Diagnose For The User",
+            "在选择工作前运行简短 steering 审计",
+            "至少三个合理 next-action 候选",
+            "应用继续检查并说明为何继续仍胜出",
+            "把计算 quota 与专注 quota 分开",
+            "注册项目权威与材料源",
+            "doc-registry 技能触发点",
+            "为用户诊断",
             "loopx diagnose",
-            "Use those signals as evidence",
-            "Identify the target project and goal first",
+            "把这些信号作为证据",
+            "先识别目标项目与 goal",
             "loopx register-authority-source",
             "loopx import-doc-registry-authority",
             "--source heartbeat --execute",
-            "Generate A Review Packet",
+            "生成评审包",
             "loopx review-packet --goal-id",
             "loopx review-packet --goal-id <STABLE_GOAL_ID> --handoff-only",
             "loopx --format json review-packet --goal-id",
-            "target project agent must not run this draft",
-            "This command is read-only",
-            "JSON output returns a minimized handoff payload with `handoff_text` instead of the full operator packet",
+            "目标项目 agent 不得把此草稿 当作自己的命令运行",
+            "此命令只读",
+            "JSON 输出返回最小化交接 负载，用 `handoff_text` 替代完整操作员包",
             "--classification <PUBLIC_SAFE_PROGRESS_CLASSIFICATION>",
             "--delivery-batch-scale <ACTUAL_DELIVERY_BATCH_SCALE>",
             "--delivery-outcome <ACTUAL_DELIVERY_OUTCOME>",
-            "Never default or upgrade a smaller/preparatory turn",
-            "do not infer scale/outcome from the classification name",
+            "默认或 提升较小/准备性轮次",
+            "不从分类名推断规模/结果",
         ):
             assert phrase in compact_skill_text, phrase
         assert "JSON output still keeps the full payload" not in compact_skill_text, compact_skill_text
@@ -398,29 +398,29 @@ def main() -> int:
         pr_review_text = " ".join(pr_review_skill.read_text(encoding="utf-8").split())
         for phrase in (
             "loopx --format json pr-review --state all",
-            "thin host adapter",
+            "本技能是薄的宿主适配器",
             "agent_response_contract.review_execution_contract",
             "review_groups",
             "pull_requests[].review_plan",
             "pull_requests[].review_template",
             "pull_requests[].evidence_commands",
-            "Do not pipe the only copy through `jq`",
+            "不要只通过 `jq` 管道处理唯一副本",
             "completion_gate",
-            "Never infer `verified` from metadata or CI",
-            "formal `REQUEST_CHANGES`",
-            "Read the published review back",
-            "Merge still routes through `loopx-pr-merge`",
+            "绝不可从元数据或 CI 推断 `verified`",
+            "正式 `REQUEST_CHANGES`",
+            "回读已发布的评审",
+            "合并仍经 `loopx-pr-merge` 路由",
         ):
             assert phrase in pr_review_text, phrase
         assert "Do not use this skill to approve" not in pr_review_text, pr_review_text
         pr_program_skill = codex_home / "skills" / "loopx-pr-program" / "SKILL.md"
         pr_program_text = " ".join(pr_program_skill.read_text(encoding="utf-8").split())
         for phrase in (
-            "one `continuous_monitor` todo",
+            "一个 `continuous_monitor` todo",
             "result_completeness.complete=true",
             "diff_snapshot.py",
-            "Product requirements set priority",
-            "Quiet monitor polls",
+            "产品需求设定 优先级",
+            "安静的 monitor 轮询保持活性",
         ):
             assert phrase in pr_program_text, phrase
         assert (
@@ -472,8 +472,8 @@ def main() -> int:
         assert 'display_name: "Loopx' not in doc_registry_metadata_text
         for phrase in (
             "Use even when the user does not mention LoopX or doc registry",
-            "use `.loopx/registry.json` as the project-local doc registry",
-            "not a substitute for project-local authority registration",
+            "把 `.loopx/registry.json` 用作 项目本地文档注册表",
+            "不能替代 项目本地权威注册",
             "loopx --registry .loopx/registry.json register-authority-source",
         ):
             assert phrase in doc_registry_text, phrase
@@ -481,8 +481,8 @@ def main() -> int:
         benchmark_text = " ".join(
             benchmark_skill.read_text(encoding="utf-8").split()
         )
-        assert "builtin `benchmark-toolkit` capability" in benchmark_text
-        assert "without a per-Goal enable switch" in benchmark_text
+        assert "内置的 `benchmark-toolkit` capability" in benchmark_text
+        assert "无需按 Goal 启用开关" in benchmark_text
         benchmark_metadata = benchmark_skill.parent / "agents" / "openai.yaml"
         assert 'display_name: "LoopX Benchmark"' in benchmark_metadata.read_text(
             encoding="utf-8"
@@ -490,14 +490,14 @@ def main() -> int:
         self_repair_skill = codex_home / "skills" / "loopx-self-repair" / "SKILL.md"
         self_repair_text = " ".join(self_repair_skill.read_text(encoding="utf-8").split())
         for phrase in (
-            "Build a compact evidence packet",
+            "构建紧凑证据包",
             "loopx --format json diagnose --goal-id <goal-id>",
             "loopx --format json status --goal-id <goal-id> --limit 20",
-            "status` defaults to the registry/dashboard view, but accepts `--goal-id`",
-            "registry-declared active state file",
+            "status` 默认为 registry/dashboard 视图，但接受 `--goal-id`",
+            "registry 声明的 活动状态文件",
             "references/repair-patterns.md",
-            "Repair at the lowest durable layer",
-            "Do not solve contradictory payloads by guessing",
+            "在最底层持久层修复",
+            "不通过猜测解决矛盾负载",
         ):
             assert phrase in self_repair_text, phrase
         self_repair_patterns = (

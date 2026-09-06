@@ -29,7 +29,7 @@ def read(path: Path) -> str:
 def assert_required_content() -> None:
     showcase_index = read(SHOWCASE_INDEX)
     assert "showcase-animation-storyboard.json" in showcase_index, SHOWCASE_INDEX
-    assert "showcase-catalog.json` as the only case data source" in showcase_index, SHOWCASE_INDEX
+    assert "`showcase-catalog.json` 作为唯一的案例数据来源" in showcase_index, SHOWCASE_INDEX
     assert "showcase-animation-prototype-smoke.py" in showcase_index, SHOWCASE_INDEX
 
 

@@ -96,7 +96,7 @@ def main() -> int:
         "server_daemon_launch",
         "external_agent_execution",
         "credentialed_host_actions",
-        "Status And Evidence Projection",
+        "状态与证据投影",
     ]:
         assert_contains(contract, needle, "contract")
     assert_contains(protocol_index, "local_agent_launch_plan_v1", "protocol index")

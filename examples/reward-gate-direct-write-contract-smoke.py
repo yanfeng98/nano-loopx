@@ -168,9 +168,9 @@ def assert_contract_doc() -> None:
         "run_bound_human_reward_overlay",
         "operator_gate_decision_run",
         "--enable-reward-write-api",
-        "There is no dashboard `operator_gate` apply endpoint",
+        "本合同中不存在 dashboard `operator_gate` apply 端点",
         "operator_gate_resume_contract",
-        "disabled-by-default",
+        "默认禁用行为",
     ]
     for marker in required:
         assert marker in text, marker

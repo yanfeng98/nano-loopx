@@ -10,7 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DOC = REPO_ROOT / "docs" / "integrations" / "codex-subagent-orchestration.md"
 
 REQUIRED_PHRASES = (
-    "shared control plane",
+    "共享控制面",
     "subagent_control_plane_handoff_v0",
     "`parent_goal_id`",
     "`authority_artifact`",
@@ -19,18 +19,18 @@ REQUIRED_PHRASES = (
     "`evidence_boundary`",
     "`writeback_spend_contract`",
     "`child_decision`",
-    "`continue`, `wait`, or `reuse_existing_evidence`",
-    "temporary task coordinator",
-    "child worker reports evidence only; task coordinator writes accepted state and spends",
+    "`continue`、`wait` 或 `reuse_existing_evidence`",
+    "临时任务协调者",
+    "子 worker 只报告证据;临时任务协调者写入已接受状态并进行消耗",
     "control_plane_handoff_version",
-    "It does not own durable goal authority",
-    "one pending lease for `(goal_id, todo_id)`",
-    "`goal_id` is the shared control-plane lane",
-    "`todo_id` is the work item being claimed",
+    "它不拥有持久的 goal 权威",
+    "只有一个待处理租约",
+    "`goal_id` 是共享控制面 lane",
+    "`todo_id` 是被 claim 的工作项",
     '"agent_model": "peer_v1"',
-    "independent worktrees",
-    "Review remains `action_kind=review`",
-    "Dormant registered agents and closed, blocked, or deferred todos are not coordinator candidates.",
+    "独立 worktree",
+    "`action_kind=review`",
+    "休眠的注册 agent 以及已关闭、被阻止或 延期的 todo 都不是协调者候选",
 )
 
 FORBIDDEN_PHRASES = (

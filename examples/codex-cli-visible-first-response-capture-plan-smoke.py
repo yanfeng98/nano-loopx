@@ -148,7 +148,7 @@ def assert_docs() -> None:
     assert "codex-cli-visible-first-response-capture-plan" in doc, doc
     assert "public-first-response.json" in doc, doc
     assert "public-runtime-idle.json" in doc, doc
-    assert "visible first-response capture plan" in readme, readme
+    assert "Codex CLI 可见首响应捕获计划" in readme, readme
     assert "codex-cli-visible-first-response-capture-plan-smoke.py" in readme, readme
 
 

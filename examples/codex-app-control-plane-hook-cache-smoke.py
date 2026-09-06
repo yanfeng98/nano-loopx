@@ -17,20 +17,20 @@ def main() -> int:
     normalized_doc = " ".join(doc.split())
 
     required_phrases = [
-        "Status: experimental design note, default off.",
+        "状态：实验性设计说明，默认关闭。",
         "enabled_by_default: false",
         "mode: advisory_hint",
-        "host-runtime hint",
-        "LoopX remains authoritative",
-        "Missing, stale, or mismatched hints fall back to the CLI.",
+        "host-runtime 提示",
+        "LoopX 保持权威",
+        "缺失、过期或不匹配的提示回退到 CLI",
         "quiet_wait_cache_lab",
         "guard_projection_lab",
         "default_candidate",
         "Evidence Gates",
-        "zero false run and zero false quiet-skip decisions",
-        "public/private scans",
-        "Fallback CLI Path",
-        "Keep all delivery, writeback, publication, and quota spend decisions on the existing CLI guard.",
+        "零误判运行、零误判 quiet-skip 决策",
+        "public/private 扫描",
+        "回退 CLI 路径",
+        "把全部交付、写回、发布与 quota spend 决策留在既有 CLI guard 上",
     ]
     for phrase in required_phrases:
         assert phrase in doc or phrase in normalized_doc, phrase

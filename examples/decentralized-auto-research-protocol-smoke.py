@@ -95,7 +95,7 @@ def main() -> None:
         "auto_research_public_claim_boundary_v0",
     ):
         assert removed_term not in protocol, f"protocol kept removed projection {removed_term!r}"
-    assert "No agent owns the whole research tree" in compact_protocol
+    assert "没有 agent 拥有完整研究树" in compact_protocol
     assert "auto_research_lane_contract_v1" in protocol
     assert "auto_research_role_state_machine_v0" in protocol
     assert "auto_research_lane_contract_v1" in protocol_readme
@@ -116,28 +116,28 @@ def main() -> None:
         "research_evidence_event_v0",
         "research_evidence_graph_v0",
         "quota should-run --agent-id",
-        "first-screen review gate",
+        "首屏评审关卡",
     ]
     for term in required_lane_terms:
         assert term in lane_contract, f"lane contract missing {term!r}"
-    assert "No lane is privileged" in compact_lane_contract
-    assert "not a lock on the full graph" in compact_lane_contract
-    assert "no public surface needs a leader or coordinator agent" in compact_lane_contract
+    assert "没有 lane 有特权" in compact_lane_contract
+    assert "不是对完整图的锁" in compact_lane_contract
+    assert "任何公开界面都不需要 leader 或协调者 agent" in compact_lane_contract
 
     required_role_state_machine_terms = [
         "auto_research_role_state_machine_v0",
         "auto_research_state_transition_v0",
-        "Research curator",
-        "Hypothesis mapper",
-        "Evidence runner",
-        "Evidence verifier",
-        "always-on role set small",
-        "transition duties",
-        "Read-only projection builder",
-        "Future Role Splits",
-        "Gate steward",
-        "Synthesis narrator",
-        "Frontier janitor",
+        "研究 curator",
+        "假设映射器",
+        "研究执行者",
+        "证据验证器",
+        "常开角色集小",
+        "转换职责",
+        "只读投影构建器",
+        "未来角色拆分",
+        "Gate 管理人",
+        "综合叙述者",
+        "前沿保洁员",
         "contract_ready",
         "hypothesis_proposed",
         "frontier_selected",
@@ -149,25 +149,25 @@ def main() -> None:
         "operator_gate",
         "todo_id",
         "claimed_by",
-        "No role owns the full graph",
+        "没有一个拥有完整图",
     ]
     for term in required_role_state_machine_terms:
         assert term in role_state_machine, f"role state machine missing {term!r}"
-    assert "not a coordinator" in compact_role_state_machine
-    assert "not start Codex, write LoopX state, or spend quota" in compact_role_state_machine
-    assert "Future versions may split gate stewardship" in compact_role_state_machine
-    assert "outside the v0 always-on role set" in compact_role_state_machine
-    assert "Promoting any future role requires a smoke update" in compact_role_state_machine
-    assert "Gate handling is a transition duty" in compact_role_state_machine
-    for future_role in ("Frontier janitor", "Synthesis narrator", "Gate steward"):
+    assert "不是协调者" in compact_role_state_machine
+    assert "但不得自行启动 Codex、写入 LoopX 状态或花费配额" in compact_role_state_machine
+    assert "未来版本可以" in compact_role_state_machine
+    assert "v0 常开角色集之外" in compact_role_state_machine
+    assert "提升任何未来角色都需要一次 smoke 更新" in compact_role_state_machine
+    assert "Gate 处理是转换职责" in compact_role_state_machine
+    for future_role in ("前沿保洁员", "综合叙述者", "Gate 管理人"):
         assert f"| {future_role} |" in role_state_machine, f"future split missing {future_role}"
 
     required_role_profile_terms = [
         "auto_research_role_profile_v0",
-        "LoopX control plane",
-        "worker-local role playbooks",
+        "LoopX 控制面",
+        "worker 局部角色 playbook",
         "AGENTS.md",
-        "Host launcher",
+        "Host 启动器",
         "agent_id",
         "role_id",
         "phase",
@@ -184,21 +184,21 @@ def main() -> None:
         "evaluator_promoter",
         "loopx-auto-research",
         "quota should-run --goal-id",
-        "The pane title is cosmetic",
+        "Pane 标题是装饰性的",
     ]
     for term in required_role_profile_terms:
         assert term in role_profile, f"role profile missing {term!r}"
-    assert "playbooks useful without letting them become a second source of identity" in compact_role_profile
-    assert "identity comes from the profile and quota/frontier" in compact_role_profile
+    assert "保持 playbook 有用，而不让它们成为第二身份来源" in compact_role_profile
+    assert "身份来自 profile 与 quota/frontier" in compact_role_profile
 
     required_blueprint_terms = [
-        "Decentralized Auto Research: k-NN Speedup",
-        "not a claim that LoopX has already achieved",
-        "Research Contract card",
-        "Decentralized frontier",
-        "Evidence timeline",
-        "Promotion decision",
-        "no leader agent owns the graph",
+        "去中心化 Auto Research：k-NN 加速",
+        "不是 LoopX 已经达成这些数字的声明",
+        "Research Contract 卡",
+        "去中心化 frontier",
+        "Evidence 时间线",
+        "晋升决策",
+        "没有 leader agent",
         "auto_research_lane_contract_v1",
         "auto_research_role_state_machine_v0",
         "curator",
@@ -225,7 +225,7 @@ def main() -> None:
             f"docs drifted toward centralized wording: {pattern}"
         )
 
-    assert "not one leader Coordinator" in blueprint or "no leader agent" in blueprint
+    assert "没有 leader agent" in blueprint or "不是 leader agent" in blueprint
     print("decentralized auto-research protocol smoke passed")
 
 

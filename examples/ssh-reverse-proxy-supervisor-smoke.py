@@ -105,7 +105,23 @@ def assert_health_endpoint_is_local(module) -> None:
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        with socket.create_connection(server.server_address, timeout=2) as client:
+        last_error: OSError | None = None
+        client: socket.socket | None = None
+        # The loopback listener can take a moment to surface on some local
+        # hosts (WSL2); wait instead of assuming the first connect succeeds.
+        for _attempt in range(20):
+            try:
+                client = socket.create_connection(server.server_address, timeout=2)
+                break
+            except OSError as exc:
+                last_error = exc
+                client = None
+                import time
+
+                time.sleep(0.05)
+        if client is None:
+            raise AssertionError(f"proxy server never came up: {last_error}")
+        with client:
             client.sendall(
                 b"GET http://reverse-proxy-health.invalid/ HTTP/1.1\r\n"
                 b"Host: reverse-proxy-health.invalid\r\n"

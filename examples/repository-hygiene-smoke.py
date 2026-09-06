@@ -107,7 +107,7 @@ def validate_release_timeline() -> None:
     timeline = RELEASE_TIMELINE.read_text(encoding="utf-8")
     tags = release_tags()
     if not tags:
-        if "on 20" not in timeline:
+        if "于 20" not in timeline:
             raise AssertionError("release timeline has no dated version entries")
         return
     missing = [tag for tag in tags if f"`{tag}`" not in timeline]

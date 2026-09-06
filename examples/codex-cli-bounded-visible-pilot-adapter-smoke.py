@@ -133,7 +133,7 @@ def assert_docs() -> None:
     assert "codex-cli-bounded-visible-pilot-adapter" in live_pilot, live_pilot
     assert "public-first-response.json" in live_pilot, live_pilot
     assert "argv prompt" in live_pilot, live_pilot
-    assert "Codex CLI bounded visible pilot adapter" in product_readme, product_readme
+    assert "Codex CLI 有界可见试点适配器" in product_readme, product_readme
     assert "codex-cli-bounded-visible-pilot-adapter-smoke.py" in product_readme, product_readme
 
 

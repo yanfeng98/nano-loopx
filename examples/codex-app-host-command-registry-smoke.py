@@ -110,7 +110,7 @@ def main() -> int:
         "loopx_goal_command_v0",
         "global_manager_command_v0",
         "fail_closed_with_slash_help",
-        "skill-level recognition",
+        "skill 级识别",
     ]:
         assert_contains(contract, needle, "host command registry contract")
 

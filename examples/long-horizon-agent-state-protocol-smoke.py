@@ -45,14 +45,14 @@ def main() -> int:
     assert_public_safe(index)
 
     assert_contains(index, "long_horizon_agent_state_protocol_v0", "protocol index")
-    assert_contains(protocol, "## Source Protocol", "source protocol section")
-    assert_contains(protocol, "## Projection Protocol", "projection protocol section")
+    assert_contains(protocol, "## 来源协议", "source protocol section")
+    assert_contains(protocol, "## 投影协议", "projection protocol section")
     assert_contains(protocol, '"projection_is_writable": false', "read-only projection flag")
     assert_contains(protocol, "interaction_contract_v0", "interaction contract anchor")
     assert_contains(protocol, "agent_lane_next_action_v0", "agent lane next action anchor")
     assert_contains(protocol, "loopx_rollout_event_v0", "rollout event anchor")
     assert_contains(protocol, "rollback_packet_v0", "rollback future contract")
-    assert_contains(protocol, "candidate todos are not silently promoted", "candidate todo acceptance")
+    assert_contains(protocol, "候选 todos 不被静默提升", "candidate todo acceptance")
     print("long-horizon-agent-state-protocol smoke ok")
     return 0
 

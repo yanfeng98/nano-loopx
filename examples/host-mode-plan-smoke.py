@@ -428,20 +428,20 @@ def test_markdown_and_docs_are_wired() -> None:
     contract = CONTRACT_PATH.read_text()
     assert_contains(contract, "dry_run_host_mode_selector", "workflow contract")
     assert_contains(contract, "loopx turn plan", "workflow contract")
-    assert_contains(contract, "independent validation", "workflow contract")
+    assert_contains(contract, "独立验证", "workflow contract")
     assert_contains(contract, "typed_host_adapter", "workflow contract")
     assert_public_safe(contract, "workflow contract")
 
     turn_contract = TURN_CONTRACT_PATH.read_text()
-    assert_contains(turn_contract, "LoopX decides -> agent CLI executes", "turn contract")
-    assert_contains(turn_contract, "independent validator", "turn contract")
+    assert_contains(turn_contract, "LoopX 决策 -> agent CLI 执行", "turn contract")
+    assert_contains(turn_contract, "独立验证器", "turn contract")
 
     protocol_index = PROTOCOL_INDEX_PATH.read_text()
     assert_contains(protocol_index, "host_mode_plan_v0", "protocol index")
 
     catalog = CONNECTOR_CATALOG_PATH.read_text()
     assert_contains(catalog, "`loopx_turn`", "connector catalog")
-    assert_contains(catalog, "Host mode plan v0", "connector catalog")
+    assert_contains(catalog, "宿主模式计划 v0", "connector catalog")
 
 
 def main() -> int:

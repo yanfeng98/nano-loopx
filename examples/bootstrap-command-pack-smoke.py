@@ -687,39 +687,39 @@ def test_skill_slash_fallback_contract() -> None:
     normalized = " ".join(skill_text.split())
     pr_review_normalized = " ".join(pr_review_skill_text.split())
 
-    assert "## Slash Command Fallback" in skill_text
+    assert "## 斜杠命令回退" in skill_text
     assert "`/loopx`" in skill_text
     assert "`/loopx <goal text>`" in skill_text
     assert "loopx bootstrap-command-pack --project ." in skill_text
     assert "loopx start-goal --guided --project ." in skill_text
     assert "canonical_project_alias" in skill_text
     assert (
-        "`start-goal --project` keeps the requested project route" in skill_text
+        "`start-goal --project` 保留所请求的项目路由" in skill_text
     )
-    assert "Lower-level diagnostic command packs" in normalized
+    assert "较低级的诊断命令包" in normalized
     assert '--goal-text "<GOAL_TEXT>"' in skill_text
-    assert "bare `/loopx` read-only command" in skill_text
-    assert "explicit goal-start intent" in normalized
-    assert "planner order plus `todo add` write order" in normalized
-    assert "do not silently downgrade `/loopx <goal text>`" in normalized
+    assert "裸 `/loopx` 只读命令" in skill_text
+    assert "显式 goal 启动意图" in normalized
+    assert "planner 顺序加 `todo add` 写入顺序" in normalized
+    assert "不要把 `/loopx <goal text>` 静默降级" in normalized
     assert "`/loopx-global-summary`" in skill_text
-    assert "Legacy `/loop-global-*` forms" in normalized
+    assert "遗留 `/loop-global-*` 形式" in normalized
     assert "loopx slash-commands" in skill_text
-    assert "not project bootstrap commands" in normalized
+    assert "不是项目 bootstrap 命令" in normalized
     assert "`/loopx-pr-review`" in skill_text
-    assert "load the narrower `loopx-pr-review` skill" in normalized
-    assert "Do not handle `/loopx-pr-review` from this broader project skill" in normalized
-    assert "do not route it to `loopx-pr-merge` unless" in normalized
+    assert "加载更窄的 `loopx-pr-review` 技能" in normalized
+    assert "不要从本更宽泛 的项目技能处理 `/loopx-pr-review`" in normalized
+    assert "不要路由到 `loopx-pr-merge`，除非" in normalized
     assert "loopx --format json pr-review --state all" not in skill_text
     assert "loopx --format json pr-review --state all" in pr_review_skill_text
-    assert "Save the full first JSON packet before printing a compact projection" in pr_review_normalized
+    assert "在打印紧凑投影前保存完整的首个 JSON 包" in pr_review_normalized
     assert "agent_response_contract" in pr_review_skill_text
     assert "pull_requests[].review_template" in pr_review_skill_text
     assert "pull_requests[].evidence_commands" in pr_review_skill_text
-    assert "Do not pipe the only copy through `jq`" in pr_review_skill_text
+    assert "不要只通过 `jq` 管道处理唯一副本" in pr_review_skill_text
     assert "review_groups.unmerged" in pr_review_skill_text
     assert "review_groups.merged" in pr_review_skill_text
-    assert "The five sections are output structure, while the execution contract is the evidence authority" in pr_review_normalized
+    assert "五个部分是输出结构，执行契约是证据 权威" in pr_review_normalized
 
 
 def test_start_goal_guided_derives_display_name_from_goal_text() -> None:

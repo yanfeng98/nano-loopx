@@ -13,12 +13,14 @@ CONTRACT_PATHS = (
 )
 
 REQUIRED_FRAGMENTS = (
-    "default cardinality policy is graph growth",
-    "material decision and evidence nodes",
-    "semantic sections or linked subgraphs",
-    "20 nodes",
-    "explicit opt-in presentation policy",
-    "overlap and text-overflow checks",
+    "默认基数策略是图增长",
+    "决策与证据节点",
+    "语义压缩",
+    "链接子图",
+    "20 节点",
+    "显式 opt-in",
+    "视为无界",
+    "运行重叠与文本溢出检查",
 )
 
 FORBIDDEN_DEFAULTS = (

@@ -36,8 +36,7 @@ def assert_hint(
         ],
         "spend_policy": (
             "do not spend for another contract/preparation-only slice; spend only "
-            "after validated product-path evidence, benchmark/case evidence, or a "
-            "precise blocker writeback"
+            "after validated goal-outcome evidence or a precise blocker writeback"
         ),
     }
 
@@ -69,13 +68,9 @@ def main() -> None:
             "classification": "blocked but explicitly requires followthrough",
         },
         outcome=None,
-        turn_kind="blocker_writeback",
+        turn_kind="unknown",
     )
-    assert_hint(
-        {"classification": "contract-only preparation"},
-        outcome=None,
-        turn_kind="contract_only_preparation",
-    )
+    assert_none({"classification": "contract-only preparation"})
     print("outcome-followthrough-policy-smoke ok")
 
 

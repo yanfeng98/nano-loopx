@@ -41,7 +41,7 @@ def assert_contains(text: str, needle: str, label: str) -> None:
 
 
 def extract_json_block(text: str) -> dict:
-    start = text.index("```json", text.index("## Public Fields"))
+    start = text.index("```json", text.index("## 公共字段"))
     body_start = text.index("\n", start) + 1
     end = text.index("```", body_start)
     return json.loads(text[body_start:end])
@@ -268,18 +268,18 @@ def main() -> int:
     interaction = read(INTERACTION_PATTERN)
 
     for required in [
-        "Long-Task Cadence Hint",
-        "not a scheduler policy",
+        "长任务 Cadence 提示",
+        "不是 scheduler 策略",
         "`cadence_hint_v0`",
-        "`blocked`, `active_work`, `thin_progress`, `material_progress`, `unknown`",
-        "`wait`, `widen`, `keep`",
-        "final agent channel",
+        "`blocked`、`active_work`、`thin_progress`、`material_progress`、`unknown`",
+        "`wait`、`widen`、`keep`",
+        "最终 Agent 通道",
         "`superseded`",
-        "not a perfect measure of actual agent-loop runtime",
-        "conversation transcripts",
-        "raw local logs",
-        "credentials",
-        "local absolute paths",
+        "对实际 Agent loop 运行时的完美度量",
+        "对话转录",
+        "原始本地日志",
+        "凭据",
+        "本地绝对路径",
     ]:
         assert_contains(policy, required, "policy")
 
@@ -295,12 +295,12 @@ def main() -> int:
     assert_contains(docs_index, "operations/README.md", "docs index")
     assert_contains(
         operations_index,
-        "Long-task cadence policy",
+        "长任务 cadence 策略",
         "operations index",
     )
     assert_contains(getting_started, "Long-task cadence hint", "getting started")
     assert_contains(interaction, "IP-010 Cadence Hint", "interaction pattern")
-    assert_contains(interaction, "thin-progress streak", "interaction pattern")
+    assert_contains(interaction, "薄进展连续段", "interaction pattern")
     assert_runtime_hint()
     assert_status_and_quota_projection()
 

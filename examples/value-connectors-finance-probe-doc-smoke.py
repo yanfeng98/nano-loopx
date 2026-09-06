@@ -55,7 +55,7 @@ def main() -> int:
     for marker in (
         "value_connector_extension_migration_v0",
         "provider source required",
-        "must not recreate the old connector",
+        "绝不能重建旧 connector",
     ):
         assert marker in doc, marker
 

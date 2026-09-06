@@ -39,29 +39,29 @@ def assert_doc() -> None:
     normalized = normalize(text)
 
     must_have = (
-        "Codex CLI First-Run Rehearsal",
-        "PyPI install/update with packaged workflow skills and an archive fallback",
-        "one-message Codex CLI TUI bootstrap",
-        "proof-capture fixtures for later visible automation",
+        "Codex CLI 首次运行彩排",
+        "PyPI 安装/更新，带打包 workflow skills 与归档兜底",
+        "一条消息的 Codex CLI TUI 引导",
+        "供之后可见自动化使用的 proof-capture 夹具",
         "Start LoopX for this repo",
         "python3 -m pip install --upgrade loopx",
         "loopx workflow-skills --install",
         "loopx codex-cli-bootstrap-message --project . --goal-id <goal-id> --message-only",
         "loopx codex-cli-tui-bootstrap-smoke-bundle",
         "loopx --format json codex-cli-visible-attach-acceptance",
-        "does not prove same-open-TUI automation",
-        "Same-TUI automation stays optional until the proof path passes",
-        "must not:",
-        "require cloning the LoopX repo",
-        "read raw Codex transcripts, session files, stdout, stderr, credentials, or private paths",
-        "spend LoopX quota before validated writeback",
-        "treat headless `codex exec` as the default user experience",
+        "仍未证明 same-open-TUI 自动化",
+        "在证明路径通过之前，Same-TUI 自动化保持可选",
+        "该首次运行路径不得",
+        "要求克隆 LoopX 仓库",
+        "读取原始 Codex transcript、session 文件、stdout、stderr、凭据或私有路径",
+        "在验证写回之前 spend LoopX quota",
+        "把 headless `codex exec` 当作默认用户体验",
     )
     for phrase in must_have:
         assert phrase in normalized, phrase
 
-    first_response_index = normalized.index("current goal id")
-    later_automation_index = normalized.index("Same-TUI automation stays optional")
+    first_response_index = normalized.index("当前 goal id")
+    later_automation_index = normalized.index("Same-TUI 自动化保持可选")
     assert first_response_index < later_automation_index, text
 
 
@@ -75,8 +75,8 @@ def assert_indexes() -> None:
     assert "product/README.md" in docs, docs
     assert f"../product/runtimes/codex-cli/{link}" in getting_started, getting_started
     assert "PyPI" in product, product
-    assert "one-message TUI bootstrap" in product, product
-    assert "proof-capture fixtures" in getting_started, getting_started
+    assert "单消息 TUI 引导" in product, product
+    assert "证明捕获夹具" in getting_started, getting_started
 
 
 def assert_cli_surfaces_align() -> None:

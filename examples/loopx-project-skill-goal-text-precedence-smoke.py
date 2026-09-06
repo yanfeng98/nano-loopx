@@ -18,12 +18,12 @@ def require(condition: bool, message: str) -> None:
 def main() -> int:
     text = SKILL.read_text(encoding="utf-8")
     compact = " ".join(text.split())
-    require("Recognized project-local goal-start command:" in text, "goal-start heading missing")
+    require("可识别的项目本地 goal 启动命令：" in text, "goal-start heading missing")
     require("- `/loopx <goal text>`" in text, "goal-text command missing")
     require("- `/loopx`\n" not in text, "bare /loopx should not be listed as project-local fallback")
-    require("Otherwise every non-whitespace character after `/loopx` is goal text." in compact, "goal text precedence missing")
-    require("Never infer a product capability route" in text, "implicit capability route guard missing")
-    require("Do not downgrade either form into a status or inspection turn." in compact, "downgrade guard missing")
+    require("否则 `/loopx` 之后每个非空白字符都是 goal 文本" in compact, "goal text precedence missing")
+    require("推断产品 capability 路由" in text, "implicit capability route guard missing")
+    require("不要降低任一形式为状态或检查轮次" in compact, "downgrade guard missing")
     require("Bare `/loopx` is read/status-first" not in text, "bare /loopx status-first branch should not steer this skill")
     print("loopx-project-skill-goal-text-precedence-smoke ok")
     return 0

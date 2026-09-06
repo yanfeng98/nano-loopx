@@ -44,21 +44,21 @@ def main() -> None:
         assert f"]({filename})" in readme, f"README does not link {filename}"
 
     assert "interaction_pattern_lens_v0" in docs["interaction-catalog.md"]
-    assert "Core Pattern Map" in docs["interaction-catalog.md"]
-    assert "State Definitions" in docs["state-definitions.md"]
-    assert "Canonical State Bodies" in docs["state-definitions.md"]
-    assert "Derived Runtime States" in docs["state-definitions.md"]
-    assert "State Machines" in docs["state-machine.md"]
+    assert "核心模式图" in docs["interaction-catalog.md"]
+    assert "State 定义" in docs["state-definitions.md"]
+    assert "规范 State 体" in docs["state-definitions.md"]
+    assert "派生的运行时 State" in docs["state-definitions.md"]
+    assert "状态机" in docs["state-machine.md"]
     for section in (
-        "Todo Lifecycle Machine",
-        "Quota / Runtime Machine",
-        "Gate Decision Scope Machine",
-        "Owner Route / Multi-Agent Handoff Machine",
-        "Evidence / Rollout / Rollback Machine",
-        "Scheduler / Heartbeat Machine",
-        "Projection Sink Machine",
-        "Agent Onboarding / Automation Enablement Machine",
-        "Agent Vision / Replan Machine",
+        "Todo 生命周期机器",
+        "配额/运行时机器",
+        "Gate 决策范围机器",
+        "Owner 路由/多 Agent 交接机器",
+        "Evidence/上线/回滚机器",
+        "调度器/心跳机器",
+        "投影 Sink 机器",
+        "Agent 接入/自动化启用机器",
+        "Agent 愿景/重规划机器",
     ):
         assert section in docs["state-machine.md"], f"missing state machine: {section}"
     assert "```mermaid" in combined

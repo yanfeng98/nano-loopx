@@ -32,7 +32,7 @@ def main() -> int:
         assert path in output, output
 
     readme = (REPO_ROOT / "apps/presentation/dashboard/README.md").read_text(encoding="utf-8")
-    assert "`status.local.json` is intentionally git-ignored" in readme, readme
+    assert "`status.local.json` 有意被 git-ignore" in readme, readme
     assert "examples/status.example.json" in readme, readme
 
     print("dashboard-local-status-gitignore-smoke ok")

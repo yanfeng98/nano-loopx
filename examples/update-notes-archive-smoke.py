@@ -72,7 +72,7 @@ def validate_indexes() -> None:
         assert_contains(notes_index, note.name, "notes index")
     assert_contains(notes_index, files[-1].name, "notes index latest")
     assert_contains(notes_index, "automation.md", "notes index")
-    if not re.search(r"Next expected window: \d{4}-\d{2}-\d{2} to \d{4}-\d{2}-\d{2}\.", notes_index):
+    if not re.search(r"下一个预期时间段：\d{4}-\d{2}-\d{2} 至 \d{4}-\d{2}-\d{2}\。", notes_index):
         raise AssertionError("notes index missing next expected window")
 
 
@@ -80,25 +80,25 @@ def validate_notes() -> None:
     for note in note_files():
         text = read(note)
         label = str(note.relative_to(ROOT))
-        assert_contains(text, "# Biweekly Update Note:", label)
-        assert_contains(text, "## Source Boundary", label)
-        assert_contains(text, "## Highlights", label)
-        assert_contains(text, "## What Shipped", label)
-        assert_contains(text, "## Validation And Public Boundary", label)
+        assert_contains(text, "# 每两周更新说明：", label)
+        assert_contains(text, "## 来源边界", label)
+        assert_contains(text, "## 亮点", label)
+        assert_contains(text, "## 交付内容", label)
+        assert_contains(text, "## 验证与公开边界", label)
 
 
 def validate_automation_plan() -> None:
     text = read(AUTOMATION)
-    assert_contains(text, "separate publication workflow", "automation plan")
+    assert_contains(text, "独立的发布工作流", "automation plan")
     assert_contains(text, ".github/workflows/update-notes.yml", "automation plan")
     assert_contains(text, "scripts/update_notes_release_job.py", "automation plan")
-    assert_contains(text, "custom behavior", "automation plan")
-    assert_contains(text, "active heartbeat", "automation plan")
+    assert_contains(text, "自定义行为", "automation plan")
+    assert_contains(text, "活跃的 heartbeat", "automation plan")
     assert_contains(text, "workflow_dispatch", "automation plan")
     assert_contains(text, "since", "automation plan")
     assert_contains(text, "until", "automation plan")
-    assert_contains(text, "reviewable draft artifact", "automation plan")
-    assert_contains(text, "explicit human action", "automation plan")
+    assert_contains(text, "可审查的草稿 artifact", "automation plan")
+    assert_contains(text, "显式的人为动作", "automation plan")
     assert_contains(text, "2026-07-12", "automation plan")
     assert_contains(text, "--dry-run", "automation plan")
     assert_contains(text, "--open-pr", "automation plan")

@@ -23,24 +23,24 @@ def assert_contract_doc() -> None:
     normalized = normalize(text)
 
     must_have = (
-        "Codex CLI TUI Continuation Priority",
-        "Frontstage and showcase work are important support surfaces",
-        "must not outrank a runnable Codex CLI TUI continuation task",
-        "one pasted LoopX message starts the loop",
-        "later steer or resume work through the same visible TUI",
-        "Codex CLI TUI continuation wins over frontstage polish",
-        "planning drift and run self-repair",
+        "Codex CLI TUI 延续优先级",
+        "Frontstage 与 showcase 工作是很重要的支撑 surface",
+        "不得排在可运行的 Codex CLI TUI 延续任务之前",
+        "一条粘贴的 LoopX 消息启动 loop",
+        "通过同一个可见 TUI 转向或恢复工作",
+        "Codex CLI TUI 延续胜过 frontstage 打磨",
+        "规划漂移",
         "same_tui_continuation_proven",
         "same_tui_continuation_blocked",
         "same_tui_continuation_gated",
-        "visible proof and runtime idle evidence",
-        "must not read raw Codex transcripts, session files",
+        "带可见证明与 runtime idle evidence",
+        "但不得读取原始 Codex transcripts、session 文件",
     )
     for phrase in must_have:
         assert phrase in normalized, phrase
 
-    priority_index = normalized.index("Scheduling Rule")
-    frontstage_index = normalized.index("frontstage or showcase support work")
+    priority_index = normalized.index("调度规则")
+    frontstage_index = normalized.index("frontstage 与 showcase 工作")
     assert priority_index < frontstage_index, text
 
 
@@ -51,8 +51,8 @@ def assert_indexes() -> None:
     link = "codex-cli-tui-continuation-priority.md"
     assert link in product, product
     assert f"../product/runtimes/codex-cli/{link}" in getting_started, getting_started
-    assert "same-open-TUI continuation ahead of" in product, product
-    assert "frontstage or showcase polish" in getting_started, getting_started
+    assert "同一开 TUI 延续领先于" in product, product
+    assert "frontstage 或 showcase 打磨" in getting_started, getting_started
 
 
 def main() -> int:
