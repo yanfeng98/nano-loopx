@@ -56,7 +56,7 @@ promotion 边界前继续使用既有 Markdown transaction。
 ### 长程持久化也是迁移收益的一部分
 
 产品目标是单个 goal 至少持续十个自然日。shared-authority RFC 的
-[第 7.2 节](./shared-goal-authority-state-provider-v0.zh-CN.md#72-十天-goal本地存储资格化目标提案)
+[第 7.2 节](./shared-goal-authority-state-provider-v0.zh-CN.md#72-ten-day-goals-local-storage-qualification-target-proposal)
 统一维护负载、性能预算、保留策略和真实 soak 验收；变化的容量数字不在此重复维护。
 
 与 provider-first Todo caller 同期推进完整本地持久化切片：资格化嵌入式事务存储
@@ -260,6 +260,7 @@ replay、receipt 与 settlement。这个架构选择已经落地，不再是假�
 | Quota monitor-poll commit transaction | TypeScript 拥有 monitor admission 复核、target/event/result 构造、effect replay/index CAS、provider intent，以及可修复的 JSON/Markdown/index persistence | Python 投影 compact `should-run` facts，在最多两次 reduction 之间调用真实 Todo provider，刷新 legacy status，并持有 cross-writer index lock |
 | Runtime decoder（[#3443](https://github.com/huangruiteng/loopx/pull/3443)） | 稳定 primitive decoding 进入一个很小的共享模块；domain decoder 仍留在本地 | 没有理由建设更大的 schema framework |
 | Transaction 兑现（[#3464](https://github.com/huangruiteng/loopx/pull/3464)、[#3481](https://github.com/huangruiteng/loopx/pull/3481) 与 Todo completion） | Turn settlement、quota delivery routing 与 Todo completion 均只跨一个粗粒度 TS boundary；Todo transaction 拥有 identity、replay fence、validation planning/result reduction、continuation/recovery 与 completion metadata | Python 仍执行显式 external provider，并物化 legacy Markdown/event result；其他 domain 仍需各自的 bounded cutover |
+| Promoted-authority Todo claim | TypeScript 拥有 provider-head 读取、lifecycle 校验、完整记录更新、hard-lease 检查、CAS、receipt，以及 authority promotion 后 claim 的 readback-safe 结果 | 默认本地 Markdown 模式仍由 legacy writer 持有；其余 Todo mutation 与 Markdown 再生仍是有界 follow-up |
 
 Scheduler facade exit 已交付第一段有边界的 Stage 3 路径。带版本的
 `heartbeat_followup_cli.ts` 从生成的 ACK/failure hint 接收有大小上限的 compact host
