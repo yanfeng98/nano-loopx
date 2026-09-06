@@ -312,3 +312,17 @@ profile、authority policy、proposal logic 和经过验证的 lifecycle writeba
 
 更完整的实现细节和不变量见
 [Decision Context 架构协议](../../../docs/reference/protocols/decision-context-architecture-v0.zh-CN.md)。
+
+## 验证
+
+```bash
+python3 examples/decision-context-contract-smoke.py
+python3 examples/decision-material-walkthrough-smoke.py
+python3 -m pytest -q tests/test_decision_context_material.py
+python3 -m pytest -q tests/capabilities/test_decision_context_capture.py
+```
+
+contract smoke 覆盖 Decision Context packet 与 architecture 回读；walkthrough smoke
+把带 revision 的证据喂进 Material Lifecycle rerank preview，保留过期/冲突证据可见，
+省略 source body 与私有 locator，并把 apply/cursor commit 留作独立 owner-gated
+动作。
