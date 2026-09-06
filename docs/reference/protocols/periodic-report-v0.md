@@ -68,6 +68,9 @@ loopx periodic-report compose-run \
 
 仅生成不暴露该投影。发布候选绑定其精确 SHA-256，Goal Channel sink 只在投递回读成功后把该绑定推进到发布 cursor。紧凑 `periodic_report_workspace_index_v0` 热路径包含身份、投递时间、前任血统与精确内容寻址详情引用，但不含报告散文。完整投影是仅回环冷读取，必须匹配当前发布 cursor。因此批准待定、仅生成、过期或摘要不匹配的投影失效关闭，而不是显示为已发布。
 
+显式提供 `limit` 或 `offset` 的请求选择有界窗口响应；这让旧的严格 v0 读取器与新服务保持兼容，而新读取器在交错升级期间同时接受 legacy 与 windowed v0 形状。窗口默认返回最新 100 项，`limit` 接受 0..200、`offset` 接受 0..10000，并报告 `returned_count`、`total_count` 与 `truncated`。
+
+
 Personal Workspace 投影不生成、不批准、不发布、不确认或不编辑报告。周期报告 capability 仍是报告触发、文档、投递与发布 cursor 状态的唯一 owner。这是里程碑报告智能呈现 RFC 的有界实现，而非该 RFC 描述的通用跨 capability 编译器。
 
 依赖策略是 `required`、`optional` 或 `disabled`。必需 sink 不可用时阻塞正式投递。可选 sink 降级而不使生成回执无效。禁用 sink 被跳过。与 profile 绑定不匹配的 provider 版本、协议或能力是 `incompatible`；无已验证就绪性的 provider 是 `unverified`。
