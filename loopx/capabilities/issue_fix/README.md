@@ -24,6 +24,62 @@ public comment or justified triage remains useful for rejecting unsuitable
 candidates or recording a concrete blocker, but it is not a substitute for the
 fix-PR path when that path is feasible.
 
+It is not "one prompt generates a patch" but an issue-to-PR loop agent that
+keeps working across model turns, chat threads, CI waits, and review
+round-trips. Issue-Fix composes four complementary capability layers into one
+delivery chain:
+
+- **LoopX State Kernel** supplies the goal, todo, quota, authority, scheduler,
+  monitor, replan, and terminal closeout that long-running continuous delivery
+  needs;
+- **OpenViking Memory** provides optional domain repository memory so the agent
+  can find historical implementations, failure patterns, and verified
+  experience, but a hit that influences a patch must still be re-verified in
+  the current checkout;
+- **LoopX Domain State (issue-fix domain state)** keeps issue-domain
+  feasibility, repository context, delivery evidence, reviewer route, PR
+  lifecycle, and outcome on top of the generic kernel;
+- **High-capability AgentLoop** supplies understanding, reasoning, tool use,
+  and code execution; it may be Codex, Claude Code, or another host agent
+  runtime, and LoopX does not bind to one model or agent loop.
+
+The goal of the four layers is not to package the model under a "human-like"
+slogan; it is to supply the continuity, memory, domain state, and execution
+intelligence that mature engineering delivery actually depends on, so the loop
+agent can keep advancing complex work like a senior engineer instead of
+restarting every round.
+
+## Four-Layer Composition
+
+| Capability layer | What it solves | Real boundary in Issue-Fix |
+| --- | --- | --- |
+| LoopX State Kernel: continuous delivery | Keeps the objective, ownership, compute decisions, waits, recovery, and closeout alive across turns. | It is the local-first control plane; it does not write code for the agent and does not decide GitHub checks, review, or merge state. |
+| OpenViking Memory: domain memory | Recovers relevant implementations, historical fixes, and validation patterns from a stable rolling default-branch index and verified outcomes, reducing repeated exploration. | Currently an explicitly configured, advisory, fail-open optional capability; a hit can influence the patch only after exact-content or high-confidence parser-chunk verification against the current checkout, and validated-outcome writeback defaults off. |
+| LoopX Domain State: issue-fix domain-state extension | Keeps the `fix_pr` / `comment_only` / `triage_only` decision, repository context, delivery evidence, reviewer, PR lifecycle, and outcome. | Reuses the existing goal-scoped domain pack; it is not a second todo, quota, or workflow engine and does not store raw issue/comment/log bodies. |
+| AgentLoop: execution intelligence | Reads issues and code, reproduces, reasons, edits the worktree, runs tests, and handles review corrections. | AgentLoop is replaceable and must obey LoopX authority, repository policy, and validation contracts; "a stronger model" does not grant publish, merge, or production authority. |
+
+All four layers are necessary, but their responsibilities must not be mixed:
+**intelligence is not continuity, memory is not current state, domain state is
+not execution, and the control plane is not the source of truth.**
+Repository/GitHub remain the authority for issue, code, CI, review,
+mergeability, and terminal PR state; the human maintainer still owns design
+judgment, sensitive/private context, and any action outside recorded
+authority.
+
+```mermaid
+flowchart TB
+  U["Public issue / maintainer correction"] --> K["LoopX State Kernel<br/>goal · todo · quota · authority · monitor · replan"]
+  K --> D["LoopX Domain State / Issue-Fix<br/>feasibility · context · delivery · PR lifecycle · outcome"]
+  D --> A["High-capability AgentLoop<br/>understanding · reasoning · tool use · coding · validation"]
+  M["OpenViking Memory<br/>rolling advisory repository index"] --> A
+  A --> C["Current checkout and focused validation"]
+  C --> G["Repository / GitHub<br/>code · checks · review · merge state"]
+  G --> D
+  D --> K
+  H["Human maintainer<br/>judgment · private context · authority"] --> K
+  H --> G
+```
+
 ## What LoopX Provides Underneath
 
 You do not need to know LoopX before using this capability. The shortest mental
@@ -73,6 +129,7 @@ LoopX is the control plane, not the coding model or GitHub itself.
 | --- | --- |
 | Host agent/runtime | Read code, reproduce the bug, edit files, run tests, and perform explicitly authorized git/GitHub actions. |
 | Issue-fix capability | Build public-safe workflow, feasibility, repository-context, reviewer, validation, and PR-lifecycle packets. |
+| OpenViking memory | Supply an optional rolling default-branch repository index and verified domain memory; a hit remains advisory until verified in the current checkout. |
 | LoopX kernel | Persist goal/todo ownership, quota, authority, evidence, monitor, replan, and human-interaction state. |
 | Repository/GitHub | Remain authoritative for code, policy, CI, review, mergeability, and terminal PR state. |
 | Human maintainer | Own design judgment, repository policy, sensitive/private context, and any action outside recorded authority. |
@@ -88,7 +145,9 @@ explicitly authorized.
 flowchart LR
   I["Public issue candidates"] --> S["Selection and feasibility"]
   S --> C["Revision-pinned repository context"]
+  OM["OpenViking Memory<br/>advisory retrieval"] --> C
   C --> R["Reproduction"]
+  AL["High-capability AgentLoop"] --> R
   R --> F["Focused patch and regression test"]
   F --> V["Layered validation"]
   V --> O["Reviewer recommendation"]
@@ -101,11 +160,14 @@ flowchart LR
   H --> O
   H --> P
   H --> M
-  LX["LoopX goal/todo/quota/evidence"] --> S
-  LX --> C
-  LX --> V
-  LX --> M
-  E --> LX
+  DK["LoopX Domain State / Issue-Fix"] --> S
+  DK --> C
+  DK --> M
+  SK["LoopX State Kernel"] --> S
+  SK --> V
+  SK --> M
+  E --> DK
+  E --> SK
 ```
 
 ### 1. Candidate selection
@@ -252,7 +314,8 @@ copy. Comments are not part of this closing contract. See GitHub's
 [linked-issue contract](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 When a human confirms that an unresolved git display name belongs to a specific
 GitHub account, `--identity-map-json` records that compact mapping as verified
-identity evidence and reranks the same repository-native contribution evidence.
+identity evidence and reranks the same repository-native contribution evidence;
+it only resolves identity and never fabricates ownership.
 
 `--notification-sinks-json` optionally adds a parallel reviewer channel. A
 configured GitHub request and configured Lark notification are independent
@@ -783,8 +846,13 @@ Track outcomes, not agent activity:
 - failure-before/pass-after proof rate;
 - unrelated regression rate;
 - time from issue selection to review-ready and terminal state;
+- recovery rate across turns, restarts, and external waits;
 - number and type of human interventions;
 - reviewer recommendation acceptance/override rate;
+- memory hit rate that genuinely changed a decision after checkout
+  verification, plus the stale/misleading hit rate;
+- completeness rate of feasibility, delivery, PR lifecycle, and terminal
+  outcome projections;
 - unchanged monitor polls skipped;
 - public/private boundary incidents;
 - LoopX generic gaps fixed or converted into concrete claimed todos.
@@ -814,6 +882,13 @@ On a host with the LoopX slash entry, start the long-running goal directly:
 ```text
 /loopx --capability-route issue-fix Fix https://github.com/owner/repo/issues/123
 ```
+
+One entry starts the same four-layer loop: the State Kernel creates a
+recoverable goal/todo and heartbeat, LoopX Domain State pins the current
+issue-fix domain stage, OpenViking Memory supplies historical clues when it is
+configured, and the current AgentLoop then executes reproduction, patch,
+validation, and the subsequent PR lifecycle. Without a configured Memory, the
+flow still fail-opens and does not block the base issue fix.
 
 For a manually integrated host, run `loopx bootstrap-command-pack --project .`
 and pass the same complete arguments once through
@@ -1118,7 +1193,11 @@ The default `loopx lark-kanban sync-loopx-todos` path also derives all issue
 outcomes from the goal's existing feasibility and PR lifecycle domain state and
 upserts them beside todo rows. A feasibility row therefore appears as issue work
 even before a PR exists; a PR enriches that row only when its lifecycle
-observation carries the matching `repo` and explicit `issue_ref`. Numeric issue
+observation carries the matching `repo` and explicit `issue_ref`. A lifecycle
+observation without a matching feasibility row is no longer silently dropped:
+it is shown as a PR-only outcome without fabricating reproduction, validation,
+or an issue link, and a terminal PR still enters the merged/closed output
+counts. Numeric issue
 aliases (`#123`, `issue_123`, `issues/123`) canonicalize to `issues_123` on
 write and when reading legacy rows, so equivalent explicit links cannot silently
 fall into the unlinked count. The command's `--limit` applies only to active todo
