@@ -1,6 +1,5 @@
 # Codex CLI 首次运行彩排
 
-> [English](codex-cli-first-run-rehearsal.md)
 
 状态：产品路径与发布彩排。
 

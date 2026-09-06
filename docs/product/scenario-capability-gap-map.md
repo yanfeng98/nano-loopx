@@ -1,6 +1,5 @@
 # 场景能力差距图
 
-> [English](scenario-capability-gap-map.md)
 
 状态:产品引导笔记。
 
@@ -217,7 +216,7 @@ README 与产品文档已经命名了比前两个示例更多的场景压力。�
 | --- | --- | --- | --- |
 | P0 | 维护者管理与多 agent 车道 | `docs/product/surfaces/intelligent-management-surface.md`、`docs/product/surfaces/nontechnical-operator-status-model.md` | `signal_v0`、`anchor_v0`、`management_projection_v0` 与车道级 `performance_review_v0`,以便维护者在更多自动化被信任前评审价值、质量、成本与注意力。 |
 | P0 | 仓库 issue-fix 与 PR 驱动增长 | `docs/product/surfaces/intelligent-management-surface.md`、`docs/project-agent-todo-contract.md` | `issue_meta_surface_v0`、`issue_intake_packet_v0` 与 `patch_handoff_packet_v0`,以便 issue 信号保持可见而不成为原始积压或不安全补丁权威。 |
-| P0 | 创作者与自媒体运营 | `README.md`、`README.zh-CN.md`、`docs/product/vision.md` | `content_ops_surface_v0`、来源感知的草稿队列与持久 `feedback_signal_v0`,以便来源边界、品味反馈与无自动发布 gate 跨 Turn 存活。 |
+| P0 | 创作者与自媒体运营 | `README.md`、`README.md`、`docs/product/vision.md` | `content_ops_surface_v0`、来源感知的草稿队列与持久 `feedback_signal_v0`,以便来源边界、品味反馈与无自动发布 gate 跨 Turn 存活。 |
 | P0 | 基准研究工作流 | `benchmark/`、基准研究 RFC | 匹配臂、原生 runner/verifier 归属、紧凑凭据与工具包边界检查,而不内置 LoopX runner。 |
 | P1 | Codex CLI TUI 接入与延续 | `README.md`、`docs/product/runtimes/codex-cli/codex-cli-tui-loop.md`、`docs/product/runtimes/codex-cli/codex-cli-automation-driver.md` | `host_session_handle_v0`、可见会话证明、空闲/回退状态与提示升级检测,使单消息引导与同 TUI 延续清晰可恢复。 |
 | P1 | ML 实验建议 | `docs/product/domain-capability-packs.md`、`docs/product/roadmaps/experiment-controller-milestone.md` | `domain_pack_detection_v0`、`domain_pack_contract_v0` 与建议性 `ml_experiment_result_v0`,以便识别实验形态的 goal 而不悄然启用启动或路由决策。 |

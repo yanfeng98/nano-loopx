@@ -1,6 +1,5 @@
 # LoopX 项目治理
 
-> [English](GOVERNANCE.md)
 
 本文档定义 LoopX 的公开项目角色与决策流程。它管辖本仓库及其发布物，
 与 LoopX 运行时概念（如 agent peer、todo claim、quota、gate、write scope）是

@@ -1,6 +1,5 @@
 # 默认工作流规划器缺口事件
 
-> [English](default-workflow-planner-gap-incident-20260625.md)
 
 日期:2026-06-25
 

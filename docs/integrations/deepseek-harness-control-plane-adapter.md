@@ -1,6 +1,5 @@
 # DeepSeek Harness 原生控制面集成
 
-> [English](deepseek-harness-control-plane-adapter.md)
 
 状态:已在本仓库中以可选
 [`dsh-loopx-plugin`](../../packages/dsh-loopx-plugin/README.md) 包实现。

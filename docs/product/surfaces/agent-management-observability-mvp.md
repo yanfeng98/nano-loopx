@@ -1,6 +1,5 @@
 # Agent 管理可观测性 MVP
 
-> [English](agent-management-observability-mvp.md)
 
 本说明把 `agent_management_projection_v0` 变成 LoopX dashboard 的第一个具体产品切片。它刻意是可观测性 MVP，而不是新 scheduler、dispatcher、任务数据库或浏览器写路径。
 

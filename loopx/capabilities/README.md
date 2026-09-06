@@ -1,6 +1,5 @@
 # LoopX 产品能力
 
-> [English](README.md)
 
 LoopX capability 是一个稳定、provider-neutral 的契约,用于从 LoopX state
 产出一个有界、可验证的调用方 outcome。它拥有领域 policy,归一化 provider
@@ -44,7 +43,7 @@ loopx capability show issue-fix --format json
 | 你需要… | Capability 路径 |
 | --- | --- |
 | 通过 fail-closed 的证据生命周期,准备并校验本地不上传的 benchmark 实验 | [Benchmark Toolkit](benchmark_toolkit/README.md) |
-| 把公开 issue 与 PR 信号转成带验证证据的聚焦、可审阅修复 | [issue-fix](issue_fix/README.md) capability([中文](issue_fix/README.zh-CN.md)) |
+| 把公开 issue 与 PR 信号转成带验证证据的聚焦、可审阅修复 | [issue-fix](issue_fix/README.md)  |
 | 通过有界 review、安全修复与严格收据,校验确切的最终 diff | [Change Quality](change_quality/README.md) |
 | 对照精确 head 证据与 typed 完成规则,审阅不断变化的公开 PR 队列 | [Pull Request Review](pr_review_queue/README.md) |
 | 检测 source-head 漂移,并安全重建本地已审阅分支栈 | [Integration Branch](integration_branch/README.md) |
@@ -54,11 +53,11 @@ loopx capability show issue-fix --format json
 
 | 你需要… | Capability 路径 |
 | --- | --- |
-| 在长程探索中保留问题、假设、实验、发现与组合前沿 | [Explore](explore/README.md)([中文版](explore/README.zh-CN.md)) |
-| 在做出决策前区分当前证据、advisory 提案与已验证 outcome | [Decision Context](decision_context/README.md)([中文](decision_context/README.zh-CN.md)) |
+| 在长程探索中保留问题、假设、实验、发现与组合前沿 | [Explore](explore/README.md) |
+| 在做出决策前区分当前证据、advisory 提案与已验证 outcome | [Decision Context](decision_context/README.md) |
 | 在没有新的用户 prompt 时召回一个已收尾的自主 turn | [Agent Turn Recall](agent_turn_recall/README.md) |
 | 增加可选、provider-neutral 的偏好召回,但不让 memory 成为状态权威 | [Semantic Preference](semantic_preference/README.md) |
-| 保存 typed 反馈记忆,并评估有界召回/应用试点 | [Reward Memory](reward_memory/README.md)([中文](reward_memory/README.zh-CN.md)) |
+| 保存 typed 反馈记忆,并评估有界召回/应用试点 | [Reward Memory](reward_memory/README.md) |
 
 ### 运维与投影
 
@@ -67,9 +66,9 @@ loopx capability show issue-fix --format json
 | 把 release 自有的 skill 投递到选定的项目本地 host surface | [Project Skill Delivery](project_skill_delivery/README.md) |
 | 用 source、archive、delivery 与 settlement 收据组合定时或进度触发的报告 | [Periodic Report](periodic_report/README.md) |
 | 把公开/私有内容信号转成可审阅的 source、角度、草稿、反馈与发布 gate 包 | [Content Operations](content_ops/README.md) |
-| 盘点、归档、迁移并重排 material store,而不丢失 raw source 权威 | [Material Lifecycle](material_lifecycle/README.md)([中文](material_lifecycle/README.zh-CN.md)) |
+| 盘点、归档、迁移并重排 material store,而不丢失 raw source 权威 | [Material Lifecycle](material_lifecycle/README.md) |
 | 在调用方迁移到 outcome 自有能力期间,检查公开安全的外部价值采集兼容路径 | [Value Connectors](value_connectors/README.md) |
-| 单向观察长程 harness 会话,读回完整性 receipt 与 stall/repetition/recovery 投影,且不授予运行时 authority | [Reliability Diagnostics](reliability_diagnostics/README.md)([中文](reliability_diagnostics/README.zh-CN.md)) |
+| 单向观察长程 harness 会话,读回完整性 receipt 与 stall/repetition/recovery 投影,且不授予运行时 authority | [Reliability Diagnostics](reliability_diagnostics/README.md) |
 
 ## 贡献者导航与 ownership
 

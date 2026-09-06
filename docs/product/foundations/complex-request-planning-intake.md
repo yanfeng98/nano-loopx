@@ -1,6 +1,5 @@
 # 复杂请求规划接收
 
-> [English](complex-request-planning-intake.md)
 
 本笔记为大型用户请求定义一个可摄入的有界模式。它通过把策略密集的对话转化为小型的、类型化的 LoopX 计划,让 agents 可以检查、认领与验证,从而防止它变成不可见的聊天历史。
 

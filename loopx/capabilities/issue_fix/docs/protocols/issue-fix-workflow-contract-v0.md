@@ -1,6 +1,5 @@
 # issue_fix_workflow_contract_v0
 
-> [English](issue-fix-workflow-contract-v0.md)
 
 `issue_fix_workflow_contract_v0` 把现有 issue-fix surfaces 串成一套 GitHub
 issue fix workflow。它是产品契约,不是新的状态存储:LoopX 仍使用元数据预览、

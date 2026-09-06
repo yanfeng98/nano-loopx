@@ -1,6 +1,5 @@
 # Dashboard 预算治理合同
 
-> [English](dashboard-budget-governance-contract.md)
 
 状态:面向 LoopX ops dashboard 的公开安全 v0 合同。
 

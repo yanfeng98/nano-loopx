@@ -1,6 +1,5 @@
 # Heartbeat 自动化提示
 
-> [English](heartbeat-automation-prompt.md)
 
 这是 Codex App heartbeat 自动化的公开复制粘贴模板，它推进一个 LoopX 目标，
 而不用把计算策略藏在定时器里。

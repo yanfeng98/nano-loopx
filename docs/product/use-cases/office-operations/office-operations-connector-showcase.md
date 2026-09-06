@@ -1,6 +1,5 @@
 # Office Operations 连接器 Showcase
 
-> [English](office-operations-connector-showcase.md)
 
 状态：产品 showcase 设计。
 

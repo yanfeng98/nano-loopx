@@ -1,6 +1,5 @@
 # DeepSeek Harness 连接器
 
-> [English](deepseek-harness-connector.md)
 
 状态:公开安全 v0 连接器,用于把 DeepSeek Harness(`dsh`)用作 LoopX 之后的
 有界 agent 执行宿主。

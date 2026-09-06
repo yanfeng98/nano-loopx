@@ -1,5 +1,4 @@
 # cs_notes_explore_capability_map_v0
-> [English](cs-notes-explore-capability-map-v0.md)
 
 状态：公开安全选择图 v0。
 

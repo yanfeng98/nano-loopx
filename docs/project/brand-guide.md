@@ -1,6 +1,5 @@
 # LoopX 对外品牌使用指南
 
-> [English](brand-guide.md)
 
 这份指南面向希望提及 LoopX、描述集成、展示 LoopX 名称或图形的开源项目、商业公司、
 用户、作者和活动组织者。它是项目层面的实务指引，不是法律意见；名称和标识的当前
@@ -120,7 +119,7 @@ credential、私有证据、未公开的安全细节或私下商业安排。
 记录提交者声称使用了什么，不代表 LoopX 认证或背书。选择 adoption mode，说明 active
 还是 experimental，链接公开证据，并避免私有或无法核验的声明。
 
-维护者观察到的[生态采用清单](../community/ecosystem-adoption.zh-CN.md)是另一份记录。没有
+维护者观察到的[生态采用清单](../community/ecosystem-adoption.md)是另一份记录。没有
 项目或用户自愿提交，不要把观察内容复制进 `ADOPTERS.md`。
 
 ## 8. 归因与声明卫生

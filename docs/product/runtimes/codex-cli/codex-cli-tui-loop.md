@@ -1,6 +1,5 @@
 # Codex CLI TUI 优先的 LoopX Loop
 
-> [English](codex-cli-tui-loop.md)
 
 状态：产品契约与实现目标。
 

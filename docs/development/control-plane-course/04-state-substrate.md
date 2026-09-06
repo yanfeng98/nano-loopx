@@ -1,5 +1,4 @@
 # 第 4 讲：状态底座与可重放事实
-> [English](04-state-substrate.md)
 
 > **本讲结论：** Canonical event/state contract 拥有长期事实；active state、status 和
 > dashboard 是可重建 read model；session context 不能替代 project memory。

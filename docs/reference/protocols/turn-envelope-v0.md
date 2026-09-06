@@ -1,5 +1,4 @@
 # TurnEnvelope v0
-> [English](turn-envelope-v0.md)
 
 `loopx_turn_envelope_v0` 是已计算的 `quota should-run` 决策之上附加的、有界的读模型。它不给 agent 重放完整配额载荷中的每个诊断 lane，而是给出下一动作及其安全契约。
 

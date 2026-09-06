@@ -1,5 +1,4 @@
 # global_manager_command_v0
-> [English](global-manager-command-v0.md)
 
 `global_manager_command_v0` 是 `/loopx-global-summary`、`/loopx-global-gates`、`/loopx-global-todos` 与 `/loopx-global-risks` 等操作员命令的读取优先协议。
 

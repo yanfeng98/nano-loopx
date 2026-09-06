@@ -1,6 +1,5 @@
 # 核心概念
 
-> [English](README.md)
 
 在阅读某个 provider 特定的集成或版本化协议之前，先用这些文档理解
 LoopX 的持久思想。

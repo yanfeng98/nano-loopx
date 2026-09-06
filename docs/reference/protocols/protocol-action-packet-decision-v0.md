@@ -1,5 +1,4 @@
 # 协议动作包决策 v0
-> [English](protocol-action-packet-decision-v0.md)
 
 ## 决策
 

@@ -1,6 +1,5 @@
 # Issue/PR Solver 锚点协调
 
-> [English](issue-pr-solver-anchor-coordination.md)
 
 本说明定义 maintainer 摄入之后 LoopX 如何协调一个选中的公开 issue/PR solver 锚点。Solver 可以是伙伴工具、人类贡献者或未来 LoopX 管理的 worker。LoopX 的角色不是认领每个 issue。它的角色是保持锚点有价值、有边界、可度量，并且安全到足以成为产品 evidence。
 

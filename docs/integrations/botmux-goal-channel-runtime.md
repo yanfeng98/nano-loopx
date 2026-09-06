@@ -1,6 +1,5 @@
 # Botmux Goal Channel runtime
 
-> [English](botmux-goal-channel-runtime.md)
 
 LoopX 可以把现有的 [botmux](https://github.com/deepcoldy/botmux) bot 绑定到一个
 Goal Channel。Botmux 负责 IM 投递、Lark 事件订阅、持久 agent 会话、流式卡片与

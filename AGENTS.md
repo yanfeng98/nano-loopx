@@ -1,6 +1,5 @@
 # Agent 指令
 
-> [English](AGENTS.md)
 
 ## 提交与 PR 卫生
 

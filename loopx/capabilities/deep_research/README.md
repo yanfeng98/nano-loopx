@@ -1,6 +1,5 @@
 # Deep research(evidence-ledger 研究 Loop)
 
-> [English](README.md)
 
 `/loopx-deepresearch` 把一个用户问题变成有界、可审计的研究会话:question、source、
 claim 与 contradiction ledgers 位于 `.loopx/deepresearch/research.json`,packet

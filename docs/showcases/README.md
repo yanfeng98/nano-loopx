@@ -1,6 +1,5 @@
 # LoopX 案例展示
 
-> [English](README.md)
 
 本目录是 LoopX 完整、公开安全的案例清单。先从独立用户证据开始,再用案例类型与证据标签把真实世界采纳、贡献者案例、创作者 dogfooding 与可复现 demo 区分开。
 

@@ -1,5 +1,4 @@
 # Decision Context 咨询型 provider v0
-> [English](decision-context-advisory-provider-v0.md)
 
 `decision_context_advisory_provider_v0` 让一个可选的 LoopX extension 实现现有的 Decision Context `ContextProvider` 端口。它是检索契约，不是新 capability、状态权威或 transcript 存储。
 

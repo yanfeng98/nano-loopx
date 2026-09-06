@@ -51,7 +51,7 @@ compare_and_put(expected_provider_generation, aggregate)
 ## 文件
 
 - `provider.py`:`NoKVCoordinationProvider`,把不透明的 per-goal 聚合映射到 NoKV 路径 generation CAS。它通过生产的规范 head codec 序列化,因此 adapter 不能分叉摘要/对等基础。
-- `probes.py`:由生产 executor 与 head codec 驱动的确定性契约回归;每个 claim/CAS 探针都通过生产的 `validated_head` 往返其持久化 head。只有[证据笔记](../../docs/architecture/rfcs/shared-goal-authority-state-provider-v0-evidence.zh-CN.md)中的检查才是修订后 receipt 契约的合并证据。
+- `probes.py`:由生产 executor 与 head codec 驱动的确定性契约回归;每个 claim/CAS 探针都通过生产的 `validated_head` 往返其持久化 head。只有[证据笔记](../../docs/architecture/rfcs/shared-goal-authority-state-provider-v0-evidence.md)中的检查才是修订后 receipt 契约的合并证据。
 
 ## 验证边界
 

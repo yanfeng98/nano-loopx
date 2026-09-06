@@ -1,6 +1,5 @@
 # 案例展示前端界面
 
-> [English](frontend-surface.md)
 
 这篇说明定义了第一个可以消费 `docs/showcases/showcase-catalog.json` 的公开案例展示界面。它是产品说明界面,不是本地操作者仪表盘。
 

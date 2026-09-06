@@ -1,6 +1,5 @@
 # 计算配额
 
-> [English](quota-allocation.md)
 
 LoopX 应在项目之间拥有计算分配。第一版应刻意简单：每个目标获得一个计算配额数字，
 自动化或 controller tick 用该数字决定目标可多频繁消耗 Agent 时间。

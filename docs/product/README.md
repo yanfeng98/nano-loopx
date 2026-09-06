@@ -1,6 +1,5 @@
 # Product
 
-> [English](README.md)
 
 本领域描述 LoopX 正成为的产品。它把持久稳定的 foundations 与运行时特定体验、运维者界面、使用场景和分阶段路线图分开,以免实验性观察被误当成稳定契约。
 

@@ -1,6 +1,5 @@
 # Codex CLI 打包安装路径
 
-> [English](codex-cli-packaged-install.md)
 
 状态：已发布 PyPI 路径，带归档回退。
 

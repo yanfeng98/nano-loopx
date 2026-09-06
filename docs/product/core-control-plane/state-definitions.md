@@ -1,6 +1,5 @@
 # State 定义
 
-> [English](state-definitions.md)
 
 LoopX state 应当小而可观察、可复用。只有当未来的 agent 或产品界面能够回答以下问题时,state 定义才有效:这个 state 来自哪里,谁可以改变它,它允许什么转换?
 

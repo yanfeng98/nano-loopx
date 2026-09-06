@@ -1,5 +1,4 @@
 # multi_agent_three_layer_minimality_contract_v0
-> [English](multi-agent-three-layer-minimality-v0.md)
 
 `multi_agent_three_layer_minimality_contract_v0` 定义 LoopX 多 agent 产品的可复用分层规则：
 

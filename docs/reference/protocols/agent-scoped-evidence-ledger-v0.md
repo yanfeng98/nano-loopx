@@ -1,5 +1,4 @@
 # agent_scoped_evidence_ledger_v0
-> [English](agent-scoped-evidence-ledger-v0.md)
 
 `agent_scoped_evidence_ledger_v0` 为需要重规划、交接或解释进展、又不读取原始 rollout 日志、私有 active state 或另一个 agent 详细工作轨迹的 agent 定义了一个薄的时间顺序读模型。
 

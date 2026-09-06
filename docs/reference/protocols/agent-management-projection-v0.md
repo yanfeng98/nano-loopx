@@ -1,5 +1,4 @@
 # agent_management_projection_v0
-> [English](agent-management-projection-v0.md)
 
 `agent_management_projection_v0` 是既有 LoopX agent、todo、quota、历史与证据状态之上的只读操作员视图。它存在的目的是让 dashboard 与评审包界面能显示哪些 agent 活动、每个 agent 认领了什么、以及什么证据使下一 Turn 安全。
 

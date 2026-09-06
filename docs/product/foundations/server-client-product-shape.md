@@ -1,6 +1,5 @@
 # Server-Client 产品形态
 
-> [English](server-client-product-shape.md)
 
 本笔记描述 LoopX 的中期产品形态。它不是网络服务的实现规范。目的是把产品角色命名得足够清晰,让未来的 CLI、dashboard、Lark、MCP 与 server 工作共享一个思维模型。
 

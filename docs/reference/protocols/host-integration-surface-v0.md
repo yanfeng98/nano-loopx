@@ -1,5 +1,4 @@
 # Host 集成界面 v0
-> [English](host-integration-surface-v0.md)
 
 LoopX host 集成让 agent host 使用 LoopX 控制面，而无需成为第二个 LoopX 运行时。兼容基线仍是 CLI。Hook、MCP 与 server 适配器是同一 registry、active state、run 历史、quota、todo、gate、可选 lease 与公开/私有边界契约之上的薄门面。
 

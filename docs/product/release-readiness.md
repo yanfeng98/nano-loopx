@@ -1,6 +1,5 @@
 # 发布就绪度
 
-> [English](release-readiness.md)
 
 状态:v0.x 维护者契约。
 

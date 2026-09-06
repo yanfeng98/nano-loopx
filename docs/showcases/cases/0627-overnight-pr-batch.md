@@ -1,6 +1,5 @@
 # 0627:带可审查控制的隔夜 PR 批处理
 
-> [English](0627-overnight-pr-batch.md)
 
 ## 摘要
 

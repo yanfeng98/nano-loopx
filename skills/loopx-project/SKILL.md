@@ -5,7 +5,6 @@ description: Use when connecting a repository or project goal document to LoopX,
 
 # LoopX 项目工作流
 
-> [English](SKILL.md)
 
 当任务提到 LoopX、loopx、项目 goal 文档、多项目 dashboard/status、陈旧的
 latest run、`.loopx/registry.json`、`.codex/goals`、`refresh-state`、

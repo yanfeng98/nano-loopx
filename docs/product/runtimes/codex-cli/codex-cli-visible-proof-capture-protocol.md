@@ -1,6 +1,5 @@
 # Codex CLI 可见证明捕获协议
 
-> [English](codex-cli-visible-proof-capture-protocol.md)
 
 状态：opt-in 证明捕获的 public-safe 协议。
 主要路径：一条消息的 Codex CLI TUI bootstrap。

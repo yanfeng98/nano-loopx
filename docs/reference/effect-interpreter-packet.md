@@ -1,6 +1,5 @@
 # Effect 解释器 Packet
 
-> [English](effect-interpreter-packet.md)
 
 本页记录 `quota should-run` 的标准读取视角:
 

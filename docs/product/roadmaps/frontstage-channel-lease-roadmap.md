@@ -1,6 +1,5 @@
 # Frontstage Channel 与 Lease 路线图
 
-> [English](frontstage-channel-lease-roadmap.md)
 
 LoopX 不应该变成一个聊天产品。它的持久价值在 backstage 控制面：registry、活跃状态、append-only 事件历史、quota、gates、leases 与可审计恢复。缺失的产品层是 frontstage 投影，让人在不读原始 CLI 转储的情况下理解和协调该控制面。
 

@@ -1,6 +1,5 @@
 # 用 Codex CLI 运行一次 LoopX Turn
 
-> [English](loopx-turn-codex-cli-quickstart.md)
 
 状态：实验性 `isolated-headless` 产品路径。
 

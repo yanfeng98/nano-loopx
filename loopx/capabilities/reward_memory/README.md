@@ -1,6 +1,5 @@
 # Reward Memory Architecture v0（中文版）
 
-[English](README.md)
 
 Reward Memory 的核心边界是把反馈证据、策略内容和动作 authority 分开。一条有价值的
 判断可以沉淀成后续策略，但不能因此变成跨场景的个人画像，也不能创造反馈者原本没有的

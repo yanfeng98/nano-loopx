@@ -1,6 +1,5 @@
 # 扩展与能力
 
-> [English](extensions.md)
 
 Capability 与扩展是 LoopX 中的独立维度:
 
@@ -19,7 +18,7 @@ LoopX Core
       `-- extension C -- 保持禁用
 ```
 
-## Runtime 职责
+## Runtime 职责 {#runtime-responsibilities}
 
 Capability 与扩展是代码与交付边界。在 runtime 中,保持四种职责彼此区分:
 
@@ -136,7 +135,7 @@ loopx extension run loopx-example \
 
 把生成的响应视为可执行文档,而不是永久的域合同。在产品化 provider 之前,把 starter 的请求、响应、权限与 doctor 语义替换为有界的领域特定语义。
 
-## Runtime 生命周期
+## Runtime 生命周期 {#runtime-lifecycle}
 
 生命周期是本地、显式的,并默认 dry-run:
 

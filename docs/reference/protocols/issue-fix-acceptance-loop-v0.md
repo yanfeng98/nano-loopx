@@ -1,5 +1,4 @@
 # issue_fix_acceptance_loop_v0
-> [English](issue-fix-acceptance-loop-v0.md)
 
 该协议现归属于 issue-fix capability：
 

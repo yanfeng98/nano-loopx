@@ -1,6 +1,6 @@
 # 在 LoopX 中使用 KunlunCode
 
-[独立 HTML 版本](kunluncode-adapter.zh-CN.html)
+[独立 HTML 版本](kunluncode-adapter.html)
 
 本文说明如何把当前主机上的 KunlunCode 接入 LoopX，使用独立项目绑定、原生 Goal/Goal
 Pro app-server 生命周期和可恢复的 LoopX writeback 完成长任务。示例统一使用 `uv` 管理

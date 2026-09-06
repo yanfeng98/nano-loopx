@@ -1,6 +1,5 @@
 # LoopX 采用者
 
-> [English](ADOPTERS.md)
 
 这是一份自愿、自我声明的目录，收录选择使用 LoopX 的项目与用户。一条登记记录
 公开关系；它不是 testimonial、认证、安全审查、支持承诺或维护者背书。

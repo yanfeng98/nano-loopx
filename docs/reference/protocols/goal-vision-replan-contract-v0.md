@@ -1,5 +1,4 @@
 # goal_vision_replan_contract_v0
-> [English](goal-vision-replan-contract-v0.md)
 
 `goal_vision_replan_contract_v0` 定义连接有界 agent vision、自主 replan、dreaming 建议与 goal 路由投影的小型每 agent 契约。它是内核契约，不是 auto-research preset。
 

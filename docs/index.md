@@ -1,6 +1,5 @@
 # 欢迎使用 LoopX
 
-> [English](index.md)
 
 LoopX 是长时 AI Agent 工作的本地控制面。它保持 objective、gate、todo、evidence、
 quota 与 handoff 稳定，同时让 Codex、Claude Code、OpenCode、Cursor 或自定义 runner

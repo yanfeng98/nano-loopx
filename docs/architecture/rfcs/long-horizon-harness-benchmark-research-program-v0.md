@@ -541,7 +541,7 @@ non-material event mix；它不能证明 benchmark integrity，也不能复用�
 
 ### 8.1 分层 stride
 
-[长程 Agent 分层步幅控制 RFC](./hierarchical-agent-stride-control-v0.zh-CN.md)
+[长程 Agent 分层步幅控制 RFC](./hierarchical-agent-stride-control-v0.md)
 定义 effect、delivery 与 authority stride。benchmark 应每次只 qualification 一层：
 
 - DeepSWE：repository 调查、实现与验证时的 effect/delivery stride；
@@ -564,7 +564,7 @@ ALE 验证它能否迁移到异构专业工作流。
 
 ### 8.3 研究探索与组合
 
-[研究型探索控制面 RFC](./research-exploration-control-plane-v0.zh-CN.md)定义 typed research
+[研究型探索控制面 RFC](./research-exploration-control-plane-v0.md)定义 typed research
 node、closure 与 explicit composition experiment。LHTB 的 research-reproduction 任务和
 ALE 的分析型 workflow 可以验证 composition candidate 是否改善 coverage 或 outcome。
 DeepSWE 可以验证 repository surface 之间的组合，但 pass patch 仍是最终权威。
@@ -575,7 +575,7 @@ composition candidate。
 
 ### 8.4 Human-attention wishlist
 
-[Human Attention Wishlist RFC](./human-attention-wishlist-v0.zh-CN.md)可以作为 assisted-mode
+[Human Attention Wishlist RFC](./human-attention-wishlist-v0.md)可以作为 assisted-mode
 sidecar 评估。问题不是 agent 能否生成更多 request，而是 bounded、evidence-backed wish
 能否在不成为 false gate、不打断 autonomous delivery 的前提下，提高 outcome 或减少每分钟
 human attention 对应的浪费工作。
@@ -614,7 +614,7 @@ capability approval。capability candidate 必须按 caller outcome 命名，不
 
 ### 8.6 Post-outcome memory utility
 
-[结果后记忆效用归因 RFC](./post-outcome-memory-utility-attribution-v0.zh-CN.md)可以把经过验证的
+[结果后记忆效用归因 RFC](./post-outcome-memory-utility-attribution-v0.md)可以把经过验证的
 benchmark outcome 作为一种 evidence source。trajectory-level reward 不能建立 per-memory
 causal credit。给出强 utility 前必须做 holdout replay 或 bounded ablation。benchmark 内容
 绝不能以污染后续 task 的方式被保留。
@@ -735,7 +735,7 @@ benchmark 协作应产生可 review 的 upstream value：
 目标不是 fork 出每个 benchmark 的 LoopX edition，而是让 LoopX 成为行为规范的 harness
 participant，其结果可以被 benchmark maintainer 复现和审计。
 
-## 11. 工程建设计划 {#11-工程建设计划}
+## 11. 工程建设计划 {#11-engineering-construction-plan}
 
 上面的研究合同定义 benchmark 结果可以证明什么；本节定义仓库应该如何建设、验证和
 运行这些工程。两条阶梯刻意保持正交：
@@ -1006,7 +1006,7 @@ promotion 或修改 LoopX default。
 - [Benchmark 研究工作区](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)
 - [DeepSWE 研究实践](https://github.com/huangruiteng/loopx/blob/main/benchmark/deepswe/README.md)
 - [旧 Benchmark 归档](https://github.com/huangruiteng/loopx/blob/main/deprecate/benchmark-legacy/README.md)
-- [长程 Agent 分层步幅控制 v0](./hierarchical-agent-stride-control-v0.zh-CN.md)
-- [研究型探索控制面 v0](./research-exploration-control-plane-v0.zh-CN.md)
-- [Human Attention Wishlist v0](./human-attention-wishlist-v0.zh-CN.md)
-- [结果后记忆效用归因 v0](./post-outcome-memory-utility-attribution-v0.zh-CN.md)
+- [长程 Agent 分层步幅控制 v0](./hierarchical-agent-stride-control-v0.md)
+- [研究型探索控制面 v0](./research-exploration-control-plane-v0.md)
+- [Human Attention Wishlist v0](./human-attention-wishlist-v0.md)
+- [结果后记忆效用归因 v0](./post-outcome-memory-utility-attribution-v0.md)

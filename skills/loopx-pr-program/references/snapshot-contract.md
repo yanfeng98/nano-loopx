@@ -1,6 +1,5 @@
 # PR 项目快照契约
 
-> [English](snapshot-contract.md)
 
 把 `loopx_pr_program_snapshot_v0` 用作源获取与 LoopX 项目协调之间的
 provider-neutral 边界。把源特定命令与凭据保留在提交给 LoopX 的快照生产者之外。

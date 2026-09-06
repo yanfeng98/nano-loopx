@@ -1,6 +1,5 @@
 # Codex CLI 无克隆发布验证
 
-> [English](codex-cli-no-clone-release-verification.md)
 
 状态：发布验证说明。
 

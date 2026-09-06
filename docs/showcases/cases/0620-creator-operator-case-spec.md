@@ -1,6 +1,5 @@
 # 0620:创作者-操作者长程 Agent 案例
 
-> [English](0620-creator-operator-case-spec.md)
 
 ## 摘要
 

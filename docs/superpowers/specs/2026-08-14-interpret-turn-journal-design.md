@@ -1,6 +1,5 @@
 # 只读 Turn Journal 解释设计
 
-> [English](2026-08-14-interpret-turn-journal-design.md)
 
 ## 目标
 

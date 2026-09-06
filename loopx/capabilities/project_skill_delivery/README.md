@@ -1,6 +1,5 @@
 # Project Skill Delivery
 
-> [English](README.md)
 
 LoopX 可以交付 canonical skill,而无需把它加到每个用户的全局 agent 配置。
 Release 自有的 skill 通过添加以下内容选择项目交付:

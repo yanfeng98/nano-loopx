@@ -1,6 +1,5 @@
 # Repository Change Window 能力介绍
 
-> [English](README.md)
 
 `repository-change-window` 是一个内置、默认关闭的 capability，服务两种相关的
 调用方结果：

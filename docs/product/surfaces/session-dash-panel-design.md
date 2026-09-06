@@ -1,6 +1,5 @@
 # Session Dash 面板设计
 
-> [English](session-dash-panel-design.md)
 
 自动生成的单页控制面板，从 LoopX public-safe 投影跟踪 agent session 任务进展与结果统计。
 

@@ -1,6 +1,6 @@
 # Material Lifecycle 能力介绍
 
-[English](README.md) | [架构协议](../../../docs/reference/protocols/material-lifecycle-architecture-v0.zh-CN.md)
+ | [架构协议](../../../docs/reference/protocols/material-lifecycle-architecture-v0.md)
 
 状态：实验能力、内置、默认关闭、goal-scoped。
 
@@ -180,7 +180,7 @@ owner-gated apply/rollback 编排已经实现并有测试覆盖。
 commit 不能包含原始素材、私有路径、私有链接、provider payload 或凭据。
 
 Packet schema 和详细不变量见
-[Material Lifecycle 架构协议](../../../docs/reference/protocols/material-lifecycle-architecture-v0.zh-CN.md)。
+[Material Lifecycle 架构协议](../../../docs/reference/protocols/material-lifecycle-architecture-v0.md)。
 
 ## 验证
 

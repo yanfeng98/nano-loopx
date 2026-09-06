@@ -1,6 +1,5 @@
 # RFC：Provider-Neutral Turn-Start Inbox Hook（v0）
 
-> [English](provider-neutral-turn-start-inbox-hook-v0.md)
 
 | 字段 | 值 |
 |---|---|

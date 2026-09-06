@@ -1,6 +1,5 @@
 # 入门 Loop 预设
 
-> [English](beginner-loop-presets.md)
 
 本笔记把轻量的公开 loop 工程入门模式映射到 LoopX 原生接入。目标不是复制另一个入门运行时。目标是给新用户一条单命令路径,直达 LoopX 已经有价值的部分:与 agent 无关的执行、团队 agent 车道、持久 todo state、调度器与配额护栏、紧凑 evidence 以及人工评审 gate。
 

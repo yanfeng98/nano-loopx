@@ -1,6 +1,5 @@
 # Dreaming 探索泳道
 
-> [English](dreaming-exploration-lane.md)
 
 LoopX 最终应当支持一条独立的 dreaming / 探索泳道，服务于长程项目。这条泳道与正在积极交付工作的 project agent 不是一回事。它的职责是在低压力的后台时间里做跨 run 学习、选项发现与 refactor 警告。
 

@@ -1,6 +1,5 @@
 # 产品迁移与历史
 
-> [English](README.md)
 
 - [LoopX 重命名迁移](loopx-rename-migration.md)
 - [LoopX state 迁移 SOP](loopx-state-migration-sop.md)

@@ -1,6 +1,5 @@
 # 项目级奖励模型
 
-> [English](project-level-reward-model.md)
 
 LoopX 不应只用单一基准分数来说明长程 agent 的价值。基准对窄任务能力有用,但 Loop Agent 在项目内随时间的推移而工作:它吸收信号、完成工作、请求人工判断、花费 token,并为下一 Turn 留下 evidence。
 

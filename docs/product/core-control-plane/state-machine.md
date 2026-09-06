@@ -1,6 +1,5 @@
 # 状态机
 
-> [English](state-machine.md)
 
 LoopX 没有一台巨型状态机。它有一小组协作机器,这些机器从相同的规范 state 体投影而来:注册表条目、active 状态、todo 元数据、运行历史、配额事件、运维者 gate、调度器确认与投影 sink。
 

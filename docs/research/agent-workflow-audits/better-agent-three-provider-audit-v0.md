@@ -1,6 +1,5 @@
 # Better Agent 三 Provider Workflow 审计 v0
 
-> [English](better-agent-three-provider-audit-v0.md)
 
 ## 决策
 

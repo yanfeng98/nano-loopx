@@ -1,6 +1,5 @@
 # SkillsBench PR #1680 Replan 坏例
 
-> [English](skillsbench-pr1680-replan-badcase-20260709.md)
 
 日期:2026-07-09
 

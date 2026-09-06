@@ -1,5 +1,4 @@
 # quota_planning_horizon_v0
-> [English](quota-planning-horizon-v0.md)
 
 `quota_planning_horizon_v0` 是有界只读上下文，让 agent 可以在不内联 LoopX 完整 Todo 存储或任务图的情况下，超越一个局部选择的 Todo 进行推理。只有当当前所选工作具有类型化血统、等待/阻塞、计划观察或 goal 验收上下文时，它才出现在默认 `quota should-run` 路径上。扁平可运行备选仅保留在 `action_portfolio` 中，避免重复热路径视图。
 

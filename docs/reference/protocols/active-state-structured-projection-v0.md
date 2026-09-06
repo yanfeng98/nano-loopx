@@ -1,5 +1,4 @@
 # active_state_structured_projection_v0
-> [English](active-state-structured-projection-v0.md)
 
 `active_state_structured_projection_v0` 是 `ACTIVE_GOAL_STATE.md` 的读模型。它把 Markdown 保持为人/agent 工作台，同时为 status、quota、评审包、dashboard 与未来 event-store 迁移暴露类型化 todo、gate、下一动作与迁移诊断。
 

@@ -1,5 +1,4 @@
 # LoopX 受治理 Turn v0
-> [English](loopx-turn-v0.md)
 
 状态：实验性协议与实现目标。
 

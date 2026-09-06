@@ -12,9 +12,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/huangruiteng/loopx?display_name=tag)](https://github.com/huangruiteng/loopx/releases/latest) [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/XmGgQyCFZd) [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml) [![Local first](https://img.shields.io/badge/control--plane-local--first-brightgreen.svg)](docs/public-private-boundary.md) [![Loop Agents](https://img.shields.io/badge/status-loop%20agents%20active-brightgreen.svg)](docs/product/release-readiness.md)
 
-[产品首页](https://huangruiteng.github.io/loopx/) · [文档](https://huangruiteng.github.io/loopx/docs/) · [开发者手册](https://huangruiteng.github.io/loopx/docs/book/) · [试用 LoopX](#试用-loopx) · [查看真实 Loop](#证据) · [理解工作原理](#为什么需要-loopx) · [用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg) · [English](README.md)
-
-**把会干活的 Agent，接成可管理、可复盘、可持续改进的数字员工。**
+[产品首页](https://huangruiteng.github.io/loopx/) · [文档](https://huangruiteng.github.io/loopx/docs/) · [开发者手册](https://huangruiteng.github.io/loopx/docs/book/) · [试用 LoopX](#试用-loopx) · [查看真实 Loop](#证据) · [理解工作原理](#为什么需要-loopx) · [用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg) **把会干活的 Agent，接成可管理、可复盘、可持续改进的数字员工。**
 
 </div>
 
@@ -29,8 +27,7 @@ LoopX 是开放且 Provider-neutral 的轻量 state kernel，也是 local-first
 
 ## 学习 LoopX
 
-- **开发者手册** - 从控制面基础到项目接入和开发者贡献的双语学习路径。[简体中文](https://huangruiteng.github.io/loopx/docs/book/) · [English](https://huangruiteng.github.io/loopx/docs/book/en/)
-- **快速开始** - 安装、连接项目并运行第一个受治理的 Loop。[指南](docs/guides/getting-started.md)
+- **开发者手册** - 从控制面基础到项目接入和开发者贡献的中文学习路径。[简体中文](https://huangruiteng.github.io/loopx/docs/book/) - **快速开始** - 安装、连接项目并运行第一个受治理的 Loop。[指南](docs/guides/getting-started.md)
 - **文档站** - 完整参考与运维文档。[LoopX Docs](https://huangruiteng.github.io/loopx/docs/)
 
 ## 认识个人 Agent 工作区
@@ -149,7 +146,7 @@ LoopX 的创建者以
 [OpenViking contributor](https://github.com/volcengine/OpenViking/pulls?q=is%3Apr+author%3Ahuangruiteng)
 身份把这条路径用于持续的 issue-to-PR 修复。图中公开贡献序列从首个 PR 创建到
 最后一次所示 review 或 update，跨越 200+ 小时。
-[Issue-Fix 能力说明](loopx/capabilities/issue_fix/README.zh-CN.md)把 rolling
+[Issue-Fix 能力说明](loopx/capabilities/issue_fix/README.md)把 rolling
 repository context、带 revision 的修复知识和 reviewer-facing preference
 分开管理；所链接 PR 与当前 checkout 的源码、测试始终具有最高权威。
 
@@ -275,7 +272,7 @@ loopx start-goal --guided --project . --goal-text "你的长程目标"
 [Codex App host command registry](docs/reference/protocols/codex-app-host-command-registry-v0.md)、
 [Codex CLI packaged install](docs/product/runtimes/codex-cli/codex-cli-packaged-install.md)和
 [Claude Code adapter](loopx/claude_goal_mode/README.md)、
-[KunlunCode 原生 Goal adapter](docs/guides/kunluncode-adapter.zh-CN.md)，以及
+[KunlunCode 原生 Goal adapter](docs/guides/kunluncode-adapter.md)，以及
 [DeepSeek Harness turn adapter](loopx/dsh_goal_mode/README.md)。
 
 可查看 [60 秒 DSH × LoopX Replan 真实录屏和可复现
@@ -283,9 +280,9 @@ fixture](docs/showcases/cases/dsh-loopx-replan-demo.md)：安装 Plugin、选择
 skill、加入新的关键约束，并检查完整保留的决策证据链。
 
 自有 runner 请先看
-[最小自定义 Runtime 示例](docs/guides/minimal-custom-runtime-example.zh-CN.md)
+[最小自定义 Runtime 示例](docs/guides/minimal-custom-runtime-example.md)
 （`python3 examples/custom-runtime-minimal-cli-turn-smoke.py`），再读完整的
-[把 LoopX 嵌入你的 Agent Runner](docs/guides/custom-agent-runner-integration.zh-CN.md)
+[把 LoopX 嵌入你的 Agent Runner](docs/guides/custom-agent-runner-integration.md)
 与 [Worker Bridge Install Contract](docs/integrations/worker-bridge-install-contract.md)。
 核心 tick 很小：
 
@@ -364,7 +361,7 @@ Kernel 把控制面归结为五个用户可以直接行动的问题。每个问�
 | Session dash | 启动实时单页面板，追踪 fleet 进程：会话、各自的 goal 与每个 goal 的 status/todo 进度，并附结果统计；页面内自动刷新。 | `loopx dash`、[session dash design](docs/product/surfaces/session-dash-panel-design.md) |
 | External projection | 把 todo / gate 投影到协作表面，同时保持 LoopX 权威。 | `loopx lark-kanban`、[Lark Kanban adapter](docs/integrations/lark-kanban-control-plane-adapter.md) |
 | Domain capability | 打包 Issue Fix、内容运营、value connector、ML 实验、benchmark 与 Explore 等可重复泳道。 | `loopx issue-fix`、`loopx content-ops`、`loopx value-connectors`、`loopx ml-experiment`、`loopx benchmark`、[Explore](loopx/capabilities/explore/README.md) |
-| 实验性上下文学习 | 通过 ignored、默认关闭的项目配置，为明确注册的 agent 试用 provider-neutral Reward Memory；OpenViking 是 provider 之一，不是全局依赖。 | `loopx reward-memory experiment-status`、[Reward Memory 中文架构](loopx/capabilities/reward_memory/README.zh-CN.md) |
+| 实验性上下文学习 | 通过 ignored、默认关闭的项目配置，为明确注册的 agent 试用 provider-neutral Reward Memory；OpenViking 是 provider 之一，不是全局依赖。 | `loopx reward-memory experiment-status`、[Reward Memory 架构](loopx/capabilities/reward_memory/README.md) |
 | Governance pattern | 沉淀可复用的 routing、gate、evidence、projection 和 planning 形状。 | [Interaction Pattern Catalog](docs/concepts/interaction-pattern-catalog.md)、[State Model](docs/state-interaction-model.md) |
 
 这些能力共同提供 lifetime goal、具体 user gate、经过审计的安全侧路、平级 todo
@@ -378,11 +375,11 @@ Capability 把上述通用原语组成 outcome-owned 工作泳道。先按结果
 
 | 你需要…… | Capability | 从这里开始 |
 | --- | --- | --- |
-| 把公开 issue 推进为可审查、有证据的变更 | [Issue Fix](loopx/capabilities/issue_fix/README.zh-CN.md) | `loopx capability show issue-fix --format json` |
+| 把公开 issue 推进为可审查、有证据的变更 | [Issue Fix](loopx/capabilities/issue_fix/README.md) | `loopx capability show issue-fix --format json` |
 | 在交付前对精确 final diff 做质量验收 | [Change Quality](loopx/capabilities/change_quality/README.md) | `loopx capability show change-quality-qualification --format json` |
 | 维护由多个已审查分支组成、持续变化的集成栈 | [Integration Branch](loopx/capabilities/integration_branch/README.md) | `loopx capability show integration-branch-reconcile --format json` |
-| 在不丢失假设和发现的前提下探索不确定研究问题 | [Explore](loopx/capabilities/explore/README.zh-CN.md) | `loopx capability show explore --format json` |
-| 基于当前证据和已验证结果重新建立决策上下文 | [Decision Context](loopx/capabilities/decision_context/README.zh-CN.md) | `loopx capability show decision-context --format json` |
+| 在不丢失假设和发现的前提下探索不确定研究问题 | [Explore](loopx/capabilities/explore/README.md) | `loopx capability show explore --format json` |
+| 基于当前证据和已验证结果重新建立决策上下文 | [Decision Context](loopx/capabilities/decision_context/README.md) | `loopx capability show decision-context --format json` |
 | 生成带 receipt 的定时或进展触发报告 | [Periodic Report](loopx/capabilities/periodic_report/README.md) | `loopx capability show periodic-report --format json` |
 
 运行 `loopx capability list --format json`，读取当前安装版本的权威目录。Capability
@@ -463,8 +460,8 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 - 飞书投影：[Lark Kanban Adapter](docs/integrations/lark-kanban-control-plane-adapter.md)
 - 通用 host 集成：[Integration Guide](docs/integration.md)
 - 自有 multi-agent runner：
-  [最小自定义 Runtime 示例](docs/guides/minimal-custom-runtime-example.zh-CN.md)，
-  再看 [Custom Runner 中文指南](docs/guides/custom-agent-runner-integration.zh-CN.md)
+  [最小自定义 Runtime 示例](docs/guides/minimal-custom-runtime-example.md)，
+  再看 [Custom Runner 中文指南](docs/guides/custom-agent-runner-integration.md)
 
 可选 projection 让状态更易检查，但不会成为新的事实源。
 
@@ -524,7 +521,7 @@ LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这�
   [方向 Tracker](https://github.com/huangruiteng/loopx/issues/3246)
 
 完整阶段、promotion gate、贡献者安全切片和 ownership 边界见
-[当前技术方向地图](docs/project/technical-directions.zh-CN.md)；社区讨论使用置顶的
+[当前技术方向地图](docs/project/technical-directions.md)；社区讨论使用置顶的
 [GitHub Discussion](https://github.com/huangruiteng/loopx/discussions/2851)。核心控制面
 可靠性继续作为这些计划共同的底座。
 
@@ -564,8 +561,8 @@ LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这�
 ### 集成与扩展
 
 - [Integration Guide](docs/integration.md)
-- [最小自定义 Runtime 示例](docs/guides/minimal-custom-runtime-example.zh-CN.md)
-- [Custom Agent Runner 中文指南](docs/guides/custom-agent-runner-integration.zh-CN.md)
+- [最小自定义 Runtime 示例](docs/guides/minimal-custom-runtime-example.md)
+- [Custom Agent Runner 集成指南](docs/guides/custom-agent-runner-integration.md)
 - [Integrations](docs/integrations/README.md)：runtime、host、协作和外部系统 adapter，
   包括 worker bridge 与 Lark。
 - [Extensions and Capabilities](docs/reference/extensions.md)
@@ -589,15 +586,15 @@ LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这�
 
 ### 项目与社区
 
-- [当前技术方向](docs/project/technical-directions.zh-CN.md)
+- [当前技术方向](docs/project/technical-directions.md)
 - [Project Governance](.github/GOVERNANCE.md)
 - [Contributing](CONTRIBUTING.md)与[Contributor Tasks](docs/development/contributor-tasks.md)
 - [Authors and Contributors](docs/project/authors.md)
 - [Project History](docs/project/history.md)
 - [Name and Marks](docs/project/trademarks.md)
-- [对外品牌使用指南](docs/project/brand-guide.zh-CN.md)：开源项目、公司和用户如何引用 LoopX、描述集成并使用图形素材
+- [对外品牌使用指南](docs/project/brand-guide.md)：开源项目、公司和用户如何引用 LoopX、描述集成并使用图形素材
 - [ADOPTERS](ADOPTERS.md)：项目与用户自愿维护的采用目录
-- [生态采用清单](docs/community/ecosystem-adoption.zh-CN.md) - 我们观察并持续追踪的
+- [生态采用清单](docs/community/ecosystem-adoption.md) - 我们观察并持续追踪的
   真实集成、采样借鉴与衍生周边
 
 ## 合作伙伴项目
@@ -662,7 +659,7 @@ integration 和进阶路径仍是 optional、default-off 或 experimental。Loop
 获得 credential，不会替用户批准 destructive / production action，不会在未授权时
 公开发布，也不会把未经验证的 run 当成成功证据。
 
-当前投入按[技术方向地图](docs/project/technical-directions.zh-CN.md)组织：长程
+当前投入按[技术方向地图](docs/project/technical-directions.md)组织：长程
 benchmark 证据、operator surface 与 IM integration、shared-goal 跨 host 协作，以及
 明确分阶段的架构与研究孵化器。
 

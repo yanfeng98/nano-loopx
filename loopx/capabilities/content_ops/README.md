@@ -1,6 +1,5 @@
 # Content-Ops 能力
 
-> [English](README.md)
 
 content-ops capability 是创作者/运维者工作流的产品路径:public handles、私有
 connector gates、来源项、角度候选、草稿状态、反馈信号与发布 gates。

@@ -1,6 +1,5 @@
 # 核心控制面图谱
 
-> [English](README.md)
 
 > 定位:LoopX 运行在多种 agent harness 之上,提供长程 state、语义决策、治理、恢复与人机协同;这些图谱映射了该承诺背后的控制面 state。参见[产品愿景](../vision.md)。
 

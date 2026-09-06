@@ -1,5 +1,4 @@
 # agent_material_frontier_v0
-> [English](agent-material-frontier-v0.md)
 
 `agent_material_frontier_v0` 是 goal 自有物料权限之上的、agent 作用域的只读视图。它回答 agent 需要哪些已注册物料引用、它观察到哪个修订，以及每个引用是 current、stale、missing、unread 还是 inaccessible。
 

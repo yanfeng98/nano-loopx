@@ -1,6 +1,5 @@
 # 去中心化 Auto-Research Showcase 蓝图
 
-> [English](decentralized-auto-research-showcase.md)
 
 本说明把 Arbor 评审变成 LoopX 产品路径。Arbor 的公开 showcase 很强，因为它具体：一个 benchmark、一棵假设树、dev/留出分数、可重放事件与一份最终报告。LoopX 应当追求同样的清晰度，同时保持自己的架构：一个共享控制面之上的去中心化 agent，而不是一个领导者 Coordinator。
 

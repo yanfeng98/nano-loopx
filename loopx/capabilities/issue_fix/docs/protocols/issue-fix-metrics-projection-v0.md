@@ -1,6 +1,5 @@
 # Issue-Fix 指标投影 v0
 
-> [English](issue-fix-metrics-projection-v0.md)
 
 ## 目的
 

@@ -1,6 +1,5 @@
 # Codex CLI
 
-> [English](README.md)
 
 Codex CLI 是头等 LoopX host。首选产品路径以一条可见 TUI 消息开始;headless 执行保持为显式回退或有界合作伙伴路径,而非默认用户体验。
 

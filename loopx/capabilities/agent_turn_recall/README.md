@@ -1,6 +1,5 @@
 # Agent Turn Recall
 
-> [English](README.md)
 
 `agent-turn-recall` 在可能没有新用户 prompt 时,为一次自主 agent turn 准备
 memory 指引。它组合现有 LoopX surface,而不是引入另一个 memory store:

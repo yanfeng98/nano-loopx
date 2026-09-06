@@ -1,6 +1,5 @@
 # Standing Authorization 重复询问事件
 
-> [English](standing-authorization-reprompt-incident-20260628.md)
 
 日期:2026-06-28
 

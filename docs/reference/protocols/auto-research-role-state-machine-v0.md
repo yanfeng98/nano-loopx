@@ -1,5 +1,4 @@
 # auto_research_role_state_machine_v0
-> [English](auto-research-role-state-machine-v0.md)
 
 `auto_research_role_state_machine_v0` 定义 LoopX auto research 的常开数字员工模型。它把 Arbor 式研究角色映射到 LoopX 去中心化控制面上，而不添加 leader agent、scheduler 服务或第二事实来源。
 

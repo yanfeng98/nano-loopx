@@ -1,6 +1,5 @@
 # Change Quality 资格判定
 
-> [English](README.md)
 
 Change Quality Qualification 为 LoopX 管理的 goal 提供 provider-neutral 的最终
 diff 审查契约。它默认关闭。项目通过 goal policy 激活,并选择两个独立控制项:

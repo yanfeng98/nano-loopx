@@ -1,6 +1,5 @@
 # 仅 Monitor Replan 停滞事件
 
-> [English](monitor-only-replan-stall-incident-20260621.md)
 
 日期:2026-06-21
 

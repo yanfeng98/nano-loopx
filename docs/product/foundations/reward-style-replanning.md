@@ -1,6 +1,5 @@
 # 奖励风格重规划提示
 
-> [English](reward-style-replanning.md)
 
 LoopX 已记录精确到运行边界的 `human_reward` 叠加与运维者 gate。下一个产品问题不是"在用户聊天上训练"。它更小也更安全:当人类反复奖励、纠正或引导一个长程 agent 时,LoopX 应把这种显式反馈转化为紧凑的重规划提示,帮助下一个有界 Turn 选择更好的 todo。
 

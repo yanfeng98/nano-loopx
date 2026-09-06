@@ -1,6 +1,5 @@
 # LoopX 实验（Experiments）
 
-> [English](README.md)
 
 本包是 LoopX 的原型实验室。它容纳那些值得评估、但尚未纳入稳定产品契约的可执行
 feature。

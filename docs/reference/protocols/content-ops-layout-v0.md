@@ -1,5 +1,4 @@
 # Content-Ops 布局 v0
-> [English](content-ops-layout-v0.md)
 
 `content_ops_layout_*_v0` 使内容呈现成为可评审的 LoopX 契约。它分离三个 owner：
 

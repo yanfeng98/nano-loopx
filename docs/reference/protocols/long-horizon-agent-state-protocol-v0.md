@@ -1,5 +1,4 @@
 # long_horizon_agent_state_protocol_v0
-> [English](long-horizon-agent-state-protocol-v0.md)
 
 `long_horizon_agent_state_protocol_v0` 是长程 LoopX agent 工作的共享生命周期图。它把持久化源状态与面向操作员的投影分离，然后展示启动、执行、结束、证据、关卡、人类反馈、交接与回滚应如何连接。
 

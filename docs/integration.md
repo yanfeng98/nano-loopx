@@ -1,6 +1,5 @@
 # 集成指南
 
-> [English](integration.md)
 
 LoopX 应作为共享本地基座使用，而不是复制进每个项目。
 

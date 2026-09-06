@@ -1,6 +1,5 @@
 # 长任务 Cadence 提示
 
-> [English](long-task-cadence-policy.md)
 
 LoopX 不应让重复的 heartbeat turn 把长时 Agent 工作拆成微小的仅状态 turn。
 cadence hint 是一个小的、派生的信号，告诉 host 或 controller 最近的工作看起来是

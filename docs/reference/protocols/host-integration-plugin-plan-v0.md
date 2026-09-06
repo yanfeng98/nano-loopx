@@ -1,5 +1,4 @@
 # Host 集成插件计划 v0
-> [English](host-integration-plugin-plan-v0.md)
 
 `host_integration_plugin_plan_v0` 描述从今天 skill 级 LoopX slash-command 回退到 host 自有命令注册表插件的产品路径。它是规划契约，不是已交付插件清单。
 

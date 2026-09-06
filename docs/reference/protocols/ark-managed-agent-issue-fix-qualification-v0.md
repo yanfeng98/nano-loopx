@@ -1,5 +1,4 @@
 # Ark 托管 Agent Issue-Fix 资格 v0
-> [English](ark-managed-agent-issue-fix-qualification-v0.md)
 
 本协议为单个 LoopX goal prompt 提交给 Ark Managed Agent Goal host 时的 LoopX issue-fix 工作进行资格界定。它组合既有 issue-fix 与 host 契约；不引入另一个运行时或另一种 prompt 家族。
 

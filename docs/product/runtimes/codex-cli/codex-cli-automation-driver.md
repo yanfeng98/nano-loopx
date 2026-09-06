@@ -1,6 +1,5 @@
 # 面向 LoopX Turn 的 Codex CLI Adapter
 
-> [English](codex-cli-automation-driver.md)
 
 状态：实验性产品路径，已发布隔离无头驱动（isolated-headless driver）。
 

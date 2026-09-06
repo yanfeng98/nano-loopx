@@ -1,5 +1,4 @@
 # 协议动作包 Codex CLI 包装器 v0
-> [English](protocol-action-packet-codex-cli-wrapper-v0.md)
 
 此包装器是 `protocol_action_packet_v0` 与未来 Codex CLI 摘要器之间的冷路径桥接。它刻意处于 `quota should-run` 之外，使热路径保持其接口预算。
 

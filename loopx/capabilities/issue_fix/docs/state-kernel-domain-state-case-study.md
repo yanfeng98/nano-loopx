@@ -1,6 +1,6 @@
 # OpenViking PR / Issue Fix：State Kernel 与垂域状态如何协同
 
-[返回 Issue-Fix 能力](../README.zh-CN.md) ·
+[返回 Issue-Fix 能力](../README.md) ·
 [工作流协议](protocols/issue-fix-workflow-contract-v0.md) ·
 [长程 Agent 状态协议](../../../../docs/reference/protocols/long-horizon-agent-state-protocol-v0.md)
 

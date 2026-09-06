@@ -1,6 +1,5 @@
 # Periodic report
 
-> [English](README.md)
 
 `periodic-report` 是 LoopX 可复用的报告 capability。它给任何项目一个稳定的
 report-run envelope,而把源语义、cadence、展示与目的地交给 profiles 与

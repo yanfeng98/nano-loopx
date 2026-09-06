@@ -1,6 +1,5 @@
 # Codex CLI 实时 TUI 首消息试点
 
-> [English](codex-cli-live-tui-first-message-pilot.md)
 
 状态：已记录 blocker；手动 TUI 引导保持为主要路径。
 记录时间：2026-06-21。

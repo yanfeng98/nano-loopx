@@ -1,5 +1,4 @@
 # Provider-neutral 周期报告 v0
-> [English](periodic-report-v0.md)
 
 ## 产品激活
 

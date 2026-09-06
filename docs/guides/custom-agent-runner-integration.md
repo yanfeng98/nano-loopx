@@ -1,13 +1,12 @@
 # 把 LoopX 嵌入你的 Agent Runner
 
-[English](custom-agent-runner-integration.md)
 
 这篇指南面向已经在远端开发机、自有 Agent CLI 或工作流 supervisor 中运行 Agent 的
 开发者。你不需要替换现有 runtime，也不需要把领域编排搬进 LoopX。保留自己的 runner，
 把 LoopX 作为跨 Turn 的持久控制面合同即可。
 
 想先看最短公共契约？从
-[最小自定义 Runtime 示例](minimal-custom-runtime-example.zh-CN.md) 开始，并运行
+[最小自定义 Runtime 示例](minimal-custom-runtime-example.md) 开始，并运行
 `python3 examples/custom-runtime-minimal-cli-turn-smoke.py`。进阶 typed Turn 路径是另一条：
 `python3 examples/loopx-turn-fake-host-walkthrough-smoke.py`。
 

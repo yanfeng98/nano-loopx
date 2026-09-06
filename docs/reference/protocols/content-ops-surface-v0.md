@@ -1,5 +1,4 @@
 # content_ops_surface_v0
-> [English](content-ops-surface-v0.md)
 
 状态：公开安全状态界面契约 v0。
 

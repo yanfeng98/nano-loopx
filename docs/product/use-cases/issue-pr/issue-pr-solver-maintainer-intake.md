@@ -1,6 +1,5 @@
 # Issue/PR Solver Maintainer 摄入 Packet
 
-> [English](issue-pr-solver-maintainer-intake.md)
 
 本 packet 帮助 LoopX maintainer 决定外部或伙伴 issue/PR solver 是否应成为高价值证明锚点。Solver 可以在 LoopX 之外。LoopX 的职责是让 maintainer 决策、边界、evidence 与 showcase 路径显式。
 

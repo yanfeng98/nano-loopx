@@ -1,6 +1,5 @@
 # 研究与证据
 
-> [English](README.md)
 
 本区域存放公开研究与可检视的证据。它不是当前产品行为的事实源；稳定的结论应当通过源链接
 提升到 product、architecture 或 reference 文档中。

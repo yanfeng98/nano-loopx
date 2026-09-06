@@ -12,7 +12,7 @@
 
 ## 工程构建图
 
-规范工程计划是[英文研究 RFC 第 11 节](../docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md#11-engineering-construction-plan)与[中文第 11 节](../docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.zh-CN.md#11-工程建设计划)。它把仓库就绪与 benchmark 结论分开:
+规范工程计划是[英文研究 RFC 第 11 节](../docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md#11-engineering-construction-plan)与[中文第 11 节](../docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md#11-engineering-construction-plan)。它把仓库就绪与 benchmark 结论分开:
 
 - **E0--E1:**类型化契约、public/private 边界、原生 runner 预检与一个一致性切片;
 - **E2:**experiment-board 生命周期、并发接纳、精确运行时观察、连续性、协调与安全关闭;

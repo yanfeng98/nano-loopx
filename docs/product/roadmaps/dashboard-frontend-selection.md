@@ -1,6 +1,5 @@
 # 仪表盘前端选型
 
-> [English](dashboard-frontend-selection.md)
 
 LoopX 应该保留无依赖的静态 HTML 渲染器作为诊断兜底，但产品 dashboard 应当使用真正的前端技术栈。
 

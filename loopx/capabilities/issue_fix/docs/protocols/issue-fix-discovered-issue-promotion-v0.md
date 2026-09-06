@@ -1,6 +1,5 @@
 # issue_fix_discovered_issue_promotion_v0
 
-> [English](issue-fix-discovered-issue-promotion-v0.md)
 
 `issue_fix_discovered_issue_promotion_v0` 把 issue-fix agent 在真实工作中发现的
 可复现缺陷,转成唯一的 canonical 公开 issue,而不创建重复的运维行。它是基于

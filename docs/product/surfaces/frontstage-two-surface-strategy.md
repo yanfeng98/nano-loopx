@@ -1,6 +1,5 @@
 # Frontstage 双 Surface 策略
 
-> [English](frontstage-two-surface-strategy.md)
 
 > **已弃用的兼容 surface：** `/deprecated/frontstage/ops` 只保留用于有界诊断。旧 `/frontstage?mode=ops` 形态为书签兼容重定向到那里。Personal Workspace（`/`）是 operator 工作流、Goal 输出与里程碑报告的产品 owner。不得向遗留 Frontstage Ops board 添加新产品 capability。在其剩余夹具与 smoke 消费方迁移后的专门清理中移除兼容路由。
 

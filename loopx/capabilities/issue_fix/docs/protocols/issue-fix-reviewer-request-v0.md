@@ -1,6 +1,5 @@
 # issue_fix_reviewer_request_v0
 
-> [English](issue-fix-reviewer-request-v0.md)
 
 `issue_fix_reviewer_request_v0` 是在 issue-fix PR 存在后自动通知 reviewer 的
 public-safe 执行契约。它把只读 reviewer 推荐转成有界的外部写,并证明正式请求

@@ -1,5 +1,4 @@
 # loopx_goal_command_v0
-> [English](loopx-goal-command-v0.md)
 
 `loopx_goal_command_v0` 定义项目局部的 `/loopx` slash 命令：
 

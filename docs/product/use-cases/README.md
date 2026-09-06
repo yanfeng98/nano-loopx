@@ -1,6 +1,5 @@
 # 产品使用场景
 
-> [English](README.md)
 
 使用场景展示通用 LoopX 契约如何围绕调用方结果组合。它们不把核心控制面权威授予领域 provider。
 

@@ -1,6 +1,5 @@
 # LoopX Self-Repair 模式
 
-> [English](repair-patterns.md)
 
 把本文件用作紧凑诊断表。每当真实事件教给一个可复用的控制面教训时，添加一行。
 

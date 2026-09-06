@@ -1,6 +1,5 @@
 # 实验控制器里程碑
 
-> [English](experiment-controller-milestone.md)
 
 只有当接入长程实验控制器能让工作好过裸 Codex App goal 模式时，LoopX 才应该接入它。这个里程碑不是"开始 watch 另一个仓库"。它是一个产品 gate：更好的实验上下文、更好的人类 reward 捕获，以及更简单的多项目操作。
 

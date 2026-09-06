@@ -5,7 +5,6 @@ description: "Use when LoopX must manage a multi-PR or multi-MR delivery program
 
 # LoopX PR 项目
 
-> [English](SKILL.md)
 
 把交付项目作为持久 LoopX 状态管理，而不是从聊天记忆重建队列。保持源获取为
 provider 本地化，把观察规范化到一个公开契约，只写回材料性迁移。

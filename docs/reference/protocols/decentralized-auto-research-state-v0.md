@@ -1,5 +1,4 @@
 # decentralized_auto_research_state_v0
-> [English](decentralized-auto-research-state-v0.md)
 
 `decentralized_auto_research_state_v0` 是 LoopX 在不引入单一 leader agent 的情况下运行自主研究的协议。它借用 Arbor 公开设计中有用的部分，尤其是持久化假设状态、worktree 隔离、dev/held-out 评估与可重放证据，但把它们映射到 LoopX 的共享控制面：todos、claims、quota、run 历史、rollout 事件、gates 与只读投影。
 

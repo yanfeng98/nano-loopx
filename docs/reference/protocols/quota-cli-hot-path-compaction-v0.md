@@ -1,5 +1,4 @@
 # 配额 CLI 热路径压缩 v0
-> [English](quota-cli-hot-path-compaction-v0.md)
 
 `quota_cli_hot_path_compaction_v0` 在不改变配额控制面所计算决策的前提下，界定默认面向 agent 的 `quota should-run` 投影。完整决策先构建。仅 CLI 的投影随后在热路径保留动作权限，并把重复的诊断细节移到显式 `--include-detail` 选择器之后。
 

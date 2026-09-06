@@ -1,5 +1,4 @@
 # computer_use_runtime_v0
-> [English](computer-use-runtime-v0.md)
 
 状态：公开安全研究与设计契约 v0。
 

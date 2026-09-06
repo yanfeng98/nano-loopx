@@ -4,7 +4,6 @@ argument-hint: <task to do>  |  (no args = arm)  |  off  |  status
 allowed-tools: Bash(python3:*)
 ---
 
-> [English](loopx.md)
 
 运行 loopx 安装助手并读取其输出：
 

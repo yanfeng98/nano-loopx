@@ -1,5 +1,4 @@
 # todo_suggestion_prompt_v0
-> [English](todo-suggestion-prompt-v0.md)
 
 `todo_suggestion_prompt_v0` 是一项 prompt 契约，用于请求用户当前的项目 agent 产出一小份候选 todo 决策队列。
 

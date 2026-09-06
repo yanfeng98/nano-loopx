@@ -1,6 +1,5 @@
 # Antigravity CLI Goal 模式
 
-> [English](README.md)
 
 LoopX 面向 [Antigravity CLI](https://antigravity.google/docs/cli/using/)(二进制
 `agy`)的适配器——Google 的终端 coding agent。agy 原生自带 goal-mode host 的两半:

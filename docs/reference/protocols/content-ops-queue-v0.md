@@ -1,5 +1,4 @@
 # content_ops_queue_projection_v0
-> [English](content-ops-queue-v0.md)
 
 状态：只读托管队列投影 v0。
 

@@ -1,5 +1,4 @@
 # loop_turn_loop_disposition_v0
-> [English](turn-loop-controller-v0.md)
 
 `loop_turn_loop_disposition_v0` 是纯 Turn Loop Controller 转换契约。它仅凭一张已验证的 Turn 回执加一份全新 quota/scheduler 决策，决定受治理 loop 的下一步，别无其他。
 

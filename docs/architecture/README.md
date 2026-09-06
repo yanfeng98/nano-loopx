@@ -1,6 +1,5 @@
 # 架构
 
-> [English](README.md)
 
 这些文档说明 LoopX 的系统边界与设计决策。先从稳定的
 [架构总览](../architecture.md)了解当前控制面模型，再继续往下看。

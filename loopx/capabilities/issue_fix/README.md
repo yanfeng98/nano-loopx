@@ -1,7 +1,7 @@
 # Issue-Fix 能力
 
-[English](README.md) · [能力目录](../README.md) ·
-[State Kernel × 垂域状态案例](docs/state-kernel-domain-state-case-study.zh-CN.md) ·
+ · [能力目录](../README.md) ·
+[State Kernel × 垂域状态案例](docs/state-kernel-domain-state-case-study.md) ·
 [工作流协议](docs/protocols/issue-fix-workflow-contract-v0.md) ·
 [Agent 发现缺陷转公开 Issue](docs/protocols/issue-fix-discovered-issue-promotion-v0.md) ·
 [验收循环](docs/protocols/issue-fix-acceptance-loop-v0.md) ·

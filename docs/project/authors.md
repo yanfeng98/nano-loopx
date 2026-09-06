@@ -1,6 +1,5 @@
 # LoopX 作者与贡献者
 
-> [English](authors.md)
 
 ## 创建者
 

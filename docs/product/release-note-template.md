@@ -1,6 +1,5 @@
 # LoopX vX.Y.Z
 
-> [English](release-note-template.md)
 
 <!--
 将此文件复制到 GitHub 发布草稿正文。替换每个尖括号占位符,删除说明性注释,

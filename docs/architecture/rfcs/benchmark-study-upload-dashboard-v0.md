@@ -1,6 +1,5 @@
 # RFC：Benchmark Study 上传与看板投影 v0
 
-> [English](benchmark-study-upload-dashboard-v0.md)
 
 | 字段 | 内容 |
 |---|---|

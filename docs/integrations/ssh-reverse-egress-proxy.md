@@ -1,6 +1,5 @@
 # 可靠 SSH 反向出口代理
 
-> [English](ssh-reverse-egress-proxy.md)
 
 远程 agent runtime 可能拥有健康的 SSH 控制通道,却缺少通往其模型 API 的可靠
 出站路由。这是两条彼此独立的数据路径。通过 SSH 启动远程 runtime 的桌面应用,

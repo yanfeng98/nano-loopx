@@ -1,6 +1,5 @@
 # LoopX OpenCode 2 适配器
 
-> [English](README.md)
 
 OpenCode 2 交付新的进程内 plugin API，且 OpenCode 1 plugins 不在其下运行。LoopX
 通过 OpenCode 2 HTTP API 驱动 OpenCode 2 会话，使用持久化进程外 goal worker，

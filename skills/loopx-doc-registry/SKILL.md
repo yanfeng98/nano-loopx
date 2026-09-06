@@ -5,7 +5,6 @@ description: Use when a connected LoopX project is asked to read, remember, reco
 
 # LoopX 文档注册表
 
-> [English](SKILL.md)
 
 对持久项目材料使用本技能。目标是让未来的 agent 从项目权威界面找到材料，
 而不只是从聊天或个人记忆中找到。

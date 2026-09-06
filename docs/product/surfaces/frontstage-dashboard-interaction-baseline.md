@@ -1,6 +1,5 @@
 # Frontstage Dashboard 交互基线
 
-> [English](frontstage-dashboard-interaction-baseline.md)
 
 LoopX 历史上曾有两个 Frontstage 职责。公开 showcase 仍是产品 surface；旧 ops board 现在是弃用的诊断路由，而 Personal Workspace 拥有 operator 工作流。
 

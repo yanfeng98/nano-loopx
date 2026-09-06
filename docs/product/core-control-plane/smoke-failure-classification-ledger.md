@@ -1,6 +1,5 @@
 # Smoke 失败分类台账
 
-> [English](smoke-failure-classification-ledger.md)
 
 本台账在改动运行时代码之前记录公开 smoke 套件失败。它的职责是把产品 bug 与过时的 smoke 假设、打包缺口和 runner 易用性问题区分开。
 

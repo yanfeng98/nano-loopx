@@ -1,6 +1,5 @@
 # 有界自动研究失败后继设计
 
-> [English](2026-08-06-auto-research-failure-successors-design.md)
 
 **状态：** 方向已接受；实现前仍需书面 spec 评审。
 

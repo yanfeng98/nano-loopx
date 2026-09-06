@@ -5,7 +5,6 @@ description: Use when a LoopX-managed goal runs, tracks, scores, or analyzes a b
 
 # LoopX Benchmark 工作流
 
-> [English](SKILL.md)
 
 对 LoopX 管理的 benchmark 实验使用本技能。内置的
 `benchmark-toolkit` capability 拥有 provider-neutral 实验状态与完整性边界。

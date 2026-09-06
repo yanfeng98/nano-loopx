@@ -1,5 +1,4 @@
 # codex_app_host_command_registry_v0
-> [English](codex-app-host-command-registry-v0.md)
 
 `codex_app_host_command_registry_v0` 定义 Codex App 之类的 host 如何在其成为普通 agent 聊天之前识别 LoopX slash 命令。Host 拥有解析、项目根解析、权限框架与结构化交接包。LoopX CLI 保持事实来源。
 

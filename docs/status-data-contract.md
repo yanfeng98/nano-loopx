@@ -1,6 +1,5 @@
 # Status 数据契约
 
-> [English](status-data-contract.md)
 
 `loopx --format json status` 是给 Agent、heartbeat 作业、dashboard 与本地 UI
 实验的稳定首屏数据契约。

@@ -1,6 +1,5 @@
 # 呈现 Surface 布局
 
-> [English](presentation-surface-layout.md)
 
 LoopX 的面向人 surface 已经多到应当被视为一个统一的呈现层，而不是散落的前端、渲染器与连接器辅助。
 

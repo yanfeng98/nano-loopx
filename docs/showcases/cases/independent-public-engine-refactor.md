@@ -1,6 +1,5 @@
 # 独立用户:跨越七个合并 PR 的公共 Engine 重构
 
-> [English](independent-public-engine-refactor.md)
 
 > **案例类型:** 独立用户
 >

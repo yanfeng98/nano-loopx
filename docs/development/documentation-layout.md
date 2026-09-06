@@ -1,6 +1,5 @@
 # 文档布局与迁移策略
 
-> [English](documentation-layout.md)
 
 LoopX 文档服务多类读者：试用产品的人、运行长程 goal 的操作者、修改控制面的贡献者，
 以及检查协议或研究证据的 maintainer。本策略在把这些路径区分开来的同时，不隐藏有用材料，

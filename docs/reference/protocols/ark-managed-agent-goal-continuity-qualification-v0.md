@@ -1,5 +1,4 @@
 # Ark 托管 Agent Goal 连续性资格 v0
-> [English](ark-managed-agent-goal-continuity-qualification-v0.md)
 
 本协议为 LoopX 由单个 Ark Managed Agent Goal activation 驱动时的暂停、会话替换与可恢复失败行为进行资格界定。它扩展一次性 host 契约；它不把 LoopX 变成 Goal 运行时，也不把 LoopX Turn 用作内部驱动器。
 

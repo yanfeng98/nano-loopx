@@ -1,5 +1,4 @@
 # Reward Memory 语料注册表 v0
-> [English](reward-memory-corpus-registry-v0.md)
 
 阶段 1 把五个 Stage-0 reward-memory 类别变成 provider-neutral 的语料清单与健康契约。注册表是无状态读模型；它不镜像 provider 内容、不成为第二个记忆存储，也不授予 agent 写入或应用召回物料的权限。
 

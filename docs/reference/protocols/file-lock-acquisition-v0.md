@@ -1,5 +1,4 @@
 # 文件锁获取 v0
-> [English](file-lock-acquisition-v0.md)
 
 LoopX 使用同级内核锁文件来串行化本地读-改-写操作：POSIX 使用 `flock`，Windows 使用 `msvcrt` 字节区间锁。决定所有权的是内核锁，而不是文件是否存在。操作员与自动化流程绝不能通过删除锁文件来恢复等待者。
 

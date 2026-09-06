@@ -1,6 +1,5 @@
 # Codex App
 
-> [English](README.md)
 
 - [控制面 hook/缓存实验](codex-app-control-plane-hook-cache.md)
 

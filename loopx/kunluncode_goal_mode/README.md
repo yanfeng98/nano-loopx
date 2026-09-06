@@ -1,6 +1,5 @@
 # LoopX KunlunCode 适配器
 
-> [English](README.md)
 
 KunlunCode 适配器是 LoopX 的头等宿主表面。它使用自己的项目绑定与注册 Agent
 身份；它不读取 `.claude/loop.md`，也不作为 Claude Code 的 `cc` 通道执行。

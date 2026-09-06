@@ -1,6 +1,5 @@
 # 架构
 
-> [English](architecture.md)
 
 LoopX 有六个持久的控制面层，外加一个可选的探针面——其执行策略要求只读观察；
 它不是对等层。
@@ -77,7 +76,7 @@ Agent 必须把该选择带回同一条 typed 预检、收据绑定、验证、�
 排他租约、owner gate 或其他机器强制限制，该限制属于 typed 权威或转移契约，
 而不是从列表位置或提示措辞推断。
 
-## Turn 决策词汇表
+## Turn 决策词汇表 {#turn-decision-vocabulary}
 
 面向 operator 的文档与 heartbeat 提示常把 turn 概括为 deliver、wait、ask、
 replan、repair 或 stay quiet。这个简写描述交互意图；它不是 Turn 契约携带的
@@ -103,7 +102,7 @@ typed packet 词汇。
 Quota `interaction_contract` 与 heartbeat 引导仍可使用 operator 简写。
 Turn adapter 使用上面链接的可执行定义。
 
-## 运行时责任模型
+## 运行时责任模型 {#runtime-responsibility-model}
 
 上面六个持久层描述控制面表面。它们不描述谁执行一个 turn 的每一步。
 运行时归属用四个责任：
@@ -148,7 +147,7 @@ Capabilities 可以投影领域 lane，如 Issue Fix
 [概念入门](development/control-plane-course/00-concept-primer.md)与
 [state 基底讲义](development/control-plane-course/04-state-substrate.md)。
 
-## 当前依赖预算
+## 当前依赖预算 {#current-dependency-budget}
 
 可执行边界策略位于
 [`test_control_plane_import_boundaries.py`](../tests/architecture/test_control_plane_import_boundaries.py)：

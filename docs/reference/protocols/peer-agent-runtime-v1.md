@@ -1,5 +1,4 @@
 # 对等 Agent 运行时 v1
-> [English](peer-agent-runtime-v1.md)
 
 ## 目的
 

@@ -1,5 +1,4 @@
 # Provider-neutral 评审批次 v0
-> [English](review-batch-v0.md)
 
 `review_batch_v0` 是受控人工评审的冷路径组合契约。它把已经规范化的候选包变成一个确定的决策界面。候选收集、仓库 API、聊天 API、评分策略与外部投递仍是采用方职责。
 

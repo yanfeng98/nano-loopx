@@ -56,7 +56,7 @@ promotion 边界前继续使用既有 Markdown transaction。
 ### 长程持久化也是迁移收益的一部分
 
 产品目标是单个 goal 至少持续十个自然日。shared-authority RFC 的
-[第 7.2 节](./shared-goal-authority-state-provider-v0.zh-CN.md#72-ten-day-goals-local-storage-qualification-target-proposal)
+[第 7.2 节](./shared-goal-authority-state-provider-v0.md#72-ten-day-goals-local-storage-qualification-target-proposal)
 统一维护负载、性能预算、保留策略和真实 soak 验收；变化的容量数字不在此重复维护。
 
 与 provider-first Todo caller 同期推进完整本地持久化切片：资格化嵌入式事务存储

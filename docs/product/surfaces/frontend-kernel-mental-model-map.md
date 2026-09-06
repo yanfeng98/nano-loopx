@@ -1,6 +1,5 @@
 # 前端 Kernel 到心智模型映射
 
-> [English](frontend-kernel-mental-model-map.md)
 
 LoopX 需要一个富内核，因为长程 agent 工作有真实失败模式：漂移的 goal、隐藏 gate、重复工作、过期 evidence、丢失 handoff 与失控的算力。前端不应把那个内核当作用户的日常词表暴露。
 

@@ -120,7 +120,7 @@ Host 中长期保留的是稳定的 re-entry body：它只说明怎样找到 goa
 当前 packet，不承载某一轮的 packet 内容。
 
 > 已有远端 Agent runner、custom CLI 或 workflow supervisor 的读者，可以直接读
-> [把 LoopX 嵌入你的 Agent Runner](../../guides/custom-agent-runner-integration.zh-CN.md)：
+> [把 LoopX 嵌入你的 Agent Runner](../../guides/custom-agent-runner-integration.md)：
 > CLI 是 truth，轻量 skill/re-entry instruction 约束 Agent 行为，现有 runner 继续拥有
 > wake、session 和 workspace；Agent 之间通过 todo/successor 接力，不依赖中央 leader。
 

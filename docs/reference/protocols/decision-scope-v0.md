@@ -1,5 +1,4 @@
 # Decision Scope v0
-> [English](decision-scope-v0.md)
 
 状态：面向作用域化用户/controller 决策的公开安全协议契约。
 

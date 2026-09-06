@@ -1,6 +1,5 @@
 # Codex CLI Proof-Capture 演示
 
-> [English](codex-cli-proof-capture-demo.md)
 
 该演示 bundle 让用户或贡献者在不运行 Codex、不读 session 资料、不动本地 LoopX 状态的情况下彩排可见证明协议。它刻意 fixture-first：命令校验 public-safe evidence 形态，并展示真实 opt-in 证明需要产生的验收决策。
 

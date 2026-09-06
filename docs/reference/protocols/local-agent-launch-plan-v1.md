@@ -1,5 +1,4 @@
 # local_agent_launch_plan_v1
-> [English](local-agent-launch-plan-v1.md)
 
 `local_agent_launch_plan_v1` 是一个公开安全的 dry-run 契约，用于预览 LoopX 如何在任何 host 启动 worker、daemon、server 或外部进程之前，把本地对等 agent 分配给当前 todo。
 

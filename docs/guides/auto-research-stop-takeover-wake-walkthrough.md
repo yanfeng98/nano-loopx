@@ -1,6 +1,5 @@
 # Auto Research 停止、接管与状态感知唤醒
 
-> [English](auto-research-stop-takeover-wake-walkthrough.md)
 
 面向贡献者的、已交付 Auto Research 控制转移走查。复用现有单命令路径。不要添加
 第二个 launcher，也不要在未经 maintainer 预览的情况下修改 README 首屏。

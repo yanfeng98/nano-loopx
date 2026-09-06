@@ -1,6 +1,5 @@
 # 公开采用 Loop
 
-> [English](public-adoption-loop.md)
 
 状态:文档优先的产品契约。
 

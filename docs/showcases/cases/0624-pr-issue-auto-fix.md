@@ -1,6 +1,5 @@
 # 0624:PR 问题自动修复 Loop
 
-> [English](0624-pr-issue-auto-fix.md)
 
 ## 摘要
 

@@ -1,6 +1,5 @@
 # 智能管理 Surface
 
-> [English](intelligent-management-surface.md)
 
 本说明定义 LoopX 的 maintainer 优先管理 surface。它是本地控制面与更大 "Loop Agent" 愿景之间的产品桥：保持稳定职责的 agent、吸收外部信号、产出可评审工作，并通过长期人类反馈改进交付。
 

@@ -9,8 +9,8 @@
   replan/amendment 决策
 - 相关契约：
   [Goal Vision 与 Replan](../../reference/protocols/goal-vision-replan-contract-v0.md)、
-  [共享控制面 Authority 与可插拔状态 Provider](./shared-goal-authority-state-provider-v0.zh-CN.md)，
-  以及 [Decision Context](../../reference/protocols/decision-context-architecture-v0.zh-CN.md)
+  [共享控制面 Authority 与可插拔状态 Provider](./shared-goal-authority-state-provider-v0.md)，
+  以及 [Decision Context](../../reference/protocols/decision-context-architecture-v0.md)
 - 语言说明：
   [英文版](./shared-goal-alignment-and-governed-amendment-v0.md)与本中文版是语义镜像；
   二者存在实质差异即为缺陷。

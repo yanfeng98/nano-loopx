@@ -1,6 +1,6 @@
 # Reliability Diagnostics 能力介绍
 
-[English](README.md) | [RFC](../../../docs/architecture/rfcs/long-running-agent-reliability-diagnostics-governed-delivery-v0.md)
+ | [RFC](../../../docs/architecture/rfcs/long-running-agent-reliability-diagnostics-governed-delivery-v0.md)
 
 状态：实验能力、内置、默认关闭、按 goal 与 session 限定。本包实现 RFC 路线图
 **P0 阶段所描述的原型组件**：L1 shadow-observer 合约与第一个 DSH 事件源适配器。
@@ -44,10 +44,10 @@ Driver 或 Agent，只消费 session log 的发布事件，并且不进入 Drive
 
 ## 与 RFC 的关系
 
-- [Long-Running Agent Reliability Diagnostics](../../../docs/architecture/rfcs/long-running-agent-reliability-diagnostics-governed-delivery-v0.zh-CN.md)
+- [Long-Running Agent Reliability Diagnostics](../../../docs/architecture/rfcs/long-running-agent-reliability-diagnostics-governed-delivery-v0.md)
   拥有这个 capability。本切片是其路线图中记录的 P0 contract checkpoint；`dsh` event source 是
   owner decision 2 的记录答案，C1 run、overhead 报告与 retention profile 在 P0 exit 前仍未完成。
-- [Desktop Execution Frontends](../../../docs/architecture/rfcs/desktop-execution-frontends-v0.zh-CN.md)
+- [Desktop Execution Frontends](../../../docs/architecture/rfcs/desktop-execution-frontends-v0.md)
   的 Mode B 是这个 observer 面向的 managed runtime：Desktop-owned runtime supervisor 可以把
   receipt 与 projection 作为诊断输入消费，observer 不持有任何 supervisor authority。
 

@@ -1,6 +1,5 @@
 # 新项目 Codex 提示
 
-> [English](new-project-codex-prompt.md)
 
 当你已经拥有以下内容时，使用这个提示：
 

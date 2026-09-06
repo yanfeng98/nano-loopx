@@ -1,6 +1,5 @@
 # 交互模式目录
 
-> [English](interaction-pattern-catalog.md)
 
 LoopX 积累了很多用户 / Agent / state 交互的经验教训。State 交互模型解释架构；
 本目录则记录那些我们希望每个 controller、heartbeat、dashboard 和 benchmark runner

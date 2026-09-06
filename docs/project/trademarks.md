@@ -1,6 +1,5 @@
 # LoopX 名称与标识
 
-> [English](trademarks.md)
 
 这是关于使用 LoopX 名称、logos 与其他项目标识的轻量社区指引。面向开源项目与商业产品的实用示例见 [外部使用品牌指南](brand-guide.md)。本页不是法律建议。
 

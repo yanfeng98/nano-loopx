@@ -1,5 +1,4 @@
 # x_public_channel_ops_v0
-> [English](x-public-channel-ops-v0.md)
 
 状态：公开安全 connector 与发布关卡协议 v0。
 

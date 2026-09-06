@@ -1,5 +1,4 @@
 # todo_detail_cold_path_v0
-> [English](todo-detail-cold-path-v0.md)
 
 `todo_detail_cold_path_v0` 是 LoopX todo 的冷路径详情契约。它让 dashboard、评审工具与 agent 在不让 `status`、`quota should-run`、heartbeat prompt 或交接包超出热路径预算的情况下检查完整 todo。
 

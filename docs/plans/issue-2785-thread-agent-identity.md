@@ -7,7 +7,6 @@ product_contract_source: ce-plan-bootstrap
 
 # 修复 Codex App Thread Agent 身份复用
 
-> [English](issue-2785-thread-agent-identity.md)
 
 ## 目标
 

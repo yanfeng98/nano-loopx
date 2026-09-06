@@ -1,6 +1,5 @@
 # Codex CLI 可见 Attach 证明试点
 
-> [English](codex-cli-visible-attach-proof-pilot.md)
 
 状态：已记录 blocker，TUI bootstrap 保持为主要。
 记录时间：2026-06-21。

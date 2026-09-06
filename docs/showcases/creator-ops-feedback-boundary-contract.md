@@ -1,6 +1,5 @@
 # 创作者-操作者反馈与边界契约
 
-> [English](creator-ops-feedback-boundary-contract.md)
 
 这个契约描述了公开安全的创作者-操作者案例展示应如何把非技术用户的反馈转化为可见的 LoopX 状态。
 

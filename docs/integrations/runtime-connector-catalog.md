@@ -1,6 +1,5 @@
 # Runtime 连接器目录
 
-> [English](runtime-connector-catalog.md)
 
 状态:面向 LoopX 宿主/runtime 连接器的公开安全 v0 目录。
 

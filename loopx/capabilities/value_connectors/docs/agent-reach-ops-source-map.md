@@ -1,6 +1,5 @@
 # Agent-Reach Ops 信源地图
 
-> [English](agent-reach-ops-source-map.md)
 
 状态：connector 支撑的内容运营的公开安全现场模式（field pattern）。
 

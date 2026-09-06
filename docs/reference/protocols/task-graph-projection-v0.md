@@ -1,5 +1,4 @@
 # task_graph_projection_v0
-> [English](task-graph-projection-v0.md)
 
 `task_graph_projection_v0` 是既有 LoopX 状态之上的可选只读图视图。它帮助 agent 与操作员看到依赖、gate、验证、修复与交接关系，而无需创建第二个任务存储。
 

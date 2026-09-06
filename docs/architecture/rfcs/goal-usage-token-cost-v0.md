@@ -1,6 +1,5 @@
 # RFC：Goal 用量、Token 与成本展示（v0）
 
-> [English](goal-usage-token-cost-v0.md)
 
 - 状态：Draft
 - 范围：核心 `usage_summary` 的 token / 成本 / 时长捕获与现有 dashboard 展示

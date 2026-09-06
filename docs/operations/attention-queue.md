@@ -1,6 +1,5 @@
 # Attention Queue
 
-> [English](attention-queue.md)
 
 Attention queue 是 LoopX 的首屏 status 契约。它为 Codex goal tick、heartbeat
 作业和未来的 UI 设计，用来快速回答一个问题：

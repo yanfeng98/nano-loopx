@@ -5,7 +5,6 @@ description: Operate an explicitly activated LoopX Material Lifecycle for a conn
 
 # LoopX Material
 
-> [English](SKILL.md)
 
 对项目持久材料库的生命周期与权限使用本技能。源发现、领域特定评分与笔记撰写
 可由项目技能提供；本技能拥有通用无损生命周期。

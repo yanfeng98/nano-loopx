@@ -1,6 +1,5 @@
 # 0619:面向硬件 Agent 开发的动态工作流
 
-> [English](0619-dynamic-workflow-hardware-agent.md)
 
 ## 摘要
 

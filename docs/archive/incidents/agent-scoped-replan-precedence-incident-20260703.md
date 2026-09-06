@@ -1,6 +1,5 @@
 # Agent 作用域 Replan 优先级事件
 
-> [English](agent-scoped-replan-precedence-incident-20260703.md)
 
 日期:2026-07-03
 

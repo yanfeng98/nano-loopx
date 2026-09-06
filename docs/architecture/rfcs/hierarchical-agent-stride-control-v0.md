@@ -140,12 +140,12 @@ bounded delivery slice。它必须诚实终止于以下之一：
 
 | 层级 | LoopX 当前事实 |
 |---|---|
-| Effect | [Agent Loop Effect Interpreter RFC](./agent-loop-effect-interpreter-v0.zh-CN.md) 已定义 typed effect request、interpretation、observation 与 settlement 语义。 |
+| Effect | [Agent Loop Effect Interpreter RFC](./agent-loop-effect-interpreter-v0.md) 已定义 typed effect request、interpretation、observation 与 settlement 语义。 |
 | Turn | [LoopX Turn protocol](../../reference/protocols/loopx-turn-v0.md) 管理 decide -> execute -> validate -> commit，并把 scheduler handoff 留在 settlement 外。 |
 | Delivery | Execution profile 已区分 standard 与 fine-grained Todo contract；fine-grained mode 使用 coherent-slice turn budget，并基于 fresh evidence 创建 successor。每个获准 heartbeat 仍执行完整 durable settlement。 |
 | Continuation | 除同一 Turn 的 controller disposition 外，typed delivery-continuity reducer 可在 heartbeat wake 之间保留最近一次 accountable `outcome_progress` Todo，前提是同一 Todo 仍 open、actionable、capability-ready，且仍由同一 agent 拥有。 |
 | Progress | Typed progress observation、repeat detection、semantic replan closure 与 evidence projection 能区分 material delta 和 maintenance。 |
-| Research | [研究型探索控制面 RFC](./research-exploration-control-plane-v0.zh-CN.md) 定义了可选的 typed knowledge frontier 与 composition experiment。 |
+| Research | [研究型探索控制面 RFC](./research-exploration-control-plane-v0.md) 定义了可选的 typed knowledge frontier 与 composition experiment。 |
 | Authority | Goal vision、user gate、permission policy 与 peer/supervisor boundary 和 execution、scheduler 保持分离。 |
 
 ### 4.2 还缺什么
@@ -674,8 +674,8 @@ executor、scheduler 或 generic policy framework。
 ## 17. 参考资料
 
 - [LoopX Turn v0](../../reference/protocols/loopx-turn-v0.md)
-- [Agent Loop Effect Interpreter v0](./agent-loop-effect-interpreter-v0.zh-CN.md)
-- [研究型探索控制面 v0](./research-exploration-control-plane-v0.zh-CN.md)
+- [Agent Loop Effect Interpreter v0](./agent-loop-effect-interpreter-v0.md)
+- [研究型探索控制面 v0](./research-exploration-control-plane-v0.md)
 - [Goal Vision and Replan contract v0](../../reference/protocols/goal-vision-replan-contract-v0.md)
 - [DeepSeek Harness Code Mode implementation note](https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-06-15-code-mode.md)
 - [DeepSeek Harness tool execution pipeline](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/tool-execution-pipeline.md)

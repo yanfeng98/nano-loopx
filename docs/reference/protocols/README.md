@@ -1,5 +1,4 @@
 # 协议契约
-> [English](README.md)
 
 这些版本化契约定义面向实现的 LoopX 行为。本迁移期间文件保持扁平，以保留既有链接；本索引按职责分组，使调用方无需扫描时间顺序列表即可找到正确的契约。
 
@@ -30,10 +29,10 @@
 - [`agent_material_frontier_v0`](agent-material-frontier-v0.md)：Agent 物料前沿 v0
 - [`agent_scoped_evidence_ledger_v0`](agent-scoped-evidence-ledger-v0.md)：Agent 作用域证据 ledger v0
 - [`decision_context_architecture_v0`](decision-context-architecture-v0.md)：Decision Context 架构 v0
-- [`decision_context_architecture_v0`](decision-context-architecture-v0.zh-CN.md)：Decision Context 架构 v0（中文）
+- [`decision_context_architecture_v0`](decision-context-architecture-v0.md)：Decision Context 架构 v0（中文）
 - [`long_horizon_agent_state_protocol_v0`](long-horizon-agent-state-protocol-v0.md)：长程 agent 状态协议 v0
 - [`material_lifecycle_architecture_v0`](material-lifecycle-architecture-v0.md)：Material Lifecycle 架构 v0
-- [`material_lifecycle_architecture_v0`](material-lifecycle-architecture-v0.zh-CN.md)：Material Lifecycle 架构 v0（中文）
+- [`material_lifecycle_architecture_v0`](material-lifecycle-architecture-v0.md)：Material Lifecycle 架构 v0（中文）
 - [`multi_agent_three_layer_minimality_contract_v0`](multi-agent-three-layer-minimality-v0.md)：多 agent 三层最小化契约 v0
 - [`multi_agent_visible_launcher_v0`](multi-agent-visible-launcher-v0.md)：多 agent 可见启动器 v0
 - [`peer_agent_runtime_v1`](peer-agent-runtime-v1.md)：对等 agent 运行时 v1
@@ -41,7 +40,7 @@
 - [`periodic_report_v0`](periodic-report-v0.md)：周期报告 v0
 - [`review_batch_v0`](review-batch-v0.md)：评审批次 v0
 - [`reward_memory_architecture_v0`](../../../loopx/capabilities/reward_memory/README.md)：Reward Memory 架构 v0
-- [`reward_memory_architecture_v0`](../../../loopx/capabilities/reward_memory/README.zh-CN.md)：Reward Memory 架构 v0（中文）
+- [`reward_memory_architecture_v0`](../../../loopx/capabilities/reward_memory/README.md)：Reward Memory 架构 v0（中文）
 - [`reward_memory_corpus_registry_v0`](reward-memory-corpus-registry-v0.md)：Reward Memory 语料注册表 v0
 - [`trajectory_hygiene_v0`](trajectory-hygiene-v0.md)：轨迹卫生 v0
 

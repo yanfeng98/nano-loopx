@@ -1,5 +1,4 @@
 # multi_agent_visible_launcher_v0
-> [English](multi-agent-visible-launcher-v0.md)
 
 `multi_agent_visible_launcher_v0` 是为一个共享 goal 启动若干可见本地 agent pane 的通用 LoopX 契约。它是 auto-research 等领域演示之下的可复用层：LoopX 拥有 goal 界面、lane 身份、quota/frontier/bootstrap guard、可见 host 控件与公开验收；领域 capability 只拥有角色语义与证据 writeback。
 

@@ -1,6 +1,5 @@
 # 安装 LoopX
 
-> [English](installing-loopx.md)
 
 PyPI 是 LoopX 的默认发布通道。在激活的虚拟环境、受管的用户环境或另一个 console
 脚本已位于 `PATH` 上且使用 Python 3.11 及更高版本的环境中安装：
@@ -151,7 +150,7 @@ loopx doctor
 可能让上一版本的宿主材料保持激活。反之，`loopx update apply` 不取代 pip 作为
 依赖解析、环境策略、包索引或卸载的 owner。
 
-### 验证各激活层
+### 验证各激活层 {#verify-the-active-layers}
 
 升级不会因为包管理器步骤成功退出就算完全合格。逐一读取可能独立过期的每一层：
 

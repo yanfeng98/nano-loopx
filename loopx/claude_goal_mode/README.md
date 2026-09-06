@@ -1,6 +1,5 @@
 # LoopX Claude Code 适配器
 
-> [English](README.md)
 
 LoopX 是一个确定性（无 LLM）的控制面。在 Claude Code 上，**运行循环是 Claude
 Code 原生的 `/loop`**；LoopX 提供控制面协议。我们**不**使用 `/goal`（它从

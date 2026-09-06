@@ -1,6 +1,5 @@
 # 领域能力包
 
-> [English](domain-capability-packs.md)
 
 状态:设计目标。
 

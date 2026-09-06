@@ -1,6 +1,5 @@
 # Lark 事件收件箱
 
-> [English](lark-event-inbox.md)
 
 LoopX 可以在不保持 agent 进程存活的情况下消费 Lark 反馈。该集成刻意把采集与
 解读分开：

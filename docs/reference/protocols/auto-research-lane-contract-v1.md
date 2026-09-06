@@ -1,5 +1,4 @@
 # auto_research_lane_contract_v1
-> [English](auto-research-lane-contract-v1.md)
 
 `auto_research_lane_contract_v1` 定义 LoopX 如何在共享控制面上用几个独立 agent lane 运行 auto research。它是角色与 capability 契约，不是新的协调者服务。
 

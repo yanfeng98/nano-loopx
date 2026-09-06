@@ -1,6 +1,5 @@
 # issue_fix_acceptance_loop_v0
 
-> [English](issue-fix-acceptance-loop-v0.md)
 
 `issue_fix_acceptance_loop_v0` 是首个可执行的 LoopX 仓库 issue fix 工作协议。
 它的目标是验收,而不是展示:给定公开 issue/PR 元数据信号,loop 必须证明 agent

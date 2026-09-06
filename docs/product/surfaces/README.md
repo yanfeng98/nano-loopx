@@ -1,6 +1,5 @@
 # 运维者与呈现界面
 
-> [English](README.md)
 
 - [智能管理界面](intelligent-management-surface.md)
 - [Agent 管理可观测性 MVP](agent-management-observability-mvp.md)

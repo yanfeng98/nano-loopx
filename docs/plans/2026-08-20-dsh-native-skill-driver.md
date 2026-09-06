@@ -7,7 +7,6 @@ product_contract_source: owner-confirmed-design
 
 # DeepSeek Harness 原生 LoopX Skill、Driver 与 GoalBar
 
-> [English](2026-08-20-dsh-native-skill-driver.md)
 
 ## 目标
 

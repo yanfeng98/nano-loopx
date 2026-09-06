@@ -1,6 +1,5 @@
 # RFC：<决策或能力名称>（v0）
 
-> [English](TEMPLATE.md)
 
 - **RFC 状态：** Draft | Under review | Accepted | Rejected | Superseded
 - **交付成熟度：** Proposal | Experiment | Partial | Implemented | Promoted

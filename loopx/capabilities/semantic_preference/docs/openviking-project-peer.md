@@ -1,6 +1,5 @@
 # OpenViking 项目 Peer Provider
 
-> [English](openviking-project-peer.md)
 
 LoopX 附带一个单薄、opt-in 的 OpenViking provider，用于项目作用域的语义偏好。
 一个规范项目映射到一个保留的 OpenViking peer。同一 `origin` 的 Git worktrees

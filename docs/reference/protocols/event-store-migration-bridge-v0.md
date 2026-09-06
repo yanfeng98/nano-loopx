@@ -1,5 +1,4 @@
 # event_store_migration_bridge_v0
-> [English](event-store-migration-bridge-v0.md)
 
 `event_store_migration_bridge_v0` 是 Markdown active-state 读模型与未来事件投影读模型之间的失效关闭桥。
 

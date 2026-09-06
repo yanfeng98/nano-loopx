@@ -1,6 +1,5 @@
 # 创作者-操作者假数据 Storyboard
 
-> [English](creator-ops-fake-data-storyboard.md)
 
 这个 storyboard 把创作者-操作者案例转成一个前端就绪的公开 demo 流程。它只使用合成数据。它不是爬虫、发布工具,也不是关于真实创作者表现的声明。
 

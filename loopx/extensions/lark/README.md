@@ -1,6 +1,5 @@
 # Lark 提供者（Provider）
 
-> [English](README.md)
 
 捆绑的 `loopx-lark` extension 提供可选的 Lark 执行与展示 providers。它不替代
 LoopX 的 goal、todo、gate、quota、evidence 或恢复权威。

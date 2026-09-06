@@ -1,6 +1,5 @@
 # LoopX 项目历史
 
-> [English](history.md)
 
 本页记录改变 LoopX 身份、治理或稳定产品方向的公开里程碑。它不是逐提交 changelog。普通发布变更属于 [GitHub Releases](https://github.com/huangruiteng/loopx/releases) 与 [update notes](../update-notes/README.md)。
 

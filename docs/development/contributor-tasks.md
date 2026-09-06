@@ -1,6 +1,5 @@
 # 贡献者任务看板
 
-> [English](contributor-tasks.md)
 
 这个看板是 LoopX 工作面向贡献者的公开投影。它刻意区别于 `.local` active goal
 state：

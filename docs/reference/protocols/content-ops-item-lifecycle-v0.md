@@ -1,5 +1,4 @@
 # content_ops_item_v0
-> [English](content-ops-item-lifecycle-v0.md)
 
 状态：provider-neutral 内容项生命周期契约 v0。
 

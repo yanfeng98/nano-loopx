@@ -1,5 +1,4 @@
 # 模型行为资格界定 v0
-> [English](model-behavior-qualification-v0.md)
 
 `model_behavior_qualification_v0` 是面向 agent 的控制面包变更的低频验证契约。它补充确定性 smokes；不取代它们，也不改变默认 `quota should-run` 视图。
 

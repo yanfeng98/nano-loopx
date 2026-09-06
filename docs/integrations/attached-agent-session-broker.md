@@ -1,6 +1,5 @@
 # Attached Agent 会话中介
 
-> [English](attached-agent-session-broker.md)
 
 Attached Agent 会话中介把已在运行的宿主会话表示到 owner 本地的 LoopX Chat
 存储中。它不会启动、恢复或替换 Agent runtime。

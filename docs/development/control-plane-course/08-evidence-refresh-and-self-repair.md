@@ -1,5 +1,4 @@
 # 第 8 讲：证据、Refresh 与 Self-Repair
-> [English](08-evidence-refresh-and-self-repair.md)
 
 > **本讲结论：** Artifact 只有经过 validation、writeback、refresh 和一次性 spend，才成为
 > material progress；replan 或 repair 必须留下 bounded state delta，不能只写 ACK。

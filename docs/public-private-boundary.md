@@ -1,6 +1,5 @@
 # 公共 / 私有边界
 
-> [English](public-private-boundary.md)
 
 LoopX 设计为公开的，但大多数有用的目标证据不是。
 

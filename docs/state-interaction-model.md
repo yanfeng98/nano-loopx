@@ -1,6 +1,5 @@
 # State 交互模型
 
-> [English](state-interaction-model.md)
 
 LoopX 不应靠一次添加一个命令来成长。新能力必须契合目标、Codex App executor、
 人类 operator 与 dashboard 之间的清晰状态模型。

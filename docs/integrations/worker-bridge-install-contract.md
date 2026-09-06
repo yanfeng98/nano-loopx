@@ -1,6 +1,5 @@
 # LoopX Worker Bridge 安装契约
 
-> [English](worker-bridge-install-contract.md)
 
 worker bridge 是一种 runner 中立的方式,让 LoopX CLI 在隔离执行器中可用。它声明
 来源/runtime 挂载、Python 预检、紧凑计数器 trace 与可选的活跃用户更新通道。它

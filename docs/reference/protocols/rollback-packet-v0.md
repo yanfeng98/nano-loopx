@@ -1,5 +1,4 @@
 # rollback_packet_v0
-> [English](rollback-packet-v0.md)
 
 `rollback_packet_v0` 是长程 LoopX 工作的公开安全补偿协议。它描述投递步骤造成风险之后必须撤销、修复前进、清理或监控的内容。它是计划与证据包，不是执行许可。
 

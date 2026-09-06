@@ -1,6 +1,5 @@
 # 非技术 Operator 状态模型
 
-> [English](nontechnical-operator-status-model.md)
 
 本说明为正在运营长程 agent goal 但不想检查 prompt、日志、CLI 输出或原始轨迹的人定义首屏状态模型。
 

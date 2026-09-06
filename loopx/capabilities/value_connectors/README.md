@@ -1,6 +1,5 @@
 # Value Connectors 能力介绍
 
-> [English](README.md)
 
 Value connectors 把外部渠道变成可复用的 LoopX 控制面输入。首条落地路径聚焦
 公开 GitHub 元数据,因为它立即可用、不要求私有数据,用户本地安装 LoopX 后即可

@@ -1,6 +1,5 @@
 # 为 LoopX 做贡献
 
-> [English](CONTRIBUTING.md)
 
 你想帮助改进 LoopX？很好，感谢你。贡献有很多形式，并非所有都是代码：
 

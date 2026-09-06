@@ -1,6 +1,5 @@
 # 交互目录透镜
 
-> [English](interaction-catalog.md)
 
 完整的交互注册表位于
 [`docs/concepts/interaction-pattern-catalog.md`](../../concepts/interaction-pattern-catalog.md)。

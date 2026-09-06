@@ -1,6 +1,5 @@
 # LoopX 开发者指南
 
-> [English](README.md)
 
 本目录是修改 LoopX 运行时、公开合同、测试和发布门禁时的稳定入口。普通产品
 用户接入 LoopX 时不需要先阅读或配置这些开发者能力。
@@ -29,7 +28,7 @@
 
 | 领域 | 文档 |
 | --- | --- |
-| 当前战略方向 | [Technical directions](../project/technical-directions.md) · [中文](../project/technical-directions.zh-CN.md) |
+| 当前战略方向 | [Technical directions](../project/technical-directions.md) |
 | 开发者学习路径 | [Developer Book](/loopx/docs/book/) |
 | 控制面代码领读 | [Eleven-lecture developer course](control-plane-course/README.md) |
 | 质量分层与命令 | [Testing and quality](testing-and-quality.md) |

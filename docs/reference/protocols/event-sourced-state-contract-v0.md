@@ -1,5 +1,4 @@
 # event_sourced_state_contract_v0
-> [English](event-sourced-state-contract-v0.md)
 
 `event_sourced_state_contract_v0` 定义 LoopX 如何在保持 `ACTIVE_GOAL_STATE.md` 为人/agent 工作台的同时，把规范的 todo 与历史事实移到追加式事件流。
 

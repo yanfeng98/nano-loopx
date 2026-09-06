@@ -1,5 +1,4 @@
 # 会话运行时受控 writeback v0
-> [English](session-runtime-controlled-writeback-v0.md)
 
 状态：外部 agent 运行时元数据写入的公开安全协议草稿。
 

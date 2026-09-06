@@ -1,6 +1,5 @@
 # LoopX 重命名迁移
 
-> [English](loopx-rename-migration.md)
 
 状态:进行中的迁移计划。
 

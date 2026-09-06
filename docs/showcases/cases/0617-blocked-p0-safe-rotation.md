@@ -1,6 +1,5 @@
 # 0617:被阻塞的 P0 与安全的 P1/P2 轮换
 
-> [English](0617-blocked-p0-safe-rotation.md)
 
 ## 摘要
 

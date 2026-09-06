@@ -1,6 +1,5 @@
 # Codex 对等任务编排
 
-> [English](codex-subagent-orchestration.md)
 
 LoopX 支持两个不容混淆的不同概念:
 

@@ -1,6 +1,5 @@
 # 每两周更新说明自动化
 
-> [English](automation.md)
 
 LoopX 更新说明应由一个独立的发布工作流生成，而不是给活跃的 heartbeat 自动化添加自定义行为。
 

@@ -1,6 +1,5 @@
 # Dashboard 奖励写入边界
 
-> [English](dashboard-reward-write-boundary.md)
 
 LoopX 已经可以通过 `POST /reward/dry-run` 验证 dashboard 奖励草稿。浏览器侧追加路径是独立的 capability,必须保持显式启用。默认 dashboard 必须保持以读为主:状态导出、run history 检查和 dry-run 验证是允许的;加载 dashboard 并不会启用紧凑奖励 overlay 的写入。
 

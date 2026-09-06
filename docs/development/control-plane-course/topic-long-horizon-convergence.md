@@ -175,7 +175,7 @@ schema 和 proposal 属于 pack，最终是否执行仍由 Kernel 判断。
 一小时分享讲到这条边界即可。需要设计新 pack 时，再深入
 [第 4 讲：Core State、Domain State 与 Runtime Artifact](04-state-substrate.md#core-statedomain-state-与-runtime-artifact)、
 [Domain Capability Packs](../../product/domain-capability-packs.md)和
-[Issue-Fix State Kernel × Domain State 案例](../../../loopx/capabilities/issue_fix/docs/state-kernel-domain-state-case-study.zh-CN.md)。
+[Issue-Fix State Kernel × Domain State 案例](../../../loopx/capabilities/issue_fix/docs/state-kernel-domain-state-case-study.md)。
 
 所以 LoopX 不是一个包办所有推理的“大 Agent”。它更像一个长期控制内核：领域层提供
 可判定事实，host 执行 bounded Turn，Kernel 维护跨 Turn 仍需成立的身份、权限、证据和
@@ -1418,7 +1418,7 @@ test；真实 Agent 是否正确理解 packet，再用 actual-default model beha
 如果这些事实仍然只能由人读长日志后主观判断，LoopX 可以先管理 Todo、Gate、Monitor 和
 Evidence refs，但不能替领域系统宣布收敛。
 
-更完整的接入路径见[把 LoopX 嵌入你的 Agent Runner](../../guides/custom-agent-runner-integration.zh-CN.md)。
+更完整的接入路径见[把 LoopX 嵌入你的 Agent Runner](../../guides/custom-agent-runner-integration.md)。
 
 ## 什么时候不应启用更复杂的规划
 
@@ -1585,7 +1585,7 @@ happy-path smoke。
 9. [Goal / Vision / Replan Contract](../../reference/protocols/goal-vision-replan-contract-v0.md)
 10. [Core Control-Plane State Machine](../../product/core-control-plane/state-machine.md)
 11. [Domain Capability Packs](../../product/domain-capability-packs.md)
-12. [Issue-Fix State Kernel × Domain State 案例](../../../loopx/capabilities/issue_fix/docs/state-kernel-domain-state-case-study.zh-CN.md)
+12. [Issue-Fix State Kernel × Domain State 案例](../../../loopx/capabilities/issue_fix/docs/state-kernel-domain-state-case-study.md)
 
 ## 课后检查
 

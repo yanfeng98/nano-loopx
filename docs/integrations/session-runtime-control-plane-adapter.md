@@ -1,6 +1,5 @@
 # Session Runtime 控制面适配器
 
-> [English](session-runtime-control-plane-adapter.md)
 
 状态:公开安全架构目标 + 只读投影契约 v0。
 

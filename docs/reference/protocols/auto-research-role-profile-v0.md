@@ -1,5 +1,4 @@
 # auto_research_role_profile_v0
-> [English](auto-research-role-profile-v0.md)
 
 `auto_research_role_profile_v0` 定义 LoopX auto-research worker 在加载任何角色特定 playbook 之前如何知道自己是谁。它桥接三个既有界面：
 

@@ -1,6 +1,5 @@
 # Codex App 控制面 Hook 缓存
 
-> [English](codex-app-control-plane-hook-cache.md)
 
 状态：实验性设计说明，默认关闭。
 

@@ -1,6 +1,6 @@
 # Decision Context 能力介绍
 
-[English](README.md) | [架构协议](../../../docs/reference/protocols/decision-context-architecture-v0.zh-CN.md)
+ | [架构协议](../../../docs/reference/protocols/decision-context-architecture-v0.md)
 
 状态：实验能力、内置、默认关闭、goal-scoped。
 
@@ -311,7 +311,7 @@ profile、authority policy、proposal logic 和经过验证的 lifecycle writeba
 或凭据。
 
 更完整的实现细节和不变量见
-[Decision Context 架构协议](../../../docs/reference/protocols/decision-context-architecture-v0.zh-CN.md)。
+[Decision Context 架构协议](../../../docs/reference/protocols/decision-context-architecture-v0.md)。
 
 ## 验证
 

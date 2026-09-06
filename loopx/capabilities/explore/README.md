@@ -1,6 +1,5 @@
 # 探索结果层
 
-[English](README.md)
 
 状态：受支持的 optional capability；harness 执行契约默认关闭。
 
@@ -255,7 +254,7 @@ Harness 还会投影 **composition gaps**——显式的组合面 todo 衍生。
 - `selected_gap`：第一个 pending gap（pending 排在 scheduled 之前，再按输入数降序、按稳定 gap id 排序）；最多投影 3 个 gap（`MAX_PROJECTED_GAPS`）。
 - gap 只能被有证据的组合实验或有证据的驳回关闭——不能靠读上下文、acknowledge packet、完成无关 todo 或复述同一结论关闭。
 
-gap 变成正常的可运行后继：一个绑定到实验节点的 todo（`--explore-result-node-ref <experiment-node>`），通过正常 LoopX 生命周期执行。概念契约见 [`research-exploration-control-plane-v0`](../../../docs/architecture/rfcs/research-exploration-control-plane-v0.zh-CN.md)。
+gap 变成正常的可运行后继：一个绑定到实验节点的 todo（`--explore-result-node-ref <experiment-node>`），通过正常 LoopX 生命周期执行。概念契约见 [`research-exploration-control-plane-v0`](../../../docs/architecture/rfcs/research-exploration-control-plane-v0.md)。
 
 显式创建一个：
 
@@ -348,7 +347,7 @@ legacy `execute` 方法对 episode adapters 保持可选：仅当 `prepare_episo
 
 Adapter 异常默认 `record` item failure policy：失败 item 变成零值结构化观测，独立队列 lanes 继续运行。Concurrency keys 在每条路径都释放。传 `item_failure_policy="fatal"`（或设置 adapter 的 `item_failure_policy` 属性为 `"fatal"`）保留异常传播。这些策略隔离工作项失败；它们不实现 planner profile 的 retry/backoff 或 cooldown 指导。
 
-## 展示 Sink：Lark 映射
+## 展示 Sink：Lark 映射 {#presentation-sink-lark-mapping}
 
 | LoopX 概念 | Lark 表面 |
 | --- | --- |

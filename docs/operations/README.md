@@ -1,6 +1,5 @@
 # 运维
 
-> [English](README.md)
 
 这些文档帮助 operator 与 Agent 运行、恢复和治理长寿命目标。
 

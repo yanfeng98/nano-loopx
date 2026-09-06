@@ -5,7 +5,6 @@ description: Use for `/loopx-pr-review` or evidence-backed PR queue review. Run 
 
 # LoopX PR 评审
 
-> [English](SKILL.md)
 
 本技能是薄的宿主适配器。内置 `pull-request-review` capability 通过 CLI 包拥有
 评审深度、证据要求、完整性与裁决政策。不要把这些规则复制到本技能中，也不要用

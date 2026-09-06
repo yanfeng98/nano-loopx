@@ -1,6 +1,5 @@
 # 多 Agent 产品配方
 
-> [English](multi-agent-product-recipe.md)
 
 本指南是产品作者构建 LoopX 多 Agent 组合的路径，无需复制 auto-research 内部。
 目标形态是：

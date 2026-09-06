@@ -1,6 +1,5 @@
 # Agent 作用域用户 Gate 越界事件
 
-> [English](agent-scoped-user-gate-overreach-incident-20260624.md)
 
 日期:2026-06-24
 

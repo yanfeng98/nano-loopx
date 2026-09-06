@@ -1,6 +1,5 @@
 # 独立用户:13+ 小时的 C++ 算法精度运行
 
-> [English](independent-cpp-accuracy-long-run.md)
 
 > **案例类型:** 独立用户
 >

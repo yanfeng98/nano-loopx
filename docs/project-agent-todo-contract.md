@@ -1,6 +1,5 @@
 # 项目 Agent Todo 契约
 
-> [English](project-agent-todo-contract.md)
 
 项目 Agent 应把面向 operator 的工作留在那些长长的聊天回复、评审文档和高重载的
 `Next Action` 段落之外。LoopX 使用独立字段，让 dashboard 与 quota guard
@@ -221,7 +220,7 @@ quota 还可以暴露 `agent_lane_next_action.schema_version=agent_lane_next_act
 而不是同一 claim/优先级桶中的普通可运行工作，使能力构建 todos 不需要脆弱的
 active-state 重排。
 
-### 机器可读恢复条件
+### 机器可读恢复条件 {#machine-readable-resume-conditions}
 
 延迟 todos 可以用 `resume_when=<token>` 携带机器可读恢复条件。支持的条件是：
 

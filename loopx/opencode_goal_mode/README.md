@@ -1,6 +1,5 @@
 # LoopX OpenCode 适配器
 
-> [English](README.md)
 
 LoopX 暴露两层独立的 OpenCode：一个静态命令门面与一个可选的执行 Goal 桥接。
 普通命令安装绝不激活运行时桥接。

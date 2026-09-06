@@ -1,6 +1,5 @@
 # Agent 配置契约
 
-> [English](agent-profile-contract.md)
 
 `agent_profile_v1` 是对周期性 LoopX 对等方的可选注册表专属描述。它给提示生成与任务选择提供一个紧凑的能力与范围提示,而不分配持久排名。
 

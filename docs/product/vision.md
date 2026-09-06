@@ -1,6 +1,5 @@
 # 产品愿景
 
-> [English](vision.md)
 
 LoopX 不只是面向 AI 编码 loop 的开发者工具。它从那里起步，因为工程工作很快暴露控制面的难题：状态漂移、人类 gates、run evidence、handoffs、所有权、quota 与 public/private 边界。更大的产品类别是动态 goal 控制面：把静态 agent goal 变成长程、可评审的状态，在众多 Turn 之间保持可理解且可恢复。LoopX 运行在不同 agent harness 之上，提供长程状态、语义决策、治理、恢复与人机协同，而不替换执行工作的 harness。
 

@@ -1,6 +1,5 @@
 # 接口预算合同
 
-> [English](interface-budget-contract.md)
 
 LoopX 把热路径 worker surface 保持得足够小,让一个简短 heartbeat 就能在无需读取原始 run history 或冗长聊天上下文的情况下路由工作。这是一份约束合同,而不是鼓励增加更多状态 surface。下面的每个 surface 都有一个唯一 owner、一个具名的消费者动作、一个冷路径回退,以及大小/数量预算。
 

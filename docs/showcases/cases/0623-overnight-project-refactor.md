@@ -1,6 +1,5 @@
 # 0623:以 PR 规模切片进行的隔夜项目重构
 
-> [English](0623-overnight-project-refactor.md)
 
 ## 摘要
 

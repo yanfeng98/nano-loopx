@@ -1,6 +1,5 @@
 # 新手命令路径
 
-> [English](newcomer-command-path.md)
 
 LoopX 给人的第一印象应该是"一条产品路径"，而不是"一个 CLI 目录"。对首次用户，
 默认界面是：

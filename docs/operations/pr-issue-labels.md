@@ -1,6 +1,5 @@
 # PR 与 Issue 标签
 
-> [English](pr-issue-labels.md)
 
 LoopX 使用 GitHub 标签，让维护者、贡献者和 Agent monitor 能够按生命周期与产品领域
 过滤、路由和汇总 issue 与 pull request。

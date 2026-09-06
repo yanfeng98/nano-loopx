@@ -309,7 +309,7 @@ Threshold 必须按 workflow 在 pilot 前登记。Native outcome 高但 attenti
 - **C4** 在改变 default 或进入 shipped promotion 前，增加 model-behavior、state-machine qualification、
   overhead/authority budget 与 non-benchmark product canary。
 
-[长程 Harness Benchmark 与研究计划](./long-horizon-harness-benchmark-research-program-v0.zh-CN.md)
+[长程 Harness Benchmark 与研究计划](./long-horizon-harness-benchmark-research-program-v0.md)
 中的 portfolio 提供互补环境：LHTB 特别适合 stall、repetition 与 recovery dynamic；DeepSWE 适合
 repository delivery 与 interruption recovery；ALE 适合异构 professional workflow 与 operator
 surface。每个 benchmark 保留自己的 runner、verifier、metric 与 publication rule；LoopX 不把它们
@@ -524,20 +524,20 @@ advantage 与 sustainable delivery evidence。
 
 ## 15. 与现有文档的关系
 
-- [商业化与 SaaS 机会评估](../../product/roadmaps/saas-opportunity-assessment.zh-CN.md)
+- [商业化与 SaaS 机会评估](../../product/roadmaps/saas-opportunity-assessment.md)
   定义更广的 open/paid thesis、product ladder 与 FDE discipline。本文将其收窄为 observer-first
   offer 与 promotion contract。
-- [长程 Harness Benchmark 与研究计划](./long-horizon-harness-benchmark-research-program-v0.zh-CN.md)
+- [长程 Harness Benchmark 与研究计划](./long-horizon-harness-benchmark-research-program-v0.md)
   拥有 benchmark truth、matched arm、C0–C4 evidence 与 research integrity。
 - [Agent Management Observability MVP](../../product/surfaces/agent-management-observability-mvp.md)
   定义 L1/L2 operator surface 复用的 read-only projection posture。
-- [Desktop Execution Frontends](./desktop-execution-frontends-v0.zh-CN.md) 定义 Mode B，即由 LoopX
+- [Desktop Execution Frontends](./desktop-execution-frontends-v0.md) 定义 Mode B，即由 LoopX
   Desktop 启动并监督 Pi 或 `dsh` 的 Managed Agent Runtime。L1 shadow observer 是该模式下
   Desktop-owned runtime supervisor 之下的被动诊断层：其 integrity receipt 与 read-only projection
   是 supervisor 可以投影的输入，observer 本身不获得 supervisor 的任何 authority。
-- [Shared Goal Authority 与 State Provider](./shared-goal-authority-state-provider-v0.zh-CN.md)
+- [Shared Goal Authority 与 State Provider](./shared-goal-authority-state-provider-v0.md)
   定义只有在 L3/L4 使用 shared coordination 时才需要的 authority/provider boundary。
-- [TypeScript Control-Plane Migration](./typescript-control-plane-migration-v0.zh-CN.md)
+- [TypeScript Control-Plane Migration](./typescript-control-plane-migration-v0.md)
   在 TypeScript candidate 通过 parity qualification 期间，维持 Python canonical。
-- [Ecosystem Adoption and Derivatives](../../community/ecosystem-adoption.zh-CN.md)
+- [Ecosystem Adoption and Derivatives](../../community/ecosystem-adoption.md)
   记录事实性的 public adoption，不能替代 product outcome 或 commercial evidence。

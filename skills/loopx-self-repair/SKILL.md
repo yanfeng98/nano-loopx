@@ -5,7 +5,6 @@ description: Diagnose and repair LoopX control-plane drift or agent behavior dri
 
 # LoopX Self Repair
 
-> [English](SKILL.md)
 
 使用本技能把意外的 LoopX 行为变成持久修复，而不只是道歉或一次性解释。
 

@@ -1,6 +1,5 @@
 # Outcome Floor 安全绕过事件
 
-> [English](outcome-floor-safe-bypass-incident-20260606.md)
 
 日期:2026-06-06
 

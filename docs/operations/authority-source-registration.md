@@ -1,6 +1,5 @@
 # 权威来源注册
 
-> [English](authority-source-registration.md)
 
 `loopx register-authority-source` 为一个目标记录一个本地权威或材料来源，
 而不存储原始来源引用。它适用于内部文档、私有仓库、owner 评审 packet 和验证快照

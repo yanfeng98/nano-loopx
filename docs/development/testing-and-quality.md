@@ -1,6 +1,5 @@
 # 测试与质量体系
 
-> [English](testing-and-quality.md)
 
 LoopX 协调长程 agent。一个局部正确的改动，仍可能改变 agent 选择哪项工作、是否
 向用户提问，或 host 是否继续运行。因此质量体系从不同距离验证同一套已交付行为：

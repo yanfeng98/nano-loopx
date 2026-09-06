@@ -1,5 +1,4 @@
 # 第 5 讲：Todo 工作图与 Peer 协作
-> [English](05-work-graph-and-peers.md)
 
 > **本讲结论：** Todo 定义工作生命周期；claim、lease、capability、workspace 和 gate 是五种
 > 不同约束；handoff 传递可恢复 frontier，不创造永久 leader。

@@ -1,6 +1,5 @@
 # 字段衍生的项目控制模式
 
-> [English](field-derived-patterns.md)
 
 LoopX 应该从反复出现的真实协作模式中成长，而不是只从抽象的功能点子出发。
 本文记录已在文档密集型 Agent 基础设施工作、长窗口实验控制和多项目 Codex

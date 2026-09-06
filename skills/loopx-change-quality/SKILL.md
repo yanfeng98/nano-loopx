@@ -5,7 +5,6 @@ description: Qualify the exact final diff for a LoopX-managed goal. Use when goa
 
 # LoopX 变更质量
 
-> [English](SKILL.md)
 
 仅当所选 goal 的 `change_quality_qualification.enabled` 策略为 true 时才使用
 本技能。LoopX 拥有规范源，但不全局安装它。为相关宿主在已连接项目中安装受管

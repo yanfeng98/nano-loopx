@@ -1,6 +1,5 @@
 # 开放战略 Review
 
-> [English](open-strategy-reviews.md)
 
 LoopX Open Strategy Review 是面向用户、贡献者和 maintainer 的阶段性公开工作会议，
 用于比较少量当前技术方向，把宽泛的 Discussion 与 RFC 反馈收敛为有界下一步、owner
@@ -8,7 +7,7 @@ LoopX Open Strategy Review 是面向用户、贡献者和 maintainer 的阶段�
 
 它不是 roadmap 投票、交付承诺或第二套治理路径。真实已交付行为仍由 `main`、release
 artifact 与稳定契约定义；
-[当前技术方向](../project/technical-directions.zh-CN.md)仍是 canonical portfolio，
+[当前技术方向](../project/technical-directions.md)仍是 canonical portfolio，
 每份 RFC 的效力以其自身标注的状态为准。
 
 ## 何时召开

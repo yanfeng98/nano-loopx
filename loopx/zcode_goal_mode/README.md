@@ -1,6 +1,5 @@
 # ZCode Goal 模式
 
-> [English](README.md)
 
 [ZCode](https://zcode.z.ai/) 的 LoopX 适配器 —— 一个终端编码 agent，支持
 [skills](https://zcode.z.ai/en/docs/skill)、[Goal Mode](https://zcode.z.ai/en/docs/goal)

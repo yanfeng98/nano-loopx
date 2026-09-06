@@ -1,6 +1,5 @@
 # Codex CLI Same-Open-TUI 延续观察
 
-> [English](codex-cli-same-open-tui-continuation-observation.md)
 
 状态：已观察到 same-open-TUI 引导延续；调度式 same-TUI 自动化仍被阻塞。
 记录时间：2026-06-21。

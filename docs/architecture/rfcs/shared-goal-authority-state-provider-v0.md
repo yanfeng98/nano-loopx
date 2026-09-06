@@ -1678,7 +1678,7 @@ Live 行按环境门控（`LOOPX_TEST_POSTGRES_URL`；`NOKV_COORDINATION_LIVE=1`
 
 Reference provider 与 probe 位于
 `examples/nokv-shadow-provider/`，并有
-[配套证据文档](./shared-goal-authority-state-provider-v0-evidence.zh-CN.md)。本 PR 的
+[配套证据文档](./shared-goal-authority-state-provider-v0-evidence.md)。本 PR 的
 deterministic candidate 证明 claim/receipt core 与 Stage 3 reference lifecycle：
 state 与 receipt 的 same-CAS、并发 claim、A/B/A 原始 receipt 重放、
 renew/release/过期 reclaim、stale-fence writeback rejection、原子

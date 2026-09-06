@@ -1,5 +1,4 @@
 # 第 9 讲：如何给 Control Plane 增加一条规则
-> [English](09-engineering-a-control-plane-rule.md)
 
 > **本讲结论：** 一条 control-plane 规则必须闭合 source、decision、effect、receipt 与
 > validation；没有真实 call site 和兼容合同的未来能力，应停留在文档或 todo。

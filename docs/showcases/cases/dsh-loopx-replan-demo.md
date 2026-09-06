@@ -1,6 +1,5 @@
 # DSH × LoopX:Replan 而不丢失决策链
 
-> [English](dsh-loopx-replan-demo.md)
 
 **可复现 demo · 真实 DSH 录屏 · 合成公开安全工作量**
 

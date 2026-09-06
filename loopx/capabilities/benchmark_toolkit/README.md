@@ -1,6 +1,5 @@
 # Benchmark Toolkit
 
-> [English](README.md)
 
 `benchmark-toolkit` 是 LoopX 内置、provider-neutral 的 surface,围绕 benchmark
 实验提供并发准入、权限、artifact、完整性与可复用 agent-runtime 边界。它不拥有

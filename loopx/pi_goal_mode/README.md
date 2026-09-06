@@ -1,6 +1,5 @@
 # LoopX Pi Goal 模式
 
-> [English](README.md)
 
 Pi 的 LoopX 宿主适配器。Pi 是一个终端编码 agent，其 extensions 注册命令、工具与
 事件处理器；本适配器把 Pi 会话变成受 LoopX 管控的可见 Goal 循环。

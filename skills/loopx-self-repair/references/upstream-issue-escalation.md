@@ -1,6 +1,5 @@
 # 受守卫的上游 Issue 升级
 
-> [English](upstream-issue-escalation.md)
 
 使用此路由把已确认、可复用的 LoopX 产品缺口变成紧凑的上游 issue，而不泄漏
 用户项目状态或制造 issue 刷屏。调用 self-repair 是诊断同意，不是发布同意。

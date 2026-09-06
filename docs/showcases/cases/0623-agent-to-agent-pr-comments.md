@@ -1,6 +1,5 @@
 # 0623:Agent 对 Agent 的 PR 评论与修复 Loop
 
-> [English](0623-agent-to-agent-pr-comments.md)
 
 ## 摘要
 

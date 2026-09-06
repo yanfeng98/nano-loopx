@@ -1,6 +1,5 @@
 # OpenViking 问题修复试点交接
 
-> [English](openviking-pilot-handoff.md)
 
 本方案启动一个真实的 OpenViking issue-fix agent,而不把仓库记忆或专家 bot 当作
 oracle。目标是可审阅的维护者 outcome:一个聚焦修复 PR、一条有用的公开评论草稿,

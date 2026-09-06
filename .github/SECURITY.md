@@ -1,6 +1,5 @@
 # 安全政策
 
-> [English](SECURITY.md)
 
 ## 受支持版本
 

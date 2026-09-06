@@ -1,6 +1,5 @@
 # LoopX DeepSeek Harness（dsh）Goal 模式
 
-> [English](README.md)
 
 头等宿主适配器，把 DeepSeek Harness 会话变成受 LoopX 管控的 Goal 循环。LoopX
 保持权威（goal/todo 状态、quota、校验）；适配器只把一个受管控 Turn 翻译成一段

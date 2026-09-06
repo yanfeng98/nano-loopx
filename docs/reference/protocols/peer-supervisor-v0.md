@@ -1,5 +1,4 @@
 # 对等 Supervisor v0
-> [English](peer-supervisor-v0.md)
 
 ## 状态
 

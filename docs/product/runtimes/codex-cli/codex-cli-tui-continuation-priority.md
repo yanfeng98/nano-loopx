@@ -1,6 +1,5 @@
 # Codex CLI TUI 延续优先级
 
-> [English](codex-cli-tui-continuation-priority.md)
 
 状态：下一块 Codex CLI 产品切片的调度契约。
 

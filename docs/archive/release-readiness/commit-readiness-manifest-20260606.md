@@ -1,6 +1,5 @@
 # 提交就绪清单 - 2026-06-06
 
-> [English](commit-readiness-manifest-20260606.md)
 
 状态:当前公开脏树就绪地图。在 canary 晋升、提交、推送或 PR 创建之前,使用
 本文件审阅并暂存当前的 LoopX checkout。它就当前树而言取代已关闭的 2026-06-03

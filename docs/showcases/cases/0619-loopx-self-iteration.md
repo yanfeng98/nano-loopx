@@ -1,6 +1,5 @@
 # 0619:LoopX 公共仓库自我迭代
 
-> [English](0619-loopx-self-iteration.md)
 
 ## 摘要
 

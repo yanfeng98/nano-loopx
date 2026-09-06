@@ -1,6 +1,5 @@
 # 有界上下文布局
 
-> [English](bounded-context-layout.md)
 
 LoopX 控制面代码正从扁平的 status/quota 辅助模块集合演变为有界上下文。目标是保持开源内核可读:源解析、策略选择、投影塑形和渲染不应全部堆在一个泛型命名空间里。
 

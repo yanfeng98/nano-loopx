@@ -1,6 +1,5 @@
 # 奖励与 Gate 直接写入合同
 
-> [English](reward-gate-direct-write-contract.md)
 
 LoopX 有两种必须保持区别的运营者决策写入:run 绑定的 `human_reward` overlay 与 `operator_gate` 决策 run。两者都把人类决策转化为持久的 runtime 证据,但都不授予写入控制权、生产访问权,或跳过下一次状态/registry/配额读取的权限。
 

@@ -1,5 +1,4 @@
 # 会话运行时到 LoopX 契约
-> [English](session-runtime-loopx-projection-v0.md)
 
 状态：面向只读首屏投影的公开安全契约 v0。
 

@@ -1,6 +1,5 @@
 # 独立用户:四天无人值守 agent 运行
 
-> [English](independent-four-day-unattended-agent.md)
 
 > **案例类型:** 独立用户
 >

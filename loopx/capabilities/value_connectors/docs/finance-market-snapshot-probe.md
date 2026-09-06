@@ -1,6 +1,5 @@
 # Finance Market Snapshot 迁移包
 
-> [English](finance-market-snapshot-probe.md)
 
 状态：已退役的 connector 证据与升级迁移路径。
 

@@ -1,6 +1,5 @@
 # 跨 Runtime 实现/评审演示
 
-> [English](cross-runtime-impl-review-demo.md)
 
 本说明为"Claude Code 实现，Codex 评审"这一模式定义一个 LoopX 原生 demo 路径，同时不让任一 runtime 成为事实源。
 

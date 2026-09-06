@@ -1,5 +1,4 @@
 # 协议动作包路由器对比 v0
-> [English](protocol-action-packet-router-comparison-v0.md)
 
 `protocol_action_packet_v0` 是面向执行器动作清晰度的纯规则热路径基线。它刻意保持精简：`schema_version` 加 `quota should-run` 内部的一个紧凑 `summary` 字符串。
 

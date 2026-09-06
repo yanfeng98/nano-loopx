@@ -1,6 +1,5 @@
 # 实验性 Planner-Worker 模式
 
-> [English](planner-worker-experimental.md)
 
 状态：**实验性**，opt-in，provider-neutral。它不是常驻调度器，也不是 LoopX 的
 默认多 Agent runtime。一次调用运行一个有界的 Planner → Worker → 验证切片，并

@@ -1,6 +1,5 @@
 # issue_fix_reviewer_recommendation_v0
 
-> [English](issue-fix-reviewer-recommendation-v0.md)
 
 `issue_fix_reviewer_recommendation_v0` 是对 issue-fix 变更可能合适的 reviewer
 (人或团队)排序的 public-safe 契约。它把 repository-native ownership 证据变成

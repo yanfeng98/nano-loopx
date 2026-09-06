@@ -1,6 +1,5 @@
 # Integration Branch 对账
 
-> [English](README.md)
 
 长程仓库工作常常同时存在两个事实:
 

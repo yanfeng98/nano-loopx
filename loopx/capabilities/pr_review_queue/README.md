@@ -1,6 +1,5 @@
 # Pull Request Review
 
-> [English](README.md)
 
 `pull-request-review` capability 帮助用户逐个审阅开放与最近合并的 pull requests:
 把公开 GitHub PR 元数据变成引导式 review 队列。其命令 packet 仍以

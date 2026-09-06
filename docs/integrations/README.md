@@ -1,6 +1,5 @@
 # 集成
 
-> [English](README.md)
 
 集成把 LoopX 连接到 agent 宿主、runtime、协作界面与外部系统,同时保持单一控制面权威。
 

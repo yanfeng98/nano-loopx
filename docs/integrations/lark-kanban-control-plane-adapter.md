@@ -1,6 +1,5 @@
 # Lark Kanban 控制面适配器
 
-> [English](lark-kanban-control-plane-adapter.md)
 
 状态:原型适配器契约 v0。
 

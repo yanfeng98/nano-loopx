@@ -1,6 +1,5 @@
 # SkillsBench Goal 基线对比事件
 
-> [English](skillsbench-goal-baseline-comparison-incident-20260711.md)
 
 日期:2026-07-11
 

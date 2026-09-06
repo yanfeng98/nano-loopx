@@ -1,6 +1,5 @@
 # 开始使用 LoopX
 
-> [English](getting-started.md)
 
 本指南承载原先放在仓库根 README 中的运维细节。根 README 现在是简短的产品落地页；
 本页是安装、项目连接、诊断、heartbeat、dashboard 使用、开发检查与命令发现的
@@ -928,7 +927,7 @@ runtime 证据会记录该跳过。
 - [Codex peer task orchestration](../integrations/codex-subagent-orchestration.md)
 - [DeepSWE research practice](https://github.com/huangruiteng/loopx/blob/main/benchmark/deepswe/README.md)
 
-## 命令参考
+## 命令参考 {#command-reference}
 
 新用户应从[新手命令路径](newcomer-command-path.md)开始。下面的目录是已知在
 调试或扩展哪条路径的操作者与贡献者的参考材料。

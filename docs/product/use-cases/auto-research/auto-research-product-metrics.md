@@ -1,6 +1,5 @@
 # Auto-Research 产品指标
 
-> [English](auto-research-product-metrics.md)
 
 本说明定义 LoopX 自动研究（auto research）的用户面向指标。这些不是实现计数器。它们应帮助 maintainer、研究负责人或 operator 回答一个产品问题：
 

@@ -1,6 +1,5 @@
 # 复杂项目只读适配器
 
-> [English](complex-project-readonly-adapter.md)
 
 有些项目过于庞大,单个 goal tick 无法安全理解。它们可能有大量文档、TODO 系统、
 报告、测试、外部同步界面与活跃分支。对这类项目,第一个 LoopX 适配器不应编辑

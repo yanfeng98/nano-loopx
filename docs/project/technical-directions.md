@@ -42,10 +42,10 @@ recovery 与 host parity 是所有战略方向共用的底座。其可靠性工�
 
 | 方向 | 目标 | 阶段 | 从这里开始 |
 | --- | --- | --- | --- |
-| 长程 Benchmark 与证据 | 产出 benchmark-native、可复现的长程能力证据，并用受控任务研究机制。 | Active research | [Tracker #3243](https://github.com/huangruiteng/loopx/issues/3243) · [RFC](../architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.zh-CN.md) |
-| 可靠性诊断与治理交付 | 证明 observer-first 产品入口：先在不改变 Agent 执行的前提下诊断长程 workflow，再只在验收通过的 seam 增加 authority。 | Draft 产品方向 / 交付 qualification | [RFC](../architecture/rfcs/long-running-agent-reliability-diagnostics-governed-delivery-v0.zh-CN.md) |
+| 长程 Benchmark 与证据 | 产出 benchmark-native、可复现的长程能力证据，并用受控任务研究机制。 | Active research | [Tracker #3243](https://github.com/huangruiteng/loopx/issues/3243) · [RFC](../architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md) |
+| 可靠性诊断与治理交付 | 证明 observer-first 产品入口：先在不改变 Agent 执行的前提下诊断长程 workflow，再只在验收通过的 seam 增加 authority。 | Draft 产品方向 / 交付 qualification | [RFC](../architecture/rfcs/long-running-agent-reliability-diagnostics-governed-delivery-v0.md) |
 | Operator Surface 与 IM Integration | 通过一致的 operator workspace，让 goal、session、decision、evidence 和有界协作清晰可操作。 | 在 integration branch 孵化 | [Tracker #3244](https://github.com/huangruiteng/loopx/issues/3244) · [integration branch](https://github.com/huangruiteng/loopx/tree/frontend-control-plane-im-prototype-rfc) |
-| Shared Goal Authority 与跨 Host 协作 | 让多 host 围绕显式共享 goal 协作，同时避免 provider 或 host session 变成控制面权威。 | Draft contract / provider qualification | [Tracker #3245](https://github.com/huangruiteng/loopx/issues/3245) · [RFC](../architecture/rfcs/shared-goal-authority-state-provider-v0.zh-CN.md) |
+| Shared Goal Authority 与跨 Host 协作 | 让多 host 围绕显式共享 goal 协作，同时避免 provider 或 host session 变成控制面权威。 | Draft contract / provider qualification | [Tracker #3245](https://github.com/huangruiteng/loopx/issues/3245) · [RFC](../architecture/rfcs/shared-goal-authority-state-provider-v0.md) |
 | 架构与研究孵化器 | 在扩大生产代码范围之前验证架构演进与研究机制。 | 混合成熟度，见下表 | [Tracker #3246](https://github.com/huangruiteng/loopx/issues/3246) · [RFC 索引](../architecture/rfcs/README.md) |
 
 ## 长程 Benchmark 与证据
@@ -117,12 +117,12 @@ replay。真实 NoKV qualification、renew/reclaim、distributed quota、认证�
 
 | 探索 | 阶段 | 当前入口 | 实现规则 |
 | --- | --- | --- | --- |
-| Effect Program 与 settlement algebra | Accepted / runtime hardening | [RFC](../architecture/rfcs/agent-loop-effect-interpreter-v0.zh-CN.md) | 改善共享 typed contract 与 negative coverage；明确 scheduler ownership 和 domain-local ACK 语义。 |
-| TypeScript 控制面迁移 | Accepted / transaction-payoff 阶段 | [RFC](../architecture/rfcs/typescript-control-plane-migration-v0.zh-CN.md) | Cut over 完整 transaction，删除 Python 语义/facade 债务，并报告 bridge traffic 与迁移经济性；delivery/vision 决策保持 domain-local reducer，不泛化成 generic Effect Program step。 |
+| Effect Program 与 settlement algebra | Accepted / runtime hardening | [RFC](../architecture/rfcs/agent-loop-effect-interpreter-v0.md) | 改善共享 typed contract 与 negative coverage；明确 scheduler ownership 和 domain-local ACK 语义。 |
+| TypeScript 控制面迁移 | Accepted / transaction-payoff 阶段 | [RFC](../architecture/rfcs/typescript-control-plane-migration-v0.md) | Cut over 完整 transaction，删除 Python 语义/facade 债务，并报告 bridge traffic 与迁移经济性；delivery/vision 决策保持 domain-local reducer，不泛化成 generic Effect Program step。 |
 | 分层 Agent stride | Active research | [#3203](https://github.com/huangruiteng/loopx/issues/3203) | 引入 adaptive selection 前先验证 read-only 与 shadow evidence。 |
-| 研究型探索控制面 | Draft / typed frontier | [RFC](../architecture/rfcs/research-exploration-control-plane-v0.zh-CN.md) | 保持 Explore、goal-frontier 和 execution authority 分离。 |
+| 研究型探索控制面 | Draft / typed frontier | [RFC](../architecture/rfcs/research-exploration-control-plane-v0.md) | 保持 Explore、goal-frontier 和 execution authority 分离。 |
 | Human Attention Wishlist | Draft / non-blocking sidecar | [#3179](https://github.com/huangruiteng/loopx/issues/3179) | 不改变 user gate、selected work、quota 或 notification authority。 |
-| Goal artifact lifecycle projection | Draft / read model | [RFC](../architecture/rfcs/goal-artifact-lifecycle-projection-v0.zh-CN.md) | 先以 read-only 方式推导 milestone 与合法 next transition。 |
+| Goal artifact lifecycle projection | Draft / read model | [RFC](../architecture/rfcs/goal-artifact-lifecycle-projection-v0.md) | 先以 read-only 方式推导 milestone 与合法 next transition。 |
 | 结果后 memory utility | Draft / research | [#3214](https://github.com/huangruiteng/loopx/issues/3214) | 只在 verified outcome 后归因；retrieval 与 model judgment 保持 advisory。 |
 | Goal Channel 与 Agent IM/OpenViking 边界 | Draft / integration exploration | [RFC 索引](../architecture/rfcs/README.md) | delivery、durable control state 与 scoped context 分属不同 owner。 |
 
@@ -142,7 +142,7 @@ module 或重复 authority。
 4. Umbrella issue 用于方向讨论与决策；具体实现和 review 使用独立 issue 或 PR。
 
 当跨方向问题适合实时讨论时，阶段性的
-[开放战略 Review](../community/open-strategy-reviews.zh-CN.md)可以比较最多四个方向。
+[开放战略 Review](../community/open-strategy-reviews.md)可以比较最多四个方向。
 Review 只记录 disposition、owner、下一产物或证据要求及复核 trigger，不通过投票把
 方向写入 `main`，也不改变 RFC stage 或直接授权实现。
 

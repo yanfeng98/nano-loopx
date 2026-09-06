@@ -1,5 +1,4 @@
 # openviking_session_memory_adapter_v0
-> [English](openviking-session-memory-adapter-v0.md)
 
 `openviking_session_memory_adapter_v0` 是 [session_runtime_loopx_projection_v0](session-runtime-loopx-projection-v0.md) 面向 OpenViking 式 issue-fix 工作流的公开安全特化。它预览 LoopX 如何在不把原始轨迹、issue 评论或工具输出复制进 LoopX 状态的情况下，把紧凑的每 goal、每 issue 会话状态连接到记忆检索决策。
 

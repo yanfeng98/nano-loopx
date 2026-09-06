@@ -1,6 +1,5 @@
 # 自动研究 Replan 与多轮演示坏例
 
-> [English](auto-research-replan-multiround-badcase-20260705.md)
 
 日期:2026-07-05
 

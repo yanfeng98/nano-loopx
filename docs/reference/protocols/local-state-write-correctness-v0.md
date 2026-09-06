@@ -1,5 +1,4 @@
 # 本地状态写入正确性 v0
-> [English](local-state-write-correctness-v0.md)
 
 状态：LoopX 本地状态写入的公开安全协议草稿。
 

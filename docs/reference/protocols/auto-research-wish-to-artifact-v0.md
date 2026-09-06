@@ -1,5 +1,4 @@
 # Auto Research 从愿望到工件 v0
-> [English](auto-research-wish-to-artifact-v0.md)
 
 Auto Research 如今接受一个开放问题，并且已经可以产出假设、dev 与 held-out evidence、终态决策、独立评审与 Explore 发现。本协议围绕这些既有记录收拢交付契约。它不新增 scheduler、研究存储或 capability。
 

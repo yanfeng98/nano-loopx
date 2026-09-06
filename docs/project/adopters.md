@@ -3,7 +3,7 @@
 这是一个由项目和用户自愿维护、自己声明的公开目录。登记表示公开关系，不代表
 testimonial、认证、安全审查、支持承诺或 maintainer 背书。
 
-维护者基于公开证据观察的[生态采用清单](../community/ecosystem-adoption.zh-CN.md)
+维护者基于公开证据观察的[生态采用清单](../community/ecosystem-adoption.md)
 仍然是独立的证据表面。根目录的 [`ADOPTERS.md`](../../ADOPTERS.md) 用于项目和用户
 主动描述自己的使用，也允许登记计划中或实验中的试用。
 

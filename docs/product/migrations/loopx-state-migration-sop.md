@@ -1,6 +1,5 @@
 # LoopX State 迁移 SOP
 
-> [English](loopx-state-migration-sop.md)
 
 状态:LoopX 重命名 PR 的草稿。
 

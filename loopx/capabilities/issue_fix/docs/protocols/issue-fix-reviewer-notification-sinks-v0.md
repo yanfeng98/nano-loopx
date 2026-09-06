@@ -1,6 +1,5 @@
 # issue_fix_reviewer_notification_sinks_v0
 
-> [English](issue-fix-reviewer-notification-sinks-v0.md)
 
 `issue_fix_reviewer_notification_sinks_v0` 用有界的二级投递扩展 canonical GitHub
 reviewer request。第一个适配器发送一条幂等的 Lark/飞书群消息,点名同一个

@@ -1,6 +1,5 @@
 # 最小自定义 Runtime 示例
 
-[English](minimal-custom-runtime-example.md)
 
 LoopX 对 agent loop 保持中立，但大多数宿主**不需要**实现 typed runtime
 adapter。本页对应
@@ -43,7 +42,7 @@ python3 examples/custom-runtime-minimal-cli-turn-smoke.py
 它不会复制私有日志、凭证或真实 agent transcript。
 
 日常 onboarding（`agent-onboard`、skill 投递、scheduler ACK）见更长的
-[把 LoopX 嵌入你的 Agent Runner](custom-agent-runner-integration.zh-CN.md)。
+[把 LoopX 嵌入你的 Agent Runner](custom-agent-runner-integration.md)。
 
 ## 路径 B — 进阶：typed LoopX Turn adapter
 

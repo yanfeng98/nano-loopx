@@ -1,6 +1,5 @@
 # LoopX 许可
 
-> [English](licensing.md)
 
 LoopX 自 `v0.4.8` 起以 Apache License 2.0 作为统一开源核心的主要许可证。当前完整许可证在 [`LICENSE`](https://github.com/huangruiteng/loopx/blob/main/LICENSE)，随项目分发的归属声明在 [`NOTICE`](https://github.com/huangruiteng/loopx/blob/main/NOTICE)。
 

@@ -1,6 +1,5 @@
 # RFC：Agent IM、LoopX 与 OpenViking 协同（v0）
 
-> [English](agent-im-openviking-collaboration-v0.md)
 
 - 状态：Draft
 - 范围：多主机、多 runtime 的 agent 协同

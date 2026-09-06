@@ -1,5 +1,4 @@
 # value_connector_plan_v0
-> [English](value-connector-plan-v0.md)
 
 状态：公开安全的 connector 规划与 starter 运行时契约 v0。
 

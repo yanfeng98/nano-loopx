@@ -1,6 +1,5 @@
 # Semantic Preference Hook 能力介绍
 
-> [English](README.md)
 
 内置的 OpenViking 项目作用域适配器见
 [OpenViking 项目 peer provider](docs/openviking-project-peer.md)。

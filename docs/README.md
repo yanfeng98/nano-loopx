@@ -1,6 +1,5 @@
 # LoopX 文档
 
-> [English](README.md)
 
 LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的事情选择最短路径；
 更深层的索引把产品方向、运维、协议、证据与历史材料保持可用，
@@ -11,7 +10,7 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 | 你想... | 从这里开始 | 继续看 |
 | --- | --- | --- |
 | 安装前了解 LoopX | [公共主页](https://huangruiteng.github.io/loopx/) | [项目 README](../README.md) |
-| 跟随精心编排的开发者课程 | [Developer Book](/loopx/docs/book/) | [英文版](/loopx/docs/book/en/) |
+| 跟随精心编排的开发者课程 | [Developer Book](/loopx/docs/book/) | [英文版](/loopx/docs/book/) |
 | 在仓库里试用 LoopX | [快速上手](guides/getting-started.md) | [新手上手命令路径](guides/newcomer-command-path.md) |
 | 运行或恢复一个长寿命目标 | [运维](operations/README.md) | [集成指南](integration.md) |
 | 理解控制面 | [架构](architecture.md) | [核心概念](concepts/README.md) |
@@ -59,7 +58,7 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 
 - [当前技术方向](project/technical-directions.md)
 - [开放策略评审](community/open-strategy-reviews.md)
-  ([中文](community/open-strategy-reviews.zh-CN.md))
+  
 - [贡献指南](../CONTRIBUTING.md)
 - [贡献者任务](development/contributor-tasks.md)
 - [治理](../.github/GOVERNANCE.md)
@@ -67,7 +66,7 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 - [许可与 v0.4.8 过渡](project/licensing.md)
 - [项目历史](project/history.md)
 - [名称与商标](project/trademarks.md)
-- [对外品牌使用指南](project/brand-guide.md) ([中文：对外品牌使用指南](project/brand-guide.zh-CN.md))
+- [对外品牌使用指南](project/brand-guide.md) 
 - [ADOPTERS](../ADOPTERS.md)：自愿自证的采用目录
 
 ## 文档策略

@@ -2,7 +2,6 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> [English](2026-08-14-interpret-turn-journal.md)
 
 **目标：** 增加一个只读的 `interpret_turn_journal` Effect Program 视角（lens），返回结构化的
 回放合法性、身份不匹配、tombstone 与阶段顺序信息。

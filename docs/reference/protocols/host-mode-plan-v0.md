@@ -1,5 +1,4 @@
 # host_mode_plan_v0
-> [English](host-mode-plan-v0.md)
 
 `host_mode_plan_v0` 是 LoopX 工作流的公开安全 host 模式选择器。它位于交付的 [LoopX Turn](loopx-turn-v0.md) 与 [runtime connector catalog](../../integrations/runtime-connector-catalog.md) 之上：从意图与广告的 host 能力选择面向用户的 host 模式，然后打印匹配的预览命令。它不是启动器、scheduler、权限授予、验证器或第二事实来源。
 
