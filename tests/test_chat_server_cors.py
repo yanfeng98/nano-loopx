@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import http.client
 import json
+import socket
 import threading
+import time
 from pathlib import Path
 
 from loopx.chat_server import ChatHTTPServer, ChatRequestHandler
@@ -27,6 +29,16 @@ def _start_server() -> tuple[ChatHTTPServer, threading.Thread]:
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
+    # 等待服务器线程实际开始接受连接;否则在异步环境(如 WSL)下请求可能过早被拒。
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        try:
+            with socket.create_connection(
+                ("127.0.0.1", server.server_address[1]), timeout=0.2
+            ):
+                break
+        except OSError:
+            time.sleep(0.05)
     return server, thread
 
 
