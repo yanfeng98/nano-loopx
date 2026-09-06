@@ -1,200 +1,175 @@
-# 0620: Creator-Operator Long-Running Agent Case
+# 0620:创作者-操作者长程 Agent 案例
 
-## Summary
+> [English](0620-creator-operator-case-spec.md)
 
-This case describes a public-safe creator-operator workflow for a
-non-technical user who wants a long-running agent to help with content research
-and planning.
+## 摘要
 
-This is an appendix case for product direction. It should not be treated as a
-frontstage top-card proof until a real user story or approved public evidence
-exists.
+这个案例描述了一个面向非技术用户、公开安全的创作者-操作者工作流:用户希望一个长程 agent 帮助自己做内容研究与规划。
 
-The user is not trying to operate an agent framework. They want a controlled
-work loop that can keep a creative goal moving:
+这是一个面向产品方向的附录案例。在出现真实用户故事或经批准的公开证据之前,它不应被当作前场顶卡证明。
 
-- detect public trend candidates;
-- map those candidates against personal creative preferences;
-- extract reusable insights;
-- draft article, short-video, or newsletter angles;
-- maintain a material, phrase, source, and copy library;
-- ask for human taste, risk, or publishing decisions at the right time.
+用户并不是想操作一个 agent 框架。他们想要一个受控的工作 Loop,能持续推动一个创作 goal 前进:
 
-The case is synthetic. It does not contain real platform data, private notes,
-creator drafts, audience metrics, screenshots, raw browsing traces, internal
-links, or performance claims.
+- 发现公开的趋势候选;
+- 把这些候选映射到个人创作偏好;
+- 提取可复用的洞察;
+- 起草文章、短视频或通讯的角度;
+- 维护一个素材、短语、来源和文案库;
+- 在合适的时机请求人类对品味、风险或发布做决定。
 
-## Situation
+这个案例是合成的。它不包含真实平台数据、私有笔记、创作者草稿、受众指标、截图、原始浏览痕迹、内部链接或性能声明。
 
-A creator-operator has recurring medium-horizon work:
+## 情景
 
-1. Check what changed across public conversation spaces.
-2. Decide which topics fit their own taste, expertise, and audience.
-3. Turn the selected topics into useful creative angles.
-4. Keep a library of source snippets, examples, hooks, and reusable phrases.
-5. Review drafts before anything is published.
+一位创作者-操作者有一类反复出现的中期工作:
 
-Without a control plane, the experience is awkward even if the underlying agent
-is capable:
+1. 检查公共对话空间中哪些内容发生了变化。
+2. 决定哪些主题符合自己的品味、专长和受众。
+3. 把选定的主题转化为有用的创作角度。
+4. 维护一个包含来源片段、例子、钩子和可复用短语的素材库。
+5. 在发布任何内容之前审查草稿。
 
-- the user has to ask "what did you do?" after every run;
-- research, draft, and material-library work blur together;
-- private notes and public evidence can be mixed by accident;
-- a publishing decision can block the whole loop;
-- feedback such as "not my style" is easy to lose in chat;
-- the user cannot tell whether the agent is safely continuing side work or
-  waiting for a required decision.
+没有控制面时,即使底层 agent 能力很强,体验也很别扭:
 
-The bottleneck is product experience, not only model ability.
+- 用户每次运行后都得问"你做了什么?";
+- 研究、草稿和素材库工作混在一起;
+- 私有笔记和公开证据可能被意外混合;
+- 一次发布决定可能阻塞整个 Loop;
+- "不是我的风格"这类反馈很容易在聊天中丢失;
+- 用户无法分辨 agent 是在安全地继续旁路工作,还是在等待一个必须的决定。
 
-## LoopX Behavior
+瓶颈是产品体验,而不只是模型能力。
 
-LoopX turns the workflow into visible control-plane objects:
+## LoopX 行为
 
-| Workflow concern | LoopX object |
+LoopX 把工作流转成可见的控制面对象:
+
+| 工作流关注点 | LoopX 对象 |
 | --- | --- |
-| Long-running creative objective | goal state |
-| "Can this be published?" | user gate |
-| Research, insight, draft, and library work | agent todos |
-| "This is not my style" | feedback signal / preference hint |
-| Synthetic demo data versus private user material | boundary note |
-| What changed since last check | run history summary |
-| Safe work while a publishing gate waits | safe side path |
-| Agent identity and lane ownership | soft claim / optional hard lease |
+| 长程创作目标 | goal 状态 |
+| "这个能发布吗?" | 用户关卡 |
+| 研究、洞察、草稿和素材库工作 | Agent todos |
+| "这不是我的风格" | 反馈信号 / 偏好提示 |
+| 合成 demo 数据与私有用户素材 | 边界说明 |
+| 上次检查之后发生了什么 | 运行历史摘要 |
+| 发布关卡等待期间的安全工作 | 安全旁路 |
+| Agent 身份与 lane 所有权 | 软认领 / 可选硬租约 |
 
-The important behavior is gate-aware continuation. The agent should not
-autopublish or treat private drafts as public evidence. But while a publishing
-decision waits, it can still do safe side work: organize synthetic examples,
-prepare source-attribution checklists, update the material-library schema, or
-draft questions for the user.
+重要的行为是关卡感知的延续。Agent 不应自动发布,也不应把私有草稿当作公开证据。但在发布决定等待期间,它可以继续做安全的旁路工作:整理合成示例、准备来源归属检查清单、更新素材库 schema、或起草给用户的问题。
 
-## Public-Safe Walkthrough
+## 公开安全演练
 
-The following walkthrough uses only fake data.
+下面的演练只使用假数据。
 
-### 1. Trend Candidates
+### 1. 趋势候选
 
-The agent proposes three synthetic trend clusters:
+Agent 提出三个合成的趋势簇:
 
-| Candidate | Why it might matter | Boundary |
+| 候选 | 为什么可能重要 | 边界 |
 | --- | --- | --- |
-| "AI note workflows for solo operators" | aligns with productivity and agent-tooling audience | public-safe synthetic topic |
-| "Short-form content from long research notes" | fits creator-operator reuse loop | public-safe synthetic topic |
-| "Human approval before agent publication" | matches safety and trust framing | public-safe synthetic topic |
+| "面向独立运营者的 AI 笔记工作流" | 契合生产力和 agent 工具受众 | 公开安全合成主题 |
+| "从长研究笔记生成短视频内容" | 契合创作者-操作者复用 Loop | 公开安全合成主题 |
+| "Agent 发布前需经人类批准" | 契合安全与信任框架 | 公开安全合成主题 |
 
-### 2. Preference Map
+### 2. 偏好地图
 
-The user has compact preference hints:
+用户有紧凑的偏好提示:
 
-- prefers practical case studies over broad futurism;
-- avoids growth-hack language;
-- wants evidence boundaries stated plainly;
-- likes examples that show what the agent will not do.
+- 偏好有实践案例的研究,而不是宽泛的未来主义;
+- 避免增长黑客式语言;
+- 希望证据边界被直接说清;
+- 喜欢能展示"agent 不会做什么"的例子。
 
-These are preferences, not hard safety gates. LoopX should keep them
-separate from permission decisions such as publish/no-publish.
+这些是偏好,不是硬性安全关卡。LoopX 应把它们与发布/不发布这类权限决定分开。
 
-### 3. Insight Board
+### 3. 洞察板
 
-The agent extracts draft insights:
+Agent 提取出草稿洞察:
 
-- "A long-running creator agent needs a dashboard, not another hidden prompt."
-- "The user gate is not a failure; it is the product boundary."
-- "Safe side paths keep research useful while publishing waits."
+- "长程创作者 agent 需要一个仪表盘,而不是又一个隐藏的提示。"
+- "用户关卡不是失败,它就是产品边界。"
+- "安全旁路让研究在发布等待期间仍然有用。"
 
-Each insight should carry source status: synthetic, public-source summary,
-private note, or needs review. Public docs may only use synthetic or
-public-source summaries.
+每条洞察都应带有来源状态:合成、公开来源摘要、私有笔记或需要审查。公开文档只能使用合成或公开来源摘要。
 
-### 4. Draft Queue
+### 4. 草稿队列
 
-The agent prepares draft angles:
+Agent 准备草稿角度:
 
-| Draft angle | Status | Gate |
+| 草稿角度 | 状态 | 关卡 |
 | --- | --- | --- |
-| "How I keep a research agent from waiting forever" | outline ready | tone review |
-| "What a creator agent should show before it publishes" | idea only | publish policy |
-| "Material libraries as memory for creative work" | source map needed | no publish yet |
+| "我如何让研究 agent 不无限期等待" | 大纲就绪 | 语调审查 |
+| "创作者 agent 在发布前应该展示什么" | 仅想法 | 发布策略 |
+| "把素材库当作创作工作的记忆" | 需要来源地图 | 暂不发布 |
 
-The user sees what is ready, what is blocked, and what can continue.
+用户能看到什么已就绪、什么被阻塞、什么可以继续。
 
-### 5. Material Library
+### 5. 素材库
 
-The agent maintains structured public-safe material:
+Agent 维护结构化的公开安全素材:
 
-- reusable hooks;
-- source summaries;
-- phrasing examples;
-- rejected angles and why they were rejected;
-- boundary notes for private drafts or unpublished ideas.
+- 可复用钩子;
+- 来源摘要;
+- 措辞示例;
+- 被拒绝的角度及其被拒原因;
+- 私有草稿或未发布想法的边界说明。
 
-This library is not a raw memory dump. LoopX should keep it governed by
-source status and user feedback.
+这个素材库不是原始记忆转储。LoopX 应让它受来源状态和用户反馈治理。
 
-### 6. Human Feedback
+### 6. 人类反馈
 
-The user can respond with structured feedback:
+用户可以用结构化反馈回应:
 
-| User feedback | Control-plane effect |
+| 用户反馈 | 控制面效果 |
 | --- | --- |
-| "This angle is useful." | reward / preference reinforcement |
-| "Too salesy." | preference hint and draft revision todo |
-| "Do not use this source." | boundary correction and source removal todo |
-| "Publish after I review tone." | user gate with explicit stop condition |
-| "Keep researching, but do not draft yet." | todo reprioritization |
+| "这个角度有用。" | reward / 偏好强化 |
+| "太销售腔了。" | 偏好提示与草稿修订 todo |
+| "不要使用这个来源。" | 边界修正与来源移除 todo |
+| "我审查语调后再发布。" | 带明确停止条件的用户关卡 |
+| "继续研究,但先别起草。" | todo 重新排序 |
 
-The feedback changes the next plan without becoming an invisible chat-only
-memory.
+反馈会改变下一份计划,而不是变成不可见的聊天专属记忆。
 
-The public feedback and source-status rules are specified in
-[creator-ops-feedback-boundary-contract.md](../creator-ops-feedback-boundary-contract.md).
+公开反馈与来源状态规则在
+[creator-ops-feedback-boundary-contract.md](../creator-ops-feedback-boundary-contract.md) 中定义。
 
-## User-Facing Value
+## 用户价值
 
-For a creator-operator, the value is not "the agent can browse and write." The
-value is that the work remains legible:
+对创作者-操作者来说,价值不是"agent 能浏览和写作"。价值在于工作保持清晰可读:
 
-- the user knows what changed since the last check;
-- publishing gates stay explicit;
-- private material stays out of public examples;
-- safe side work continues while gated work waits;
-- feedback becomes a durable planning signal;
-- the agent's next move is visible before it spends another run.
+- 用户知道自上次检查以来发生了什么;
+- 发布关卡保持明确;
+- 私有素材不会进入公开示例;
+- 关卡化的工作等待时,安全旁路工作继续;
+- 反馈成为持久的规划信号;
+- agent 的下一步在它再次消耗运行之前就是可见的。
 
-For a potential LoopX user, the reusable pattern is broader: a
-long-running agent loop becomes easier to trust when goals, gates, todos,
-evidence, boundaries, feedback, and next actions appear in one control plane.
+对潜在 LoopX 用户来说,可复用模式更宽泛:当 goals、关卡、todos、证据、边界、反馈和下一步动作出现在同一个控制面中时,长程 agent Loop 更容易被信任。
 
-## Evidence Boundary
+## 证据边界
 
-This case is a synthetic product case spec. It intentionally excludes:
+这个案例是一个合成的产品案例规格。它刻意排除:
 
-- real creator notes, drafts, screenshots, or audience data;
-- raw social-platform content or scraping output;
-- private user preferences that were not rewritten as synthetic examples;
-- internal links, private repositories, local paths, credentials, or raw agent
-  sessions;
-- claims about reach, quality, engagement, or revenue improvement.
+- 真实创作者笔记、草稿、截图或受众数据;
+- 原始社交平台内容或抓取输出;
+- 未被改写成合成示例的私有用户偏好;
+- 内部链接、私有仓库、本地路径、凭据或原始 agent session;
+- 关于触达、质量、参与度或收入提升的声明。
 
-Future demos should use fake data or public-domain sample material and should
-keep no-autopublish gates visible.
+未来的 demo 应使用假数据或公有领域示例素材,并保持"不自动发布"关卡可见。
 
-## Public Evidence Sequence
+## 公开证据序列
 
-1. A creator-operator has a long-running research and content-planning goal.
-2. The agent proposes trend candidates, maps them to preferences, and drafts
-   insight options using synthetic data.
-3. LoopX separates the publishing gate from safe side work.
-4. The user gives feedback that becomes structured control-plane state.
-5. The next agent run starts from visible goals, todos, boundaries, and
-   feedback instead of a hidden chat transcript.
+1. 一位创作者-操作者有一个长程研究与内容规划 goal。
+2. Agent 提出趋势候选,映射到偏好,并用合成数据起草洞察选项。
+3. LoopX 把发布关卡与安全旁路工作分开。
+4. 用户给出的反馈变成结构化的控制面状态。
+5. 下一次 agent 运行从可见的 goals、todos、边界和反馈开始,而不是从隐藏的聊天转录开始。
 
-## Demo Status
+## Demo 状态
 
-The first public-safe storyboard is available in
-[creator-ops-fake-data-storyboard.md](../creator-ops-fake-data-storyboard.md).
-It defines a synthetic fixture and frontend panel sequence for trend
-candidates, preference map, insight board, draft queue, material library,
-human feedback, and controlled replan. No executable demo is included yet.
-The companion feedback contract is
-[creator-ops-feedback-boundary-contract.md](../creator-ops-feedback-boundary-contract.md).
+第一个公开安全 storyboard 见
+[creator-ops-fake-data-storyboard.md](../creator-ops-fake-data-storyboard.md)。
+它定义了趋势候选、偏好地图、洞察板、草稿队列、素材库、人类反馈和受控 replan 的合成 fixture 与前场面板序列。目前还没有可执行 demo。
+配套的反馈契约是
+[creator-ops-feedback-boundary-contract.md](../creator-ops-feedback-boundary-contract.md)。

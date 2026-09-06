@@ -1,27 +1,25 @@
-# Semantic preference hook
+# Semantic Preference Hook 能力介绍
 
-For the built-in OpenViking project-scoped adapter, see
-[OpenViking project peer provider](docs/openviking-project-peer.md).
+> [English](README.md)
 
-LoopX can optionally recall semantic preferences before a domain action and
-build a compact application receipt afterwards. The hook is deliberately thin:
-the provider owns storage, ranking, and semantic content; the caller owns how a
-preference affects its output and writes the receipt through existing LoopX
-evidence or state surfaces.
+内置的 OpenViking 项目作用域适配器见
+[OpenViking 项目 peer provider](docs/openviking-project-peer.md)。
 
-The hook is disabled unless a caller supplies an enabled local-private JSON
-config. Config files inside a git project must be ignored; tracked configs are
-rejected. LoopX never copies the provider command, config path, recalled
-semantic content, or raw provider errors into receipts.
+LoopX 可以在领域动作执行前可选地召回语义偏好，并在其后构建一条紧凑的应用
+回执。该 hook 刻意保持单薄：provider 拥有存储、排序与语义内容；调用方拥有
+偏好如何影响其输出，并通过现有 LoopX evidence 或 state 表面写入回执。
 
-The preferred provider path is an explicitly activated extension. The
-compatibility path still accepts a direct subprocess `argv`; both paths use the
-same core request, response, failure-policy, and receipt contracts.
+除非调用方提供一份启用了的本地私有 JSON 配置，否则该 hook 保持禁用。Git
+项目内的配置文件必须被忽略；被跟踪的配置会被拒绝。LoopX 绝不把 provider
+命令、配置路径、召回出的语义内容或原始 provider 错误复制进回执。
 
-## Module-owned surfaces
+首选 provider 路径是显式激活的 extension。兼容路径仍接受直接子进程 `argv`；
+两条路径使用相同的核心请求、响应、失败策略与回执契约。
 
-`surfaces` is a mapping keyed by arbitrary module-qualified ids. The runtime
-does not branch on `issue_fix`, `content_ops`, or any other domain name.
+## 模块拥有的表面
+
+`surfaces` 是一个以任意模块限定 id 为键的映射。运行时不会对 `issue_fix`、
+`content_ops` 或任何其他领域名做分支判断。
 
 ```json
 {
@@ -43,19 +41,16 @@ does not branch on `issue_fix`, `content_ops`, or any other domain name.
 }
 ```
 
-LoopX resolves the installed provider from the `semantic-preference` capability
-and `semantic_preference_provider_v0` protocol in runtime state. `args` are
-appended after the manifest-owned entrypoint arguments. The manifest owns
-protocol, permission, timeout, and doctor; config cannot override them.
-`extension_id` remains an optional compatibility selector when migrating an
-existing config or disambiguating multiple installed implementations.
-`extension_state_file` is an optional local-private override for tests or
-specialized embeddings; the CLI's global `--runtime-root` selects the normal
-isolated runtime. If an activated extension is later disabled or unavailable,
-recall follows the surface's existing `fail_open` or `fail_closed` policy.
+LoopX 从运行时状态中的 `semantic-preference` capability 与
+`semantic_preference_provider_v0` 协议解析已安装的 provider。`args` 追加在
+manifest 拥有的入口点参数之后。manifest 拥有协议、权限、超时与 doctor；
+配置无法覆盖它们。`extension_id` 在迁移既有配置或区分多个已安装实现时仍是
+可选兼容选择器。`extension_state_file` 是用于测试或专用 embedding 的可选
+本地私有覆盖；CLI 的全局 `--runtime-root` 选择正常的隔离运行时。如果已激活的
+extension 之后被禁用或不可用，recall 遵循该表面既有的 `fail_open` 或
+`fail_closed` 策略。
 
-For a legacy provider that has not adopted the extension manifest, replace the
-provider object with:
+对于尚未采用 extension manifest 的旧式 provider，替换 provider 对象如下：
 
 ```json
 {
@@ -66,18 +61,17 @@ provider object with:
 }
 ```
 
-`argv` and `extension_id` are mutually exclusive. Omitting both selects the
-unique installed extension implementation from runtime state.
+`argv` 与 `extension_id` 互斥。两者都省略时，从运行时状态选择唯一的已安装
+extension 实现。
 
-A domain module owns the surface id, query, context keys, and decision about
-how recalled items influence its output. Adding another module is a config
-change, not a LoopX runtime change.
+领域模块拥有表面 id、query、上下文键，以及召回条目如何影响其输出的决策。
+新增模块是一次配置变更，不是 LoopX 运行时变更。
 
-## Provider protocol
+## Provider 协议
 
-On `recall --execute`, LoopX sends one
-`semantic_preference_provider_request_v0` JSON object on stdin. A provider
-returns one `semantic_preference_provider_response_v0` object on stdout:
+`recall --execute` 时，LoopX 向 stdin 发送一个
+`semantic_preference_provider_request_v0` JSON 对象。provider 在 stdout 上返回
+一个 `semantic_preference_provider_response_v0` 对象：
 
 ```json
 {
@@ -103,30 +97,25 @@ returns one `semantic_preference_provider_response_v0` object on stdout:
 }
 ```
 
-`corpus_inventory` is optional and provider-neutral. It describes which bounded
-corpora contributed to the recall and what closes a maintenance decision; it
-does not contain raw memory. LoopX validates the inventory and derives
-`semantic_preference_maintenance_guidance_v0`. A fixed function boundary can
-therefore expose the corpus ids, writeback triggers, and closure policy in the
-same provider call instead of relying on the agent to remember a separate
-runbook. Providers that omit the field remain compatible.
+`corpus_inventory` 可选且 provider-neutral。它描述哪些有界语料库参与本次召回、
+什么会关闭一次维护决策；它不包含原始记忆。LoopX 校验该清单并推导出
+`semantic_preference_maintenance_guidance_v0`。因此一个固定的函数边界可以在同一次
+provider 调用中暴露 corpus ids、writeback triggers 与 closure policy，而不必依赖
+Agent 记住另一份 runbook。省略该字段的 provider 仍然兼容。
 
-An explicit feedback or source-of-truth change does not imply that every corpus
-must be rewritten. The caller either performs the provider-owned update and
-verifies the configured closure policy, or records a `no_write_rationale`.
-LoopX does not infer semantic updates, mirror provider storage, or turn a soft
-preference into an execution permission.
+显式反馈或 source-of-truth 变更并不意味每个语料库都必须重写。调用方要么执行
+provider 拥有的更新并校验已配置的 closure policy，要么记录一条
+`no_write_rationale`。LoopX 不推断语义更新、不镜像 provider 存储、也不把软性
+偏好变成执行许可。
 
-Provider stderr and non-zero output are reduced to a bounded failure kind.
-`fail_open` returns no items and lets the domain continue; `fail_closed` stops
-the caller with an actionable error. Provider failures do not become user
-gates automatically.
+Provider 的 stderr 与非零输出被归约为有界的失败类型。`fail_open` 返回空 items
+并让领域继续；`fail_closed` 以可操作的错误停止调用方。Provider 失败不会自动
+变成 user gates。
 
-`provider.id` and `setup_hints` are optional. Legacy `probe_argv` must be a
-read-only health check owned by the provider. Extension providers use the
-manifest doctor instead. Neither doctor path installs packages, starts
-services, changes config, or writes credentials; setup hints remain guidance
-for an explicit operator action.
+`provider.id` 与 `setup_hints` 可选。旧式 `probe_argv` 必须是 provider 拥有的
+只读健康检查。Extension providers 改用 manifest doctor。两条 doctor 路径都
+不安装包、不启动服务、不改配置、不写凭据；setup hints 只是显式 operator
+动作的指引。
 
 ## CLI
 
@@ -158,34 +147,28 @@ loopx semantic-preference maintenance-receipt \
   --evidence-ref project-preference-readback-v2
 ```
 
-Receipts contain only surface, application id, outcome, optional public
-artifact reference, and hashes of provider-owned preference references. The
-command returns the receipt without writing a file. Callers can attach it to
-the existing evidence log, todo evidence, or `refresh-state` record; the hook
-does not maintain a second reward or memory ledger.
+回执只包含表面、application id、outcome、可选的公开 artifact 引用，以及
+provider 拥有的偏好引用的哈希。该命令返回回执而不写文件。调用方可以把它挂到
+现有 evidence log、todo evidence 或 `refresh-state` 记录上；该 hook 不维护
+第二套 reward 或 memory 台账。
 
-Maintenance receipts are also stateless. They contain only the trigger,
-outcome, corpus ids, optional compact evidence reference, and hashes of scope
-references. A `verified` outcome means the provider-specific write, queue or
-index wait, direct read, and scoped recall required by the inventory have all
-passed. A `no_write_rationale` outcome records that the trigger was assessed
-but no durable semantic change was needed.
+Maintenance receipts 同样无状态。它们只包含 trigger、outcome、corpus ids、
+可选的紧凑 evidence 引用，以及 scope 引用的哈希。`verified` outcome 意味着清单
+要求的 provider 特定写入、队列或索引等待、直接读取与作用域召回都已通过。
+`no_write_rationale` outcome 记录该 trigger 已被评估，但不需要持久的语义变更。
 
-`--context` is repeatable and each entry uses `lower_snake=value` syntax.
-Invalid config, context, surface, or fail-closed requests return a structured
-`semantic_preference_error_v0` payload with exit code 2 instead of a Python
-traceback.
+`--context` 可重复，每个条目使用 `lower_snake=value` 语法。无效配置、上下文、
+表面或 fail-closed 请求返回结构化的 `semantic_preference_error_v0` 载荷，退出码
+为 2，而不是 Python traceback。
 
-## Domain integration
+## 领域集成
 
-For reviewed reward-memory records, Stage 3 also exposes
-`run_semantic_preference_reward_memory`. The caller supplies the exact corpus,
-module-owned surface, query steps, read-authority checkpoint, provider binding,
-and model application callback. The shared reward-memory core performs the
-scope/freshness/conflict guards and returns a compact receipt; this module does
-not add another store, router, or scheduler. Function-boundary mode permits one
-query, while bounded agentic mode permits at most three caller/model-authored
-queries.
+对于经评审的 reward-memory 记录，Stage 3 还暴露
+`run_semantic_preference_reward_memory`。调用方提供精确的 corpus、模块拥有的
+表面、query 步骤、read-authority 检查点、provider 绑定与模型应用回调。共享的
+reward-memory 核心执行 scope/freshness/conflict 守卫并返回紧凑回执；本模块
+不新增另一套存储、路由或调度器。函数边界模式允许一次 query，有界的 agentic
+模式允许至多三次调用方/模型撰写的 queries。
 
 ```python
 from loopx.capabilities.semantic_preference import application_receipt, recall
@@ -196,15 +179,14 @@ preferences = recall(
     surface="issue_fix.pr_description",
     execute=True,
 )
-# The same result identifies provider-owned corpora that must be assessed after
-# explicit feedback or a source-of-truth change.
+# 同一结果识别出在显式反馈或 source-of-truth 变更后需要评估的 provider 自有语料库。
 guidance = preferences.get("maintenance_guidance")
-# The issue-fix module decides whether and how to apply preferences["items"].
+# issue-fix 模块决定是否以及如何应用 preferences["items"]。
 receipt = application_receipt(
     surface="issue_fix.pr_description",
     application_id="pr-123-description-v2",
     outcome="applied",
     preference_refs=[item["preference_ref"] for item in preferences["items"]],
 )
-# Write `receipt` through an existing LoopX evidence/state surface.
+# 通过现有 LoopX evidence/state 表面写入 `receipt`。
 ```

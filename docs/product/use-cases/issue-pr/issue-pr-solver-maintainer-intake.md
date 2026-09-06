@@ -1,32 +1,23 @@
-# Issue/PR Solver Maintainer Intake Packet
+# Issue/PR Solver Maintainer 摄入 Packet
 
-This packet helps a LoopX maintainer decide whether an external or partner
-issue/PR solver should become a high-value proof anchor. The solver may live
-outside LoopX. LoopX's job is to make the maintainer decision, boundary,
-evidence, and showcase path explicit.
+> [English](issue-pr-solver-maintainer-intake.md)
 
-The packet is intentionally pre-execution. It does not authorize reading
-private source, generating patches, pushing branches, posting comments,
-publishing artifacts, or claiming benchmark uplift. It turns an issue/PR solver
-opportunity into reviewable LoopX state.
+本 packet 帮助 LoopX maintainer 决定外部或伙伴 issue/PR solver 是否应成为高价值证明锚点。Solver 可以在 LoopX 之外。LoopX 的职责是让 maintainer 决策、边界、evidence 与 showcase 路径显式。
 
-## When To Use It
+该 packet 刻意在执行前。它不授权读取私有源码、生成 patch、推送分支、发布评论、发布 artifacts 或声称 benchmark 提升。它把 issue/PR solver 机会变成可评审的 LoopX 状态。
 
-Use `issue_pr_solver_maintainer_intake_v0` when:
+## 何时使用
 
-- a maintainer is considering a repository, issue, or PR as a public proof
-  anchor;
-- a partner solver or host product may do the implementation work;
-- LoopX needs to track owner routing, allowed actions, evidence, and
-  graduation into a showcase;
-- the opportunity is not yet a normal agent todo because fit, consent, or
-  boundaries are unclear.
+在以下情况使用 `issue_pr_solver_maintainer_intake_v0`：
 
-Do not use it for ordinary local bug fixes, private customer work, benchmark
-tasks, production incidents, or any repository where the public/private boundary
-is unclear.
+- maintainer 正在考虑把某仓库、issue 或 PR 当作公开证明锚点；
+- 伙伴 solver 或宿主产品可能做实现工作；
+- LoopX 需要跟踪 owner 路由、允许动作、evidence 与 showcase 毕业；
+- 该机会还不是正常 agent todo，因为契合度、同意或边界不清晰。
 
-## Packet Shape
+不要把它用于普通本地 bug 修复、私有客户工作、benchmark 任务、生产事故，或任何 public/private 边界不清晰的仓库。
+
+## Packet 形态
 
 ```yaml
 issue_pr_solver_maintainer_intake_v0:
@@ -73,78 +64,68 @@ issue_pr_solver_maintainer_intake_v0:
     allowed_surface: none | anonymized_card | public_case | launch_material
 ```
 
-The fields are deliberately small enough to show in a management card. A real
-adapter may store more internal detail, but public LoopX state should keep only
-compact handles, labels, and evidence pointers.
+字段刻意小到能塞进管理卡。真实 adapter 可以存更多内部细节，但公开 LoopX 状态应只保留紧凑 handle、标签与 evidence 指针。
 
-## Fit Checklist
+## 契合度检查清单
 
-A candidate is a good public anchor when most answers are positive:
+当多数回答为正面时，候选是好的公开锚点：
 
-- the issue or PR is public and stable enough to cite by handle;
-- the task is small enough for a bounded solver attempt;
-- the expected user value is easy to explain;
-- reproduction or validation can be checked without private material;
-- the maintainer or repo owner has a clear route for review;
-- the result can produce a visible signal: merged PR, rejected patch with
-  useful reason, accepted plan, CI result, or documented blocker;
-- the case demonstrates LoopX management value, not only raw solver ability.
+- issue 或 PR 公开且足够稳定，可以按 handle 引用；
+- 任务小到足以进行有边界 solver 尝试；
+- 预期用户价值容易解释；
+- 复现或验证可以不经私有资料检查；
+- maintainer 或仓库 owner 有清晰评审路由；
+- 结果能产生可见信号：已合并 PR、带有用理由的拒绝 patch、已接受计划、CI 结果或已记录 blocker；
+- 案例展示 LoopX 管理价值，而不只是原始 solver 能力。
 
-A candidate should stay a signal, not an anchor, when:
+当以下情况时，候选应保持为信号而非锚点：
 
-- it requires broad repository ownership or protected production action;
-- it mainly tests model coding ability without long-running control-plane
-  value;
-- the owner route is missing;
-- the only possible evidence would be unredacted runtime material, private
-  traces, or private source material;
-- showcase consent is unknown and the case cannot be anonymized safely.
+- 它需要广泛仓库所有权或受保护生产动作；
+- 它主要测试模型编码能力而没有长程控制面价值；
+- owner 路由缺失；
+- 唯一可能的 evidence 将是未脱敏 runtime 资料、私有轨迹或私有源码资料；
+- showcase 同意未知，且案例无法安全匿名化。
 
-## Allowed Action Ladder
+## 允许动作梯级
 
-Allowed actions should start narrow and be promoted explicitly:
+允许动作应从窄开始并显式晋升：
 
-| Level | Allowed action | Promotion evidence |
+| 级别 | 允许动作 | 晋升 evidence |
 | --- | --- | --- |
-| Observe | record public handle, labels, source status, and freshness | source boundary is clear |
-| Triage | classify task type, user value, owner route, and first validation | maintainer fit is plausible |
-| Reproduce | run or describe a compact validation surface | validation can stay public-safe |
-| Draft plan | propose patch scope and risk without changing source | owner review path exists |
-| Prepare patch | create local patch or branch in an approved workspace | write scope and review gate are approved |
-| Open PR / comment | publish externally | explicit maintainer and publication gates are approved |
-| Showcase | turn outcome into card or case | showcase consent is approved or anonymization is safe |
+| Observe | 记录公开 handle、labels、来源状态与新鲜度 | 来源边界清晰 |
+| Triage | 分类任务类型、用户价值、owner 路由与首个验证 | Maintainer 契合度合理 |
+| Reproduce | 运行或描述紧凑验证 surface | 验证可以保持 public-safe |
+| Draft plan | 不改源码提议 patch scope 与风险 | Owner 评审路径存在 |
+| Prepare patch | 在批准 workspace 创建本地 patch 或分支 | 写范围与评审 gate 获批准 |
+| Open PR / comment | 外部发布 | 显式 maintainer 与发布 gates 获批准 |
+| Showcase | 把成果变成卡或案例 | Showcase 同意获批准或匿名化安全 |
 
-The default level is Observe. Each higher level must be visible as a gate,
-todo update, or review event.
+默认级别是 Observe。每个更高级别都必须作为 gate、todo 更新或评审事件可见。
 
-## LoopX Writeback
+## LoopX 写回
 
-The intake can produce several normal LoopX objects:
+摄入可以产生几个正常 LoopX 对象：
 
-- `signal_v0` for unselected opportunities;
-- `anchor_v0` for selected proof paths;
-- agent todo for triage, validation, or handoff;
-- user todo for maintainer approval or consent;
-- `review_event_v0` for accepted/rejected candidate decisions;
-- `feedback_signal_v0` for owner corrections or route changes;
-- showcase card only after consent and boundary checks.
+- 未选中机会的 `signal_v0`；
+- 选中证明路径的 `anchor_v0`；
+- 用于分诊、验证或交接的 agent todo；
+- 用于 maintainer 批准或同意的 user todo；
+- 用于接受/拒绝候选决策的 `review_event_v0`；
+- 用于 owner 纠正或路由变更的 `feedback_signal_v0`；
+- 只在同意与边界检查后的 showcase 卡。
 
-LoopX should not treat every public issue as backlog. The maintainer chooses a
-few anchors; everything else remains a searchable signal or is archived.
+LoopX 不应把每个公开 issue 当作待办。Maintainer 选少数锚点；其余保持为可搜索信号或被归档。
 
-## Acceptance Criteria
+## 验收标准
 
-A maintainer intake is successful when:
+Maintainer 摄入成功当：
 
-- the repo/issue/PR handle, source status, and freshness are explicit;
-- allowed actions are visible and start at Observe by default;
-- owner routing names who must review patch, comment, or showcase steps;
-- evidence boundaries say what can and cannot be stored or shown;
-- stop conditions are concrete enough for an agent to halt without guessing;
-- showcase consent is separate from implementation success;
-- selected candidates promote to normal LoopX todos, gates, or anchors instead
-  of staying only in chat.
+- repo/issue/PR handle、来源状态与新鲜度显式；
+- 允许动作可见且默认从 Observe 开始；
+- owner 路由命名谁必须评审 patch、评论或 showcase 步骤；
+- evidence 边界说明什么可以存储或显示、什么不可以；
+- 停止条件具体到 agent 无需猜测就能停止；
+- showcase 同意与实现成功分离；
+- 选中候选晋升为正常 LoopX todos、gates 或锚点，而不是只留在聊天里。
 
-This keeps open-source PR-led growth aligned with the core LoopX promise:
-choose high-value anchors, keep humans in control, and make solver work
-reviewable by evidence rather than hype.
+这让开源 PR 驱动增长对齐核心 LoopX 承诺：选高价值锚点、保持人类控制，并让 solver 工作凭 evidence 而非炒作可评审。

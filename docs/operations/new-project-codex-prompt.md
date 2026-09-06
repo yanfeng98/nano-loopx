@@ -1,16 +1,18 @@
-# New Project Codex Prompt
+# 新项目 Codex 提示
 
-Use this prompt when you already have:
+> [English](new-project-codex-prompt.md)
 
-- a local project folder;
-- a project goal document;
-- a Codex session with access to that folder.
+当你已经拥有以下内容时，使用这个提示：
 
-Replace the placeholders before sending it to Codex.
+- 一个本地项目文件夹；
+- 一个项目目标文档；
+- 一个可以访问该文件夹的 Codex 会话。
 
-## CLI Generator
+在发送给 Codex 之前替换占位符。
 
-Generate the same handoff prompt locally:
+## CLI 生成器
+
+在本地生成相同的 handoff 提示：
 
 ```bash
 loopx new-project-prompt \
@@ -18,7 +20,7 @@ loopx new-project-prompt \
   --goal-doc <GOAL_DOC_PATH>
 ```
 
-If the project needs a controller that can split scoped sub-agent probes:
+如果项目需要一个能拆分范围化 sub-agent 探针的 controller：
 
 ```bash
 loopx new-project-prompt \
@@ -30,7 +32,7 @@ loopx new-project-prompt \
   --write-scope "docs/**"
 ```
 
-## Copy-Paste Prompt
+## 复制粘贴提示
 
 ````text
 我有一个新项目要接入 LoopX。
@@ -263,9 +265,9 @@ loopx new-project-prompt \
    - 如果还不能接入 decision-advisor，明确缺哪些 gates。
 ````
 
-## Minimal Command
+## 最小命令
 
-If the goal is simple and does not need a project-specific adapter yet:
+如果目标简单且还不需要项目特定 adapter：
 
 ```bash
 cd <PROJECT_ROOT>
@@ -276,7 +278,7 @@ loopx connect \
   --goal-doc <GOAL_DOC_PATH>
 ```
 
-Then inspect:
+然后检查：
 
 ```bash
 loopx registry
@@ -284,18 +286,16 @@ loopx status
 loopx check --scan-root .
 ```
 
-## What Good Looks Like
+## 合格的样子
 
-The first connection is successful when:
+当满足以下条件时，第一次连接成功：
 
-- the project has a stable `ACTIVE_GOAL_STATE.md`;
-- the registry points to that state file;
-- the goal appears in `loopx status`;
-- the attention queue says exactly who should act next;
-- private evidence is kept in the project or local runtime, not in public docs;
-- the next Codex tick can continue from saved state instead of re-reading the
-  whole conversation.
+- 项目有稳定的 `ACTIVE_GOAL_STATE.md`；
+- registry 指向该状态文件；
+- 目标出现在 `loopx status`；
+- attention queue 准确说明谁下一步应行动；
+- 私有证据留在项目或本地运行时，而不是公共文档里；
+- 下一个 Codex tick 可以从已保存状态继续，而不是重读整个对话。
 
-For larger projects, the first useful adapter is usually read-only. It should
-map documents, TODOs, validation surfaces, risks, and handoff packets before it
-edits files.
+对更大的项目，第一个有用的 adapter 通常只读。它应在编辑文件之前先映射
+文档、TODO、验证面、风险和 handoff packet。

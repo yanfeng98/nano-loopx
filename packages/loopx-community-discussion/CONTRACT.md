@@ -1,45 +1,27 @@
-# Community Discussion Provider Contract
+# Community Discussion Provider 契约
 
-`community_discussion_scan_v0` is a provider-neutral, public-safe snapshot of
-recent community discussion around a repository. Collectors emit typed
-`discussion_fact_v0` facts; consumers (periodic reports, community funnels,
-operator digests) render or aggregate facts but do not reinterpret missing
-providers as silence.
+`community_discussion_scan_v0` 是围绕一个仓库的近期社区讨论的 provider-neutral、public-safe 快照。收集器发出类型化的 `discussion_fact_v0` 事实;消费者(周期性报告、社区漏斗、运营摘要)渲染或聚合事实,但不把缺失的 provider 重新解释为沉默。
 
-## Ownership
+## 所有权
 
-| Surface | Owner | Responsibility |
+| 组件面 | 所有者 | 职责 |
 | --- | --- | --- |
-| Contract | `loopx-community-discussion` extension | Schema, fact types, boundary rules |
-| Observation | GitHub REST/GraphQL + HN Algolia collectors | Public evidence with typed values or warnings |
-| Rendering | `loopx-community-discussion` | Deterministic markdown digest |
-| Delivery | Operator | Exact-gated external writes (Lark etc.) are never performed by this extension |
+| 契约 | `loopx-community-discussion` 扩展 | schema、事实类型、边界规则 |
+| 观察 | GitHub REST/GraphQL + HN Algolia 收集器 | 带类型化值或警告的公开证据 |
+| 渲染 | `loopx-community-discussion` | 确定性的 markdown 摘要 |
+| 投递 | 运营方 | 精确把关的外部写入(Lark 等)绝不由本扩展执行 |
 
-## Rules
+## 规则
 
-- Facts are metadata-first: title, source URL, author, published timestamp,
-  relevance, and a `dedupe_key`. Raw provider payloads and full post bodies are
-  never stored.
-- A failed provider is represented as an `evidence.warnings` entry plus the
-  surviving facts, never as fabricated facts.
-- GitHub internal `[Task]`/`[Benchmark]`/`[Sweep]`/`[Chore]` issues are
-  filtered as non-community signals.
-- Maintainer-authored items are typed `maintainer_signal`; other authors are
-  `external_discussion`, so digests can prioritize user voices.
-- Public recommendations from projects and public adoption declarations from
-  organizations are typed `adoption_declaration`. They are the highest-bar
-  adoption evidence (someone self-identifies as a user and advocates
-  publicly); digests must rank them above passive signals and ordinary
-  discussion.
-- HN collection disables typo tolerance and requires exact substring matches
-  to keep the well-known Loopxo/Looptap/looped-music/CrowdStrike noise out.
-- Credentials are never part of a request or response packet; GitHub
-  authentication comes from the process environment only.
-- The provider rejects a request with a mismatched `schema_version` before
-  doing any network work.
+- 事实以元数据为先:标题、来源 URL、作者、发布时间戳、相关性与 `dedupe_key`。原始 provider 载荷与完整帖子正文从不存储。
+- 失败的 provider 表示为 `evidence.warnings` 条目加上幸存的事实,绝不表现为捏造的事实。
+- GitHub 内部 `[Task]`/`[Benchmark]`/`[Sweep]`/`[Chore]` issue 作为非社区信号过滤。
+- 维护者撰写的条目类型为 `maintainer_signal`;其他作者为 `external_discussion`,以便摘要优先展示用户的声音。
+- 来自项目的公开推荐与组织的公开采纳声明类型为 `adoption_declaration`。它们是最具门槛采纳证据(有人自我表明是用户并公开倡导);摘要必须把它们排在被动信号与普通讨论之上。
+- HN 收集关闭错别字容错,要求精确子串匹配,以排除众所周知的 Loopxo/Looptap/looped-music/CrowdStrike 噪声。
+- 凭据绝不属于请求或响应包的一部分;GitHub 认证只来自进程环境。
+- provider 在开始任何网络工作之前,拒绝 `schema_version` 不匹配的请求。
 
-## Evidence
+## 证据
 
-Each scan carries `evidence.sources`, `evidence.rate_limit_remaining`, and
-`evidence.warnings` so downstream reports can audit freshness and partial
-provider availability.
+每次扫描携带 `evidence.sources`、`evidence.rate_limit_remaining` 与 `evidence.warnings`,以便下游报告可以审计新鲜度与部分 provider 可用性。

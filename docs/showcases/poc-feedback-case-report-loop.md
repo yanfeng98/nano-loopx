@@ -1,89 +1,76 @@
-# PoC Feedback And Case Report Loop
+# PoC 反馈与案例报告 Loop
 
-LoopX is still early. The fastest useful feedback is not a long review; it is a
-small, public-safe case report that shows where a long-running agent loop became
-hard to govern.
+> [English](poc-feedback-case-report-loop.md)
 
-This note defines the default PoC feedback loop for seed users and contributors.
-It turns onboarding friction, real usage stories, and showcase ideas into
-repeatable evidence without publishing private work.
+LoopX 还很早。最有用的快速反馈不是一篇长文评论,而是一份小型、公开安全的案例报告,展示长程 agent Loop 在哪里变得难以治理。
 
-## Intake
+这篇说明定义了面向种子用户与贡献者的默认 PoC 反馈 Loop。它把入门摩擦、真实使用故事与案例展示想法转化为可复用的证据,而不发布私有工作。
 
-Use GitHub Issues or Discussions as the primary public entry. Chat groups are
-useful for quick questions, but public proof should eventually reduce to an
-issue, PR, or showcase patch that future users can inspect.
+## 收录入口
 
-Good seed-user feedback usually fits one of these shapes:
+使用 GitHub Issues 或 Discussions 作为主要公开入口。聊天群适合快速提问,但公开证明最终应归结为未来用户可以检查的 issue、PR 或案例展示补丁。
 
-| Feedback shape | Best public entry | What to include |
+好的种子用户反馈通常符合以下形态之一:
+
+| 反馈形态 | 最佳公开入口 | 应包含什么 |
 | --- | --- | --- |
-| Onboarding friction | Issue | Install path, agent surface, confusing step, expected next action. |
-| Real case candidate | Issue or Discussion | Domain label, loop length, where the agent got stuck, what stayed private. |
-| Showcase improvement | PR or Issue | Case card, better wording, missing evidence, or public-safe screenshot. |
-| Product gap | Issue | The decision, gate, todo, or evidence signal that was hard to see. |
+| 入门摩擦 | Issue | 安装路径、agent 界面、令人困惑的步骤、期望的下一步动作。 |
+| 真实案例候选 | Issue 或 Discussion | 领域标签、Loop 长度、agent 卡在哪里、什么保持私有。 |
+| 案例展示改进 | PR 或 Issue | 案例卡片、更好的措辞、缺失的证据、或公开安全截图。 |
+| 产品缺口 | Issue | 难以看清的决定、关卡、todo 或证据信号。 |
 
-Do not paste private chats, credentials, internal URLs, raw traces, customer
-names, local paths, or unpublished artifacts. Describe the pattern instead.
+不要粘贴私有聊天、凭据、内部 URL、原始轨迹、客户名称、本地路径或未公开工件。改成描述模式。
 
-## Case Report Shape
+## 案例报告形态
 
-A useful case report is short:
+一份有用的案例报告很短:
 
 ```text
-Title:
-Domain:
-Agent surface:
-Loop length:
-What became hard:
-What LoopX made visible:
-Human decision:
-Safe side work:
-Evidence pointer:
-Private boundary:
-Suggested public claim:
+标题:
+领域:
+Agent 界面:
+Loop 长度:
+什么变难了:
+LoopX 让什么可见:
+人类决定:
+安全旁路工作:
+证据指向:
+私有边界:
+建议的公开声明:
 ```
 
-The report should be understandable without reading logs. If a field cannot be
-shared publicly, write the boundary instead of the raw detail.
+报告应在不阅读日志的情况下也能理解。如果某个字段不能公开分享,写出边界,而不是原始细节。
 
-## Evidence Checklist
+## 证据检查清单
 
-A case is ready to influence the PoC when it has:
+当一份案例具备以下条件时,它就能影响 PoC:
 
-- a reusable control-plane pattern, not just "an agent did work";
-- a public-safe evidence pointer such as a PR, issue, commit, smoke, synthetic
-  fixture, or approved screenshot;
-- an explicit private boundary;
-- a plain-language user value statement;
-- one next action that would make the case more reproducible or clearer.
+- 一个可复用的控制面模式,而不只是"一个 agent 做了工作";
+- 一个公开安全的证据指向,例如 PR、issue、commit、smoke、合成 fixture 或经批准的截图;
+- 一条明确的私有边界;
+- 一句白话的用户价值声明;
+- 一个能让案例更可复现或更清晰的下一步动作。
 
-For the first 3-5 PoC users, prefer modest evidence over broad claims. A case
-can be valuable even when it ends in a blocker, as long as the blocker is
-visible and the next safe action is concrete.
+对前 3-5 位 PoC 用户,宁愿选择适度的证据,也不要宽泛的声明。一个案例即使以 blocker 结束也有价值,只要 blocker 可见、下一步安全动作具体。
 
-## Promotion Path
+## 提升路径
 
-1. **Feedback**: a user files an issue, discussion, or small PR.
-2. **Triage**: a maintainer labels the pattern and public/private boundary.
-3. **Report**: the case is reduced into the report shape above.
-4. **Catalog**: mature reports become `docs/showcases` case cards or appendix
-   entries.
-5. **Frontstage**: only catalog-backed, public-safe cases become public cards.
+1. **反馈**:用户提交一个 issue、discussion 或小 PR。
+2. **分诊**:维护者标注模式与公共/私有边界。
+3. **报告**:案例被归结为上面的报告形态。
+4. **目录**:成熟的报告变成 `docs/showcases` 案例卡片或附录条目。
+5. **前场**:只有目录支撑的、公开安全的案例变成公共卡片。
 
-This keeps the hosted Frontstage honest: it shows public product proof, not
-private local status or unreviewed anecdotes.
+这让托管的 Frontstage 保持诚实:它展示公开产品证明,而不是私有本地状态或未经审查的轶事。
 
-## Maintainer Triage Notes
+## 维护者分诊说明
 
-When converting feedback into a contributor task, preserve these fields:
+把反馈转化为贡献者任务时,保留这些字段:
 
-- source entry: issue, discussion, PR, or approved public artifact;
-- pattern tags: gate, fallback, ownership, evidence, replan, feedback, or
-  onboarding;
-- claim level: synthetic demo, public evidence, redacted stub, or appendix;
-- boundary: what must not appear in public docs or UI;
-- next proof: smoke, screenshot, case page, frontend card, or user question.
+- 来源条目:issue、discussion、PR 或经批准的公开工件;
+- 模式标签:gate、fallback、ownership、evidence、replan、feedback 或 onboarding;
+- 声明级别:合成 demo、公开证据、脱敏 stub 或附录;
+- 边界:什么绝不能出现在公共文档或 UI 中;
+- 下一步证明:smoke、截图、案例页、前端卡片或用户问题。
 
-If the report depends on private material, keep it out of the public catalog
-until a sanitized summary or synthetic reproduction exists.
+如果报告依赖私有素材,在出现脱敏摘要或合成复现之前,把它留在公共目录之外。

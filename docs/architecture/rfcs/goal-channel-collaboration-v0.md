@@ -1,88 +1,78 @@
-# RFC: Goal Channel Collaboration v0
+# RFC: Goal Channel 协作模型 v0
 
-> Language note: the
-> [Chinese version](./goal-channel-collaboration-v0.zh-CN.md) and this
-> English version are semantic mirrors. A difference between them is a defect.
+> 语言说明：本文与
+> [英文版](./goal-channel-collaboration-v0.md)互为语义镜像；两者不一致属于缺陷。
 
-- Status: Draft
-- Scope: provider-backed collaboration channels for one LoopX goal
-- Decision type: product architecture and staged integration contract
+- 状态：Draft
+- 范围：绑定到单个 LoopX goal 的 provider-backed 外部协作通道
+- 决策类型：产品架构与分阶段集成契约
 
-## Summary
+## 摘要
 
-This RFC introduces **Goal Channel** as the LoopX-owned abstraction for an
-external collaboration channel bound to exactly one goal. A channel may be a
-Lark/Feishu group, Slack channel or thread, GitHub issue, Linear thread, or
-another provider surface. The provider owns delivery and UI primitives; LoopX
-owns goal state, todos, human gates, quota, evidence, receipts, and accepted
-state transitions.
+本文引入 **Goal Channel** 作为 LoopX 拥有的核心抽象：一个绑定到唯一
+goal 的外部协作通道。这个 channel 可以由 Lark/飞书群、Slack channel 或
+thread、GitHub issue、Linear thread，或其他 provider surface 承载。
+provider 负责消息投递和 UI 原语；LoopX 负责 goal 状态、todos、human
+gates、quota、evidence、receipts，以及被接受的状态迁移。
 
-The first provider target is Lark/Feishu:
+第一阶段 provider 目标是 Lark/飞书：
 
-- create or reuse one group chat for a goal;
-- create or reuse a Lark Base Kanban projection;
-- pin a compact control message and Kanban link in the group;
-- send bounded human-gate notifications;
-- sync accepted LoopX state back to the Kanban projection.
+- 为一个 goal 创建或复用一个群聊；
+- 创建或复用一个 Lark Base Kanban 投影；
+- 在群里 pin 一条紧凑的控制消息和 Kanban 链接；
+- 发送有界 human-gate 通知；
+- 将已被 LoopX 接受的状态同步回 Kanban 投影。
 
-The channel is not the source of truth. It is the visible collaboration entry
-point and feedback surface for a LoopX goal.
+channel 不是事实源。它是一个 LoopX goal 的可见协作入口和反馈 surface。
 
-## Problem
+## 问题
 
-LoopX already has durable state and Lark-specific pieces:
+LoopX 已经有稳定状态和一些 Lark 专属能力：
 
-- `lark-kanban` projects LoopX todos and status into Lark Base;
-- Lark notification code paths already prove send, readback, idempotency, and
-  profile checks for narrower domains.
+- `lark-kanban` 可以把 LoopX todos 和状态投影到 Lark Base；
+- Lark 通知代码路径已经在更窄的领域里验证过 send、readback、
+  idempotency 和 profile check。
 
-These pieces do not yet compose into the product shape users expect from a
-Claude Tag-like workflow:
+这些能力还没有组合成用户期待的 Claude Tag 类工作流：
 
-1. Mention a bot in a collaboration surface.
-2. Get or create an isolated collaboration channel for that objective.
-3. See progress and gates in the same place.
-4. Receive human-gate prompts without leaving the collaboration surface.
-5. Let LoopX keep the authoritative goal, todo, gate, and evidence state.
+1. 在协作 surface 里 mention 一个 bot。
+2. 为该目标获取或创建一个隔离的协作通道。
+3. 在同一个地方看到进展和 gate。
+4. 不离开协作 surface 就能收到 human gate 提问。
+5. 仍然由 LoopX 保持权威的 goal、todo、gate 和 evidence 状态。
 
-Without a first-class Goal Channel abstraction, a Lark group, Base board,
-message thread, pinned status, and notification receipts can drift apart.
+如果没有一等的 Goal Channel 抽象，Lark 群、Base 看板、消息 thread、
+pinned status 和 notification receipt 很容易彼此漂移。
 
-## Goals
+## 目标
 
-- Define a provider-neutral LoopX concept for "the external collaboration
-  channel for this goal".
-- Keep Lark group chat, Kanban, pinned messages, and gate notifications bound
-  to one `goal_id`.
-- Preserve LoopX as the only writer of canonical goal, todo, gate, evidence,
-  and quota state.
-- Make provider writes explicit, previewable, idempotent, and readback
-  verified.
-- Let humans see and answer gate prompts in the channel without granting the
-  channel broad write authority.
-- Allow later provider adapters such as Slack, GitHub, or Linear without
-  renaming the core concept.
+- 定义一个 provider-neutral 的 LoopX 概念，表示“这个 goal 的外部协作通道”。
+- 让 Lark 群聊、Kanban、pinned message 和 gate notification 都绑定到同一个
+  `goal_id`。
+- 保持 LoopX 是 canonical goal、todo、gate、evidence 和 quota 状态的唯一写入者。
+- 让 provider 写操作显式、可预览、幂等，并经过 readback 验证。
+- 允许人在 channel 里看到并回答 gate，但不因此授予 channel 宽泛写权限。
+- 后续可以增加 Slack、GitHub 或 Linear 等 provider adapter，而不需要重命名核心概念。
 
-## Non-Goals
+## 非目标
 
-- Replacing `lark-kanban`; Goal Channel composes it.
-- Making Lark, Slack, or any external tool the source of truth.
-- Shipping a LoopX-managed global Lark app in the open-source CLI.
-- Requiring one fixed bot identity across all users or tenants.
-- Treating arbitrary chat text as an accepted state transition.
-- Copying raw chat history, private message ids, local paths, credentials, or
-  raw provider payloads into public packets.
-- Solving full remote runner orchestration in this RFC.
+- 替代 `lark-kanban`；Goal Channel 只是组合它。
+- 让 Lark、Slack 或任何外部工具成为事实源。
+- 在开源 CLI 中内置一个 LoopX 托管的全局 Lark app。
+- 要求所有用户或租户共用一个固定 bot 身份。
+- 将任意聊天文本直接视为已接受的状态迁移。
+- 把原始聊天历史、私有 message id、本地路径、凭据或 raw provider
+  payload 复制进公开 packet。
+- 在本 RFC 中解决完整远程 runner 编排。
 
-## Naming
+## 命名
 
-Use **Goal Channel** for the core abstraction.
+核心抽象使用 **Goal Channel**。
 
-Avoid `room` as the primary name. A group chat may be one implementation
-detail, but a Goal Channel can contain chat, pinned status, Kanban,
-notification receipts, and provider-specific metadata.
+不要把 `room` 作为主名称。群聊可以是一个实现细节，但 Goal Channel 可以同时包含
+chat、pinned status、Kanban、notification receipts 和 provider-specific metadata。
 
-Suggested command surface:
+建议命令面：
 
 ```bash
 loopx goal-channel setup --provider lark --goal-id <goal-id>
@@ -96,18 +86,18 @@ loopx goal-channel notify-gate --goal-id <goal-id>
 loopx goal-channel runtime setup --goal-id <goal-id> --bot-id <bot-id> --chat-id <chat-id>
 ```
 
-`goal-channel` is the durable control-plane object and the user-facing CLI.
-The optional [botmux runtime integration](../../integrations/botmux-goal-channel-runtime.md)
-delegates IM delivery and persistent agent sessions to botmux without changing
-Goal Channel or LoopX state authority. Delivery does not imply a state
-transition; the configured agent runtime must still invoke LoopX explicitly.
+`goal-channel` 同时作为持久控制面对象和用户可见 CLI。可选的
+[botmux runtime integration](../../integrations/botmux-goal-channel-runtime.md)
+把 IM 投递与持久 agent session 委托给 botmux，而不改变 Goal Channel 或 LoopX
+state authority。投递本身不产生状态迁移；配置的 agent runtime 仍必须显式调用
+LoopX。
 
-## Ownership Model
+## 所有权模型
 
-| Capability | LoopX | Provider channel | Provider adapter |
+| 能力 | LoopX | Provider channel | Provider adapter |
 | --- | --- | --- | --- |
 | Goal lifecycle | Owner | Projection | Calls LoopX |
-| Todos, claims, gates, quota | Owner | Projection and prompts | Syncs bounded packets |
+| Todos、claims、gates、quota | Owner | Projection and prompts | Syncs bounded packets |
 | Kanban rows | Source data owner | Display owner | Upserts rows |
 | Group/chat/thread | References binding | Owner | Creates, updates, reads |
 | Pinned status | Builds bounded content | Displays | Sends and pins |
@@ -115,12 +105,11 @@ transition; the configured agent runtime must still invoke LoopX explicitly.
 | Credentials and profile | Never stores secrets | Provider auth | Uses local-private profile |
 | Receipts | Owner of accepted transition receipts | Message ids are private | Records compact send/readback receipt |
 
-The provider may store its own state. LoopX stores only the minimum local-private
-binding needed to operate the channel.
+provider 可以保存自己的状态。LoopX 只保存运行 channel 所需的最小本地私有绑定。
 
-## Lark Provider Binding
+## Lark Provider 绑定
 
-A Lark Goal Channel binding is local-private and project-scoped:
+Lark Goal Channel 绑定是本地私有、项目作用域内的配置：
 
 ```json
 {
@@ -151,17 +140,16 @@ A Lark Goal Channel binding is local-private and project-scoped:
 }
 ```
 
-The file belongs under `.loopx/` or another ignored local-private path. Public
-status packets must not expose chat ids, member ids, message ids, profile names,
-raw Lark payloads, local file paths, or credentials. Public packets may expose
-booleans, counts, sanitized provider labels, and operator-safe URLs only when
-the caller has already chosen to show them.
+该文件应位于 `.loopx/` 或其他被忽略的本地私有路径。公开 status packet 不得暴露
+chat id、member id、message id、profile name、raw Lark payload、本地文件路径或凭据。
+只有当调用方明确选择展示时，公开 packet 才可以展示布尔值、计数、脱敏 provider
+label 和 operator-safe URL。
 
-### Shared provider targets
+### 共享 provider target
 
-Several Goal Channels may reference one named local-private provider target.
-The target owns the reusable Lark chat and sender identity; each Goal binding
-continues to own its control message, Kanban, receipts, and cooldown state:
+多个 Goal Channel 可以引用同一个具名、本地私有的 provider target。target 持有
+可复用的 Lark 群和发送身份；每个 Goal binding 仍独立持有自己的控制消息、Kanban、
+receipt 和 cooldown 状态：
 
 ```bash
 loopx goal-channel target add \
@@ -178,151 +166,135 @@ loopx goal-channel attach \
   --execute
 ```
 
-The target store belongs under the resolved LoopX runtime root and is never a
-public or repository-tracked configuration. A target-linked Goal binding stores
-only `target_ref` plus Goal-local state; changing a target updates the resolved
-chat or sender for every referencing Goal without merging their state.
-After moving a target to another group, rerun bounded `attach` batches so each
-Goal can establish and verify its own control message in the new group.
+target store 位于解析后的 LoopX runtime root 下，绝不能成为公开或提交进仓库的配置。
+引用 target 的 Goal binding 只保存 `target_ref` 和 Goal 本地状态；更新 target 会改变
+所有引用 Goal 解析到的群或 sender，但不会合并这些 Goal 的状态。
+target 换到另一个群后，应重新执行有界 `attach` 批次，让每个 Goal 在新群中分别建立并
+回读自己的控制消息。
 
-Machines do not synchronize private chat ids or authentication profiles. To
-use the same group from a workstation and a development host, configure the
-same target name independently on each machine. Inbound routing must reply to a
-specific gate message or carry an explicit Goal id; ordinary group text must
-never be inferred as belonging to one of several Goals.
+不同机器之间不自动同步私有 chat id 或认证 profile。若本机和开发机需要使用同一个群，
+应在两台机器上分别配置同名 target。未来接收群回复时，只能接受对具体 gate 消息的回复，
+或携带明确 Goal id 的操作；不得把普通群文本推断给多个 Goal 中的某一个。
 
 ## BYO Provider Identity
 
-Open-source LoopX should default to **Bring Your Own provider identity**:
+开源 LoopX 应默认使用 **Bring Your Own provider identity**：
 
-- users create or select their own Lark app or bot in their tenant;
-- users authenticate it through `lark-cli` or a future provider-specific
-  profile manager;
-- LoopX stores only the local profile reference and compact verification state;
-- LoopX never ships a fixed cross-tenant bot as an implicit dependency.
+- 用户在自己的租户里创建或选择 Lark app / bot；
+- 用户通过 `lark-cli` 或未来 provider-specific profile manager 完成认证；
+- LoopX 只保存本地 profile 引用和紧凑验证状态；
+- LoopX 不把一个固定跨租户 bot 作为隐式依赖。
 
-Supported identity modes:
+支持的身份模式：
 
-| Mode | Intended use | Tradeoff |
+| 模式 | 适用场景 | 取舍 |
 | --- | --- | --- |
-| `local_user` | Create and own the group and Base as the user | Easy resource ownership; the bot is still required for messages |
-| `project_bot` | Use a dedicated bot profile for channel messages | Requires app/bot setup but gives stable message identity |
-| `managed_app` | Future hosted product | Best UX, requires tenant install, compliance, and operations |
+| `local_user` | 由用户创建并持有群聊和 Base | 资源归属清晰；消息仍必须由 bot 发送 |
+| `project_bot` | 使用项目专属 bot profile 发送 channel 消息 | 需要配置 app/bot，但消息身份稳定 |
+| `managed_app` | 未来托管产品 | 体验最好，但需要租户安装、合规和运维 |
 
-The first implementation uses the local user identity for group and Base
-operations. Goal Control messages, pins, and gate notifications always use the
-configured bot identity. It does not require or request
-`im:message.send_as_user`.
+第一版实现使用本地 user identity 操作群聊和 Base；Goal Control message、pin
+和 gate notification 始终使用已配置的 bot identity，不请求也不依赖
+`im:message.send_as_user`。
 
-Effectful direct setup requires an explicit `--bot-app-id cli_...`; target-based
-setup obtains that explicit selection from the local-private target. LoopX
-verifies that it matches the selected `lark-cli` profile before adding the bot or
-sending a message. Omitting the flag is a preview-only convenience, not
-authorization to select the default profile's bot.
+直接执行 setup 时必须显式传入 `--bot-app-id cli_...`；target 模式则从本地私有
+target 取得这项明确选择。LoopX 会验证该 app id
+与所选 `lark-cli` profile 一致，再允许加 bot 或发消息。省略该参数只适用于
+preview，不代表可以静默选择默认 profile 的 bot。
 
-## Lifecycle
+## 生命周期
 
 ### Setup
 
-`goal-channel setup --provider lark --goal-id <goal-id>` should:
+`goal-channel setup --provider lark --goal-id <goal-id>` 应该：
 
-1. Resolve and validate the goal.
-2. Load or create the local-private Lark channel binding.
-3. Verify `loopx-lark` extension activation and required permissions.
-4. Verify the local user resource identity and the configured bot sender.
-5. Create or reuse a Lark group chat and verify the bot is a member.
-6. Create or reuse the Lark Kanban Base through `lark-kanban`.
-7. Read back and persist the canonical Base URL.
-8. Send a compact Goal Control message containing the Kanban link.
-9. Pin that verified control message.
-10. Save the local-private binding and compact receipts.
+1. 解析并校验 goal。
+2. 加载或创建本地私有 Lark channel 绑定。
+3. 验证 `loopx-lark` extension activation 和所需权限。
+4. 验证本地 user resource identity 和已配置的 bot sender。
+5. 创建或复用一个 Lark 群聊，并验证 bot 已加入群聊。
+6. 通过 `lark-kanban` 创建或复用 Lark Kanban Base。
+7. 回读并保存 canonical Base URL。
+8. 发送一条包含 Kanban 链接的紧凑 Goal Control message。
+9. pin 这条已验证的控制消息。
+10. 保存本地私有绑定和紧凑 receipt。
 
-Default mode is dry-run. External writes require `--execute`.
+默认是 dry-run。外部写操作必须要求 `--execute`。
 
 ### Sync
 
-`goal-channel sync` composes existing projections:
+`goal-channel sync` 组合现有投影：
 
-- `lark-kanban sync-loopx-todos` for active user/agent todos and derived
-  domain outcomes;
-- a compact status/control message update or append when the visible channel
-  summary changed materially;
-- optional periodic report or explore projection sinks only when separately
-  configured.
+- 用 `lark-kanban sync-loopx-todos` 同步 active user/agent todos 和派生领域 outcome；
+- 当 channel 可见摘要发生实质变化时，更新或追加紧凑 status/control message；
+- 只有在单独配置后，才启用 periodic report 或 explore projection sink。
 
-The sync command must not create new canonical todos from remote rows.
+sync 命令不得从远端 row 创建新的 canonical todo。
 
 ### Human Gate Notification
 
-`goal-channel notify-gate` sends a bounded message when LoopX already decided a
-human gate or user todo needs attention. The trigger input is the existing quota
-and interaction-contract surface:
+当 LoopX 已经判定某个 human gate 或 user todo 需要关注时，
+`goal-channel notify-gate` 发送有界消息。触发输入来自现有 quota 和
+interaction-contract surface：
 
-- `state=operator_gate`;
-- `notify_user_on_gate=true`;
-- `notify_user_on_open_todo=true`;
-- `gate_prompt`;
-- `operator_question`;
-- `open_todo_notify_reason`;
-- `user_todo_summary`;
-- `user_gate_notification_cooldown`.
+- `state=operator_gate`；
+- `notify_user_on_gate=true`；
+- `notify_user_on_open_todo=true`；
+- `gate_prompt`；
+- `operator_question`；
+- `open_todo_notify_reason`；
+- `user_todo_summary`；
+- `user_gate_notification_cooldown`。
 
-The message includes:
+消息包含：
 
-- goal label and short objective;
-- concrete gate question;
-- up to three user-gate or user-action todos;
-- expected reply format;
-- Kanban link or channel control link;
-- next safe action while waiting, if any.
+- goal label 和短 objective；
+- 具体 gate question；
+- 最多三条 user-gate 或 user-action todo；
+- 期望回复格式；
+- Kanban 链接或 channel control 链接；
+- 等待期间的 next safe action（如果存在）。
 
-It excludes local paths, raw active state, private logs, credentials, message
-ids, and raw provider payloads.
+消息不包含本地路径、raw active state、私有日志、凭据、message id 或 raw provider
+payload。
 
-Automatic delivery is disabled by default. After Goal Channel setup, preview
-and then enable it explicitly:
+自动投递默认关闭。完成 Goal Channel setup 后，先预览，再显式启用：
 
 ```bash
 loopx goal-channel configure --goal-id <goal-id> --auto-notify-human-gates
 loopx goal-channel configure --goal-id <goal-id> --auto-notify-human-gates --execute
 ```
 
-Once enabled, each successful non-dry-run `refresh-state` rebuilds quota from
-canonical LoopX state. It sends only when quota selects a human gate, and it
-reuses the same bot verification, semantic idempotency, cooldown, provider
-idempotency key, and message readback as `notify-gate`.
+启用后，每次成功且非 dry-run 的 `refresh-state` 都会根据 LoopX canonical state
+重新计算 quota。只有 quota 选中 human gate 时才发送，并复用 `notify-gate`
+已有的 bot 身份校验、语义幂等、冷却、provider idempotency key 和消息回读。
 
-Use `loopx refresh-state ... --suppress-external-sinks` to suppress delivery for
-one refresh without disabling the binding. Disable automatic delivery
-persistently with:
+单次 refresh 可使用 `loopx refresh-state ... --suppress-external-sinks`
+临时抑制投递，而无需禁用 binding。持久关闭自动投递：
 
 ```bash
 loopx goal-channel configure --goal-id <goal-id> --no-auto-notify-human-gates --execute
 ```
 
-The opt-in is stored only in the project-local private Goal Channel binding.
-It does not grant repository or LoopX transition authority. Chat replies can
-provide context, but a gate changes only after LoopX validates and records the
-corresponding decision.
+该 opt-in 只保存在项目本地私有的 Goal Channel binding 中，不授予仓库或 LoopX
+状态迁移权限。群聊回复可以补充 context，但只有经过 LoopX 校验并记录的 decision
+才能改变 gate 状态。
 
-Automatic lifecycle delivery resolves the enabled, doctor-verified Lark
-extension before reading the private binding. Enabling automatic delivery
-requires the canonical project-local binding path; custom `--binding-path`
-values are rejected because `refresh-state` has no per-invocation path input.
-The explicit local disable command is the only recovery exception: it may clear
-the opt-in while the extension or binding is incomplete, and it never enters
-provider code or performs an external write.
+自动生命周期投递会先解析已启用且 doctor 验证通过的 Lark extension，再读取私有
+binding。启用自动投递时必须使用项目本地 canonical binding 路径；由于
+`refresh-state` 没有逐次传入 binding path 的入口，自定义 `--binding-path`
+会被拒绝。唯一的恢复例外是显式本地 disable 命令：即使 extension 或 binding
+不完整，它也可以清除 opt-in；该路径不会进入 provider 代码，也不会执行外部写。
 
-Enabling also writes an owner-only local marker containing only the enabled
-boolean. The lifecycle may read this marker before extension activation solely
-to distinguish a never-configured project from a configured sink whose
-extension became unavailable. The latter fails closed with a retryable
-`extension_unavailable` postcondition; the marker contains no provider ids,
-credentials, channel metadata, or raw payloads.
+启用时还会写入一个 owner-only 的本地 marker，其中只包含 enabled boolean。
+生命周期在 extension activation 前只允许读取这个 marker，用来区分“从未配置”
+和“已配置但 extension 后续不可用”。后者会通过可重试的
+`extension_unavailable` postcondition fail closed；marker 不包含 provider id、
+凭据、channel metadata 或 raw payload。
 
-## Command Contract
+## 命令契约
 
-Each effectful command returns a compact packet:
+每个 effectful command 返回紧凑 packet：
 
 ```json
 {
@@ -341,84 +313,80 @@ Each effectful command returns a compact packet:
 }
 ```
 
-Failures should be typed:
+失败应类型化：
 
-- `extension_unavailable`;
-- `provider_identity_unverified`;
-- `channel_binding_missing`;
-- `channel_membership_unverified`;
-- `kanban_binding_missing`;
-- `notification_cooldown_active`;
-- `readback_mismatch`;
-- `state_transition_rejected`;
-- `provider_api_failed`.
+- `extension_unavailable`；
+- `provider_identity_unverified`；
+- `channel_binding_missing`；
+- `channel_membership_unverified`；
+- `kanban_binding_missing`；
+- `notification_cooldown_active`；
+- `readback_mismatch`；
+- `state_transition_rejected`；
+- `provider_api_failed`。
 
-## Idempotency And Cooldown
+## 幂等和 Cooldown
 
-Provider writes use idempotency keys derived from the semantic action, not the
-wall-clock attempt:
+provider 写操作使用语义 action 派生 idempotency key，而不是使用本次尝试的时间：
 
 ```text
 goal_id + provider + operation + todo_id/gate_id + gate_text_hash + channel_id
 ```
 
-Rules:
+规则：
 
-- retrying the same send returns `already_sent` or the original receipt;
-- gate text changes may create a new notification key;
-- cooldown suppresses repeated reminders without closing the gate;
-- stale provider events cannot override newer LoopX revisions.
+- 重试同一次发送返回 `already_sent` 或原始 receipt；
+- gate 文案变化可以生成新的 notification key；
+- cooldown 抑制重复提醒，但不关闭 gate；
+- stale provider event 不能覆盖更新的 LoopX revision。
 
-## Security And Privacy
+## 安全与隐私
 
-- Channel membership is not LoopX write authority.
-- Bot membership is verified before sending.
-- Message readback is required before recording a successful send receipt.
-- Raw provider payloads stay local-private.
-- Shared/global registry calls resolve Goal Channel state beside the selected
-  goal's canonical `source_registry`; caller CWD is never a default state root.
-- Local-private JSON uses an owner-only temporary file plus atomic replace, so
-  interrupted writes do not expose or truncate the previous binding.
-- Local checkout paths, active-state paths, credentials, chat ids, member ids,
-  message ids, and profile names do not enter public artifacts.
-- The channel may show a Kanban link, but the Kanban remains a projection.
-- Destructive, credentialed, production, publish, merge, or external-write
-  gates remain LoopX gates and cannot be bypassed by chat text.
+- Channel membership 不是 LoopX 写权限。
+- 发送前必须验证 bot membership。
+- 记录成功发送 receipt 前必须完成 message readback。
+- Raw provider payload 留在本地私有状态。
+- 从 shared/global registry 调用时，Goal Channel 状态必须落在所选 goal
+  的 canonical `source_registry` 旁边，调用者 CWD 不能作为默认状态根目录。
+- 本地私有 JSON 使用同目录、owner-only 的临时文件完成写入，再原子 replace，
+  避免中断时暴露或截断旧 binding。
+- 本地 checkout 路径、active-state 路径、凭据、chat id、member id、message id
+  和 profile name 不进入公开 artifact。
+- channel 可以展示 Kanban 链接，但 Kanban 仍然只是投影。
+- destructive、credentialed、production、publish、merge 或 external-write gate
+  仍然是 LoopX gate，不能被聊天文本绕过。
 
-## Smallest Useful Slice
+## 最小可用切片
 
-The smallest useful implementation should be:
+第一版最小可用实现应包括：
 
-1. Add `loopx goal-channel` with `setup`, `configure`, `doctor`, `sync`, and
-   `notify-gate`.
-2. Implement only the Lark provider.
-3. Reuse existing `lark-kanban` setup/sync and `loopx-lark` extension
-   activation checks.
-4. Create or reuse one Lark group for one existing goal.
-5. Send and pin one compact Goal Control message.
-6. Send a human-gate notification with idempotency and readback.
-7. Optionally send LoopX-selected human gates after authorized `refresh-state`
-   writes.
-8. Store local-private binding, automation opt-in, and receipts under `.loopx/`.
+1. 增加 `loopx goal-channel`，包含 `setup`、`configure`、`doctor`、`sync` 和
+   `notify-gate`。
+2. 只实现 Lark provider。
+3. 复用现有 `lark-kanban` setup/sync 和 `loopx-lark` extension activation checks。
+4. 为一个已有 goal 创建或复用一个 Lark 群。
+5. 发送并 pin 一条紧凑 Goal Control message。
+6. 发送带 idempotency 和 readback 的 human-gate notification。
+7. 可选地在授权的 `refresh-state` 写回后发送 LoopX 选中的 human gate。
+8. 将本地私有绑定、automation opt-in 和 receipt 保存到 `.loopx/`。
 
-This slice proves the external collaboration entry point.
+这个切片先验证外部协作入口。
 
-## Validation
+## 验证
 
-The first slice must prove:
+第一版切片必须证明：
 
-- setup is dry-run by default and performs external writes only with
-  `--execute`;
-- one goal maps to one local-private Lark binding;
-- extension activation is checked before private config is read;
-- a Kanban board can be reused or created and then synced;
-- a Goal Control message is sent, pinned, and readback verified;
-- human-gate notification respects cooldown and idempotency;
-- repeated notification retries do not duplicate visible messages;
-- automatic delivery is disabled by default and can be suppressed per refresh;
-- automatic delivery reads canonical quota and does not send for non-gate state;
-- doctor reports missing bot auth, missing channel, missing Kanban, or stale
-  extension activation with typed blockers;
-- local-private binding files remain ignored and untracked;
-- public packets do not contain chat ids, member ids, message ids, profile
-  names, local paths, raw provider payloads, or credentials.
+- setup 默认 dry-run，只有带 `--execute` 时才执行外部写；
+- 一个 goal 映射到一个本地私有 Lark binding；
+- 读取私有配置前会先检查 extension activation；
+- Kanban board 可以被复用或创建，然后成功同步；
+- Goal Control message 可以发送、pin，并通过 readback 验证；
+- human-gate notification 遵守 cooldown 和 idempotency；
+- 重试通知不会产生重复可见消息；
+- 自动投递默认关闭，并且可按单次 refresh 临时抑制；
+- 自动投递读取 canonical quota，非 gate 状态不发送；
+- doctor 能用类型化 blocker 报告缺 bot auth、缺 channel、缺 Kanban 或 stale
+  extension activation；
+- 本地私有 binding 文件保持 ignored 且 untracked；
+- 公开 packet 不包含 chat id、member id、message id、profile name、本地路径、
+  raw provider payload 或凭据。

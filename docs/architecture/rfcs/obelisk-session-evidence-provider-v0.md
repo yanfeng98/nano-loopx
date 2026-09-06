@@ -1,159 +1,131 @@
-# RFC: Obelisk Session Evidence Provider v0
+# RFC：Obelisk Session Evidence Provider v0
 
-- Status: Draft integration proposal
-- Date: 2026-09-01
-- Tracking issue: [#3792](https://github.com/huangruiteng/loopx/issues/3792)
-- Decision boundary: whether and how LoopX may retrieve prior agent-session history as bounded evidence for Replan and Turn admission
-- Capability owner: existing `agent-turn-recall`
-- Provider id: proposed optional `obelisk-session-evidence`
-- Delivery boundary: independently installed extension or package; disabled by default
+- 状态：集成提案草案
+- 日期：2026-09-01
+- 跟踪 Issue：[#3792](https://github.com/huangruiteng/loopx/issues/3792)
+- 决策边界：LoopX 是否以及如何把历史 Agent Session 作为 Replan 与 Turn Admission 的有界证据
+- Capability Owner：现有 `agent-turn-recall`
+- Provider ID：提议中的可选 `obelisk-session-evidence`
+- 交付边界：独立安装的 Extension 或 Package，默认关闭
 
-## 0. Summary
+## 0. 摘要
 
-LoopX should evaluate [Obelisk](https://github.com/tommy0103/obelisk) as an
-optional, read-only historical-evidence provider for Replan cold paths.
+LoopX 应评估把 [Obelisk](https://github.com/tommy0103/obelisk) 接成一个可选、
+只读的历史证据 Provider，用于 Replan 的冷路径。
 
-The valuable product seam is not "search every past transcript before every
-Turn." It is a narrower question asked when current control state is
-insufficient:
+真正有价值的产品切口不是“每个 Turn 前搜索所有历史 Transcript”，而是在当前控制状态
+不足时回答一个更窄的问题：
 
-> Has this same agent already tried this route in the same project, what
-> happened, and is the proposed next step materially new?
+> 同一个 Agent 在同一个项目里是否已经走过这条路，当时发生了什么，拟议的下一步是否
+> 真的有新意？
 
-The provider may supply bounded, provenance-bearing historical observations.
-LoopX remains authoritative for scope, admission, Replan semantics, Todo state,
-quota, evidence acceptance, and action authority.
+Provider 可以给出有界、带 Provenance 的历史观察；LoopX 继续拥有 Scope、Admission、
+Replan 语义、Todo、Quota、证据接纳和动作权限。
 
 ```text
-typed Replan situation
-  -> LoopX retrieval policy and scope
-  -> optional Obelisk adapter
-  -> bounded historical-evidence result
-  -> public-safe retrieval receipt
-  -> existing Replan reasoning and settlement
+类型化 Replan Situation
+  -> LoopX 检索策略与 Scope
+  -> 可选 Obelisk Adapter
+  -> 有界历史证据 Result
+  -> public-safe 检索 Receipt
+  -> 现有 Replan 推理与 Settlement
 ```
 
-Retrieval is default-off, fail-open for the work lane, and unable to satisfy a
-Replan obligation by itself. The first pilot is same-agent,
-same-project/repository, recent or revision-aware, and read-only.
+该能力默认关闭，对工作 Lane fail-open，且检索本身不能完成 Replan Obligation。首个 Pilot
+限定为 same-agent、same-project/repository、近期或 revision-aware，并且只读。
 
-## 1. Motivation
+## 1. 动机
 
-Replan protects long-running work from repeating an unchanged plan. Its typed
-contract can require a new surface, hypothesis, probe, grounded successor,
-blocker, or coverage-backed exhaustion. However, the current Turn packet may
-only contain recent LoopX outcomes. Earlier Codex or other agent sessions can
-contain relevant attempts that were never converted into canonical LoopX
-evidence.
+Replan 用于阻止长程任务重复不变的计划。类型化 Contract 可以要求新的 Surface、
+Hypothesis、Probe、Grounded Successor、Blocker，或有 Coverage 支撑的 Exhaustion。但当前
+Turn Packet 可能只包含近期 LoopX Outcome；更早的 Codex 或其他 Agent Session 中，可能有
+尚未转成 LoopX Canonical Evidence 的重要尝试。
 
-This creates three practical gaps:
+这会产生三个实际缺口：
 
-1. **Repeated dead ends:** an agent retries an old command, file path, or
-   hypothesis because the failure lived in an earlier session.
-2. **False novelty:** a successor looks new in the current packet but repeats
-   prior work.
-3. **Handoff loss:** a resumed or replacement agent sees durable control state
-   but lacks the bounded historical observation needed to understand a past
-   decision.
+1. **重复走死路**：旧 Session 中的命令、文件路径或 Hypothesis 已失败，Agent 却重新尝试；
+2. **假新意**：Successor 在当前 Packet 中看似新，但实际重复了历史工作；
+3. **Handoff 丢失**：接续 Agent 能看到 Durable Control State，却缺少理解历史决策或失败所需
+   的有界观察。
 
-Obelisk indexes local Claude Code, Codex, Kimi, Pi, and DSH histories into
-SQLite/FTS5. It supports session, message, tool, file, subagent, and workflow
-queries. This makes it a plausible provider for the missing historical
-observation, but not a new source of control-plane truth.
+Obelisk 把本地 Claude Code、Codex、Kimi、Pi 和 DSH 历史索引到 SQLite/FTS5，并支持
+Session、Message、Tool、File、Subagent 和 Workflow 查询。它适合成为缺失观察的 Provider，
+但不应成为新的控制面事实源。
 
-## 2. Empirical boundary
+## 2. 实证边界
 
-Obelisk's public evaluations argue for a constrained product, not broad memory
-injection:
+Obelisk 的公开评测支持一个受约束的产品，而不是宽泛的 Memory Injection：
 
-- [Obelisk issue #39](https://github.com/tommy0103/obelisk/issues/39) reports
-  strong conversational and temporal retrieval and a reduction in repeated
-  dead-end commands from 6.7% to 0.5%. It also reports 25–51k characters of
-  retrieved context per query and no statistically significant SWE retry
-  improvement from raw coding trajectories.
-- [Obelisk issue #46](https://github.com/tommy0103/obelisk/issues/46) reports no
-  measurable benefit from foreign-agent cross-task archives. The promising
-  signal came from an agent's own longitudinal, same-repository history, with
-  improved efficiency and quality indicators.
+- [Obelisk issue #39](https://github.com/tommy0103/obelisk/issues/39) 显示其会话与
+  时间检索较强，重复死路命令从 6.7% 降到 0.5%；但每次查询取回 25–51k 字符，并且 Raw
+  Coding Trajectory 对 SWE Retry 没有统计显著提升。
+- [Obelisk issue #46](https://github.com/tommy0103/obelisk/issues/46) 显示 Foreign-agent
+  Cross-task Archive 没有可测收益；更有希望的信号来自 Agent 自己在同一 Repository 中的
+  长期历史，其效率与质量指标有所改善。
 
-The pilot therefore optimizes first for **avoided repetition and lower
-reconstruction cost**, not an assumed task-success uplift. Raw history must be
-reduced before it enters a Turn.
+因此 Pilot 首先优化的是**减少重复与降低上下文重建成本**，而不是假设 Task Success 必然
+提升。Raw History 在进入 Turn 前必须收敛。
 
-## 3. Placement decision
+## 3. 归属决策
 
-This proposal does not add an `obelisk`, `session-database`, or generic
-`retrieval` capability.
+本提案不新增 `obelisk`、`session-database` 或通用 `retrieval` Capability。
 
-The capability owner is the existing `agent-turn-recall` boundary because its
-caller outcome is already "prepare bounded prior guidance or context for an
-autonomous Turn." The Replan path contributes a typed situation and retrieval
-policy; it does not create a second memory lifecycle.
+Capability Owner 是现有 `agent-turn-recall`，因为它已有明确 Caller Outcome：为 Autonomous
+Turn 准备有界的历史 Guidance 或 Context。Replan 路径提供类型化 Situation 与 Retrieval
+Policy，不新建第二套 Memory Lifecycle。
 
-The proposed provider id is `obelisk-session-evidence`. It is delivered as an
-optional extension/package because:
+Provider ID 提议为 `obelisk-session-evidence`。它应作为可选 Extension/Package 交付，因为：
 
-- Obelisk is not required for core LoopX behavior;
-- it has its own Node.js runtime, index, CLI, upgrade, and failure lifecycle;
-- users must explicitly opt into indexing local session history; and
-- Obelisk is AGPL-3.0-only while LoopX is Apache-2.0.
+- LoopX Core 不依赖 Obelisk；
+- 它有独立的 Node.js Runtime、Index、CLI、升级与失败生命周期；
+- 用户必须显式同意索引本地 Session History；
+- Obelisk 是 AGPL-3.0-only，而 LoopX 是 Apache-2.0。
 
-LoopX MUST NOT vendor, statically link, translate, or copy Obelisk code into
-core. The integration invokes an independently installed, unmodified Obelisk
-process through a documented protocol. Packaging and license review remain a
-promotion gate; this RFC is not legal advice.
+LoopX 不得把 Obelisk 代码 Vendor、静态链接、翻译或复制进 Core。集成只能通过有文档的
+协议调用独立安装、未修改的 Obelisk 进程。Packaging 与 License Review 仍是 Promotion Gate；
+本 RFC 不构成法律意见。
 
-### 3.1 Relationship to adjacent capabilities
+### 3.1 与相邻 Capability 的关系
 
-| Surface | Owns | Does not become |
+| Surface | 拥有什么 | 不会变成什么 |
 | --- | --- | --- |
-| Replan | obligation, semantic novelty, successor or exhaustion | a transcript search engine |
-| Agent Turn Recall | situation, admission, bounded recalled context | a durable memory store |
-| Obelisk provider | read-only search over indexed local sessions | action or evidence authority |
-| Reward Memory | reviewed memory lifecycle and utility | a raw transcript archive |
-| Explore | research frontier, coverage, closure | an implicit session-history importer |
-| OpenViking adapter | scoped context-provider retrieval | interchangeable with unreviewed session evidence |
+| Replan | Obligation、语义新意、Successor 或 Exhaustion | Transcript Search Engine |
+| Agent Turn Recall | Situation、Admission、有界 Recall Context | Durable Memory Store |
+| Obelisk Provider | 对已索引本地 Session 的只读检索 | 动作或证据权威 |
+| Reward Memory | 经审阅的 Memory Lifecycle 与 Utility | Raw Transcript Archive |
+| Explore | Research Frontier、Coverage、Closure | 隐式 Session History Importer |
+| OpenViking Adapter | Scoped Context-provider Retrieval | 与未审阅 Session Evidence 等价的来源 |
 
-Obelisk hits are historical observations. They are not
-`reward_memory_active_record_v0` records and MUST NOT be presented as reviewed
-Reward Memory. A later second caller, such as Decision Context or Explore, may
-reuse the provider-neutral historical-evidence contract only after a concrete
-need and independent admission policy exist.
+Obelisk Hit 是历史观察，不是 `reward_memory_active_record_v0`，不得伪装成已审阅 Reward
+Memory。未来如果 Decision Context 或 Explore 出现第二个真实 Caller，应在其拥有独立
+Admission Policy 后复用 Provider-neutral Historical Evidence Contract，而不是提前抽象。
 
-## 4. Admission policy
+## 4. Admission Policy
 
-The provider is not called on every Turn. A typed policy admits retrieval only
-for one of these situations:
+Provider 不在每个 Turn 调用。只有以下类型化 Situation 才允许检索：
 
-1. `replan_repetition`: two or more materially unchanged attempts or an
-   explicit repeated-route signal;
-2. `hypothesis_history_gap`: current hypotheses are exhausted but prior-session
-   coverage is unknown;
-3. `resume_or_handoff_gap`: durable state identifies the work but the earlier
-   decision or failure evidence is missing;
-4. `operator_requested_history`: the operator explicitly requests historical
-   evidence.
+1. `replan_repetition`：两次以上实质不变的尝试，或显式重复路线信号；
+2. `hypothesis_history_gap`：当前 Hypothesis 已耗尽，但历史 Coverage 未知；
+3. `resume_or_handoff_gap`：Durable State 能定位工作，但早期决策或失败证据缺失；
+4. `operator_requested_history`：Operator 显式要求历史证据。
 
-The default scope is:
+默认 Scope 为：
 
-- the same `agent_id`;
-- the same LoopX project and repository identity;
-- recent sessions or sessions relevant to the current repository revision;
-- explicit evidence types and a bounded result count/size.
+- 同一个 `agent_id`；
+- 同一个 LoopX Project 与 Repository Identity；
+- 近期 Session，或与当前 Repository Revision 相关的 Session；
+- 显式 Evidence Type 和有界 Result 数量/大小。
 
-Cross-agent, cross-project, and foreign archives are denied by default. An
-extension enablement flag alone MUST NOT broaden these scopes. Each broader
-scope requires separate configuration, privacy disclosure, and qualification.
+Cross-agent、Cross-project 与 Foreign Archive 默认拒绝。只启用 Extension 不能扩大这些
+Scope；每个更宽 Scope 都需要单独配置、隐私披露和 Qualification。
 
-Provider unavailability, an incomplete index, or zero hits produces a typed
-empty result. It does not create a user gate and does not prevent the agent from
-continuing with current evidence.
+Provider 不可用、Index 不完整或零命中时，返回类型化空结果；不创建 User Gate，也不阻塞
+Agent 使用当前证据继续工作。
 
-## 5. Proposed typed contract
+## 5. 提议的类型化 Contract
 
-The TypeScript control-plane boundary should own the schema, admission reducer,
-size limits, and receipt projection. Python may invoke or adapt the provider but
-must not recreate policy or Replan semantics.
+TypeScript Control-plane Boundary 应拥有 Schema、Admission Reducer、Size Limit 和 Receipt
+Projection。Python 可以调用或适配 Provider，但不得重建 Policy 或 Replan 语义。
 
 ### 5.1 Request
 
@@ -188,11 +160,10 @@ type HistoricalEvidenceRequestV0 = {
 };
 ```
 
-`query_terms` are bounded search terms derived from canonical situation fields,
-not raw chat history. The adapter MUST escape them as data and MUST NOT generate
-arbitrary JavaScript from model output.
+`query_terms` 必须从 Canonical Situation Field 中产生有界搜索词，而非 Raw Chat History。
+Adapter 必须把它们作为 Data 转义，禁止从模型输出生成任意 JavaScript。
 
-### 5.2 Private result
+### 5.2 Private Result
 
 ```ts
 type HistoricalEvidenceResultV0 = {
@@ -222,11 +193,10 @@ type HistoricalEvidenceResultV0 = {
 };
 ```
 
-The private result may be consumed only inside the admitted Turn. It is not
-copied into status, Todo metadata, public evidence, PR text, or logs. Results
-must be capped before prompt construction; truncation is explicit.
+Private Result 只能在获准的 Turn 内消费，不能复制到 Status、Todo Metadata、Public Evidence、
+PR 文本或日志。进入 Prompt 前必须限长；Truncation 必须显式。
 
-### 5.3 Public-safe receipt
+### 5.3 Public-safe Receipt
 
 ```ts
 type HistoricalEvidenceReceiptV0 = {
@@ -249,202 +219,185 @@ type HistoricalEvidenceReceiptV0 = {
 };
 ```
 
-Opaque session and message references may stay in owner-local private state for
-debugging and replay. The public receipt contains only content-free digests and
-counts. A receipt proves that a scoped lookup occurred; it does not prove a
-historical claim true or a Replan obligation complete.
+不透明 Session/Message Ref 可以留在 Owner-local Private State 中用于调试和 Replay；Public
+Receipt 只包含 Content-free Digest 与 Count。Receipt 只证明一次 Scoped Lookup 发生过，不能
+证明历史陈述为真，也不能证明 Replan Obligation 已完成。
 
-## 6. Provider protocol and failure behavior
+## 6. Provider Protocol 与失败行为
 
-Obelisk currently exposes free-form JavaScript query scripts and read-only SQL,
-not a stable bounded JSON request envelope. The preferred integration is an
-upstream structured JSON query interface that accepts explicit filters and
-limits and rejects unknown options.
+Obelisk 当前暴露 Free-form JavaScript Query Script 和 Read-only SQL，而不是稳定、有界的
+JSON Request Envelope。首选方案是推动上游提供 Structured JSON Query Interface，支持显式
+Filter/Limit 并拒绝 Unknown Option。
 
-An MVP MAY use one fixed, versioned query template if all values are escaped as
-data, all supported options are allowlisted, final scope is verified from the
-returned rows, and output is capped before parsing. It MUST NOT execute
-model-authored JavaScript or SQL.
+MVP 最多可以使用一个固定、版本化的 Query Template，前提是所有值都作为 Data 转义、所有
+Option 都在 Allowlist 内、返回 Row 的最终 Scope 被再次验证，并且解析前已经限制输出。
+禁止执行 Model-authored JavaScript 或 SQL。
 
-The adapter fails closed on scope and parsing:
+Adapter 对 Scope 与 Parsing fail-closed：
 
-- unknown request fields or provider options: reject;
-- missing agent/project/repository filter: reject;
-- returned row outside the requested scope: reject the entire result;
-- stale/incomplete index: return explicit freshness, never "no history";
-- timeout, malformed output, or provider absence: typed empty failure;
-- oversize output: terminate, return truncation/failure metadata, and do not
-  leak partial raw output into public state.
+- Unknown Request Field 或 Provider Option：拒绝；
+- 缺少 Agent/Project/Repository Filter：拒绝；
+- 返回 Row 越出 Requested Scope：拒绝整个 Result；
+- Index stale/incomplete：显式返回 Freshness，不能解释为“没有历史”；
+- Timeout、Malformed Output、Provider 缺失：类型化空失败；
+- Oversize Output：终止并返回 Truncation/Failure Metadata，不把部分 Raw Output 泄漏进
+  Public State。
 
-These requirements directly address known upstream risks: missing CI coverage
-([#34](https://github.com/tommy0103/obelisk/issues/34)), fail-open unsupported
-options ([#94](https://github.com/tommy0103/obelisk/issues/94)), indexing cost
-([#75](https://github.com/tommy0103/obelisk/issues/75),
-[#105](https://github.com/tommy0103/obelisk/issues/105)), tokenizer false
-positives ([#76](https://github.com/tommy0103/obelisk/issues/76)), and stale
-same-mtime Codex updates ([#104](https://github.com/tommy0103/obelisk/issues/104)).
+这些要求直接覆盖已知上游风险：CI 覆盖不足
+([#34](https://github.com/tommy0103/obelisk/issues/34))、Unsupported Option fail-open
+([#94](https://github.com/tommy0103/obelisk/issues/94))、Index Cost
+([#75](https://github.com/tommy0103/obelisk/issues/75)、
+[#105](https://github.com/tommy0103/obelisk/issues/105))、Tokenizer False Positive
+([#76](https://github.com/tommy0103/obelisk/issues/76)) 和 Codex 同 mtime 更新导致 Index Stale
+([#104](https://github.com/tommy0103/obelisk/issues/104))。
 
-## 7. Replan integration
+## 7. Replan 集成
 
-Historical retrieval refines reasoning; it does not add a Replan terminal
-state.
+Historical Retrieval 只改进推理，不新增 Replan Terminal State。
 
 ```text
-Replan required
-  -> classify current coverage and history gap
-  -> if admitted, retrieve bounded same-scope history
-  -> compare proposed route with historical observations
-  -> produce an existing legal Replan outcome
+Replan Required
+  -> 分类当前 Coverage 与 History Gap
+  -> 若 Admission 允许，检索有界 Same-scope History
+  -> 把拟议路线与历史观察比较
+  -> 产出现有合法 Replan Outcome
 ```
 
-The legal outcome still needs one of the existing semantic advances:
+合法 Outcome 仍需满足现有语义推进之一：
 
-- a new surface;
-- a new or revised hypothesis;
-- a new falsifiable probe;
-- a grounded runnable successor;
-- a newly evidenced blocker; or
-- coverage-backed exhaustion with no follow-up.
+- 新 Surface；
+- 新增或修订 Hypothesis；
+- 新的 Falsifiable Probe；
+- Grounded Runnable Successor；
+- 新证据支持的 Blocker；
+- 有 Coverage 支撑的 Exhaustion 与 No Follow-up。
 
-"Obelisk returned results" and "Obelisk returned no results" are not legal
-completion rationales. Absence from an incomplete or stale index is never
-evidence that no prior attempt exists.
+“Obelisk 返回结果”或“Obelisk 没返回结果”都不是合法 Completion Rationale。对于 Incomplete
+或 Stale Index，未检索到内容绝不能作为“没有历史尝试”的证据。
 
-## 8. Product lifecycle
+## 8. 产品生命周期
 
-The following commands are proposed UX, not current shipped CLI:
+以下命令是提议中的 UX，并非当前已发布 CLI：
 
 ```bash
-# Install the independent provider distribution.
+# 安装独立 Provider Distribution。
 loopx extension install obelisk-session-evidence
 
-# Explicitly enable it for one agent/project surface.
+# 为一个 Agent/Project Surface 显式启用。
 loopx capability enable agent-turn-recall \
   --provider obelisk-session-evidence \
   --surface replan-history \
   --agent-id <agent-id> \
   --project-id <project-id>
 
-# Read back configuration, provider version, index freshness, and allowed scope.
+# 回读配置、Provider Version、Index Freshness 与 Allowed Scope。
 loopx capability status agent-turn-recall \
   --provider obelisk-session-evidence \
   --project-id <project-id> \
   --format json
 
-# Disable without deleting the user's Obelisk index.
+# 禁用，不删除用户的 Obelisk Index。
 loopx capability disable agent-turn-recall \
   --provider obelisk-session-evidence \
   --project-id <project-id>
 
-# Uninstall only the adapter distribution; external Obelisk data remains
-# governed by Obelisk and must not be silently deleted by LoopX.
+# 只卸载 Adapter Distribution；External Obelisk Data 仍由 Obelisk 与用户管理，
+# LoopX 不得静默删除。
 loopx extension uninstall obelisk-session-evidence
 ```
 
-Enablement grants read access only to the configured historical scope. It does
-not grant action authority, external write authority, cross-agent access,
-memory publication, Todo mutation, or deletion of Obelisk data.
+Enablement 只授予读取已配置 Historical Scope 的能力，不授予 Action Authority、External
+Write、Cross-agent Access、Memory Publication、Todo Mutation 或删除 Obelisk Data 的权限。
 
-## 9. Delivery stages
+## 9. 交付阶段
 
-### Stage 0: offline qualification
+### Stage 0：离线 Qualification
 
-- Build matched fixtures from public-safe or synthetic same-repository
-  histories.
-- Measure repeated-route detection, false matches, result size, latency,
-  freshness, and scope enforcement.
-- Establish no-Obelisk and current-context baselines.
+- 从 Public-safe 或 Synthetic Same-repository History 构造 Matched Fixture；
+- 测量重复路线识别、False Match、Result Size、Latency、Freshness 与 Scope Enforcement；
+- 建立 No-Obelisk 与 Current-context Baseline。
 
-No product registration or automatic Replan call occurs in this stage.
+这一阶段不注册 Product Capability，也不自动调用 Replan。
 
-### Stage 1: operator-invoked read-only adapter
+### Stage 1：Operator-invoked Read-only Adapter
 
-- Ship the optional provider package with explicit install and enablement.
-- Support `operator_requested_history` only.
-- Emit bounded private results and content-free receipts.
-- Qualify timeout, stale index, unsupported option, and oversize behavior.
+- 交付可选 Provider Package，并要求显式安装和启用；
+- 只支持 `operator_requested_history`；
+- 输出 Bounded Private Result 与 Content-free Receipt；
+- 验证 Timeout、Stale Index、Unsupported Option 与 Oversize 行为。
 
-### Stage 2: typed Replan cold-path admission
+### Stage 2：类型化 Replan Cold-path Admission
 
-- Admit `replan_repetition`, `hypothesis_history_gap`, and
-  `resume_or_handoff_gap` only after matched evidence.
-- Preserve default-off configuration and same-agent/same-project scope.
-- Add Replan comparison evidence without creating a new settlement state.
+- 只有 Matched Evidence 合格后，才允许 `replan_repetition`、
+  `hypothesis_history_gap` 和 `resume_or_handoff_gap`；
+- 保持 Default-off 与 Same-agent/Same-project Scope；
+- 为 Replan 增加比较证据，但不新增 Settlement State。
 
-### Stage 3: promotion decision
+### Stage 3：Promotion Decision
 
-Promotion requires a measured reduction in repeated dead ends or reconstruction
-cost, bounded context and latency, no task-success or evidence-quality
-regression, and no silent scope broadening. Cross-agent retrieval, automatic
-memory writes, and additional callers require separate RFC decisions.
+Promotion 需要可测的重复死路或上下文重建成本下降、有界 Context/Latency、Task Success 与
+Evidence Quality 不回归，并且不存在 Silent Scope Broadening。Cross-agent Retrieval、Automatic
+Memory Write 与其他 Caller 都需要单独 RFC 决策。
 
-## 10. Validation and no-go criteria
+## 10. Validation 与 No-go Criteria
 
-The evaluation should compare identical Replan cases under:
+评测应在相同 Replan Case 上比较：
 
-1. current LoopX context only;
-2. Obelisk retrieval admitted by the typed policy; and
-3. where useful, full native history as a cost ceiling rather than a product
-   default.
+1. 只有当前 LoopX Context；
+2. 由类型化 Policy Admission 的 Obelisk Retrieval；
+3. 必要时使用 Full Native History 作为 Cost Ceiling，而不是产品默认值。
 
-Required measures include:
+必须测量：
 
-- repeated dead-end action rate;
-- time, provider calls, and tokens to a grounded successor;
-- task success and evidence quality;
-- retrieval precision for same-route and prior-failure questions;
-- private context size and truncation rate;
-- query and indexing latency;
-- stale/incomplete index detection;
-- cross-scope rejection and unknown-option failure behavior.
+- Repeated Dead-end Action Rate；
+- 到 Grounded Successor 的时间、Provider Call 与 Token；
+- Task Success 与 Evidence Quality；
+- Same-route/Prior-failure 问题的 Retrieval Precision；
+- Private Context Size 与 Truncation Rate；
+- Query 与 Indexing Latency；
+- Stale/Incomplete Index Detection；
+- Cross-scope Rejection 与 Unknown-option Failure。
 
-Do not promote the provider if it shows no measurable repetition or efficiency
-benefit, harms success/evidence quality, cannot bound results reliably, or can
-silently broaden search scope. A positive anecdote is not enough.
+如果没有可测的重复/效率收益、损害成功率或证据质量、无法可靠限制 Result，或可能静默扩大
+Search Scope，就不得 Promotion。单个正面 Anecdote 不足以通过。
 
-## 11. Privacy, authority, and security boundary
+## 11. 隐私、权限与安全边界
 
-Session histories can contain source code, prompts, identities, local paths,
-secrets, and private organizational context. The provider therefore remains
-owner-local by default.
+Session History 可能包含源码、Prompt、身份、本机路径、Secret 与私有组织上下文。因此
+Provider 默认保持 Owner-local。
 
-- LoopX stores no raw transcript in canonical public state.
-- Public projections contain only digests, counts, freshness, truncation, and
-  provider metadata.
-- Query terms and snippets are private ephemeral Turn context.
-- Provider subprocess output is never copied wholesale into logs or errors.
-- Credentials are neither requested nor transferred by this contract.
-- Index deletion, retention, and import remain under Obelisk/user authority.
-- Retrieval cannot grant permission, satisfy a user gate, or authorize a new
-  external effect.
+- LoopX 不在 Canonical Public State 存储 Raw Transcript；
+- Public Projection 只有 Digest、Count、Freshness、Truncation 与 Provider Metadata；
+- Query Term 与 Snippet 是 Private Ephemeral Turn Context；
+- Provider Subprocess Output 不得整体复制进 Log 或 Error；
+- 本 Contract 不请求或传递 Credential；
+- Index 删除、保留与导入仍归 Obelisk/用户管理；
+- Retrieval 不能授予权限、满足 User Gate 或授权新的 External Effect。
 
-The adapter must scan provider output for boundedness and scope, but content
-filtering is not a substitute for correct authorization. Cross-agent retrieval
-is a distinct privacy capability, not an incidental query flag.
+Adapter 必须检查输出的 Boundedness 与 Scope，但 Content Filtering 不能替代正确 Authorization。
+Cross-agent Retrieval 是独立的隐私能力，而非顺手打开的 Query Flag。
 
-## 12. Non-goals
+## 12. 非目标
 
-This RFC does not:
+本 RFC 不会：
 
-- make Obelisk required or built into LoopX;
-- query history on every Turn;
-- replace Replan, Explore, Reward Memory, OpenViking, or canonical goal state;
-- infer authoritative evidence from unreviewed transcript text;
-- write, summarize, or promote memories automatically;
-- expose a general model-authored SQL or JavaScript execution surface;
-- copy Obelisk's AGPL implementation into LoopX;
-- promise cross-agent or cross-project learning; or
-- define a universal retrieval abstraction before a second real caller exists.
+- 把 Obelisk 变成 LoopX 必选依赖或 Built-in；
+- 在每个 Turn 查询历史；
+- 替代 Replan、Explore、Reward Memory、OpenViking 或 Canonical Goal State；
+- 把未经审阅的 Transcript Text 推断成 Authoritative Evidence；
+- 自动写入、总结或 Promotion Memory；
+- 暴露通用的 Model-authored SQL/JavaScript 执行面；
+- 把 Obelisk 的 AGPL 实现复制进 LoopX；
+- 承诺 Cross-agent/Cross-project Learning；
+- 在出现第二个真实 Caller 前定义 Universal Retrieval Abstraction。
 
-## 13. Open questions
+## 13. 开放问题
 
-1. Can Obelisk expose a stable structured query envelope with strict unknown
-   option rejection and explicit index revision/freshness?
-2. What repository identity is stable across worktrees, forks, and renamed
-   remotes without exposing private paths?
-3. Which revision-window policy best balances long-term recall with stale
-   history?
-4. Should Stage 1 live in the LoopX monorepo `packages/` root or an independent
-   provider repository after license and release-lifecycle review?
-5. What matched Replan corpus is sufficient to distinguish avoided repetition
-   from general model variance?
+1. Obelisk 能否提供稳定的 Structured Query Envelope，严格拒绝 Unknown Option，并显式返回
+   Index Revision/Freshness？
+2. 如何在 Worktree、Fork 与 Remote Rename 之间建立稳定 Repository Identity，同时不泄露
+   Private Path？
+3. 什么 Revision-window Policy 能平衡长期 Recall 与 Stale History？
+4. Stage 1 应放在 LoopX Monorepo `packages/`，还是在 License/Release Lifecycle Review 后放进
+   独立 Provider Repository？
+5. 多大的 Matched Replan Corpus 才足以把“减少重复”与一般模型方差区分开？

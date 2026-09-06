@@ -1,21 +1,21 @@
-# Reliable SSH Reverse Egress Proxy
+# 可靠 SSH 反向出口代理
 
-A remote agent runtime may have a healthy SSH control channel while lacking a
-reliable outbound route to its model API. These are separate data paths. A
-desktop application that starts a remote runtime over SSH does not necessarily
-forward the desktop's HTTPS connectivity to that runtime.
+> [English](ssh-reverse-egress-proxy.md)
 
-This guide provides a public-safe reference for running a loopback-only HTTPS
-CONNECT proxy on the desktop side and exposing it to one remote runtime through
-an SSH reverse forward. It transfers network traffic only. It does not copy
-credentials, session databases, rollout files, or runtime state.
+远程 agent runtime 可能拥有健康的 SSH 控制通道,却缺少通往其模型 API 的可靠
+出站路由。这是两条彼此独立的数据路径。通过 SSH 启动远程 runtime 的桌面应用,
+并不必然把桌面的 HTTPS 连通性转发给该 runtime。
 
-The implementation is the parameterized
+本指南提供一个公开安全参考:在桌面侧运行仅限 loopback 的 HTTPS CONNECT 代理,
+并通过 SSH 反向转发把它暴露给一个远程 runtime。它只转发网络流量,不复制凭证、
+会话数据库、发布文件或 runtime 状态。
+
+实现是带参数的
 [`examples/ssh_reverse_proxy_supervisor.py`](../../examples/ssh_reverse_proxy_supervisor.py)
-script. It is an optional integration example, not a LoopX control-plane
-capability or a replacement for a host application's native SSH connection.
+脚本。它是可选的集成示例,不是 LoopX 控制面能力,也不是宿主应用原生 SSH 连接
+的替代品。
 
-## Data Path And Ownership
+## 数据路径与所有权
 
 ```text
 remote agent process
@@ -26,48 +26,41 @@ remote agent process
   -> public model endpoint:443
 ```
 
-The desktop owns both the local proxy and the SSH client that creates the
-reverse forward. The remote side receives only a loopback listener. Keeping
-both listeners on `127.0.0.1` prevents other machines from using the proxy.
+桌面拥有本地代理以及创建反向转发的 SSH 客户端。远程侧只接收一个 loopback
+监听器。把两个监听器都保持在 `127.0.0.1` 上,可以防止其他机器使用该代理。
 
-Use a dedicated port for this bridge. Do not reuse the native control channel's
-port, a project status port, or a shared proxy port.
+为该 bridge 使用专用端口。不要复用原生控制通道端口、项目状态端口或共享代理
+端口。
 
-## Failure Modes Worth Preserving
+## 值得保留的故障模式
 
-### A stale remote listener is not necessarily a timer
+### 过时的远程监听器并不一定是定时器
 
-When a route, VPN, or network interface changes abruptly, the desktop SSH
-client can disappear before the remote `sshd` child notices. That child may
-temporarily retain the reverse-forward listener. A process manager with
-`KeepAlive` or an equivalent restart policy then launches a new SSH client,
-which fails with `remote port forwarding failed` because the old listener still
-owns the port.
+当路由、VPN 或网络接口突然变化时,桌面 SSH 客户端可能先于远程 `sshd` 子进程
+察觉而消失。该子进程可能暂时保留反向转发监听器。带有 `KeepAlive` 或等价重启
+策略的进程管理器随后会启动新的 SSH 客户端,由于旧监听器仍占用端口,新客户端会
+以 `remote port forwarding failed` 失败。
 
-The restart policy creates repeated attempts; it does not create the stale
-listener. Treat the remote `sshd` child and the local supervisor as two
-different lifecycle owners when diagnosing this loop.
+重启策略造成的是重复尝试,而不是过时监听器。诊断该循环时,把远程 `sshd` 子进程
+与本地监督进程视为两个不同的生命周期所有者。
 
-### Out-of-band SSH health probes can amplify an outage
+### 带外 SSH 健康探测可能放大故障
 
-A periodic check that opens a second SSH connection may time out during a slow
-handshake even while the managed tunnel is still usable. If that check kills
-the tunnel, a transient route slowdown becomes a deterministic restart loop.
+周期检查打开第二个 SSH 连接时,可能在慢速握手期间超时,即便受管隧道仍然可用。
+如果该检查杀掉隧道,一次瞬时路由变慢就变成了确定的重启循环。
 
-Prefer the managed SSH process's `ServerAliveInterval` and
-`ServerAliveCountMax`. Run remote inspection only after that process exits.
-This keeps the failure detector on the same connection it manages.
+优先使用受管 SSH 进程的 `ServerAliveInterval` 与 `ServerAliveCountMax`。只有在该
+进程退出后才运行远程检查。这使故障检测器始终处于它自己管理的那条连接上。
 
-### Globally scoped IPv6 can still be unreachable
+### 全局范围的 IPv6 仍可能不可达
 
-DNS may return IPv6 before IPv4 while the active route has no working IPv6
-egress. A sequential connector can spend the caller's entire timeout on the
-first IPv6 address. The example filters non-public targets, prefers IPv4, and
-retains IPv6 as a fallback.
+DNS 可能先返回 IPv6 再返回 IPv4,而活动路由没有可用的 IPv6 出站。顺序连接器
+可能把调用者的整个超时都浪费在第一个 IPv6 地址上。该示例过滤非公开目标、优先
+IPv4,并把 IPv6 保留为兜底。
 
-## Run The Supervisor
+## 运行监督进程
 
-Configure an ordinary SSH alias for the remote runtime, then run:
+为远程 runtime 配置一个普通 SSH alias,然后运行:
 
 ```bash
 python3 examples/ssh_reverse_proxy_supervisor.py \
@@ -76,22 +69,20 @@ python3 examples/ssh_reverse_proxy_supervisor.py \
   --remote-port 18080
 ```
 
-The local proxy remains alive while its managed SSH child reconnects. The SSH
-command uses batch mode, disables connection sharing, enables server-alive
-checks, and requires the reverse forward to bind successfully.
+本地代理在其受管 SSH 子进程重连期间保持存活。该 SSH 命令使用 batch 模式、禁用
+连接共享、启用 server-alive 检查,并要求反向转发成功绑定。
 
-On the remote runtime, point HTTPS clients at the remote loopback listener:
+在远程 runtime 上,把 HTTPS 客户端指向远程 loopback 监听器:
 
 ```bash
 export HTTPS_PROXY=http://127.0.0.1:18080
 ```
 
-Keep credentials in the remote runtime's existing credential source. Proxy
-configuration should contain only the loopback URL.
+把凭证保留在远程 runtime 现有的凭证源中。代理配置应只包含 loopback URL。
 
-## Optional Stale-Listener Cleanup
+## 可选的过时监听器清理
 
-Automatic cleanup is intentionally opt-in:
+自动清理刻意采用 opt-in:
 
 ```bash
 python3 examples/ssh_reverse_proxy_supervisor.py \
@@ -101,25 +92,22 @@ python3 examples/ssh_reverse_proxy_supervisor.py \
   --cleanup-stale-listener
 ```
 
-Cleanup runs only after the managed tunnel exits. It refuses to terminate a
-process unless all of these conditions hold:
+清理只在受管隧道退出后运行。除非以下所有条件成立,否则它拒绝终止进程:
 
-- the process listens on the exact configured remote loopback port;
-- the process belongs to the current remote user;
-- its executable name is `sshd` or `sshd-session`.
+- 该进程监听的正是所配置的远程 loopback 端口;
+- 该进程属于当前远程用户;
+- 其可执行文件名为 `sshd` 或 `sshd-session`。
 
-The remote account must be able to inspect that listener. If `lsof` requires
-privilege, allow only non-interactive inspection of the dedicated loopback
-port. Do not grant a broad process-management rule. Terminating a same-user
-`sshd` child should not require elevated privilege.
+远程账户必须能够检查该监听器。如果 `lsof` 需要特权,只允许对该专用 loopback
+端口进行非交互式检查。不要授予宽泛的进程管理规则。终止同用户 `sshd` 子进程
+不应需要提权。
 
-If cleanup is disabled or refused, the local proxy stays up and the supervisor
-continues retrying. Operators can inspect the exact listener before deciding
-whether to remove it.
+如果清理被关闭或拒绝,本地代理保持运行,监督进程继续重试。操作员可以先检查
+确切监听器,再决定是否移除它。
 
-## End-To-End Validation
+## 端到端验证
 
-First validate the local proxy without depending on SSH:
+先在不依赖 SSH 的情况下验证本地代理:
 
 ```bash
 curl --proxy http://127.0.0.1:18080 \
@@ -130,8 +118,8 @@ curl --proxy http://127.0.0.1:18080 \
   --write-out 'status=%{http_code} total=%{time_total}\n'
 ```
 
-Then validate the reverse-forward path from the remote runtime. The synthetic
-health host is answered locally by the example and does not use public DNS:
+然后在远程 runtime 上验证反向转发路径。合成健康主机由该示例在本地应答,
+不使用公开 DNS:
 
 ```bash
 curl --proxy http://127.0.0.1:18080 \
@@ -142,51 +130,44 @@ curl --proxy http://127.0.0.1:18080 \
   http://reverse-proxy-health.invalid/
 ```
 
-Expected status is `204`. Finally, request the intended public HTTPS endpoint.
-Any real HTTP response, including an authentication or method error, proves
-that DNS resolution, reverse forwarding, CONNECT, TLS, and HTTP reached the
-service. A successful health endpoint with a failed HTTPS request narrows the
-problem to desktop DNS or public egress rather than the reverse forward.
+预期状态是 `204`。最后,请求预期的公开 HTTPS 端点。任何真实 HTTP 响应,包括
+认证或方法错误,都证明 DNS 解析、反向转发、CONNECT、TLS 与 HTTP 已经到达服务。
+健康端点成功而 HTTPS 请求失败,说明问题被缩小到桌面 DNS 或公开出站,而不是反向
+转发。
 
-## Controlled Recovery Test
+## 受控恢复测试
 
-Before relying on a process manager, terminate only the supervisor's managed
-SSH child. Do not terminate the host application's native SSH control process.
-The expected result is:
+在依赖进程管理器之前,只终止监督进程的受管 SSH 子进程。不要终止宿主应用的原生
+SSH 控制进程。预期结果是:
 
-1. the supervisor process stays alive;
-2. the old SSH child exits;
-3. an exact stale listener is cleaned only when cleanup is enabled;
-4. a new SSH child appears;
-5. the remote health endpoint returns `204` again.
+1. 监督进程保持存活;
+2. 旧 SSH 子进程退出;
+3. 仅在启用清理时,确切过时监听器才被清理;
+4. 出现新的 SSH 子进程;
+5. 远程健康端点再次返回 `204`。
 
-When using `launchd`, `systemd`, or another process manager, verify that its
-restart counter does not increase during this test. A stable supervisor with a
-replaced child proves that reconnect ownership is inside the supervisor rather
-than delegated to a crash loop.
+使用 `launchd`、`systemd` 或其他进程管理器时,要验证其重启计数器在该测试期间
+不增加。监督进程稳定而子进程被替换,证明重连所有权在监督进程内部,而不是被委托
+给崩溃循环。
 
-## Security Boundary
+## 安全边界
 
-The example deliberately applies a narrow policy:
+该示例刻意采用狭窄政策:
 
-- local and remote listeners bind only to IPv4 loopback;
-- only HTTPS `CONNECT` requests to port `443` are accepted;
-- resolved targets must be globally routable addresses;
-- proxy authentication data is neither accepted nor logged;
-- the SSH host, ports, retry policy, and cleanup behavior are explicit CLI
-  configuration;
-- logs contain lifecycle events and error classes, not request headers or
-  response bodies.
+- 本地与远程监听器只绑定 IPv4 loopback;
+- 只接受发往端口 `443` 的 HTTPS `CONNECT` 请求;
+- 解析出的目标必须是全球可路由地址;
+- 代理认证数据既不被接受也不记录;
+- SSH 主机、端口、重试政策与清理行为都是显式 CLI 配置;
+- 日志包含生命周期事件与错误类别,不包含请求头或响应体。
 
-Do not publish real SSH aliases, hostnames, private addresses, local absolute
-paths, process listings, route tables, credentials, or incident logs when
-sharing a diagnosis. Preserve the lifecycle pattern and validation method,
-not the original environment.
+分享诊断时,不要公开真实 SSH alias、主机名、私有地址、本地绝对路径、进程列表、
+路由表、凭证或事件日志。保留生命周期模式与验证方法,而不是原始环境。
 
-## Repository Validation
+## 仓库验证
 
-The smoke is offline: it mocks address resolution and opens only an ephemeral
-loopback server. It never contacts an SSH host or a public endpoint.
+该 smoke 是离线的:它模拟地址解析,只打开一个临时 loopback 服务器,绝不联系
+SSH 主机或公开端点。
 
 ```bash
 python3 examples/ssh-reverse-proxy-supervisor-smoke.py

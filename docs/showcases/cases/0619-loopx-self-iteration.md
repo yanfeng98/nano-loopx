@@ -1,51 +1,37 @@
-# 0619: LoopX Public Repo Self-Iteration
+# 0619:LoopX 公共仓库自我迭代
 
-## Summary
+> [English](0619-loopx-self-iteration.md)
 
-LoopX was used to improve a fast-moving LoopX repository, not only
-one isolated feature. The public repo shows a long-running agent project moving
-across benchmark adapters, control-plane correctness, planning lanes, dashboard
-surfaces, public docs, smokes, and multi-agent coordination while still keeping
-work reviewable.
+## 摘要
 
-The case matters because it is public and commit-backed. A reader can inspect
-the same Git history that produced the product behavior: the repo records the
-workload, the feature chain, the validation surfaces, and the boundaries of
-what evidence is safe to publish.
+LoopX 被用来改进一个快速演进的 LoopX 仓库,而不只是改进某一个孤立功能。这个公共仓库展示了一个长程 agent 项目,在基准适配器、控制面正确性、规划 lane、仪表盘界面、公共文档、smoke 测试和多 agent 协调之间推进,同时仍然保持工作的可审查性。
 
-This is not a claim that one peer authored every commit. The point is
-stronger and more product-relevant: LoopX can keep a high-churn,
-multi-lane agent engineering project coherent while independently claimed peer
-work moves in parallel.
+这个案例之所以重要,是因为它是公开的、有 commit 支撑的。读者可以检查同一份 Git 历史,它产出了上述产品行为:仓库记录了工作量、功能链、验证界面,以及哪些证据可以安全发布的边界。
 
-## Public Repository Signal
+这不是在声称单个 peer 撰写了每一个 commit。要点更强、也更贴近产品:LoopX 能够在一个高变动、多 lane 的 agent 工程项目中保持一致性,同时独立的 peer 认领工作并行推进。
 
-The workload signal is the whole public repository through fixed anchor commit
-`86d6d9d` (`docs: sharpen always-on agent team hero copy`). The fixed anchor
-avoids letting this documentation update change its own evidence window.
+## 公共仓库信号
 
-| Signal | Value |
+工作量信号是整份公共仓库,锚定在固定 commit `86d6d9d` 上(`docs: sharpen always-on agent team hero copy`)。固定锚点避免本次文档更新改变自己的证据窗口。
+
+| 信号 | 值 |
 | --- | --- |
-| All public commits in the repository | 801 |
-| Unique files touched across public history | 570 |
-| Cumulative public insertions / deletions | 265703 / 49895 |
-| Public commits since 2026-06-18 00:00 +08:00 | 244 |
-| Recent unique files touched since 2026-06-18 | 216 |
-| Recent cumulative insertions / deletions | 52898 / 20935 |
-| Public commits on 2026-06-19 | 74 |
-| 2026-06-19 unique files touched | 118 |
-| 2026-06-19 cumulative insertions / deletions | 16087 / 1082 |
-| Public evidence window | 2026-05-31 22:57 +08:00 to 2026-06-20 12:18 +08:00 |
-| Calendar elapsed in public Git window | 19.6 days |
-| Days with public commits | 16 |
+| 仓库内全部公共 commit | 801 |
+| 公共历史中涉及的唯一文件数 | 570 |
+| 累计公共 insertions / deletions | 265703 / 49895 |
+| 自 2026-06-18 00:00 +08:00 以来的公共 commit | 244 |
+| 自 2026-06-18 以来最近涉及的唯一文件数 | 216 |
+| 最近累计 insertions / deletions | 52898 / 20935 |
+| 2026-06-19 的公共 commit | 74 |
+| 2026-06-19 涉及的唯一文件数 | 118 |
+| 2026-06-19 累计 insertions / deletions | 16087 / 1082 |
+| 公共证据窗口 | 2026-05-31 22:57 +08:00 至 2026-06-20 12:18 +08:00 |
+| 公共 Git 窗口内的日历耗时 | 19.6 天 |
+| 有公共 commit 的天数 | 16 |
 
-The repo-scale numbers show the environment LoopX had to manage:
-benchmark work, control-plane fixes, public docs, smoke coverage,
-dashboard/status contracts, and product positioning all moved in the same short
-window.
+仓库规模的数字展示了 LoopX 必须管理的环境:基准工作、控制面修复、公共文档、smoke 覆盖、仪表盘/状态契约和产品定位,全都在同一个短窗口内推进。
 
-These are not raw transcript metrics. They are public Git facts that a reader
-can inspect locally with commands such as:
+这些不是原始转录指标。它们是公开 Git 事实,读者可以在本地用类似这样命令检查:
 
 ```bash
 git rev-list --count HEAD
@@ -53,158 +39,90 @@ git log --numstat --format=COMMIT:%H
 git log --reverse --oneline --since="2026-06-18T00:00:00+08:00"
 ```
 
-## Efficiency Evidence Model
+## 效率证据模型
 
-Commit volume is not itself an efficiency claim. The fair comparison is to
-translate the public repository state into product requirements, estimate what
-an ordinary AI-coding-assisted product process would schedule for each
-requirement, then compare that baseline with the public wall-clock evidence
-window.
+commit 数量本身不构成效率声明。公平的比较方式是把公共仓库状态翻译成产品需求,估计一个普通的 AI 编码辅助产品流程会为每个需求安排多少工作量,然后把这个基线跟公共墙钟证据窗口做对比。
 
-The baseline below already assumes competent AI coding help. It is not a
-"manual developer with no model" comparison. The assumed traditional process is:
-scope the requirement, write or review the contract, implement, add focused
-validation, document the behavior, review the diff, and merge or release it.
-Requirement clusters are discounted when the shipped state is only a prototype,
-design note, or partial adapter.
+下面的基线已经假设了能干的 AI 编码辅助。它不是"没有模型的纯手工开发者"对比。假设的传统流程是:界定需求、编写或审查契约、实现、加入聚焦验证、记录行为、审查 diff、合并或发布。当交付状态只是原型、设计说明或部分适配器时,需求簇会被折扣。
 
-| Product requirement cluster | Public evidence surface | Landing level | Conservative AI-coding-assisted baseline |
+| 产品需求簇 | 公共证据界面 | 落地水平 | 保守 AI 编码辅助基线 |
 | --- | --- | --- | --- |
-| Local control-plane kernel: bootstrap/connect, registry, status, history, check, review packet, todo CLI, public boundary scan | `loopx/`, README, status contracts, docs, smokes | shipped core | 11-16 developer-days |
-| Gate, quota, heartbeat, reward, blocker, and safe-fallback lifecycle | quota/status modules, heartbeat prompt docs, state interaction docs, regression smokes | shipped core with ongoing hardening | 10-15 developer-days |
-| Multi-agent ownership and peer delivery discipline | `claimed_by`, registered-peer checks, identity-aware heartbeat prompts, task workspace guard, typed continuation, self-merge evidence flag | shipped coordination slice | 5-8 developer-days |
-| Benchmark and evaluation control contracts | Terminal-Bench, SkillsBench, ALE, Codex Goal worker contracts, reducers, readiness docs | partial product surface; not full leaderboard automation | 10-16 developer-days |
-| Dashboard, frontstage, and projection surfaces | dashboard app, status server, frontstage fixtures, showcase prototype, goal-channel projection | prototype to beta | 5-8 developer-days |
-| Public smokes, docs governance, and redaction discipline | `examples/`, showcase catalog checks, boundary checks, docs governance smoke | shipped support system | 8-12 developer-days |
-| Product positioning, onboarding, showcases, launch copy, naming, contributor tasks | README, Chinese README, showcases, product vision, outreach drafts | public docs and case surface | 5-8 developer-days |
-| Planning, dreaming, server/client product shape | planning lane docs, dreaming notes, server/client shape docs | design/prototype, deliberately low estimate | 2-4 developer-days |
-| Packaging, install, skills, contributor workflow | install scripts, global skill docs, contributor contracts | usable but still local-first | 3-5 developer-days |
-| **Total conservative baseline** | Whole public repo through `86d6d9d` | mixed maturity | **59-92 developer-days** |
+| 本地控制面内核:bootstrap/connect、registry、status、history、check、review packet、todo CLI、公共边界扫描 | `loopx/`、README、状态契约、文档、smoke 测试 | 已交付核心 | 11-16 开发者日 |
+| gate、quota、heartbeat、reward、blocker 与安全兜底生命周期 | quota/status 模块、heartbeat 提示文档、状态交互文档、回归 smoke | 已交付核心,持续加固中 | 10-15 开发者日 |
+| 多 agent 所有权与 peer 交付纪律 | `claimed_by`、注册 peer 检查、身份感知 heartbeat 提示、任务工作区守卫、typed continuation、self-merge 证据标志 | 已交付协调切片 | 5-8 开发者日 |
+| 基准与评估控制契约 | Terminal-Bench、SkillsBench、ALE、Codex Goal worker 契约、reducer、就绪文档 | 部分产品界面;非完整 leaderboard 自动化 | 10-16 开发者日 |
+| 仪表盘、前场与投影界面 | 仪表盘应用、状态服务器、前场 fixture、案例原型、goal-channel 投影 | 原型到 beta | 5-8 开发者日 |
+| 公共 smoke、文档治理与脱敏纪律 | `examples/`、案例目录检查、边界检查、文档治理 smoke | 已交付支持系统 | 8-12 开发者日 |
+| 产品定位、入门、案例展示、发布文案、命名、贡献者任务 | README、中文 README、案例展示、产品愿景、推广草稿 | 公共文档与案例界面 | 5-8 开发者日 |
+| 规划、dreaming、server/client 产品形态 | planning lane 文档、dreaming 说明、server/client 形态文档 | 设计/原型,刻意给出低估 | 2-4 开发者日 |
+| 打包、安装、skills、贡献者工作流 | 安装脚本、全局 skill 文档、贡献者契约 | 可用但仍以本地优先(local-first) | 3-5 开发者日 |
+| **保守基线合计** | 截至 `86d6d9d` 的整个公共仓库 | 成熟度混合 | **59-92 开发者日** |
 
-That baseline should be read as a range, not a precision metric. Several
-capabilities are deliberately not counted as high-cost production systems:
-frontstage is still a prototype, server/client shape is mostly product design,
-and benchmark adapters are public contracts plus partial routes rather than a
-finished hosted evaluation service.
+这个基线应当被当作区间,而不是精度指标。有几项能力刻意没有算成高成本生产系统:前场仍是原型,server/client 形态主要是产品设计,基准适配器是公开契约加部分路由,而不是一个完整的托管评估服务。
 
-The public Git window is 19.6 calendar days, with 16 days containing public
-commits. Compared with a single AI-coding-assisted product engineer, the
-conservative requirement estimate suggests roughly **3.0x-4.7x calendar
-compression**. Compared with a small two-person AI-coding team, the claim
-should be weaker: roughly **1.8x-3.2x calendar compression**, depending on how
-much of the work could truly run in parallel after product review, validation,
-and merge sequencing.
+公共 Git 窗口是 19.6 个日历日,其中 16 天有公共 commit。与单个 AI 编码辅助产品工程师相比,保守需求估算意味着大约 **3.0x-4.7x 的日历压缩**。与两人的小型 AI 编码团队相比,主张应该更弱:大约 **1.8x-3.2x 的日历压缩**,取决于在产品审查、验证与合并排序之后有多少工作真正可以并行。
 
-The stronger product claim is not the exact multiplier. It is that Goal
-Harness made the compression governable: multiple lanes moved in the same
-short window while the project still kept goals, gates, todos, ownership,
-evidence, boundary checks, and merge policy visible. Without that control
-plane, the same velocity would be much harder to review, hand off, or trust.
+更强的产品主张不是那个精确倍数,而是 Goal Harness 让这种压缩变得可治理:在同一个短窗口内多 lane 并行推进,同时项目仍然保持 goals、关卡、todos、所有权、证据、边界检查和合并策略可见。没有这个控制面,同样的速度会更难以审查、交接或信任。
 
-This efficiency model is intentionally conservative and public-safe. It does
-not use private chat logs, local active-state bodies, raw agent sessions, or
-unpublished benchmark artifacts. Future versions can make it more rigorous by
-keeping the requirement clusters in a machine-readable fixture and asking two
-human reviewers to independently score landing level and baseline effort.
+这个效率模型刻意保守且公开安全。它不使用私有聊天日志、本地 active state 主体、原始 agent session 或未公开的基准工件。未来版本可以做得更严谨:把需求簇保留在一个机器可读 fixture 中,并请两位人类评审独立打分落地水平与基线工作量。
 
-## Feature Chain
+## 功能链
 
-The public repository history shows a connected long-horizon feature chain, not
-only a todo/claim feature:
+公共仓库历史展示了一条连贯的长程功能链,而不只是一项 todo/claim 功能:
 
-1. **Benchmark and adapter maturation**: Terminal-Bench, ALE, SkillsBench, and
-   split-control execution routes gained public contracts, readiness probes,
-   compact reducers, cloud-host guidance, and benchmark workflow docs.
-2. **Control-plane correctness**: quota routing, scoped gates, action scopes,
-   active-state write locks, todo projection gaps, project-asset handoffs, and
-   outcome-floor blocker/no-op states were tightened so automation does not
-   confuse surface progress with real progress.
-3. **Planning and dreaming lanes**: autonomous replanning, advisory dreaming,
-   server-managed planning proposals, and dreaming lane badges were separated
-   so background thinking can propose work without silently becoming executable
-   project truth.
-4. **User/operator surfaces**: lifetime-goal language, agent-led diagnostics,
-   dashboard first-screen decision framing, onboarding todo candidates,
-   quickstart clarity, and showcase-first README material made the control
-   plane easier for humans and future agents to understand.
-5. **Multi-agent ownership**: the repo added registered todo ownership,
-   `claimed_by`, registered-agent checks, identity-aware heartbeat prompts,
-   advisory peer scope, and task-scoped worktree policy.
-6. **Peer completion discipline**: small validated peer work can be
-   completed with `--self-merged --evidence`, while broad, risky, or
-   unclear work uses an ordinary independent handoff with `action_kind=review`.
-7. **Evidence and public-boundary discipline**: public smokes, regression
-   wrappers, docs governance, showcase catalog checks, and public/private
-   boundary scans keep the case reproducible without exposing private chats,
-   raw trajectories, internal docs, or benchmark logs.
+1. **基准与适配器成熟化**:Terminal-Bench、ALE、SkillsBench 和 split-control 执行路由获得了公开契约、就绪探测、紧凑 reducer、云端托管指引与基准工作流文档。
+2. **控制面正确性**:quota 路由、作用域关卡、动作作用域、active state 写锁、todo 投影缺口、项目资产交接、以及 outcome-floor 的 blocker/no-op 状态被收紧,使自动化不会把表面进展误认为真实进展。
+3. **规划与 dreaming lane**:自主 replan、顾问式 dreaming、由服务器管理的规划提案、以及 dreaming lane 徽标被分离,使背景思考可以提出工作,而不会悄悄变成可执行的工程事实。
+4. **用户/操作者界面**:lifetime-goal 语言、agent 主导的诊断、仪表盘首屏决策框架、入门 todo 候选、快速上手清晰度、以及案例展示优先的 README 材料,让控制面对人与未来 agent 都更容易理解。
+5. **多 agent 所有权**:仓库添加了注册 todo 所有权、`claimed_by`、注册 agent 检查、身份感知 heartbeat 提示、顾问式 peer 作用域和任务作用域 worktree 策略。
+6. **Peer 完成纪律**:小规模已验证的 peer 工作可以用 `--self-merged --evidence` 完成,而广泛、有风险或不清楚的工作走普通的独立交接,带 `action_kind=review`。
+7. **证据与公共边界纪律**:公共 smoke、回归包装、文档治理、案例目录检查和公共/私有边界扫描,使案例可复现,同时不暴露私有聊天、原始轨迹、内部文档或基准日志。
 
-That chain matters because it converts a fuzzy collaboration problem into
-product behavior:
+这条链之所以重要,是因为它把一个模糊的协作问题转化为产品行为:
 
-- What is the durable goal?
-- Which lane owns the next bounded move?
-- Which agent has claimed a todo?
-- Which gate is waiting for a human?
-- What can safely continue while another path is gated?
-- Which validation or public evidence proves the move happened?
-- Which work can self-merge, and which work needs explicit peer review?
+- 持久的 goal 是什么?
+- 哪条 lane 拥有下一步有界动作?
+- 哪个 agent 认领了某个 todo?
+- 哪个关卡在等人类?
+- 另一条路径被关卡化时,什么可以安全继续?
+- 哪项验证或公开证据证明动作已经发生?
+- 哪些工作可以 self-merge,哪些需要明确的 peer 审查?
 
-## LoopX Behavior
+## LoopX 行为
 
-LoopX made the full loop durable in several places:
+LoopX 在若干地方把完整 Loop 变得持久:
 
-- the registry and prompt contracts named peer identities instead of relying
-  on chat memory;
-- active todos separated benchmark, productization, documentation, planning,
-  and follow-up work into reviewable obligations;
-- quota and status projection kept executable work, monitor work, user gates,
-  and blockers distinct;
-- advisory peer scope stayed in the agent profile/prompt, while todo metadata
-  kept a simple `claimed_by` owner and typed continuation;
-- completion evidence recorded self-merge and validation outcomes instead of
-  leaving them only in conversation;
-- public docs and smokes turned reusable lessons into repository artifacts;
-- public/private boundary checks kept showcase material free of internal
-  links, raw benchmark evidence, credentials, and machine-local state.
+- registry 与提示契约点名 peer 身份,而不是依赖聊天记忆;
+- 活动 todos 把基准、产品化、文档、规划与后续工作分成可审查的义务;
+- quota 与状态投影把可执行工作、监控工作、用户关卡与 blocker 区分开;
+- 顾问式 peer 作用域留在 agent profile/提示中,而 todo 元数据保存一个简单的 `claimed_by` 所有者和 typed continuation;
+- 完成证据记录 self-merge 与验证结果,而不是只留在对话中;
+- 公共文档与 smoke 测试把可复用经验变成仓库工件;
+- 公共/私有边界检查确保案例材料不包含内部链接、原始基准证据、凭据与机器本地状态。
 
-The product value is not that an agent wrote many files. The value is that a
-high-churn, multi-lane repository stayed legible: a future agent can recover
-the goal, ownership, gates, validation, evidence, and remaining follow-up work
-from public project surfaces.
+产品价值不在于 agent 写了大量文件。价值在于一个高变动、多 lane 的仓库保持清晰可读:未来的 agent 可以从公共项目界面恢复 goal、所有权、关卡、验证、证据和剩余后续工作。
 
-## User-Facing Value
+## 用户价值
 
-For an operator, this case shows how LoopX reduces coordination load:
+对操作者来说,这个案例展示了 LoopX 如何降低协调负担:
 
-- one peer can keep focus on a high-priority benchmark lane;
-- other peers can improve product, docs, and control-plane surfaces without
-  silently racing its claim;
-- user gates remain explicit instead of turning into hidden idle time;
-- safe fallback or side work can continue when the gated path is blocked;
-- small validated changes do not create unnecessary review queue pressure;
-- larger or riskier work flows through explicit peer review.
+- 一个 peer 可以专注于高优先级基准 lane;
+- 其他 peer 可以推进产品、文档与控制面界面,而不会悄悄与它的 claim 冲突;
+- 用户关卡保持明确,而不是变成隐藏的空闲时间;
+- 当被关卡化的路径被阻塞时,安全兜底或旁路工作可以继续;
+- 小规模已验证的变更不会制造不必要的审查队列压力;
+- 更大或更有风险的工作经过明确的 peer 审查。
 
-For a potential user, the reusable pattern is this: LoopX lets a project
-delegate bounded improvement lanes to agents without losing ownership, evidence,
-gate discipline, or merge discipline.
+对潜在用户来说,可复用模式是这样的:LoopX 让项目可以把有界的改进 lane 委托给 agent,同时不丢失所有权、证据、关卡纪律或合并纪律。
 
-## Evidence Boundary
+## 证据边界
 
-This case intentionally uses only public repository evidence: commit ids, file
-counts, public docs, public CLI behavior, public smokes, and public boundary
-checks. It excludes private thread text, local active-state bodies, internal
-document links, screenshots, raw benchmark material, credentials, and
-machine-specific paths.
+这个案例刻意只使用公共仓库证据:commit id、文件数、公共文档、公共 CLI 行为、公开 smoke 测试与公开边界检查。它排除了私有线程文本、本地 active-state 主体、内部文档链接、截图、原始基准材料、凭据与机器特定路径。
 
-## Public Evidence Sequence
+## 公开证据序列
 
-1. A long-running agent engineering repo is moving quickly across benchmark,
-   runtime, docs, dashboard, planning, and smoke surfaces.
-2. LoopX keeps the whole project legible through durable goals, todos,
-   gates, quota, evidence, and run history.
-3. A peer lane is claimed so productization and coordination work can progress
-   beside another peer's benchmark lane.
-4. The peer lane ships ownership, identity-aware prompts, showcase material,
-   self-merge policy, and outcome-floor projection with focused validation.
-5. Public docs and smokes turn the experience into a reusable case without
-   publishing private chat, internal docs, or raw benchmark evidence.
+1. 一个长程 agent 工程仓库正在基准、runtime、文档、仪表盘、规划与 smoke 界面快速推进。
+2. LoopX 通过持久 goals、todos、关卡、quota、证据与运行历史,让整个项目保持清晰可读。
+3. 一条 peer lane 被认领,使产品化与协调工作可以在另一条 peer 基准 lane 旁边推进。
+4. 该 peer lane 交付所有权、身份感知提示、案例材料、self-merge 策略和 outcome-floor 投影,并附带聚焦验证。
+5. 公共文档与 smoke 测试把这段经历转化为可复用案例,而不发布私有聊天、内部文档或原始基准证据。

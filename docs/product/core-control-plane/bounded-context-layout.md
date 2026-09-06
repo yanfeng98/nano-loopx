@@ -1,70 +1,52 @@
-# Bounded Context Layout
+# 有界上下文布局
 
-LoopX control-plane code is moving from a flat collection of status/quota helper
-modules toward bounded contexts. The goal is to keep the open-source kernel
-readable: source parsing, policy selection, projection shaping, and rendering
-should not all accumulate in one generic namespace.
+> [English](bounded-context-layout.md)
 
-## Package Shape
+LoopX 控制面代码正从扁平的 status/quota 辅助模块集合演变为有界上下文。目标是保持开源内核可读:源解析、策略选择、投影塑形和渲染不应全部堆在一个泛型命名空间里。
 
-New control-plane code should live under `loopx.control_plane`:
+## 包形态
 
-| Context | Responsibility |
+新的控制面代码应放在 `loopx.control_plane` 下:
+
+| 上下文 | 职责 |
 | --- | --- |
-| `work_items` | Attention items, work-item selection, work-item read models, lifecycle and delivery signals. |
-| `goals` | Goal state, active-state sections, registry health, and goal-level planning surfaces. |
-| `todos` | Todo parsing summaries, todo-derived attention helpers, and todo handoff summaries. |
-| `agents` | Agent-scope filtering, lane recommendation, capability gates, subagent activity, and the reusable multi-agent execution kernel. |
-| `quota` | Quota-specific control-plane helpers. |
-| `status` | Status collection assembly, runtime summaries, agent-lane status projection, and other status read models. |
-| `scheduler` | Scheduler-facing monitor display and cadence helpers. |
-| `runtime` | Runtime/session projections and run-compaction helpers. |
-| `handoff` | Handoff readiness, handoff state, handoff-run classification, cross-runtime review packets, and exact review-decision batching. |
+| `work_items` | 关注项、工作项选择、工作项读模型、生命周期与交付信号。 |
+| `goals` | Goal 状态、active 状态部分、注册表健康以及 goal 级规划界面。 |
+| `todos` | Todo 解析摘要、由 todo 派生的关注辅助函数以及 todo 交接摘要。 |
+| `agents` | Agent 范围过滤、车道路推荐、能力关卡、子 agent 活动以及可复用的多 agent 执行内核。 |
+| `quota` | 配额专用的控制面辅助函数。 |
+| `status` | 状态收集组装、运行时摘要、agent 车道状态投影以及其他状态读模型。 |
+| `scheduler` | 面向调度器的 monitor 展示与节奏辅助函数。 |
+| `runtime` | 运行时/会话投影与运行压缩辅助函数。 |
+| `handoff` | 交接就绪度、交接 state、交接运行分类、跨运行时评审包以及精确的评审决策批处理。 |
 
-Repo-local control-plane code, examples, and smokes should import the owning
-bounded context directly. Do not add compatibility shims for internal moves; if
-an external compatibility break matters, make it an explicit release decision
-instead of keeping a generic legacy namespace alive by default.
+仓库内控制面代码、示例与 smoke 应直接导入其所属的有界上下文。内部移动不要添加兼容垫片;如果外部兼容断裂重要,就让它成为一个显式的发布决策,而不是默认留着一个泛型遗留命名空间。
 
-## Projection Boundary
+## 投影边界
 
-A projection is a derived read model with a stable consumer contract. It should
-be:
+投影是带有稳定消费者契约的派生读模型。它应当:
 
-- deterministic from public-safe source state;
-- side-effect free;
-- small enough for hot status/quota/dashboard surfaces;
-- consumed through a named contract rather than copied across renderers.
+- 由公开安全源 state 确定性地得出;
+- 无副作用;
+- 足够小,能用于热 status/quota/dashboard 界面;
+- 通过具名契约消费,而不是在多个渲染器之间复制。
 
-Not every extracted helper is a projection. Selection rules belong near the
-domain policy, parser helpers belong near the state they parse, and renderer
-formatting belongs in the sink. If a module is moved only because a source file
-is too long, choose the bounded context first and the `projection.py` name only
-when it really exposes a read model contract.
+并非每个抽取出的辅助函数都是投影。选择规则应靠近领域策略,解析辅助函数应靠近它们解析的 state,渲染器格式化应放在 sink 中。如果一个模块只是因为源文件太长而被移动,先选择有界上下文,只有真的暴露读模型契约时才使用 `projection.py` 这个名字。
 
-## Migration Rule
+## 迁移规则
 
-When moving an existing module:
+移动已有模块时:
 
-1. Move the implementation into the owning bounded context.
-2. Update LoopX runtime imports to the new context path.
-3. Update repo-local examples, docs, and smokes to the bounded-context import
-   path in the same batch.
-4. Add or keep a focused smoke that exercises the runtime path and rejects
-   internal imports from stale legacy namespaces.
-5. Use a deliberate compatibility-breaking release note if an old public import
-   path must be removed.
+1. 把实现移入所属的有界上下文。
+2. 把 LoopX 运行时导入更新为新上下文路径。
+3. 在同一批次中把仓库内示例、文档与 smoke 更新为有界上下文导入路径。
+4. 新增或保留一个聚焦 smoke,它覆盖运行时路径并拒绝陈旧遗留命名空间的内部导入。
+5. 如果必须移除旧的公开导入路径,使用刻意的兼容性破坏发布说明。
 
-This keeps the kernel architecture clean without preserving internal shims that
-invite future code to grow in the wrong namespace.
+这样可以在不保留内部垫片的前提下保持内核架构干净,而垫片会诱使未来代码在错误命名空间中生长。
 
-## Compatibility Decisions
+## 兼容决策
 
-The July 2026 package-ownership migration removed the internal
-`loopx.capabilities.multi_agent`, `loopx.capabilities.cross_runtime`, and
-`loopx.capabilities.review_batch` import paths. Their implementations now live
-under the owning `agents` and `handoff` contexts, while the `review-batch` CLI
-registration lives under `loopx.cli_commands`. These paths had no maintained
-external compatibility window, so the migration updates active callers and
-tests directly instead of keeping wrappers that would preserve the wrong
-ownership boundary.
+2026 年 7 月的包归属迁移移除了内部
+`loopx.capabilities.multi_agent`、`loopx.capabilities.cross_runtime` 与
+`loopx.capabilities.review_batch` 导入路径。它们的实现现在位于所属的 `agents` 与 `handoff` 上下文下,而 `review-batch` CLI 注册位于 `loopx.cli_commands` 下。这些路径没有维护中的外部兼容窗口,因此迁移直接更新了现有调用方与测试,而不是保留会维持错误归属边界的包装器。

@@ -1,145 +1,127 @@
-# Better Agent Three-Provider Workflow Audit v0
+# Better Agent 三 Provider Workflow 审计 v0
 
-## Decision
+> [English](better-agent-three-provider-audit-v0.md)
 
-**Run provider-specific inspection in parallel, but serialize any shared-tree
-implementation behind a parent review gate. Stop a specialist lane when it no
-longer contributes provider-specific evidence.**
+## 决策
 
-This is a metadata-only audit design for the synthetic workflow proposed in
-[LoopX issue #670](https://github.com/huangruiteng/loopx/issues/670). It is not
-evidence that a Better Agent run has already exhibited duplicate work, stale
-state, or conflicting changes.
+**并行运行 provider 特定检查，但任何共享树（shared-tree）实现都要串行化在父级评审
+gate 之后。当一个专业 lane 不再贡献 provider 特定证据时，停止它。**
+
+这是针对 [LoopX issue #670](https://github.com/huangruiteng/loopx/issues/670) 中提出的合成
+workflow 的仅元数据审计设计。它不是一条证据，不能说明 Better Agent 的运行已经表现出重复
+工作、陈旧状态或冲突变更。
 
 ## Workflow
 
-[Better Agent](https://github.com/ofekron/better-agent) describes one local
-workspace for Claude, Codex, and Gemini, with session forking, delegation,
-parallel execution, and headless SDK/CLI control. Its maintainer proposed this
-synthetic task:
+[Better Agent](https://github.com/ofekron/better-agent) 描述了一个同时用于 Claude、Codex
+与 Gemini 的本地工作区，支持 session 分叉、委派、并行执行与 headless SDK/CLI 控制。它的
+维护者提出了这个合成任务：
 
-1. three specialist lanes inspect Codex, Claude, and Gemini integrations;
-2. each lane returns findings and validation evidence;
-3. a parent reconciles the findings into one shared implementation;
-4. the parent decides whether to keep, stop, or serialize lanes.
+1. 三个专业 lane 分别检查 Codex、Claude 与 Gemini 集成；
+2. 每个 lane 返回发现与验证证据；
+3. 父级把发现调和为一个共享实现；
+4. 父级决定保留、停止还是串行化这些 lanes。
 
-The audit unit is one parent task plus its three child lanes. Prompts, message
-bodies, credentials, raw logs, and private session content are out of scope.
+审计单元是一个父任务加上它的三个子 lanes。Prompt、消息体、凭证、原始日志与私有
+session 内容不在范围内。
 
-## Minimum Metadata
+## 最低元数据
 
-| Field | Purpose |
+| 字段 | 用途 |
 | --- | --- |
-| `parent_run_id` and `lane_id` | Keep lineage explicit without copying session content. |
-| `provider` and `scope_summary` | Show the intended unique contribution of each lane. |
-| `base_revision` and `observed_at` | Detect findings produced from stale shared-tree state. |
-| `inspected_paths` | Measure exploration overlap without retaining file contents. |
-| `proposed_write_scopes` | Detect implementation conflicts before writes begin. |
-| `validation_receipts` | Distinguish checked evidence from narrative success claims. |
-| `finding_keys` and `recommendation` | Compare conclusions without storing full transcripts. |
-| `parent_decision` and `decision_reason_codes` | Preserve the keep, stop, or serialize outcome. |
+| `parent_run_id` 与 `lane_id` | 在不复制 session 内容的情况下保持血统明确。 |
+| `provider` 与 `scope_summary` | 展示每个 lane 预期的独特贡献。 |
+| `base_revision` 与 `observed_at` | 检测由陈旧共享树状态产生的发现。 |
+| `inspected_paths` | 在不保留文件内容的情况下衡量探索重叠。 |
+| `proposed_write_scopes` | 在写入开始前检测实现冲突。 |
+| `validation_receipts` | 区分已检查的证据与叙述性的成功声明。 |
+| `finding_keys` 与 `recommendation` | 在不存储完整 transcript 的情况下比较结论。 |
+| `parent_decision` 与 `decision_reason_codes` | 保留 keep、stop 或 serialize 的结果。 |
 
-Path lists should be repository-relative. Validation receipts should retain a
-command or check identifier, status, revision, and timestamp, but not raw
-output.
+路径列表应当相对仓库。Validation receipts 应当保留命令或检查标识、状态、revision 与
+时间戳，但不保留原始输出。
 
-## Signals
+## 信号
 
-The following signals are derived from metadata. They are not inferred from
-agent confidence or a generic "success" label.
+以下信号由元数据推导。它们不是从 Agent 置信度或通用“成功”标签推断的。
 
-| Signal | Evidence | Interpretation |
+| 信号 | 证据 | 解读 |
 | --- | --- | --- |
-| Duplicate exploration | High overlap in `inspected_paths` and `finding_keys`, with no provider-specific result. | One lane may be redundant. |
-| Stale shared state | A lane's `base_revision` differs from the parent integration revision when its recommendation is reviewed. | Rebase or re-inspect before accepting the result. |
-| Conflicting implementation | Overlapping `proposed_write_scopes` plus incompatible recommendations. | Do not let lanes write concurrently. |
-| Superficial success | Lane-local checks pass, but no parent integration receipt covers the combined change. | The workflow is not yet validated. |
-| Unique provider value | A lane finds a provider-specific contract, failure, or check that no other lane covers. | Keep that lane active. |
+| 重复探索 | `inspected_paths` 与 `finding_keys` 高度重叠，且没有 provider 特定结果。 | 有一个 lane 可能是冗余的。 |
+| 陈旧共享状态 | 评审某 lane 的建议时，它的 `base_revision` 与父级集成 revision 不同。 | 接受结果前先 rebase 或重新检查。 |
+| 冲突实现 | 重叠的 `proposed_write_scopes` 加上不兼容的建议。 | 不要让 lanes 并行写入。 |
+| 表面成功 | lane 本地检查通过，但没有父级集成 receipt 覆盖合并后的变更。 | workflow 尚未验证。 |
+| 独特 provider 价值 | 一个 lane 发现了其他 lane 都没有覆盖的 provider 特定契约、失败或检查。 | 保持该 lane 活跃。 |
 
-Overlap is a review cue, not an automatic stop. Two lanes may inspect the same
-adapter for different provider contracts. The parent must record whether the
-second lane added unique evidence.
+重叠是评审线索，不是自动停止。两个 lanes 可能为不同的 provider 契约检查同一个适配器。
+父级必须记录第二个 lane 是否增加了独特证据。
 
-## Decision Rules
+## 决策规则
 
-### Keep all lanes
+### 保留所有 lanes
 
-Keep the three inspection lanes while each has a distinct provider scope and
-continues to add unique findings or validation receipts. Shared read-only
-inspection is allowed even when paths overlap.
+当三个检查 lane 各自拥有不同的 provider 范围并持续增加独特发现或验证 receipts 时，保留它们。
+路径重叠时的共享只读检查是允许的。
 
-### Stop a redundant lane
+### 停止一个冗余 lane
 
-Stop a lane when all of these are true:
+当以下条件全部为真时停止一个 lane：
 
-- its current scope substantially overlaps another live lane;
-- it has not added a unique finding or validation receipt since the last
-  parent review;
-- stopping it does not remove provider-specific coverage.
+- 它当前范围与另一个存活 lane 实质重叠；
+- 自上次父评审以来，它没有增加任何独特发现或验证 receipt；
+- 停止它不会移除 provider 特定覆盖。
 
-Record the stopped lane, retained lane, overlap evidence, and parent decision.
-Do not estimate saved cost unless lane duration or token/cost metadata exists.
+记录被停止的 lane、保留的 lane、重叠证据与父决策。除非存在 lane 时长或 token/cost 元数据，
+否则不要估算节省的成本。
 
-### Serialize implementation
+### 串行化实现
 
-Serialize the final implementation when any lane proposes overlapping write
-scopes, works from a stale base revision, or recommends a change incompatible
-with another lane. The parent first selects one implementation todo and one
-base revision. Other lanes become reviewers or validators; they do not keep
-writing the same shared tree.
+当任何 lane 提议重叠的写范围、基于陈旧基础 revision 工作，或建议与另一个 lane 不兼容的变更
+时，串行化最终实现。父级先选择一个实现 todo 与一个基础 revision。其他 lanes 变成评审者或
+validator；它们不再持续写入同一个共享树。
 
-The implementation may return to parallel work only after write scopes are
-disjoint and the parent records the split.
+只有写范围不相交且父级记录了分界之后，实现才可以回到并行工作。
 
-## Trust Ranking
+## 信任分级
 
-1. **High:** repository revisions, relative path sets, todo or lease identity,
-   commit receipts, and reproducible validation status.
-2. **Medium:** compact finding keys and parent-authored reason codes linked to
-   high-trust evidence.
-3. **Low:** free-form recommendations, self-reported completion, or lane-local
-   success without an integration receipt.
+1. **高：** 仓库 revisions、相对路径集合、todo 或 lease 身份、commit receipts 与可复现的
+   验证状态。
+2. **中：** 与高信任证据关联的紧凑 finding keys 与父级撰写的 reason codes。
+3. **低：** 自由格式建议、自报告完成，或没有集成 receipt 的 lane 本地成功。
 
-The parent decision should cite high-trust evidence for any stop or merge
-choice. Low-trust evidence can trigger review, but cannot close it.
+父决策应当为任何 stop 或 merge 选择引用高信任证据。低信任证据可以触发评审，但不能结束评审。
 
-## Measures
+## 度量
 
-Use measured counters only:
+只使用测量到的计数器：
 
-- parent review latency from last lane receipt to recorded decision;
-- number of lanes stopped for proven redundancy;
-- duplicate inspected-path count at the parent review point;
-- overlapping write-scope conflicts caught before implementation;
-- integration validation reruns before one accepted receipt;
-- lane minutes or provider cost avoided after an explicit stop decision, when
-  those values are available.
+- 从最后一次 lane receipt 到记录决策的父评审延迟；
+- 因被证明冗余而停止的 lane 数量；
+- 父评审点上的重复 inspected-path 数量；
+- 实现前拦截到的重叠写范围冲突；
+- 产生一个被接受 receipt 之前执行的集成验证重跑次数；
+- 在显式停止决策后节省的 lane 分钟数或 provider 成本（当这些值可用时）。
 
-The audit is useful if it shortens a real parent decision or catches one
-conflict before duplicated implementation. It must not claim savings from this
-synthetic design alone.
+如果审计缩短了真实的父决策，或在重复实现前拦到一个冲突，它就是有用的。它不能仅凭这个合成
+设计声称节省。
 
-## Fit And Kill Criteria
+## 契合与停止标准
 
-Proceed with one synthetic replay if Better Agent can export the minimum
-metadata above without prompts, raw logs, credentials, or private session
-content. The replay passes when it produces one explainable parent decision and
-one integration validation receipt.
+如果 Better Agent 能在不包含 prompts、原始日志、凭证或私有 session 内容的情况下导出上述
+最低元数据，就进行一次合成回放。当它产生一个可解释的父决策与一个集成验证 receipt 时，
+回放通过。
 
-Stop this audit route if the workflow cannot expose base revisions, relative
-path scopes, and validation receipts independently of private traces. Also stop
-if all three lanes are only a narrative scenario and no bounded synthetic run
-can produce observable metadata.
+如果该 workflow 不能独立于私有 traces 暴露基础 revisions、相对路径范围与验证 receipts，
+就停止这条审计路线。如果三个 lanes 只是叙述性场景、没有任何有界合成运行能产生可观察元数据，
+也停止。
 
-## Next Bounded Step
+## 下一个有界步骤
 
-Run one synthetic provider-parity task on a disposable public fixture. Capture
-only the minimum metadata, then apply the rules above. The parent should choose
-exactly one outcome:
+在一个一次性的公开 fixture 上运行一个合成 provider 对等任务。只捕获最低元数据，然后应用
+上述规则。父级应当只选择一种结果：
 
-- keep all inspection lanes because each added unique provider evidence;
-- stop at least one redundant lane with measured overlap evidence; or
-- serialize implementation behind one shared-state review gate.
+- 保留所有检查 lanes，因为每个都增加了独特 provider 证据；
+- 用测量到的重叠证据停止至少一个冗余 lane；或
+- 把实现串行化在一个共享状态评审 gate 之后。
 
-No issue comment, repository mutation in Better Agent, production access, or
-private material is required for that replay.
+该回放不需要任何 issue 评论、Better Agent 中的仓库变更、生产访问或私有材料。

@@ -1,90 +1,62 @@
-# Ark Managed Agent Issue-Fix Qualification v0
+# Ark 托管 Agent Issue-Fix 资格 v0
+> [English](ark-managed-agent-issue-fix-qualification-v0.md)
 
-This protocol qualifies LoopX issue-fix work when one LoopX goal prompt is
-submitted to an Ark Managed Agent Goal host. It composes existing issue-fix
-and host contracts; it does not introduce another runtime or another prompt
-family.
+本协议为单个 LoopX goal prompt 提交给 Ark Managed Agent Goal host 时的 LoopX issue-fix 工作进行资格界定。它组合既有 issue-fix 与 host 契约；不引入另一个运行时或另一种 prompt 家族。
 
-The qualification is deliberately staged. A repaired file is useful evidence,
-but it is not proof that the Goal host reached a durable terminal state.
+资格界定刻意分阶段进行。一个修复后的文件是有用证据，但它不证明 Goal host 到达了持久化终态。
 
-## Evidence stages
+## 证据阶段
 
-| Stage | Required evidence | Pass condition |
+| 阶段 | 所需证据 | 通过条件 |
 | --- | --- | --- |
-| 1. Intake and route | Public-safe issue metadata and an `issue_fix_feasibility_v0` packet | Exactly one route is selected. A `fix_pr` route has a named repro, bounded scope, and named validation. |
-| 2. Worker repair | Repro-before, minimal patch, focused validation-after, and changed-file summary | The repro fails before the patch, validation passes after it, and the artifact is review-ready without claiming an external write. |
-| 3. Durable LoopX closure | Validated todo writeback plus explicit successor or `no_followup` | The selected todo is durably closed and a new `quota should-run` no longer asks the worker to repeat the repair. |
-| 4. Goal host closure | Host events for Goal evaluation and terminal session state | Evaluation ends satisfied, the Goal becomes achieved, and the session returns idle without a provider, evaluator, or transport error. |
-| 5. Review handoff | Review packet and explicit authority state | The packet is ready for review. PR creation, review request, merge, and publish remain false until separately authorized. |
+| 1. 收件与路由 | 公开安全的 issue 元数据与一个 `issue_fix_feasibility_v0` 包 | 恰好选择一条路由。`fix_pr` 路由需要有命名 repro、受限范围与命名验证。 |
+| 2. Worker 修复 | Repro 前、最小补丁、聚焦验证后与变更文件摘要 | repro 在补丁前失败，验证在补丁后通过，且工件达到评审就绪状态而未声称任何外部写入。 |
+| 3. 持久化 LoopX 关闭 | 已验证的 todo writeback 加显式 successor 或 `no_followup` | 所选 todo 已持久化关闭，且新的 `quota should-run` 不再要求 worker 重复修复。 |
+| 4. Goal host 关闭 | Goal 评估与终态会话状态的 host 事件 | 评估在满意中结束，Goal 达成，会话在无 provider、evaluator 或传输错误的情况下返回空闲。 |
+| 5. 评审交接 | 评审包与显式权限状态 | 包已达到评审就绪。PR 创建、评审请求、合并与发布在另行授权前保持 false。 |
 
-Stages 1–3 qualify the issue-fix worker path. Stages 1–4 qualify the one-shot
-Goal host path end to end. Stage 5 qualifies the handoff boundary; it does not
-grant publication authority.
+阶段 1–3 界定 issue-fix worker 路径。阶段 1–4 端到端界定一次性 Goal host 路径。阶段 5 界定交接边界；它不授予发布权限。
 
-## Verdict rules
+## 判定规则
 
-Use these verdicts instead of one overloaded success bit:
+使用这些判定，而不是一个过载的成功位：
 
-| Observed result | Worker verdict | Goal-host verdict | Meaning |
+| 观察到结果 | Worker 判定 | Goal-host 判定 | 含义 |
 | --- | --- | --- | --- |
-| Repro, patch, validation, and durable todo closure all pass; Goal evaluation ends satisfied | pass | pass | End-to-end host case passed. |
-| Worker evidence passes; Goal evaluator or provider fails before satisfied | pass | fail | The repair is real, but the host case is not complete. Diagnose the evaluator/provider boundary. |
-| Code changes, but focused validation or durable writeback is missing | fail | not reached | Do not treat a plausible diff as a completed issue fix. |
-| Goal reports satisfied without a validated repair artifact | fail | invalid | The evaluator result is insufficient and the case must be rejected. |
-| Review packet is ready but external-write authority is absent | pass | pass or not applicable | Stop at draft/review handoff; do not publish. |
+| repro、补丁、验证与持久化 todo 关闭全部通过；Goal 评估在满意中结束 | pass | pass | 端到端 host 用例通过。 |
+| Worker 证据通过；Goal evaluator 或 provider 在满意前失败 | pass | fail | 修复是真实的，但 host 用例未完成。诊断 evaluator/provider 边界。 |
+| 代码有改动，但聚焦验证或持久化 writeback 缺失 | fail | not reached | 不要把看似合理的 diff 当作已完成的 issue fix。 |
+| Goal 在没有已验证修复工件的情况下报告满意 | fail | invalid | evaluator 结果不充分，用例必须被拒绝。 |
+| 评审包就绪但外部写入权限缺失 | pass | pass 或 not applicable | 停在草稿/评审交接处；不要发布。 |
 
-`issue_fix_validated_fix_artifact_v0` intentionally owns worker evidence only.
-It does not contain a Goal terminal-state field. Goal satisfaction must come
-from the host event stream or an equivalent host readback, never from the
-presence of a patch.
+`issue_fix_validated_fix_artifact_v0` 有意只承载 worker 证据。它不包含 Goal 终态字段。Goal 满意度必须来自 host 事件流或等价的 host 回读，绝不来自补丁的存在。
 
-## Representative matrix
+## 代表性矩阵
 
-An L2 qualification run should cover more than one happy-path issue:
+一次 L2 资格运行应覆盖多于一个 happy-path issue：
 
-1. a bounded issue that selects `fix_pr`, reproduces locally, applies a minimal
-   patch, and passes focused validation;
-2. an issue with useful diagnosis but insufficient repair evidence that routes
-   to `comment_only` and remains externally gated;
-3. an issue with neither a safe repair nor useful comment payload that routes
-   to `triage_only` with no fabricated follow-up;
-4. a one-shot Goal-host run using the same generated `task_body` as the cloud
-   host, including durable todo closure and terminal Goal readback; and
-5. a review-ready handoff that proves no comment, PR, merge, or publish action
-   occurred without authority.
+1. 一个有界的 issue，选择 `fix_pr`，本地复现、应用最小补丁并通过聚焦验证；
+2. 一个诊断有用但修复证据不充分的 issue，路由到 `comment_only` 并保持外部关卡；
+3. 一个既无安全修复亦无有用评论载荷的 issue，路由到 `triage_only` 且不编造后续动作；
+4. 一次使用与云 host 相同生成 `task_body` 的一次性 Goal-host 运行，包括持久化 todo 关闭与终态 Goal 回读；以及
+5. 一个评审就绪的交接，证明在没有权限的情况下未发生评论、PR、合并或发布动作。
 
-The deterministic repository fixture covers the repair mechanics. At least
-one authenticated host run is still required for stage 4; a mock provider or a
-successful patch alone cannot close that requirement.
+确定性仓库 fixture 覆盖修复机制。阶段 4 仍至少需要一次已认证的 host 运行；仅 mock provider 或单个成功补丁无法关闭该要求。
 
-## Current live finding
+## 当前实时发现
 
-A fresh Goal-host parity replay installed the CLI and workflow skills from one
-clean revision, then submitted one generated task body. The real issue-fix
-worker reproduced the retry-delay defect, applied the one-line repair, passed
-all four focused tests, wrote the review handoff, and closed its LoopX todo
-with explicit `no_followup`.
+一次全新的 Goal-host 一致性重放从同一干净修订安装 CLI 与 workflow skill，然后提交一个生成的 task body。真实的 issue-fix worker 复现了 retry-delay 缺陷、应用了一行修复、通过全部四个聚焦测试、写出评审交接，并以显式 `no_followup` 关闭其 LoopX todo。
 
-The next quota read returned `terminal_no_followup` with complete user and
-agent todo sources and no acceptance gaps. A state-aware Goal evaluator then
-observed that durable terminal state, emitted a satisfied evaluation, and the
-session returned idle. The run completed 14 authenticated provider exchanges.
-The correct classification is therefore
-`repair=pass, durable_closure=pass, goal_host=pass`; publication remains a
-separate gated handoff.
+下一次配额读取返回 `terminal_no_followup`，且用户与 agent todo 来源完整、无验收缺口。随后一个状态感知的 Goal evaluator 观察到该持久化终态、发出满意评估，会话返回空闲。该运行完成了 14 次已认证的 provider 交换。因此正确分类是 `repair=pass, durable_closure=pass, goal_host=pass`；发布仍是一个独立的受关卡交接。
 
-Private prompts, credentials, provider payloads, local paths, and raw traces
-are intentionally excluded from this public protocol.
+私有 prompt、凭据、provider 载荷、本地路径与原始 trace 有意排除在本公开协议之外。
 
-## Durable checks
+## 持久化检查
 
-Run the focused contract:
+运行聚焦契约：
 
 ```bash
 python -m pytest -q tests/test_ark_managed_agent_issue_fix_matrix.py
 ```
 
-The test composes the current feasibility, deterministic repair, Goal-host,
-and review-handoff contracts. It also prevents the validated repair artifact
-from silently acquiring or implying Goal terminal-state authority.
+该测试组合当前可行性、确定性修复、Goal-host 与评审交接契约。它还阻止验证修复工件静默获得或暗示 Goal 终态权限。

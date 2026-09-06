@@ -1,83 +1,71 @@
-# RFC: LoopX Desktop Execution Frontends v0
+# RFC：LoopX 桌面执行前端 v0
 
-> Language note: the
-> [Chinese version](./desktop-execution-frontends-v0.zh-CN.md) and this
-> English version are semantic mirrors. A difference between them is a defect.
+> 语言说明：本文与
+> [英文版](./desktop-execution-frontends-v0.md)互为语义镜像；两者不一致属于缺陷。
 
-- Status: Draft
-- Decision boundary: support both attachment to an externally owned Agent
-  session and an end-to-end LoopX-managed desktop runtime
-- Initial attached runtime: Codex App / app-server
-- Initial managed runtimes: Pi and DeepSeek Harness (`dsh`)
-- Default managed provider profile: Volcengine Ark Agent Plan
+- 状态：Draft
+- 决策边界：同时支持挂接到外部拥有的 Agent 会话，以及端到端由 LoopX 托管的桌面运行时
+- 初始挂接运行时：Codex App / app-server
+- 初始托管运行时：Pi 与 DeepSeek Harness（`dsh`）
+- 默认托管 provider 配置：火山方舟 Agent Plan
 
-## Summary
+## 摘要
 
-LoopX Desktop should support two explicit execution frontend modes:
+LoopX Desktop 应支持两种显式的执行前端模式：
 
-1. **Attached App Session.** The operator attaches LoopX Desktop to an
-   already-running Codex App or app-server session. The external host keeps
-   process, conversation, interruption, resume, and execution-loop ownership.
-2. **Managed Agent Runtime.** LoopX Desktop launches and supervises Pi or
-   DeepSeek Harness, selects an explicit provider profile, and advances work
-   through bounded `loopx_turn_v0` transactions. The default distribution
-   profile uses Volcengine Ark Agent Plan, while the runtime and provider
-   contracts remain replaceable.
+1. **挂接 App 会话（Attached App Session）**。操作者把 LoopX Desktop 挂接到
+   一个正在运行的 Codex App 或 app-server 会话。外部宿主继续拥有进程、对话、
+   中断、恢复和执行循环的所有权。
+2. **托管 Agent 运行时（Managed Agent Runtime）**。LoopX Desktop 启动并
+   监督 Pi 或 DeepSeek Harness，选择显式的 provider 配置，并通过有界的
+   `loopx_turn_v0` 事务推进工作。默认发行配置使用火山方舟 Agent Plan，
+   而运行时与 provider 契约保持可替换。
 
-Both modes present the same LoopX Goal, Todo, gate, quota, evidence, and status
-truth. They do not share process ownership. The frontend must never infer a
-mode switch from chat prose or silently start a second executor.
+两种模式呈现相同的 LoopX Goal、Todo、gate、quota、evidence 和状态事实。
+它们不共享进程所有权。前端绝不能从聊天散文推断模式切换，也不得静默启动
+第二个执行器。
 
-Execution mode is independent from external connectors. Web Chat and a Lark
-Bot may both connect to the same Agent-owned working session, while Lark group
-messages or document comments may use an explicit ordered queue or
-asynchronous inbox until that session can accept input. A Goal may contain
-multiple Agents; each Agent has its own working-session binding, at most one
-active runtime session, and explicit connector bindings without introducing a
-manager Agent or hard-coding a connector to Codex.
+执行模式独立于外部连接器。Web Chat 和 Lark Bot 可以连接到同一个
+Agent 拥有的工作会话；而 Lark 群消息或文档评论可以在该会话能够接收输入前，
+使用显式有序队列或异步 inbox。一个 Goal 可以包含多个 Agent；每个 Agent 拥有
+自己的工作会话绑定、至多一个活跃运行时会话，以及显式的连接器绑定，且不引入
+manager Agent，也不把连接器硬编码到 Codex。
 
-Not every connector is a conversation transport. A Lark group can be a live
-transport or an asynchronous event source. A document body is registered
-authority material, while its comment stream is a separate event source with
-its own cursor, capture policy, reply capability, and acknowledgement state.
-LoopX must not equate fetching a document body with observing its comments.
+并非每个连接器都是对话传输。Lark 群既可以是实时传输，也可以是异步事件源。
+文档正文是已登记的权威材料，而它的评论流是独立事件源，拥有自己的 cursor、
+捕获策略、回复能力和确认状态。LoopX 不得把“拉取文档正文”等同于“观察文档评论”。
 
-The managed mode does not require a host-native Goal loop. A desktop-owned
-runtime supervisor repeatedly asks LoopX whether another bounded Turn is
-eligible, invokes the selected runtime adapter, validates its result, and
-commits accepted state. `loopx_turn_v0` remains one transaction rather than a
-second recurring scheduler.
+托管模式不要求宿主原生的 Goal 循环。桌面拥有的运行时监督器反复询问 LoopX
+下一个有界 Turn 是否有资格执行，调用所选运行时适配器，验证其结果，并提交
+被接受的状态。`loopx_turn_v0` 始终是一个事务，而不是第二个常驻调度器。
 
-## Problem
+## 问题
 
-LoopX already has the pieces of two different products:
+LoopX 已经拥有两个不同产品的零件：
 
-- a control-plane kernel with authoritative Goal and Todo state, gates, quota,
-  validation, writeback, and scheduling hints;
-- a desktop frontend and local application shell;
-- visible-host integration, including the opt-in Pi Goal extension;
-- a host-neutral bounded Turn protocol; and
-- a DeepSeek Harness adapter that can execute a Turn through `dsh`.
+- 一个控制平面内核，拥有权威的 Goal 和 Todo 状态、gates、quota、验证、
+  回写和调度提示；
+- 一个桌面前端和本地应用壳；
+- 可见宿主集成，包括可选加入的 Pi Goal 扩展；
+- 一个宿主中立的、有界的 Turn 协议；以及
+- 一个可以通过 `dsh` 执行 Turn 的 DeepSeek Harness 适配器。
 
-What is missing is an accepted desktop ownership model that connects these
-pieces without collapsing two valid workflows into one.
+缺少的是一个被接受的桌面所有权模型，能够把这些零件连接起来，同时不把两个
+有效的工作流压成一个。
 
-Some users already have a long-running App session with valuable context and
-an installed LoopX automation prompt. Replacing that session with a newly
-launched CLI would create two conversations, change runtime policy, and risk
-two executors advancing the same Goal.
+一些用户已经有一个长期运行的 App 会话，带有宝贵的上下文和已安装的 LoopX
+automation prompt。用新启动的 CLI 替换该会话会产生两段对话、改变运行时策略，
+并且有风险让两个执行器推进同一个 Goal。
 
-Other users want a complete desktop product: choose a Goal, configure a
-provider, start an Agent, converse with it, interrupt it, close the application,
-and resume the same working session later. Requiring them to start a separate
-App or install a host-native Goal loop defeats that product shape.
+另一些用户想要一个完整的桌面产品：选择一个 Goal、配置 provider、启动 Agent、
+与它对话、中断它、关闭应用，然后稍后恢复同一个工作会话。要求他们启动一个
+单独的 App 或安装宿主原生的 Goal 循环，会破坏这种产品形态。
 
-The frontend therefore needs two explicit modes with a shared projection and
-separate lifecycle contracts.
+因此前端需要两种显式模式，共享同一个投影，并有独立的生命周期契约。
 
-## Decision
+## 决策
 
-LoopX Desktop exposes a tagged execution frontend:
+LoopX Desktop 暴露一个带标签的执行前端：
 
 ```text
 desktop_execution_frontend_v0 =
@@ -85,12 +73,10 @@ desktop_execution_frontend_v0 =
   | managed_agent_runtime
 ```
 
-The mode is chosen explicitly when a frontend binding is created. It is
-persisted with the binding and is visible in status. A reconnect may restore
-the same mode and session identity, but it may not change modes implicitly.
+模式在创建前端绑定时被显式选择。它随绑定持久化，并在状态中可见。重连可以
+恢复相同的模式和会话身份，但绝不能隐式改变模式。
 
-Conversation transport is a second, orthogonal tag, and collaboration event
-sources are a third:
+对话传输是第二个正交标签，协作事件源是第三个：
 
 ```text
 execution mode: attached_app_session | managed_agent_runtime
@@ -99,49 +85,44 @@ event source:   lark_group_message | lark_document_comment | ...
 ownership:      one Goal -> many Agents -> at most one active session per Agent
 ```
 
-Adding or removing a transport or event source does not create, replace, or
-migrate an execution session. Changing execution mode is a separate explicit
-operation.
+添加或移除传输或事件源不会创建、替换或迁移执行会话。改变执行模式是另一个
+独立的显式操作。
 
-### Common invariants
+### 公共不变量
 
-Both modes preserve the following boundaries:
+两种模式都保持以下边界：
 
-- **LoopX owns work truth.** Goal, Todo, claim, gate, quota, evidence, accepted
-  progress, and terminal state remain authoritative in LoopX.
-- **The runtime owns execution mechanics.** Codex App, Pi, or `dsh` owns its
-  model/tool loop and opaque upstream session state.
-- **The Agent owns the working-session route.** A Goal may have multiple
-  Agents. Runtime, transport, and event-source bindings resolve through an
-  explicit Agent id, never through an ambiguous Goal-wide default.
-- **The provider owns inference.** Provider credentials, endpoints, model
-  availability, and raw payloads are not LoopX task state.
-- **Desktop owns presentation and supervision.** It projects work and runtime
-  state, routes user input, and, in managed mode only, starts and supervises
-  the runtime process.
-- **One binding has at most one active executor.** Ingress is serialized and
-  duplicate starts fail closed.
-- **Conversation is not a write receipt.** Material state changes require the
-  relevant LoopX validation and writeback contract.
+- **LoopX 拥有工作事实。** Goal、Todo、claim、gate、quota、evidence、已接受
+  的进展和终态在 LoopX 中保持权威。
+- **运行时拥有执行机制。** Codex App、Pi 或 `dsh` 拥有其模型/工具循环和不透明
+  的上游会话状态。
+- **Agent 拥有工作会话路由。** 一个 Goal 可以有多个 Agent。运行时、传输和
+  事件源绑定通过显式的 Agent id 解析，绝不经由模糊的 Goal 级默认值。
+- **provider 拥有推理。** provider 凭据、端点、模型可用性和原始负载不是
+  LoopX 的任务状态。
+- **Desktop 拥有呈现和监督。** 它投影工作和运行时状态、路由用户输入，并且
+  仅在托管模式下启动和监督运行时进程。
+- **一个绑定至多有一个活跃执行器。** 入口被串行化，重复启动失败关闭。
+- **对话不是写入回执。** 实质状态变更需要相应的 LoopX 验证和回写契约。
 
-### Mode comparison
+### 模式对比
 
-| Boundary | Attached App Session | Managed Agent Runtime |
+| 边界 | 挂接 App 会话 | 托管 Agent 运行时 |
 |---|---|---|
-| Process owner | External App / app-server | LoopX Desktop runtime supervisor |
-| Initial runtime | Codex App / app-server | Pi or `dsh` |
-| Session creation | Before attachment | Created by Desktop |
-| Conversation transport | Existing app-server connection | Managed runtime adapter |
-| Execution-loop driver | Existing automation prompt or visible-host loop | Desktop outer loop plus bounded LoopX Turns |
-| Host-native Goal required | Allowed, not imposed by Desktop | No |
-| Provider configuration | Inherited from external session | Explicit managed provider profile |
-| Disconnect behavior | Report stale/disconnected | Reconcile process and offer resume/restart |
-| Mode fallback | Never automatic | Never attaches to an unrelated session |
+| 进程所有者 | 外部 App / app-server | LoopX Desktop 运行时监督器 |
+| 初始运行时 | Codex App / app-server | Pi 或 `dsh` |
+| 会话创建 | 在挂接前 | 由 Desktop 创建 |
+| 对话传输 | 已有 app-server 连接 | 托管运行时适配器 |
+| 执行循环驱动 | 已有 automation prompt 或可见宿主循环 | Desktop 外层循环加有界 LoopX Turn |
+| 是否要求宿主原生 Goal | 允许，但不由 Desktop 强加 | 否 |
+| Provider 配置 | 继承自外部会话 | 显式托管 provider 配置 |
+| 断连行为 | 报告 stale/disconnected | 协调进程并提供恢复/重启 |
+| 模式回退 | 绝不自动 | 绝不挂接到无关会话 |
 
-## Agent-scoped Web and Lark convergence
+## Agent 级 Web 与 Lark 收敛
 
-The short-term collaboration product is not a separate status Bot. It is a
-second frontend transport for an Agent's real working session:
+短期协作产品不是一个独立的状态 Bot。它是 Agent 真实工作会话的第二个前端
+传输：
 
 ```text
 LoopX Goal
@@ -155,57 +136,46 @@ LoopX Goal
             -> Lark Bot connection B
 ```
 
-In v0, each Agent may have at most one active `lark_bot` connection. This is a
-logical Agent-to-connection binding; it does not require a unique Lark
-application credential for every Agent. One Bot application may serve multiple
-connections if the local broker preserves explicit Agent and channel routing.
+在 v0 中，每个 Agent 至多有一个活跃的 `lark_bot` 连接。这是一个逻辑上的
+Agent 到连接绑定；它不要求每个 Agent 都有唯一的 Lark 应用凭据。如果本地
+broker 保留显式的 Agent 与频道路由，一个 Bot 应用可以为多个连接服务。
 
-### One ordered working conversation
+### 一个有序的工作对话
 
-In live-steering and queued-session modes, Web and Lark messages enter one
-serialized ingress stream for the selected Agent session. Each message records
-public-safe transport metadata such as `origin=web` or `origin=lark`, but origin
-does not select a different Agent, conversation history, executor, or LoopX
-state machine.
+在实时操控和队列会话模式下，Web 与 Lark 消息进入所选 Agent 会话的同一个
+串行化入口流。每条消息记录 public-safe 的传输元数据，例如 `origin=web` 或
+`origin=lark`，但 origin 不会选择不同的 Agent、对话历史、执行器或 LoopX
+状态机。
 
-The session router assigns ordering before delivery to the runtime. A
-simultaneous Web and Lark message may wait, interrupt through an explicit
-control action, or fail closed according to session policy; it may not create
-two concurrent Agent attempts. Responses may be projected to both surfaces
-according to connection policy while preserving one canonical sequence.
+会话路由器在投递给运行时之前分配顺序。同时到达的 Web 与 Lark 消息可以等待、
+通过显式控制动作中断，或按会话策略失败关闭；它们绝不能产生两个并发的 Agent
+尝试。响应可以根据连接策略投影到两个 surface，同时保留一个规范序列。
 
-An asynchronous inbox event is different: it remains owner-private external
-input until the selected Agent drains and interprets it. Only the accepted
-Agent-facing message or resulting durable effect joins the working-session
-sequence. Provider collection alone does not create conversation history,
-task authority, a Turn, or quota spend.
+异步 inbox 事件则不同：在被选中的 Agent 排空并解释之前，它仍是 owner-private
+的外部输入。只有被接受的、面向 Agent 的消息或由此产生的持久效果才加入
+工作会话序列。仅做 provider 采集不会创建对话历史、任务权威、Turn 或 quota
+消耗。
 
-### Agent binding, not Goal-wide or runtime-specific binding
+### Agent 绑定，而非 Goal 级或运行时专属绑定
 
-A Lark connection binds to a concrete Agent within a Goal. If a Goal has
-multiple Agents and the connection does not identify one, routing fails closed.
-The Bot talks directly to that working Agent; it does not first ask a manager
-Agent to classify or relay the message. The binding is not hard-coded to Codex:
-the Agent's execution session may be an attached Codex App today or a managed
-Pi/`dsh` session later.
+Lark 连接绑定到 Goal 内的具体 Agent。如果 Goal 有多个 Agent 而连接没有指明
+其中一个，路由失败关闭。Bot 直接与该工作 Agent 对话；它不会先请 manager
+Agent 分类或转发消息。绑定不硬编码到 Codex：该 Agent 的执行会话今天可以是
+挂接的 Codex App，以后也可以是托管的 Pi/`dsh` 会话。
 
-### Product projection
+### 产品投影
 
-The selected Agent's Goal Chat header should show a bounded connection state,
-for example `Lark Bot · connected`, `listening`, `stale`, or `disconnected`,
-and provide a direct management entry. The management view owns explicit
-attach, detach, channel selection, freshness, and reconnect actions.
+所选 Agent 的 Goal Chat 头部应显示有界的连接状态，例如 `Lark Bot · connected`、
+`listening`、`stale` 或 `disconnected`，并提供直接的管理入口。管理视图拥有
+显式的 attach、detach、频道选择、新鲜度和重连动作。
 
-`loopx_collaboration_status_v0` may provide a useful read-only card, but it is
-not the core abstraction. The core objects are the Agent-scoped frontend
-connection and the converged working session.
+`loopx_collaboration_status_v0` 可以提供有用的只读卡片，但它不是核心抽象。
+核心对象是 Agent 级的前端连接和收敛后的工作会话。
 
-## Agent-scoped external Connector model
+## Agent 级外部连接器模型
 
-Lark group ingress and Lark document comments are two instances of one
-provider-neutral Connector boundary. A Connector binds an external source to
-one registered Agent and advertises only the operations it can actually
-perform:
+Lark 群入口和 Lark 文档评论是一个 provider-neutral 连接器边界的两个实例。
+连接器把外部源绑定到一个已登记的 Agent，并且只宣称它能实际执行的操作：
 
 ```text
 agent_external_connector_v0 = {
@@ -223,46 +193,37 @@ agent_external_connector_v0 = {
 }
 ```
 
-The same provider may expose several source kinds. For example, a Lark group
-source may advertise live delivery, history catch-up, thread reply, and ACK,
-while a document-comment source may advertise incremental listing, anchor and
-reply-chain readback, comment reply, and resolved-state observation. Missing
-capabilities remain unavailable; LoopX does not emulate them by scraping an
-unrelated surface.
+同一个 provider 可以暴露多种 source kind。例如，Lark 群源可以宣称实时投递、
+历史追补、thread 回复和 ACK；而文档评论源可以宣称增量列举、锚点与回复链
+读回、评论回复和已解决状态观察。缺失的能力保持不可用；LoopX 不会通过抓取
+无关 surface 来模拟它们。
 
-A Connector capability may also expose typed `permission_requirements` with
-the provider identity, exact scopes, publication requirement, and an official
-repair URL bound to the selected App. The provider extension owns those facts;
-the LoopX core only renders the typed guidance. Realtime receive, response
-write, and history catch-up remain separate capabilities and must not be
-collapsed into one generic "message permission" flag.
+Connector capability 还可以暴露类型化的 `permission_requirements`，包含 provider
+身份、精确 scope、发布要求，以及绑定所选 App 的官方修复入口。这些事实由
+provider 扩展拥有；LoopX 内核只负责渲染类型化指引。实时接收、响应写入和历史
+追补是彼此独立的能力，不得压缩成一个笼统的“消息权限”标志。
 
-### Authority material versus collaboration events
+### 权威材料与协作事件
 
-A durable document and its comments have different authority semantics:
+持久文档与其评论具有不同的权威语义：
 
-- the document body is registered as a Goal authority material with freshness,
-  revision, owner status, and conflict policy;
-- a comment is owner-private external input addressed to an Agent, not an
-  accepted requirement, Todo mutation, or repository fact by itself; and
-- incorporating a comment requires an explicit durable effect such as a Todo
-  update, accepted design revision, no-follow-up rationale, or owner gate.
+- 文档正文被登记为 Goal 权威材料，带有新鲜度、修订、所有者状态和冲突策略；
+- 评论是面向 Agent 的 owner-private 外部输入，它本身不是被接受的需求、Todo
+  变更或仓库事实；以及
+- 纳入一条评论需要一个显式的持久效果，例如 Todo 更新、被接受的设计修订、
+  不跟进理由或 owner gate。
 
-Reading the body does not advance the comment cursor. Listing comments does not
-make the document authoritative. A comment that contradicts accepted state is
-recorded as a pending decision or evidence gap rather than silently changing
-Goal truth.
+读取正文不会推进评论 cursor。列举评论不会让文档变得权威。与已接受状态冲突的
+评论被记录为待决决策或证据缺口，而不是静默改变 Goal 事实。
 
-### Capture, replay, and acknowledgement
+### 捕获、重放与确认
 
-Every event-source Connector owns a stable provider event id, incremental
-cursor or equivalent checkpoint, bounded catch-up policy, and idempotency key.
-Real-time subscription and history catch-up feed the same deduplicated inbox so
-that events created before attachment or during downtime are not silently
-lost. A source may be filtered by mention, author, document, comment state,
-anchor, or configured source scope without changing its delivery mode.
+每个事件源连接器拥有稳定的 provider 事件 id、增量 cursor 或等价检查点、
+有界的追补策略和幂等键。实时订阅和历史追补进入同一个去重后的 inbox，因此
+在挂接前或停机期间创建的事件不会静默丢失。源可以按 mention、作者、文档、
+评论状态、锚点或已配置的源范围过滤，而不改变其投递模式。
 
-The Agent processes one accepted event with this ordering:
+Agent 按以下顺序处理一个被接受的事件：
 
 ```text
 capture and deduplicate
@@ -274,38 +235,31 @@ capture and deduplicate
   -> ACK and advance the source cursor
 ```
 
-No ACK or cursor advance may precede the durable effect and required verified
-response. A crash replays the same event idempotently. Private bodies, authors,
-provider ids, source references, and comment text remain in owner-local inbox
-storage; status and quota see content-free urgency only.
+任何 ACK 或 cursor 推进都不得先于持久效果和必需的已验证响应。崩溃会幂等地
+重放同一事件。私有正文、作者、provider id、源引用和评论文本保留在
+owner-local inbox 存储中；状态和 quota 只看到无内容的紧迫性。
 
-### Delivery into the working Agent
+### 投递到工作 Agent
 
-Connector capture and Agent delivery remain orthogonal. A live group message
-may steer the current working session, wait in its ordered queue, or wake an
-asynchronous Agent inbox. A document comment normally enters through
-`async_inbox`, but the same event may be submitted into a verified live session
-when an explicit policy permits it. In all cases it targets the existing bound
-Agent and never starts a shadow manager or a fresh conversation implicitly.
+连接器捕获与 Agent 投递保持正交。实时群消息可以操控当前工作会话、在其有序
+队列中等待，或唤醒异步 Agent inbox。文档评论通常通过 `async_inbox` 进入，
+但当显式策略允许时，同一事件也可以提交到已验证的实时会话。在所有情况下，
+它都指向已有绑定 Agent，绝不静默启动影子 manager 或全新对话。
 
-### Short-term Goal Channel bridge
+### 短期 Goal Channel 桥
 
-The existing Goal Channel transport may provide the first Lark delivery path,
-provided that its Goal-level connection is refined with an explicit target
-Agent and is routed into that Agent's existing ordered session. This bridge is
-an incremental implementation path, not permission to keep a second IM-only
-conversation lifecycle.
+现有 Goal Channel 传输可以提供第一条 Lark 投递路径，前提是其 Goal 级连接被
+细化为显式目标 Agent，并路由到该 Agent 已有有序会话。这个桥是增量实现路径，
+不是保留第二个仅 IM 对话生命周期的许可。
 
-If accepted, this RFC supersedes the Goal Channel draft's one-Goal-to-one-Lark-
-binding constraint for interactive chat. Goal-wide Kanban, lifecycle
-notifications, and shared collaboration artifacts may remain Goal-scoped;
-inbound working conversation is Agent-scoped.
+如果本 RFC 被接受，它将取代 Goal Channel 草案中“一个 Goal 对应一个 Lark
+绑定”的交互式聊天约束。Goal 级 Kanban、生命周期通知和共享协作工件可以保持
+Goal 级；入站工作对话是 Agent 级的。
 
-## Agent-scoped Bot ingress modes
+## Agent 级 Bot 入口模式
 
-An Agent-to-Bot connection needs three explicit ingress semantics. They are
-delivery policies for one bound Agent, not three Agents and not a
-natural-language classifier:
+Agent 到 Bot 的连接需要三种显式的入口语义。它们是同一个已绑定 Agent 的
+投递策略，不是三个 Agent，也不是自然语言分类器：
 
 ```text
 agent_bot_ingress_mode_v0 =
@@ -314,18 +268,17 @@ agent_bot_ingress_mode_v0 =
   | async_inbox
 ```
 
-The three policies solve different availability conditions:
+三种策略解决不同的可用性条件：
 
-| Mode | Delivery target | Availability model | Durable boundary |
+| 模式 | 投递目标 | 可用性模型 | 持久边界 |
 |---|---|---|---|
-| `live_steering` | The currently attached or managed working session | Session is live and accepts ordered ingress | Existing session/event store; no second Agent session |
-| `session_queue` | The same Agent working session when it next accepts input | Runtime exists but is busy, reconnecting, or temporarily offline | Owner-local ordered ingress queue keyed by Agent and session |
-| `async_inbox` | The next eligible LoopX Agent turn after an explicit drain | No Agent process needs to remain alive | Existing provider-owned event inbox plus content-free quota urgency |
+| `live_steering` | 当前挂接或托管的工作会话 | 会话在线并接受有序入口 | 现有会话/事件存储；无第二个 Agent 会话 |
+| `session_queue` | 同一 Agent 工作会话在下次接受输入时 | 运行时存在但忙碌、重连中或暂时离线 | 按 Agent 与会话键控的 owner-local 有序入口队列 |
+| `async_inbox` | 显式排空后的下一个合格 LoopX Agent Turn | 无需 Agent 进程保持存活 | 现有 provider 拥有的事件 inbox 加无内容 quota 紧迫性 |
 
-### Capture, ingress, and reply are orthogonal
+### 捕获、入口与回复正交
 
-Provider selection and Agent delivery must not reuse one overloaded flag. The
-initial Lark group shape is:
+provider 选择与 Agent 投递不得复用同一个过载标志。初始 Lark 群形态是：
 
 ```text
 capture_scope: mentions | configured_chat_all
@@ -333,150 +286,121 @@ ingress_mode: live_steering | session_queue | async_inbox
 reply_mode: source_thread | topic_reply | configured_mirror
 ```
 
-`capture_scope` answers which provider events are eligible. `ingress_mode`
-answers how one eligible event reaches the Agent. `reply_mode` answers where a
-verified response is delivered. The existing `incoming_mode=mentions|all`
-expresses capture scope only; it is not proof of session attachment.
+`capture_scope` 回答哪些 provider 事件合格。`ingress_mode` 回答一个合格事件
+如何到达 Agent。`reply_mode` 回答已验证响应投递到哪里。现有
+`incoming_mode=mentions|all` 只表达捕获范围；它不是会话挂接的证据。
 
-The persisted inbox scope must equal the effective provider routing scope. An
-`addressed_only` stream is never projected as `thread_complete`, even when it
-has an enabled source-message reply binding. `configured_chat_all` remains an
-explicit owner choice: it stores the configured conversation for domain
-interpretation, but only typed questions, mentions, or verified bot replies
-activate `reply_due`.
+持久 Inbox 范围必须与实际 provider 路由范围一致。即使启用了精确源消息回复，
+`addressed_only` 流也不得投影成 `thread_complete`。`configured_chat_all` 仍是 owner
+的显式选择：它会为领域解释保存已配置会话，但只有 typed question、mention 或
+已验证的 Bot reply 才会激活 `reply_due`。
 
-Mention admission binds both the App id and the Bot open id returned by the
-verified provider profile. A rendered display name is a compatibility signal,
-not the only identity proof. Every rejected provider event retains one
-content-free decision reason such as `not_addressed` or `topic_mismatch` in
-listener health, so an event that was seen but not persisted cannot disappear
-behind a bare `ignored` status.
+mention 准入同时绑定已验证 provider profile 返回的 App id 与 Bot open id；渲染后
+的 display name 只是兼容信号，不能成为唯一身份依据。每个被拒绝的 provider event
+都要在 listener health 中保留 `not_addressed`、`topic_mismatch` 等无内容决策原因，
+让“已经看到但未持久化”的事件不再隐藏在一个裸 `ignored` 状态后面。
 
-Fallback is explicit and defaults to fail closed. A `live_steering`
-connection may opt into `session_queue` or `async_inbox` when the session is
-unavailable, but it may not silently start another runtime or write the same
-event to multiple modes. The selected mode, fallback decision, and dedupe key
-produce one content-free ingress receipt.
+回退是显式的，默认失败关闭。`live_steering` 连接在会话不可用时可以选择加入
+`session_queue` 或 `async_inbox`，但不得静默启动另一个运行时，也不得把同一
+事件写入多个模式。所选模式、回退决策和去重键产生一个无内容的入口回执。
 
-### Live steering
+### 实时操控
 
-`live_steering` submits into a verified Agent working-session binding. It
-shares the Web ingress serializer, upstream resume identity, interrupt policy,
-workspace, runtime, trust, and capability boundary. If that binding is stale,
-ambiguous, terminal, or owned by another Agent, delivery fails closed.
+`live_steering` 提交到已验证的 Agent 工作会话绑定。它共享 Web 入口串行器、
+上游恢复身份、中断策略、工作区、运行时、信任和能力边界。如果该绑定陈旧、
+模糊、终态或属于另一个 Agent，投递失败关闭。
 
-Steering is transport, not task authority. A read-only exchange may remain a
-normal session turn. A material effect still requires the fresh LoopX
-decision, validation, writeback, and settlement appropriate to the attached or
-managed execution mode.
+操控是传输，不是任务权威。只读交流可以是普通会话 Turn。实质效果仍然需要与
+所采用执行模式相称的最新 LoopX 决策、验证、回写和结算。
 
-### Session queue
+### 会话队列
 
-`session_queue` is a broker-owned buffer for a known Agent working session. It
-preserves stable event dedupe, per-session order, bounded size, expiry,
-backpressure, cancellation, and crash-safe dispatch. It is not the LoopX Todo
-queue and may not mutate Goal priority, claim work, or grant capabilities.
+`session_queue` 是已知 Agent 工作会话的 broker 拥有的缓冲。它保留稳定的事件
+去重、按会话排序、有界大小、过期、背压、取消和崩溃安全派发。它不是 LoopX
+Todo 队列，不得改变 Goal 优先级、认领工作或授予能力。
 
-When the same session becomes ready, the broker submits the oldest eligible
-entry through the normal serialized ingress. A missing or replaced session
-requires an explicit rebind or dead-letter decision; it does not silently
-route the entry to a fresh Agent history.
+当同一会话恢复就绪时，broker 通过正常的串行化入口提交最旧的合格条目。缺失
+或被替换的会话需要显式重新绑定或死信决策；它不会把条目静默路由到全新 Agent
+历史。
 
-### Asynchronous inbox
+### 异步 inbox
 
-`async_inbox` reuses the existing Lark event inbox and collector rather than
-keeping an Agent process alive. The collector writes owner-private bounded
-events. LoopX projects only `operator_inbox_urgency_v0`: pending/question/
-mention/reply counts, oldest age, and `reply_due`, never message bodies,
-senders, provider ids, private paths, or chat ids.
+`async_inbox` 复用现有 Lark 事件 inbox 和 collector，而不是让 Agent 进程保持
+存活。collector 写入 owner-private 的有界事件。LoopX 只投影
+`operator_inbox_urgency_v0`：pending/question/mention/reply 计数、最旧年龄和
+`reply_due`，绝不投影消息正文、发送者、provider id、私有路径或 chat id。
 
-When `reply_due=true`, the inbox lane preempts ordinary advancement and monitor
-work. The selected Agent drains bounded content, interprets it against fresh
-Goal state, writes any durable effect first, sends at most one idempotent
-source-thread reply with provider readback, and only then ACKs. Drain alone is
-read-only; collection or ACK is never semantic authority.
+当 `reply_due=true` 时，inbox 通道抢占普通推进和 monitor 工作。被选中的 Agent
+排空有界内容，对照最新 Goal 状态解释它，先写入任何持久效果，然后发送至多
+一条带 provider readback 的幂等 source-thread 回复，最后才 ACK。仅排空是
+只读的；采集或 ACK 永远不是语义权威。
 
-The Goal Topic compatibility runtime currently composes provider collection,
-an Inbox file, a Goal Chat answer, reply, and ACK inline. That path is useful
-evidence but is not Agent-scoped convergence when it opens a generic Agent
-session or fails to register inbox urgency on the bound Goal. The implementation
-must split provider collection from ingress policy, require the registered
-Agent id, and either submit through a verified working-session binding or
-publish the inbox pointer to the canonical quota path.
+Goal Topic 兼容运行时目前把 provider 采集、Inbox 文件、Goal Chat 回答、回复
+和 ACK 内联组合在一起。该路径是有用证据，但当它打开通用 Agent 会话或未能
+在绑定 Goal 上登记 inbox 紧迫性时，它不是 Agent 级收敛。实现必须把 provider
+采集与入口策略分开、要求已登记的 Agent id，并且要么通过已验证的工作会话
+绑定提交，要么把 inbox 指针发布到规范 quota 路径。
 
-### Initial product ordering
+### 初始产品排序
 
-The first integration should enable `async_inbox` for environments where an
-already-running App session cannot yet accept brokered input. This gives a
-restart-safe, Agent-owned path without pretending that attachment exists.
-`live_steering` follows with the attached App Session broker. `session_queue`
-then closes busy/offline ordering and backpressure for both attached and
-managed runtimes. A product may expose all three options at once, but each
-incoming event selects exactly one effective mode.
+第一次集成应针对已运行的 App 会话尚不能接受 broker 输入的环境启用
+`async_inbox`。这提供了一条重启安全、Agent 拥有的路径，而不假装挂接已经存在。
+`live_steering` 随后随挂接 App 会话 broker 跟进。`session_queue` 然后为挂接和
+托管运行时补齐忙碌/离线排序与背压。产品可以同时暴露全部三个选项，但每个
+入站事件只选择一个有效模式。
 
-## Mode A: Attached App Session
+## 模式 A：挂接 App 会话
 
-### Discover and attach
+### 发现与挂接
 
-A host-local broker lists attachable sessions as bounded descriptors. A public
-descriptor may include:
+宿主本地 broker 把可挂接会话列为有界描述符。公开描述符可以包含：
 
-- a public-safe session reference;
-- host kind and lifecycle state;
-- Goal and Agent binding when known;
-- workspace identity as an opaque or redacted reference;
-- message, streaming, interrupt, and resume capabilities; and
-- freshness and last-activity timestamps.
+- 一个 public-safe 会话引用；
+- 宿主 kind 与生命周期状态；
+- 已知时的 Goal 和 Agent 绑定；
+- 作为不透明或被脱敏引用的工作区身份；
+- 消息、流式、中断和恢复能力；以及
+- 新鲜度和最近活动时间戳。
 
-The operator explicitly selects one descriptor. The broker verifies that the
-session is still live and that its Goal, Agent, workspace, and trust boundary
-match the requested frontend context. A successful attachment creates a
-frontend binding; it does not create an Agent process or a second upstream
-session.
+操作者显式选择一个描述符。broker 验证会话仍然存活，且其 Goal、Agent、工作区
+和信任边界与请求的前端上下文匹配。成功挂接创建一个前端绑定；它不会创建
+Agent 进程或第二个上游会话。
 
-### Interact
+### 交互
 
-All user messages continue through app-server. The frontend does not maintain
-an ordinary-chat-versus-material-chat classifier. The working Agent and its
-installed LoopX interaction contract decide which canonical commands or typed
-actions are needed.
+所有用户消息继续经过 app-server。前端不维护“普通聊天 vs 材料聊天”的分类器。
+工作 Agent 及其已安装的 LoopX 交互契约决定需要哪些规范命令或 typed actions。
 
-The existing automation prompt or visible-host loop remains the driver. It may
-read fresh LoopX state, select a Todo, execute a bounded segment, validate the
-result, write state back, and account quota through the normal LoopX command
-surface. The frontend projects that state; it does not wrap every chat message
-in `turn run-once`.
+现有 automation prompt 或可见宿主循环仍然是驱动者。它可以通过正常的 LoopX
+命令 surface 读取最新 LoopX 状态、选择 Todo、执行有界段落、验证结果、回写
+状态并结算 quota。前端投影该状态；它不会把每条聊天消息包进 `turn run-once`。
 
-### Detach
+### 解除挂接
 
-Detaching removes only the frontend binding. It does not terminate the App
-session, delete its automation, complete a Todo, spend quota, or change Goal
-state. If the attached session disappears, Desktop reports it as stale or
-disconnected and does not silently launch a managed runtime.
+解除挂接只移除前端绑定。它不会终止 App 会话、删除其 automation、完成 Todo、
+消耗 quota 或改变 Goal 状态。如果挂接的会话消失，Desktop 将其报告为 stale
+或 disconnected，并且不会静默启动托管运行时。
 
-## Mode B: Managed Agent Runtime
+## 模式 B：托管 Agent 运行时
 
-### Product flow
+### 产品流程
 
-The managed desktop path is end to end:
+托管桌面路径是端到端的：
 
-1. select or create a LoopX Goal and working Agent binding;
-2. select Pi or `dsh` as the runtime;
-3. select a managed provider profile, with Ark Agent Plan as the default
-   distribution profile;
-4. validate runtime installation, provider authentication, and advertised
-   capabilities;
-5. launch one runtime and create one opaque resumable session;
-6. send user input to that same session;
-7. advance material work through bounded LoopX Turns;
-8. project conversation, runtime liveness, Goal/Todo state, validation, quota,
-   and the next scheduler action in one view; and
-9. interrupt, close, reopen, and resume without silently creating a new
-   session.
+1. 选择或创建 LoopX Goal 和工作 Agent 绑定；
+2. 选择 Pi 或 `dsh` 作为运行时；
+3. 选择托管 provider 配置，默认发行配置为 Ark Agent Plan；
+4. 验证运行时安装、provider 认证和已宣称能力；
+5. 启动一个运行时并创建一个不透明可恢复会话；
+6. 向同一会话发送用户输入；
+7. 通过有界 LoopX Turn 推进实质工作；
+8. 在一个视图中投影对话、运行时存活、Goal/Todo 状态、验证、quota 和下一个
+   调度动作；以及
+9. 中断、关闭、重新打开和恢复，而不静默创建新会话。
 
-### Managed loop controller
+### 托管循环控制器
 
-Managed mode uses a Desktop-owned runtime supervisor as the outer loop:
+托管模式使用 Desktop 拥有的运行时监督器作为外层循环：
 
 ```text
 fresh LoopX state
@@ -490,102 +414,86 @@ fresh LoopX state
   -> Desktop supervisor decides whether to request another Turn
 ```
 
-`loopx_turn_v0` stays a bounded transaction. It does not become an eternal
-loop or a second scheduler. The supervisor is responsible for process
-liveness, one-Turn-at-a-time serialization, cancellation, backoff, wakeup,
-crash recovery, and session resume. LoopX remains responsible for whether work
-is eligible and whether an outcome is accepted.
+`loopx_turn_v0` 保持为有界事务。它不会变成永恒循环或第二个调度器。监督器负责
+进程存活、一次一个 Turn 的串行化、取消、退避、唤醒、崩溃恢复和会话恢复。
+LoopX 仍然负责工作是否有资格执行、结果是否被接受。
 
-This mode does not depend on a runtime's native Goal abstraction. The existing
-Pi Goal extension remains a supported visible-host integration, but managed Pi
-may reuse Pi's Agent/session/tool surfaces without using that extension as the
-desktop scheduler. Likewise, the existing `dsh` Turn connector is a useful
-starting point; the desktop contract must not depend on an unaccepted native
-plugin implementation.
+该模式不依赖运行时的原生 Goal 抽象。现有 Pi Goal 扩展仍然是受支持的
+visible-host 集成，但托管 Pi 可以复用 Pi 的 Agent/session/tool surface，
+而不用该扩展充当桌面调度器。同样，现有 `dsh` Turn 连接器是很好的起点；
+桌面契约不得依赖一个未被接受的本地插件实现。
 
-### Runtime adapter contract
+### 运行时适配器契约
 
-Pi and `dsh` implement the same narrow managed-runtime contract without
-pretending that their internal loops are identical. At minimum it provides:
+Pi 和 `dsh` 实现同一个窄托管运行时契约，而不假装其内部循环相同。至少它提供：
 
-- install and version probe;
-- capability discovery;
-- create, resume, interrupt, and close session;
-- submit one bounded host request;
-- stream public-safe progress and final result events;
-- return an opaque owner-local session reference; and
-- map runtime failures into stable LoopX/Desktop error classes.
+- 安装与版本探测；
+- 能力发现；
+- 创建、恢复、中断和关闭会话；
+- 提交一个有界宿主请求；
+- 流式输出 public-safe 进度和最终结果事件；
+- 返回不透明 owner-local 会话引用；以及
+- 把运行时失败映射为稳定的 LoopX/Desktop 错误类别。
 
-The adapter may keep native transcripts, checkpoints, and tool logs in its own
-owner-local storage. LoopX stores only the identifiers and receipts required
-for reconciliation, validation, and resume.
+适配器可以在自己的 owner-local 存储中保留本地转录、检查点和工具日志。LoopX
+只存储协调、验证和恢复所需的标识符与回执。
 
-### Provider profile contract
+### Provider 配置契约
 
-Runtime choice and provider choice are orthogonal. Ark Agent Plan is the
-default managed product profile, not a special case embedded throughout the
-LoopX kernel.
+运行时选择与 provider 选择正交。Ark Agent Plan 是默认托管产品配置，而不是
+散落在 LoopX 内核各处的特例。
 
-A provider profile must expose or resolve:
+一个 provider 配置必须暴露或解析：
 
-- provider and route identifiers;
-- an owner-local credential reference;
-- supported model discovery;
-- API surface and streaming support;
-- input/output modalities and tool-call support;
-- reasoning or thinking modes when advertised;
-- context and output limits when advertised;
-- usage and rate-limit telemetry when available; and
-- a redacted health-check result.
+- provider 与路由标识符；
+- owner-local 凭据引用；
+- 受支持的模型发现；
+- API surface 与流式支持；
+- 输入/输出模态与工具调用支持；
+- 已宣称时的推理/思考模式；
+- 已宣称时的上下文与输出限制；
+- 可用时的用量与限流遥测；以及
+- 一个脱敏的健康检查结果。
 
-Capability discovery is versioned evidence. Unknown or conflicting provider
-capabilities remain unknown until an explicit probe resolves them. Desktop
-must not silently fall back to a different model, route, provider, or billing
-plan.
+能力发现是有版本的证据。未知或冲突的 provider 能力在显式探测解决前保持未知。
+Desktop 不得静默回退到不同的模型、路由、provider 或计费方案。
 
-Ark Agent Plan has its own supported-model, credential, and usage boundary.
-The adapter must therefore validate the Plan route instead of assuming that a
-model supported by a standard Ark endpoint is automatically available through
-the Plan profile. Credentials and raw provider responses remain owner-local.
+Ark Agent Plan 有自己的受支持模型、凭据和用量边界。适配器因此必须验证 Plan
+路由，而不是假设标准 Ark 端点支持的模型会自动通过 Plan 配置可用。凭据和
+原始 provider 响应保持 owner-local。
 
-### Goal-bound external capabilities in both modes
+### 两种模式中由 Goal 绑定的外部能力
 
-Runtime and provider selection do not define the Agent's complete toolset.
-Attached and managed working sessions must project the same external
-capabilities from the selected Agent's Goal binding. This RFC does not add an
-`external toolkit` runtime object or another capability-pack contract. The
-existing boundaries remain sufficient:
+运行时和 provider 选择并不能定义 Agent 的完整工具集。挂接与托管工作会话
+必须从所选 Agent 的 Goal 绑定投影相同的外部能力。本 RFC 不新增
+`external toolkit` 运行时对象，也不新增另一套 capability-pack 契约。现有
+边界已经足够：
 
-- an extension owns provider packaging, installation, revision, enablement,
-  doctor, and rollback;
-- an external capability owns the caller-outcome contract, operations,
-  permissions, schemas, validation, readback, and receipts; and
-- an optional domain capability pack owns domain policy, state, and projection
-  when those semantics are actually required.
+- extension 拥有 provider 打包、安装、revision、启用、doctor 与回滚；
+- external capability 拥有 caller-outcome 契约、operation、权限、schema、
+  验证、readback 与回执；以及
+- 可选的 domain capability pack 只在确实需要领域语义时拥有领域策略、状态
+  与投影。
 
-A repository that happens to contain multiple skills, commands, and services
-is only a source distribution. Its owner may keep a source inventory, but each
-executable operation must enter LoopX through an existing extension and
-capability contract. Installing the repository, finding a prompt skill, or
-observing a same-named provider grants no authority. Duplicate providers fail
-closed unless the Goal binding selects one exact ready revision.
+一个恰好包含多个 skill、命令和服务的仓库只是一份源分发。它的所有者可以
+维护源清单，但每个可执行 operation 都必须通过现有 extension 与 capability
+契约进入 LoopX。安装仓库、发现 prompt skill 或观察到同名 provider 都不会
+授予权威。除非 Goal 绑定选择了一个确切且 ready 的 revision，否则重复
+provider 失败关闭。
 
-Read-only operations may reuse the durable Goal binding without creating work
-truth. A material operation must bind to the current authorized work attempt;
-managed mode uses the governed Turn transaction, while attached mode preserves
-the equivalent host or automation decision and settlement evidence. Neither
-path may let a capability provider mutate Goal or Todo state directly.
+只读 operation 可以复用持久 Goal 绑定，而不创建工作事实。物质 operation
+必须绑定当前获准的工作尝试；托管模式使用受治理的 Turn 事务，挂接模式则保留
+等价的宿主或 automation 决策与结算证据。两条路径都不能允许 capability
+provider 直接变更 Goal 或 Todo 状态。
 
-Private provider coordinates, credentials, logs, traces, database rows, and
-document content remain owner-local. LoopX durable state keeps only public-safe
-capability and operation identity, provider revision and profile digests,
-bounded evidence references, and admitted receipts.
+私有 provider coordinates、凭据、日志、trace、数据库行和文档内容保持
+owner-local。LoopX 持久状态只保存 public-safe 的 capability 与 operation
+身份、provider revision 与 profile digest、有界证据引用和已准入回执。
 
-## State and identity boundaries
+## 状态与身份边界
 
-The frontend stores one Agent-scoped working-session binding whose public
-projection is sufficient to reconnect and explain ownership. Transport
-connections reference that binding instead of owning another conversation:
+前端存储一个 Agent 级的工作会话绑定，其公开投影足以重连并解释所有权。传输
+连接引用该绑定，而不是拥有另一段对话：
 
 ```json
 {
@@ -613,268 +521,222 @@ connections reference that binding instead of owning another conversation:
 }
 ```
 
-The schema is illustrative, not a commitment to expose opaque values to the
-browser. At minimum, these identities remain distinct:
+该 schema 是说明性的，不是向浏览器暴露不透明值的承诺。至少这些身份保持
+不同：
 
-| Identity | Owner | Purpose |
+| 身份 | 所有者 | 用途 |
 |---|---|---|
-| Goal/Todo | LoopX control plane | Work selection, authority, gates, accounting, termination |
-| Agent working-session binding | LoopX control plane and Desktop broker | Scope one Agent's runtime and ordered conversation within a Goal |
-| Upstream runtime session | Codex App, Pi, or `dsh` adapter | Conversation, model/tool execution, native resume |
-| Provider profile | Owner-local provider store | Authentication, route, model, capability and usage boundary |
-| Frontend connection | LoopX Desktop broker | Attach Web or Lark transport to one Agent working session |
-| Turn journal | LoopX Turn | Idempotent bounded execution, validation, writeback and settlement evidence |
+| Goal/Todo | LoopX 控制平面 | 工作选择、权威、gates、记账、终止 |
+| Agent 工作会话绑定 | LoopX 控制平面与 Desktop broker | 限定一个 Agent 在 Goal 内的运行时与有序对话 |
+| 上游运行时会话 | Codex App、Pi 或 `dsh` 适配器 | 对话、模型/工具执行、原生恢复 |
+| Provider 配置 | owner-local provider 存储 | 认证、路由、模型、能力与用量边界 |
+| 前端连接 | LoopX Desktop broker | 把 Web 或 Lark 传输挂到同一个 Agent 工作会话 |
+| Turn 日志 | LoopX Turn | 幂等有界执行、验证、回写与结算证据 |
 
-An attached descriptor or managed session reference cannot grant new Goal
-authority. A stale or mismatched Goal, Agent, workspace, runtime, provider, or
-trust binding fails closed.
+挂接描述符或托管会话引用不能授予新的 Goal 权威。陈旧或不匹配的 Goal、Agent、
+工作区、运行时、provider 或信任绑定失败关闭。
 
-## Safety and privacy
+## 安全与隐私
 
-- Keep opaque session handles, credentials, environment values, process
-  metadata, raw transcripts, provider payloads, tool logs, and local paths in
-  owner-local storage.
-- Require an authenticated local broker boundary for discovery, attachment,
-  runtime launch, session control, and provider configuration.
-- Authenticate Lark callbacks, map each channel to an explicit Agent binding,
-  and reject ambiguous or replayed ingress before it reaches the Agent session.
-- Keep document authority registration separate from document-comment event
-  capture, and require explicit source and Agent bindings for both.
-- Preserve the effective sandbox, workspace, approval, network, and capability
-  policy in both modes; managed mode must make that policy visible before
-  launch.
-- Recheck binding freshness before control actions and before every managed
-  Turn writeback.
-- Use an idempotent Turn key and allow at most one in-flight Turn for a managed
-  session.
-- Spend quota only after independent validation and accepted state writeback.
-- Do not copy private deployment or collaboration context into public fixtures,
-  screenshots, examples, or documentation.
-- Use synthetic provider fixtures for committed tests and make live provider
-  tests explicit and opt-in.
+- 把不透明会话句柄、凭据、环境值、进程元数据、原始转录、provider 负载、
+  工具日志和本地路径保留在 owner-local 存储中。
+- 对发现、挂接、运行时启动、会话控制和 provider 配置，要求经过认证的本地
+  broker 边界。
+- 认证 Lark 回调，把每个频道映射到显式 Agent 绑定，并在模糊或重放的入口到达
+  Agent 会话前拒绝它们。
+- 保持文档权威登记与文档评论事件捕获分离，并为两者要求显式源和 Agent 绑定。
+- 在两种模式中保留有效的 sandbox、工作区、审批、网络和能力策略；托管模式
+  必须在启动前让该策略可见。
+- 在控制动作前和每次托管 Turn 回写前重新检查绑定新鲜度。
+- 使用幂等 Turn 键，并允许托管会话至多一个在途 Turn。
+- 只在独立验证和被接受的状态回写之后消耗 quota。
+- 不把私有部署或协作上下文复制到公共 fixtures、截图、示例或文档中。
+- 已提交测试使用合成 provider fixtures，并把真实 provider 测试设为显式可选。
 
-## Delivery slices
+## 交付切片
 
-### Slice A: Agent-scoped Lark connection
+### 切片 A：Agent 级 Lark 连接
 
-1. model an explicit Agent working-session binding within a Goal;
-2. refine the existing Goal Channel connection with a required target Agent;
-3. separate capture scope, ingress mode, and reply mode in the connection;
-4. enable `async_inbox` first by registering its Goal-bound config pointer,
-   projecting `reply_due`, and requiring drain/writeback/reply/readback/ACK;
-5. add `live_steering` only through a verified working-session binding and the
-   same serialized ingress used by Web;
-6. add `session_queue` with stable dedupe, ordering, bounded backpressure, and
-   explicit stale-session handling;
-7. let each Agent attach at most one active Lark Bot connection;
-8. show connection, capture, ingress, fallback, listening, and pending state in
-   the selected Agent's Goal Chat header with a direct management entry; and
-9. use the existing working Agent directly, without a manager Agent or a
-   separate IM conversation lifecycle.
+1. 在 Goal 内建模显式的 Agent 工作会话绑定；
+2. 把现有 Goal Channel 连接细化为必填目标 Agent；
+3. 在连接中分离捕获范围、入口模式和回复模式；
+4. 首先启用 `async_inbox`：登记其 Goal 级配置指针、投影 `reply_due`，并要求
+   drain/writeback/reply/readback/ACK；
+5. 只通过已验证的工作会话绑定和 Web 使用的同一串行化入口添加
+   `live_steering`；
+6. 添加 `session_queue`，带稳定去重、排序、有界背压和显式陈旧会话处理；
+7. 让每个 Agent 至多挂接一个活跃 Lark Bot 连接；
+8. 在所选 Agent 的 Goal Chat 头部显示连接、捕获、入口、回退、监听和待处理
+   状态，并提供直接管理入口；以及
+9. 直接使用现有工作 Agent，不引入 manager Agent 或独立 IM 对话生命周期。
 
-This is the first collaboration slice. It makes the current Goal Channel
-useful immediately while establishing the session convergence needed by both
-execution modes.
+这是第一个协作切片。它让当前 Goal Channel 立即有用，同时建立两种执行模式
+都需要的会话收敛。
 
-### Slice A2: document-comment awareness
+### 切片 A2：文档评论感知
 
-1. define the provider-neutral Agent Connector and event-inbox contract;
-2. register a document body as redacted Goal authority material independently
-   from its comment stream;
-3. bind one or more configured document-comment sources to a registered Agent;
-4. support bounded initial catch-up plus incremental cursor-based reads without
-   losing comments created before attachment or during downtime;
-5. preserve comment anchors and reply-chain context in owner-local storage;
-6. route actionable comments through the same durable-effect-before-response-
-   before-ACK lifecycle as group inbox events;
-7. expose comment reply and provider readback only when declared by the
-   Connector; and
-8. project only content-free pending, age, failure, and freshness state to
-   LoopX status and quota.
+1. 定义 provider-neutral 的 Agent 连接器和事件 inbox 契约；
+2. 把文档正文登记为脱敏 Goal 权威材料，独立于其评论流；
+3. 把一个或多个已配置的文档评论源绑定到已登记 Agent；
+4. 支持有界初始追补加增量 cursor 读取，不丢失挂接前或停机期间创建的评论；
+5. 在 owner-local 存储中保留评论锚点和回复链上下文；
+6. 让可操作评论走与群 inbox 事件相同的持久效果-先于-响应-先于-ACK 生命周期；
+7. 仅在连接器宣称时暴露评论回复和 provider readback；以及
+8. 只向 LoopX 状态和 quota 投影无内容的待处理、年龄、失败和新鲜度状态。
 
-This slice generalizes the group-specific inbox after Slice A proves the Agent
-binding and acknowledgement lifecycle. It does not make external comments
-authoritative or require the document provider to become a task database.
+该切片在切片 A 证明 Agent 绑定和确认生命周期后，把群专属 inbox 泛化。它不会
+让外部评论变得权威，也不要求文档 provider 变成任务数据库。
 
-### Slice B: attached Codex App
+### 切片 B：挂接 Codex App
 
-1. one host-local app-server session descriptor source;
-2. explicit attach and detach actions;
-3. reuse of existing message, stream, interrupt, and resume transport;
-4. bounded LoopX Goal/status projection beside the session; and
-5. no second Agent process or managed fallback.
+1. 一个宿主本地 app-server 会话描述符源；
+2. 显式 attach 和 detach 动作；
+3. 复用现有消息、流式、中断和恢复传输；
+4. 在会话旁放置有界 LoopX Goal/状态投影；以及
+5. 不启动第二个 Agent 进程或托管回退。
 
-This is the short path for adopting Desktop around work that is already
-running.
+这是围绕已在运行的工作采用 Desktop 的短路径。
 
-The first phase's executable broker contract settles in the Chat
-session/store and the generic `worker-bridge attached-session-*` commands
-rather than inside a Lark provider:
+第一阶段的可执行 broker 契约沉淀在 Chat session/store 与通用
+`worker-bridge attached-session-*` 命令中，而不是 Lark provider 内部：
 
-- `agent_id` always refers to a registered LoopX Agent within the Goal;
-- `executor_endpoint_id` separately identifies `codex`, `claude-code`, or
-  another execution endpoint;
-- attach succeeds only when `(host_surface, host_session_id)` is exactly bound
-  to that Agent;
-- Web and Lark messages for an attached session enter one bounded FIFO and
-  preserve `origin=web|lark`;
-- an existing host may hold a claim wait for at most 30 minutes and obtain the
-  oldest-first, idempotent claim immediately when a message appears in the
-  queue; a timeout only returns an empty result and never starts or resumes any
-  runtime;
-- the originating host claims messages through stable claim/completion ids and
-  writes them back; repeated calls do not duplicate an Agent reply; and
-- no attached-session path may invoke a managed runtime's start/resume
-  functions.
+- `agent_id` 始终表示 Goal 内已登记的 LoopX Agent；
+- `executor_endpoint_id` 单独表示 `codex`、`claude-code` 或其他执行端；
+- attach 只有在 `(host_surface, host_session_id)` 已精确绑定该 Agent 时才成立；
+- attached session 的 Web 与 Lark 消息进入同一有界 FIFO，并保留
+  `origin=web|lark`；
+- 已有宿主可以保持一个最长 30 分钟的 claim 等待，并在队列出现消息时立即
+  获得旧项优先、幂等 claim；超时只返回空结果，不启动或恢复任何运行时；
+- 原宿主通过稳定 claim/completion id 领取消息并回写，重复调用不会重复生成
+  Agent 回复；以及
+- 任何 attached session 路径都不得调用 managed runtime 的启动/恢复函数。
 
-This phase already supports `session_queue` and reply readback.
-`live_steering` still requires the host to provide a push transport for the
-running Turn; until then the capability is explicitly `false`, ingress fails
-closed, and a freshly started app-server or a silent switch to another mode
-cannot masquerade as completion. Desktop next needs to project bind/list/claim
-state as first-screen attach management interactions, and hosts such as Codex
-App should complete claim/complete automatically instead of requiring a human
-to run the CLI manually.
+该阶段已经能支撑 `session_queue` 与回复 readback。`live_steering` 仍要求宿主提供
+对正在运行 Turn 的 push transport；在此之前 capability 明确为 false，入口失败
+关闭，不能用新启动的 app-server 或静默改投另一个模式冒充完成。Desktop 下一步
+需要把 bind/list/claim 状态投影成首屏 attach 管理交互，并由 Codex App 等宿主
+自动完成 claim/complete，而不是要求人手工运行 CLI。
 
-### Slice C: managed reference vertical
+### 切片 C：托管参考垂直
 
-1. a provider-neutral managed-runtime and managed-provider interface;
-2. one Desktop runtime supervisor with start, interrupt, close, reconcile, and
-   resume;
-3. `dsh` as the first reference runtime by reusing its accepted Turn adapter;
-4. Ark Agent Plan as the default configured provider profile;
-5. one resumable conversation and one-at-a-time bounded Turn execution; and
-6. joined runtime, Turn, and LoopX status in Desktop.
+1. 一个 provider-neutral 的托管运行时与托管 provider 接口；
+2. 一个 Desktop 运行时监督器，支持 start、interrupt、close、reconcile 和
+   resume；
+3. `dsh` 作为第一个参考运行时，复用其已被接受的 Turn 适配器；
+4. Ark Agent Plan 作为默认配置的 provider 配置；
+5. 一个可恢复对话和一次一个的有界 Turn 执行；以及
+6. 在 Desktop 中联合展示运行时、Turn 和 LoopX 状态。
 
-`dsh` is the reference ordering because it already has a bounded Turn
-connector; this ordering does not make it the permanent default runtime.
+`dsh` 是参考顺序，因为它已有有界 Turn 连接器；该顺序不会让它成为永久默认
+运行时。
 
-### Slice D: Pi parity
+### 切片 D：Pi 对等
 
-1. a Pi managed-runtime adapter using Pi Agent/session/tool surfaces;
-2. the same Ark Agent Plan provider profile and capability handshake;
-3. parity for launch, conversation, stream, interrupt, resume, and Turn result;
-4. proof that managed Pi progresses without the Pi Goal extension installed;
-   and
-5. preservation of the existing opt-in Pi Goal extension for visible-host use.
+1. 一个使用 Pi Agent/session/tool surface 的 Pi 托管运行时适配器；
+2. 相同的 Ark Agent Plan provider 配置和能力握手；
+3. launch、对话、流式、中断、恢复和 Turn 结果的对等；
+4. 证明托管 Pi 无需安装 Pi Goal 扩展即可推进；以及
+5. 为 visible-host 使用保留现有可选 Pi Goal 扩展。
 
-The dual-runtime managed mode is complete only after both Slice C and Slice D
-pass the shared conformance suite.
+只有切片 C 和切片 D 都通过共享一致性测试套件后，双运行时托管模式才算完整。
 
-## Validation criteria
+## 验证标准
 
-### Shared
+### 公共
 
-- one binding has at most one active executor and serialized user ingress;
-- one Goal may route different Lark connections to different Agents without
-  cross-session delivery;
-- LoopX remains authoritative for Goal/Todo lifecycle in every frontend mode;
-- a read-only exchange creates no task transition or quota spend;
-- both modes expose only the external capability operations admitted by the
-  same Goal binding at an exact provider revision;
-- an external capability material operation cannot bypass the active work-
-  attempt authority, validation, provider readback, or settlement receipt;
-- stale or mismatched identity and capability bindings fail closed; and
-- committed packets contain no credentials, raw transcripts, provider
-  payloads, opaque handles, or real local paths.
+- 一个绑定至多有一个活跃执行器，用户入口串行化；
+- 一个 Goal 可以把不同 Lark 连接路由到不同 Agent，而不会跨会话投递；
+- 在每种前端模式下，LoopX 对 Goal/Todo 生命周期保持权威；
+- 只读交流不产生任务转换或 quota 消耗；
+- 两种模式只暴露同一 Goal 绑定在确切 provider revision 下准入的 external
+  capability operation；
+- external capability 的物质 operation 不能绕过活跃工作尝试权威、验证、
+  provider readback 或结算回执；
+- 陈旧或不匹配的身份与能力绑定失败关闭；以及
+- 已提交 packets 不包含凭据、原始转录、provider 负载、不透明句柄或真实
+  本地路径。
 
-### Attached mode
+### 挂接模式
 
-- attaching to a running session starts no second Agent process;
-- three consecutive user messages use the same upstream App session;
-- interrupt and resume preserve that session identity;
-- automation-prompt-driven work updates LoopX state and is projected without
-  a managed Turn launch;
-- detaching leaves the underlying session and Goal unchanged; and
-- loss of the App session never triggers silent managed fallback.
+- 挂接到运行中的会话不会启动第二个 Agent 进程；
+- 连续三条用户消息使用同一个上游 App 会话；
+- 中断和恢复保留该会话身份；
+- automation-prompt 驱动的工作更新 LoopX 状态并被投影，而不启动托管 Turn；
+- 解除挂接后底层会话和 Goal 不变；以及
+- App 会话丢失绝不触发静默托管回退。
 
-### Web and Lark convergence
+### Web 与 Lark 收敛
 
-- two Agents in one Goal can attach separate Lark connections and each message
-  reaches only the explicitly bound Agent;
-- capture scope, ingress mode, and reply mode are independently configured and
-  an event produces exactly one effective ingress receipt;
-- three interleaved Web and Lark messages enter one deterministic working-
-  session order in `live_steering`/`session_queue` and preserve origin metadata;
-- Web and Lark resume the same Agent session rather than creating parallel
-  histories or executors;
-- an unavailable steering session fails closed unless an explicit queue or
-  inbox fallback is configured; fallback never duplicates delivery;
-- queued ingress is ordered, bounded, restart-safe, and remains bound to the
-  same Agent/session without becoming a LoopX Todo;
-- a real inbox mention or direct question projects content-free `reply_due`,
-  preempts ordinary work, and is ACKed only after durable effect plus verified
-  source-thread reply; duplicate drain/reply/ACK is idempotent;
-- a Goal Chat header projects connection freshness and links to explicit
-  management actions;
-- ambiguous Goal-only routing and replayed Lark callbacks fail closed; and
-- attaching or detaching Lark does not change the Agent's execution mode or
-  LoopX Goal/Todo state.
+- 一个 Goal 中的两个 Agent 可以挂接独立 Lark 连接，每条消息只到达显式绑定的
+  Agent；
+- 捕获范围、入口模式和回复模式独立配置，一个事件恰好产生一个有效入口回执；
+- 三条交错的 Web 和 Lark 消息在 `live_steering`/`session_queue` 中进入一个
+  确定性工作会话顺序，并保留 origin 元数据；
+- Web 和 Lark 恢复同一个 Agent 会话，而不是创建并行历史或执行器；
+- 不可用的操控会话失败关闭，除非配置了显式队列或 inbox 回退；回退绝不重复
+  投递；
+- 排队入口有序、有界、重启安全，并保持绑定到同一 Agent/会话，而不会变成
+  LoopX Todo；
+- 真实 inbox mention 或直接问题投影无内容的 `reply_due`，抢占普通工作，并且
+  只在持久效果加已验证 source-thread 回复后 ACK；重复 drain/reply/ACK 幂等；
+- Goal Chat 头部投影连接新鲜度并链接到显式管理动作；
+- 模糊的 Goal-only 路由和重放 Lark 回调失败关闭；以及
+- 挂接或解除挂接 Lark 不改变 Agent 的执行模式或 LoopX Goal/Todo 状态。
 
-### External Connector awareness
+### 外部连接器感知
 
-- a group event and a document comment bound to the same Agent are captured as
-  distinct provider event types and deduplicated independently;
-- initial catch-up discovers an actionable event created before attachment,
-  then real-time delivery or polling continues from the committed cursor;
-- fetching a document body neither acknowledges comments nor marks them
-  incorporated;
-- incorporating a comment creates an auditable Todo/design/no-follow-up effect
-  before any reply and cursor advance;
-- a comment assertion does not become accepted capability or requirement fact
-  until its configured evidence or owner boundary is satisfied;
-- reply-capable Connectors verify provider readback, while read-only Connectors
-  record an explicit no-response outcome; and
-- status, quota, and public fixtures contain no comment bodies, author ids,
-  private source references, or provider cursor values.
+- 绑定到同一 Agent 的群事件和文档评论作为不同 provider 事件类型被捕获，并
+  独立去重；
+- 初始追补发现挂接前创建的可操作事件，然后实时投递或轮询从已提交 cursor
+  继续；
+- 拉取文档正文既不确认评论，也不把它们标记为已纳入；
+- 纳入评论在任何回复和 cursor 推进前创建可审计的 Todo/设计/不跟进效果；
+- 评论断言在满足其配置的证据或 owner 边界前，不会成为被接受的能力或需求
+  事实；
+- 支持回复的连接器验证 provider readback，而只读连接器记录显式“无回复”
+  结果；以及
+- 状态、quota 和公共 fixtures 不包含评论正文、作者 id、私有源引用或 provider
+  cursor 值。
 
-### Managed mode
+### 托管模式
 
-- Desktop launches exactly one selected runtime and reuses the same opaque
-  session across three user messages and multiple bounded Turns;
-- the runtime progresses with no host-native Goal loop installed;
-- every material attempt has a selected Todo, idempotent Turn identity,
-  independent validation, accepted writeback, and post-writeback settlement;
-- interruption and application restart preserve or explicitly reconcile the
-  session instead of silently creating another one;
-- crash replay does not duplicate state writeback or quota spend;
-- Pi and `dsh` pass the same lifecycle and Turn-result conformance suite;
-- the Ark Agent Plan profile validates its own supported-model and usage
-  boundary and fails closed on missing authentication or unsupported
-  capability; and
-- provider or model changes are explicit rebinding operations, never silent
-  fallback.
+- Desktop 恰好启动一个所选运行时，并在三条用户消息和多个有界 Turn 中复用
+  同一个不透明会话；
+- 运行时在未安装宿主原生 Goal 循环的情况下推进；
+- 每次实质尝试都有所选 Todo、幂等 Turn 身份、独立验证、被接受的回写和回写后
+  结算；
+- 中断和应用重启保留或显式协调会话，而不是静默创建另一个；
+- 崩溃重放不重复状态回写或 quota 消耗；
+- Pi 和 `dsh` 通过相同的生命周期和 Turn 结果一致性套件；
+- Ark Agent Plan 配置验证自己的受支持模型与用量边界，并在缺少认证或不支持
+  能力时失败关闭；以及
+- provider 或模型变更是显式重新绑定操作，绝不是静默回退。
 
-## Non-goals
+## 非目标
 
-- Replacing Pi or `dsh` with a new model/tool execution kernel.
-- Removing existing automation-prompt, native Goal, or visible-host modes.
-- Wrapping each attached chat message in a managed Turn.
-- Making `turn run-once` an eternal scheduler or desktop process supervisor.
-- Building a universal runtime abstraction beyond the behavior required by Pi
-  and `dsh`.
-- Vendoring enterprise toolkits, provider coordinates, credentials, or private
-  operating procedures into LoopX core.
-- Treating a toolkit repository, install script, or prompt skill as one
-  implicitly trusted universal capability.
-- Hard-coding a permanent model capability table in LoopX.
-- Treating a standard Ark route and an Ark Agent Plan route as globally
-  interchangeable.
-- Making transcripts, Desktop storage, or provider responses authoritative for
-  Goal/Todo lifecycle.
-- Automatically migrating an attached session into managed mode.
-- Introducing a manager Agent between Lark and the bound working Agent.
-- Requiring one physical Lark application credential per Agent; v0 requires a
-  logical Agent-scoped connection and explicit routing.
-- Inferring ingress mode from message prose or using `mentions|all` as proof of
-  a live working-session attachment.
-- Treating the session ingress queue as the LoopX Todo queue, or storing raw
-  inbox content in quota/status.
-- Treating a document body fetch as comment awareness, treating document
-  comments as accepted Goal truth, or advancing a comment cursor before the
-  durable effect and required response are verified.
+- 用新的模型/工具执行内核替换 Pi 或 `dsh`。
+- 移除现有 automation-prompt、原生 Goal 或 visible-host 模式。
+- 把每条挂接聊天消息包进托管 Turn。
+- 把 `turn run-once` 变成永恒调度器或桌面进程监督器。
+- 构建超出 Pi 与 `dsh` 所需行为的通用运行时抽象。
+- 把企业 toolkit、provider coordinates、凭据或私有操作流程 vendoring 到
+  LoopX core。
+- 把 toolkit 仓库、安装脚本或 prompt skill 当作一个隐式受信的通用
+  capability。
+- 在 LoopX 中硬编码永久的模型能力表。
+- 把标准 Ark 路由与 Ark Agent Plan 路由视为全局可互换。
+- 让转录、Desktop 存储或 provider 响应对 Goal/Todo 生命周期拥有权威。
+- 自动把挂接会话迁移到托管模式。
+- 在 Lark 与绑定工作 Agent 之间引入 manager Agent。
+- 要求每个 Agent 有一个物理 Lark 应用凭据；v0 要求逻辑 Agent 级连接和显式
+  路由。
+- 从消息散文推断入口模式，或把 `mentions|all` 当作活跃工作会话挂接的证据。
+- 把会话入口队列当作 LoopX Todo 队列，或在 quota/status 中存储原始 inbox
+  内容。
+- 把文档正文拉取当作评论感知，把文档评论当作被接受的 Goal 事实，或在持久
+  效果和必需响应被验证前推进评论 cursor。
 
-## Related surfaces and proposals
+## 相关 surface 与提案
 
 - [Runtime connector catalog](../../integrations/runtime-connector-catalog.md)
 - [Domain capability packs](../../product/domain-capability-packs.md)
@@ -886,30 +748,24 @@ pass the shared conformance suite.
 - [Volcengine Ark Agent Plan documentation](https://www.volcengine.com/docs/82379/1928262)
 - [Volcengine Ark API overview](https://api.volcengine.com/api-docs/view?serviceCode=ark&version=2024-01-01)
 
-## Open questions
+## 开放问题
 
-1. Which existing host-local registry should own attachable App descriptors and
-   managed runtime session records?
-2. Should the first managed Pi adapter embed Pi's Agent API or supervise its
-   CLI protocol?
-3. What is the smallest common streaming and tool-event surface that Pi and
-   `dsh` can expose without leaking native transcripts?
-4. Which Ark Agent Plan inference API surface should be the first supported
-   provider adapter, and which capability probes are mandatory before launch?
-5. Which Agent lifecycle operation explicitly rotates or replaces its working
-   runtime session while preserving auditable conversation boundaries?
-6. How should optional Pi and `dsh` runtime dependencies be installed and
-   upgraded by Desktop?
-7. After v0, should an Agent support multiple Lark channel connections, and
-   what projection policy should control which responses are mirrored to each
-   transport?
-8. Which bounded owner-local store should back `session_queue`, and when may an
-   explicit rebind preserve queued entries across a replaced runtime session?
-9. Should `async_inbox` remain a selectable steady-state mode after
-   `live_steering` ships, or primarily serve offline and non-resident Agents?
-10. Which provider-neutral cursor contract can cover webhook delivery,
-    incremental comment listing, and bounded initial catch-up without leaking
-    provider identifiers into public state?
-11. Should a document-comment Connector support automatic resolved-state
-    transitions, or require an explicit human or capability-owned action in
-    the first version?
+1. 哪个现有宿主本地 registry 应该拥有可挂接 App 描述符和托管运行时会话记录？
+2. 第一个托管 Pi 适配器应该内嵌 Pi 的 Agent API，还是监督其 CLI 协议？
+3. Pi 和 `dsh` 能够在不泄漏本地转录的前提下暴露的最小公共流式与工具事件
+   surface 是什么？
+4. 哪个 Ark Agent Plan 推理 API surface 应该是第一个受支持的 provider 适配器，
+   哪些能力探测在启动前是必填的？
+5. 哪个 Agent 生命周期操作显式轮换或替换其工作运行时会话，同时保留可审计的
+   对话边界？
+6. Desktop 应如何安装和升级可选的 Pi 与 `dsh` 运行时依赖？
+7. v0 之后，Agent 是否应支持多个 Lark 频道连接，什么投影策略控制哪些响应
+   镜像到每个传输？
+8. 哪个有界 owner-local 存储应该支撑 `session_queue`，显式重新绑定何时可以
+   在替换运行时会话后保留排队条目？
+9. `async_inbox` 在 `live_steering` 上线后是应保持可选的稳态模式，还是主要
+   服务离线和非常驻 Agent？
+10. 哪个 provider-neutral cursor 契约可以覆盖 webhook 投递、增量评论列举和
+    有界初始追补，而不把 provider 标识符泄漏到公共状态？
+11. 文档评论连接器在第一版中应支持自动“已解决”状态转换，还是要求显式的
+    人工或能力拥有动作？

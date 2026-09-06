@@ -1,114 +1,63 @@
 # host_mode_plan_v0
+> [English](host-mode-plan-v0.md)
 
-`host_mode_plan_v0` is a public-safe host-mode selector for LoopX workflows. It
-sits above the shipped [LoopX Turn](loopx-turn-v0.md) and
-[runtime connector catalog](../../integrations/runtime-connector-catalog.md): it chooses the
-user-facing host mode from intent and advertised host capabilities, then prints
-the matching preview command. It is not a launcher, scheduler, permission grant,
-validator, or second source of truth.
+`host_mode_plan_v0` 是 LoopX 工作流的公开安全 host 模式选择器。它位于交付的 [LoopX Turn](loopx-turn-v0.md) 与 [runtime connector catalog](../../integrations/runtime-connector-catalog.md) 之上：从意图与广告的 host 能力选择面向用户的 host 模式，然后打印匹配的预览命令。它不是启动器、scheduler、权限授予、验证器或第二事实来源。
 
-The problem it solves is operational ambiguity. A user may say "keep working
-when I close the visible UI", "let chat create work", or "wake from a timer".
-Those are different host modes, but all must preserve the same LoopX invariants:
-scoped agent identity, quota guard before work, no-spend quiet checks,
-independent validation, durable writeback, and quota spend only after validated
-writeback.
+它解决的问题是运维歧义。用户可能说「我关闭可见 UI 后继续工作」「让聊天创建工作」或「从定时器唤醒」。这些是不同的 host 模式，但都必须保留相同的 LoopX 恒等式：作用域 agent 身份、工作前的配额 guard、零花费安静检查、独立验证、持久化 writeback，以及仅在已验证 writeback 之后的配额花费。
 
-## Boundary
+## 边界
 
-The selector returns `mode=dry_run_host_mode_selector`. It must not start a
-process, open a session, arm a timer, call a chat gateway, validate a result,
-write LoopX state, or spend quota. For any execution path, `loopx_turn_v0`,
-TurnEnvelope, registry, quota, todo projection, and run history remain
-authoritative.
+选择器返回 `mode=dry_run_host_mode_selector`。它不得启动进程、打开会话、布设定时器、调用聊天网关、验证结果、写入 LoopX 状态或花费配额。对于任何执行路径，`loopx_turn_v0`、TurnEnvelope、registry、quota、todo 投影与 run 历史保持权威。
 
-For headless execution, the selector maps to `loopx turn plan` and then the
-existing Turn lifecycle:
+对于无头执行，选择器映射到 `loopx turn plan`，然后是既有 Turn 生命周期：
 
 ```text
-LoopX decides -> host adapter executes -> independent validator proves -> LoopX commits
+LoopX 决策 -> host 适配器执行 -> 独立验证器证明 -> LoopX 提交
 ```
 
-That mapping is the key product value: the selector makes mode choice visible
-without inventing a parallel runner or a second workflow authority.
+该映射是关键产品价值：选择器使模式选择可见，而不发明并行 runner 或第二工作流权威。
 
-## Modes
+## 模式
 
-| mode | connector / contract | good fit | required capability |
+| 模式 | connector / 契约 | 合适场景 | 所需能力 |
 | --- | --- | --- | --- |
-| `visible_tui` | `codex_cli_tui` connector | user wants to watch or steer each turn | `visible_session` |
-| `isolated_headless_turn` | `loopx_turn_v0` with `generic-cli` and `isolated-headless` | bounded unattended work through typed host results | `loopx_turn`, `typed_host_adapter`, `independent_validator` |
-| `im_gateway` | gateway/webhook connector | chat or another surface should create durable work | `chat_gateway` |
-| `shell_service` | shell worker plus LoopX Turn | cron, launchd, service timer, or manual shell wakeup | `service_timer`, `shell`, `loopx_turn`, `typed_host_adapter`, `independent_validator` |
-| `hybrid_handoff` | explicit transition contract | one mode should escalate or continue in another | at least two concrete modes ready |
+| `visible_tui` | `codex_cli_tui` connector | 用户想观察或引导每一 Turn | `visible_session` |
+| `isolated_headless_turn` | 带 `generic-cli` 与 `isolated-headless` 的 `loopx_turn_v0` | 通过类型化 host 结果做有界无人值守工作 | `loopx_turn`、`typed_host_adapter`、`independent_validator` |
+| `im_gateway` | gateway/webhook connector | 聊天或其他界面应创建持久化工作 | `chat_gateway` |
+| `shell_service` | shell worker 加 LoopX Turn | cron、launchd、服务定时器或手动 shell 唤醒 | `service_timer`、`shell`、`loopx_turn`、`typed_host_adapter`、`independent_validator` |
+| `hybrid_handoff` | 显式转换契约 | 一种模式应在另一种模式中升级或继续 | 至少两种具体模式就绪 |
 
-## Intent And Capability Signals
+## 意图与能力信号
 
-Public-safe `user_intent` signals fail closed when unknown:
+公开安全 `user_intent` 信号在未知时失效关闭：
 
-- `watch_each_turn` -> `visible_tui`;
-- `continue_without_ui` -> `isolated_headless_turn`;
-- `intake_from_chat` -> `im_gateway`;
-- `timer_keepalive` -> `shell_service`;
-- `escalate_between_modes` -> `hybrid_handoff`.
+- `watch_each_turn` -> `visible_tui`；
+- `continue_without_ui` -> `isolated_headless_turn`；
+- `intake_from_chat` -> `im_gateway`；
+- `timer_keepalive` -> `shell_service`；
+- `escalate_between_modes` -> `hybrid_handoff`。
 
-Public-safe `host_capabilities` signals are:
+公开安全 `host_capabilities` 信号有：
 
-- `visible_session`;
-- `loopx_turn`;
-- `typed_host_adapter`;
-- `independent_validator`;
-- `chat_gateway`;
-- `service_timer`;
-- `shell`.
+- `visible_session`；
+- `loopx_turn`；
+- `typed_host_adapter`；
+- `independent_validator`；
+- `chat_gateway`；
+- `service_timer`；
+- `shell`。
 
-The first intent selects `selected_mode`. Every mode option still reports
-`capability_ready` so an operator can see whether the selected host can actually
-run the desired mode.
+首个意图选择 `selected_mode`。每个模式选项仍报告 `capability_ready`，使操作员能看到所选 host 实际能否运行期望模式。
 
-## Visible Host Identity
+## 可见 Host 身份
 
-A coarse `visible_session` capability cannot distinguish Codex CLI, Claude Code,
-or another generic visible host such as OpenCode or Pi. The planner therefore fails
-closed for `visible_tui` unless an explicit, catalog-registered `host_identity`
-is supplied (`--host-identity`: `codex-cli`, `claude-code`, `generic-cli`, or
-the `opencode` / `pi` aliases). With no
-identity, the visible option reports `connector_id=null`,
-`host_resolution=identity_required`, `turn_mapping.host=null`,
-`capability_ready=false`, a blocking reason naming the missing identity, and a
-stop-first next step; no Codex CLI default is fabricated. An unregistered
-identity similarly yields `connector_id=null` with
-`host_resolution=unregistered_host_identity`. The resolution state lives in the
-separately typed `host_resolution` field so the `connector_id` field only ever
-carries real runtime connector catalog ids.
-With an identity, the typed mapping is used: `codex-cli` -> `codex_cli_tui`,
-`claude-code` -> `claude_code_loop`, `generic-cli` -> `opencode_goal_loop`
-(the OpenCode visible goal loop runs through the generic-cli Turn host;
-`--host-identity opencode` is accepted as an alias for the same mapping), and
-`pi` -> `pi_goal_loop` (Pi also runs through the generic-cli Turn host while
-keeping its own connector identity). Every
-emitted connector id must exist in the runtime connector catalog; an identity
-with no registered catalog connector fails closed instead of emitting a dynamic
-string.
+粗略的 `visible_session` 能力无法区分 Codex CLI、Claude Code 或 OpenCode、Pi 等另一个通用可见 host。因此规划器在未提供显式目录注册 `host_identity` 时对 `visible_tui` 失效关闭（`--host-identity`：`codex-cli`、`claude-code`、`generic-cli`，或 `opencode` / `pi` 别名）。没有身份时，可见选项报告 `connector_id=null`、`host_resolution=identity_required`、`turn_mapping.host=null`、`capability_ready=false`、一条指名缺失身份的阻塞原因，以及一个停首的下一步；不编造 Codex CLI 默认。未注册身份同样得到 `connector_id=null` 且 `host_resolution=unregistered_host_identity`。解析状态存放在单独类型化的 `host_resolution` 字段中，使 `connector_id` 字段只携带真实运行时 connector 目录 id。有身份时使用类型化映射：`codex-cli` -> `codex_cli_tui`、`claude-code` -> `claude_code_loop`、`generic-cli` -> `opencode_goal_loop`（OpenCode 可见 goal loop 经 generic-cli Turn host 运行；`--host-identity opencode` 被接受为该映射的别名）、`pi` -> `pi_goal_loop`（Pi 也经 generic-cli Turn host 运行，同时保留自己的 connector 身份）。每个发出的 connector id 都必须存在于运行时 connector 目录；无注册目录 connector 的身份失效关闭，而不是发出动态字符串。
 
-## Readiness And Proofs
+## 就绪与证明
 
-Readiness fails closed: a mode only reports `capability_ready=true` when every
-capability listed in `required_host_capabilities` is advertised. Because
-`shell_service` proves typed host results and independent validation, those
-capabilities are part of its requirement; a host with only `service_timer`,
-`shell`, and `loopx_turn` is not ready. Each mode option also reports
-`missing_host_capabilities`, human-readable `blocking_reasons`, and
-`recommended_next_steps` so an operator knows what to fill in before attempting
-the mode. When a mode is not ready, the first recommended step is `stop`: the
-operator fills the gaps and re-runs the selector before any preview command is
-treated as runnable. When `im_gateway` is ready, its steps are intake-first:
-create durable work from the chat/webhook surface, confirm LoopX state is safe
-to proceed, then choose an execution mode (`isolated_headless_turn` for
-unattended runs or `visible_tui` for user gates) without treating the gateway
-as an executor.
+就绪失效关闭：一种模式只有在 `required_host_capabilities` 中列出的每个能力都被广告时才报告 `capability_ready=true`。由于 `shell_service` 证明类型化 host 结果与独立验证，这些能力是其要求的一部分；仅有 `service_timer`、`shell` 与 `loopx_turn` 的 host 不算就绪。每个模式选项还报告 `missing_host_capabilities`、人类可读的 `blocking_reasons` 与 `recommended_next_steps`，使操作员在该模式尝试前知道要补什么。模式未就绪时，首个推荐步骤是 `stop`：操作员补齐差距并重跑选择器，然后才把任何预览命令视为可运行。`im_gateway` 就绪时，其步骤是摄取优先：从聊天/webhook 界面创建持久化工作，确认 LoopX 状态可安全继续，然后选择执行模式（无人值守运行用 `isolated_headless_turn`，用户关卡用 `visible_tui`），而不把网关当作执行器。
 
-## Shape
+## 形状
 
 ```json
 {
@@ -136,47 +85,28 @@ as an executor.
 }
 ```
 
-Each `mode_options[]` entry includes the connector id, readiness, required
-host capabilities, Turn mapping when one exists, scheduler execution context,
-quota guard command, and required proofs.
+每个 `mode_options[]` 条目包括 connector id、就绪状态、必需 host 能力、存在的 Turn 映射、scheduler 执行上下文、配额 guard 命令与所需证明。
 
-## Functional Points
+## 功能点
 
-The selector provides four concrete functions:
+选择器提供四个具体功能：
 
-1. **Mode choice:** turn user intent into a named host mode instead of forcing
-   users and agents to infer visible/headless/gateway/timer behavior manually.
-2. **Turn mapping:** for unattended execution, print the exact `loopx turn plan`
-   preview that preserves host, execution mode, scheduler owner, agent id, and
-   available capabilities.
-3. **Readiness surface:** report which advertised capabilities are missing
-   before a mode can be trusted.
-4. **Safe handoff plan:** name transitions such as visible bootstrap to
-   isolated headless Turn, headless user-gate escalation back to visible TUI,
-   gateway intake to Turn, and shell timer to visible escalation.
+1. **模式选择：** 把用户意图变成命名 host 模式，而不是迫使人与 agent 手动推断可见/无头/网关/定时器行为。
+2. **Turn 映射：** 对于无人值守执行，打印保留 host、执行模式、scheduler owner、agent id 与可用能力的精确 `loopx turn plan` 预览。
+3. **就绪界面：** 在模式可被信任之前报告哪些广告能力缺失。
+4. **安全交接计划：** 命名转换，如可见引导到隔离无头 Turn、无头用户关卡升级回可见 TUI、网关摄取到 Turn、shell 定时器到可见升级。
 
-## Acceptance Checks
+## 验收检查
 
-A fixture or implementation is acceptable when:
+一个 fixture 或实现在以下条件下可接受：
 
-1. `schema_version=host_mode_plan_v0` and `mode=dry_run_host_mode_selector`;
-2. the five canonical modes are present and intent selects the expected mode;
-3. `isolated_headless_turn` maps to `loopx turn plan --host generic-cli
-   --execution-mode isolated-headless --scheduler-owner outer_controller`;
-4. scoped identity flows into Turn and quota preview commands as `--agent-id`;
-5. the no-spend policy covers selector previews, Turn plan previews, quiet
-   monitors, cadence-only changes, and final/readiness checks;
-6. the boundary says the selector does not execute, write, spend, infer
-   production permission, infer credential access, or infer destructive
-   authority;
-7. no selected mode reports `capability_ready=true` while a capability-backed
-   required proof is unavailable (including `shell_service` requiring both
-   `typed_host_adapter` and `independent_validator`);
-8. visible `host_identity` is required when `visible_tui` is selected, is
-   preserved for distinct hosts such as Codex CLI and Claude Code in the
-   connector id, Turn mapping, and preview commands, and every emitted connector
-   id exists in the runtime connector catalog (unresolved mappings emit
-   `connector_id=null` plus a typed `host_resolution` instead of a non-catalog
-   value);
-9. handoffs preserve the selected agent id and expose target readiness; and
-10. unknown intent or host capability values fail closed with suggestions.
+1. `schema_version=host_mode_plan_v0` 且 `mode=dry_run_host_mode_selector`；
+2. 五个规范模式都存在且意图选择预期模式；
+3. `isolated_headless_turn` 映射到 `loopx turn plan --host generic-cli --execution-mode isolated-headless --scheduler-owner outer_controller`；
+4. 作用域身份以 `--agent-id` 流入 Turn 与配额预览命令；
+5. 零花费策略覆盖选择器预览、Turn 计划预览、安静 monitor、仅节奏变更与最终/就绪检查；
+6. 边界声明选择器不执行、不写入、不花费、不推断生产权限、不推断凭据访问、不推断破坏性权限；
+7. 没有模式在能力支撑的必需证明不可用时报告 `capability_ready=true`（包括 `shell_service` 要求同时具备 `typed_host_adapter` 与 `independent_validator`）；
+8. 选择 `visible_tui` 时必需可见 `host_identity`，对 Codex CLI 与 Claude Code 等不同 host 在 connector id、Turn 映射与预览命令中保持区分，且每个发出的 connector id 都存在于运行时 connector 目录（未解析映射发出 `connector_id=null` 加类型化 `host_resolution`，而非非目录值）；
+9. 交接保留所选 agent id 并暴露目标就绪状态；并且
+10. 未知意图或 host 能力值带建议失效关闭。

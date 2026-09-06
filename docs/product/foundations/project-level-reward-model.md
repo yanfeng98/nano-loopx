@@ -1,92 +1,79 @@
-# Project-Level Reward Model
+# 项目级奖励模型
 
-LoopX should not explain long-running agent value only with a single benchmark
-score. Benchmarks are useful for narrow task capability, but a Loop Agent works
-inside a project over time: it absorbs signals, completes work, asks for human
-judgment, spends tokens, and leaves evidence for the next turn.
+> [English](project-level-reward-model.md)
 
-This note defines a conservative product model for comparing that project-level
-value without claiming universal benchmark uplift.
+LoopX 不应只用单一基准分数来说明长程 agent 的价值。基准对窄任务能力有用,但 Loop Agent 在项目内随时间的推移而工作:它吸收信号、完成工作、请求人工判断、花费 token,并为下一 Turn 留下 evidence。
 
-## Core Formula
+本笔记定义一个保守的产品模型,用于比较这种项目级价值,而不声称通用基准提升。
 
-For complex project work, LoopX should treat agent value as:
+## 核心公式
+
+对于复杂的项目工作,LoopX 应把 agent 价值视为:
 
 ```text
 project_reward = f(quantity, quality, token_cost, user_attention_cost)
 ```
 
-The formula is intentionally product-facing. It is not a model-training reward
-function, and it is not a replacement for task benchmark metrics. Its job is to
-make a Loop Agent reviewable by a human operator.
+该公式刻意面向产品。它不是模型训练奖励函数,也不是任务基准指标的替代品。它的职责是让 Loop Agent 可被人类运维者评审。
 
-## Dimensions
+## 维度
 
-### Quantity
+### 数量
 
-What the agent produced.
+Agent 产生了什么。
 
-Observable inputs:
+可观察输入:
 
-- completed todos;
-- merged PRs or accepted patches;
-- validated docs, fixtures, or demos;
-- resolved gates or blockers;
-- evidence packets written back to run history.
+- 完成的 todo;
+- 合并的 PR 或被接受的补丁;
+- 已验证的文档、fixture 或演示;
+- 解决的 gate 或阻碍;
+- 写回运行历史的 evidence 包。
 
-Quantity should count bounded deliverables, not chat volume. A summary-only turn
-does not count as outcome progress unless the summary itself is the requested
-artifact.
+数量应计算有界交付物,而非聊天量。仅摘要的 Turn 不计为结果进展,除非摘要本身就是被请求的产物。
 
-### Quality
+### 质量
 
-Whether the output was useful and trustworthy.
+输出是否有用且可信。
 
-Observable or reviewable inputs:
+可观察或可评审的输入:
 
-- human review feed: useful, not useful, needs evidence, off-scope, too
-  expensive, private/unsafe;
-- validation strength: smoke passed, proof artifact present, reviewer accepted,
-  or blocker precisely recorded;
-- rework rate: whether the user had to correct the same failure pattern again;
-- boundary quality: whether the work avoided private material, raw logs,
-  credentials, and over-claims.
+- 人工评审反馈:有用、没用、需要 evidence、范围外、太贵、私有/不安全;
+- 校验强度:smoke 通过、具备证明产物、评审者接受、或阻碍被精确记录;
+- 返工率:用户是否需要再次纠正同一失败模式;
+- 边界质量:工作是否避开私有材料、原始日志、凭据与过度声称。
 
-Quality is the dimension the intelligent management surface must help capture.
-Before enough review data exists, use coarse labels such as `high`, `medium`,
-`low`, or `blocked` rather than pretending precision.
+质量是智能管理界面必须帮助捕捉的维度。在有足够评审数据之前,使用粗标签如 `high`、`medium`、`low` 或 `blocked`,而不是假装精确。
 
-### Token Cost
+### Token 成本
 
-How much model or executor budget the agent consumed.
+Agent 消耗了多少模型或执行器预算。
 
-Observable inputs:
+可观察输入:
 
-- model token counters when the host exposes them;
-- LoopX quota slots or runtime minutes as a fallback;
-- number of executor turns needed to reach a validated artifact.
+- host 暴露模型 token 计数器时使用它;
+- 作为回退的 LoopX 配额槽或运行时分钟;
+- 达到已验证产物所需的执行器 Turn 数。
 
-Token cost should be comparable within one project or host integration before
-being compared across different runtimes.
+Token 成本应在跨不同运行时比较之前,先在一个项目或 host 集成内可比。
 
-### User Attention Cost
+### 用户注意力成本
 
-How much human steering the agent consumed.
+Agent 消耗了多少人工引导。
 
-Observable inputs:
+可观察输入:
 
-- number of user gates opened;
-- number of repeated or unclear questions;
-- time spent waiting on user decisions;
-- frequency of avoidable status-only updates;
-- number of corrections needed before the agent followed the intended route.
+- 打开的用户 gate 数;
+- 重复或不清楚的提问数;
+- 等待用户决策的时间;
+- 可避免的纯状态更新的频率;
+- agent 遵循预期路由前所需的纠正次数。
 
-Low attention cost does not mean "never ask the user." Good Loop Agents ask
-when judgment is needed and avoid asking the user to be the scheduler.
+低注意力成本并不意味着"永不问用户"。好的 Loop Agent 在需要判断时提问,并避免让用户充当调度器。
 
-## Performance Review Shape
+## 绩效评审形态
 
-A project-level review should summarize a lane or Loop Agent over a time window:
+项目级评审应在时间窗口内汇总一个车道或 Loop Agent:
 
 ```json
 {
@@ -116,57 +103,43 @@ A project-level review should summarize a lane or Loop Agent over a time window:
 }
 ```
 
-The schema should stay compact and inspectable. It should reference source
-runs, todos, review events, and validation artifacts instead of copying raw
-transcripts or private evidence.
+schema 应保持紧凑且可检查。它应引用源运行、todo、评审事件与校验产物,而不是复制原始转录或私有 evidence。
 
-## Relationship To Benchmarks
+## 与基准的关系
 
-Benchmark results remain useful, especially for single-task capability and
-controlled comparisons. They should be displayed as one evidence source inside
-the broader review, not as the whole story.
+基准结果仍然有用,尤其是单任务能力与受控比较。它们应在更广评审中作为一个 evidence 来源展示,而不是整个故事。
 
-LoopX should avoid these over-claims:
+LoopX 应避免这些过度声称:
 
-- "project_reward improved, so the model is generally better";
-- "one successful case proves benchmark uplift";
-- "low token cost is good even when quality is low";
-- "low user attention is good when the agent silently crossed a boundary";
-- "many completed todos mean high value without human review or evidence."
+- "project_reward 改善了,因此模型总体上更好";
+- "一个成功案例证明基准提升";
+- "低 token 成本就是好的,即使质量低";
+- "低用户注意力是好的,当 agent 悄然越过边界时";
+- "许多完成的 todo 意味着高价值,而不需要人工评审或 evidence。"
 
-Instead, the product claim should be narrower:
+相反,产品声明应更窄:
 
 ```text
 LoopX makes long-running agent work reviewable by quantity, quality, cost, and
 human attention, so operators can decide which Loop Agents deserve more trust.
 ```
 
-## Product Surface
+## 产品界面
 
-The intelligent management surface should expose this model in three levels:
+智能管理界面应在三个层面暴露此模型:
 
-1. **Review feed**: card-level feedback such as useful, not useful, needs
-   evidence, too expensive, off-scope, or private/unsafe.
-2. **Lane snapshot**: current quantity, quality label, cost label, attention
-   label, blocker, and next expectation for one agent lane.
-3. **Performance review**: periodic rollup that compares selected lanes or
-   anchors over a bounded window.
+1. **评审流**:卡片级反馈,如有用、没用、需要 evidence、太贵、范围外或私有/不安全。
+2. **车道快照**:一个 agent 车道的当前数量、质量标签、成本标签、注意力标签、阻碍与下一个预期。
+3. **绩效评审**:在有界窗口内比较所选车道或锚点的周期汇总。
 
-The first implementation can be read-only. Scoring and control writes should
-remain separate: a review can recommend a todo, gate, or replan, but actual
-mutation still goes through LoopX authority, quota, and boundary checks.
+首次实现可以是只读的。打分与控制写入应保持分离:评审可以推荐 todo、gate 或重规划,但实际变更仍经过 LoopX 权威、配额与边界检查。
 
-## Acceptance Criteria
+## 验收标准
 
-This model is ready for implementation when:
+此模型在以下条件满足时即可实现:
 
-- status or dashboard can show quantity, quality, token cost, and attention
-  cost as separate fields;
-- quality can be driven by explicit review events or validation evidence, not
-  hidden inference from chat;
-- benchmark scores can be attached as evidence without becoming the only value
-  metric;
-- user attention cost can distinguish good human gates from avoidable repeated
-  steering;
-- public docs and showcases avoid claiming general benchmark uplift from this
-  project-level review model.
+- status 或 dashboard 可以把数量、质量、token 成本与注意力成本显示为独立字段;
+- 质量由显式评审事件或校验 evidence 驱动,而非来自聊天的隐藏推断;
+- 基准分数可以作为 evidence 附加,而不成为唯一价值指标;
+- 用户注意力成本可以区分好的用户 gate 与可避免的重复引导;
+- 公开文档与 showcase 避免从这种项目级评审模型声称通用基准提升。

@@ -1,10 +1,11 @@
-# Release Readiness
+# 发布就绪
 
-Release-readiness manifests group historical commit or launch decisions. Keep
-them here after the release window closes so current contributors can focus on
-the live contracts.
+> [English](README.md)
 
-Current records:
+发布就绪清单(manifest)汇总历史提交或发布决策。发布窗口关闭后把它们留在这里,
+让当前贡献者专注于现役契约。
 
-- [Commit readiness manifest, 2026-06-03](commit-readiness-manifest-20260603.md)
-- [Commit readiness manifest, 2026-06-06](commit-readiness-manifest-20260606.md)
+当前记录:
+
+- [提交就绪清单,2026-06-03](commit-readiness-manifest-20260603.md)
+- [提交就绪清单,2026-06-06](commit-readiness-manifest-20260606.md)

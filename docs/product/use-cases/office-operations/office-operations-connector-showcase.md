@@ -1,21 +1,16 @@
-# Office Operations Connector Showcase
+# Office Operations 连接器 Showcase
 
-Status: product showcase design.
+> [English](office-operations-connector-showcase.md)
 
-This note turns the office-operations connector idea into a public-safe LoopX
-showcase. It is not a plan to build a social crawler, a publishing bot, or a
-domain-specific office suite. The goal is narrower: prove that LoopX can manage
-an always-running agent that receives external work signals, selects useful
-anchors, drafts bounded next actions, and learns from human review without
-crossing source, privacy, or publish boundaries.
+状态：产品 showcase 设计。
 
-## Product Claim
+本说明把 office-operations 连接器想法变成 public-safe LoopX showcase。它不是构建社交爬虫、发布 bot 或领域特定办公套件的计划。目标更窄：证明 LoopX 能管理一个常开的 agent，接收外部工作信号、选择有用锚点、起草有边界的下一个动作，并在不越过来源、隐私或发布边界的情况下从人类评审中学习。
 
-Many office workflows do not fail because there is no agent executor. They fail
-because useful signals arrive across too many surfaces and no one can tell which
-signals deserve follow-up.
+## 产品声明
 
-LoopX should make this loop manageable:
+许多办公工作流失败不是因为缺少 agent 执行器。它们失败是因为有用信号从太多 surface 到达，没人说得清哪些信号值得跟进。
+
+LoopX 应让这个 loop 可管理：
 
 ```text
 connector observation
@@ -27,73 +22,63 @@ connector observation
   -> performance review and next improvement
 ```
 
-The control-plane value is that every step has a source label, a boundary, an
-owner decision, and evidence. The agent can keep working on safe preparation
-while publishing, outreach, private-source reads, or production actions stay
-behind explicit gates.
+控制面价值是每一步都有来源标签、边界、owner 决策与 evidence。Agent 可以继续做安全准备工作，而发布、外联、私有来源读取或生产动作保持显式 gates 之后。
 
-## Showcase User Story
+## Showcase 用户故事
 
-A maintainer or operator wants to keep a long-running work loop moving while
-they are not watching every channel. Example surfaces include public web
-signals, issue or PR metadata, local chat/search tools, notes, tasks, and docs.
+Maintainer 或 operator 想要在不盯每个 channel 的情况下保持长程工作 loop 前进。示例 surface 包括公开 web 信号、issue 或 PR 元数据、本地聊天/搜索工具、笔记、任务与文档。
 
-The operator does not want raw source dumps. They want a short review surface:
+Operator 不想要原始来源转储。他们想要一个简短评审 surface：
 
-- which new signals appeared;
-- which signals are worth turning into anchors;
-- what the agent proposes to do next;
-- why the proposal is backed by evidence;
-- what needs human judgment before external action;
-- whether the work was useful enough to continue.
+- 出现了哪些新信号；
+- 哪些信号值得变成锚点；
+- agent 提议接下来做什么；
+- 为什么提案有 evidence 支撑；
+- 外部动作前需要什么人类判断；
+- 工作是否足够有用到可以继续。
 
-The first showcase can use synthetic or consented inputs. Real connectors
-should come later and keep raw retrieval outside public LoopX state.
+第一个 showcase 可以使用合成或经同意的输入。真实连接器应稍后出现，并让原始检索留在公开 LoopX 状态之外。
 
-## State Model
+## 状态模型
 
-The showcase should reuse the generic LoopX substrate instead of adding a
-new office-specific core object.
+Showcase 应复用通用 LoopX 底板，而不是添加新的办公特定核心对象。
 
-| Layer | Public-safe object | Purpose |
+| 层 | Public-safe 对象 | 用途 |
 | --- | --- | --- |
-| Source | `connector_observation_v0` | Compact facts from a browser, chat, issue, doc, or task connector; no raw private material. |
-| Inbox | `signal_v0` | A work signal with source status, freshness, suggested effect, and boundary label. |
-| Selection | `anchor_v0` | A small number of signals chosen as high-value proof paths. |
-| Work | `todo_lifecycle_v0` | Concrete user/agent todo with validation and stop condition. |
-| Review | `review_event_v0` / `feedback_signal_v0` | Useful/not useful, needs evidence, off-scope, risky, promote, or archive. |
-| Evidence | `artifact_handle_v0` / `validation_surface_map_v0` | Observable handle and proof surface for the proposed action. |
-| Boundary | `publish_boundary_v0` | External posting, outreach, production action, or private-source expansion gate. |
-| Value | `performance_review_v0` | Output, quality, cost, attention cost, and next improvement. |
+| 来源 | `connector_observation_v0` | 来自浏览器、聊天、issue、文档或任务连接器的紧凑事实；无原始私有资料。 |
+| 收件箱 | `signal_v0` | 带来源状态、新鲜度、建议效果与边界标签的工作信号。 |
+| 选择 | `anchor_v0` | 被选为高价值证明路径的少量信号。 |
+| 工作 | `todo_lifecycle_v0` | 带验证与停止条件的具体 user/agent todo。 |
+| 评审 | `review_event_v0` / `feedback_signal_v0` | 有用/没用、需要 evidence、越界、有风险、晋升或归档。 |
+| Evidence | `artifact_handle_v0` / `validation_surface_map_v0` | 提议动作的可观察 handle 与证明 surface。 |
+| 边界 | `publish_boundary_v0` | 外部发布、外联、生产动作或私有来源扩展 gate。 |
+| 价值 | `performance_review_v0` | 输出、质量、成本、注意力成本与下一改进。 |
 
-## Minimal Card Shape
+## 最小卡片形态
 
-Each signal or work product should become a card that a human can review fast.
+每个信号或工作产品都应变成人类可以快速评审的卡片。
 
-Required fields:
+必需字段：
 
-- `title`: plain-language work signal or proposal;
-- `source_status`: public, private-needs-review, synthetic, internal, or
-  forbidden;
-- `freshness`: when the signal was observed or last validated;
-- `suggested_effect`: ignore, ask user, create todo, update evidence, create
-  anchor, or schedule review;
-- `evidence_pointer`: compact handle, not raw source text;
-- `proposed_next_action`: bounded action the agent can take;
-- `human_gate`: what cannot happen without user approval;
-- `review_choices`: useful, not useful, needs evidence, off-scope, risky,
-  promote to anchor, or archive.
+- `title`：通俗语言的工作信号或提案；
+- `source_status`：public、private-needs-review、synthetic、internal 或 forbidden；
+- `freshness`：信号被观察或最后验证的时间；
+- `suggested_effect`：忽略、询问用户、创建 todo、更新 evidence、创建锚点或安排评审；
+- `evidence_pointer`：紧凑 handle，不是原始来源文本；
+- `proposed_next_action`：agent 可以采取的有界动作；
+- `human_gate`：未经用户批准不能发生的事；
+- `review_choices`：有用、没用、需要 evidence、越界、有风险、晋升为锚点或归档。
 
-Non-fields:
+非字段：
 
-- raw chat messages;
-- raw browsing traces;
-- private docs;
-- platform credentials;
-- unpublished draft bodies;
-- auto-publish commands.
+- 原始聊天消息；
+- 原始浏览轨迹；
+- 私有文档；
+- 平台凭据；
+- 未发布草稿正文；
+- 自动发布命令。
 
-## Example Flow
+## 示例流程
 
 ```mermaid
 flowchart LR
@@ -110,80 +95,61 @@ flowchart LR
   J -- "Not approved" --> L["Boundary correction / next todo"]
 ```
 
-## Metrics
+## 指标
 
-The showcase should not optimize for raw article count, message count, or
-generated drafts. Better first metrics are:
+Showcase 不应为原始文章数、消息数或生成草稿数优化。更好的首批指标是：
 
-- accepted signals: how many observed signals became useful anchors;
-- qualified conversations: how many follow-ups created a real user or partner
-  conversation;
-- review quality: useful/not useful/needs evidence/off-scope ratios;
-- evidence strength: how often proposals had enough public-safe proof;
-- boundary correctness: how often the agent stopped before private or external
-  action gates;
-- attention cost: how many human decisions were needed per useful outcome;
-- cost per useful signal: quota or token spend divided by accepted signals.
+- 已接受信号：多少观察信号变成有用锚点；
+- 合格对话：多少跟进创造了真实用户或伙伴对话；
+- 评审质量：有用/没用/需要 evidence/越界比率；
+- evidence 强度：提案有多少比例有足够 public-safe 证明；
+- 边界正确性：agent 有多少比例在私有或外部动作 gates 前停止；
+- 注意力成本：每个有用成果需要多少人类决策；
+- 每有用信号成本：quota 或 token spend 除以已接受信号。
 
-These metrics fit the broader Loop Agent value model:
+这些指标契合更广的 Loop Agent 价值模型：
 
 ```text
 value ~= useful_output_quality / (compute_cost + user_attention_cost)
 ```
 
-## Connector Boundary
+## 连接器边界
 
-Connectors are information sources, not authority sources. A connector can
-observe, summarize, and point to a source handle. It should not silently turn a
-private feed into public evidence or an external action.
+连接器是信息来源，不是 authority 来源。连接器可以观察、总结、指向来源 handle。它不应把私有 feed 悄悄变成公开 evidence 或外部动作。
 
-| Connector class | Default action | Gate before |
+| 连接器类别 | 默认动作 | 之前在 gate |
 | --- | --- | --- |
-| Public web metadata | create compact signal | quoting bodies, claiming trend, outreach |
-| Issue / PR metadata | create compact issue signal | patch generation, branch write, publication |
-| Local chat search | project private-source gate | message-body ingestion, quoting, public docs |
-| Notes / docs | source-status preview | copying private text, publishing excerpts |
-| Task systems | compact task handle | changing external status or assigning owners |
+| 公开 web 元数据 | 创建紧凑信号 | 引用正文、声称趋势、外联 |
+| Issue / PR 元数据 | 创建紧凑 issue 信号 | Patch 生成、分支写入、发布 |
+| 本地聊天搜索 | 项目私有来源 gate | 消息正文摄入、引用、公开文档 |
+| Notes / 文档 | 来源状态预览 | 复制私有文本、发布摘录 |
+| 任务系统 | 紧凑任务 handle | 改变外部状态或指派 owners |
 
-The first public showcase should use synthetic or consented data and make the
-gate labels visible. Real connector adapters should be implemented behind
-capability gates and terms-of-use checks.
+第一个公开 showcase 应使用合成或经同意数据，并让 gate 标签可见。真实连接器 adapter 应在 capability gates 与使用条款检查之后实现。
 
-## PoC Acceptance
+## PoC 验收
 
-The showcase is useful when a maintainer can:
+当 maintainer 可以完成以下事项时，showcase 有用：
 
-1. See at least five compact signals from synthetic or consented office
-   surfaces.
-2. Promote one signal into an anchor and leave the rest as signals, not todos.
-3. Generate one bounded agent todo with validation and stop condition.
-4. Review the agent output with at least four structured choices.
-5. See the review update a draft feedback signal or performance-review note.
-6. Confirm that external posting, outreach, production action, and private
-   source expansion stay blocked without a human gate.
+1. 从合成或经同意的办公 surface 看到至少五个紧凑信号。
+2. 把一个信号晋升为锚点，其余保持为信号而非 todos。
+3. 生成一个带验证与停止条件的有边界 agent todo。
+4. 用至少四个结构化选择评审 agent 输出。
+5. 看到评审更新草稿 feedback signal 或 performance-review 说明。
+6. 确认外部发布、外联、生产动作与私有来源扩展在没有人类 gate 时保持阻塞。
 
-## Relationship To Other LoopX Surfaces
+## 与其他 LoopX Surface 的关系
 
-- The [intelligent management surface](../../surfaces/intelligent-management-surface.md)
-  renders the signal inbox, anchors, review feed, and performance-review
-  summary.
-- The [scenario capability gap map](../../scenario-capability-gap-map.md) ranks the
-  reusable substrate that office operations shares with issue-fix, creator
-  operations, benchmarks, and host integrations.
-- The [content ops surface](../../../reference/protocols/content-ops-surface-v0.md)
-  is a narrower creator/self-media state contract. Office operations should use
-  the same source-status, feedback, and publish-gate discipline but avoid
-  assuming that every signal becomes content.
-- A future host product or partner connector may own real browser, chat, issue,
-  document, or task execution. LoopX owns the compact control projection and
-  reviewable writeback path.
+- [智能管理 surface](../../surfaces/intelligent-management-surface.md) 渲染信号收件箱、锚点、评审 feed 与表现评审摘要。
+- [场景 capability 缺口图](../../scenario-capability-gap-map.md) 排序 office operations 与 issue-fix、creator operations、benchmarks 及宿主集成共享的可复用底板。
+- [Content ops surface](../../../reference/protocols/content-ops-surface-v0.md) 是更窄的 creator/自媒体状态契约。Office operations 应使用相同来源状态、反馈与发布 gate 纪律，但避免假设每个信号都变成内容。
+- 未来宿主产品或伙伴连接器可以拥有真实浏览器、聊天、issue、文档或任务执行。LoopX 拥有紧凑控制投影与可评审写回路径。
 
-## Non-Goals
+## 非目标
 
-- Do not build a generic crawler into LoopX core.
-- Do not auto-publish, auto-message, or auto-outreach.
-- Do not treat private chat or document content as public evidence.
-- Do not optimize for volume-only metrics.
-- Do not let every signal become an agent todo.
-- Do not require a custom frontend before the compact state surface proves
-  useful in status and review packets.
+- 不把通用爬虫建进 LoopX 核心。
+- 不自动发布、自动发消息或自动外联。
+- 不把私有聊天或文档内容当作公开 evidence。
+- 不为纯量指标优化。
+- 不让每个信号都变成 agent todo。
+- 紧凑状态 surface 在 status 与 review packets 中证明有用之前，不要求定制前端。

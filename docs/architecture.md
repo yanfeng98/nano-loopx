@@ -1,25 +1,23 @@
-# Architecture
+# 架构
 
-LoopX has six durable control-plane layers, plus an optional probe surface
-whose execution policy requires read-only observation; it is not a peer layer.
+> [English](architecture.md)
 
-1. **Registry**: lists known goals, their repos, adapters, authority sources,
-   status, and guards.
-2. **Goal state**: the active state file for one goal.
-3. **Run log**: JSON and Markdown reports saved per goal.
-4. **Run history**: compact indexes consumed by agents, heartbeats, and UI.
-5. **Status / attention queue**: first-screen summary of who needs to act next.
-6. **Compute quota**: local policy for how much automatic agent compute each
-   goal may consume.
+LoopX 有六个持久的控制面层，外加一个可选的探针面——其执行策略要求只读观察；
+它不是对等层。
 
-**Optional probe surface (not a seventh layer):** goals may register a
-project-specific `next_probe` command via bootstrap `--next-probe`. Registration
-stores the command as free-form text and does not validate that it is read-only;
-heartbeat and operator policy require any executed observation to be read-only.
-The `pre-tick-runnable` adapter status is declared separately and is not inferred
-from `next_probe`. There is no shipped `pre_tick` module or adapter pre-tick
-package, so keep probe registration, execution policy, and adapter status as
-separate contracts.
+1. **Registry**：列出已知目标、它们的仓库、adapter、权威来源、status 与 guard。
+2. **Goal state**：一个目标的活跃状态文件。
+3. **Run log**：每个目标保存的 JSON 与 Markdown 报告。
+4. **Run history**：被 Agent、heartbeat 与 UI 消费的紧凑索引。
+5. **Status / attention queue**：下一个该谁行动的首屏摘要。
+6. **Compute quota**：每个目标可消耗多少自动 Agent 计算的本地策略。
+
+**可选探针面（不是第七层）：** 目标可以通过 bootstrap `--next-probe` 注册一个
+项目特定的 `next_probe` 命令。注册把命令存为自由文本，且不验证它是只读的；
+heartbeat 与 operator 策略要求任何被执行的观察都必须是只读的。
+`pre-tick-runnable` adapter 状态单独声明，不从 `next_probe` 推断。
+没有随附的 `pre_tick` 模块或 adapter pre-tick 包，所以保持探针注册、
+执行策略与 adapter 状态为三个独立契约。
 
 ```text
 project goal state
@@ -39,99 +37,85 @@ loopx status
 quota-aware agent tick / heartbeat / future UI
 ```
 
-The core repository intentionally avoids domain logic. A data experiment goal,
-a note-maintenance goal, and a harness self-improvement goal should share the
-same runtime and contract, but use different adapters.
+核心仓库刻意避免领域逻辑。一个数据实验目标、一个笔记维护目标和一个 harness
+自改进目标应共享同一运行时与契约，但使用不同 adapter。
 
-## Control Plane As Effect Interpreter
+## 控制面即 Effect Interpreter
 
-The six layers are not only storage surfaces. Together they interpret one
-effect request per loop iteration:
+六个层不只是存储面。它们共同在每次 loop 迭代中解释一个 effect request：
 
 ```text
 model -> effect request -> harness interprets effect -> observation -> model
 ```
 
-The read model is the current state (`A`): registry, goal state, and run
-history. The projection is the observation (`F[B]`): status, attention queue,
-and compact run summaries. The decision is the effect interpreter
-(`A => F[QuotaDecision]`): quota, interaction contract, capability gates,
-work-lane routing, and scheduler hints decide whether and how the next effect
-may run. The data-encoded handler is the `next_effect` in the quota packet:
-CLI actions, scheduler ACK/failure hints, writeback, and spend.
+读模型是当前状态（`A`）：registry、goal state 与 run history。投影是观察
+（`F[B]`）：status、attention queue 与紧凑 run 摘要。决策是 effect interpreter
+（`A => F[QuotaDecision]`）：quota、交互契约、能力门、work-lane 路由与 scheduler
+hint 决定下一个 effect 是否可以及如何运行。数据编码的 handler 是 quota packet
+中的 `next_effect`：CLI 动作、scheduler ACK/失败提示、writeback 与 spend。
 
-This is the same lens as the
+这与
 [Agent Loop Effect Interpreter RFC](architecture/rfcs/agent-loop-effect-interpreter-v0.md)
-and
-[Harness Is the Effectful Program](development/control-plane-course/01-agent-loop-effectful-program.md).
-The public framing comes from 齐梦星空,
-[主线一：Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share).
+和
+[Harness Is the Effectful Program](development/control-plane-course/01-agent-loop-effectful-program.md)
+是同一透镜。公开表述来自齐梦星空，
+[主线一：Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share)。
 
-## Guided Autonomy, Not Recommendation Lock-In
+## 引导式自主，而非推荐锁定
 
-LoopX separates **hard boundaries** from **steering guidance**. Claims, scope,
-capability readiness, gates, quota, public/private policy, and destructive or
-production-effect rules define what an agent may do. Priorities,
-recommendations, bounded suggestions, and `next_cli_actions` help the agent
-choose efficiently inside that legal set; they do not silently shrink it.
+LoopX 区分**硬边界**与**引导建议**。声明、范围、能力就绪、gate、quota、
+公共/私有策略，以及破坏性或生产效果规则定义 Agent 可以做什么。优先级、
+推荐、有界建议与 `next_cli_actions` 帮助 Agent 在该合法集内高效选择；
+它们不会偷偷缩小它。
 
-Projections therefore optimize for readability without pretending to be
-exhaustive. An agent may choose a currently authoritative eligible action that was
-not displayed among the first suggestions; a typed discovery route should expose
-the authoritative queue when the bounded view is insufficient. The agent must
-bring that choice back
-through the same typed preflight, receipt binding, validation, writeback, and
-spend path. This preserves process guidance and auditability while keeping the
-agent autonomous where no real boundary requires a single route.
+因此投影针对可读性优化，而不假装穷举。Agent 可以选择一个当前权威的合格动作，
+即使它不在第一组建议里；当有界视图不足时，typed 发现路径应暴露权威队列。
+Agent 必须把该选择带回同一条 typed 预检、收据绑定、验证、写回与 spend 路径。
+这保留了流程引导与可审计性，同时在没有真实边界要求单一路线时保持 Agent 自主。
 
-A field that is advisory must say so in its schema. If a controller intends a
-whitelist, exclusive lease, owner gate, or other machine-enforced restriction,
-that restriction belongs in a typed authority or transition contract rather
-than being inferred from list position or prompt wording.
+一个字段如果是建议性的，就必须在 schema 里说明。如果 controller 想要白名单、
+排他租约、owner gate 或其他机器强制限制，该限制属于 typed 权威或转移契约，
+而不是从列表位置或提示措辞推断。
 
-## Turn Decision Vocabulary
+## Turn 决策词汇表
 
-Operator-facing docs and heartbeat prompts often summarize a turn as deliver,
-wait, ask, replan, repair, or stay quiet. That shorthand describes interaction
-intent; it is not the typed packet vocabulary carried by the Turn contracts.
+面向 operator 的文档与 heartbeat 提示常把 turn 概括为 deliver、wait、ask、
+replan、repair 或 stay quiet。这个简写描述交互意图；它不是 Turn 契约携带的
+typed packet 词汇。
 
-The executable vocabulary lives with its owning contracts:
+可执行词汇与其拥有契约共存：
 
-| Contract | When | Authoritative definition |
+| 契约 | 时机 | 权威定义 |
 | --- | --- | --- |
-| `LoopXTurnRoute` | Before host execution | [`driver.py`](../loopx/control_plane/turn_driver/driver.py), enum `LoopXTurnRoute` |
-| `TurnResultKind` | After host execution | [`settlement.ts`](../loopx/control_plane/turn_driver/settlement.ts), `TURN_RESULT_KINDS`; Python adapter: [`transaction.py`](../loopx/control_plane/turn_driver/transaction.py), enum `LoopXTurnResultKind` |
+| `LoopXTurnRoute` | Host 执行前 | [`driver.py`](../loopx/control_plane/turn_driver/driver.py)，枚举 `LoopXTurnRoute` |
+| `TurnResultKind` | Host 执行后 | [`settlement.ts`](../loopx/control_plane/turn_driver/settlement.ts)，`TURN_RESULT_KINDS`；Python adapter: [`transaction.py`](../loopx/control_plane/turn_driver/transaction.py)，枚举 `LoopXTurnResultKind` |
 
-Read the complete member lists in those definitions; this page explains their
-meaning without maintaining another exhaustive enumeration.
+阅读这些定义里的完整成员列表；本页解释它们的含义，而不维护另一份穷举枚举。
 
-- Prose "deliver" splits into `validated_progress` versus `validated_completion`.
-- Execution failures are first-class typed results. In particular,
-  `terminal_closeout_failed` means terminal closeout failed after durable
-  writeback and quota spend. Recovery retries the same Turn's closeout without
-  repeating those committed effects; it must not treat the failure as unspent.
-  The [Turn executor recovery tests](../tests/test_loopx_turn_executor.py)
-  exercise this boundary.
-- "Stay quiet" is notification / monitor behavior (for example
-  `monitor_quiet_skip` or heartbeat `DONT_NOTIFY`), not a member of either enum.
+- 散文 "deliver" 拆成 `validated_progress` 与 `validated_completion`。
+- 执行失败是一等 typed 结果。特别是 `terminal_closeout_failed` 表示终态收尾在持久的
+  writeback 与 quota spend 之后失败。恢复重试同一 Turn 的收尾而不重复那些已提交的
+  effect；它绝不能把失败当作未 spend。
+  [Turn executor 恢复测试](../tests/test_loopx_turn_executor.py)覆盖这一边界。
+- "Stay quiet" 是通知/monitor 行为（例如 `monitor_quiet_skip` 或 heartbeat
+  `DONT_NOTIFY`），不是两个枚举的成员。
 
-Quota `interaction_contract` and heartbeat guidance may still use the operator
-shorthand. Turn adapters use the executable definitions linked above.
+Quota `interaction_contract` 与 heartbeat 引导仍可使用 operator 简写。
+Turn adapter 使用上面链接的可执行定义。
 
-## Runtime Responsibility Model
+## 运行时责任模型
 
-The six durable layers above describe control-plane surfaces. They do not
-describe who performs each step of a turn. For runtime ownership, use four
-responsibilities:
+上面六个持久层描述控制面表面。它们不描述谁执行一个 turn 的每一步。
+运行时归属用四个责任：
 
-| Responsibility | Owns | Must not own |
+| 责任 | 拥有 | 不得拥有 |
 | --- | --- | --- |
-| **Agent** | Planning, analysis, tool use, and one bounded execution through a host/runtime | Durable goal lifecycle or unscoped effect authority |
-| **Provider** | External calls and bounded observations, effect results, and readback | Domain transition policy or LoopX todo state |
-| **Capability** | The caller-facing outcome contract, domain policy, observation normalization, validation, and typed transition proposals | Durable scheduling, claims, gates, or direct lifecycle writes |
-| **LoopX Kernel** | Goal, todo, claim, gate, monitor, quota, accepted writeback, recovery, and scheduling | Domain-specific reasoning or provider implementation details |
+| **Agent** | 规划、分析、工具使用，以及通过 host/runtime 的一次有界执行 | 持久目标生命周期或未加作用域的 effect 权威 |
+| **Provider** | 外部调用与有界观察、effect 结果与读回 | 领域转移策略或 LoopX todo 状态 |
+| **Capability** | 面向调用方的结果契约、领域策略、观察归一化、验证与 typed 转移提议 | 持久调度、声明、gate 或直接生命周期写 |
+| **LoopX 内核** | Goal、todo、claim、gate、monitor、quota、被接受的 writeback、恢复与调度 | 领域特定推理或 provider 实现细节 |
 
-The request and result paths therefore run in opposite directions:
+因此请求与结果路径反向运行：
 
 ```text
 Agent -> Capability -> Provider -> external system
@@ -139,298 +123,239 @@ external observation / effect readback -> Provider -> Capability
 typed transition proposal -> LoopX Kernel -> next todo / gate / monitor / turn
 ```
 
-An observation is not a transition, and a provider receipt is not accepted
-progress until the capability validates it and the Kernel commits the resulting
-state change. Domain state, evidence, and receipts are artifacts exchanged
-between these responsibilities, not additional runtime owners.
+观察不是转移，provider 收据在 capability 验证它且内核提交结果状态变化前，
+也不是被接受的进度。领域状态、证据与收据是这些责任之间交换的产物，
+不是额外运行时 owner。
 
-The host/runtime carries the Agent's session, tools, and invocation. It is a
-replaceable execution boundary, not a fifth domain decision owner.
+host/runtime 携带 Agent 的会话、工具与调用。它是可替换的执行边界，
+不是第五个领域决策 owner。
 
-An **extension** is a separate delivery and lifecycle axis. It may install an
-optional provider, while a built-in capability may use a core provider. The
-extension does not become a fifth runtime responsibility and does not acquire
-Kernel authority. This boundary is represented directly by
-`CapabilityRegistry`, which registers providers, capability contracts, and
-their implementations separately.
+一个**extension** 是独立的分发与生命周期轴。它可以安装可选 provider，
+而内置 capability 可以使用核心 provider。extension 不会成为第五个运行时责任，
+也不会获得内核权威。这个边界直接由 `CapabilityRegistry` 表示，
+它分别注册 providers、capability 契约与其实现。
 
-### Agent-Native Kanban Is A Projection
+### Agent 原生 Kanban 是一种投影
 
-LoopX state can be rendered as an agent-native Kanban: todos are cards, logical
-lanes are derived views, and card moves are validated transitions. The metaphor
-does not introduce another state owner. Canonical todo/event/state contracts
-remain authoritative; dashboards and collaboration boards consume public-safe
-projections.
+LoopX 状态可以渲染为 Agent 原生 Kanban：todos 是卡片，逻辑 lane 是派生视图，
+卡片移动是经过验证的转移。这个隐喻不引入另一个状态 owner。Canonical
+todo/event/state 契约保持权威；dashboard 与协作看板消费 public-safe 投影。
 
-Capabilities may project domain lanes such as Issue Fix
-`feasibility -> patch -> checks -> review -> merge` without adding those labels
-to the Kernel lifecycle. Providers supply the external facts behind the lane,
-capabilities validate them and propose typed transitions, and the Kernel owns
-claim, gate, monitor, quota, writeback, recovery, and terminal closure. See the
-[concept primer](development/control-plane-course/00-concept-primer.md) and
-[state substrate lecture](development/control-plane-course/04-state-substrate.md).
+Capabilities 可以投影领域 lane，如 Issue Fix
+`feasibility -> patch -> checks -> review -> merge`，而不把这些标签加入
+内核生命周期。Provider 提供 lane 背后的事实，capability 验证它们并提议 typed
+转移，内核拥有 claim、gate、monitor、quota、writeback、恢复与终态关闭。见
+[概念入门](development/control-plane-course/00-concept-primer.md)与
+[state 基底讲义](development/control-plane-course/04-state-substrate.md)。
 
-## Current Dependency Budget
+## 当前依赖预算
 
-The executable boundary policy lives in
-[`test_control_plane_import_boundaries.py`](../tests/architecture/test_control_plane_import_boundaries.py):
+可执行边界策略位于
+[`test_control_plane_import_boundaries.py`](../tests/architecture/test_control_plane_import_boundaries.py)：
 
-- `test_control_plane_does_not_gain_outward_dependencies` rejects control-plane
-  imports of presentation, CLI, capability, or benchmark-adapter layers.
-- `test_status_has_no_forbidden_outward_dependencies` rejects status imports of
-  benchmark-adapter or presentation layers.
-- `test_quota_markdown_is_owned_by_the_presentation_layer` protects the renderer
-  ownership and CLI composition boundary.
+- `test_control_plane_does_not_gain_outward_dependencies` 拒绝控制面导入
+  展示、CLI、capability 或 benchmark-adapter 层。
+- `test_status_has_no_forbidden_outward_dependencies` 拒绝 status 导入
+  benchmark-adapter 或展示层。
+- `test_quota_markdown_is_owned_by_the_presentation_layer` 保护渲染器归属与
+  CLI 组合边界。
 
-These are zero-exception checks. The former quota-Markdown and status
-verifier-bootstrap edges have been removed; there is no remaining debt
-allowlist for these checks. Run the linked architecture test file to inspect
-current violations rather than maintaining an edge inventory in prose.
+这些是零例外检查。先前 quota-Markdown 与 status verifier-bootstrap 边已被移除；
+这些检查没有剩余债务白名单。运行链接的架构测试文件检查当前违规，
+而不是在散文里维护一份边清单。
 
-Adapter-specific enrichment belongs behind application/plugin composition
-rather than in the status core. Move an edge only after characterization
-parity exists. Hiding an adapter dependency inside a function or dynamic import
-does not count as architectural separation; the current AST checks inspect
-static imports, including function-local imports, but do not prove the absence
-of dynamic imports.
+Adapter 特定增强属于应用/插件组合，而不是 status 核心。只有在存在
+characterization 对等后才移动一条边。在函数或动态导入里藏 adapter 依赖
+不算架构分离；当前 AST 检查审查静态导入，包括函数局部导入，
+但不证明动态导入不存在。
 
-### Status And Quota Facades
+### Status 与 Quota 门面
 
-`loopx.status` and `loopx.quota` remain compatibility entry points for their
-facade-owned behavior. Imported implementations belong to their canonical
-bounded modules; the only compatibility-only re-exports are the keys in each
-facade's `_PUBLIC_COMPAT_REEXPORTS` map, whose values name the canonical owner.
+`loopx.status` 与 `loopx.quota` 保持为其门面拥有行为的兼容入口。
+被导入的实现属于其 canonical 有界模块；唯一纯兼容再导出是每个门面
+`_PUBLIC_COMPAT_REEXPORTS` 映射中的键，其值指明 canonical owner。
 
-New repository code must import the canonical owner. A compatibility-only
-entry may remain while a public example, regression, or documented import
-contract consumes it. Zero-consumer, undocumented entries are removed instead
-of becoming permanent accidental API. Removing a retained entry requires an
-explicit migration or deprecation step, and status/quota CLI JSON parity must
-stay characterized independently of the compatibility binding.
+新仓库代码必须导入 canonical owner。当公共示例、回归或文档导入契约消费它时，
+纯兼容条目可以保留。零消费者、无文档的条目被移除，而不是变成永久意外 API。
+移除保留条目需要显式迁移或弃用步骤，且 status/quota CLI JSON 对等性必须独立于
+兼容绑定保持特征化。
 
-Capabilities and extensions are also orthogonal: a capability is a product
-contract, while an extension is an independently managed delivery unit that
-may install providers for one or more capabilities. The provider-aware
-registration and manifest boundary is documented in
-[extensions.md](reference/extensions.md).
+Capabilities 与 extensions 也是正交的：capability 是产品契约，
+而 extension 是独立管理的分发单元，可以为多个 capability 安装 providers。
+provider 感知的注册与清单边界在 [extensions.md](reference/extensions.md) 中说明。
 
-Operator-inbox urgency is one such inward contract. Quota consumes the
-content-free `operator_inbox_urgency_v0` read model from the control plane; it
-does not import the Lark provider. The existing Lark config, event files,
-capability key, lane names, and CLI remain compatibility surfaces while the
-provider delegates urgency projection to that contract. Provider files should
-move only after this read-model and work-lane parity remains characterized.
+Operator 收件箱紧迫度就是这样一个内向契约。Quota 消费控制面的无内容
+`operator_inbox_urgency_v0` 读模型；它不导入 Lark provider。现有 Lark 配置、
+事件文件、capability key、lane 名称与 CLI 在 provider 把紧迫度投影委托给该契约
+时保持兼容面。只有在该读模型与 work-lane 对等性保持特征化后，provider 文件才应移动。
 
-LoopX should still absorb field-tested project-control mechanisms such
-as authority registries, current-belief TODOs, managed external-source
-manifests, experiment boards, validation surface maps, and gated handoff
-packets. See [field-derived-patterns.md](concepts/field-derived-patterns.md).
+LoopX 还应吸收经过现场检验的项目控制机制，如权威注册表、当前信念 TODO、
+托管外部来源清单、实验看板、验证面映射与带 gate 的 handoff packet。
+见 [field-derived-patterns.md](concepts/field-derived-patterns.md)。
 
-LoopX should also expose a human-friendly frontstage without moving the
-source of truth into chat. A goal can project as a channel, agents can project
-as workspace members, and task ownership can project as explicit leases; the
-registry, active state, run history, quota, gates, and lease events remain the
-backstage ledger. See
-[frontstage-channel-lease-roadmap.md](product/roadmaps/frontstage-channel-lease-roadmap.md).
+LoopX 还应暴露一个人类友好的 frontstage，而不把真相源搬进聊天。
+一个目标可以投影为通道，Agent 可以投影为工作区成员，任务归属可以投影为
+显式租约；registry、active state、run history、quota、gate 与租约事件仍是
+backstage ledger。见
+[frontstage-channel-lease-roadmap.md](product/roadmaps/frontstage-channel-lease-roadmap.md)。
 
-LoopX should also grow a narrow host-integration surface. CLI commands
-remain the compatibility baseline, but long-running agent hosts benefit when
-the same state is available through hook/MCP/server adapters:
+LoopX 还应成长出一个窄的 host 集成面。CLI 命令保持兼容基线，
+但长时 Agent host 在同状态可用作 hook/MCP/server adapter 时受益：
 
-- hook activation should only route the host toward the current LoopX
-  contract; it must not embed a second scheduler or stale project policy;
-- MCP/server tools should expose lifecycle reads, todo/gate/lease writes, and
-  compact status projections without requiring the host to parse Markdown;
-- host adapters should isolate platform details while preserving the same
-  registry, event-ledger, quota, public/private boundary, and lease semantics;
-- task graphs should be optional projections over LoopX state, not a
-  replacement for the event ledger or active goal truth.
+- hook 激活应只把 host 导向当前 LoopX 契约；它不得嵌入第二个 scheduler
+  或过期的项目策略；
+- MCP/server 工具应暴露生命周期读、todo/gate/lease 写与紧凑 status 投影，
+  而无需 host 解析 Markdown；
+- host adapter 应隔离平台细节，同时保留相同的 registry、事件 ledger、
+  quota、公共/私有边界与租约语义；
+- 任务图应是 LoopX 状态上的可选投影，而不是事件 ledger 或活跃目标真相的替代品。
 
-This keeps LoopX portable across Codex, local CLI loops, dashboards, and
-future agent hosts while avoiding a forked control plane per host.
-The v0 protocol contract is
-[`host-integration-surface-v0`](reference/protocols/host-integration-surface-v0.md):
-hook activation stays thin, lifecycle reads and todo/gate/lease writes map to
-CLI-equivalent operations, compact status projections exclude raw/private
-material, optional derived projections remain read-only, and CLI fallback
-remains available when an adapter is absent.
+这使 LoopX 在 Codex、本地 CLI loop、dashboard 与未来 Agent host 之间保持可移植，
+同时避免为每个 host 派生一个控制面。v0 协议契约是
+[`host-integration-surface-v0`](reference/protocols/host-integration-surface-v0.md)：
+hook 激活保持薄，生命周期读与 todo/gate/lease 写映射到 CLI 等效操作，
+紧凑 status 投影排除原始/私有材料，可选派生投影保持只读，
+且 adapter 缺失时 CLI fallback 依然可用。
 
-## Lifetime Goal Invariant
+## 终身目标不变量
 
-LoopX should optimize for **lifetime goals**: durable intentions that
-may outlive a single thread, executor, project phase, or plan. This is a
-product invariant, not an additional storage layer.
+LoopX 应优化**终身目标**：可能活过一个线程、执行器、项目阶段或计划的持久意图。
+这是产品不变量，不是额外存储层。
 
-A lifetime goal must be stable enough that a future human or agent can recover
-what the goal is, what currently defines it, who may change it, and what the
-next safe transition is. It must also stay narrow enough that automation can
-make one bounded, verifiable move instead of claiming open-ended authority.
+一个终身目标必须稳定到足以让未来的人或 Agent 恢复：目标是什么、
+当前什么定义它、谁可以改变它、下一个安全转移是什么。它也必须保持窄，
+让自动化能做一个有界、可验证的动作，而不是声称开放式的权威。
 
-The architecture maps that invariant onto the existing layers:
+架构把该不变量映射到现有层：
 
-- the registry gives the lifetime goal a stable identity, repo boundary,
-  adapter status, guards, and authority-source list;
-- active goal state records the current belief, priority stack, non-goals, and
-  next action without becoming a complete diary;
-- authority sources replace implicit model memory with reviewable context and
-  conflict rules;
-- run history preserves the compact evidence trail across sessions and agents;
-- todos turn the lifetime goal into bounded user and agent obligations;
-- gates, reward, and quota keep human judgment, course correction, and compute
-  spend attached to concrete transitions.
+- registry 给终身目标稳定身份、仓库边界、adapter 状态、guard 与权威来源列表；
+- active goal state 记录当前信念、优先级栈、非目标与下一个动作，
+  而不变成完整日记；
+- 权威来源用可评审上下文与冲突规则取代隐式模型记忆；
+- run history 在会话与 Agent 之间保留紧凑证据轨迹；
+- todos 把终身目标变成有界的用户与 Agent 义务；
+- gates、reward 与 quota 让人类判断、路线修正与计算 spend 附着在具体转移上。
 
-The result should preserve continuity without claiming open-ended autonomy: a
-goal can live for years, but every agent turn still has to pass through current
-authority, boundary, quota, validation, and writeback before it can count as
-progress.
+结果应在不声称开放式自主性的情况下保留连续性：目标可以活好几年，
+但每个 Agent turn 仍必须经过当前权威、边界、quota、验证与 writeback，
+才能算作进度。
 
-For session-runtime platforms that already own agent definitions, session
-events, tool execution, permissions, billing, and product frontstage, Goal
-Harness should integrate as the goal-level control projection rather than as a
-second runtime. The read-only adapter path is: ingest compact session, event,
-approval, outcome, and artifact summaries; produce `goal_state`,
-`run_projection`, `operator_gate`, `human_reward`, `work_lane_contract`,
-`quota_decision`, `handoff_packet`, and `dreaming_proposal` projections; then
-let the product surface display those projections. See
-[session-runtime-control-plane-adapter.md](integrations/session-runtime-control-plane-adapter.md).
+对已经拥有 Agent 定义、会话事件、工具执行、权限、计费与产品 frontstage 的
+会话运行时平台，Goal Harness 应集成为目标级控制投影，而不是第二个运行时。
+只读 adapter 路径是：摄入紧凑会话、事件、批准、结果与产物摘要；产出
+`goal_state`、`run_projection`、`operator_gate`、`human_reward`、
+`work_lane_contract`、`quota_decision`、`handoff_packet` 与
+`dreaming_proposal` 投影；然后让产品面显示这些投影。见
+[session-runtime-control-plane-adapter.md](integrations/session-runtime-control-plane-adapter.md)。
 
-## Local Server / Daemon Roadmap
+## 本地服务器 / Daemon 路线图
 
-The CLI remains the compatibility baseline. A future local server should be an
-optional control-plane coordinator over the same registry, active state, run
-history, quota, todo, and boundary contracts, not a replacement state machine.
+CLI 保持兼容基线。未来的本地服务器应是同一 registry、active state、run history、
+quota、todo 与边界契约上的可选控制面协调器，而不是替代状态机。
 
-In the current control plane, a **goal** is the stable `goal_id` boundary: one
-registry entry, active-state file, quota lane, run-history stream, and status
-projection. A **todo** is a structured active-state checkbox inside that goal,
-addressed by `todo_id` and projected as an agent or user work item. There is no
-separate issue object in the LoopX runtime model.
+在当前控制面中，一个 **goal** 是稳定的 `goal_id` 边界：一个 registry 条目、
+active-state 文件、quota lane、run-history 流与 status 投影。一个 **todo**
+是该目标内的结构化 active-state 复选框，用 `todo_id` 编址，
+并投影为 Agent 或用户工作条目。LoopX 运行时模型中没有独立的 issue 对象。
 
-The server path should land in layers:
+服务器路径应分层落地：
 
-1. **Writer correctness before a server**: make existing CLI writers safe under
-   concurrency with per-goal locks, idempotency keys, and optimistic revision
-   checks. `todo`, `refresh-state`, reward writeback, quota spend, and history
-   append paths should fail closed on stale revision or overlapping write scope.
-2. **Lease adoption**: the optional local `task_lease_v0` CLI already provides
-   owner, TTL, write scope, idempotency, conflict, transfer, and release
-   semantics. Released generations remain as inactive per-todo tombstones, so
-   a later acquire advances both the CAS version and authority-owned
-   `lease_epoch`; terminal writeback uses the returned key/version pair. Keep
-   `claimed_by` as the default soft route and adopt hard leases
-   only for hosts with a demonstrated concurrent-write problem.
-   The pending/lease key should be per todo: `(goal_id, todo_id)` is the
-   contention unit, not the whole goal or project. Different todos under the
-   same goal may proceed in parallel when their write scopes and gates allow
-   it; competing claims on the same todo fail closed or renew.
-   Status currently exposes capability availability; quota does not enforce or
-   consume hard leases. A later host integration may project active lease rows
-   after its adoption contract and fallback behavior are validated.
-3. **Loopback coordinator**: extend the existing local status server into a
-   loopback-only coordinator that can centralize per-goal locks, leases, quota
-   decisions, compact status projection, and heartbeat scheduling. It must bind
-   locally, keep raw/private evidence out of compact responses, and preserve
-   CLI fallbacks for every write.
-4. **Heartbeat scheduler**: move recurring heartbeat bookkeeping behind the
-   coordinator only after quota/spend idempotency is proven. Scheduler output
-   should be the same `quota should-run` / `interaction_contract` /
-   `protocol_action_packet` shape that current automation prompts already use.
-5. **Planning and dreaming queues**: let background planning produce ranked
-   todo proposals, evidence probes, and refactor warnings as advisory records.
-   These queues must not execute protected work, read private material, or
-   spend delivery quota without a later normal `quota should-run` decision and
-   goal-boundary approval. The compact contract is
-   `server_managed_planning_contract_v0`; see
-   [dreaming-exploration-lane.md](product/roadmaps/dreaming-exploration-lane.md).
-6. **Host adapters**: expose the same contracts through MCP, hooks, or a small
-   local HTTP API for Codex-like hosts. Host adapters should route agents to
-   current state and valid writes; they should not embed stale project policy or
-   create a second scheduler.
+1. **服务器之前的写入正确性**：用每目标锁、幂等键与乐观 revision 检查，
+   让现有 CLI 写者在并发下安全。`todo`、`refresh-state`、reward writeback、
+   quota spend 与 history append 路径应在过期 revision 或重叠写作用域上 fail closed。
+2. **租约采用**：可选本地 `task_lease_v0` CLI 已提供 owner、TTL、写作用域、
+   幂等、冲突、转移与释放语义。已释放的世代保持为非活跃的逐 todo tombstone，
+   因此后续 acquire 同时推进 CAS 版本与权威拥有的 `lease_epoch`；
+   终态 writeback 使用返回的 key/version 对。把 `claimed_by` 保持为默认软路径，
+   只为有确证并发写问题的 host 采用硬租约。
+   Pending/lease 键应为每 todo：`(goal_id, todo_id)` 是争用单元，
+   不是整个目标或项目。同一目标下不同 todos 在写作用域与 gate 允许时可以并行；
+   同一 todo 上的竞争 claim 会 fail closed 或续约。
+   Status 目前暴露 capability 可用性；quota 不强制也不消费硬租约。
+   后续 host 集成可在其采用契约与回退行为验证后投影活跃租约行。
+3. **Loopback 协调器**：把现有本地 status server 扩展为纯 loopback 协调器，
+   可以集中每目标锁、租约、quota 决策、紧凑 status 投影与 heartbeat 调度。
+   它必须绑定本地，让原始/私有证据远离紧凑响应，并为每次写保留 CLI fallback。
+4. **Heartbeat scheduler**：只在 quota/spend 幂等被证明后，把循环 heartbeat
+   簿记移到协调器后面。Scheduler 输出应为当前自动化提示已使用的同一
+   `quota should-run` / `interaction_contract` / `protocol_action_packet` 形状。
+5. **规划与 dreaming 队列**：让后台规划把排名 todo 提议、证据探针与重构警告
+   产出为建议性记录。这些队列不得执行受保护工作、读取私有材料，
+   或在经过后续正常 `quota should-run` 决策与目标边界批准前花费 delivery 配额。
+   紧凑契约是 `server_managed_planning_contract_v0`；见
+   [dreaming-exploration-lane.md](product/roadmaps/dreaming-exploration-lane.md)。
+6. **Host adapters**：通过 MCP、hooks 或小型本地 HTTP API 为 Codex 类 host
+   暴露相同契约。Host adapter 应把 Agent 路由到当前状态与合法写；
+   不应嵌入过期项目策略或创建第二个 scheduler。
 
-Acceptance criteria for the first server-backed milestone:
+首个服务器支撑里程碑的验收标准：
 
-- the same action can be completed through CLI-only mode after the daemon is
-  stopped;
-- a duplicate heartbeat, duplicate quota spend, or stale todo update becomes an
-  explicit no-op or conflict, not a second delivery event;
-- status shows the active lease and current owner without making the lease the
-  source of project truth;
-- all compact server responses pass the public/private boundary scan;
-- tests cover one concurrent writer conflict and one daemon-down fallback.
+- 守护进程停止后，同一动作仍可通过纯 CLI 模式完成；
+- 重复 heartbeat、重复 quota spend 或过期 todo 更新变成显式 no-op 或冲突，
+  而不是第二个 delivery 事件；
+- status 显示活跃租约与当前 owner，而不让租约成为项目真相源；
+- 所有紧凑服务器响应通过公共/私有边界扫描；
+- 测试覆盖一个并发写者冲突与一个守护进程宕机回退。
 
-Before the server-backed lease exists, LoopX keeps a lighter shared-control-plane
-contract: todo metadata may include `claimed_by`, written by the todo CLI under
-the active-state file lock. That field is a soft owner for visibility only, and
-the CLI accepts it only when the id is registered in
-`coordination.registered_agents`. Registered identities are peers. Work authority
-comes from explicit claims, task leases, goal/write boundaries, and typed
-continuation policy rather than a durable leader role. Any peer doing repository
-work follows the same workspace-isolation rule when the selected task writes;
-repository maintainer policy determines whether it may self-merge. A future
-server lease should stay per todo and add TTL, idempotency keys, stale-claim
-detection, overlap warnings, and compare-and-swap conflict responses.
+在服务器支撑的租约存在之前，LoopX 保留一个更轻的共享控制面契约：
+todo 元数据可以包含 `claimed_by`，由 todo CLI 在 active-state 文件锁下写入。
+该字段是仅供可见的软 owner，CLI 只在 id 注册于
+`coordination.registered_agents` 时接受它。已注册身份是对等 peer。
+工作权威来自显式 claim、任务租约、目标/写边界与 typed 延续策略，
+而不是持久 leader 角色。做仓库工作时任何 peer 都遵循同一工作区隔离规则；
+仓库维护者策略决定它可否 self-merge。未来服务器租约应保持每 todo，
+并增加 TTL、幂等键、过期 claim 检测、重叠警告与 compare-and-swap 冲突响应。
 
-## State Interaction Model
+## State 交互模型
 
-LoopX has four product actors:
+LoopX 有四个产品 actor：
 
-- the **goal**, which owns durable objective, state, guards, run history, and
-  reward overlays;
-- the **Codex App executor**, which performs bounded transitions but should not
-  be the long-term source of truth;
-- the **user**, who supplies operator intent, approval, and high-quality reward
-  signals;
-- the **dashboard**, which visualizes derived status and should remain
-  read-mostly unless an explicit local write boundary is enabled.
+- **goal**，拥有持久 objective、状态、guard、run history 与 reward overlay；
+- **Codex App executor**，执行有界转移，但不应是长期真相源；
+- **user**，提供 operator 意图、批准与高质量奖励信号；
+- **dashboard**，可视化派生 status，且在启用显式本地写边界前应保持只读为主。
 
-This actor model is the design gate for future commands and dashboard work. A
-new capability should name the state it reads, the state it writes, the owner
-of that write, and how the dashboard proves the transition happened.
+这个 actor 模型是未来命令与 dashboard 工作的设计关卡。一个新 capability
+应指明它读的状态、写的状态、该写的 owner，以及 dashboard 如何证明转移发生。
 
-See [state-interaction-model.md](state-interaction-model.md).
+见 [state-interaction-model.md](state-interaction-model.md)。
 
-## Peer Task Coordination
+## Peer 任务协调
 
-For parallel work, every registered LoopX agent has equal identity authority.
-Each peer owns only the work it has claimed or leased, within the current goal
-boundary. A peer may:
+对并行工作，每个已注册 LoopX Agent 有平等身份权威。每个 peer 只在当前目标边界内
+拥有其声明或租约的工作。一个 peer 可以：
 
-- inspect or claim an eligible todo;
-- advance one bounded implementation, validation, monitor, or repair slice;
-- create an ordinary independent successor, optionally with executor exclusions;
-- write back evidence for its own accepted task outcome.
+- 检查或声明一个合格 todo；
+- 推进一个有界的实现、验证、监控或修复切片；
+- 创建一个普通独立 successor，可选带执行者排除；
+- 为其自身被接受的任务结果写回证据。
 
-When bounded orchestration is enabled, LoopX deterministically selects a
-temporary coordinator for one task bundle. That coordinator may activate or
-resume eligible peer lanes and aggregate accepted bundle evidence. It does not
-become a durable leader and gains no implicit review, merge, publication, or
-replan authority over other identities.
+当有界编排启用时，LoopX 确定性为一批任务选择一个临时协调者。
+该协调者可以激活或恢复合格 peer lane 并汇总被接受的 bundle 证据。
+它不会成为持久 leader，也不会对其他身份获得隐式评审、merge、发布或 replan 权威。
 
-LoopX does not replace the operating-system scheduler or Codex App
-executor. It should, however, own the simple compute quota that those executors
-read before running more work. Timer cadence is an execution mechanism, not the
-product source of truth for project priority.
+LoopX 不取代操作系统 scheduler 或 Codex App executor。但是，它应拥有
+那些执行者在运行更多工作前读取的简单计算配额。定时器 cadence 是执行机制，
+不是项目优先级的真相源。
 
-See [quota-allocation.md](quota-allocation.md).
+见 [quota-allocation.md](quota-allocation.md)。
 
-See [peer-agent-runtime-v1.md](reference/protocols/peer-agent-runtime-v1.md).
+见 [peer-agent-runtime-v1.md](reference/protocols/peer-agent-runtime-v1.md)。
 
 ## Status / Attention Queue
 
-The status layer derives a compact queue from registry, run history, and
-contract health. It should be the first thing a controller or future UI reads:
+status 层从 registry、run history 与契约健康派生紧凑队列。它应是 controller
+或未来 UI 首先读取的内容：
 
-- contract failures block adapter work,
-- goals waiting on user/controller opt-in are surfaced explicitly,
-- goals ready for Codex work are separated from external evidence watches,
-- already-connected read-only goals with valid runs do not keep demanding
-  redundant review.
+- 契约失败阻塞 adapter 工作，
+- 等待用户/controller opt-in 的目标被显式表露，
+- 准备好接受 Codex 工作的目标与外部证据关注分离，
+- 已连接且带有效 run 的只读目标不需要索要冗余评审。
 
-See [attention-queue.md](operations/attention-queue.md).
+见 [attention-queue.md](operations/attention-queue.md)。
 
-The JSON export is the boundary for dashboards, heartbeat summaries, and future
-UI work. See [status-data-contract.md](status-data-contract.md). The product
-dashboard frontend should follow
-[dashboard-frontend-selection.md](product/roadmaps/dashboard-frontend-selection.md); the
-single-file HTML renderer remains a fallback for smoke tests and offline
-inspection.
+JSON 导出是 dashboard、heartbeat 摘要与未来 UI 工作的边界。
+见 [status-data-contract.md](status-data-contract.md)。产品 dashboard
+前端应遵循
+[dashboard-frontend-selection.md](product/roadmaps/dashboard-frontend-selection.md)；
+单文件 HTML 渲染器保持为冒烟测试与离线检查的回退。

@@ -1,31 +1,26 @@
-# Issue/PR Solver Anchor Coordination
+# Issue/PR Solver 锚点协调
 
-This note defines how LoopX coordinates a selected public issue/PR solver
-anchor after maintainer intake. The solver may be a partner tool, a human
-contributor, or a future LoopX-managed worker. LoopX's role is not to claim
-every issue. Its role is to keep the anchor valuable, bounded, measurable, and
-safe enough to become product evidence.
+> [English](issue-pr-solver-anchor-coordination.md)
 
-Use this after
+本说明定义 maintainer 摄入之后 LoopX 如何协调一个选中的公开 issue/PR solver 锚点。Solver 可以是伙伴工具、人类贡献者或未来 LoopX 管理的 worker。LoopX 的角色不是认领每个 issue。它的角色是保持锚点有价值、有边界、可度量，并且安全到足以成为产品 evidence。
+
+在
 [`issue_pr_solver_maintainer_intake_v0`](issue-pr-solver-maintainer-intake.md)
-has selected a candidate as a high-value anchor.
+选中某个候选作为高价值锚点之后使用本说明。
 
-## Why This Exists
+## 为什么存在
 
-Issue/PR solving is a useful proof path only when it demonstrates more than raw
-coding ability. A good anchor should show that LoopX can help a maintainer:
+Issue/PR 求解只有展示出超越原始编码能力时才是有用的证明路径。一个好锚点应显示 LoopX 能帮助 maintainer：
 
-- choose a worthwhile repository or issue;
-- keep ownership and publication gates explicit;
-- turn scattered solver activity into compact evidence;
-- compare useful outcomes against cost and human attention;
-- decide whether the case graduates into onboarding, showcase, or product work.
+- 选择值得的仓库或 issue；
+- 保持所有权与发布 gates 显式；
+- 把零散的 solver 活动变成紧凑 evidence；
+- 对照成本与人类注意力比较有用成果；
+- 决定案例是否毕业进入 onboarding、showcase 或产品工作。
 
-That makes the issue/PR solver lane a secondary value proof for LoopX's
-management surface: a maintainer can see what happened, what it cost, where a
-human judgment was needed, and whether the next anchor should change.
+这使 issue/PR solver 泳道成为 LoopX 管理 surface 的次级价值证明：maintainer 可以看到发生了什么、花了什么成本、哪里需要人类判断，以及下一个锚点是否应改变。
 
-## Coordination Packet
+## 协调 Packet
 
 ```yaml
 issue_pr_solver_anchor_coordination_v0:
@@ -103,101 +98,75 @@ issue_pr_solver_anchor_coordination_v0:
     stop_condition: "what makes this anchor no longer worth pursuing"
 ```
 
-## Seed Workflow
+## 种子工作流
 
-1. **Collect signals.** Keep raw candidates as searchable signals, not todos.
-   Sources can include GitHub issues, maintainer requests, partner solver
-   suggestions, user conversations, or operator notes.
-2. **Run maintainer intake.** Use the intake packet to decide whether the
-   candidate is worth becoming an anchor.
-3. **Select a tiny anchor set.** Prefer one to three anchors with clear user
-   value, public evidence, and a reachable owner route.
-4. **Set the allowed action level.** Start at Observe or Triage. Promote only
-   when the next human gate has passed.
-5. **Hand off to the solver.** Give the solver only the approved handle,
-   objective, allowed actions, validation surface, and stop conditions.
-6. **Ingest compact evidence.** Store result labels, validation status, review
-   outcome, and cost signals. Do not store private transcripts or raw runtime
-   material.
-7. **Review like work output.** The human reviewer scores value, quality, cost,
-   and attention. The score changes future anchor selection.
-8. **Graduate or archive.** A useful public outcome can become a case-catalog
-   entry or showcase card. A noisy or unsafe anchor should be archived with the
-   reason visible.
+1. **收集信号。** 把原始候选当作可搜索信号，而不是 todos。来源可以包括 GitHub issues、maintainer 请求、伙伴 solver 建议、用户对话或 operator 说明。
+2. **运行 maintainer 摄入。** 用摄入 packet 决定候选是否值得成为锚点。
+3. **选一个小型锚点集。** 偏好一到三个带清晰用户价值、公开 evidence 与可达 owner 路由的锚点。
+4. **设定允许动作级别。** 从 Observe 或 Triage 开始。只在下一个人类 gate 通过后晋升。
+5. **交接给 solver。** 只给 solver 已批准的 handle、目标、允许动作、验证 surface 与停止条件。
+6. **摄入紧凑 evidence。** 存储结果标签、验证状态、评审结果与成本信号。不存储私有 transcript 或原始 runtime 资料。
+7. **像工作输出一样评审。** 人类评审者对价值、质量、成本与注意力评分。分数改变未来锚点选择。
+8. **毕业或归档。** 有用的公开成果可以成为 case-catalog 条目或 showcase 卡。嘈杂或危险的锚点应归档，并让理由可见。
 
-## Metric Board
+## 指标板
 
-Do not optimize for raw issue count or raw PR count. Those are easy to inflate
-and do not prove that a long-running agent is manageable.
+不要为原始 issue 数或原始 PR 数优化。这些容易夸大，且不能证明长程 agent 可管理。
 
-The first useful board should track:
+第一个有用的板应跟踪：
 
-- **Selected anchors**: how many candidates survived maintainer intake.
-- **Useful outcomes**: merged PR, accepted plan, clear maintainer rejection,
-  reproduced bug, validated blocker, or product insight.
-- **Quality**: validation result, reviewer score, and whether the solver stayed
-  inside the boundary.
-- **Cost**: token/runtime cost, number of iterations, and human attention
-  minutes.
-- **Learning**: what feedback changed the next anchor choice.
+- **选中的锚点：** 多少候选通过 maintainer 摄入。
+- **有用成果：** 已合并 PR、已接受计划、明确 maintainer 拒绝、已复现 bug、已验证 blocker 或产品洞察。
+- **质量：** 验证结果、评审者分数，以及 solver 是否留在边界内。
+- **成本：** token/runtime 成本、迭代次数与人类注意力分钟数。
+- **学习：** 什么反馈改变了下一次锚点选择。
 
-This aligns with the broader Loop Agent reward model:
+这与更广的 Loop Agent reward 模型一致：
 
 ```text
 value = f(quantity, quality, token/runtime cost, human attention cost)
 ```
 
-## Human Gates
+## 人类 Gates
 
-Every anchor should expose concrete gates rather than a generic "owner gate":
+每个锚点应暴露具体 gates，而不是泛化"owner gate"：
 
-- **Source boundary gate**: can the issue, code, and evidence be handled
-  publicly or compactly?
-- **Solver autonomy gate**: may the partner solver move from observing to
-  reproducing, planning, or preparing code?
-- **Publication gate**: may anyone post a comment, open a PR, or publish a
-  branch?
-- **Showcase gate**: may the outcome be named, anonymized, or reused in launch
-  material?
-- **Review gate**: does human feedback say to continue, narrow, broaden, or stop
-  the anchor class?
+- **来源边界 gate：** issue、代码与 evidence 能否公开或紧凑处理？
+- **Solver 自主 gate：** 伙伴 solver 能否从观察移动到复现、计划或准备代码？
+- **发布 gate：** 是否允许任何人发评论、开 PR 或发布分支？
+- **Showcase gate：** 成果能否在发布资料中被命名、匿名化或复用？
+- **评审 gate：** 人类反馈是说继续、收窄、扩宽还是停止该锚点类别？
 
-When a gate blocks progress, write it as a user todo with the concrete decision
-needed. When a gate is resolved, record the decision as compact evidence.
+当 gate 阻塞进展时，把它写成带所需具体决策的 user todo。当 gate 解决时，把决策记录为紧凑 evidence。
 
-## Graduation Path
+## 毕业路径
 
-An anchor should move through explicit states:
+锚点应经过显式状态：
 
-| State | Meaning | Next condition |
+| 状态 | 含义 | 下一条件 |
 | --- | --- | --- |
-| Signal | Candidate exists, not selected | maintainer intake says it is worth testing |
-| Selected anchor | Boundary and owner route are plausible | allowed action level and solver handoff are ready |
-| Pilot running | Solver is working inside approved actions | compact result or blocker arrives |
-| Result review | Human reviews value, quality, cost, and attention | score and next-anchor decision are recorded |
-| Case catalog | The result is reusable internally or publicly | consent and boundary allow publication |
-| Showcase | The case can teach LoopX's product value | public card or demo copy is approved |
-| Archived | The case is no longer useful or safe | reason is visible for future selection |
+| Signal | 候选存在，未选中 | maintainer 摄入说值得测试 |
+| Selected anchor | 边界与 owner 路由合理 | 允许动作级别与 solver 交接就绪 |
+| Pilot running | Solver 在批准动作内工作 | 紧凑结果或 blocker 到达 |
+| Result review | 人类评审价值、质量、成本与注意力 | 记录分数与下一锚点决策 |
+| Case catalog | 结果内部或公开可复用 | 同意与边界允许发布 |
+| Showcase | 案例可以教 LoopX 的产品价值 | 公开卡或 demo 文案获批准 |
+| Archived | 案例不再有用或不安全 | 理由对未来选择可见 |
 
-Graduation is not automatic. A solved issue may still fail showcase graduation
-if the evidence is private, the value is hard to explain, or the human attention
-cost is too high.
+毕业不是自动的。如果 evidence 是私有的、价值难以解释或人类注意力成本太高，已解决的 issue 仍可能无法通过 showcase 毕业。
 
-## LoopX Writeback
+## LoopX 写回
 
-The coordination lane should write normal LoopX objects:
+协调泳道应写入正常 LoopX 对象：
 
-- a selected `anchor_v0` or signal archive decision;
-- an agent todo for solver handoff, evidence ingest, or case-catalog drafting;
-- a user todo for source, publication, or showcase gates;
-- a `review_event_v0` with value, quality, cost, and attention feedback;
-- a compact metric-board update;
-- a case-catalog or showcase todo only after consent.
+- 一个选中的 `anchor_v0` 或信号归档决策；
+- 一个用于 solver 交接、evidence 摄入或 case-catalog 起草的 agent todo；
+- 一个用于来源、发布或 showcase gates 的 user todo；
+- 一个带价值、质量、成本与注意力反馈的 `review_event_v0`；
+- 一个紧凑指标板更新；
+- 只在同意后的 case-catalog 或 showcase todo。
 
-For the first repo-local projection, an active state may also include a compact
-`## Issue Meta Surface` section. `loopx status` lifts each public-safe
-key-value bullet into `issue_meta_surface_v0` and mirrors it under
-`project_asset.issue_meta_surface`:
+对第一个仓库本地投影，活跃状态也可以包含一个紧凑 `## Issue Meta Surface` 区块。`loopx status` 把每个 public-safe 键值 bullet 提升到 `issue_meta_surface_v0`，并镜像到 `project_asset.issue_meta_surface` 下：
 
 ```md
 ## Issue Meta Surface
@@ -205,11 +174,6 @@ key-value bullet into `issue_meta_surface_v0` and mirrors it under
 - anchor_id=issue_anchor_parser_bug repo=sample-org/sample-repo issue=#128 labels=bug,good-first-issue owner_route=repo_maintainer_review related_code=src/parser.py validation=unit_smoke promotion_target=agent_todo:todo_issue_fix status=selected_anchor freshness=fresh
 ```
 
-This is the small state face for issue/PR anchor selection. It keeps labels,
-owner route, related-code hint, validation surface, and promotion target visible
-to agents and dashboards without storing issue bodies, private source context,
-raw solver traces, or publication authority.
+这是 issue/PR 锚点选择的小状态面。它让 labels、owner 路由、相关代码提示、验证 surface 与晋升目标对 agent 与 dashboards 可见，而不存储 issue 正文、私有来源上下文、原始 solver 轨迹或发布权限。
 
-This keeps open-source PR-led growth connected to LoopX's core promise:
-long-running agent work should be selectable, bounded, reviewable, and improved
-through human feedback.
+这让开源 PR 驱动增长连接 LoopX 的核心承诺：长程 agent 工作应可选、有边界、可评审，并通过人类反馈改进。

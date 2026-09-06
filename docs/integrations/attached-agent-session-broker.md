@@ -1,20 +1,21 @@
-# Attached Agent Session Broker
+# Attached Agent 会话中介
 
-The attached Agent session broker represents an already-running host session
-inside the owner-local LoopX Chat store. It does not start, resume, or replace
-an Agent runtime.
+> [English](attached-agent-session-broker.md)
 
-The first bridge stage supports:
+Attached Agent 会话中介把已在运行的宿主会话表示到 owner 本地的 LoopX Chat
+存储中。它不会启动、恢复或替换 Agent runtime。
 
-- exact `(Goal, registered Agent, host surface, host session)` admission;
-- distinct LoopX `agent_id` and executor `executor_endpoint_id` identities;
-- one shared ordered queue for Web and Connector messages with `origin`;
-- duplicate-safe host claim and completion receipts;
-- response readback through the existing Chat turn and Lark reply path; and
-- content-free Session list projections.
+第一个桥接阶段支持:
 
-The host session must already have an exact `bind-agent-thread` registration.
-Bind it to Chat with owner-local opaque values:
+- 精确的 `(Goal、注册 Agent、宿主界面、宿主会话)` 准入;
+- 区分 LoopX `agent_id` 与执行器 `executor_endpoint_id` 两套身份;
+- 为 Web 与 Connector 消息提供一份带 `origin` 的共享有序队列;
+- 防重复的宿主 claim 与完成回执;
+- 通过现有 Chat 的 Turn 与 Lark 回复路径回读响应;以及
+- 不含内容的 Session 列表投影。
+
+宿主会话必须已经具备一项精确的 `bind-agent-thread` 注册。使用 owner 本地的
+不透明(opaque)值把它绑定到 Chat:
 
 ```bash
 loopx worker-bridge attached-session-bind \
@@ -26,7 +27,7 @@ loopx worker-bridge attached-session-bind \
   --execute
 ```
 
-Web or Lark `session_queue` input is then claimed by the existing host:
+Web 或 Lark 的 `session_queue` 输入随后由现有宿主 claim:
 
 ```bash
 loopx worker-bridge attached-session-claim \
@@ -38,14 +39,13 @@ loopx worker-bridge attached-session-claim \
   --format json
 ```
 
-`--wait-seconds` turns claim into a bounded host subscription. An existing host
-bridge can keep one claim request open and wake as soon as the oldest queued
-message is available, instead of polling the command in a tight loop. The wait
-is capped at 30 minutes and never starts or resumes an Agent runtime. A timeout
-returns `claimed=false`; the host chooses whether to subscribe again.
+`--wait-seconds` 把 claim 变成有界的宿主订阅。现有宿主 bridge 可以保持一个
+claim 请求处于打开状态,一旦最早的排队消息可用就立即唤醒,而不是在紧循环中
+轮询该命令。等待以 30 分钟为上限,并且从不启动或恢复 Agent runtime。超时返回
+`claimed=false`;是否再次订阅由宿主决定。
 
-Write the Agent response to an owner-local JSON file containing at least a
-`message` field, then complete the exact claim:
+把 Agent 响应写入一个至少包含 `message` 字段的 owner 本地 JSON 文件,然后完成
+该精确 claim:
 
 ```bash
 loopx worker-bridge attached-session-complete \
@@ -58,17 +58,15 @@ loopx worker-bridge attached-session-complete \
   --response-json <owner-local-response.json>
 ```
 
-`session_queue`, bounded claim wait, and reply readback are enabled in this
-stage. `live_steering` is explicitly reported as unavailable until the host
-exposes a push transport for the already-running Turn. LoopX fails closed
-instead of starting a managed runtime or silently degrading one event into
-another ingress mode.
+本阶段启用 `session_queue`、有界 claim 等待与回复回读。在宿主为已经运行的
+Turn 暴露推送传输通道之前,`live_steering` 明确报告为不可用。LoopX 采用失败
+即关闭(fail closed)的处理,而不是启动受管 runtime,或者把某个事件静默降级到
+另一种入口模式。
 
-An attached Session with an active host claim cannot be closed. Complete the
-claimed Turn first, then close the Session. This preserves the host's writeback
-authority and prevents a closed Session from stranding a running Turn.
+带有活动宿主 claim 的 attached Session 不能关闭。先完成已 claim 的 Turn,再关闭
+该 Session。这保留了宿主的写回权威,并防止已关闭的 Session 遗留一个正在运行的
+Turn。
 
-Opaque host identifiers, message bodies, and response files stay in the local
-runtime store. Public Session projections contain only the LoopX Session id,
-Goal/Agent binding, executor endpoint label, host surface, capability booleans,
-and lifecycle state.
+不透明宿主标识符、消息体与响应文件都保留在本地 runtime 存储中。公开 Session
+投影只包含 LoopX Session id、Goal/Agent 绑定、执行器端点标签、宿主界面、能力
+布尔值与生命周期状态。

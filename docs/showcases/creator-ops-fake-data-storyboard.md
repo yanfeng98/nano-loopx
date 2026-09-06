@@ -1,36 +1,33 @@
-# Creator-Ops Fake-Data Storyboard
+# 创作者-操作者假数据 Storyboard
 
-This storyboard turns the creator-operator case into a frontend-ready public
-demo flow. It uses only synthetic data. It is not a crawler, publishing tool,
-or claim about real creator performance.
+> [English](creator-ops-fake-data-storyboard.md)
 
-The goal is to show how LoopX makes a long-running creator-agent loop
-legible:
+这个 storyboard 把创作者-操作者案例转成一个前端就绪的公开 demo 流程。它只使用合成数据。它不是爬虫、发布工具,也不是关于真实创作者表现的声明。
 
-- research can continue;
-- publishing stays gated;
-- feedback changes the plan;
-- private material and public demo data remain separated.
+目标是展示 LoopX 如何让长程创作者 agent Loop 清晰可读:
 
-## Surface Shape
+- 研究可以继续;
+- 发布保持关卡化;
+- 反馈改变计划;
+- 私有素材与公开 demo 数据保持分离。
 
-The first mock should render as a work surface, not a marketing landing page.
-Use seven connected panels:
+## 界面形态
 
-1. Trend discovery
-2. Preference map
-3. Insight board
-4. Draft queue
-5. Material library
-6. Human feedback
-7. Controlled replan
+第一个 mock 应渲染为一个工作界面,而不是营销落地页。使用七个相互连接的面板:
 
-Each panel should show one control-plane object or transition. Avoid raw agent
-logs, prompt text, screenshots, platform data, and live browsing output.
+1. 趋势发现
+2. 偏好地图
+3. 洞察板
+4. 草稿队列
+5. 素材库
+6. 人类反馈
+7. 受控 replan
 
-## Fake Data Fixture
+每个面板应展示一个控制面对象或一次转换。避免原始 agent 日志、提示文本、截图、平台数据和实时浏览输出。
 
-The mock can use this small fixture directly.
+## 假数据 Fixture
+
+这个 mock 可以直接使用这个小 fixture。
 
 ```json
 {
@@ -131,108 +128,102 @@ The mock can use this small fixture directly.
 }
 ```
 
-## Panel Details
+## 面板细节
 
-### 1. Trend Discovery
+### 1. 趋势发现
 
-Purpose: show candidate topics and why they might matter.
+目的:展示候选主题以及它们为什么可能重要。
 
-Render:
+渲染:
 
-- three candidate rows;
-- fit indicator;
-- source boundary badge.
+- 三行候选;
+- 契合度指示;
+- 来源边界徽标。
 
-Do not render raw social posts or live platform names. The point is control
-plane legibility, not data acquisition.
+不要渲染原始社交帖子或实时平台名。重点在于控制面可读性,而不是数据采集。
 
-### 2. Preference Map
+### 2. 偏好地图
 
-Purpose: show that user taste can guide planning without becoming a hard gate.
+目的:展示用户品味可以引导规划,而不必变成硬性关卡。
 
-Render:
+渲染:
 
-- preference chips;
-- one sentence explaining that preferences are planning hints;
-- separate badge for hard permission gates.
+- 偏好芯片;
+- 一句话说明偏好是规划提示;
+- 将硬权限关卡单独放一个徽标。
 
-### 3. Insight Board
+### 3. 洞察板
 
-Purpose: turn research into reusable candidate insights.
+目的:把研究转化为可复用的候选洞察。
 
-Render:
+渲染:
 
-- insight cards;
-- source status;
-- "needs review" marker when source status is not public-safe.
+- 洞察卡片;
+- 来源状态;
+- 当来源状态不是公开安全时,显示"需要审查"标记。
 
-### 4. Draft Queue
+### 4. 草稿队列
 
-Purpose: make draft readiness and gates visible.
+目的:让草稿就绪度与关卡可见。
 
-Render:
+渲染:
 
-- draft title;
-- readiness status;
-- gate label;
-- allowed safe side work.
+- 草稿标题;
+- 就绪状态;
+- 关卡标签;
+- 允许的安全旁路工作。
 
-### 5. Material Library
+### 5. 素材库
 
-Purpose: show memory as governed material, not a raw transcript dump.
+目的:把记忆展示为受治理的素材,而不是原始转录转储。
 
-Render:
+渲染:
 
-- material categories;
-- source status;
-- rejected-angle notes.
+- 素材类别;
+- 来源状态;
+- 被拒绝角度说明。
 
-### 6. Human Feedback
+### 6. 人类反馈
 
-Purpose: let the user steer without editing state manually.
+目的:让用户不必手动编辑状态即可引导。
 
-Render feedback buttons as explicit control-plane effects:
+把反馈按钮渲染为明确的控制面效果:
 
-| Button | Effect |
+| 按钮 | 效果 |
 | --- | --- |
-| This angle is useful | reward / preference hint |
-| Too salesy | draft revision todo |
-| Do not use this source | boundary correction |
-| Publish after tone review | gate decision |
+| 这个角度有用 | reward / 偏好提示 |
+| 太销售腔了 | 草稿修订 todo |
+| 不要使用这个来源 | 边界修正 |
+| 语调审查后发布 | 关卡决定 |
 
-The feedback classes and source-status rules are defined in
-[creator-ops-feedback-boundary-contract.md](creator-ops-feedback-boundary-contract.md).
+反馈类别与来源状态规则在
+[creator-ops-feedback-boundary-contract.md](creator-ops-feedback-boundary-contract.md) 中定义。
 
-### 7. Controlled Replan
+### 7. 受控 Replan
 
-Purpose: show how feedback changes the next agent move.
+目的:展示反馈如何改变 agent 的下一步动作。
 
-Render:
+渲染:
 
-- next action;
-- safe side path;
-- blocked route;
-- validation expectation.
+- 下一步动作;
+- 安全旁路;
+- 被阻塞路线;
+- 验证预期。
 
-The replan panel should make clear that the agent can keep organizing safe
-synthetic material while publishing still waits.
+replan 面板应清楚表明:在发布仍然等待时,agent 可以继续整理安全的合成素材。
 
-## Frontend Acceptance Criteria
+## 前端验收标准
 
-The first static mock is good enough when:
+当以下条件满足时,第一个静态 mock 就合格:
 
-- every visible data item comes from the fake fixture or catalog fields;
-- no card requires live platform access;
-- no user feedback is treated as a hidden memory;
-- the publish gate is visible on the first screen;
-- the safe side path remains visible beside the blocked publish route;
-- source boundaries are visible for trend, insight, draft, and material panels;
-- the case still renders from `docs/showcases/showcase-catalog.json` without
-  scraping the narrative case page.
+- 每个可见数据项都来自假 fixture 或目录字段;
+- 没有任何卡片需要实时平台访问;
+- 没有用户反馈被当作隐藏记忆;
+- 发布关卡在首屏可见;
+- 安全旁路在被阻塞的发布路线旁边保持可见;
+- 趋势、洞察、草稿与素材面板都显示来源边界;
+- 该案例仍然能从 `docs/showcases/showcase-catalog.json` 渲染,而不抓取叙事案例页。
 
-## Boundary
+## 边界
 
-This storyboard may be used for a public README image, website mock, or static
-HTML demo. It must not include real user drafts, private preferences, platform
-screenshots, raw browsing traces, local paths, credentials, or claims about
-engagement, reach, conversion, revenue, or model quality improvement.
+这个 storyboard 可用于公共 README 图片、网站 mock 或静态 HTML demo。它不得包含真实用户草稿、私有偏好、平台截图、原始浏览痕迹、本地路径、凭据,或关于参与度、触达、转化、收入或模型质量提升的声明。

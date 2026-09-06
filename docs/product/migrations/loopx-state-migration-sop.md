@@ -1,53 +1,44 @@
-# LoopX State Migration SOP
+# LoopX State 迁移 SOP
 
-Status: draft for the LoopX rename PR.
+> [English](loopx-state-migration-sop.md)
 
-This SOP is for existing local users who already have Goal Harness state under
-the legacy runtime and want to move that state into LoopX without keeping a
-legacy CLI compatibility alias.
+状态:LoopX 重命名 PR 的草稿。
 
-## What Moves
+本 SOP 面向已有 Goal Harness state 在遗留运行时下、希望在不保留遗留 CLI 兼容别名的情况下把该 state 移入 LoopX 的现有本地用户。
 
-`loopx migrate-state` is a one-shot migration tool. It does not make
-`goal-harness` a supported command. It only reads an explicit legacy registry,
-rewrites selected goal ids and local path prefixes, then writes LoopX state.
+## 迁移什么
 
-It can move:
+`loopx migrate-state` 是一次性迁移工具。它不把 `goal-harness` 变成受支持命令。它只读取显式遗留注册表,重写所选 goal id 与本地路径前缀,然后写入 LoopX state。
 
-- a selected goal entry into `.loopx/registry.json`;
-- the selected active-state file into the rewritten project path;
-- selected runtime history under `~/.codex/loopx/goals/<new-goal-id>/`;
-- the migrated project registry into `~/.codex/loopx/registry.global.json`.
+它可以迁移:
 
-It intentionally requires an explicit goal selection: either repeat
-`--goal-id` for known goals or pass `--all-goals` after previewing the legacy
-registry. There is no default “migrate everything” behavior.
+- 一个所选 goal 条目到 `.loopx/registry.json`;
+- 所选 active-state 文件到重写的项目路径;
+- `~/.codex/loopx/goals/<new-goal-id>/` 下所选的运行时历史;
+- 迁移的项目注册表到 `~/.codex/loopx/registry.global.json`。
 
-## Recommended Sequence
+它刻意要求显式 goal 选择:要么为已知 goal 重复 `--goal-id`,要么在预览遗留注册表后传 `--all-goals`。没有默认的"迁移全部"行为。
 
-1. Install LoopX from the rename branch or released package.
+## 推荐顺序
+
+1. 从重命名分支或发布的包安装 LoopX。
 
 ```bash
 loopx doctor
 ```
 
-The installer does not create a `goal-harness` compatibility alias. For
-existing local installs, it disables legacy `goal-harness` and
-`goal-harness-canary` symlinks only when they point at the old local release
-directory. It leaves unrelated user commands untouched.
+安装器不创建 `goal-harness` 兼容别名。对于现有本地安装,它只在旧本地发布目录被指向时禁用遗留 `goal-harness` 与 `goal-harness-canary` 符号链接。不相关用户命令保持不动。
 
-Verify that the old command is gone before trusting the migration:
+信任迁移前确认旧命令已消失:
 
 ```bash
 command -v loopx
 ! command -v goal-harness
 ```
 
-2. Create a local backup before the first execute.
+2. 首次执行前创建本地备份。
 
-The migration is copy-first, but existing users should still keep a timestamped
-backup of the legacy registry, legacy runtime root, and any target LoopX state
-that may already exist.
+迁移是复制优先的,但现有用户仍应保留遗留注册表、遗留运行时根与任何可能已存在的目标 LoopX state 的时间戳备份。
 
 ```bash
 backup_dir="$HOME/.codex/loopx-migration-backup-$(date +%Y%m%d-%H%M%S)"
@@ -59,8 +50,7 @@ if [ -d "$HOME/.codex/loopx" ]; then
 fi
 ```
 
-For a project-local migration, also back up the current project state before
-writing `.loopx/registry.json` or copied active-state files:
+对于项目本地迁移,在写入 `.loopx/registry.json` 或复制的 active-state 文件前,也备份当前项目 state:
 
 ```bash
 mkdir -p "$backup_dir/project-state"
@@ -69,7 +59,7 @@ if [ -d .codex ]; then cp -a .codex "$backup_dir/project-state/.codex"; fi
 if [ -d .local ]; then cp -a .local "$backup_dir/project-state/.local"; fi
 ```
 
-3. Preview one goal migration.
+3. 预览一个 goal 迁移。
 
 ```bash
 loopx --registry .loopx/registry.json migrate-state \
@@ -81,10 +71,9 @@ loopx --registry .loopx/registry.json migrate-state \
   --copy-active-state
 ```
 
-The preview should show `dry_run=true`, the selected old goal id, and the
-migrated new goal id. It should not create `.loopx/registry.json`.
+预览应显示 `dry_run=true`、所选旧 goal id 与迁移后的新 goal id。它不应创建 `.loopx/registry.json`。
 
-4. Execute after the preview looks right.
+4. 预览看起来正确后执行。
 
 ```bash
 loopx --registry .loopx/registry.json migrate-state \
@@ -98,12 +87,9 @@ loopx --registry .loopx/registry.json migrate-state \
   --execute
 ```
 
-Use `--copy-runtime` only when the old run history should remain visible to
-LoopX. For a clean rename validation lane, copying active state alone is often
-enough.
+只有当旧运行历史应保持对 LoopX 可见时才使用 `--copy-runtime`。对于干净的重命名校验车道,单独复制 active state 通常足够。
 
-5. For a machine with several existing projects, preview the full legacy
-   registry before doing a batch migration.
+5. 对于有几个现有项目的机器,批量迁移前先预览完整遗留注册表。
 
 ```bash
 loopx --registry ~/.codex/loopx/registry.global.json migrate-state \
@@ -116,7 +102,7 @@ loopx --registry ~/.codex/loopx/registry.global.json migrate-state \
   --no-global-sync
 ```
 
-Only execute after the preview lists exactly the expected goals:
+只在预览列出精确预期 goal 后执行:
 
 ```bash
 loopx --registry ~/.codex/loopx/registry.global.json migrate-state \
@@ -130,11 +116,9 @@ loopx --registry ~/.codex/loopx/registry.global.json migrate-state \
   --execute
 ```
 
-This batch path is for the shared local control plane. When a repo becomes the
-active working checkout again, run the one-goal project-local migration from
-that repo so it also has its own `.loopx/registry.json`.
+该批量路径用于共享本地控制面。当仓库再次成为活跃工作 checkout 时,从该仓库运行单 goal 项目本地迁移,使其也拥有自己的 `.loopx/registry.json`。
 
-6. Verify the migrated state.
+6. 验证迁移后的 state。
 
 ```bash
 loopx --registry .loopx/registry.json registry
@@ -145,9 +129,9 @@ loopx --registry .loopx/registry.json quota should-run \
 loopx --registry .loopx/registry.json check --scan-root .
 ```
 
-7. Update automations only after the migrated goal is visible.
+7. 只在迁移后的 goal 可见后更新自动化。
 
-The heartbeat prompt should use the new goal id and the LoopX command:
+心跳提示应使用新 goal id 与 LoopX 命令:
 
 ```text
 Advance `loopx-meta` from the registry-declared active state.
@@ -155,15 +139,11 @@ Use skills: `loopx-project`; if surprising/tiny/contradictory, `loopx-self-repai
 LoopX CLI is source of truth.
 ```
 
-Do not keep an old automation id or prompt body around as a hidden
-compatibility path. If a Codex App heartbeat cannot be renamed in place, delete
-the old heartbeat and create a new `loopx` heartbeat.
+不要保留旧自动化 id 或提示正文作为隐藏兼容路径。如果 Codex App 心跳无法就地重命名,删除旧心跳并创建新的 `loopx` 心跳。
 
-8. Roll back only by restoring the backup.
+8. 只通过恢复备份回滚。
 
-If verification fails, do not hand-edit migrated JSON in place. Restore the
-backup, rerun a dry-run with narrower `--goal-id` / `--goal-id-map` /
-`--path-map` choices, then execute again only after the preview is clean.
+如果验证失败,不要就地手工编辑迁移后的 JSON。恢复备份,用更窄的 `--goal-id` / `--goal-id-map` / `--path-map` 选择重跑 dry-run,在预览干净后再执行。
 
 ```bash
 # Global rollback.
@@ -185,16 +165,12 @@ if [ -d "$backup_dir/project-state/.local" ]; then
 fi
 ```
 
-If the machine did not have a previous `~/.codex/loopx`, the global rollback
-leaves that target runtime absent. The next migration attempt will recreate it.
+如果机器没有之前的 `~/.codex/loopx`,全局回滚会留下该目标运行时缺失。下一次迁移尝试将重建它。
 
-## Safety Rules
+## 安全规则
 
-- Start with one goal, not the whole registry.
-- Use `--all-goals` only after a dry-run shows the expected goal list.
-- Keep migration state local-private; do not commit `.loopx/`, `.local/`, or
-  runtime history.
-- Keep old command names only in migration SOPs, migration code, and
-  no-compat negative assertions.
-- Stop before GitHub repository rename, Pages cutover, package publication, or
-  destructive cleanup unless the maintainer explicitly approves that gate.
+- 从一个 goal 开始,而不是整个注册表。
+- 只有在 dry-run 显示预期 goal 列表后才使用 `--all-goals`。
+- 保持迁移 state 本地私有;不要提交 `.loopx/`、`.local/` 或运行时历史。
+- 只在迁移 SOP、迁移代码与无兼容否定断言中保留旧命令名。
+- 在维护者明确批准该 gate 前,停止于 GitHub 仓库重命名、Pages 切换、包发布或破坏性清理。

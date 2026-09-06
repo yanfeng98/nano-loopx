@@ -1,47 +1,35 @@
-# Session Runtime Controlled Writeback v0
+# 会话运行时受控 writeback v0
+> [English](session-runtime-controlled-writeback-v0.md)
 
-Status: public-safe protocol draft for external agent runtime metadata writes.
+状态：外部 agent 运行时元数据写入的公开安全协议草稿。
 
-This contract defines the first writeback boundary after
-`session_runtime_loopx_projection_v0` has proven read-only value. The goal is
-not to make LoopX drive the runtime directly. The goal is to let an external
-runtime carry compact LoopX decisions as metadata or event pointers, so a
-visible session can recover, hand off, and explain why it is allowed to
-continue.
+本契约定义了 `session_runtime_loopx_projection_v0` 证明只读价值之后的第一个 writeback 边界。目标不是让 LoopX 直接驱动运行时。目标是让外部运行时以元数据或事件指针的形式携带紧凑的 LoopX 决策，使一个可见会话能够恢复、交接，并解释它为何被允许继续。
 
-## Entry Criteria
+## 进入条件
 
-Controlled writeback is available only when all of these are true:
+只有在以下条件全部成立时，受控 writeback 才可用：
 
-1. A read-only projection already exists and identifies `goal_id`, `agent_id`,
-   `runtime_id`, `session_id`, and at least one LoopX `run_id` or `todo_id`.
-2. The LoopX source event is already recorded through the CLI or a
-   CLI-equivalent adapter.
-3. The runtime target supports a dry-run or preview path.
-4. The payload is compact metadata, not raw transcript, raw tool output, local
-   path, credential, or private document body.
-5. The adapter can report an applied, skipped, rejected, or failed result back
-   to LoopX without guessing.
+1. 只读投影已存在，并标识 `goal_id`、`agent_id`、`runtime_id`、`session_id` 以及至少一个 LoopX `run_id` 或 `todo_id`。
+2. LoopX 源事件已经通过 CLI 或 CLI 等价适配器记录。
+3. 运行时目标支持 dry-run 或 preview 路径。
+4. 载荷是紧凑元数据，而不是原始 transcript、原始工具输出、本地路径、凭据或私有文档正文。
+5. 适配器能够不靠猜测地把已应用、已跳过、已拒绝或失败的结果报告回 LoopX。
 
-If any entry criterion is missing, the adapter must stay in read-only mode and
-write a blocker or user todo through LoopX instead of attempting a host write.
+任一进入条件缺失时，适配器必须保持只读模式，并通过 LoopX 写入一个 blocker 或用户 todo，而不是尝试 host 写入。
 
-## Write Classes
+## 写入类别
 
-| LoopX Source | Runtime Target | Allowed Payload | Must Not Mean |
+| LoopX 源 | 运行时目标 | 允许载荷 | 不得意指 |
 | --- | --- | --- | --- |
-| `operator_gate` decision | approval-like runtime event or metadata | decision id, decision label, actor class, reason summary, source run id | Runtime permission override, hidden approval, production authorization |
-| `human_reward` overlay | run-bound judgment metadata | reward id, judged run id, decision label, public-safe reason | Model score, benchmark score, or task pass/fail impersonation |
-| `quota_decision` | scheduler hint metadata | eligible/throttled/monitor hint, window id, reason code | Billing decision, launch authority, or hidden session start |
-| `handoff_packet` | session metadata pointer or message draft | handoff id, next action, stop condition, evidence pointers | Raw transcript copy, unbounded prompt injection, or forced same-session control |
-| compact artifact/run pointer | runtime artifact annotation | artifact id, validation label, outcome class | Raw evidence upload, local path exposure, or private log mirror |
+| `operator_gate` 决策 | 类批准运行时事件或元数据 | decision id、decision label、actor class、原因摘要、源 run id | 运行时权限覆盖、隐藏批准、生产授权 |
+| `human_reward` overlay | 绑定 run 的判定元数据 | reward id、被判定 run id、decision label、公开安全原因 | 模型分数、benchmark 分数或任务 pass/fail 冒充 |
+| `quota_decision` | scheduler 提示元数据 | eligible/throttled/monitor 提示、window id、原因码 | 计费决策、启动权限或隐藏会话开始 |
+| `handoff_packet` | 会话元数据指针或消息草稿 | handoff id、下一动作、停止条件、evidence 指针 | 原始 transcript 复制、无界 prompt 注入或强制同会话控制 |
+| 紧凑工件/run 指针 | 运行时工件注解 | artifact id、验证标签、结局类别 | 原始证据上传、本地路径暴露或私有日志镜像 |
 
-Writeback is deliberately narrower than the host integration surface. Todo
-creation, gate recording, reward recording, refresh-state, and quota spend
-still originate in LoopX. The runtime receives a compact reflection after
-LoopX has recorded the authoritative event.
+Writeback 刻意比 host 集成界面更窄。Todo 创建、gate 记录、reward 记录、refresh-state 与配额花费仍源自 LoopX。运行时只在 LoopX 记录权威事件之后接收紧凑反映。
 
-## Minimal Shape
+## 最小形状
 
 ```json
 {
@@ -82,50 +70,39 @@ LoopX has recorded the authoritative event.
 }
 ```
 
-The dry-run result may be shown in a local control-plane UI. It is not a
-runtime command to continue. A real apply must still be tied to the recorded
-LoopX event and must report a compact result.
+dry-run 结果可以在本地控制面 UI 中显示。它不是继续运行的运行时命令。真正的 apply 仍须绑定到已记录的 LoopX 事件，并报告紧凑结果。
 
-## Flow
+## 流程
 
-1. Read the current LoopX projection and host session facts.
-2. Verify the entry criteria and public/private boundary.
-3. Build a dry-run payload with an `idempotency_key`.
-4. Show or record the dry-run preview.
-5. Apply only when the relevant LoopX event already exists and the runtime
-   adapter exposes the matching write class.
-6. Append a compact LoopX result run with `status=applied`, `skipped`,
-   `rejected`, or `failed`.
+1. 读取当前 LoopX 投影与 host 会话事实。
+2. 验证进入条件与公开/私有边界。
+3. 用 `idempotency_key` 构建 dry-run 载荷。
+4. 显示或记录 dry-run 预览。
+5. 只在相关 LoopX 事件已经存在且运行时适配器暴露匹配写入类别时应用。
+6. 追加一条紧凑 LoopX 结果 run，`status=applied`、`skipped`、`rejected` 或 `failed`。
 
-An adapter may skip apply when the runtime already has the same
-`idempotency_key`. It must still report the skip as a compact result so LoopX
-can tell the difference between "already reflected" and "never attempted."
+当运行时已经持有同一 `idempotency_key` 时，适配器可以跳过 apply。它仍必须把跳过报告为紧凑结果，使 LoopX 能区分「已反映」与「从未尝试」。
 
-## Failure Semantics
+## 失败语义
 
-Controlled writeback fails closed:
+受控 writeback 失效关闭：
 
-- Missing read-only projection: stay read-only and request projection first.
-- Missing LoopX source event: record the LoopX event first.
-- Missing runtime dry-run support: block writeback and keep CLI as source of
-  truth.
-- Runtime target unavailable: record `failed` or `skipped`, not a user approval.
-- Unsafe payload: reject the payload and create a public-safe blocker.
+- 只读投影缺失：保持只读并先请求投影。
+- LoopX 源事件缺失：先记录 LoopX 事件。
+- 运行时 dry-run 支持缺失：阻止 writeback，并把 CLI 保持为事实来源。
+- 运行时目标不可用：记录 `failed` 或 `skipped`，而不是用户批准。
+- 载荷不安全：拒绝载荷并创建公开安全 blocker。
 
-Runtime writeback failure does not invalidate the LoopX decision. It only means
-the host did not receive the compact reflection yet.
+运行时 writeback 失败不会使 LoopX 决策失效。它只表示 host 尚未收到紧凑反映。
 
-## Acceptance Checks
+## 验收检查
 
-A controlled writeback adapter is acceptable when:
+一个受控 writeback 适配器在以下条件下可接受：
 
-1. every supported write class has a CLI-equivalent LoopX source event;
-2. dry-run works before apply;
-3. `idempotency_key` prevents duplicate runtime metadata;
-4. the payload excludes raw transcripts, raw tool outputs, credentials, local
-   paths, private document bodies, and production logs;
-5. quota writeback is treated as a scheduler hint, never launch or billing
-   authority;
-6. human reward writeback is clearly distinct from benchmark/task scoring; and
-7. failure returns a compact blocker or result event instead of guessing around
-   gates.
+1. 每个受支持写入类别都有 CLI 等价的 LoopX 源事件；
+2. dry-run 在 apply 之前可用；
+3. `idempotency_key` 防止重复运行时元数据；
+4. 载荷排除原始 transcript、原始工具输出、凭据、本地路径、私有文档正文与生产日志；
+5. 配额 writeback 被当作 scheduler 提示，绝不作为启动或计费权限；
+6. 人类奖励 writeback 与 benchmark/任务评分明显区分；并且
+7. 失败返回紧凑 blocker 或结果事件，而不是绕过关卡猜测。

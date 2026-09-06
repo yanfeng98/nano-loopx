@@ -1,30 +1,15 @@
-# LoopX Demo Workspace
+# LoopX Demo 工作区
 
-> **DEMO — NOT an official product capability.**
+> **DEMO — 不是官方产品 capability。**
 >
-> Everything under `demo/` is an exploratory prototype / showcase, not part of
-> the shipped LoopX product. It is **not** installed with the LoopX wheel, not
-> registered in the product capability catalog, and not exposed through the
-> product CLI.
+> `demo/` 下的一切都是探索性原型 / 展示,不属于交付的 LoopX 产品。它**不**随 LoopX wheel 安装,不在产品 capability 目录中注册,也不通过产品 CLI 暴露。
 
-This directory holds self-contained demos that are kept runnable from the repo
-checkout for reference and experimentation:
+此目录存放自包含的 demos,保持可从仓库检出运行,供参考与实验:
 
-- `auto_research/` — the auto-research worker/supervisor showcase (kernels,
-  worker loop, evidence packets, terminal-result query, demo end-to-end).
-- `multi_agent/` — the companion multi-agent launcher showcase (contract,
-  round ledger, role successor, visible launch policy, wake scheduler).
-- `visible_multi_agent_launcher.py` / `visible_multi_agent_tmux.py` — the
-  tmux-based visible multi-agent launcher used by the demo.
+- `auto_research/` — 自动研究 worker/supervisor 展示(内核、worker loop、证据包、终态结果查询、端到端 demo)。
+- `multi_agent/` — 配套的多 agent 启动器展示(契约、round ledger、角色后继、可见启动策略、唤醒调度器)。
+- `visible_multi_agent_launcher.py` / `visible_multi_agent_tmux.py` — demo 使用的基于 tmux 的可见多 agent 启动器。
 
-The demos depend on the real LoopX product modules (`loopx.quota`,
-`loopx.todos`, `loopx.status`, …) and are run by importing the `demo` package
-from the repo root (examples and smokes already add the repo root to
-`sys.path`).
+这些 demos 依赖真实的 LoopX 产品模块(`loopx.quota`、`loopx.todos`、`loopx.status` 等),通过在仓库根导入 `demo` 包运行(示例与 smokes 已经把仓库根加入 `sys.path`)。
 
-These were relocated from the product capability surface
-(`loopx/capabilities/auto_research` and `loopx/control_plane/agents/multi_agent`)
-to make the demo/non-product boundary explicit. If a piece here matures into a
-stable caller contract, it should be promoted back into
-`loopx/capabilities/<capability>/` with a real entrypoint and focused
-validation.
+它们是从产品 capability 组件面(`loopx/capabilities/auto_research` 与 `loopx/control_plane/agents/multi_agent`)迁移过来的,以明确 demo/非产品边界。如果其中某部分成熟为稳定的调用方契约,应晋升回 `loopx/capabilities/<capability>/`,带真实入口点与聚焦验证。

@@ -1,22 +1,14 @@
 # LoopX Dashboard
 
-This is the first product dashboard shell for LoopX. It renders the
-status data contract with a React/Vite control-plane UI.
+这是 LoopX 的第一个产品 dashboard shell。它用 React/Vite 控制面 UI 渲染状态数据契约。
 
-## Current Status
+## 当前状态
 
-The dashboard is an experimental operator preview, not the primary LoopX
-workflow. The CLI, status JSON, run history, and active goal files remain the
-source of truth for day-to-day work. Use the dashboard for public-safe demos,
-local inspection, and focused UI experiments until it receives a dedicated
-product iteration pass.
+dashboard 是实验性的运营预览,不是 LoopX 的主要工作流。CLI、状态 JSON、运行历史与活动 goal 文件仍然是日常工作的真相来源。在它获得专门的产品迭代之前,请把 dashboard 用于 public-safe 演示、本地检查与聚焦的 UI 实验。
 
-## Fresh Clone Public Preview
+## 全新 Clone 的公开预览
 
-No private LoopX state is required for the first dashboard preview. The
-app bundles `examples/status.example.json` as its public-safe example source,
-so a fresh checkout can validate and open the UI before starting any local
-status server:
+首次 dashboard 预览不需要任何私有 LoopX 状态。应用把 `examples/status.example.json` 打包为 public-safe 示例来源,因此一个全新检出可以在启动任何本地状态服务器之前验证并打开 UI:
 
 ```bash
 cd apps/presentation/dashboard
@@ -25,125 +17,56 @@ npm run smoke:demo-readiness -- --skip-browser
 npm run dev:web
 ```
 
-Then open `http://127.0.0.1:5173/`. Use the bundled example source for a public
-demo, or switch to a loopback status URL only after you have started
-`loopx serve-status` locally. Do not commit `status.local.json` or live
-status exports; they can contain local registry/runtime paths and private
-project summaries.
+然后打开 `http://127.0.0.1:5173/`。公开演示使用打包的示例来源,或者只在本地启动 `loopx serve-status` 后切换到回环状态 URL。不要提交 `status.local.json` 或实时状态导出;它们可能包含本地 registry/运行时路径与私有项目摘要。
 
-`npm run dev:web` starts only the Vite UI with the bundled example. `npm run dev`
-also starts the loopback status and Chat services and therefore requires a
-Python 3.11+ interpreter; see the development section below.
+`npm run dev:web` 只启动带打包示例的 Vite UI。`npm run dev` 还会启动回环状态与 Chat 服务,因此需要 Python 3.11+ 解释器;见下方开发一节。
 
-The public Frontstage lives at `/frontstage`. It renders only the public-safe
-showcase catalog and bundled presentation fixtures. The former dense
-`goal_channel_projection_v0` board is quarantined as a deprecated diagnostic
-surface; Personal Workspace is the product path for live operator workflows.
-The product interaction baseline lives in
-`docs/product/surfaces/frontstage-dashboard-interaction-baseline.md`: showcase mode is
-the public case-driven homepage surface, while `mode=ops` is the dense,
-read-only legacy diagnostic workspace. Its canonical route is now
-`/deprecated/frontstage/ops`; the old `mode=ops` URL redirects there. Personal
-Workspace (`/`) owns Goal workflows, outputs, and milestone reports.
+公开 Frontstage 位于 `/frontstage`。它只渲染 public-safe 展示目录与打包的展示 fixtures。旧的密集式 `goal_channel_projection_v0` 面板已隔离为弃用的诊断组件面;Personal Workspace 才是实时运营工作流的产品路径。产品交互基线见
+`docs/product/surfaces/frontstage-dashboard-interaction-baseline.md`:showcase 模式是公开的案例驱动首页组件面,而 `mode=ops` 是密集、只读的遗留诊断工作区。其规范路由现在是
+`/deprecated/frontstage/ops`;旧的 `mode=ops` URL 会重定向到那里。Personal Workspace(`/`)拥有 Goal 工作流、输出与里程碑报告。
 
-The public first screen teaches the control-plane model without reading status
-JSON: its signal strip summarizes human judgment, asynchronous agent teams,
-public cases, and the live-data boundary. The deprecated diagnostic route keeps
-the old `Role Map`, projected todo lanes, search, and lane filters only so a
-developer can reproduce an existing status slice during migration.
-The `Efficiency Evidence` panel pulls the public-safe self-iteration case from
-the showcase catalog so the hosted frontstage can show commit-backed baseline,
-actual-window, compression, and evidence-boundary signals without exposing raw
-sessions. The `Async Work Loop` and `Showcase Cases` panels render the same
-catalog as animated narrative lanes and compact case cards, linking back to
-public GitHub case pages for deeper reading. Legacy diagnostic lanes are
-derived from the read-only projection; Showcase panels are derived only from
-public-safe showcase metadata. Neither surface is browser write authority.
+公开首屏在不读取状态 JSON 的情况下讲解控制面模型:其信号条带概括了人工判断、异步 agent 团队、公开案例与实时数据边界。弃用诊断路由保留旧 `Role Map`、投影 todo 通道、搜索与通道过滤器,只是为了开发者在迁移期间能复现一个既有状态切片。
+`Efficiency Evidence` 面板从展示目录抽取 public-safe 的自我迭代案例,使托管的 frontstage 可以展示 commit 支撑的基线、实际窗口、压缩与证据边界信号,而不暴露原始会话。`Async Work Loop` 与 `Showcase Cases` 面板把同一目录渲染为动画叙事通道与紧凑案例卡,并链接回公开 GitHub 案例页面以便深入阅读。遗留诊断通道来自只读投影;Showcase 面板只来自 public-safe 展示元数据。两个组件面都没有浏览器写入权威。
 
-The default frontstage route is public showcase mode. It ignores `statusUrl`
-and renders only bundled showcase/demo material, so a copied or hosted URL does
-not accidentally project local registry state.
-`examples/fixtures/frontstage-private-status-trap.public.json` is the synthetic
-negative fixture for that boundary: browser smokes prove its `GH_FAKE_*` live
-status markers stay out of showcase URLs and appear only after an explicit
-deprecated diagnostics load.
+默认的 frontstage 路由是公开 showcase 模式。它忽略 `statusUrl`,只渲染打包的 showcase/演示素材,因此被复制或托管的 URL 不会意外投影本地 registry 状态。
+`examples/fixtures/frontstage-private-status-trap.public.json` 是该边界的合成负面 fixture:浏览器 smoke 证明它的 `GH_FAKE_*` 实时状态标记不会出现在 showcase URL 中,只会在显式加载弃用诊断界面时出现。
 
-For contributor onboarding, use `/frontstage?mode=developer`. This is still a
-public-safe read-only view: it shows the agent-first start path, quota/status
-health checks, peer workspace guard, todo claiming, local server checks,
-and writeback boundary without loading live registry data. It is meant to help
-new developers understand how to enter LoopX from Codex CLI or another
-agent TUI before they open the denser ops board.
+贡献者上手请使用 `/frontstage?mode=developer`。这仍然是一个 public-safe 的只读视图:它展示 agent 优先的起始路径、quota/状态健康检查、同行工作区防护、todo 认领、本地服务器检查与写回边界,而不加载实时 registry 数据。它旨在帮助新开发者在打开更密集的 ops 面板之前,理解如何从 Codex CLI 或其他 agent TUI 进入 LoopX。
 
-The developer extension cockpit lives at `/frontstage/developer`. It is a
-read-only contributor workbench for status-contract exploration, projection
-diffing, fixture generation rules, smoke-run checklists, and component examples
-so new projection work does not require reverse-engineering the large
-dashboard page. It uses static public contracts and fixtures only; live status
-feeds, registry files, and browser write APIs stay out of this route.
+开发者扩展驾驶舱位于 `/frontstage/developer`。它是一个只读贡献者工作台,用于状态契约探索、投影对比、fixture 生成规则、smoke 运行清单与组件示例,使新的投影工作不必逆向工程大型 dashboard 页面。它只使用静态公开契约与 fixtures;实时状态 feed、registry 文件与浏览器写入 API 都留在这个路由之外。
 
-For legacy live local control-plane inspection, explicitly enter the deprecated route:
-`/deprecated/frontstage/ops?statusUrl=http://127.0.0.1:8766/status.json`. The route
-then reads `attention_queue.items[].goal_channel_projection` and stays
-read-only; if the feed is missing or has no projection, the bundled demo
-fixture remains visible. Ops-mode status sources are limited to relative or
-loopback URLs so public frontstage links do not silently pull external/private
-feeds. The ops feed is loaded through a TanStack Query-backed local data layer
-with schema-version freshness checks, stale-daemon repair copy, and a
-`local_dashboard_api` capability projection. It remains read-only by default:
-reward or control-plane write affordances require explicit loopback opt-in,
-advertised capability URLs, and preview-locked local APIs. Do not use ops-mode
-URLs as public links. Its implementation is isolated under
-`src/views/deprecated/`; `src/views/frontstage-page.tsx` remains Showcase-only.
+要保持对遗留本地控制面的实时检查,请显式进入弃用路由:`/deprecated/frontstage/ops?statusUrl=http://127.0.0.1:8766/status.json`。该路由随后读取 `attention_queue.items[].goal_channel_projection` 并保持只读;如果 feed 缺失或没有投影,打包的演示 fixture 仍然可见。Ops 模式的状态源限于相对或回环 URL,因此公开 frontstage 链接不会静默拉取外部/私有 feed。ops feed 通过 TanStack Query 支撑的本地数据层加载,带 schema 版本新鲜度检查、过期 daemon 修复副本与 `local_dashboard_api` capability 投影。它默认为只读:reward 或控制面写入功能需要显式回环选择加入、公布的 capability URL 与 preview 锁定的本地 API。不要把 ops 模式 URL 当作公开链接。其实现隔离在
+`src/views/deprecated/` 下;`src/views/frontstage-page.tsx` 仍然是 Showcase-only。
 
-To create a public-safe static bundle for demos, Lark shares, or future GitHub
-Pages hosting, export the frontstage with the sanitized fixture:
+要为演示、Lark 分享或未来的 GitHub Pages 托管创建 public-safe 静态 bundle,用净化后的 fixture 导出 frontstage:
 
 ```bash
 cd apps/presentation/dashboard
 npm run export:frontstage-share
 ```
 
-The default output is `/tmp/loopx-frontstage-share-bundle`. It includes a
-compiled dashboard, `status.frontstage-share.json`, a direct `/frontstage/`
-static route, a manifest, and a README with the local serve URL. The exporter
-rejects local paths, private registry state, internal document hosts, raw-key
-leaks, token assignments, and private key material before reporting success.
-The share-bundle smoke also scans generated files for the synthetic `GH_FAKE_*`
-trap markers so public exports cannot accidentally carry a live-status payload.
-For repository Pages hosting later, rerun the same exporter with
-`-- --base /loopx/ --out-dir <artifact-dir>` and publish only that
-generated site artifact.
+默认输出为 `/tmp/loopx-frontstage-share-bundle`。它包含编译后的 dashboard、`status.frontstage-share.json`、一个直接的 `/frontstage/` 静态路由、一个 manifest,以及一个带本地 serve URL 的 README。导出器在报告成功之前会拒绝本地路径、私有 registry 状态、内部文档主机、原始密钥泄漏、令牌赋值与私钥材料。share-bundle smoke 还会扫描生成的文件中合成的 `GH_FAKE_*` 陷阱标记,以确保公开导出不会意外携带实时状态载荷。之后若要托管到仓库 Pages,用 `-- --base /loopx/ --out-dir <artifact-dir>` 重新运行同一个导出器,并且只发布那个生成的站点产物。
 
-## Run
+## 运行
 
-From any directory after installing LoopX:
+在安装 LoopX 后,从任意目录:
 
 ```bash
 loopx dashboard
 ```
 
-This one command serves the packaged Personal Workspace, status projection, and
-Agent Chat from the same process. It opens the browser by default. For a
-headless launch, run `loopx dashboard --no-open` and open the URL printed by the
-command; the default is `http://127.0.0.1:8767/chat/`. Installed use does not
-require a separate `loopx serve-status` process or npm dependency installation.
+这一条命令从同一个进程提供打包的 Personal Workspace、状态投影与 Agent Chat。默认会打开浏览器。无头启动请运行 `loopx dashboard --no-open` 并打开命令打印的 URL;默认是 `http://127.0.0.1:8767/chat/`。安装使用不需要单独的 `loopx serve-status` 进程,也不需要在后端安装 npm 依赖。
 
-The packaged UI and status projection can be read back from that same process:
+可以从同一个进程回读打包的 UI 与状态投影:
 
 ```bash
 curl -fsS http://127.0.0.1:8767/chat/ >/dev/null
 curl -fsS http://127.0.0.1:8767/status.json
 ```
 
-If a LoopX Chat service is already running on the default port (for example
-started by the Tauri desktop shell), `loopx dashboard` detects it by its exact
-capability fingerprint and reuses it instead of failing: it prints the running
-URL and opens the browser/PWA route, then exits without starting a second
-server. The desktop shell reuses the same services in the opposite order, so
-the browser/PWA and native entry points can be started in either order.
+如果默认端口上已有一个 LoopX Chat 服务在运行(例如由 Tauri 桌面 shell 启动),`loopx dashboard` 通过其确切 capability 指纹检测到并复用,而不是失败:它打印正在运行的 URL 并打开浏览器/PWA 路径,然后退出,不启动第二个服务器。桌面 shell 以相反顺序复用同一组服务,因此浏览器/PWA 与原生入口可以按任意顺序启动。
 
-Source-checkout development is a separate mode:
+源码检出的开发是另一种模式:
 
 ```bash
 npm ci
@@ -151,64 +74,37 @@ npm run build
 npm run dev
 ```
 
-`npm run dev` starts the Vite UI together with the loopback status and Chat
-services on ports `5173`, `8766`, and `8767`. Use `npm run dev:web` when those
-LoopX services are already running separately. Vite proxies the default
-`/status.json` request to port `8766`, so an SSH user only needs to forward port
-`5173` for the normal development page.
+`npm run dev` 与回环状态及 Chat 服务一起启动 Vite UI,端口为 `5173`、`8766` 与 `8767`。当那些 LoopX 服务已经单独运行时,请使用 `npm run dev:web`。Vite 把默认的 `/status.json` 请求代理到端口 `8766`,因此 SSH 用户只需转发端口 `5173` 即可访问常规开发页面。
 
-The full-stack launcher needs a Python 3.11+ interpreter for the status and
-Chat services. It honors `LOOPX_PYTHON` first, then the Python recorded by the
-LoopX installer in `.loopx-python`, then the repository `.venv`,
-`python3.13`/`python3.12`/`python3.11` on `PATH`, and common Homebrew locations.
-If your default `python3` is older, point it at an existing interpreter:
+全栈启动器需要 Python 3.11+ 解释器来运行状态与 Chat 服务。它优先采用 `LOOPX_PYTHON`,然后是 LoopX 安装在 `.loopx-python` 中记录的 Python,再依次是仓库 `.venv`、`PATH` 上的 `python3.13`/`python3.12`/`python3.11` 以及常见 Homebrew 位置。如果你的默认 `python3` 太旧,把它指向一个现有解释器:
 
 ```bash
 LOOPX_PYTHON=/path/to/python3.12 npm run dev
 ```
 
-Both the root dashboard and the packaged `/chat/` route expose the same
-installable PWA manifest and icons. The default `loopx dashboard` command opens
-`/chat/`; its manifest therefore scopes the installed app to `/chat/`. This is
-an installable standalone surface, not an offline-cache service worker.
+根 dashboard 与打包的 `/chat/` 路由都暴露同样的可安装 PWA manifest 与图标。默认 `loopx dashboard` 命令打开 `/chat/`;因此其 manifest 把已安装应用限定在 `/chat/`。这是一个可安装的独立组件面,不是离线缓存 service worker。
 
-The live `/status.json` route keeps repository-wide public-boundary scanning
-out of the first-screen request. Its contract projection reports that scan as
-deferred; run `loopx check` before publishing or pushing public surfaces to
-perform the complete boundary audit.
+实时 `/status.json` 路由把仓库范围的公开边界扫描移出首屏请求。其契约投影把该扫描报告为已推迟;在发布或推送公开组件面之前运行 `loopx check` 以执行完整的边界审计。
 
-The default screen is the Personal Workspace—LoopX's sole operator-facing frontend.
-It provides a unified, coherent experience for managing long-running agent Goals:
+默认屏幕是 Personal Workspace——LoopX 面向运营方的唯一前端。它为管理长程 agent Goals 提供统一、连贯的体验:
 
-- **LoopX Manager Overview (`/`)**:
-  Cross-Goal triage answering operator priorities before raw drill-down:
-  - 4-lane overview flow (`需要你` / `执行中` / `观察中` / `已安排`);
-  - System Health diagnostics highlighting control-plane and registry status;
-  - Unified conversation tray supporting global questions, Goal creation drafts, and progress summaries.
+- **LoopX Manager 概览(`/`)**:
+  在原始下钻之前回答运营方优先级的跨 Goal 分诊:
+  - 4 通道概览流(`需要你` / `执行中` / `观察中` / `已安排`);
+  - 突出控制面与 registry 状态的 System Health 诊断;
+  - 支持全局问题、Goal 创建草稿与进度摘要的统一会话托盘。
 
-- **Goal Workspace (`/?goalId=<id>`)**:
-  Dedicated workspace for an individual Goal:
-  - **Chat**: Goal-scoped Agent communication, streaming turns, and action previews;
-  - **Tasks**: 4-column kanban board (`待确认`, `待执行 / 进行中`, `定时与持续`, `已完成`) with quick status updates and one-click conversion of Agent replies to Task drafts;
-  - **Files**: Repository artifact browser and file inspects;
-  - **Context Drawer**: Goal diagnosis, repository bindings, Lark Topic connections, and session health.
+- **Goal 工作区(`/?goalId=<id>`)**:
+  单个 Goal 的专用工作区:
+  - **Chat**:Goal 范围的 Agent 通信、流式 Turn 与动作预览;
+  - **任务**:4 列 kanban 看板(`待确认`, `待执行 / 进行中`, `定时与持续`, `已完成`),支持快速状态更新与把 Agent 回复一键转换为任务草稿;
+  - **文件**:仓库产物浏览器与文件检查;
+  - **Context 抽屉**:Goal 诊断、仓库绑定、Lark Topic 连接与会话健康。
 
-- **Action Safety & Control Plane**:
-  Durable modifications to Goals, Todos, Heartbeats, monitors, or settings follow the typed preview → governed apply → verified receipt protocol. Presentation follows risk and reversibility: protected or irreversible actions remain review-first, while the reversible Goal pause below applies a ready preview directly and escalates stale or newly gated results back to review. The browser never performs unmediated direct writes to control-plane truth.
-  The Goal directory keeps only active Goals in its main list. Use the pause action
-  beside a Goal to apply a reversible stop in one click; persistent feedback reports
-  the result, and stopped Goals retain their
-  Todos, history, and evidence in a collapsed **Stopped Goals** section and can be
-  restored from the same section. Stopping a Goal pauses automatic Agent turns; it
-  does not mark the Goal complete or delete state. A stopped Goal leaves active
-  attention and projects zero effective quota, allowing the scheduler to stop host
-  automation such as a Codex App heartbeat while retaining the configured quota.
-  Goal stop and `quota.compute=0` share this shutdown path but keep distinct resume
-  authority: only Goal lifecycle resume may reactivate a stopped Goal, while an
-  explicit positive quota update resumes a quota pause. Stop does not force-kill an
-  in-flight tool call; the next `quota should-run` packet tells the host to pause or
-  delete the recurring heartbeat before another automatic turn. The equivalent CLI
-  flow is:
+- **动作安全与控制面**:
+  对 Goals、Todos、Heartbeats、监视器或设置的持久修改遵循类型化 preview → 受治理 apply → 已验证 receipt 协议。展现方式随风险与可逆性而变化:受保护或不可逆动作保持 review 优先,而下方可逆的 Goal pause 直接应用就绪的 preview,并把过期或新被关卡约束的结果升级回 review。浏览器从不执行对控制面真相的未调解直接写入。
+  Goal 目录的主列表只保留活动 Goals。使用 Goal 旁边的暂停动作一键应用可逆停止;持久反馈报告结果,停止的 Goal 在折叠的 **Stopped Goals** 区域保留其 Todos、历史与证据,并且可以从同一区域恢复。停止 Goal 会暂停自动 Agent Turn;它不把 Goal 标记为完成,也不删除状态。停止的 Goal 离开活动attention 范畴,投影零有效 quota,从而让调度器停止宿主自动化(如 Codex App heartbeat),同时保留配置的 quota。
+  Goal stop 与 `quota.compute=0` 共享这条关闭路径,但保留不同的恢复权威:只有 Goal 生命周期恢复可以重新激活一个停止的 Goal,而显式的正向 quota 更新会恢复一个 quota 暂停。Stop 不强制杀死进行中的工具调用;下一个 `quota should-run` 包会告诉宿主在另一个自动 Turn 之前暂停或删除周期性的 heartbeat。等价的 CLI 流程是:
 
   ```bash
   loopx goal-lifecycle --goal-id <goal-id> --operation stop
@@ -217,123 +113,88 @@ It provides a unified, coherent experience for managing long-running agent Goals
   loopx quota status --goal-id <goal-id>
   ```
 
-  The first command is a zero-write preview. The executed commands write the
-  authoritative source registry, refresh the shared registry projection, and verify
-  both readbacks. Resume restores scheduling eligibility; quota, Gates, and Todos
-  still decide whether work may run.
+  第一条命令是零写入的 preview。执行过的命令会写入权威来源 registry、刷新共享 registry 投影并验证两个回读。Resume 恢复调度资格;quota、Gates 与 Todos 仍然决定工作是否可以运行。
 
-- **Public Frontstage (`/frontstage`)**:
-  Public `/frontstage` continues to serve as an unauthenticated, read-only showcase and public-safe presentation surface. Real local operator workflows belong exclusively in the Personal Workspace.
+- **公开 Frontstage(`/frontstage`)**:
+  公开 `/frontstage` 继续作为无需认证、只读的 showcase 与 public-safe 展示组件面。真实的本地运营工作流专属 Personal Workspace。
 
-## Load Live Status
+## 加载实时状态
 
-For the canonical multi-project home, start a global status server. This is the
-normal operator view for all projects connected into the shared registry:
+作为规范的多项目首页,启动一个全局状态服务器。这是所有接入共享 registry 的项目的正常运营视图:
 
 ```bash
 loopx serve-status --global-registry --port 8766 --limit 80
 ```
 
-On macOS, keep the status feed and the Chat service running after login with
-the user-level LaunchAgent helper:
+在 macOS 上,用用户级 LaunchAgent 辅助脚本让状态 feed 与 Chat 服务在登录后保持运行:
 
 ```bash
 ../../scripts/macos-dashboard-launchagent.sh install
 ```
 
-The helper starts:
+该辅助脚本启动:
 
 ```text
 http://127.0.0.1:8766/status.json
 http://127.0.0.1:8767/chat/
 ```
 
-Use `../../scripts/macos-dashboard-launchagent.sh restart|stop|uninstall|status`
-for local service operations. `status` also probes
-`http://127.0.0.1:8766/status.json` and prints the
-`status_contract.schema_version`; if it is missing or below the expected
-dashboard version, run `restart` before a demo so the live feed is not served by
-an older daemon. Logs live under `~/Library/Logs/loopx/`.
-The status output path is covered without touching real macOS services by
-`python3 examples/macos-dashboard-launchagent-status-smoke.py`.
+本地服务操作使用 `../../scripts/macos-dashboard-launchagent.sh restart|stop|uninstall|status`。`status` 还会探测
+`http://127.0.0.1:8766/status.json` 并打印
+`status_contract.schema_version`;如果缺失或低于预期 dashboard 版本,请在演示前运行 `restart`,以免实时 feed 由较旧的 daemon 服务。日志位于 `~/Library/Logs/loopx/`。
+状态输出路径由 `python3 examples/macos-dashboard-launchagent-status-smoke.py` 覆盖,无需触碰真实 macOS 服务。
 
-Then open the packaged personal workspace:
+然后打开打包的个人工作区:
 
 ```text
 http://127.0.0.1:8767/chat/
 ```
 
-### Named local and SSH-tunnel sources
+### 命名本地与 SSH 隧道来源
 
-The Personal Workspace source switcher keeps a browser-local catalog with one
-built-in **Local** source and any number of named SSH-tunnel sources. Start the
-status server on each remote host, then forward each host to a distinct local
-port:
+Personal Workspace 的来源切换器维护一个浏览器本地目录,包含一个内置 **Local** 来源与任意数量的命名 SSH 隧道来源。在每个远程主机上启动状态服务器,然后把每个主机转发到不同的本地端口:
 
 ```bash
-# On the remote host
+# 在远程主机上
 loopx serve-status --global-registry --host 127.0.0.1 --port 8766
 
-# On the operator machine; choose a different local port for every source
+# 在运营方机器上;为每个来源选择不同的本地端口
 ssh -N -L 8876:127.0.0.1:8766 <remote-host>
 ```
 
-The add-source panel reads only explicit, shell-safe `Host` aliases from the
-operator machine's OpenSSH config through the current loopback Dashboard
-origin. Packaged `loopx dashboard` serves this endpoint from its Chat runtime,
-so a custom Dashboard port works without a fixed discovery port; development
-mode proxies the same path to the local Chat service. Select an alias, choose a
-local port, copy and run the generated tunnel command, then add the source.
-Wildcard hosts, negated patterns, `IdentityFile`, `ProxyCommand`, hostnames,
-credentials, and config paths are never projected to the browser. The manual
-loopback-URL path remains available for custom forwarding setups.
+添加来源面板通过当前回环 Dashboard origin,只从运营方机器的 OpenSSH 配置读取显式、shell 安全的 `Host` 别名。打包的 `loopx dashboard` 从其 Chat 运行时提供该端点,因此自定义 Dashboard 端口无需固定发现端口;开发模式把同一路径代理到本地 Chat 服务。选择别名、选一个本地端口、复制并运行生成的隧道命令,然后添加来源。通配符主机、否定模式、`IdentityFile`、`ProxyCommand`、主机名、凭据与配置路径绝不会投影到浏览器。手动回环 URL 路径对自定义转发设置仍然可用。
 
-The browser catalog stores only the selected alias label and loopback URL;
-LoopX does not store SSH credentials or open the tunnel. The active source
-reports its connection health. Local stays interactive, while every custom
-SSH-tunnel source is explicitly read-only even though its forwarded URL is
-loopback.
+浏览器目录只存储所选别名标签与回环 URL;LoopX 不存储 SSH 凭据,也不打开隧道。活动来源报告其连接健康。Local 保持可交互,而每个自定义 SSH 隧道来源即使其转发 URL 是回环,也显式只读。
 
-The switcher intentionally has no synthetic **All** source. Independent status
-feeds do not yet share authority, identity, or deduplication semantics, so
-combining them would imply cross-host coordination that the control plane has
-not established.
+切换器有意没有合成的 **All** 来源。独立状态 feed 尚未共享权威、身份与去重语义,因此合并它们会暗示控制面尚未建立的主机间协调。
 
-For project-local debugging or a disposable `loopx demo`, start a local
-status server from the project you want to inspect:
+对于项目本地调试或一次性 `loopx demo`,从你想检查的项目启动本地状态服务器:
 
 ```bash
 loopx serve-status --port 8765
 ```
 
-`--global-registry` is intentionally explicit: it keeps the multi-project home
-on the shared registry even when you launch it from inside a project checkout,
-while plain `serve-status` remains useful for project-local debugging.
+`--global-registry` 是有意的显式行为:即使你在项目检出内部启动它,它也把多项目首页保持在共享 registry 上,而普通 `serve-status` 仍适用于项目本地调试。
 
-Keep the dashboard app running and use `?view=ops`, the `Live` source button,
-or load this project-local URL from the source control:
+保持 dashboard 应用运行,使用 `?view=ops`、`Live` 来源按钮,或从来源控件加载这个项目本地 URL:
 
 ```text
 http://127.0.0.1:8765/status.json
 ```
 
-The status server binds to `127.0.0.1` by default and sends no-store JSON with
-local CORS headers for the Vite dashboard.
+状态服务器默认绑定到 `127.0.0.1`,并为 Vite dashboard 发送带本地 CORS 头的 no-store JSON。
 
-It also serves `POST /reward/dry-run` for validating the selected goal/run and
-public-safe reward text. To allow direct local dashboard submission, start the
-server with the explicit write flag:
+它还提供 `POST /reward/dry-run`,用于验证选中的 goal/run 与 public-safe 奖励文本。要允许直接本地 dashboard 提交,用显式写标志启动服务器:
 
 ```bash
 loopx serve-status --port 8765 --enable-reward-write-api
 ```
 
-The write flag is loopback-only. Without it, the dashboard can validate a
-reward draft but cannot append feedback.
+该写标志仅限回环。没有它,dashboard 可以验证奖励草稿,但不能追加反馈。
 
-## Load Static Status
+## 加载静态状态
 
-Use a local static export:
+使用本地静态导出:
 
 ```bash
 python3 -m loopx.cli --format json status > apps/presentation/dashboard/public/status.local.json
@@ -341,76 +202,53 @@ cd apps/presentation/dashboard
 npm run dev
 ```
 
-Then load `/status.local.json` from the dashboard source control.
+然后从 dashboard 来源控件加载 `/status.local.json`。
 
-`status.local.json` is intentionally git-ignored because live status exports can
-contain local registry/runtime paths and private project summaries. Keep it as a
-local inspection file only. For public demos, use the sanitized
-`examples/status.example.json` fixture instead of committing a live export.
+`status.local.json` 有意被 git-ignore,因为实时状态导出可能包含本地 registry/运行时路径与私有项目摘要。只把它作为本地检查文件。公开演示请使用净化的 `examples/status.example.json` fixture,而不是提交实时导出。
 
-You can also import a JSON file directly in the browser, or load a local API
-URL that returns the same `loopx --format json status` shape.
+你也可以直接在浏览器导入 JSON 文件,或加载一个返回相同 `loopx --format json status` 形态的本地 API URL。
 
-## Live Single-Page Session Dash
+## 实时单页会话面板
 
-The primary way to watch session task progress is a loopback single-page panel:
+观察会话任务进度的主要方式是一个回环单页面板:
 
 ```bash
-loopx dash                 # serve at http://127.0.0.1:8767/ (auto-refresh every 10s)
-loopx dash --goal-id <goal-id>   # narrow the panel to one goal
+loopx dash                 # 在 http://127.0.0.1:8767/ 服务(每 10 秒自动刷新)
+loopx dash --goal-id <goal-id>   # 把面板收窄到单个 goal
 ```
 
-Open the printed URL in any browser and keep it open while the agents work.
-The page is a human-focused fleet view: an overview strip of sessions, goals,
-active / needs-you / blocked / done buckets, open todos and run statistics,
-followed by one card per session with the goals it owns and each goal's
-status badge, todo progress bar, waiting reason, and latest run. It refreshes
-itself in place every 10 seconds by re-fetching the `/panel` fragment.
-Internal control machinery (decision frames, work-lane contracts, quota slot
-math, source warnings) is intentionally not rendered. The panel is
-read-only: no write controls, no browser write authority. The server binds
-loopback only and exposes no write routes.
+在任意浏览器打开打印出的 URL,并在 agents 工作时保持打开。该页面是一个面向人类的机群视图:会话、goals、active / needs-you / blocked / done 桶、开放 todos 与运行统计的概览条带,后面是每个会话一张卡,包含其拥有的 goals 以及每个 goal 的状态徽章、todo 进度条、等待原因与最近一次运行。它每 10 秒通过重新拉取 `/panel` 片段在原地刷新。内部控制机制(decision frames、work-lane 契约、quota slot 计算、来源警告)有意不渲染。面板只读:没有写控件,没有浏览器写入权威。服务器只绑定回环,不暴露任何写路由。
 
-A one-shot static snapshot is also available for demos or sharing:
+一次性静态快照也可用于演示或分享:
 
 ```bash
 loopx dash generate [--goal-id <goal-id>] --out dash.html
 ```
 
-Open `dash.html` in any browser. The command runs the public/private
-boundary scan before reporting success and withholds output on failure.
+在任意浏览器打开 `dash.html`。该命令在报告成功之前运行 public/private 边界扫描,失败时不输出。
 
 ```bash
-# print the projection + html as JSON instead
+# 改为以 JSON 打印投影 + html
 loopx --format json dash generate --goal-id <goal-id>
 ```
 
-See [the session dash panel design](../../../docs/product/surfaces/session-dash-panel-design.md)
-for the layout, data boundary, and validation contract.
+布局、数据边界与验证契约见 [session dash panel 设计](../../../docs/product/surfaces/session-dash-panel-design.md)。
 
-## Browser Smokes
+## 浏览器 Smokes
 
-Dashboard browser smokes are explicit because they start a temporary Vite
-server. For demo readiness, run the grouped public-safe smoke:
+Dashboard 浏览器 smoke 是显式的,因为它们会启动临时 Vite 服务器。演示就绪请运行分组的 public-safe smoke:
 
 ```bash
 npm run smoke:demo-readiness
 ```
 
-That command runs the LaunchAgent status-output smoke, the structured
-`promotion-gate` fresh/warning contract smoke, the source-contract smokes, and
-the current Home and Personal Workspace browser smokes. The decision-freshness
-and promotion-readiness read models remain covered by focused control-plane
-smokes instead of browser tests for the retired legacy Ops view. In CI
-environments without Playwright/Chrome,
-use:
+该命令运行 LaunchAgent 状态输出 smoke、结构化的 `promotion-gate` 新鲜/警告契约 smoke、来源契约 smokes,以及当前 Home 与 Personal Workspace 浏览器 smokes。决策新鲜度与晋升就绪读模型仍由聚焦的控制面 smokes 覆盖,而不是用浏览器测试替代已退役的旧版 Ops 视图。在没有 Playwright/Chrome 的 CI 环境中,使用:
 
 ```bash
 python3 ../../../examples/dashboard-demo-readiness-smoke.py --skip-browser
 ```
 
-The individual browser smokes are still available when you want to debug one
-surface:
+当你想调试单个组件面时,各个浏览器 smoke 仍然可用:
 
 ```bash
 npm run smoke:home-browser
@@ -420,36 +258,13 @@ node examples/dashboard-throttled-browser-smoke.mjs
 node examples/dashboard-operator-gate-browser-smoke.mjs
 ```
 
-The home browser smoke protects the canonical control-plane home. It uses a
-public-safe four-project fixture, opens the root route without `view=share`,
-checks the Chinese operator copy for user todos, agent priorities, showcase
-activity, quota guard state, per-project top-4 todo status, and state
-writeback, and rejects raw machine tokens such as `single_surface`,
-`focus_wait`, or raw internal slot constraints on the first screen. It also captures desktop
-and mobile first-screen / decision-frame screenshots under
-`output/playwright/dashboard-home-visual-acceptance/` and fails on horizontal
-overflow so density regressions are visible before calling the frontend broadly
-usable. It uses an installed Playwright package or the Codex bundled runtime
-when available, and starts Vite through the local `vite` package rather than
-depending on `npm` / `npx` being on `PATH`.
+home 浏览器 smoke 保护规范控制面首页。它使用一个 public-safe 的四项目 fixture,不带 `view=share` 打开根路由,检查中文运营文案中的用户 todos、agent 优先级、showcase 活动、quota 守卫状态、每项目 top-4 todo 状态与状态写回,并在首屏拒绝原始机器令牌如 `single_surface`、`focus_wait` 或原始内部 slot 约束。它还在
+`output/playwright/dashboard-home-visual-acceptance/` 下捕获桌面与移动首屏/decision-frame 截图,并在水平溢出时失败,以便在广泛宣称前端可用之前让密度回退可见。它使用已安装的 Playwright 包,或在可用时使用 Codex 捆绑的运行时,并通过本地 `vite` 包启动 Vite,而不依赖 `PATH` 上的 `npm` / `npx`。
 
-The ops decision-freshness smoke protects the detailed `?view=ops` panel with
-two public fixtures: a live-like zero-item summary and a stale/rebase-required
-decision example. It verifies the rendered Chinese/English operator copy,
-counts, top affected goal, and exact-replay wording instead of relying only on
-source-string checks.
+ops 决策新鲜度 smoke 用两个公开 fixtures 保护详细的 `?view=ops` 面板:一个类实时的零条目摘要与一个过期/需要 rebase 的 decision 示例。它验证渲染的中英文运营文案、计数、受影响最大的 goal 与精确重放措辞,而不是只依赖源码字符串检查。
 
-The promotion-readiness smoke protects the detailed `?view=ops` panel with
-fresh, stale, and missing readiness fixtures. It verifies the status badges,
-readiness/rerun decision, artifact window, age, reason, and source-of-truth copy
-for canary promotion readiness. The canonical fixture/browser script is
-`examples/dashboard-promotion-readiness-browser-smoke.mjs`; use the npm script
-above instead of calling ad hoc duplicate filenames.
-The grouped demo-readiness path also runs `examples/promotion-gate-smoke.py`
-before browser checks, so the structured `gate_state`, `can_promote`, and
-`should_warn` contract is covered even when browser smokes are skipped.
+晋升就绪 smoke 用新鲜、过期与缺失的 readiness fixtures 保护详细的 `?view=ops` 面板。它验证 canary 晋升就绪的状态徽章、readiness/rerun 决策、产物窗口、时长、原因与真相来源文案。规范 fixture/浏览器脚本是
+`examples/dashboard-promotion-readiness-browser-smoke.mjs`;请使用上面的 npm 脚本,而不是调用临时的重复文件名。
+分组 demo-readiness 路径还会在浏览器检查之前运行 `examples/promotion-gate-smoke.py`,因此即使跳过浏览器 smokes,结构化的 `gate_state`、`can_promote` 与 `should_warn` 契约也被覆盖。
 
-The throttled smoke protects the "quiet scheduling state" first screen. The
-operator-gate smoke protects planned high-complexity goals: they should appear
-as controller/user actions, not Codex-ready work. Those older browser smokes
-still use the local Playwright CLI wrapper.
+节流 smoke 保护"安静调度状态"首屏。运营关卡 smoke 保护计划的高复杂度 goals:它们应显示为控制器/用户动作,而不是 Codex 可处理的工作。那些较旧的浏览器 smokes 仍使用本地 Playwright CLI 包装器。

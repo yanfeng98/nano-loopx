@@ -1,80 +1,48 @@
-# Server-Client Product Shape
+# Server-Client 产品形态
 
-This note describes a medium-term product shape for LoopX. It is not an
-implementation spec for a network service. The purpose is to name the product
-roles clearly enough that future CLI, dashboard, Lark, MCP, and server work can
-share one mental model.
+> [English](server-client-product-shape.md)
 
-LoopX is the control plane around agent loops:
+本笔记描述 LoopX 的中期产品形态。它不是网络服务的实现规范。目的是把产品角色命名得足够清晰,让未来的 CLI、dashboard、Lark、MCP 与 server 工作共享一个思维模型。
 
-- the server owns durable goal state, event history, and governed planning
-  lanes;
-- the client acts as the user's intent proxy;
-- executor loops do bounded work and write back evidence.
+LoopX 是 agent Loop 周围的控制面:
 
-## Product Roles
+- server 拥有持久的 goal state、事件历史与受治理的规划车道;
+- client 充当用户的意图代理;
+- 执行器 Loop 做有界工作并写回 evidence。
+
+## 产品角色
 
 ### Server
 
-The LoopX server is the durable control-plane owner. It should be
-thought of first as a database-backed state system, not as the place where
-agent intelligence lives. In local-first mode, this may still be implemented
-by files plus CLI commands. In the product shape, however, the server is where
-long-running facts become coherent:
+LoopX server 是持久的控制面 owner。首先应把它看作数据库支撑的 state 系统,而不是 agent 智能所在处。在 local-first 模式下,这可能仍由文件加 CLI 命令实现。但在产品形态中,server 是长程事实变得连贯的地方:
 
-- stable goal identity, current belief, todo state, gate state, and run
-  history;
-- registered agent identity, role, scope, worktree policy, and review handoff
-  defaults;
-- maintainer-facing signal inbox, selected anchors, and performance-review
-  summaries;
-- per-todo soft claim and optional hard-lease state;
-- quota, spend, idempotency, and concurrency policy;
-- compact public/private boundary summaries;
-- compact mental-model and management projections for clients;
-- scheduled planning, dreaming, and replanning queues;
-- review and feedback rollups for maintainer-facing performance review;
-- proposal promotion from advisory lanes into normal user or agent todos.
+- 稳定的 goal 身份、当前信念、todo state、gate state 与运行历史;
+- 已注册的 agent 身份、角色、范围、worktree 策略与评审交接默认;
+- 面向维护者的信号收件箱、所选锚点与绩效评审摘要;
+- 逐 todo 软认领与可选硬租约 state;
+- 配额、花费、幂等与并发策略;
+- 紧凑的公开/私有边界摘要;
+- 面向客户端的紧凑思维模型与管理投影;
+- 调度的规划、dreaming 与重规划队列;
+- 面向维护者绩效评审的评审与反馈汇总;
+- 从建议车道提升提议到普通用户或 agent todo。
 
-The backend layer around that store should be thin but strict: typed reads,
-idempotent writes, conflict checks, compact projections, scheduler decisions,
-and public/private boundary enforcement. It is closer to a control-plane
-database plus projection API than to a traditional application server that
-owns domain behavior.
+该存储周围的后端层应薄而严格:类型化读取、幂等写入、冲突检查、紧凑投影、调度器决策与公开/私有边界执行。它更接近控制面数据库加投影 API,而不是拥有领域行为的传统应用服务器。
 
-The server should stay conservative. Planning lanes may rank candidate todos,
-surface refactor warnings, or propose evidence probes, but they do not execute
-protected work, read private material, or spend delivery quota until promoted
-through the normal gate, quota, and boundary path.
+server 应保持保守。规划车道可以排序候选 todo、呈现重构警告或提议 evidence 探针,但直到通过正常 gate、配额与边界路径提升前,它们不执行受保护工作、不读取私有材料、不花费交付配额。
 
-For the maintainer-first product surface, the server should treat external
-signals as candidates before they become work. A GitHub issue, pull request,
-failing check, Lark feedback, or document change can enter the signal inbox;
-only selected high-value anchors become todos, owner-routing requests, or
-showcase candidates. This keeps "always running" from turning into "always
-busy."
+对于维护者优先的产品界面,server 应把外部信号视为候选工作。GitHub issue、pull request、失败检查、Lark 反馈或文档变更可以进入信号收件箱;只有所选高价值锚点成为 todo、owner 路由请求或 showcase 候选。这防止"总是在运行"变成"总是忙"。
 
-### Delivery And Planning Queues
+### 交付与规划队列
 
-The server roadmap should separate two queue families while keeping them in the
-same durable state system:
+server 路线图应把两个队列族分开,同时保持在同一个持久 state 系统中:
 
-- **Delivery queue**: promoted user or agent todos that an executor may work on
-  after `quota should-run`, claim or lease checks, workspace policy, capability
-  checks, and goal-boundary checks.
-- **Planning queue**: dreaming, periodic replan, memory consolidation, and
-  refactor-warning proposals that may inspect compact run history and rank
-  candidate work, but remain advisory until promoted.
+- **交付队列**:执行器可以在 `quota should-run`、认领或租约检查、worktree 策略、能力检查与 goal 边界检查后处理的提升用户或 agent todo。
+- **规划队列**:dreaming、周期重规划、记忆整合与重构警告提议,它们可以检查紧凑运行历史并排序候选工作,但提升前保持建议性。
 
-Both queues should share the boring control-plane substrate: per-goal locks,
-per-todo or per-proposal identity, idempotency keys, append-only events,
-public/private boundary summaries, and compact status projections. They should
-not share delivery permission. A planning proposal can say "this todo should
-move up", "this stale lane needs a split", or "this blocker should be asked";
-it cannot silently mutate active truth, claim delivery work, read gated
-material, or spend delivery quota.
+两个队列应共享平淡的控制面基质:逐 goal 锁、逐 todo 或逐提议身份、幂等键、仅追加事件、公开/私有边界摘要与紧凑状态投影。它们不应共享交付权限。规划提议可以说"这个 todo 应上移"、"这个陈旧车道需要拆分"或"这个阻碍应被询问";它不能悄然变更 active 真相、认领交付工作、读取 gate 材料或花费交付配额。
 
-Promotion is the critical transition:
+提升是关键转换:
 
 ```text
 planning proposal
@@ -83,64 +51,33 @@ planning proposal
   -> quota / lease / boundary checked delivery turn
 ```
 
-This keeps server-side dreaming and periodic replanning useful without turning
-the server into a hidden autonomous agent. The server owns durable scheduling
-facts and proposal records; the client and executor still perform the visible
-human-in-the-loop transition and bounded delivery work.
+这让 server 端 dreaming 与周期重规划有用,而不把 server 变成隐藏自主 agent。Server 拥有持久调度事实与提议记录;client 与执行器仍执行可见的人机协同转换与有界交付工作。
 
-### Management Projections And Summaries
+### 管理投影与摘要
 
-Loop Agent management adds a second projection need on top of ordinary status.
-The server should keep kernel state explicit, but expose compressed read models
-for clients:
+Loop Agent 管理在普通状态之上增加第二个投影需求。Server 应保持内核 state 显式,但向客户端暴露压缩读模型:
 
-- **mental-model projection**: maps goal state, gates, todos, claims, scope,
-  evidence, run history, quota, and handoff into the five user concepts:
-  Goal, Next step, Needs your judgment, Evidence, and Can continue.
-- **performance-review projection**: rolls a lane or anchor into quantity,
-  quality, token cost, user-attention cost, latest evidence, and next
-  expectation.
-- **review-feed projection**: turns recent outputs, gates, blockers, and
-  signals into cards that the user can mark useful, not useful, needs evidence,
-  off-scope, or too expensive.
+- **思维模型投影**:把 goal state、gate、todo、认领、范围、evidence、运行历史、配额与交接映射为五个用户概念:Goal、下一步、需要你的判断、Evidence、可以继续。
+- **绩效评审投影**:把一个车道或锚点汇总为数量、质量、token 成本、用户注意力成本、最新 evidence 与下一个预期。
+- **评审流投影**:把近期输出、gate、阻碍与信号转化为用户可以标记有用、没用、需要 evidence、范围外或太贵的卡片。
 
-These projections should be deterministic from recorded state first. A
-model-backed summarizer can help produce friendlier wording, cluster duplicate
-signals, or draft a review summary, but it must be default-off for control
-purposes. Its output is advisory until promoted through a typed review,
-feedback, todo, or gate transition. It cannot approve gates, mutate active
-truth, hide missing evidence, or spend quota.
+这些投影首先应从记录的 state 确定性得出。模型支撑的摘要器可以帮助产生更友好的措辞、聚类重复信号或起草评审摘要,但出于控制目的它必须默认关闭。它的输出建议性,直到通过类型化评审、反馈、todo 或 gate 转换提升。它不能批准 gate、变更 active 真相、隐藏缺失 evidence 或花费配额。
 
-## Multica Reference Point
+## Multica 参考点
 
-Multica is a useful reference implementation for this product split, but Goal
-Harness should borrow the shape rather than the full product category.
+Multica 是这种产品拆分的有用参考实现,但 Goal Harness 应借用其形态而不是完整产品类别。
 
-Public Multica docs describe a stack with a Next.js frontend, a Go backend
-using Chi / sqlc / WebSocket, PostgreSQL 17 with pgvector, and a local agent
-daemon that runs coding CLIs. Its CLI/daemon guide makes the daemon the local
-runtime: it detects installed agent CLIs, registers runtimes with the server,
-polls for claimed tasks, creates isolated workspaces, starts the agent CLI,
-streams results back, and sends heartbeats.
+公开 Multica 文档描述的栈有 Next.js 前端、使用 Chi / sqlc / WebSocket 的 Go 后端、PostgreSQL 17 加 pgvector,以及运行编码 CLI 的本地 agent daemon。其 CLI/daemon 指南把 daemon 当作本地运行时:它检测已安装 agent CLI、向 server 注册运行时、轮询认领任务、创建隔离工作区、启动 agent CLI、流回结果并发送心跳。
 
-The LoopX takeaway:
+LoopX 的启示:
 
-- **Database first**: durable coordination facts should live in a real state
-  store or a file-backed equivalent before they are projected into UI, prompts,
-  or handoff packets.
-- **Backend as control API**: server code should enforce schemas,
-  idempotency, leases, boundaries, quota, and projection contracts.
-- **Daemon / executor outside the state store**: agent execution belongs in a
-  local daemon, Codex/App loop, terminal agent, or benchmark runner. The server
-  schedules and observes; it does not become the model runtime.
-- **Event stream plus projections**: issue/task status, comments, blockers,
-  heartbeats, claims, and results should be appendable facts that can produce
-  first-screen cards, review packets, and automation prompts.
-- **Vector memory is optional**: pgvector is useful when a product wants skill
-  or memory retrieval. LoopX should not require vector storage for v0
-  control-plane correctness; relational/event facts come first.
+- **数据库优先**:持久协调事实应在被投影进 UI、提示或交接包之前,存在于真实 state 存储或文件支撑等价物中。
+- **后端作为控制 API**:server 代码应强制执行 schema、幂等性、租约、边界、配额与投影契约。
+- **Daemon/执行器在 state 存储之外**:agent 执行属于本地 daemon、Codex/App Loop、终端 agent 或基准 runner。Server 调度与观察;它不成为模型运行时。
+- **事件流加投影**:issue/任务状态、评论、阻碍、心跳、认领与结果应该是可追加事实,能产生首屏卡片、评审包与自动化提示。
+- **向量记忆是可选的**:当产品想要 skill 或记忆检索时,pgvector 有用。LoopX 不应为 v0 控制面正确性要求向量存储;关系/事件事实优先。
 
-So "server" in LoopX should usually mean:
+因此 LoopX 中的"server"通常应意味着:
 
 ```text
 durable state store
@@ -150,7 +87,7 @@ durable state store
   + scheduler / quota decisions
 ```
 
-not:
+而不是:
 
 ```text
 agent runtime
@@ -160,54 +97,40 @@ agent runtime
 
 ### Client
 
-The client is the maintainer's agent-facing proxy. It turns human intent into
-governed control-plane transitions and turns raw agent activity back into an
-operator-readable surface.
+Client 是维护者的面向 agent 代理。它把人类意图转化为受治理的控制面转换,并把原始 agent 活动转回运维者可读的界面。
 
-The client can be a CLI, dashboard, Lark document workflow, browser UI, or host
-adapter. The important product responsibility is the same:
+Client 可以是 CLI、dashboard、Lark 文档工作流、浏览器 UI 或 host 适配器。重要的产品责任相同:
 
-- explain what the goal is trying to accomplish now;
-- show the signal inbox and selected high-value anchors;
-- show what happened, what is blocked, and what will happen next;
-- show whether a Loop Agent is earning value, respecting control, and staying
-  cost-aware;
-- collect user judgment, taste, approval, rejection, deferral, or reward;
-- translate that input into gates, preferences, todo changes, or handoffs;
-- route executor loops toward the current state without embedding stale policy;
-- make peer claims and explicit review handoffs visible.
+- 解释 goal 现在试图完成什么;
+- 显示信号收件箱与所选高价值锚点;
+- 显示发生了什么、什么被阻碍、接下来会发生什么;
+- 显示 Loop Agent 是否在赚取价值、尊重控制并保持成本意识;
+- 收集用户判断、品味、批准、拒绝、延迟或奖励;
+- 把该输入转化为 gate、偏好、todo 变更或交接;
+- 在不嵌入陈旧策略的情况下把执行器 Loop 路由到当前 state;
+- 让对等方认领与显式评审交接可见。
 
-This is why the client is more than intent classification. It is a product
-surface for long-running work: it carries context, permission, feedback,
-visibility, and trust.
+这就是 client 超越意图分类的原因。它是长程工作的产品界面:它承载上下文、权限、反馈、可见性与信任。
 
-Issue / PR solver pilots should therefore appear first as anchor-management
-flows, not as a separate issue-fix product. The client can show: why this issue
-or PR is worth acting on, who owns implementation, what action is allowed, what
-evidence will be accepted, and whether the outcome can graduate into public
-showcase material.
+Issue/PR solver 试点因此应首先以锚点管理流程出现,而不是作为单独的 issue-fix 产品。Client 可以显示:为什么这个 issue 或 PR 值得行动、谁拥有实现、允许什么动作、将接受什么 evidence,以及结果能否升格为公开 showcase 材料。
 
-### Executor Loop
+### 执行器 Loop
 
-The executor loop is Codex, Claude Code, Cursor, a terminal agent, a benchmark
-runner, or another bounded worker. It does the work, but it should not be the
-long-term source of truth.
+执行器 Loop 是 Codex、Claude Code、Cursor、终端 agent、基准 runner 或其他有界 worker。它做工作,但它不应是长期真相源。
 
-An executor loop should:
+执行器 Loop 应:
 
-- read the current goal state and quota decision before work;
-- respect user gates, public/private boundaries, and claimed todo ownership;
-- keep one turn bounded to the selected todo or safe side path;
-- write back evidence, validation, blockers, and next-step proposals;
-- stop before sensitive material, destructive git, private material, production
-  actions, or unapproved publication boundaries.
+- 工作前读取当前 goal state 与配额决策;
+- 尊重用户 gate、公开/私有边界与已认领 todo 所有权;
+- 把一个 Turn 限制在所选的 todo 或安全旁路;
+- 写回 evidence、校验、阻碍与下一步提议;
+- 在敏感材料、破坏性 git、私有材料、生产动作或未批准的发布边界前停止。
 
-The executor can be powerful without being the product authority. LoopX keeps
-authority in shared state that the user and every registered peer can inspect.
+执行器可以强大,但不必成为产品权威。LoopX 把权威保持在使用户与每个已注册对等方都能检查的共享 state 中。
 
-## Interaction Loop
+## 交互 Loop
 
-The product loop is:
+产品 Loop 是:
 
 ```text
 user
@@ -219,19 +142,13 @@ user
   -> user
 ```
 
-The client should not bypass the server by turning every user sentence directly
-into an agent instruction. The executor should not bypass the client by hiding
-important decisions in chat or local memory. LoopX exists so user
-judgment, agent work, evidence, and future planning remain visible in the same
-control plane.
+Client 不应通过把每个用户句子直接变成 agent 指令来绕过 server。Executor 不应通过在聊天或本地记忆中隐藏重要决策来绕过 client。LoopX 存在的意义是让用户判断、agent 工作、evidence 与未来规划在同一控制面中保持可见。
 
-## Decoupled Display And Control
+## 解耦显示与控制
 
-The intelligent display surface can be adopted before the full LoopX control
-loop. This separation matters for early users and partner teams.
+智能显示界面可以在完整 LoopX 控制 Loop 之前采用。这种分离对早期用户与合作伙伴团队很重要。
 
-In **display-only mode**, the server or local state store can ingest agent work
-products and review signals without owning the executor's next action:
+在**仅显示模式**中,server 或本地 state 存储可以摄取 agent 工作产物与评审信号,而不拥有执行器的下一动作:
 
 ```text
 external agent artifacts
@@ -241,11 +158,9 @@ external agent artifacts
   -> maintainer dashboard
 ```
 
-This mode quantifies value but does not steer execution. It is appropriate for
-existing Codex, Claude Code, OpenViking-style solver, office-operations, or
-internal agent workflows where the user first wants to inspect and score work.
+此模式量化价值,但不引导执行。它适合现有 Codex、Claude Code、OpenViking 风格 solver、office-operations 或内部 agent 工作流,用户首先想检查与打分工作。
 
-In **LoopX control mode**, accepted review output becomes governed state:
+在**LoopX 控制模式**中,已接受的评审输出成为受治理 state:
 
 ```text
 performance_review_v0
@@ -255,101 +170,58 @@ performance_review_v0
   -> next review event
 ```
 
-Both modes should live in one product system and preferably one repository for
-now. The code boundary should still be explicit: the display app may run
-read-only, while writeback paths must call LoopX schemas, gates, quota, and
-boundary checks. This lets frontend collaborators build a polished surface
-without accidentally creating a second source of truth.
+两种模式应存在于一个产品系统中,目前优选一个仓库。代码边界仍应显式:显示应用可以只读运行,而写回路径必须调用 LoopX schema、gate、配额与边界检查。这让前端协作者可以构建精致界面,而不会意外创建第二真相源。
 
-## Capability Boundaries
+## 能力边界
 
-LoopX should not become:
+LoopX 不应变成:
 
-- an agent runtime that owns model execution, tools, billing, or permissions;
-- a generic workflow engine where every step is a hidden automation edge;
-- a raw transcript store for private chat, logs, benchmark traces, or local
-  evidence;
-- a crawler, publisher, or production-action authority;
-- a replacement for project-specific adapters, evaluators, or domain tools.
+- 拥有模型执行、工具、计费或权限的 agent 运行时;
+- 每一步都是隐藏自动化边的通用工作流引擎;
+- 私有聊天、日志、基准痕迹或本地 evidence 的原始转录存储;
+- 爬虫、发布器或生产动作权威;
+- 项目特定适配器、评估器或领域工具的替代品。
 
-It should provide the governed projection around those systems: goal state,
-gates, todos, claims or leases, quota, evidence summaries, run history,
-feedback, planning proposals, and handoff packets.
+它应围绕这些系统提供受治理投影:goal state、gate、todo、认领或租约、配额、evidence 摘要、运行历史、反馈、规划提议与交接包。
 
-## First Contract Slices
+## 首批契约切片
 
-The first product slices should remain small and compatible with CLI-only mode.
+首批产品切片应保持小而兼容 CLI-only 模式。
 
-1. **`goal_channel_projection_v0`**: a read-only first-screen projection for
-   goal, gate, todos, current blocker, latest evidence, quota, and next action.
-2. **`mental_model_projection_v0`**: a user-facing compression layer that maps
-   kernel state into Goal, Next step, Needs your judgment, Evidence, and Can
-   continue. Clients should render this before exposing raw claim, scope,
-   quota, run-history, or handoff details.
-3. **`agent_profile_v1`**: registered peer identity with advisory functional
-   role, default scope, task classes, and action preferences. Task and
-   repository policy own workspace, review, and merge requirements.
-4. **`task_lease_v0`**: per-`(goal_id, todo_id)` ownership with TTL,
-   idempotency key, write scope, renewal, transfer, and conflict behavior.
-5. **`planning_queue_v0`**: advisory planning, dreaming, and replanning
-   proposals that remain non-executable until promoted by controller or user
-   decision plus normal quota and boundary checks. The minimal record should
-   include proposal id, source run window, due/retry policy, candidate todo
-   refs, confidence, promotion target, and idempotency key.
-6. **`feedback_signal_v0`**: user feedback captured as one of four control
-   effects: gate decision, preference hint, todo mutation, or product
-   improvement note. Raw private chat should not become public evidence.
-7. **`performance_review_projection_v0`**: lane or anchor rollup over a bounded
-   window with output quantity, quality label, token or quota cost, user
-   attention cost, evidence references, and next expectation. It should cite
-   source events instead of copying raw work context.
-8. **`review_feed_card_v0`**: card-level projection for outputs, blockers,
-   signals, or proposed todos that can receive user feedback and later produce
-   `feedback_signal_v0`, `todo_update`, `anchor_update`, or
-   `performance_review_note`.
-9. **`anchor_candidate_v0`**: selected external signals that may become work.
-   The minimal record should include source kind, public/private boundary,
-   reason to care, allowed action, owner split, stop condition, expected
-   evidence, and showcase-consent status.
-10. **`project_level_reward_v0`**: aggregate value estimate for long-running
-   agent work across a project. It combines quantity, human-scored quality,
-   token spend, and user-attention spend so benchmark evidence can be compared
-   with maintainer value without reducing everything to a single task score.
-11. **`advisory_summary_v0`**: optional model-backed summary of recent state,
-   used only for wording or clustering. It is default-off for control and cannot
-   mutate state unless converted into a typed object above.
-12. **`handoff_packet_v0`**: compact executor input that carries the selected
-   todo, stop condition, validation expectation, boundary notes, and writeback
-   target without copying the whole project history.
+1. **`goal_channel_projection_v0`**:goal、gate、todo、当前阻碍、最新 evidence、配额与下一步动作的只读首屏投影。
+2. **`mental_model_projection_v0`**:把内核 state 映射为 Goal、下一步、需要你的判断、Evidence 与可以继续的面向用户压缩层。Client 应在暴露原始认领、范围、配额、运行历史或交接详情前渲染它。
+3. **`agent_profile_v1`**:带建议性功能角色、默认范围、任务类别与动作偏好的已注册对等方身份。任务与仓库策略拥有工作区、评审与合并要求。
+4. **`task_lease_v0`**:逐 `(goal_id, todo_id)` 所有权,含 TTL、幂等键、写入范围、续期、转移与冲突行为。
+5. **`planning_queue_v0`**:在控制器或用户决策加正常配额与边界检查提升前保持不可执行的建议性规划、dreaming 与重规划提议。最小记录应包括提议 id、来源运行窗口、到期/重试策略、候选 todo 引用、置信度、提升目标与幂等键。
+6. **`feedback_signal_v0`**:捕获为四种控制效果之一的用户反馈:gate 决策、偏好提示、todo 变更或产品改进笔记。原始私有聊天不应成为公开 evidence。
+7. **`performance_review_projection_v0`**:有界窗口内的车道或锚点汇总,含输出数量、质量标签、token 或配额成本、用户注意力成本、evidence 引用与下一个预期。它应引用来源事件,而不是复制原始工作上下文。
+8. **`review_feed_card_v0`**:输出、阻碍、信号或提议 todo 的卡片级投影,可以接收用户反馈并随后产生 `feedback_signal_v0`、`todo_update`、`anchor_update` 或 `performance_review_note`。
+9. **`anchor_candidate_v0`**:可能成为工作的所选外部信号。最小记录应包括来源种类、公开/私有边界、关心的理由、允许的动作、owner 拆分、停止条件、预期 evidence 与 showcase 同意状态。
+10. **`project_level_reward_v0`**:跨项目的长程 agent 工作聚合价值估算。它结合数量、人工打分的质量、token 花费与用户注意力花费,使基准 evidence 可以与维护者价值比较,而不把一切约简为单个任务分数。
+11. **`advisory_summary_v0`**:近期 state 的可选模型支撑摘要,仅用于措辞或聚类。它出于控制目的默认关闭,除非转化为上述类型化对象,否则不能变更 state。
+12. **`handoff_packet_v0`**:承载所选 todo、停止条件、校验预期、边界笔记与写回目标的紧凑执行器输入,而不复制整个项目历史。
 
-Each slice should have a CLI fallback, a compact status projection, and one
-public/private boundary check before it becomes part of a richer UI.
+每个切片在成为更丰富 UI 的一部分之前,应有一个 CLI 回退、一个紧凑状态投影与一个公开/私有边界检查。
 
-## Roadmap Implication
+## 路线图含义
 
-This product shape changes the center of gravity from "a CLI around a Markdown
-goal file" to "a dynamic goal control plane with CLI as the first client."
+此产品形态把重心从"围绕 Markdown goal 文件的 CLI"变为"以 CLI 为首个客户端的动态 goal 控制面。"
 
-That does not make the CLI obsolete. The CLI is the compatibility baseline and
-the safety fallback. It also keeps contracts honest: if a future server or
-dashboard cannot fall back to equivalent CLI reads and writes, it is probably
-creating a second source of truth.
+这不会让 CLI 过时。CLI 是兼容基线与安全回退。它也让契约诚实:如果未来 server 或 dashboard 无法回退到等价 CLI 读写,它可能正在创建第二真相源。
 
-The near-term roadmap should therefore prefer:
+近期路线图因此应优选:
 
-- contract-first status and write APIs over UI-only state;
-- mental-model projections before frontend-only remapping;
-- local concurrency correctness before broad server scheduling;
-- task-scoped peer claims and workspace policy before autonomous multi-agent merging;
-- planning proposals before background execution;
-- user feedback and performance-review modeling before personalization claims;
-- anchor selection before domain-specific solver UIs.
+- 契约优先的状态与写 API,而非仅 UI state;
+- 思维模型投影,而非仅前端重映射;
+- 本地并发正确性,而非宽泛 server 调度;
+- 任务范围对等方认领与 worktree 策略,而非自主多 agent 合并;
+- 规划提议,而非后台执行;
+- 用户反馈与绩效评审建模,而非个性化声明;
+- 锚点选择,而非领域特定 solver UI。
 
-The product promise stays the same across these layers: make the human decision
-explicit, keep safe side work moving when it is independent, and make every
-agent loop leave enough evidence for the next loop to recover the plot.
+跨这些层级的产品承诺保持不变:让人类决策显式,保持独立时的安全旁线工作推进,并让每个 agent Loop 留下足够 evidence 让下一个 Loop 恢复剧情。
 
-## References
+## 参考
 
 - Multica README architecture section:
   <https://github.com/multica-ai/multica#architecture>

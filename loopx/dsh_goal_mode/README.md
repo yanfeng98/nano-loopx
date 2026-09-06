@@ -1,29 +1,28 @@
-# LoopX DeepSeek Harness (dsh) goal mode
+# LoopX DeepSeek Harness（dsh）Goal 模式
 
-First-class host adapter that turns a DeepSeek Harness session into a
-LoopX-governed goal loop. LoopX keeps authority (goal/todo state, quota,
-validation); the adapter only translates one governed Turn into one bounded
-dsh work segment and shapes the reply into a typed result.
+> [English](README.md)
 
-## Surface
+头等宿主适配器，把 DeepSeek Harness 会话变成受 LoopX 管控的 Goal 循环。LoopX
+保持权威（goal/todo 状态、quota、校验）；适配器只把一个受管控 Turn 翻译成一段
+有界的 dsh 工作段，并把回复塑造成类型化结果。
 
-The `deepseek-harness` host surface (aliases: `deepseek_harness`,
-`DeepSeek Harness`, `dsh`) is an external loop driver:
+## 入口
+
+`deepseek-harness` 宿主表面（别名：`deepseek_harness`、`DeepSeek Harness`、
+`dsh`）是一个外部循环驱动：
 
 1. `loopx start-goal --guided --project . --host-surface deepseek-harness`
-   returns the host-loop activation packet after todo writeback.
-2. Every automatic tick starts from `loopx quota should-run`
-   (`--runtime-profile generic_cli`) and stops when it says stop.
-3. Each approved tick runs `loopx turn run-once` with this adapter as the
-   generic-cli host adapter command.
-4. The adapter reads one `loopx_turn_host_request_v0` JSON object on stdin,
-   extracts the signed TurnEnvelope authority, asks dsh to execute the bounded
-   `primary_action`, and emits exactly one `loopx_turn_result_v0` JSON object
-   on stdout.
-5. LoopX validates the typed result independently before writing any state or
-   spending quota.
+   在 todo writeback 后返回 host-loop 激活 packet。
+2. 每次自动 tick 都从 `loopx quota should-run`（`--runtime-profile generic_cli`）
+   开始，并在它说 stop 时停止。
+3. 每个被批准的 tick 运行 `loopx turn run-once`，本适配器作为其 generic-cli
+   宿主适配器命令。
+4. 适配器从 stdin 读取一个 `loopx_turn_host_request_v0` JSON 对象，提取带签名的
+   TurnEnvelope 权威，要求 dsh 执行有界的 `primary_action`，并向 stdout 输出
+   恰好一个 `loopx_turn_result_v0` JSON 对象。
+5. LoopX 在写任何状态或花费 quota 之前独立校验类型化结果。
 
-## Run the adapter
+## 运行适配器
 
 ```bash
 python -m loopx.dsh_goal_mode \
@@ -32,85 +31,73 @@ python -m loopx.dsh_goal_mode \
   --provider deepseek-official
 ```
 
-The historical launcher still works and resolves to the same implementation:
+历史启动器仍可用，且解析到同一实现：
 
 ```bash
 python3 scripts/dsh_turn_host_adapter.py --cordis /path/to/cordis.yml
 ```
 
-Flags: `--provider`, `--model`, `--max-tokens`, `--workspace`,
-`--dsh-home` (`--session-root` remains a compatibility alias), `--cordis`,
-`--runtime-bin`, `--request-timeout-seconds`, and `--dsh-runner`. The runner
-option is an explicit test hook; LoopX does not machine-enforce where it may be
-used, and the caller already owns local host-execution authority.
+Flags：`--provider`、`--model`、`--max-tokens`、`--workspace`、
+`--dsh-home`（`--session-root` 仍是兼容别名）、`--cordis`、`--runtime-bin`、
+`--request-timeout-seconds` 与 `--dsh-runner`。runner 选项是显式测试 hook；
+LoopX 不机器强制其使用范围，调用方本就拥有本地宿主执行权威。
 
-## In-process host (`--host dsh`)
+## 进程内宿主（`--host dsh`）
 
-`loopx turn run-once --host dsh` runs the same adapter inside the CLI process
-instead of a generic subprocess. Provider failures then reach the Turn
-journal as typed `loopx_turn_host_failure_v0` kinds instead of collapsing to
-`unknown` through a bare nonzero exit, so bounded same-Turn retry stays
-available. Both failure shapes are covered: a raised transport exception and
-the SDK's normal terminal report (`RunResult.finish_reason == "error"` with a
-structured `turn/end` reason and no Python exception at all).
+`loopx turn run-once --host dsh` 在 CLI 进程内运行同一适配器，而不是通用
+子进程。Provider 失败于是以类型化 `loopx_turn_host_failure_v0` 种类进入 Turn
+日志，而不会经裸非零退出塌缩为 `unknown`，因此有界同 Turn 重试保持可用。两种
+失败形态都被覆盖：抛出的传输异常，以及 SDK 的正常终态报告
+（`RunResult.finish_reason == "error"`，携带结构化 `turn/end` 原因，完全没有
+Python 异常）。
 
-Classification follows the `loopx-turn-v0` precedence: a known provider
-`error.code` wins over HTTP status and prose, an unknown non-empty code fails
-closed to `unknown` and blocks every lower tier, HTTP status decides only
-when no more specific code exists, and bounded message matching applies only
-when no structured signal exists. Signals that disagree within one tier fold
-to `unknown`. The SDK's stable `SERVER` code covers HTTP 5xx responses and maps
-to the retryable `provider_overloaded` bucket even when an intermediate
-serializer omits the duplicate HTTP status. Its hard-quota `QUOTA` code remains
-non-retryable, while its explicitly retryable `EMPTY_RESPONSE` code maps to the
-closest LoopX transient bucket, `transport_lost`.
+分类遵循 `loopx-turn-v0` 优先级：已知 provider `error.code` 优先于 HTTP 状态与
+散文，未知非空 code fail closed 到 `unknown` 并封锁所有更低层级，HTTP 状态只在
+没有更具体 code 时才决定，有界消息匹配只在没有结构信号时适用。同一层级内
+不一致的信号收敛为 `unknown`。SDK 稳定的 `SERVER` code 覆盖 HTTP 5xx 响应，
+并映射到可重试的 `provider_overloaded` 桶，即使中间序列化器省略了重复的 HTTP
+状态。它的硬配额 `QUOTA` code 仍不可重试，而其显式可重试的 `EMPTY_RESPONSE`
+code 映射到最接近的 LoopX 瞬态桶 `transport_lost`。
 
-CLI flags: `--dsh-provider`, `--dsh-model`, `--dsh-max-tokens`,
-`--dsh-home`, `--dsh-cordis`, `--dsh-runtime-bin`, and `--dsh-runner`.
-Against the current SDK config surface the home maps to `dsh_home`, the runtime
-binary maps to `dsh_bin`, and a cordis file rides as one `patches` entry.
-Home precedence is explicit CLI value, then `DSH_HOME`, then
-`<workspace>/.local/.dsh-sessions`; LoopX creates the selected local directory
-before SDK launch. Session persistence still belongs to the selected dsh
-composition, so this mode does not promise cross-turn dsh session continuity.
-The generic-cli subprocess preserves its legacy contract: an exception-free
-terminal SDK error produces a typed `wait` result, while the in-process host
-turns the same outcome into a retry-aware host failure. Hermetic verification:
-`python3 examples/loopx-turn-dsh-builtin-host-e2e-smoke.py`.
+CLI flags：`--dsh-provider`、`--dsh-model`、`--dsh-max-tokens`、`--dsh-home`、
+`--dsh-cordis`、`--dsh-runtime-bin` 与 `--dsh-runner`。针对当前 SDK 配置表面，
+home 映射到 `dsh_home`，运行时二进制映射到 `dsh_bin`，cordis 文件作为一条
+`patches` 条目挂载。Home 优先级是显式 CLI 值，然后 `DSH_HOME`，然后
+`<workspace>/.local/.dsh-sessions`；LoopX 在 SDK 启动前创建选定的本地目录。
+会话持久化仍属于选定的 dsh 组合，因此该模式不承诺跨 Turn 的 dsh 会话连续性。
+Generic-cli 子进程保留其旧契约：无异常的终端 SDK 错误产生类型化 `wait` 结果，
+而进程内宿主把同一结果变成重试感知的宿主失败。密封验证：
+`python3 examples/loopx-turn-dsh-builtin-host-e2e-smoke.py`。
 
-The SDK derives `finish_reason` from the last `turn/end.reason.kind`; the
-adapter rejects contradictory or malformed runner outcomes as
-`contract_rejected`. Result parsing and shaping failures use the same typed
-contract failure instead of collapsing into `unknown`.
+SDK 从最后一个 `turn/end.reason.kind` 推导 `finish_reason`；适配器拒绝矛盾或
+格式错误（malformed）的 runner 结果为 `contract_rejected`。结果解析与塑形失败
+使用同一类型化契约失败，而不是塌缩为 `unknown`。
 
-## Requirements
+## 依赖要求
 
-- Optional dependency group `loopx[deepseek-harness]`, currently pinned to the
-  validated `deepseek-harness-sdk==0.1.2a3` API, or a compatible runner via
-  `--dsh-runner`.
-- A dsh `cordis.yml` plus any `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL`
-  settings for the real runtime.
-- Defaults come from `DSH_MODEL` / `DSH_PROVIDER` when set. `DSH_HOME` may
-  override the workspace-local home when no CLI home is supplied.
+- 可选依赖组 `loopx[deepseek-harness]`，当前锁定在已验证的
+  `deepseek-harness-sdk==0.1.2a3` API，或经 `--dsh-runner` 提供兼容 runner。
+- 真实运行时需要 dsh `cordis.yml` 以及任何 `DEEPSEEK_API_KEY` /
+  `DEEPSEEK_BASE_URL` 设置。
+- 设置 `DSH_MODEL` / `DSH_PROVIDER` 时作为默认值。未提供 CLI home 时，
+  `DSH_HOME` 可覆盖 workspace 本地 home。
 
-## Boundary
+## 边界
 
-The explicit dsh runtime home (default `<workspace>/.local/.dsh-sessions`)
-stays local and never enters public LoopX evidence. The composition, not this
-path name, owns session persistence. The adapter never reads goal/todo state,
-builds prompts from todo ids, writes LoopX state, spends quota, or validates
-its own work. A valid final response with no typed JSON candidate becomes a
-conservative `wait`; an invalid runner/result shape is a typed
-`contract_rejected` host failure. Neither path may spend quota.
+显式 dsh 运行时 home（默认 `<workspace>/.local/.dsh-sessions`）保持本地化，
+绝不进入公开 LoopX evidence。会话持久化由组合拥有，不是该路径名。适配器绝不
+读取 goal/todo 状态、不根据 todo ids 构建 prompt、不写 LoopX 状态、不花费
+quota、也不校验自己的工件。无类型化 JSON 候选的有效最终响应变成保守的
+`wait`；无效 runner/结果形态是类型化 `contract_rejected` 宿主失败。两条路径都
+不得花费 quota。
 
-The adapter derives a stable owner-local session id, but LoopX does not yet
-project or validate a DSH Host Session Binding. The built-in surface therefore
-does not claim managed supervisor recovery, outer wake/timer ownership, or a
-cross-process resume guarantee.
+适配器推导稳定的 owner 本地会话 id，但 LoopX 尚未投影或校验 DSH Host Session
+Binding。因此内置表面不声称具备受管 supervisor 恢复、外层唤醒/定时器所有权或跨
+进程恢复保证。
 
-See `docs/integrations/deepseek-harness-connector.md` for the full connector
-walkthrough and `examples/dsh-turn-host-adapter-smoke.py` plus
-`examples/loopx-turn-dsh-e2e-smoke.py` for hermetic smokes. With the optional
-SDK installed, run `examples/loopx-turn-dsh-real-e2e-smoke.py` once with
-`--host generic-cli` and once with `--host dsh`; both paths clear ambient DSH
-home variables and prove the explicit SDK-home wiring.
+完整 connector 走读见 `docs/integrations/deepseek-harness-connector.md`，
+密封 smokes 见 `examples/dsh-turn-host-adapter-smoke.py` 与
+`examples/loopx-turn-dsh-e2e-smoke.py`。安装可选 SDK 后，
+`examples/loopx-turn-dsh-real-e2e-smoke.py` 分别以 `--host generic-cli` 与
+`--host dsh` 各运行一次；两条路径都清除环境中的 DSH home 变量，并验证显式
+SDK-home 接线。

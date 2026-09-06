@@ -1,28 +1,25 @@
 # multi_agent_three_layer_minimality_contract_v0
+> [English](multi-agent-three-layer-minimality-v0.md)
 
-`multi_agent_three_layer_minimality_contract_v0` defines the reusable layering
-rule for LoopX multi-agent products:
+`multi_agent_three_layer_minimality_contract_v0` 定义 LoopX 多 agent 产品的可复用分层规则：
 
-1. **User layer:** declares intent and a few product-level options.
-2. **Preset layer:** supplies domain defaults, role semantics, handoff hints,
-   and product evidence or metric adapters.
-3. **Kernel layer:** owns the reusable multi-agent mechanics.
+1. **用户层：** 声明意图与少量产品级选项。
+2. **Preset 层：** 提供领域默认值、角色语义、交接提示与产品证据或指标适配器。
+3. **内核层：** 拥有可复用的多 agent 机制。
 
-The goal is not only to minimize the user's snippet. The preset must also stay
-thin so auto-research can be a reusable example for future multi-agent products
-rather than a second product-specific runner.
+目标不只是最小化用户的片段。preset 也必须保持轻薄，使 auto-research 可以成为未来多 agent 产品的可复用示例，而不是第二个产品特定 runner。
 
-## Ownership
+## 所有权
 
-| Layer | Owns | Must Not Own |
+| 层 | 拥有 | 不得拥有 |
 | --- | --- | --- |
-| User | Objective, rounds, optional role overrides, and optional data/eval entrypoint. | Tmux/Codex TUI launch, pane-local tick commands, quota/frontier protocol details, worker plumbing, per-agent vision/replan state, or machine JSON routing. |
-| Preset | Domain roles, handoff hints, metric/evidence loop, and domain defaults. | Generic runner lifecycle, real Codex TUI panes, workspace/trust-safe launch, pane-local A2A tick, todo/evidence/status protocol, per-agent vision budgets, replan state transitions, or compact human status. |
-| Kernel | Multi-agent runner, real Codex TUI panes, workspace/trust-safe launch, pane-local A2A tick, todo/evidence/status protocol, CLI-enforced per-agent vision budgets, vision/replan state transitions, compact human status, and default role prompt scaffolding. | Domain-specific research, benchmark, support, or sales semantics. |
+| 用户 | 目标、轮数、可选角色覆盖、可选数据/评估入口点。 | Tmux/Codex TUI 启动、pane 级 tick 命令、quota/frontier 协议细节、worker 管道、逐 agent vision/replan 状态或机器 JSON 路由。 |
+| Preset | 领域角色、交接提示、指标/证据循环与领域默认值。 | 通用 runner 生命周期、真实 Codex TUI pane、workspace/trust-safe 启动、pane 级 A2A tick、todo/evidence/status 协议、逐 agent vision 预算、replan 状态迁移或紧凑人类状态。 |
+| 内核 | 多 agent runner、真实 Codex TUI pane、workspace/trust-safe 启动、pane 级 A2A tick、todo/evidence/status 协议、CLI 强制的逐 agent vision 预算、vision/replan 状态迁移、紧凑人类状态与默认角色 prompt 脚手架。 | 领域特定的研究、benchmark、支持或销售语义。 |
 
-## Contract Shape
+## 契约形状
 
-The reusable helper lives in `demo/multi_agent/contract.py`:
+可复用 helper 位于 `demo/multi_agent/contract.py`：
 
 ```python
 build_three_layer_minimality_contract(
@@ -33,7 +30,7 @@ build_three_layer_minimality_contract(
 )
 ```
 
-It returns:
+它返回：
 
 ```json
 {
@@ -53,59 +50,37 @@ It returns:
 
 ## Auto-Research Preset
 
-Auto-research is one preset on top of the generic kernel. Its preset layer owns
-research roles, handoff hints, the metric/evidence loop, and domain defaults.
-It does not own the runner, TUI panes, workspace/trust-safe launch,
-pane-local A2A tick, todo/evidence/status protocol, per-agent vision budgets,
-or replan state transitions.
+Auto-research 是通用内核之上的一个 preset。其 preset 层拥有研究角色、交接提示、指标/证据循环与领域默认值。它不拥有 runner、TUI pane、workspace/trust-safe 启动、pane 级 A2A tick、todo/evidence/status 协议、逐 agent vision 预算或 replan 状态迁移。
 
-This keeps the public promise honest: a small auto-research recipe should prove
-that other products can also reuse the same kernel with their own thin preset.
+这保持公开承诺的真实性：一个小型 auto-research recipe 应证明其他产品也可以用各自轻薄 preset 复用同一内核。
 
-## Public Line-Count Claim
+## 公开行数声明
 
-The public "few lines of auto-research" claim counts declarative recipe lines,
-not the shared kernel implementation.
+「几行 auto-research」的公开声明计数的是声明性 recipe 行，而非共享内核实现。
 
-For the default auto-research demo, the bounded claim is:
+对于默认 auto-research 演示，有界声明是：
 
-| Layer | Counted Lines | Meaning |
+| 层 | 计数行 | 含义 |
 | --- | ---: | --- |
-| User | 1 | `loopx auto-research start "<open question>" --execute` |
-| Auto-research preset | 4 | default role specs: curator, mapper, runner, verifier |
-| Generic kernel | 0 | shared runner, Codex TUI panes, fixed wake prompt, pane-local tick, todo/evidence/status protocol |
+| 用户 | 1 | `loopx auto-research start "<open question>" --execute` |
+| Auto-research preset | 4 | 默认角色 spec：curator、mapper、runner、verifier |
+| 通用内核 | 0 | 共享 runner、Codex TUI pane、固定唤醒 prompt、pane 级 tick、todo/evidence/status 协议 |
 
-So the honest slogan is: one user line plus a four-line preset can start a
-decentralized A2A research loop on the shared LoopX kernel. The slogan must not
-claim that tmux launch, Codex TUI bootstrap, quota/frontier, evidence routing,
-or status projection are reimplemented inside the auto-research preset.
+因此诚实的口号是：一行用户代码加一个四行 preset 就可以在共享 LoopX 内核上启动去中心化 A2A 研究 Loop。该口号不得声称 tmux 启动、Codex TUI 引导、quota/frontier、证据路由或状态投影在 auto-research preset 内部被重新实现。
 
-## Developer Implementation Budget
+## 开发者实现预算
 
-The same split applies to source code, not only to command examples.
-`demo/auto_research/preset.py` should read like a small preset:
-role defaults, role profiles, successor declarations, seed todo wording, and
-thin wrappers around generic helpers. Reusable A2A proof fields such as
-`broadcaster_selects_todo=false`, `each_pane_reads_own_quota_frontier=true`,
-and `leader_agent_required=false` belong to
-`demo/multi_agent/recipe.py`.
+同样拆分适用于源代码，而不只是命令示例。`demo/auto_research/preset.py` 读起来应像一个小型 preset：角色默认值、角色 profile、successor 声明、seed todo 措辞与围绕通用 helper 的薄包装。可复用的 A2A 证明字段，例如 `broadcaster_selects_todo=false`、`each_pane_reads_own_quota_frontier=true` 与 `leader_agent_required=false`，属于 `demo/multi_agent/recipe.py`。
 
-This keeps the developer-facing promise honest: future products should be able
-to copy the pattern by writing their own short preset, not by importing
-auto-research internals.
+这保持面向开发者的承诺真实：未来产品应能通过编写各自简短 preset 复制该模式，而不是导入 auto-research 内部实现。
 
-## Collective Round Ledger
+## 集体轮数 Ledger
 
-`multi_agent_collective_round_ledger_v0` is the kernel-owned proof surface for
-multi-agent rounds. It records expected lanes, per-lane quota/frontier/turn
-outcomes, integrated evidence, and role-declared successor todos. Product
-presets may wrap the ledger with domain metrics, but they should not fork its
-round definition or introduce a coordinator to decide work.
+`multi_agent_collective_round_ledger_v0` 是多 agent 轮数的内核拥有证明界面。它记录预期 lane、每 lane quota/frontier/turn 结局、整合证据与角色声明的 successor todo。产品 preset 可以把领域指标包装到 ledger 上，但不应分叉其轮数定义或引入协调者来决定工作。
 
-## Canonical Auto-Research Recipe
+## 规范 Auto-Research Recipe
 
-Auto-research should stay small enough that a developer can see the whole
-product-specific recipe at a glance:
+Auto-research 应保持足够小，使开发者能一眼看到整个产品特定 recipe：
 
 ```text
 loopx auto-research start "<open question>" --execute
@@ -115,24 +90,16 @@ research-executor:research-executor:research_executor
 evaluator-promoter:evaluator-promoter:evaluator_promoter
 ```
 
-Those five lines are the product recipe: one user question and four research
-role identities. The fixed decentralized wake prompt, real Codex TUI panes,
-pane-local quota/frontier tick, successor todo protocol, and
-`multi_agent_collective_round_ledger_v0` proof remain generic kernel behavior.
+这五行就是产品 recipe：一个用户问题加四个研究角色身份。固定去中心化唤醒 prompt、真实 Codex TUI pane、pane 级 quota/frontier tick、successor todo 协议与 `multi_agent_collective_round_ledger_v0` 证明仍是通用内核行为。
 
-For the KNN demo, the auto-research preset may declare the research metric and
-role successor hints, but it must not add a product-specific coordinator,
-workflow runner, or metric aggregator. The required proof is: four collective
-role rounds, at least two held-out metric improvements, public-safe evidence,
-and a generic collective-round ledger saying which lanes participated.
+对于 KNN 演示，auto-research preset 可以声明研究指标与角色 successor 提示，但不得添加产品特定协调者、工作流 runner 或指标聚合器。必需证明是：四轮集体角色轮数、至少两项 held-out 指标改进、公开安全证据，以及一份说明哪些 lane 参与的通用集体轮数 ledger。
 
-## Acceptance
+## 验收
 
-A change satisfies this contract only when:
+一项变更只有满足以下条件才符合本契约：
 
-- the user recipe remains a few intent fields, not runner configuration;
-- the preset has no host process lifecycle or pane-local tick implementation;
-- the preset has no product-specific fork of per-agent vision/replan mechanics;
-- the generic kernel contract stays domain-agnostic;
-- another multi-agent product can reuse the same kernel without importing
-  auto-research code.
+- 用户 recipe 仍是少数意图字段，而非 runner 配置；
+- preset 没有 host 进程生命周期或 pane 级 tick 实现；
+- preset 没有逐 agent vision/replan 机制的产品特定分叉；
+- 通用内核契约保持领域无关；
+- 另一个多 agent 产品可以在不导入 auto-research 代码的情况下复用同一内核。

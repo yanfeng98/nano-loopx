@@ -1,42 +1,40 @@
 # Agent Turn Recall
 
-`agent-turn-recall` prepares memory guidance for an autonomous agent turn when
-there may be no new user prompt. It composes existing LoopX surfaces instead of
-introducing another memory store:
+> [English](README.md)
 
-- quota and Todo projection select the current work;
-- Agent Turn Recall builds the bounded situation and query;
-- Reward Memory enforces corpus, identity, authority, freshness, and lifecycle;
-- the configured context provider performs read-only retrieval.
+`agent-turn-recall` 在可能没有新用户 prompt 时,为一次自主 agent turn 准备
+memory 指引。它组合现有 LoopX surface,而不是引入另一个 memory store:
 
-The capability is default-off. A goal must explicitly enable a Reward Memory
-experiment for the agent and configure the `agent_workflow.turn_admission`
-surface.
+- quota 与 Todo 投影选出当前工作;
+- Agent Turn Recall 构建有界的情境与 query;
+- Reward Memory 强制 corpus、identity、authority、freshness 与 lifecycle;
+- 配置的 context provider 执行只读 retrieval。
 
-## Turn Contract
+该 capability 默认关闭。Goal 必须显式地为 agent 开启一个 Reward Memory
+实验,并配置 `agent_workflow.turn_admission` surface。
 
-`agent_turn_situation_v0` includes the agent, goal, project, selected Todo,
-phase, recent outcomes, and next intent. It records
-`user_prompt_included=false`; chat text is not a fallback input. The material
-fields produce a `situation_fingerprint`. Combining that fingerprint with the
-host-provided `turn_instance_id` produces a `turn_recall_id`.
+## Turn 契约
 
-This gives two useful identities:
+`agent_turn_situation_v0` 包含 agent、goal、project、选中的 Todo、阶段、近期
+outcome 与下一步意图。它记录 `user_prompt_included=false`;聊天文本不是后备输入。
+这些 material 字段产生一个 `situation_fingerprint`。把该 fingerprint 与
+host 提供的 `turn_instance_id` 组合,得到 `turn_recall_id`。
 
-- a changed Todo, target, phase, or intent changes the situation fingerprint;
-- a new turn changes the recall id and recalls again, even when the situation
-  is otherwise unchanged.
+这给出两种有用身份:
 
-Repeated execution with the same recall id may reuse one ignored local receipt.
-The receipt stores only the compact private context needed to reproduce that
-turn's guidance; it never stores provider payloads, credentials, or query text.
+- Todo、target、阶段或意图变化会改变 situation fingerprint;
+- 新 turn 会改变 recall id 并重新召回,即使情境本身没有变化。
 
-## Usage
+用同一个 recall id 重复执行可以复用一条被忽略的本地 receipt。Receipt 只保存
+重建该 turn 指引所需的紧凑私有上下文;它从不保存 provider payload、凭据或
+query 文本。
 
-Preview without provider access:
+## 使用
+
+不访问 provider 的预览:
 
 ```bash
-# Persist the exact packet already used for turn routing in ignored local state.
+# 把已用于 turn 路由的确切 packet 持久化到被忽略的本地 state。
 loopx quota should-run ... --format json > .local/turn-quota.json
 
 loopx agent-turn-recall \
@@ -47,7 +45,7 @@ loopx agent-turn-recall \
   --format json
 ```
 
-Recall after quota/Todo selection:
+在 quota/Todo 选择之后召回:
 
 ```bash
 loopx agent-turn-recall \
@@ -59,26 +57,22 @@ loopx agent-turn-recall \
   --format json
 ```
 
-The command consumes the exact quota packet instead of rebuilding status. This
-keeps turn admission bounded and ensures the recall query uses the same selected
-Todo and interaction state that the host is following. `-` may be used to read
-the packet from stdin when the host owns a safe pipeline.
+该命令消费确切 quota packet,而不是重建 status。这让 turn admission 保持有界,
+并确保召回 query 使用 host 正在遵循的同一个选中 Todo 与交互状态。当 host 拥有
+安全 pipeline 时,可以用 `-` 从 stdin 读取 packet。
 
-The result carries a private `context.guidance` list for agent reasoning. It is
-not action authority. The agent must still obey the current interaction
-contract, capability gates, write scopes, and user gates.
+结果携带一条私有 `context.guidance` 列表供 agent 推理使用。它不是 action
+authority。Agent 仍须遵守当前交互契约、capability gates、写作用域与用户 gate。
 
-Retrieval relevance and action applicability remain separate. Recalled
-guidance is conditional private context; the agent must compare it with the
-exact turn situation and current authority before acting.
+Retrieval 相关性与动作适用性仍然是两回事。召回指引是条件性私有上下文;agent
+在行动前必须把它与确切 turn 情境及当前 authority 对比。
 
-## Freshness And Failure
+## Freshness 与失败
 
-Active Reward Memory records may carry `lifecycle.expires_at`. Retrieval ignores
-the record at or after that timestamp. Wrong user, peer, project, session, or
-surface scope is rejected before provider application.
+活跃 Reward Memory 记录可能带 `lifecycle.expires_at`。Retrieval 会忽略该时间戳
+及之后的所有记录。错误的 user、peer、project、session 或 surface 作用域会在
+provider 应用前被拒绝。
 
-Provider and application failures preserve an empty base context, do not create
-a user gate, do not spend quota, and do not deliver to external sinks. The host
-can therefore call this capability at turn admission without making memory
-availability a prerequisite for safe autonomous progress.
+Provider 与应用失败会保留空的基础上下文,不创建用户 gate,不消耗 quota,也不
+投递到外部 sink。因此 host 可以在 turn admission 时调用该 capability,而无需
+把 memory 可用性变成安全自主推进的前提。

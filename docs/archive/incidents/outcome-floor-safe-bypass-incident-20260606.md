@@ -1,57 +1,51 @@
-# Outcome-Floor Safe-Bypass Incident
+# Outcome Floor 安全绕过事件
 
-Date: 2026-06-06
+> [English](outcome-floor-safe-bypass-incident-20260606.md)
 
-Audience: LoopX maintainers, heartbeat prompt generator owners, quota
-contract owners, dashboard/status owners, and connected-project controller
-authors.
+日期:2026-06-06
 
-## Summary
+读者对象:LoopX 维护者、heartbeat 提示词生成器所有者、quota 契约所有者、
+dashboard/status 所有者,以及 connected-project 控制器作者。
 
-LoopX correctly detected that a connected delivery goal had fallen below
-the handoff outcome floor, but the exported `quota should-run` contract made the
-next action easy to misread. The payload returned `should_run=false` and
-`decision=skip` while also returning `safe_bypass_allowed=true`,
-`safe_bypass_kind=outcome_floor_recovery`, and
-`heartbeat_recommendation.recommended_mode=outcome_floor_recovery`.
+## 摘要
 
-The executor followed the generic skip branch in an installed automation prompt
-and stopped, even though the intended behavior was one bounded recovery segment:
-produce ranker/cross-domain evidence or write back the concrete blocker.
+LoopX 正确检测到一个 connected 交付目标低于交接 outcome floor,但导出的
+`quota should-run` 契约让下一个动作很容易被误读。载荷返回了 `should_run=false`
+和 `decision=skip`,同时又返回了 `safe_bypass_allowed=true`、
+`safe_bypass_kind=outcome_floor_recovery` 和
+`heartbeat_recommendation.recommended_mode=outcome_floor_recovery`。
 
-This is both an executor failure and a LoopX contract failure. The
-executor should have respected `safe_bypass_kind=outcome_floor_recovery`, but
-LoopX should not make a Codex-owned recovery path look like a quiet skip.
+执行者在一个已安装的自动化提示词中遵循了通用 skip 分支并停止,即使预期行为是
+一个有界的恢复段:产出 ranker/跨域证据,或写回具体 blocker。
 
-## Product Background
+这既是执行者失败,也是 LoopX 契约失败。执行者本应尊重
+`safe_bypass_kind=outcome_floor_recovery`,但 LoopX 也不应让 Codex 拥有的恢复
+路径看起来像静默 skip。
 
-LoopX is a control surface for long-running agent work. It should manage
-goals, state, gates, quota, evidence, stop conditions, and operator-visible
-current truth so the user does not have to read every agent thread.
+## 产品背景
 
-For heartbeat automation, the timer only wakes the executor. LoopX owns
-the control-plane decision:
+LoopX 是长程 agent 工作的控制 surface。它应管理目标、状态、gate、quota、
+证据、停止条件和 operator 可见的当前真相,让用户不必阅读每条 agent 线程。
 
-- whether normal delivery may run;
-- whether the goal is waiting for an owner/operator;
-- whether the goal is waiting on external evidence;
-- whether a focus-wait lane is still Codex-addressable through a safe bypass;
-- whether the next useful work must be outcome-scale evidence rather than
-  surface propagation;
-- when a completed turn is allowed to append quota spend.
+对于 heartbeat 自动化,定时器只唤醒执行者。LoopX 拥有控制面决策:
 
-The core problem in this incident is that LoopX mixed two different
-questions in one top-level boolean:
+- 普通交付是否可以运行;
+- 目标是否在等待所有者/operator;
+- 目标是否在等待外部证据;
+- 焦点等待通道(focus-wait lane)是否仍可通过安全绕过被 Codex 寻址;
+- 下一个有用工作是否必须是对应结果规模的证据,而不是表面传播;
+- 完成的 turn 何时允许追加 quota spend。
 
-- "May ordinary delivery continue?" Answer: no.
-- "Is there a bounded Codex recovery action to run now?" Answer: yes.
+本事件的核心问题是:LoopX 在一个顶层布尔值里混入了两个不同的问题:
 
-The exported contract should make both answers explicit.
+- "普通交付可以继续吗?" 答案:不能。
+- "现在有可以运行的有界 Codex 恢复动作吗?" 答案:有。
 
-## Observed Payload Shape
+导出的契约应把两个答案都显式化。
 
-The affected `quota should-run` payload for `agent-harness-side-bypass` included
-these fields:
+## 观察到的载荷形态
+
+受影响的 `quota should-run` 载荷(`agent-harness-side-bypass`)包含这些字段:
 
 ```json
 {
@@ -82,36 +76,33 @@ these fields:
 }
 ```
 
-The intended action was not a quiet skip. It was:
+预期动作不是静默 skip,而是:
 
-1. Do exactly one bounded `ranker_or_cross_domain_evidence` recovery segment
-   inside the goal boundary, or write back the blocker that prevents it.
-2. Avoid surface-only downstream propagation and synthetic-only test chains.
-3. Validate and write back active state, todo, critic, and next action.
-4. Spend exactly once only after validated evidence or validated blocker
-   writeback.
+1. 在目标边界内执行恰好一个受限的 `ranker_or_cross_domain_evidence` 恢复段,
+   或写回阻止它的 blocker。
+2. 避免 surface-only 的下游传播和 synthetic-only 测试链。
+3. 验证并写回活动状态、todo、critic 与下一个动作。
+4. 只在验证后的证据或验证后的 blocker 写回之后 spend 一次。
 
-## What Went Wrong
+## 问题出在哪里
 
-1. `decision=skip` and `should_run=false` were too prominent for an actionable
-   recovery branch.
-2. `safe_bypass_allowed=true` existed but was semantically subordinate in the
-   payload and in some installed automation prompts.
-3. The installed automation had an older generic rule: "`should_run=false` means
-   no implementation, adapter work, file edits, research, exploration, or
-   spend." That branch ran before the safe-bypass branch.
-4. The installed automation also carried project-specific stale policy instead
-   of delegating current policy to active state and `goal_boundary`.
-5. The global/latest-run projection remained stale after direct user-turn
-   progress. It still described an older `0/8 current plan task ids` blocker
-   after the project active state had moved to a full-airline clean scope.
-6. The dashboard/status language for `focus_wait` does not clearly distinguish
-   owner-blocked focus wait from Codex-owned outcome-floor recovery.
+1. 对一个可操作的恢复分支来说,`decision=skip` 和 `should_run=false` 太醒目。
+2. `safe_bypass_allowed=true` 存在,但语义上被置于载荷和一些已安装自动化提示词
+   的次要位置。
+3. 已安装的自动化有一条过时的通用规则:"`should_run=false` 意味着不做实现、
+   adapter 工作、文件编辑、研究、探索或花费。" 该分支在 safe-bypass 分支之前
+   运行。
+4. 已安装的自动化还携带项目专属的过时策略,而不是把当前策略委托给活动状态和
+   `goal_boundary`。
+5. 直接用户回合有进展后,全局/最新运行投影仍然过时。项目活动状态已经移到
+   全航线(full-airline)干净作用域后,它仍描述一个更旧的 `0/8 current plan
+   task ids` blocker。
+6. Dashboard/status 对 `focus_wait` 的措辞没有清楚区分"所有者阻塞的焦点等待"
+   与"Codex 拥有的 outcome-floor 恢复"。
 
-## Local Mitigation Applied
+## 已应用的本地缓解
 
-The affected Codex heartbeat automation was replaced with the compact body
-generated by:
+受影响的 Codex heartbeat 自动化被替换为以下命令生成的紧凑正文:
 
 ```bash
 loopx-canary heartbeat-prompt \
@@ -121,17 +112,15 @@ loopx-canary heartbeat-prompt \
   --active-state <ACTIVE_GOAL_STATE_PATH>
 ```
 
-This mitigation removes the hand-written generic `should_run=false` hard-stop
-branch from the installed automation. It is not the final product fix: the Goal
-Harness generic contract and generator still need the P0 changes below so other
-installed automations do not repeat the same ambiguity.
+这一缓解从已安装自动化中移除了手写的通用 `should_run=false` 硬停分支。它不是
+最终产品修复:Goal Harness 通用契约和生成器仍需下面的 P0 变更,避免其他已安装
+自动化重复同样的歧义。
 
-## Desired Semantics
+## 期望语义
 
-LoopX should separate normal delivery eligibility from actionable
-recovery eligibility.
+LoopX 应把普通交付资格与可操作恢复资格分开。
 
-Recommended fields:
+推荐字段:
 
 ```json
 {
@@ -146,10 +135,10 @@ Recommended fields:
 }
 ```
 
-`should_run` should mean "there is a Codex-actionable turn now." Ordinary
-delivery remains separately blocked through `normal_delivery_allowed=false`.
+`should_run` 应表示"现在存在一个 Codex 可动作的 turn"。普通交付通过
+`normal_delivery_allowed=false` 单独保持阻塞。
 
-Suggested decision enum:
+建议的 decision 枚举:
 
 - `run`
 - `safe_bypass_recovery`
@@ -160,113 +149,103 @@ Suggested decision enum:
 - `throttled_skip`
 - `blocked_health`
 
-## Acceptance Criteria
+## 验收标准
 
-1. When a quota payload has `safe_bypass_kind=outcome_floor_recovery`, generated
-   heartbeat prompts handle that branch before ordinary delivery, even when
-   `should_run=true`.
-2. `quota should-run` exposes an unambiguous machine field such as
-   `effective_action=outcome_floor_recovery` plus `should_run=true`, or
-   `recovery_delivery_allowed=true`.
-3. Dashboard first-screen copy distinguishes:
-   - owner/operator focus wait;
-   - external evidence wait;
-   - Codex-owned outcome-floor recovery;
-   - true quiet quota skip.
-4. Installed heartbeat prompt smoke covers the regression: a payload with
-   `should_run=true`, `normal_delivery_allowed=false`,
-   `recovery_delivery_allowed=true`, and
-   `safe_bypass_kind=outcome_floor_recovery` must choose recovery before
-   ordinary delivery.
-5. Status freshness is visible. If `ACTIVE_GOAL_STATE.md` is newer than the
-   latest run projection used for `status` / `quota should-run`, the payload
-   should expose `stale_status_warning=true` or equivalent.
-6. A completed direct user-turn artifact can be recorded or refreshed so the
-   global registry/latest-run projection does not keep recommending a superseded
-   blocker.
+1. 当 quota 载荷具有 `safe_bypass_kind=outcome_floor_recovery` 时,生成的
+   heartbeat 提示词在普通交付之前处理该分支,即使 `should_run=true`。
+2. `quota should-run` 暴露一个无歧义的机器字段,如 `effective_action=
+   outcome_floor_recovery` 加 `should_run=true`,或 `recovery_delivery_allowed=
+   true`。
+3. Dashboard 首屏文案区分:
+   - 所有者/operator 焦点等待;
+   - 外部证据等待;
+   - Codex 拥有的 outcome-floor 恢复;
+   - 真正的静默 quota skip。
+4. 已安装 heartbeat 提示词 smoke 覆盖该回归:具有 `should_run=true`、
+   `normal_delivery_allowed=false`、`recovery_delivery_allowed=true` 和
+   `safe_bypass_kind=outcome_floor_recovery` 的载荷必须在普通交付之前选择恢复。
+5. 状态新鲜度可见。如果 `ACTIVE_GOAL_STATE.md` 比用于 `status` /
+   `quota should-run` 的最新运行投影更新,载荷应暴露 `stale_status_warning=true`
+   或等价物。
+6. 已完成的直接用户回合工件可以被记录或刷新,使全局 registry/最新运行投影
+   不再持续推荐一个被取代的 blocker。
 
 ## TODO
 
-### P0: Contract
+### P0:契约
 
-- Add explicit `effective_action` to `quota should-run`.
-- Add explicit `normal_delivery_allowed` and `recovery_delivery_allowed`, or an
-  equivalent non-ambiguous split.
-- Ensure `decision` is not `skip` when the next intended action is a Codex-owned
-  safe-bypass recovery segment.
-- Make `should_run` mean "a Codex-actionable turn exists"; ordinary delivery
-  eligibility is exposed separately through `normal_delivery_allowed`.
+- 给 `quota should-run` 添加显式 `effective_action`。
+- 添加显式 `normal_delivery_allowed` 与 `recovery_delivery_allowed`,或等价的
+  无歧义拆分。
+- 当下一个预期动作是 Codex 拥有的安全绕过恢复段时,确保 `decision` 不是
+  `skip`。
+- 让 `should_run` 表示"存在 Codex 可动作的 turn";普通交付资格通过
+  `normal_delivery_allowed` 单独暴露。
 
-### P0: Heartbeat Prompt Generator
+### P0:Heartbeat 提示词生成器
 
-- Reorder generated heartbeat branches:
+- 重新排序生成的 heartbeat 分支:
   1. `effective_action=outcome_floor_recovery` /
      `recovery_delivery_allowed=true`;
-  2. operator/user gate notification;
-  3. external monitor branch;
-  4. generic `should_run=false` quiet skip;
-  5. normal delivery.
-- Add a generated-prompt smoke case for the recovery shape:
-  `should_run=true`, `normal_delivery_allowed=false`, and
-  `recovery_delivery_allowed=true`.
-- Remove project-specific stale policy from installed prompts. Project steering
-  should live in registry, active state, adapter output, or `goal_boundary`.
+  2. operator/用户 gate 通知;
+  3. 外部 monitor 分支;
+  4. 通用 `should_run=false` 静默 skip;
+  5. 普通交付。
+- 为恢复形态添加生成提示词 smoke 用例:`should_run=true`、
+  `normal_delivery_allowed=false` 与 `recovery_delivery_allowed=true`。
+- 从已安装提示词中移除项目专属的过时策略。项目 steering 应位于 registry、
+  活动状态、adapter 输出或 `goal_boundary` 中。
 
-### P0: Status Freshness
+### P0:状态新鲜度
 
-- Compare current active-state `updated_at` or file mtime with latest-run
-  `generated_at` in `status` and `quota should-run`.
-- If latest run is stale, expose a compact warning and avoid presenting stale
-  `recommended_action` as current authority.
-- Add smoke coverage for stale latest-run vs newer active-state writeback.
+- 在 `status` 与 `quota should-run` 中比较当前活动状态的 `updated_at` 或文件
+  mtime 与最新运行的 `generated_at`。
+- 如果最新运行过时,暴露紧凑告警,并避免把过时的 `recommended_action` 当作
+  当前权威呈现。
+- 为"过时最新运行 vs 更新的活动状态写回"添加 smoke 覆盖。
 
-### P1: Direct User-Turn Writeback
+### P1:直接用户回合写回
 
-- Provide a public-safe `record-run` / `refresh-state` path for direct user-turn
-  artifacts that did not originate from a heartbeat spend.
-- Require explicit delivery hints for such updates:
-  `delivery_batch_scale`, `delivery_outcome`, classification, artifact refs, and
-  current blocker/progress state.
-- Ensure a post-turn guard check cannot continue to recommend the superseded
-  blocker.
+- 为不来源于 heartbeat spend 的直接用户回合工件提供 public-safe 的
+  `record-run` / `refresh-state` 路径。
+- 此类更新要求显式交付提示:`delivery_batch_scale`、`delivery_outcome`、
+  分类、工件引用,以及当前 blocker/进展状态。
+- 确保回合后的防护检查不能继续推荐被取代的 blocker。
 
-### P1: Dashboard / Operator View
+### P1:Dashboard / Operator 视图
 
-- Split `focus_wait` UI into at least:
+- 把 `focus_wait` UI 至少拆分为:
   - `focus_wait_owner_blocked`;
   - `focus_wait_external_evidence`;
-  - `focus_wait_codex_recovery_allowed`.
-- When `waiting_on=codex`, `user_todo_summary.open_count=0`, and
-  `safe_bypass_allowed=true`, display "Codex recovery action required" rather
-  than "waiting on owner".
+  - `focus_wait_codex_recovery_allowed`。
+- 当 `waiting_on=codex`、`user_todo_summary.open_count=0` 且
+  `safe_bypass_allowed=true` 时,显示"需要 Codex 恢复动作",而不是"等待所有者"。
 
-### P1: Spend Semantics
+### P1:Spend 语义
 
-- Make safe-bypass recovery spend rules explicit in CLI and generated prompts:
-  no spend for quiet skip, blocker-push, preflight failure, dry-run, self-cancel,
-  duplicate accounting, or surface-only report;
-  spend exactly once after validated evidence or validated blocker writeback.
-- Add a spend-slot smoke that accepts safe-bypass recovery accounting with
-  `should_run=true` and `normal_delivery_allowed=false`, while rejecting generic
-  quiet skips.
+- 在 CLI 与生成提示词中显式化 safe-bypass 恢复的 spend 规则:静默 skip、
+  blocker-push、预检失败、dry-run、自我取消、重复记账或 surface-only 报告
+  一律不花费;在验证后的证据或验证后的 blocker 写回之后 spend 一次。
+- 添加一个 spend-slot smoke:接受带 `should_run=true` 与
+  `normal_delivery_allowed=false` 的 safe-bypass 恢复记账,同时拒绝通用静默
+  skip。
 
-### P2: Migration / Installed Automation Hygiene
+### P2:迁移 / 已安装自动化卫生
 
-- Add a command or dashboard check that detects installed automation prompts
-  whose `should_run=false` branch precedes safe-bypass handling.
-- Add a canary-rollout helper that regenerates installed prompts from
-  `heartbeat-prompt --brief --cli-bin loopx-canary` for selected goals.
-- Warn when installed automation text contains stale project policy that should
-  live in active state or `goal_boundary`.
+- 添加一个命令或 dashboard 检查,检测其 `should_run=false` 分支先于 safe-bypass
+  处理的已安装自动化提示词。
+- 添加 canary-rollout 助手,为选定的目标从 `heartbeat-prompt --brief
+  --cli-bin loopx-canary` 重新生成已安装提示词。
+- 当已安装自动化文本包含应位于活动状态或 `goal_boundary` 的过时项目策略时
+  发出警告。
 
-## Non-Goals
+## 非目标
 
-- Do not relax operator gates.
-- Do not allow ordinary delivery to bypass outcome-floor focus wait.
-- Do not make surface-only reports spendable.
-- Do not turn project-specific side-bypass policy into a global rule.
+- 不放松 operator gate。
+- 不允许普通交付绕过 outcome-floor 焦点等待。
+- 不把 surface-only 报告变为可花费。
+- 不把项目专属的侧旁绕过(side-bypass)策略变成全局规则。
 
-The goal is not "run more." The goal is to make the control plane express the
-real next action precisely enough that a project agent can continue when Codex
-is responsible, stop when the user is responsible, and spend only after a
-validated artifact or blocker writeback.
+目标不是"多运行"。目标是让控制面足够精确地表达真正的下一个动作:当 Codex
+负责时项目 agent 可以继续,当用户负责时停下,并且只在验证后的工件或 blocker
+写回之后 spend。

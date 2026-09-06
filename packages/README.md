@@ -1,29 +1,23 @@
-# Co-located Packages
+# 同仓库包
 
-This directory contains independently installable distributions developed next
-to LoopX. Each child owns its packaging metadata, dependencies, and release
-lifecycle; it is not included in the LoopX wheel merely because it is tracked
-in this repository.
+此目录包含与 LoopX 共同开发、可独立安装的发行包。每个子包拥有自己的打包元数据、依赖与发布生命周期;它不会仅仅因为被收录在本仓库中就进入 LoopX wheel。
 
-LoopX-owned source remains under `loopx/`:
+LoopX 自有的源码位于 `loopx/` 下:
 
-- `loopx/capabilities/` owns caller-facing capability contracts and built-in
-  implementations;
-- `loopx/extensions/` owns extension lifecycle machinery and providers bundled
-  in the LoopX wheel.
+- `loopx/capabilities/` 拥有面向调用方的 capability 契约与内置实现;
+- `loopx/extensions/` 拥有扩展机制与随 LoopX wheel 一起发布的 provider。
 
-Create a standalone extension package with:
+用以下命令创建一个独立的扩展包:
 
 ```bash
 loopx extension init <extension-id> --execute
 ```
 
-Current co-located extensions include:
+当前同仓库扩展包括:
 
 - [`loopx-codex-provider-routing`](loopx-codex-provider-routing/README.md):
-  public-safe Codex App + CPA catalog compilation, qualification and upgrade
-  planning;
-- [`loopx-repo-health`](loopx-repo-health/README.md): public-safe GitHub
-  repository health snapshots.
+  public-safe 的 Codex App + CPA 目录编译、资格判定与升级规划;
+- [`loopx-repo-health`](loopx-repo-health/README.md):public-safe 的 GitHub
+  仓库健康快照。
 
-The default destination is `packages/<extension-id>/`.
+默认目标位置是 `packages/<extension-id>/`。

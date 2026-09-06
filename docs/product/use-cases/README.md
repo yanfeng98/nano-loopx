@@ -1,9 +1,10 @@
-# Product Use Cases
+# 产品使用场景
 
-Use cases show how generic LoopX contracts compose around a caller outcome.
-They do not grant domain providers core control-plane authority.
+> [English](README.md)
 
-- [Auto research](auto-research/README.md)
-- [Issue and PR work](issue-pr/README.md)
-- [Cross-runtime implementation and review](cross-runtime/README.md)
-- [Office operations](office-operations/README.md)
+使用场景展示通用 LoopX 契约如何围绕调用方结果组合。它们不把核心控制面权威授予领域 provider。
+
+- [自动研究](auto-research/README.md)
+- [Issue 与 PR 工作](issue-pr/README.md)
+- [跨运行时实现与评审](cross-runtime/README.md)
+- [办公运营](office-operations/README.md)

@@ -1,79 +1,50 @@
-# Host Integration Surface v0
+# Host 集成界面 v0
+> [English](host-integration-surface-v0.md)
 
-LoopX host integrations let an agent host use the LoopX control
-plane without becoming a second LoopX runtime. The compatibility
-baseline remains the CLI. Hook, MCP, and server adapters are thin facades over
-the same registry, active state, run history, quota, todo, gate, optional
-lease, and public/private boundary contracts.
+LoopX host 集成让 agent host 使用 LoopX 控制面，而无需成为第二个 LoopX 运行时。兼容基线仍是 CLI。Hook、MCP 与 server 适配器是同一 registry、active state、run 历史、quota、todo、gate、可选 lease 与公开/私有边界契约之上的薄门面。
 
-The v0 protocol contract is intentionally small: thin hook activation,
-lifecycle reads, controlled todo/gate writes, optional explicit lease writes,
-compact status projection, CLI fallback, and public/private boundary
-invariants. It does not prove that any adapter is installed, and it does not
-grant write authority beyond the existing CLI-equivalent LoopX
-lifecycle.
+v0 协议契约有意保持小：薄 hook 激活、生命周期读取、受控 todo/gate 写入、可选显式 lease 写入、紧凑状态投影、CLI 回退与公开/私有边界恒等式。它不证明任何适配器已安装，也不授予超出既有 CLI 等价 LoopX 生命周期的写权限。
 
-Codex App slash command parsing is covered by
-[`codex_app_host_command_registry_v0`](codex-app-host-command-registry-v0.md):
-the host recognizes `/loopx`, `/loopx <goal text>`, and `/loopx-global-*`
-before ordinary chat, then hands off to the same CLI-backed lifecycle.
+Codex App slash 命令解析由 [codex_app_host_command_registry_v0](codex-app-host-command-registry-v0.md) 覆盖：host 在普通聊天之前识别 `/loopx`、`/loopx <goal text>` 与 `/loopx-global-*`，然后交接给同一 CLI 支撑的生命周期。
 
-## Roles
+## 角色
 
-| Surface | Job | Must Not Do |
+| 界面 | 工作 | 不得 |
 | --- | --- | --- |
-| Hook activation | Start a host turn with the current LoopX lifecycle contract and route the agent toward `quota should-run`. | Embed stale project policy, schedule hidden work, or replace the user's visible TUI/control surface. |
-| MCP adapter | Expose read and controlled write tools to a host that already understands tool calls. | Store raw transcripts, bypass LoopX CLI semantics, or invent host-specific permission rules. |
-| Loopback server adapter | Provide compact status and controlled write endpoints for local dashboards or host runtimes. | Bind remotely by default, publish private state, or make browser/frontstage/server writes authoritative without CLI-equivalent dry-run. |
-| CLI fallback | Preserve a deterministic path for every read and write when the hook/MCP/server layer is absent or unhealthy. | Become a hidden headless execution path for TUI-first bootstrap unless the user explicitly opted in. |
+| Hook 激活 | 以当前 LoopX 生命周期契约启动 host Turn，并把 agent 路由到 `quota should-run`。 | 内嵌过期项目策略、调度隐藏工作或替换用户可见 TUI/控制界面。 |
+| MCP 适配器 | 向已理解工具调用的 host 暴露读取与受控写入工具。 | 存储原始 transcript、绕过 LoopX CLI 语义或发明 host 特定权限规则。 |
+| 回环 server 适配器 | 为本地 dashboard 或 host 运行时提供紧凑状态与受控写入端点。 | 默认远程绑定、发布私有状态，或使浏览器/frontstage/server 写入在无 CLI 等价 dry-run 的情况下权威。 |
+| CLI 回退 | 在 hook/MCP/server 层缺失或不健康时，为每次读取与写入保留确定性路径。 | 除非用户显式选择，为 TUI 优先引导成为隐藏无头执行路径。 |
 
-## Thin Hook Activation
+## 薄 Hook 激活
 
-A host hook may only activate the current LoopX lifecycle. It should:
+一个 host hook 只能激活当前 LoopX 生命周期。它应：
 
-1. resolve the goal id and registered agent id;
-2. run or instruct the host to run `loopx doctor` if the CLI is missing;
-3. read `quota should-run` with the shared global registry;
-4. pass the resulting `interaction_contract`, `goal_boundary`, and selected
-   `agent_lane_next_action` into the host turn;
-5. stop when the user channel requires a concrete question or payload todo; and
-6. leave scheduling, quota spend, and writeback to the normal LoopX
-   lifecycle.
+1. 解析 goal id 与已注册 agent id；
+2. CLI 缺失时运行或指示 host 运行 `loopx doctor`；
+3. 用共享全局 registry 读取 `quota should-run`；
+4. 把得到的 `interaction_contract`、`goal_boundary` 与所选 `agent_lane_next_action` 传入 host Turn；
+5. 用户 channel 需要具体问题或载荷 todo 时停止；并且
+6. 把调度、配额花费与 writeback 留给正常 LoopX 生命周期。
 
-The hook body should stay thin like a generated heartbeat prompt. Project
-policy belongs in registry metadata, active state, authority sources, and
-adapter output. If a hook needs project-specific branches, treat that as a
-LoopX product gap before copying policy into host code.
+Hook 正文应保持像生成的 heartbeat prompt 一样薄。项目策略属于 registry 元数据、active state、权威源与适配器输出。若 hook 需要项目特定分支，先把该情况当作 LoopX 产品缺口处理，再复制策略进 host 代码。
 
-For Codex CLI /goal visible TUI bootstrap, hook activation must preserve the
-visible TUI as the primary surface. It may generate the thin `/goal` body or a
-copyable bootstrap message, but it must not silently switch to hidden
-`codex exec`, read session transcripts, or claim same-TUI automation without
-the visible proof and idle-detection contracts.
+对于 Codex CLI /goal 可见 TUI 引导，hook 激活必须把可见 TUI 保持为主界面。它可以生成薄 `/goal` 正文或可复制 bootstrap 消息，但不得在没有可见证明与空闲检测契约的情况下静默切换到隐藏 `codex exec`、读取会话 transcript 或声称同 TUI 自动化。
 
 ## Ark Managed Agent host
 
-`ark-managed-agent` is a one-shot goal host, not a LoopX Turn driver. LoopX
-generates one short, transport-neutral goal prompt; the Managed Agent goal
-runtime owns all inner iteration and continuation.
+`ark-managed-agent` 是一次性 goal host，不是 LoopX Turn 驱动器。LoopX 生成一个简短、传输中立的 goal prompt；Managed Agent goal 运行时拥有所有内部迭代与继续。
 
-The prompt uses the same 4,000-character interface budget and the same guarded
-goal policy as the Codex App/CLI visible-goal hosts; only the host ownership
-preamble differs.
+该 prompt 使用与 Codex App/CLI 可见 goal host 相同的 4,000 字符接口预算与受保护 goal 策略；只有 host 所有权前言不同。
 
-Generate the prompt with:
+用以下命令生成 prompt：
 
 ```bash
 loopx heartbeat-prompt --thin --goal-id <GOAL_ID> --agent-id <AGENT_ID> \
   --runtime-profile ark_managed_agent_goal
 ```
 
-The same contract is visible through first-class onboarding with
-`--agent-type ark-managed-agent`. Onboarding is a read-only verifier, not an
-installer or an installation prerequisite. Because this host does not use a
-Codex-specific skill directory, the fixed installer shared with Codex writes
-the LoopX workflow skills into a host-native target root. The packaged
-no-clone path is:
+同一契约通过 `--agent-type ark-managed-agent` 的一等 onboarding 可见。Onboarding 是只读验证器，不是安装器或安装前置条件。因为该 host 不使用 Codex 特定 skill 目录，与 Codex 共享的固定安装器把 LoopX workflow skills 写入 host 原生目标根。打包的 no-clone 路径是：
 
 ```bash
 curl -fsSL \
@@ -83,7 +54,7 @@ curl -fsSL \
       LOOPX_INSTALL_SLASH_COMMANDS=0 bash
 ```
 
-For a contributor checkout, the equivalent command is:
+对于贡献者 checkout，等价命令是：
 
 ```bash
 LOOPX_SKILLS_DIR=<PROJECT_WORKSPACE>/.agents/skills \
@@ -92,148 +63,65 @@ LOOPX_SKILLS_DIR=<PROJECT_WORKSPACE>/.agents/skills \
   <LOOPX_CHECKOUT>/scripts/install-local.sh
 ```
 
-This is also the supported canary path for an untrusted or dirty checkout.
-With an explicit `LOOPX_SKILLS_DIR`, the script materializes the release-owned
-workflow skills, including the generated `$loopx` task-entry skill, and writes
-`.loopx-skill-install.json` without promoting the checkout as the default
-`loopx` executable. The Managed Agent's ordinary task turn starts with
-`$loopx <task>`; that skill writes the business todo before the host submits the
-generated Goal task body exactly once. The controller must not pre-seed that
-business todo. The generated entry skill binds the exact Managed Agent host at
-install time, and its start-goal transaction preserves that host, task text,
-and declared capabilities across bootstrap inspection. Without an explicit
-target, a canary-only install leaves the existing default skill root unchanged.
+这也是不信任或脏 checkout 的受支持 canary 路径。带显式 `LOOPX_SKILLS_DIR` 时，脚本物化发行所有的 workflow skills，包括生成的 `$loopx` 任务入口 skill，并写入 `.loopx-skill-install.json`，而不把 checkout 提升为默认 `loopx` 可执行文件。Managed Agent 的普通任务 Turn 以 `$loopx <task>` 开始；该 skill 在 host 恰好一次提交生成的 Goal 任务正文前写入业务 todo。Controller 不得预置该业务 todo。生成入口 skill 在安装时绑定精确 Managed Agent host，其 start-goal 事务在 bootstrap 检查期间保留该 host、任务文本与声明能力。无显式目标时，仅 canary 安装保持既有默认 skill 根不变。
 
-The installer is the sole owner of filesystem mutation for both Codex and Ark
-Managed Agent. Its default target is the Codex skill root; Ark Managed Agent
-supplies a host-native `LOOPX_SKILLS_DIR` and binds the generated entry with
-`LOOPX_ENTRY_HOST_SURFACE`. The manifest records the materialized skill ids,
-source revision, and per-skill content digests so `doctor` and onboarding can
-verify delivery read-only without becoming second installers. Running either
-check is optional for installation. Run a check with the same
-`LOOPX_SKILLS_DIR` to report the filesystem readback status and source
-revision. Filesystem materialization is distinct from the host's runtime
-loaded-skill readback; the latter is still required before claiming that the
-skills were injected into an active agent context.
+安装器是 Codex 与 Ark Managed Agent 文件系统变更的唯一 owner。其默认目标是 Codex skill 根；Ark Managed Agent 提供 host 原生 `LOOPX_SKILLS_DIR` 并用 `LOOPX_ENTRY_HOST_SURFACE` 绑定生成入口。Manifest 记录已物化 skill id、来源修订与每 skill 内容摘要，使 `doctor` 与 onboarding 能只读验证投递，而不成为第二安装器。运行任一检查对安装是可选的。用相同 `LOOPX_SKILLS_DIR` 运行检查以报告文件系统回读状态与来源修订。文件系统物化不同于 host 的运行时已加载 skill 回读；在声称技能已注入活动 agent 上下文之前，后者仍然必需。
 
-Local-development and cloud transports must send the exact same `task_body` as
-their goal prompt. They may differ in endpoint, authentication, session id, or
-wire envelope, but those fields do not change the prompt or become LoopX
-policy. The host has no automation mode, and it must not wrap every inner goal
-iteration in `loopx turn run-once`.
+本地开发与云传输必须发送与 goal prompt 完全相同的 `task_body`。它们可以在端点、认证、会话 id 或线封包上不同，但这些字段不改变 prompt，也不成为 LoopX 策略。Host 没有自动化模式，且不得把每个内层 goal 迭代包装在 `loopx turn run-once` 中。
 
-The generated `host_contract` states that activation happens once, the goal
-runtime owns continuation, the lifecycle scope is the registered Goal until
-terminal, phase handoff is not allowed, host session state is
-non-authoritative, and the LoopX Turn driver is not required. A bounded
-delivery segment is progress inside that Goal, not permission to replace it
-with a successor host Goal after screening, implementation, review, or another
-ordinary phase transition. Durable policy remains in current `quota
-should-run.interaction_contract`, active state, todos, vision, and writeback.
+生成的 `host_contract` 声明激活发生一次、goal 运行时拥有继续、生命周期作用域是注册的 Goal 直到终态、不允许相位交接、host 会话状态非权威、LoopX Turn 驱动器不是必需的。有界投递段落是该 Goal 内的进展，不是在筛选、实现、评审或另一普通相位转换后用 successor host Goal 替换它的许可。持久化策略仍在当前 `quota should-run.interaction_contract`、active state、todos、vision 与 writeback 中。
 
-For `--runtime-profile ark_managed_agent_goal`, the same quota read also emits
-`scheduler_hint.goal_runtime_continuation` with schema
-`goal_runtime_continuation_v0`. Its disposition is `continue_now`, `defer`, or
-`complete`. A deferred result includes a bounded `recheck_after_seconds` and a
-typed `wake_policy=state_change_or_deadline`: the host reruns quota when a
-durable frontier write changes the sibling `scheduler_hint.reset_policy`
-identity, or no later than the recheck deadline. The continuation packet does
-not duplicate that identity or `scheduler_hint.reason_code`; their source refs
-are declared by the Host contract. The deadline makes a due monitor runnable
-even without a push signal; provider-specific CI/review observation remains
-owned by its capability connector. This is the machine continuation contract.
-The Goal prompt is not rewritten to teach waiting policy, and the model is not
-used as a mechanical polling loop.
+对于 `--runtime-profile ark_managed_agent_goal`，同一配额读取还发出 schema 为 `goal_runtime_continuation_v0` 的 `scheduler_hint.goal_runtime_continuation`。其处置是 `continue_now`、`defer` 或 `complete`。推迟结果包含有界 `recheck_after_seconds` 与类型化 `wake_policy=state_change_or_deadline`：当持久化前沿写入改变同级 `scheduler_hint.reset_policy` 身份时 host 重跑 quota，或不晚于重新检查截止时间。继续包不重复该身份或 `scheduler_hint.reason_code`；它们的来源引用由 Host 契约声明。截止时间使到期的 monitor 在无推送信号时也可运行；provider 特定的 CI/review 观察仍归其 capability connector 所有。这是机器继续契约。Goal prompt 不被改写来教授等待策略，模型也不被用作机械轮询循环。
 
-The state identity includes the selected Todo id, action, target, claim owner,
-and capability binding ref. Switching work or admission authority therefore
-wakes the Goal even when the rendered recommendation is unchanged; diagnostic
-notes and other non-contract detail do not create a wakeup.
+状态身份包括所选 Todo id、动作、目标、claim owner 与 capability 绑定引用。因此切换工作或准入权限即使在渲染推荐未变时也会唤醒 Goal；诊断笔记与其他非契约细节不产生唤醒。
 
-When the frontier carries explicit `next_due_at` values, the deadline is the
-earliest exact due time. The coarser host cadence remains an automation concern
-and must not delay a Goal-runtime wake past that boundary.
+当前沿携带显式 `next_due_at` 值时，截止时间是该最早精确到期时间。较粗的 host 节奏仍是自动化关注点，不得把 Goal 运行时唤醒推迟过该边界。
 
-`defer` is a whole-frontier decision, not a per-PR wait. A quiet CI/review
-monitor remains auxiliary context while any independent advancement todo is
-runnable, so that mixed frontier projects `continue_now`. Only a frontier with
-no executable advancement or due monitor may enter the deferred wake policy.
+`defer` 是整前沿决策，不是每 PR 等待。安静 CI/review monitor 在任一独立推进 todo 可运行时保持辅助上下文，因此混合前沿投影 `continue_now`。只有无可执行推进、无到期 monitor 的前沿才可进入推迟唤醒策略。
 
-A dependent work step may begin only after material upstream results have
-crossed the durable boundary: update the current todo evidence and the next
-executable todo with any scope, acceptance, or non-goal delta, then refresh
-state and read back quota. Chat/model summaries are not durable state.
+依赖工作步骤只能在物化上游结果越过持久化边界后开始：更新当前 todo 证据与下一个可执行 todo 的任何 scope、验收或非 goal 增量，然后刷新状态并回读 quota。聊天/模型摘要不是持久化状态。
 
-Runtime capabilities discovered after activation do not regenerate the Goal
-prompt. `quota should-run` returns the existing
-`runtime_capability_reentry_v0` packet in
-`interaction_contract.cli_channel.runtime_capability_reentry` and projects the
-same packet near the beginning of JSON output as
-`runtime_capability_reentry`. The early copy prevents bounded tool-result
-capture from hiding the canonical packet behind large diagnostics.
+激活后发现运行时能力不会重新生成 Goal prompt。`quota should-run` 在 `interaction_contract.cli_channel.runtime_capability_reentry` 返回既有 `runtime_capability_reentry_v0` 包，并在 JSON 输出开头附近投影同一包为 `runtime_capability_reentry`。提前复制防止有界工具结果捕获把规范包藏在大诊断之后。
 
-Every candidate still requires a successful real-callsite observation before
-the generated re-entry command may declare the capability. Follow-up
-`next_cli_actions` inherit verified session capabilities; LoopX does not
-persist the observation as a durable permission grant.
+每个候选仍需要成功实时调用点观察，生成的重新进入命令才可声明该能力。后续 `next_cli_actions` 继承已验证会话能力；LoopX 不把该观察持久化为常驻权限授予。
 
-Issue-fix qualification on this host uses a staged evidence contract. A
-validated patch proves the worker path, while Goal satisfaction must be read
-from the host separately. See
-[`ark-managed-agent-issue-fix-qualification-v0`](ark-managed-agent-issue-fix-qualification-v0.md).
+该 host 上的 issue-fix 资格使用分阶段证据契约。已验证补丁证明 worker 路径，而 Goal 满意度必须从 host 单独读取。参见 [ark-managed-agent-issue-fix-qualification-v0](ark-managed-agent-issue-fix-qualification-v0.md)。
 
-Pause, replacement-session, and ambiguous-failure qualification is defined in
-[`ark-managed-agent-goal-continuity-qualification-v0`](ark-managed-agent-goal-continuity-qualification-v0.md).
-In particular, a surviving session id or a present Goal journal is not enough
-to claim recovery; the replacement host must reconstruct the LoopX frontier
-and the Goal runtime must prove journal rehydration without duplicate effects.
+暂停、会话替换与模糊失败资格在 [ark-managed-agent-goal-continuity-qualification-v0](ark-managed-agent-goal-continuity-qualification-v0.md) 中定义。特别是，存活的 session id 或存在的 Goal journal 不足以声称恢复；替换 host 必须重建 LoopX 前沿，且 Goal 运行时必须证明 journal rehydrate 而无重复效果。
 
-## Lifecycle Reads
+## 生命周期读取
 
-Host integrations should expose read methods that map directly to CLI reads:
+Host 集成应暴露直接映射到 CLI 读取的读取方法：
 
-| Capability | CLI Baseline | Output Shape |
+| 能力 | CLI 基线 | 输出形状 |
 | --- | --- | --- |
-| Health and installation | `loopx doctor` | compact readiness plus missing pieces |
-| Registry and goal boundary | `loopx registry` and `quota should-run` | goal id, adapter status, write scope, registered agents, stop condition |
-| Status and attention queue | `loopx --format json status` | first-screen status, user todos, agent todos, gate state, freshness warnings, optional read-only projections such as `task_graph_projection_v0` and `local_agent_launch_plan_v1` |
-| Quota decision | `loopx --format json quota should-run --goal-id <goal-id> --agent-id <agent-id>` | `interaction_contract`, execution obligation, workspace guard, spend policy |
-| Review packet | `loopx --format json review-packet --goal-id <goal-id>` | human/controller decision packet and agent handoff context |
-| Run history | `loopx history` or status projections | compact run ids, classification, outcome, validation, blocker pointers |
+| 健康与安装 | `loopx doctor` | 紧凑就绪产品加缺失部分 |
+| Registry 与 goal 边界 | `loopx registry` 与 `quota should-run` | goal id、适配器状态、写 scope、已注册 agent、停止条件 |
+| 状态与关注队列 | `loopx --format json status` | 首屏状态、用户 todos、agent todos、gate 状态、新鲜度警告、可选只读投影如 `task_graph_projection_v0` 与 `local_agent_launch_plan_v1` |
+| 配额决策 | `loopx --format json quota should-run --goal-id <goal-id> --agent-id <agent-id>` | `interaction_contract`、执行义务、工作区 guard、花费策略 |
+| 评审包 | `loopx --format json review-packet --goal-id <goal-id>` | 人类/controller 决策包与 agent 交接上下文 |
+| Run 历史 | `loopx history` 或状态投影 | 紧凑 run id、分类、结局、验证、blocker 指针 |
 
-Read methods return compact control facts. They must not return raw session
-logs, raw benchmark task text, raw trajectories, private document bodies,
-credentials, local absolute paths, or host auth material.
-Optional projections such as `task_graph_projection_v0`,
-`local_agent_launch_plan_v1`, and `cadence_hint_v0` are read-only
-inputs to a host integration. They do not add graph write authority, launch
-workers, change quota gates, or create a new source of truth.
+读取方法返回紧凑控制事实。它们不得返回原始会话日志、原始 benchmark 任务文本、原始轨迹、私有文档正文、凭据、本地绝对路径或 host 认证物料。`task_graph_projection_v0`、`local_agent_launch_plan_v1` 与 `cadence_hint_v0` 等可选投影是 host 集成的只读输入。它们不增加图写权限、不启动 worker、不改变 quota 关卡、不创建新事实来源。
 
-## Controlled Writes
+## 受控写入
 
-Writes must be CLI-equivalent, idempotent where possible, and fail closed when
-the host lacks authority. A host adapter may expose these write classes:
+写入必须 CLI 等价、尽可能幂等，且 host 缺权限时失效关闭。Host 适配器可以暴露这些写入类别：
 
-| Write Class | CLI Baseline | Required Guards |
+| 写入类别 | CLI 基线 | 必需 guard |
 | --- | --- | --- |
-| Todo claim and lifecycle | `loopx todo claim/update/complete` | registered agent id, active-state file lock, task class, active task-lease execution key when present, optional successor handoff with `blocks_agent` / `unblocks_todo_id` |
-| User/agent todo creation | `loopx todo add --role user --task-class user_gate\|user_action` / `--role agent` | public-safe text, concrete actor, duplicate detection |
-| Gate decision | `loopx operator-gate --decision approve|reject|defer` | explicit controller/user decision, dry-run preview before write |
-| Human reward | `loopx reward ... --dry-run` then explicit write | run-bound judgment, public-safe reason, no score impersonation |
-| Soft claim or optional hard lease | `claimed_by` by default; explicit `loopx task-lease acquire/renew/transfer/release/inspect` when a host needs hard write-scope exclusion | `(goal_id, todo_id)` contention key; `task_lease_v0` is opt-in and is not enforced by `quota should-run` |
-| State refresh and quota spend | `refresh-state`, then `quota spend-slot --todo-id <SELECTED_TODO_ID> --source heartbeat --execute` | validation evidence first, one spend per completed automatic turn, bound to the selected todo |
+| Todo claim 与生命周期 | `loopx todo claim/update/complete` | 已注册 agent id、active-state 文件锁、任务类别、存在时的活动 task-lease 执行键、可选带 `blocks_agent` / `unblocks_todo_id` 的 successor 交接 |
+| 用户/agent todo 创建 | `loopx todo add --role user --task-class user_gate\|user_action` / `--role agent` | 公开安全文本、具体执行者、重复检测 |
+| Gate 决策 | `loopx operator-gate --decision approve|reject|defer` | 显式 controller/用户决策、写入前 dry-run 预览 |
+| 人类奖励 | `loopx reward ... --dry-run` 然后显式写入 | 绑定 run 的判定、公开安全原因、无分数冒充 |
+| 软 claim 或可选硬 lease | 默认 `claimed_by`；host 需要硬写 scope 排斥时显式 `loopx task-lease acquire/renew/transfer/release/inspect` | `(goal_id, todo_id)` 竞争键；`task_lease_v0` 可选且不被 `quota should-run` 强制 |
+| 状态刷新与配额花费 | `refresh-state`，然后 `quota spend-slot --todo-id <SELECTED_TODO_ID> --source heartbeat --execute` | 先验证证据、每个完成的自动 Turn 一次花费、绑定到所选 todo |
 
-The adapter must not translate a host approval, model confidence, browser click,
-frontstage action, server callback, or scheduler timer into a protected write
-unless the corresponding LoopX contract allows that write.
-Browser/frontstage/server writes remain non-authoritative by default unless a
-loopback capability advertises a dry-run/preview endpoint and the same
-operation has a CLI fallback.
+适配器不得把 host 批准、模型置信度、浏览器点击、frontstage 动作、server 回调或 scheduler 定时器翻译成受保护写入，除非相应 LoopX 契约允许该写入。浏览器/frontstage/server 写入默认保持非权威，除非回环 capability 广告 dry-run/预览端点且同一操作有 CLI 回退。
 
-## Compact Status Projection
+## 紧凑状态投影
 
-The host-facing status projection should be small enough for dashboards,
-hooks, and MCP clients:
+面向 host 的状态投影应足够小，供 dashboard、hook 与 MCP 客户端使用：
 
 ```json
 {
@@ -266,16 +154,11 @@ hooks, and MCP clients:
 }
 ```
 
-This projection is not project truth. It is a host capability map plus the
-current LoopX lifecycle pointers. The registry, active state, event
-ledger, todos, gates, quota, and optional task leases remain authoritative. A
-host may consume task graph or cadence projections, but those projections
-remain derived read-only facts and never grant write authority.
+该投影不是项目真相。它是 host 能力图加当前 LoopX 生命周期指针。Registry、active state、event ledger、todos、gates、quota 与可选 task leases 保持权威。Host 可以消费任务图或节奏投影，但那些投影保持派生的只读事实，绝不授予写权限。
 
-## CLI Fallback
+## CLI 回退
 
-Every host integration must document the CLI fallback for the same operation.
-Minimum fallback set:
+每个 host 集成必须为同一操作文档化 CLI 回退。最小回退集：
 
 ```bash
 loopx doctor
@@ -287,60 +170,35 @@ loopx refresh-state --goal-id <goal-id> --agent-id <agent-id>
 loopx quota spend-slot --goal-id <goal-id> --todo-id <selected-todo-id> --slots 1 --source heartbeat --execute --agent-id <agent-id>
 ```
 
-When a host explicitly advertises `task_lease_v0`, it must also expose the
-equivalent CLI fallback. Acquiring a hard lease does not replace todo claim,
-quota, capability, write-scope, or workspace guards:
+Host 显式广告 `task_lease_v0` 时，它也必须暴露等价 CLI 回退。获取硬 lease 不替换 todo claim、quota、capability、写 scope 或工作区 guard：
 
 ```bash
 loopx task-lease acquire --goal-id <goal-id> --todo-id <todo_id> --owner <agent-id> --idempotency-key <turn-key> --write-scope <scope>
 loopx todo complete --goal-id <goal-id> --todo-id <todo_id> --claimed-by <agent-id> --task-lease-idempotency-key <turn-key> --task-lease-expected-version <lease-version> --evidence "<public-safe evidence>"
 ```
 
-The acquire key and returned version form the execution-instance fence. A
-lifecycle writer cannot rely on `agent_id` alone because multiple host
-processes may share one registered peer identity. While an effective lease
-exists, `todo complete` and `todo supersede` require both fields, hold the lease
-lock through canonical state writeback, and reject a missing, stale, or
-mismatched fence before creating successors. Renew, transfer, and release also
-require `--expected-version`. Release retains an inactive terminal record so a
-later acquire advances the per-todo version and `lease_epoch` instead of
-recreating version 1.
+获取键与返回版本构成执行实例围栏。生命周期写者不能仅依赖 `agent_id`，因为多个 host 进程可能共享一个已注册对等身份。有效 lease 存在时，`todo complete` 与 `todo supersede` 要求两个字段，在规范状态 writeback 期间持有 lease 锁，并在创建 successors 前拒绝缺失、过期或不匹配的围栏。Renew、transfer 与 release 也要求 `--expected-version`。Release 保留不活动终态记录，使后续 acquire 推进每 todo 版本与 `lease_epoch`，而不是重建版本 1。
 
-If the host adapter is unavailable, the user or automation can run those
-commands and preserve the same state transitions. If a host offers an operation
-without a CLI fallback, that operation is experimental and must not be used as
-the default project control path.
+Host 适配器不可用时，用户或自动化可以运行那些命令并保留相同状态迁移。Host 提供无 CLI 回退的操作时，该操作是实验性的，不得用作默认项目控制路径。
 
-## Public/Private Boundary
+## 公开/私有边界
 
-Host integrations must preserve these invariants:
+Host 集成必须保留这些恒等式：
 
-- Raw host transcripts, raw tool outputs, raw benchmark task text,
-  trajectories, verifier tails, credentials, production logs, and local private
-  paths stay in the host or private project store.
-- LoopX state stores compact summaries, public-safe evidence pointers,
-  decision labels, todo ids, gate ids, lease ids, and run ids.
-- Loopback servers bind locally by default and reject remote write authority
-  unless a separate deployment contract says otherwise.
-- MCP/server tools must report denied or missing authority as structured
-  blockers instead of guessing around gates.
-- Hook prompts and adapter code must not carry long project-specific policy
-  branches; regenerate or read current LoopX state each turn.
-- The Codex CLI TUI path remains visible-first. Hidden headless execution is
-  only an explicit fallback, not the default bootstrap or same-session proof.
+- 原始 host transcript、原始工具输出、原始 benchmark 任务文本、轨迹、verifier 尾部、凭据、生产日志与本地私有路径留在 host 或私有项目存储中。
+- LoopX 状态存储紧凑摘要、公开安全证据指针、决策标签、todo id、gate id、lease id 与 run id。
+- 回环 server 默认本地绑定，且除非独立部署契约另有说明，拒绝远程写权限。
+- MCP/server 工具必须把拒绝或缺失权限报告为结构化 blockers，而非绕过关卡猜测。
+- Hook prompt 与适配器代码不得携带长项目特定策略分支；每 Turn 重新生成或读取当前 LoopX 状态。
+- Codex CLI TUI 路径保持可见优先。隐藏无头执行只是显式回退，不是默认引导或同会话证明。
 
-## Acceptance Checks
+## 验收检查
 
-A host adapter is acceptable when:
+一个 host 适配器在以下条件下可接受：
 
-1. `quota should-run` remains the first delivery gate;
-2. user-channel action requirements surface concrete user todos/questions;
-3. every write class has a CLI-equivalent command and dry-run/preview when the
-   write affects gates, reward, leases, or browser-triggered actions;
-4. duplicate todo claim, stale lease, stale status, and daemon-down cases fail
-   closed or fall back to CLI;
-5. compact status projection excludes raw/private material and marks optional
-   projections as read-only inputs rather than authority; and
-6. validation covers one hook activation packet, one lifecycle read, one
-   controlled write preview, one CLI fallback path, and one public/private
-   boundary trap.
+1. `quota should-run` 保持首个投递关卡；
+2. 用户 channel 动作要求呈现具体用户 todos/问题；
+3. 每个写入类别都有 CLI 等价命令，且当写入影响 gates、reward、leases 或浏览器触发动作时带 dry-run/预览；
+4. 重复 todo claim、过期 lease、过期状态与 daemon 下线情况失效关闭或回退到 CLI；
+5. 紧凑状态投影排除原始/私有物料，并把可选投影标记为只读输入而非权限；并且
+6. 验证覆盖一个 hook 激活包、一次生命周期读取、一次受控写入预览、一条 CLI 回退路径与一个公开/私有边界陷阱。

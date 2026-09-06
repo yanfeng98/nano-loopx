@@ -1,145 +1,103 @@
-# RFC: Intelligent Review and Dynamic Presentation Surfaces v0
+# RFC：智能化审阅与动态展示面 v0
 
-- Status: Draft, under maintainer review
-- Proposed by: LoopX maintainers
-- Date: 2026-09-01
-- Scope: a provider-neutral typed interaction projection that selects,
-  presents, reviews, and reports material control-plane changes, plus a bounded
-  presentation plan for cards, comparisons, graphs, reports, dashboards, and
-  living documents; no new source store, authority grant, provider effect,
-  notification scheduler, universal renderer, or required model dependency
-- Source baseline: LoopX `546bf6967`
-- Tracking issue: [#3786](https://github.com/huangruiteng/loopx/issues/3786)
-- Related direction: [#3244](https://github.com/huangruiteng/loopx/issues/3244)
-- First vertical example: [#3785](https://github.com/huangruiteng/loopx/pull/3785)
-- Language note: the
-  [Chinese version](./intelligent-review-presentation-surfaces-v0.zh-CN.md)
-  and this English version are semantic mirrors. A difference between them is
-  a defect.
+- 状态：Draft，等待 Maintainer 审阅
+- 提案人：LoopX Maintainers
+- 日期：2026-09-01
+- 范围：定义一个 provider-neutral 的 typed interaction projection，用于筛选、展示、审阅和反馈控制面的重要变化，并为卡片、对比、图、报告、Dashboard 与持续演进的文档提供有界 presentation plan；不新增 source store、authority grant、provider effect、通知调度器、万能 renderer，也不要求必须依赖模型
+- Source baseline：LoopX `546bf6967`
+- Tracking issue：[#3786](https://github.com/huangruiteng/loopx/issues/3786)
+- 相关技术方向：[#3244](https://github.com/huangruiteng/loopx/issues/3244)
+- 第一个垂直案例：[#3785](https://github.com/huangruiteng/loopx/pull/3785)
+- 语言说明：[英文版](./intelligent-review-presentation-surfaces-v0.md) 与本中文版是语义镜像；两者有语义差异即视为缺陷。
 
 ---
 
-## 0. Executive example
+## 0. 直观案例
 
-An operator clicks the stop icon beside an active Goal. Stopping is reversible,
-Goal-local, initiated by an explicit click, and backed by a typed preview,
-optimistic rollback, verified readback, and receipt. Asking the operator to
-click a second generic confirmation button adds attention without adding a new
-decision.
+Operator 点击一个 active Goal 左侧的停止按钮。停止是可逆的、作用域限于当前 Goal、由用户显式点击触发，并且已有 typed preview、optimistic rollback、readback 验证和 receipt。此时再要求用户点击一次通用“确认执行”，增加了 attention cost，却没有引入新的判断。
 
-The desired path is:
+理想路径是：
 
 ```text
-explicit operator intent
-  -> typed preview and current-state fingerprint
-  -> ready + reversible + bounded + readback-capable
-  -> apply directly
+用户显式操作意图
+  -> typed preview + 当前状态 fingerprint
+  -> ready + 可逆 + 有界 + 可 readback
+  -> 直接 apply
   -> optimistic projection
-  -> verified readback and receipt
-  -> lightweight visible feedback
+  -> readback 验证 + receipt
+  -> 轻量但明确的可见反馈
 ```
 
-If the state changes between preview and apply, the same path must not continue
-silently:
+如果 preview 和 apply 之间状态发生变化，同一条路径不得继续静默执行：
 
 ```text
-apply discovers stale state or a protected gate
-  -> rollback optimistic projection
-  -> upgrade to repair or explicit review
-  -> show the exact changed fact and safe next step
+apply 发现 stale state 或 protected gate
+  -> 回滚 optimistic projection
+  -> 升级为 repair 或显式审阅
+  -> 展示具体变化的事实和安全下一步
 ```
 
-Resume and permanent deletion are not automatically equivalent to stop. They
-may preserve review-first behavior because they change runtime consumption or
-artifact availability. The distinction must come from typed facts and policy,
-not from a frontend list of button labels.
+恢复与永久删除不应被自动视为和停止等价。恢复可能重新开启运行消耗，删除会影响 artifact 可用性，因此可以继续 review-first。区别应来自 typed facts 和 policy，而不是前端维护一份按钮文案名单。
 
-This example is only the first vertical slice. The same architecture must also
-help an operator review a replan, understand an acceptance gap, receive a
-stage report, inspect a failed settlement, or decide a scoped gate without
-reading raw state or every Agent conversation.
+这个例子只是第一个垂直切片。同一套架构还应帮助 Operator 审阅 replan、理解 acceptance gap、接收阶段报告、检查 settlement 失败，或者在无需阅读原始状态和全部 Agent 对话的情况下处理 scoped gate。
 
-## 1. Product thesis
+## 1. 产品判断
 
-LoopX optimizes a joint objective:
+LoopX 优化的是一个联合目标：
 
 ```text
-maximize useful Agent output
-while minimizing Human Attention
-without hiding risk, authority, or degraded outcomes
+最大化有价值的 Agent 产出
+同时最小化 Human Attention
+但不能隐藏风险、authority 或退化的结果
 ```
 
-Minimizing attention does not mean minimizing information or removing human
-judgment. It means maximizing the decision value of each interruption and each
-visible screen:
+最小化 attention 不等于最小化信息，也不等于删除人的判断。它意味着最大化每次打扰、每块可见界面的决策价值：
 
-- routine, reversible, verified work should stay quiet or complete directly;
-- material progress should be legible without demanding a decision;
-- actual human judgment should arrive as one bounded decision frame;
-- protected authority must remain explicit;
-- incomplete, stale, or contradictory state must become repair, not confident
-  UI prose;
-- every committed effect must have a proportionate receipt and recovery path.
+- 日常、可逆、可验证的工作应安静进行或直接完成；
+- 重要进展应清晰可见，但不应伪装成需要决策；
+- 真正需要人判断时，应投影成一个有边界的 decision frame；
+- protected authority 必须始终显式；
+- 不完整、过期或矛盾的状态必须进入 repair，而不是生成自信的 UI 文案；
+- 每个已提交 effect 都应有与风险相称的 receipt 和恢复路径。
 
-An intelligent surface is therefore not a dashboard with more model-generated
-summaries. It is a typed compiler from canonical control-plane facts to a
-role-aware, channel-aware interaction and presentation plan. The same facts
-may deserve a comparison table during a decision, a dependency graph during a
-replan, a milestone report for a weekly review, or a living Wiki page for
-durable shared context.
+因此，“智能化的界面”不是一个多写几段 AI 总结的 Dashboard，而是把 canonical control-plane facts 编译成 role-aware、channel-aware interaction 与 presentation plan 的 typed compiler。同一组 facts 在做决策时可能最适合对比表，在 replan 时可能最适合依赖图，在每周回顾时可能最适合 milestone report，在长期协作中也可能最适合持续更新的 Wiki。
 
-## 2. Problem and existing assets
+## 2. 当前问题与已有基础
 
-Main already contains most of the semantic ingredients:
+Main 已经具备大部分语义组件：
 
-| Existing owner | Current value | Missing composition |
+| 现有 Owner | 当前价值 | 尚缺的组合层 |
 | --- | --- | --- |
-| status `attention_queue` and Goal Channel projection | bounded operator-visible Goal state | shared salience, delivery, and disclosure vocabulary across sinks |
-| typed Chat action proposal | preview/apply, fingerprint, validation evidence, gate, receipt | typed presentation mode and review frame |
-| planning inventory, action portfolio, planning horizon | coherent Agent-facing frontier and strategic context | reuse of facts/completeness in operator review without a second Todo worldview |
-| `review_batch_v0` | deterministic cold-path ranking and exact decision-digest binding | hot-path per-item interaction policy |
-| Human Attention Wishlist | optional, non-blocking human leverage | general selection and presentation policy |
-| periodic report | material stage trigger, bounded report, audience routing | shared digest/attention delivery vocabulary |
-| Effect Program and domain settlement reducers | effect identity, order, failure, replay, receipt | operator-facing interpretation of settlement state |
-| Dashboard, Lark, CLI, review packet | working presentation sinks | one semantic plan rendered at different densities |
+| status `attention_queue` 与 Goal Channel projection | 有界的 Operator 可见 Goal 状态 | 跨 sink 统一的显著性、delivery 与 disclosure 词汇 |
+| typed Chat action proposal | preview/apply、fingerprint、validation evidence、gate、receipt | typed presentation mode 与 review frame |
+| planning inventory、action portfolio、planning horizon | 一致的 Agent-facing frontier 与战略上下文 | Operator 审阅复用相同 facts/completeness，避免第二套 Todo 世界观 |
+| `review_batch_v0` | 确定性的冷路径排序与精确 decision digest 绑定 | 热路径单个 item 的 interaction policy |
+| Human Attention Wishlist | 可选、非阻塞的人类增益 | 通用的选择与展示策略 |
+| periodic report | 重要阶段触发、有界报告、audience routing | 共享的 digest/attention delivery 词汇 |
+| Effect Program 与 domain settlement reducers | effect identity、顺序、失败、replay、receipt | 面向 Operator 的 settlement 状态解释 |
+| Dashboard、Lark、CLI、review packet | 已工作的 presentation sinks | 在不同密度下渲染同一份 semantic plan |
 
-Without a shared interaction boundary, separately reasonable implementations
-drift:
+缺少共享的 interaction boundary 时，各自合理的实现会逐渐漂移：
 
-1. a reversible action and an irreversible action can receive the same generic
-   confirmation UI;
-2. a recommended action can be shown without alternatives, fallback, evidence
-   gaps, or the planning horizon needed to judge it;
-3. `needs attention`, `needs a decision`, `needs authority`, and `notify now`
-   can be conflated;
-4. unchanged or superseded state can repeatedly consume attention;
-5. channel-specific summaries can omit different facts without declaring
-   completeness;
-6. a success message can obscure whether the effect was proposed, attempted,
-   committed, read back, or reconciled;
-7. model-generated language can accidentally be treated as risk or authority
-   classification.
+1. 可逆动作和不可逆动作可能收到同样的通用确认 UI；
+2. recommended action 可能没有同时展示 alternatives、fallback、evidence gap，或者做判断所需的 planning horizon；
+3. `needs attention`、`needs a decision`、`needs authority`、`notify now` 容易被混为一谈；
+4. unchanged 或 superseded 状态会重复消耗注意力；
+5. 各 channel 可以遗漏不同事实，却不声明 completeness；
+6. success 文案可能模糊 effect 到底只是 proposed、attempted、committed、readback verified，还是已经 reconciled；
+7. 模型生成的自然语言可能被错误当成风险或 authority 分类。
 
-## 3. Decision
+## 3. 决策
 
-LoopX will define a provider-neutral `interaction_surface_plan_v0` read model.
-It compiles existing authoritative facts into bounded surface items with four
-responsibilities:
+LoopX 将定义 provider-neutral 的 `interaction_surface_plan_v0` read model。它从现有 authoritative facts 编译出有界 surface items，承担四项职责：
 
-1. **selection** — decide which material deltas are candidates for attention;
-2. **presentation** — choose the smallest truthful summary and a real detail
-   path;
-3. **review** — select a closed interaction mode and decision frame;
-4. **feedback** — describe receipt, readback, rollback, and repair state after
-   interaction.
-5. **composition** — recommend an abstract presentation form, persistence
-   lifecycle, and deterministic fallback without choosing a provider or
-   performing an external write.
+1. **选择（selection）**：判断哪些 material delta 值得成为 attention candidate；
+2. **展示（presentation）**：选择最小但真实的摘要，并提供真正可展开的 detail path；
+3. **审阅（review）**：选择封闭的 interaction mode 和 decision frame；
+4. **反馈（feedback）**：描述交互后的 receipt、readback、rollback 与 repair 状态。
+5. **编排（composition）**：推荐抽象 presentation form、持久化 lifecycle 与 deterministic fallback，但不选择 provider，也不执行 external write。
 
-The compiler is a pure, typed TypeScript reducer at the control-plane read
-boundary. It receives already-normalized facts; it performs no provider call,
-external write, authority consumption, Goal/Todo transition, or effect
-settlement.
+Compiler 位于 control-plane read boundary，是一个 pure、typed TypeScript reducer。它只接收已经归一化的 facts，不执行 provider call、external write、authority consumption、Goal/Todo transition 或 effect settlement。
 
 ```mermaid
 flowchart LR
@@ -163,45 +121,39 @@ flowchart LR
   I --> A
 ```
 
-Different sinks may render different density, layout, and locale from the same
-plan. They may not change its authority, completeness, interaction mode, or
-subject identity.
+不同 sink 可以从同一份 plan 渲染不同密度、布局和语言，但不得改变 authority、completeness、interaction mode 或 subject identity。
 
-## 4. Vocabulary
+## 4. 核心词汇
 
 ### 4.1 Surface item
 
-A surface item is one revision-bound unit of operator or Agent attention. It is
-not a copy of canonical state and cannot be edited as project truth.
+Surface item 是一个绑定 revision 的 Operator 或 Agent attention 单元。它不是 canonical state 的副本，也不能作为项目真相被编辑。
 
-Examples:
+典型例子包括：
 
-- a proposed Goal lifecycle action;
-- a material replan delta;
-- an evidence-backed acceptance gap;
-- a newly released successor after monitor change;
-- a periodic milestone result;
-- an effect settlement that needs repair.
+- 一个拟议的 Goal lifecycle action；
+- 一个 material replan delta；
+- 一个 evidence-backed acceptance gap；
+- monitor 变化后刚被释放的 successor；
+- 一个 periodic milestone 结果；
+- 一个需要 repair 的 effect settlement。
 
 ### 4.2 Material delta
 
-A material delta explains what changed relative to the last acknowledged or
-delivered revision. A snapshot without a comparison boundary is insufficient
-for interruption policy.
+Material delta 描述相对于上一次已确认或已投递 revision，哪些事实发生了变化。没有比较边界的 snapshot 不足以决定是否打扰用户。
 
-The delta must carry:
+Delta 必须携带：
 
-- stable subject and source revision;
-- changed facts;
-- relevant facts explicitly known to be unchanged;
-- supersession or lineage when applicable;
-- observation time and freshness;
-- completeness and omitted count.
+- 稳定的 subject 与 source revision；
+- changed facts；
+- 与本次判断相关、且明确 unchanged 的 facts；
+- 必要时的 supersession 或 lineage；
+- observation time 与 freshness；
+- completeness 与 omitted count。
 
 ### 4.3 Attention kind
 
-`attention_kind` describes why a fact might deserve attention, not what the
-user must do:
+`attention_kind` 说明某条事实为什么可能值得注意，而不是用户必须做什么：
 
 ```ts
 type AttentionKind =
@@ -215,44 +167,36 @@ type AttentionKind =
   | "terminal";
 ```
 
-For example, `authority` normally maps to an explicit gate, while `progress`
-normally maps to inform/digest. The kinds remain separate from delivery and
-interaction mode so a digest item cannot accidentally become a gate.
+例如，`authority` 通常映射为显式 gate，`progress` 通常映射为 inform/digest。Attention kind 必须与 delivery、interaction mode 分离，避免一个 digest item 意外变成 gate。
 
 ### 4.4 Interaction mode
 
-v0 defines a closed set:
+v0 定义一组封闭模式：
 
-| Mode | Meaning | User action |
+| Mode | 含义 | 用户动作 |
 | --- | --- | --- |
-| `silent` | no new decision or material display value | none |
-| `inform` | verified material result or change | none; inspect on demand |
-| `direct_with_receipt` | explicit intent may apply a ready bounded action directly | one initiating action only |
-| `compact_review` | one focused judgment is needed | choose, revise, defer, or reject |
-| `protected_gate` | canonical scoped authority is missing | explicit gate resolution |
-| `repair_escalation` | stale, incomplete, contradictory, or failed readback | inspect/repair/retry |
+| `silent` | 没有新的决策或重要展示价值 | 无 |
+| `inform` | 已验证的重要结果或变化 | 无；按需查看 |
+| `direct_with_receipt` | 用户显式意图可直接 apply 一个 ready、有界动作 | 只有最初那次操作 |
+| `compact_review` | 需要一个聚焦的判断 | 选择、修改、defer 或 reject |
+| `protected_gate` | 缺少 canonical scoped authority | 显式解决 gate |
+| `repair_escalation` | stale、不完整、矛盾或 readback 失败 | 查看、修复或重试 |
 
-These modes are presentation obligations, not permission grants. The compiler
-may require more review than a domain minimum. It may never weaken a domain
-gate.
+这些 mode 是 presentation obligation，不是 permission grant。Compiler 可以比 domain minimum 要求更多审阅，但永远不能削弱 domain gate。
 
 ### 4.5 Presentation density
 
-Density is independent of interaction mode:
+Density 与 interaction mode 相互独立：
 
 ```ts
 type PresentationDensity = "glance" | "compact" | "expanded" | "diagnostic";
 ```
 
-A protected gate can have a compact mobile card and an expanded desktop view
-without changing authority. A direct action can show only a glance receipt by
-default while retaining a diagnostic detail path.
+同一个 protected gate 可以在手机端显示 compact card、在桌面端显示 expanded view，而不改变 authority。Direct action 默认只显示 glance receipt，也可以保留 diagnostic detail path。
 
-### 4.6 Presentation intent and form
+### 4.6 Presentation Intent 与 Form
 
-Density answers how much to show. Presentation intent answers what the
-audience needs to understand, while form answers which abstract visual or
-document structure best carries that meaning:
+Density 回答“展示多少”，presentation intent 回答“需要帮助 audience 理解什么”，form 回答“哪一种抽象视觉或文档结构最适合表达”：
 
 ```ts
 type PresentationIntent =
@@ -279,20 +223,13 @@ type PresentationForm =
   | "living_wiki";
 ```
 
-The planner chooses an abstract form, not a provider. `living_wiki` might be
-rendered through Lark Wiki, a repository document, or another provider that
-implements the required artifact contract. `milestone_report` may render as
-Markdown, HTML, a Lark document, or a compact card. Provider selection and
-external effects remain separate.
+Planner 选择 abstract form，而不是 provider。`living_wiki` 可以通过 Lark Wiki、仓库文档或另一个实现 artifact contract 的 provider 渲染。`milestone_report` 可以渲染为 Markdown、HTML、Lark 文档或 compact card。Provider selection 与 external effect 始终分离。
 
-Form selection is dynamic but bounded. It uses typed content shape, audience,
-decision intent, relation density, change history, expected lifetime,
-interactivity need, and channel capability. It must publish reason codes and a
-deterministic fallback; it must not let a model emit arbitrary executable UI.
+Form selection 可以动态，但必须有界。它基于 typed content shape、audience、decision intent、relation density、change history、expected lifetime、interactivity need 与 channel capability，并输出 reason codes 和 deterministic fallback；不能允许模型产生任意 executable UI。
 
 ## 5. Typed contract
 
-### 5.1 Shared facts
+### 5.1 共享 Facts
 
 ```ts
 type SurfaceSubject = {
@@ -346,14 +283,11 @@ type PresentationPlan = {
 };
 ```
 
-Risk and evidence values must come from domain contracts, canonical policy, or
-validated source projections. A renderer or model must not infer them from a
-title, button name, free-form summary, or substring list.
+Risk 与 evidence 值必须来自 domain contracts、canonical policy 或经过验证的 source projections。Renderer 或模型不得根据标题、按钮名、free-form summary 或 substring list 自行推断。
 
-### 5.2 Make unsafe combinations hard to express
+### 5.2 让不安全组合难以表达
 
-The mode-specific contract is a discriminated union rather than a bag of
-optional booleans:
+Mode-specific contract 应使用 discriminated union，而不是一袋 optional booleans：
 
 ```ts
 type InteractionDecision =
@@ -389,10 +323,7 @@ type InteractionDecision =
     };
 ```
 
-`direct_with_receipt` deliberately requires explicit operator initiation,
-available rollback, and required readback in v0. Background autonomy remains
-under existing quota, scheduler, capability, and authority contracts; this RFC
-does not create a generic auto-execution lane.
+v0 中，`direct_with_receipt` 有意要求 explicit operator initiation、available rollback 和 required readback。后台自治继续由现有 quota、scheduler、capability 与 authority contracts 治理；本 RFC 不创建通用 auto-execution lane。
 
 ### 5.3 Decision frame
 
@@ -417,11 +348,9 @@ type DecisionFrame = {
 };
 ```
 
-A recommendation is not an obligation. Machine-enforced obligations and
-canonical gates must be named as such. If the recommended option cannot run,
-the frame must include a safe fallback or explain why no fallback exists.
+Recommendation 不是 obligation。机器强制的 obligation 与 canonical gate 必须明确命名。如果 recommended option 当前无法执行，frame 必须提供 safe fallback，或解释为什么不存在 fallback。
 
-### 5.4 Complete item
+### 5.4 完整 Item
 
 ```ts
 type InteractionSurfaceItem = {
@@ -444,33 +373,27 @@ type InteractionSurfaceItem = {
 };
 ```
 
-The public wire format will use snake case. The TypeScript shape above shows
-the intended associations and illegal-state boundary, not a final serialization
-spelling decision.
+公共 wire format 会使用 snake case。上面的 TypeScript shape 表达预期的关联关系和 illegal-state boundary，不代表序列化字段拼写已经最终确定。
 
-## 6. Compiler precedence and invariants
+## 6. Compiler 优先级与不变量
 
-The compiler must use explicit precedence, not an opaque aggregate score:
+Compiler 必须采用显式优先级，而不是一个不透明 aggregate score：
 
-1. invalid schema, stale subject revision, conflicting state, incomplete
-   required evidence, or failed required readback -> `repair_escalation`;
-2. missing or unknown required authority, irreversible/privacy-expanding
-   protected action, or canonical gate -> `protected_gate`;
-3. real value, direction, priority, acceptance, or route judgment ->
-   `compact_review`;
-4. explicit operator intent plus all direct-action eligibility facts ->
-   `direct_with_receipt`;
-5. verified material delta with no decision -> `inform`;
-6. unchanged, superseded, or non-material delta -> `silent`.
+1. schema 非法、subject revision stale、状态矛盾、required evidence 不完整或 required readback 失败 -> `repair_escalation`；
+2. required authority 缺失或 unknown、不可逆/扩大隐私边界的 protected action，或 canonical gate -> `protected_gate`；
+3. 真正涉及价值、方向、优先级、acceptance 或路线的判断 -> `compact_review`；
+4. explicit operator intent 且满足全部 direct-action eligibility facts -> `direct_with_receipt`；
+5. 已验证 material delta 且不需决策 -> `inform`；
+6. unchanged、superseded 或 non-material delta -> `silent`。
 
-Direct eligibility is conjunctive:
+Direct eligibility 是合取条件：
 
 ```text
 proposal ready
-AND explicit current operator intent
+AND 当前用户显式意图
 AND state fingerprint current
 AND reversibility = reversible
-AND blast radius <= configured bounded scope
+AND blast radius <= 已配置的有界 scope
 AND authority in {not_required, already_scoped}
 AND privacy change = false
 AND rollback available
@@ -478,33 +401,28 @@ AND readback contract available
 AND no canonical gate
 ```
 
-Unknown is never equivalent to low risk. A missing fact must move to review,
-gate, or repair according to the owning contract.
+Unknown 永远不等于低风险。缺失 fact 必须根据 owning contract 进入 review、gate 或 repair。
 
-The first implementation must use named policy rules. A future learned ranker
-may order eligible inform/digest items, but cannot override the precedence or
-direct/gate eligibility invariants.
+第一版实现必须使用命名的 policy rules。未来 learned ranker 可以对已 eligible 的 inform/digest items 排序，但不能覆盖上述优先级或 direct/gate eligibility 不变量。
 
-## 7. Intelligent selection and delivery
+## 7. 智能化选择与 Delivery
 
-### 7.1 Delta before snapshot
+### 7.1 Delta 优先于 Snapshot
 
-Interruptions should normally be driven by material delta:
+打扰通常应由 material delta 驱动：
 
-- a gate newly opened or changed scope;
-- a monitor observed material change and released a successor;
-- a bounded stage closed and a report is ready;
-- a replan changed strategy, acceptance, or frontier;
-- a settlement changed from attempted to verified or failed;
-- an acceptance gap remains after Todo exhaustion.
+- gate 新打开或 scope 变化；
+- monitor 观察到 material change 并释放 successor；
+- bounded stage 关闭且 report ready；
+- replan 改变 strategy、acceptance 或 frontier；
+- settlement 从 attempted 变为 verified 或 failed；
+- Todo 耗尽后 acceptance gap 仍然存在。
 
-Repeated unchanged monitor polls, already-acknowledged gates, or superseded
-recommendations stay silent unless their freshness deadline creates a new
-material fact.
+重复的 unchanged monitor poll、已经 acknowledged 的 gate 或 superseded recommendation 应保持 silent，除非 freshness deadline 本身产生了新 material fact。
 
-### 7.2 Selection is not delivery
+### 7.2 Selection 不等于 Delivery
 
-An eligible item separately chooses delivery:
+Eligible item 还需要独立选择 delivery：
 
 ```ts
 type DeliveryMode =
@@ -516,109 +434,88 @@ type DeliveryMode =
   | "silent";
 ```
 
-- blocking authority or repair normally interrupts;
-- non-blocking decisions may remain on the persistent surface;
-- optional leverage piggybacks or enters a digest;
-- verified progress enters the surface or periodic report;
-- unchanged background state remains on demand or silent.
+- blocking authority 或 repair 通常 interrupt；
+- non-blocking decision 可保留在 persistent surface；
+- optional leverage 进入 piggyback 或 digest；
+- verified progress 进入 surface 或 periodic report；
+- unchanged background state 保持 on-demand 或 silent。
 
-The interaction plan does not schedule notifications. Existing host, Goal
-Channel, and periodic-report lifecycles own actual delivery and receipts.
+Interaction plan 不负责调度通知。现有 host、Goal Channel 和 periodic-report lifecycle 继续拥有实际 delivery 与 receipt。
 
-### 7.3 Deduplication and acknowledgement
+### 7.3 Deduplication 与 Acknowledgement
 
-Each item needs stable subject revision and material-delta identity. A sink
-acknowledgement records that a specific revision was presented or decided; it
-does not mutate canonical Goal/Todo truth.
+每个 item 需要稳定的 subject revision 和 material-delta identity。Sink acknowledgement 只记录某个 revision 已经展示或决策，不会修改 canonical Goal/Todo truth。
 
-Newer revisions supersede older undecided presentation items but may not erase
-an unconsumed canonical gate. Decision writes bind to the exact reviewed
-revision/digest and fail stale after supersession.
+较新 revision 可以 supersede 较旧、尚未决策的 presentation item，但不能抹掉未消费的 canonical gate。Decision write 必须绑定到精确的 reviewed revision/digest，并在 supersession 后 fail stale。
 
-## 8. Intelligent presentation
+## 8. 智能化展示
 
-### 8.1 Minimum decision-relevant information
+### 8.1 最小决策相关信息
 
-The compact first layer should answer:
+Compact 第一层应回答：
 
-1. what changed;
-2. why it matters now;
-3. whether a decision or authority grant is required;
-4. what LoopX recommends and on which typed facts;
-5. what alternatives or safe fallback exist;
-6. what evidence is complete, partial, or missing;
-7. what will prove the selected effect committed.
+1. 什么发生了变化；
+2. 为什么此刻重要；
+3. 是否需要 decision 或 authority grant；
+4. LoopX 推荐什么，以及推荐基于哪些 typed facts；
+5. 有哪些 alternatives 或 safe fallback；
+6. 哪些 evidence 完整、部分或缺失；
+7. 什么能证明所选 effect 已经 committed。
 
-It should not begin with raw event history, every Todo, internal schema names,
-or model chain-of-thought.
+第一层不应从 raw event history、全部 Todo、内部 schema 名或模型 chain-of-thought 开始。
 
 ### 8.2 Progressive disclosure
 
-Every compact item with omitted decision-relevant facts must expose a truthful
-detail path. `complete=false` is a protocol fact, not a visual hint.
+任何遗漏了 decision-relevant facts 的 compact item，都必须提供真实的 detail path。`complete=false` 是 protocol fact，不是视觉提示。
 
-Recommended layers:
+建议层级：
 
-- **glance:** status, delta headline, interaction requirement, receipt state;
-- **compact:** decision frame, consequence, fallback, key evidence;
-- **expanded:** planning relations, affected Todos/artifacts, alternatives,
-  source refs;
-- **diagnostic:** fingerprints, receipts, replay/repair details, bounded event
-  lineage.
+- **glance**：状态、delta headline、interaction requirement、receipt state；
+- **compact**：decision frame、consequence、fallback、关键 evidence；
+- **expanded**：planning relations、受影响 Todos/artifacts、alternatives、source refs；
+- **diagnostic**：fingerprints、receipts、replay/repair 细节、有界 event lineage。
 
 ### 8.3 Channel adaptation
 
-| Surface | Default density | Important constraint |
+| Surface | 默认密度 | 关键约束 |
 | --- | --- | --- |
-| Dashboard first screen | glance/compact | aggregate attention; do not duplicate navigation or canonical state |
-| Dashboard drawer/detail | expanded/diagnostic | preserve exact action and receipt identity |
-| Lark Goal Channel | compact | one actionable frame; no raw private state; threaded detail link |
-| periodic digest/report | compact grouped items | material stage deltas; no implied immediate authority |
-| CLI/review packet | expanded/diagnostic | stable machine-readable fields and exact refs |
-| Agent handoff | compact strategic | authority, planning horizon, validation, stop condition |
+| Dashboard first screen | glance/compact | 聚合 attention；不重复导航或复制 canonical state |
+| Dashboard drawer/detail | expanded/diagnostic | 保留精确 action 与 receipt identity |
+| Lark Goal Channel | compact | 一个可行动 frame；不暴露 raw private state；提供 threaded detail link |
+| periodic digest/report | compact grouped items | 重要阶段 delta；不暗示即时 authority |
+| CLI/review packet | expanded/diagnostic | 稳定 machine-readable fields 与精确 refs |
+| Agent handoff | compact strategic | authority、planning horizon、validation、stop condition |
 
-Channel capacity may remove optional display fields. It cannot remove a gate,
-change interaction mode, claim completeness, or replace an exact identity with
-free-form prose.
+Channel capacity 可以移除可选 display fields，但不能移除 gate、改变 interaction mode、虚报 completeness，或用 free-form prose 替换精确 identity。
 
-### 8.4 Dynamic form selection
+### 8.4 动态 Form Selection
 
-The most intelligent representation is not always another card:
+最智能的表达不一定是再增加一张卡片：
 
-| Fact shape and purpose | Preferred abstract form | Typical examples |
+| Fact 形态与目的 | 首选抽象 form | 典型例子 |
 | --- | --- | --- |
-| one verified state or receipt | `status_glance` | Goal stopped, delivery verified |
-| one scoped choice | `decision_card` | approve/revise/defer a route |
-| alternatives with shared dimensions | `comparison_table` | replan candidates, provider choices |
-| change over time | `timeline` | stage progress, incident recovery, settlement history |
-| typed relations and blocking paths | `dependency_graph` | Todo frontier, Explore graph, cross-Agent handoff |
-| claims against evidence | `evidence_matrix` | acceptance review, benchmark claim qualification |
-| bounded period or stage | `milestone_report` | weekly report, segment closeout |
-| frequently changing multi-lane state | `interactive_dashboard` | long-running Goal portfolio |
-| stable narrative for later readers | `linear_document` | handoff, design explanation |
-| continuously maintained shared context | `living_wiki` | project decisions, current architecture, durable operating knowledge |
+| 一个已验证状态或 receipt | `status_glance` | Goal 已停止、delivery 已验证 |
+| 一个 scoped choice | `decision_card` | approve/revise/defer 路线 |
+| 具有共同维度的 alternatives | `comparison_table` | replan candidates、provider choices |
+| 随时间变化 | `timeline` | 阶段进展、incident recovery、settlement history |
+| typed relations 与 blocking paths | `dependency_graph` | Todo frontier、Explore graph、cross-Agent handoff |
+| claims 对 evidence | `evidence_matrix` | acceptance review、benchmark claim qualification |
+| 有边界的周期或阶段 | `milestone_report` | 周报、segment closeout |
+| 高频变化的 multi-lane state | `interactive_dashboard` | 长程 Goal portfolio |
+| 供后续读者阅读的稳定叙事 | `linear_document` | handoff、design explanation |
+| 持续维护的共享上下文 | `living_wiki` | 项目决策、当前架构、长期 operating knowledge |
 
-Several domain-local precedents already prove parts of this direction:
+仓库里已有几个 domain-local precedent，证明这条方向并非空中楼阁：
 
-- Explore presentation recommends canonical-only or dual canonical/executive
-  views from typed readability and decision-density signals, preserves source
-  digest/revision, and chooses board style independently from evidence truth;
-- periodic report normalizes one typed document before Markdown and HTML
-  renderers, records renderer lineage, and keeps generation separate from
-  publication;
-- content-ops defines typed page roles and validates sparse, overcrowded,
-  overflowing, colliding, or role-incomplete layouts.
+- Explore presentation 根据 typed readability 与 decision-density signals 推荐 canonical-only 或 canonical/executive dual view，保留 source digest/revision，并让 board style 与 evidence truth 分离；
+- periodic report 先归一化同一份 typed document，再交给 Markdown 与 HTML renderers，记录 renderer lineage，并把 generation 与 publication 分开；
+- content-ops 定义 typed page roles，并能拒绝 sparse、overcrowded、overflowing、colliding 或 role-incomplete layouts。
 
-This RFC should reuse those lessons rather than replace each domain renderer
-with one universal layout engine. The shared compiler owns communication
-intent, required semantic blocks, completeness, abstract form, and fallback.
-Domain capabilities own domain meaning. Renderers own concrete layout. Sinks
-own provider effects and exact readback.
+本 RFC 应复用这些经验，而不是用一个 universal layout engine 取代各 domain renderer。Shared compiler 拥有 communication intent、required semantic blocks、completeness、abstract form 与 fallback；domain capability 拥有 domain meaning；renderer 拥有 concrete layout；sink 拥有 provider effect 与 exact readback。
 
-### 8.5 Reports and living Wiki artifacts
+### 8.5 周报与 Living Wiki Artifact
 
-Reports and Wiki pages are not merely large notifications. They are artifacts
-with identity and lifecycle:
+周报和 Wiki 不是“大号通知”，而是有 identity 与 lifecycle 的 artifact：
 
 ```ts
 type PresentationArtifactPlan = {
@@ -633,351 +530,259 @@ type PresentationArtifactPlan = {
 };
 ```
 
-A weekly report normally freezes a bounded period and supersedes or appends a
-new artifact. A living Wiki normally patches one stable artifact from current
-canonical projections. Neither becomes a second source of truth: it preserves
-source revision/digest and points back to canonical evidence.
+周报通常冻结一个有边界 period，并 append 或 supersede 新 artifact；Living Wiki 通常基于当前 canonical projections patch 同一个稳定 artifact。二者都不成为第二 source of truth：必须保留 source revision/digest，并反向链接 canonical evidence。
 
-Creating or updating a Wiki, publishing HTML, or sending a report is an
-external effect. The presentation plan may propose that effect, but the actual
-provider operation still requires typed preview/apply, exact artifact identity,
-idempotency, authority, and readback. A renderer receipt proves generation; a
-sink receipt proves delivery. They must not be conflated.
+创建或更新 Wiki、发布 HTML、发送周报都是 external effect。Presentation plan 可以提出 effect，但真正 provider operation 仍需要 typed preview/apply、精确 artifact identity、idempotency、authority 与 readback。Renderer receipt 证明 generation，sink receipt 证明 delivery，两者不能混为一谈。
 
-For “do not maintain the same content twice,” the default Wiki strategy is
-projection-backed patching: stable semantic block ids map to stable remote
-blocks, changed blocks update, removed facts supersede or retire explicitly,
-and unchanged blocks remain untouched. Free-form model rewriting of the whole
-page is not the default lifecycle.
+为了“不重复维护同一份内容”，Wiki 默认采用 projection-backed patch：稳定 semantic block id 映射稳定 remote block；变化的 block 更新；删除的 facts 显式 supersede 或 retire；unchanged block 不触碰。模型每次自由重写整页不应成为默认 lifecycle。
 
-### 8.6 Adaptive presentation feedback
+### 8.6 Adaptive Presentation Feedback
 
-The system may learn that a form is under- or over-disclosing through bounded
-signals such as immediate detail opens, repeated clarification, decision
-reversal, layout validation failure, or a renderer reporting overlap. These
-signals can change a future form recommendation or density; they cannot change
-canonical facts, authority, evidence status, or whether an effect committed.
+系统可以通过有界 signals 感知 form 是否 under-disclosing 或 over-disclosing，例如用户立即打开 detail、重复 clarification、decision reversal、layout validation failure，或者 renderer 报告 overlap。它们可以影响未来 form recommendation 或 density，但不能改变 canonical facts、authority、evidence status 或 effect 是否 committed。
 
-Adaptive policies must be inspectable and resettable. Their outputs carry
-reason codes and preserve a deterministic fallback.
+Adaptive policy 必须 inspectable、resettable，其输出携带 reason codes，并始终保留 deterministic fallback。
 
-## 9. Coverage across the long-horizon lifecycle
+## 9. 覆盖长程工作的完整生命周期
 
-| Phase | Intelligent surface responsibility |
+| 阶段 | 智能化界面的职责 |
 | --- | --- |
-| Goal authoring | clarify objective, acceptance, execution boundary, and missing authority without presenting a giant undifferentiated form |
-| planning and replan | show strategy/acceptance/frontier delta, affected work, alternatives, and fallback; ordinary successor planning remains Agent-owned |
-| execution | keep routine progress quiet; surface bounded session state, artifact delta, and meaningful intervention points |
-| monitor and wait | show material observation and newly runnable successor; suppress unchanged polls |
-| gate and decision | ask one scoped question, name authority effect, and show independent safe work when available |
-| delivery and review | show artifact/evidence readiness, exact protected effect, reviewer role, and revision binding |
-| settlement | distinguish proposed, attempted, committed, readback-verified, reconciled, partial, and repair-required states |
-| terminal and acceptance | distinguish Todo exhaustion from accepted Goal closure and show remaining evidence gaps or replan requirement |
+| Goal authoring | 澄清 objective、acceptance、execution boundary 和缺失 authority，而不是展示一个巨大且无差别的表单 |
+| planning 与 replan | 展示 strategy/acceptance/frontier delta、受影响工作、alternatives 与 fallback；普通 successor planning 仍归 Agent 所有 |
+| execution | 日常进展保持安静；展示有界 session state、artifact delta 和有意义的干预点 |
+| monitor 与 wait | 展示 material observation 和新变为 runnable 的 successor；抑制 unchanged polls |
+| gate 与 decision | 提出一个 scoped question，说明 authority effect，并在存在时展示独立 safe work |
+| delivery 与 review | 展示 artifact/evidence readiness、精确 protected effect、reviewer role 与 revision binding |
+| settlement | 区分 proposed、attempted、committed、readback-verified、reconciled、partial 与 repair-required |
+| terminal 与 acceptance | 区分 Todo 耗尽和 Goal acceptance，展示剩余 evidence gap 或 replan requirement |
 
-The compiler may use a shared vocabulary across phases, but domain-specific
-facts remain owned by their reducers. Replan ACK, Todo resume, report trigger,
-and action apply must not become one generic state machine.
+Compiler 可以在不同阶段复用词汇，但 domain-specific facts 继续由各 reducer 所有。Replan ACK、Todo resume、report trigger 和 action apply 不应被合成一个通用状态机。
 
-## 10. Model-assisted intelligence
+## 10. Model-assisted Intelligence
 
-The typed compiler must produce a usable plan without a model. Optional model
-advice can improve language and prioritization after the fact set is bounded.
+Typed compiler 在没有模型时也必须生成可用 plan。可选模型只能在 fact set 已被限制后改善语言和排序。
 
-Allowed proposals:
+允许模型提出：
 
-- clearer title or explanation from supplied public-safe facts;
-- grouping several related inform items;
-- salience ordering among already eligible items;
-- audience-calibrated explanation depth;
-- a candidate presentation form, semantic grouping, or report/Wiki outline
-  selected from the admitted component vocabulary;
-- a candidate missing alternative or evidence question for deterministic
-  validation.
+- 基于已提供 public-safe facts 的更清晰标题或解释；
+- 对多个相关 inform items 分组；
+- 在已经 eligible 的 items 之间做 salience ordering；
+- 适应 audience 的解释深度；
+- 从 admitted component vocabulary 中提出 candidate presentation form、semantic grouping 或 report/Wiki outline；
+- 提出可能缺失的 alternative 或 evidence question，交给 deterministic validation。
 
-Forbidden authority:
+禁止模型拥有：
 
-- setting permission or decision scope;
-- declaring evidence complete;
-- choosing direct execution for an irreversible or unknown action;
-- suppressing a gate, stale state, or failed readback;
-- changing subject identity or revision;
-- claiming an effect committed;
-- ingesting raw transcripts, logs, credentials, or private files outside the
-  declared source boundary;
-- emitting arbitrary executable UI, script, remote document mutation, or
-  provider-specific payload outside admitted renderers.
+- permission 或 decision scope；
+- evidence completeness；
+- 为 irreversible 或 unknown action 选择 direct execution；
+- 抑制 gate、stale state 或 failed readback；
+- 修改 subject identity 或 revision；
+- 声称 effect 已 committed；
+- 在声明的 source boundary 外读取 raw transcript、log、credential 或 private file；
+- 在 admitted renderer 外生成任意 executable UI、script、remote document mutation 或 provider-specific payload。
 
-Model output is an untrusted proposal with input digest, model/profile identity,
-bounded output, validator result, and fallback to deterministic copy. Shadow
-evaluation must measure both over-escalation and dangerous suppression before
-any model advice affects delivery.
+Model output 是 untrusted proposal，需携带 input digest、model/profile identity、有界输出、validator result，并可 fallback 到 deterministic copy。任何 model advice 影响 delivery 前，shadow evaluation 必须同时度量过度升级和危险抑制。
 
-## 11. Relationship to existing architecture
+## 11. 与现有架构的关系
 
-### 11.1 Source state and projections
+### 11.1 Source state 与 Projections
 
-Canonical Goal, Todo, Gate, Evidence, Event, and Receipt state remains the
-truth. The interaction plan is a recomputable projection. Dashboard or Lark
-acknowledgements may govern surface lifecycle but cannot close a Todo, consume
-authority, or settle an effect.
+Canonical Goal、Todo、Gate、Evidence、Event 与 Receipt state 继续是真相。Interaction plan 是可重建 projection。Dashboard 或 Lark acknowledgement 可以管理 surface lifecycle，但不能关闭 Todo、消费 authority 或 settle effect。
 
-### 11.2 Typed action proposals
+### 11.2 Typed Action Proposal
 
-Typed Chat action proposals remain the preview/apply, validation, fingerprint,
-and receipt boundary. `action_review_plan_v0`, the first subset of this RFC,
-will compile how an existing proposal is presented. It does not legalize the
-action.
+Typed Chat action proposal 继续拥有 preview/apply、validation、fingerprint 与 receipt boundary。作为本 RFC 第一个子集的 `action_review_plan_v0` 只负责编译现有 proposal 如何展示，不会让 action 变得合法。
 
-### 11.3 Planning inventory and horizon
+### 11.3 Planning Inventory 与 Horizon
 
-Operator surfaces should reuse canonical Todo identity, relations, claim state,
-completeness, and detail refs from planning read models. They may select a
-different density but must not rebuild runnable/waiting/blocked semantics in
-frontend code.
+Operator surface 应复用 planning read models 中的 canonical Todo identity、relations、claim state、completeness 与 detail refs。它可以选择不同 density，但不能在前端重新实现 runnable/waiting/blocked 语义。
 
-### 11.4 Review batch
+### 11.4 Review Batch
 
-`review_batch_v0` is a cold-path multi-candidate composition and exact-decision
-binding contract. It can consume surface candidates or serve an expanded
-review session. It does not decide whether a single hot-path action is direct,
-reviewed, gated, or repair-required.
+`review_batch_v0` 是冷路径 multi-candidate composition 与 exact-decision binding contract。它可以消费 surface candidates，也可以服务 expanded review session；但不决定单个热路径 action 是 direct、reviewed、gated 还是 repair-required。
 
 ### 11.5 Human Attention Wishlist
 
-A wish remains optional human leverage, never a gate or notification by itself.
-It maps to `optional_leverage` plus piggyback/digest delivery. This RFC does not
-replace its authoring, deduplication, or lifecycle contract.
+Wish 继续是 optional human leverage，本身永远不是 gate 或 notification。它映射为 `optional_leverage` 加 piggyback/digest delivery。本 RFC 不替代其 authoring、deduplication 或 lifecycle contract。
 
-### 11.6 Periodic report
+### 11.6 Periodic Report
 
-Periodic report remains a capability-owned trigger, document, audience, and
-governed delivery lifecycle. A report milestone can produce `inform` surface
-items; the interaction compiler does not generate the report or send it.
+Periodic report 继续拥有 capability-owned trigger、document、audience 和 governed delivery lifecycle。Report milestone 可以产生 `inform` surface items；interaction compiler 不生成或发送 report。
 
 ### 11.7 Effect Program
 
-Effect Program and domain settlement reducers provide effect identity, order,
-failure, replay, committed prefix, and receipt facts. The interaction compiler
-renders those facts. Effect Program must not become a generic UI decision
-engine, and interaction policy must not claim settlement authority.
+Effect Program 与 domain settlement reducers 提供 effect identity、顺序、failure、replay、committed prefix 和 receipt facts。Interaction compiler 只渲染这些 facts。Effect Program 不应成为通用 UI decision engine，interaction policy 也不能声称 settlement authority。
 
-### 11.8 Capability hooks and providers
+### 11.8 Capability Hooks 与 Providers
 
-An installed capability may contribute bounded provider-neutral projection
-candidates through an admitted hook. Core validates the schema and owns final
-interaction semantics. A hook gains neither canonical write authority nor the
-right to weaken a gate, choose direct execution, or deliver externally.
+已安装 capability 可以通过 admitted hook 提供有界 provider-neutral projection candidate。Core 验证 schema 并拥有最终 interaction semantics。Hook 不获得 canonical write authority，也不能削弱 gate、选择 direct execution 或外部 delivery。
 
-### 11.9 Domain presentation and artifact lifecycles
+### 11.9 Domain Presentation 与 Artifact Lifecycle
 
-Explore presentation, periodic-report renderers, content-ops layout planning,
-and Goal artifact lifecycle projections remain their nearest domain owners.
-The shared interaction surface consumes their bounded facts and offers a
-common abstract form vocabulary. It does not absorb their evidence selection,
-document normalization, layout validation, milestone/guard derivation, or sink
-protocols.
+Explore presentation、periodic-report renderers、content-ops layout planning 与 Goal artifact lifecycle projection 继续留在最近的 domain owner。Shared interaction surface 消费其有界 facts，并提供通用 abstract form vocabulary；它不会吸收这些 domain 的 evidence selection、document normalization、layout validation、milestone/guard derivation 或 sink protocols。
 
-Durable reports and living documents must additionally carry artifact identity,
-source lineage, update mode, renderer receipt, and sink readback. Their content
-may be reconstructed from canonical projections; remote presentation state
-does not become authority over Goal or Todo state.
+Durable report 与 living document 还必须携带 artifact identity、source lineage、update mode、renderer receipt 和 sink readback。内容可以从 canonical projections 重建；remote presentation state 不会获得对 Goal 或 Todo state 的 authority。
 
-## 12. Smallest useful implementation slice
+## 12. 最小可用实现切片
 
-The first PR after this RFC should remain narrow:
+本 RFC 后的第一个 PR 应保持有界：
 
-1. characterize current Goal lifecycle behavior:
-   - ready stop -> direct apply with receipt;
-   - stop apply stale/gated -> rollback and escalation;
-   - resume/delete -> reviewed;
-   - failed readback -> not completed;
-2. define a TypeScript `action_review_plan_v0` discriminated union and pure
-   compiler for existing typed action proposal facts;
-3. encode Goal lifecycle policy through named typed rules, not button text;
-4. make Dashboard render the current behavior from the plan;
-5. keep Python Chat action preview/apply and Goal lifecycle reducers unchanged;
-6. add parity, negative, and mutation tests proving protected, unknown,
-   incomplete, or stale proposals cannot become direct;
-7. preserve visible feedback, accessibility, mobile operation, and truthful
-   detail refs.
+1. Characterize 当前 Goal lifecycle behavior：
+   - ready stop -> direct apply with receipt；
+   - stop apply stale/gated -> rollback 并升级；
+   - resume/delete -> reviewed；
+   - failed readback -> not completed；
+2. 为现有 typed action proposal facts 定义 TypeScript `action_review_plan_v0` discriminated union 与 pure compiler；
+3. 通过命名 typed rules 编码 Goal lifecycle policy，而不是按钮文案；
+4. 让 Dashboard 从 plan 渲染当前 behavior；
+5. 保持 Python Chat action preview/apply 与 Goal lifecycle reducers 不变；
+6. 增加 parity、negative 与 mutation tests，证明 protected、unknown、incomplete 或 stale proposal 不能变成 direct；
+7. 保留可见 feedback、accessibility、mobile operation 与真实 detail refs。
 
-This slice turns the useful behavior in #3785 from UI-local policy into a
-reusable typed seam. It does not yet generalize attention-queue delivery,
-periodic digest, Lark rendering, or model assistance.
+这个切片会把 #3785 的有价值行为从 UI-local policy 变成可复用 typed seam，但暂不泛化 attention-queue delivery、periodic digest、Lark rendering 或 model assistance。
 
-## 13. Delivery stages
+## 13. 交付阶段
 
-### Stage 0: inventory and characterization
+### Stage 0：Inventory 与 Characterization
 
-- catalogue current action, attention, gate, report, replan, and settlement
-  surfaces;
-- record which owner supplies risk, authority, evidence, and receipt facts;
-- identify duplicate frontend state semantics and dishonest detail paths;
-- add fixtures before moving policy.
+- 盘点当前 action、attention、gate、report、replan 与 settlement surfaces；
+- 记录由哪个 owner 提供 risk、authority、evidence 与 receipt facts；
+- 找出重复的前端状态语义和不真实的 detail path；
+- 在迁移 policy 前先建立 fixtures。
 
-### Stage 1: action review vertical
+### Stage 1：Action Review 垂直切片
 
-- ship `action_review_plan_v0` in TypeScript;
-- route Goal lifecycle through it;
-- retain current backends and renderers;
-- publish the protocol and focused tests.
+- 用 TypeScript 交付 `action_review_plan_v0`；
+- 让 Goal lifecycle 经过该 plan；
+- 保持当前 backend 与 renderer；
+- 发布 protocol 与聚焦测试。
 
-### Stage 2: attention and disclosure plan
+### Stage 2：Attention 与 Disclosure Plan
 
-- compile material attention-queue deltas;
-- separate selection, delivery, interaction, and density;
-- reuse planning completeness/detail refs;
-- expose stable acknowledgement/supersession identities.
+- 编译 material attention-queue deltas；
+- 分离 selection、delivery、interaction 与 density；
+- 复用 planning completeness/detail refs；
+- 暴露稳定 acknowledgement/supersession identity。
 
-### Stage 3: cross-channel parity
+### Stage 3：Cross-channel Parity
 
-- render the same semantic plan in Dashboard and Lark Goal Channel;
-- let periodic reports feed digest items;
-- qualify dynamic form selection across card, table, timeline, graph, report,
-  dashboard, and document fallbacks;
-- add one living-Wiki preview/patch/readback contract without making Wiki a
-  canonical source;
-- add semantic parity fixtures across different layouts and locales.
+- 在 Dashboard 与 Lark Goal Channel 渲染同一 semantic plan；
+- 允许 periodic report 提供 digest items；
+- 验证 card、table、timeline、graph、report、dashboard 与 document fallback 之间的动态 form selection；
+- 增加一个 living-Wiki preview/patch/readback contract，但不让 Wiki 成为 canonical source；
+- 为不同 layout 与 locale 添加 semantic parity fixtures。
 
-### Stage 4: replan, acceptance, and settlement review
+### Stage 4：Replan、Acceptance 与 Settlement Review
 
-- add domain adapters for material replan delta, acceptance gaps, and effect
-  repair state;
-- keep each domain reducer authoritative;
-- qualify meaningful intervention points with model-behavior tests.
+- 为 material replan delta、acceptance gap 和 effect repair state 增加 domain adapters；
+- 每个 domain reducer 继续保持 authoritative；
+- 用 model-behavior tests 验证有意义的干预点。
 
-### Stage 5: optional model advice
+### Stage 5：可选 Model Advice
 
-- shadow clearer explanations and eligible-item ranking;
-- validate against exact input digests and typed invariants;
-- measure false interruption, missed escalation, and user correction;
-- keep deterministic fallback and explicit disable/reset.
+- Shadow 更清晰的解释和 eligible-item ranking；
+- 对照精确 input digest 与 typed invariants 验证；
+- 度量 false interruption、missed escalation 和 user correction；
+- 保留 deterministic fallback 和显式 disable/reset。
 
-### Stage 6: bounded personalization
+### Stage 6：有界个性化
 
-Only after the earlier stages are stable, consider operator preferences for
-density, digest cadence, or default review strictness. Preferences must be
-portable, inspectable, resettable, privacy-bounded, and unable to weaken
-canonical gates.
+只有前面阶段稳定后，才考虑 Operator 对 density、digest cadence 或 default review strictness 的偏好。Preference 必须 portable、inspectable、resettable、privacy-bounded，且不能削弱 canonical gate。
 
-## 14. Validation
+## 14. 验证
 
-### 14.1 Protocol and reducer
+### 14.1 Protocol 与 Reducer
 
-- deterministic output for the same source revisions and surface context;
-- stable total order for multiple items;
-- exact subject revision/digest binding;
-- stale decision and superseded item rejection;
-- union-level rejection of illegal direct/gate combinations;
-- unknown risk or required evidence never defaults to direct;
-- completeness, truncation, and overflow remain explicit;
-- public/private boundary rejects raw transcripts, logs, credentials, local
-  paths, and unbounded provider payloads.
+- 相同 source revisions 与 surface context 产生 deterministic output；
+- 多 item 使用稳定 total order；
+- 精确绑定 subject revision/digest；
+- 拒绝 stale decision 与 superseded item；
+- union 层拒绝非法 direct/gate 组合；
+- unknown risk 或 required evidence 不会默认 direct；
+- completeness、truncation 与 overflow 始终显式；
+- public/private boundary 拒绝 raw transcript、log、credential、local path 和无界 provider payload。
 
-### 14.2 Vertical behavior
+### 14.2 垂直行为
 
-- direct stop still creates a typed preview and exactly one apply;
-- optimistic stop rolls back after gate, stale result, or apply failure;
-- verified receipt is visible without a confirmation drawer;
-- new authority gate becomes explicit review;
-- resume and delete remain reviewed;
-- duplicate clicks cannot create duplicate effects;
-- background reconciliation cannot overwrite a newer optimistic revision;
-- keyboard, screen-reader, reduced-motion, narrow-screen, and locale behavior
-  remain valid.
+- direct stop 仍创建 typed preview，且只 apply 一次；
+- optimistic stop 遇到 gate、stale result 或 apply failure 会 rollback；
+- verified receipt 无需 confirmation drawer 也保持可见；
+- 新 authority gate 升级为显式 review；
+- resume 与 delete 保持 reviewed；
+- 重复点击不会创建重复 effects；
+- background reconciliation 不会覆盖更新的 optimistic revision；
+- keyboard、screen reader、reduced motion、narrow screen 和 locale behavior 继续有效。
 
-### 14.3 Cross-channel parity
+### 14.3 Cross-channel Parity
 
-- Dashboard, Lark, digest, and CLI share subject, revision, attention kind,
-  interaction mode, authority, evidence status, and completeness;
-- density differences do not change semantic fields;
-- detail refs retrieve information omitted upstream, not only a second copy of
-  the same truncated payload;
-- delivery receipts identify what was actually displayed or sent.
-- presentation-form reason codes and deterministic fallbacks remain stable;
-- renderer validation can reject unreadable graph/layout output without
-  dropping canonical evidence;
-- report and Wiki artifacts bind exact source revisions/digests and preserve
-  lineage across patch, append, replace, or supersede;
-- a generated artifact never counts as published without an independent sink
-  readback receipt.
+- Dashboard、Lark、digest 与 CLI 共享 subject、revision、attention kind、interaction mode、authority、evidence status 与 completeness；
+- density 差异不改变 semantic fields；
+- detail refs 可以获取 upstream 已遗漏的信息，而不是同一份 truncated payload 的另一个副本；
+- delivery receipt 标识实际展示或发送了什么。
+- presentation-form reason codes 与 deterministic fallback 保持稳定；
+- renderer validation 可以拒绝不可读的 graph/layout output，但不能删除 canonical evidence；
+- report 与 Wiki artifact 绑定精确 source revision/digest，并在 patch、append、replace 或 supersede 中保留 lineage；
+- generated artifact 在缺少独立 sink readback receipt 时，永远不能算作 published。
 
-### 14.4 Product and model evaluation
+### 14.4 产品与模型评估
 
-Measure both attention cost and outcome quality:
+Attention cost 与 outcome quality 必须同时度量：
 
-- interventions and attention minutes per accepted Goal outcome;
-- false interrupts and missed material escalations;
-- time from material delta to required decision;
-- decision reversal/regret and immediate detail-open rate;
-- stale-action and failed-readback recovery;
-- user comprehension of changed state and committed effect;
-- Agent throughput, acceptance quality, and safety outcomes;
-- model-advice override, hallucination, over-escalation, and dangerous
-  suppression rates.
+- 每个 accepted Goal outcome 的 interventions 与 attention minutes；
+- false interrupts 与 missed material escalations；
+- material delta 到 required decision 的时间；
+- decision reversal/regret 与立即打开 detail 的比例；
+- stale-action 与 failed-readback recovery；
+- 用户对“什么变了”和“effect 是否 committed”的理解；
+- Agent throughput、acceptance quality 与 safety outcomes；
+- model-advice override、hallucination、over-escalation 与 dangerous suppression rate。
 
-Reducing clicks while lowering accepted outcome quality is a regression, not a
-success.
+减少点击但降低 accepted outcome quality 是回归，不是成功。
 
-## 15. Failure and fallback rules
+## 15. Failure 与 Fallback Rules
 
-- compiler unavailable: render existing conservative reviewed surface;
-- unknown policy version: fail to review/repair, never direct;
-- model advisor unavailable or invalid: deterministic copy/order;
-- detail source unavailable: mark incomplete and show recovery, never claim
-  full context;
-- sink delivery failure: retain canonical item and delivery receipt; do not
-  replay the underlying domain effect;
-- readback failure: rollback projection when safe and surface repair;
-- conflicting source revisions: reject the interaction and refresh.
+- compiler 不可用：渲染现有 conservative reviewed surface；
+- policy version unknown：fail to review/repair，绝不 direct；
+- model advisor 不可用或非法：使用 deterministic copy/order；
+- detail source 不可用：标记 incomplete 并展示恢复路径，不声称 full context；
+- sink delivery failure：保留 canonical item 与 delivery receipt，不 replay underlying domain effect；
+- readback failure：在安全时 rollback projection，并 surface repair；
+- source revisions 冲突：拒绝 interaction 并 refresh。
 
 ## 16. Non-goals
 
-- replacing canonical state with frontend state;
-- replacing typed domain gates with an AI risk score;
-- auto-approving protected effects;
-- streaming chain-of-thought, every Agent step, or raw logs;
-- making every status item actionable;
-- creating a global generic effect executor;
-- creating one universal renderer that absorbs Explore, report, content, Wiki,
-  and Dashboard domain contracts;
-- making models required for control-plane rendering;
-- introducing a second Todo, planning, receipt, or notification store;
-- shipping personalization, every sink, and every domain adapter in the first
-  implementation;
-- treating fewer clicks as sufficient evidence of product improvement.
+- 用 frontend state 替代 canonical state；
+- 用 AI risk score 替代 typed domain gates；
+- 自动批准 protected effects；
+- 流式展示 chain-of-thought、每个 Agent step 或 raw logs；
+- 让每条 status item 都变得 actionable；
+- 创建 global generic effect executor；
+- 创建一个吸收 Explore、report、content、Wiki 与 Dashboard domain contract 的万能 renderer；
+- 让模型成为 control-plane rendering 的必需依赖；
+- 引入第二套 Todo、planning、receipt 或 notification store；
+- 在第一版同时交付 personalization、全部 sink 和全部 domain adapter；
+- 把“点击更少”当作产品提升的充分证据。
 
-## 17. Open questions
+## 17. 开放问题
 
-1. Should `action_review_plan_v0` be serialized as a public protocol in its
-   first slice, or remain an internal TypeScript read model until a second sink
-   consumes it?
-2. Which existing action metadata should own reversibility and blast radius,
-   and which values require a schema migration?
-3. Does surface acknowledgement belong in the existing event ledger or in a
-   projection-local delivery ledger with no project-state authority?
-4. Which replan deltas are genuinely operator decisions versus informative
-   autonomous alignment changes?
-5. What is the smallest cross-channel semantic parity fixture that catches
-   drift without snapshotting presentation copy?
-6. Which operator preference is valuable enough to justify a persisted profile
-   after v0, and how is it reset across hosts?
-7. Should abstract form selection live in the core interaction compiler or in
-   a built-in presentation capability once a second domain caller is proven?
-8. What is the first provider-neutral living-document patch contract that can
-   serve Lark Wiki and repository docs without assuming either provider's block
-   model?
+1. `action_review_plan_v0` 应在第一阶段就序列化成 public protocol，还是等第二个 sink 使用后再从 internal TypeScript read model 晋升？
+2. 哪些现有 action metadata 应拥有 reversibility 与 blast radius，哪些值需要 schema migration？
+3. Surface acknowledgement 应进入现有 event ledger，还是进入没有 project-state authority 的 projection-local delivery ledger？
+4. 哪些 replan delta 真正需要 Operator 决策，哪些只是 informative autonomous alignment changes？
+5. 什么是最小 cross-channel semantic parity fixture，既能捕获漂移，又不会 snapshot presentation copy？
+6. v0 之后，哪一种 Operator preference 值得持久化 profile，以及它如何跨 host reset？
+7. Abstract form selection 应位于 core interaction compiler，还是等第二个 domain caller 成立后进入 built-in presentation capability？
+8. 第一个 provider-neutral living-document patch contract 应如何同时服务 Lark Wiki 与 repository docs，而不假设任一 provider 的 block model？
 
-## 18. Acceptance criteria for this RFC
+## 18. RFC 验收条件
 
-The RFC may move beyond Draft when maintainers agree on:
+当 Maintainers 对以下内容达成一致时，本 RFC 才可离开 Draft：
 
-1. the projection-only authority boundary;
-2. the closed interaction modes and precedence;
-3. conjunctive direct-action eligibility;
-4. reuse boundaries for action proposals, planning inventory, review batch,
-   periodic report, Effect Program, and capability hooks;
-5. the Stage 1 typed vertical and its negative tests;
-6. cross-channel completeness and parity requirements;
-7. dynamic form, artifact lineage, renderer, and sink authority boundaries;
-8. evaluation metrics that protect both Human Attention and Goal outcomes.
+1. projection-only authority boundary；
+2. 封闭的 interaction modes 与优先级；
+3. 合取式 direct-action eligibility；
+4. action proposal、planning inventory、review batch、periodic report、Effect Program 与 capability hooks 的复用边界；
+5. Stage 1 typed vertical 及其 negative tests；
+6. cross-channel completeness 与 parity 要求；
+7. dynamic form、artifact lineage、renderer 与 sink authority boundary；
+8. 同时保护 Human Attention 与 Goal outcome 的评估指标。

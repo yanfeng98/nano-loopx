@@ -1,102 +1,74 @@
-# RFC: Human Attention Wishlist v0
+# RFC：Human Attention Wishlist v0
 
-- Status: Draft, under maintainer review
-- Proposed by: LoopX maintainers
-- Date: 2026-08-14
-- Scope: a typed, non-blocking human-attention subtype plus a bounded agent
-  authoring sidecar; no new capability, task store, authority grant, scheduler,
-  or quota lane
-- Source baseline: LoopX `4e4c03621`
-- Tracking issue: [#3179](https://github.com/huangruiteng/loopx/issues/3179)
-- Language note: the
-  [Chinese version](./human-attention-wishlist-v0.zh-CN.md) and this English
-  version are semantic mirrors. A difference between them is a defect.
+- 状态：Draft，maintainer 评审中
+- 提出方：LoopX maintainers
+- 日期：2026-08-14
+- 范围：一个类型化、非阻塞的人类注意力子类型，以及有界的 agent 写入 sidecar；不新增 capability、任务存储、权限授予、调度器或 quota lane
+- 基线：LoopX `4e4c03621`
+- 跟踪 issue：[#3179](https://github.com/huangruiteng/loopx/issues/3179)
+- 语言说明：[英文版](./human-attention-wishlist-v0.md)与本中文版互为语义镜像，差异视为缺陷。
 
 ---
 
-## 0. Example
+## 0. 一个例子
 
-An agent completes and validates the selected product task. During the work it
-notices a high-leverage opportunity: a short preference answer, an introduction
-to a relevant maintainer, or review of one concrete assumption could improve a
-later slice. The selected task did not require that human action, and the agent
-already has independent work it may continue.
+Agent 完成并验证了当前选中的产品任务。工作期间，它发现一个高杠杆机会：用户回答一个简短偏好、引荐一位相关 maintainer，或审阅一个具体假设，都可能改善后续切片。但当前选中的任务并不依赖这项人类动作，而且 agent 还有独立工作可以继续。
 
-Today the agent has three poor choices:
+目前 agent 只有三个不理想的选择：
 
-1. turn the opportunity into a `user_gate`, which falsely blocks delivery;
-2. record an ordinary `user_action`, which can create an immediate notification
-   even though the request is optional; or
-3. leave the observation in chat or discard it, so later turns cannot use it.
+1. 把机会变成 `user_gate`，错误地阻塞交付；
+2. 记录普通 `user_action`，尽管请求是可选的，却可能立即触发通知；
+3. 把观察留在聊天中或直接丢弃，后续 turn 无法使用。
 
-The desired behavior is a fourth choice:
+期望的是第四种选择：
 
 ```text
-complete and validate the selected work
-  -> optionally capture zero or one evidence-backed human wish
-  -> write it as a non-blocking sidecar
-  -> preserve selected work, quota, authority, and notification behavior
+完成并验证选中工作
+  -> 可选地捕获 0 或 1 个有证据的人类 wish
+  -> 作为非阻塞 sidecar 写回
+  -> 保持选中工作、quota、authority 与通知行为不变
 ```
 
-The user can review wishes later or see one piggybacked on an already-visible
-material result. The existence of a wish never creates a standalone
-notification and never stops the agent's main flow.
+用户可以稍后集中查看 wish，或在原本就可见的 material 结果里顺带看到一条。Wish 的存在永远不会单独触发通知，也不会停止 agent 主流程。
 
-## 1. Problem
+## 1. 问题
 
-LoopX already distinguishes blocking `user_gate` todos from non-blocking
-`user_action` todos and can continue an independent agent lane around a scoped
-gate. It also asks heartbeat agents to retain high-value losing candidates.
-What is missing is an exact authoring and projection contract for optional
-human leverage discovered while normal work proceeds.
+LoopX 已经区分阻塞性的 `user_gate` todo 与非阻塞的 `user_action` todo，也能在 scoped gate 周围继续独立 agent lane。Heartbeat 还要求 agent 保留高价值的落选候选。缺少的是：当正常工作推进时，如何把可选的人类杠杆精确写入并投影出来。
 
-The current seams do not compose into that outcome:
+现有接缝无法组合出这个结果：
 
-- heartbeat guidance says to record a high-value candidate, but it does not
-  define a wishlist write command or lifecycle;
-- `todo_write_hint` exposes gate, user-action, and agent-todo templates, but no
-  non-notifying optional-human template;
-- an open `user_action` can enter the user notification channel even when it is
-  non-blocking;
-- `todo suggest` creates a read-only candidate queue that requires later
-  promotion, while `todo capture-followups` writes only agent work;
-- the compact turn envelope carries required execution and writeback actions,
-  but no signed optional sidecar hint.
+- heartbeat 指南要求记录高价值候选，却没有定义 wishlist 写命令或生命周期；
+- `todo_write_hint` 提供 gate、user-action 和 agent-todo 模板，却没有“不通知的可选人类请求”模板；
+- 一个打开的 `user_action` 即使非阻塞，也可能进入用户通知通道；
+- `todo suggest` 只产生只读候选队列，还需要后续 promotion；`todo capture-followups` 则只写 agent work；
+- compact turn envelope 带有必须执行的动作和写回，却没有签名过的可选 sidecar 提示。
 
-The result is an avoidable production bias: agents either promote optional
-value into a blocker, create noisy reminders, or forget it.
+结果是一种可以避免的生产偏差：agent 要么把可选价值升级成 blocker，要么制造提醒噪音，要么遗忘它。
 
-## 2. Decision
+## 2. 决策
 
-LoopX will model human-facing attention as three semantic kinds:
+LoopX 把面向人的注意力建模为三种语义：
 
-| Kind | Stored form | Blocks selected work | Grants authority | Default delivery |
+| 类型 | 存储形态 | 是否阻塞选中工作 | 是否授予权限 | 默认呈现 |
 | --- | --- | --- | --- | --- |
-| `gate` | `task_class=user_gate` | Only when its explicit scope covers the action | Only through existing typed decision-scope receipts | Interrupt with a concrete ask |
-| `request` | `task_class=user_action`, field absent or `request` | No | No | Existing non-blocking notice behavior |
-| `wish` | `task_class=user_action`, `human_attention_kind=wish` | No | No | Piggyback or digest only |
+| `gate` | `task_class=user_gate` | 仅当显式 scope 覆盖该动作 | 仅通过既有 typed decision-scope receipt | 用具体问题中断并询问 |
+| `request` | `task_class=user_action`，字段缺失或为 `request` | 否 | 否 | 保持现有非阻塞通知行为 |
+| `wish` | `task_class=user_action`，`human_attention_kind=wish` | 否 | 否 | 只顺带呈现或集中摘要 |
 
-`user_gate` remains the only user-todo class that may carry blocking scope or
-consume decision authority. A wish is an agent-authored hypothesis about
-optional human leverage, not a weak approval and not a deferred gate.
+`user_gate` 仍是唯一可以携带 blocking scope 或消费 decision authority 的用户 todo 类型。Wish 是 agent 对“可选人类杠杆”的假设，不是弱批准，也不是延迟 gate。
 
-The initial implementation reuses the canonical user-todo store. It does not
-add `user_wish` to `task_class`, create another task database, or introduce a
-new built-in capability. The nearest owners remain:
+初始实现复用 canonical user-todo store。不向 `task_class` 增加 `user_wish`，不创建另一套任务数据库，也不引入新的 built-in capability。最近的 owner 仍然是：
 
-- `control_plane/todos` for typed metadata, authoring, deduplication, and
-  projection;
-- `control_plane/work_items/interaction_contract` for notification and agent
-  channel semantics;
-- `control_plane/heartbeat` and `loopx-project` for the active model-facing
-  authoring rule;
-- `control_plane/quota/turn_envelope` for the compact signed sidecar hint.
+- `control_plane/todos`：类型化 metadata、写入、去重与投影；
+- `control_plane/work_items/interaction_contract`：通知与 agent channel 语义；
+- `control_plane/heartbeat` 与 `loopx-project`：活跃的 model-facing 写入规则；
+- `control_plane/quota/turn_envelope`：紧凑、签名过的 sidecar 提示。
 
-## 3. Typed Contract
+## 3. 类型化协议
 
-### 3.1 Stored fields
+### 3.1 存储字段
 
-The smallest stored extension is:
+最小存储扩展是：
 
 ```json
 {
@@ -109,41 +81,29 @@ The smallest stored extension is:
 }
 ```
 
-Rules:
+规则：
 
-- `human_attention_kind` is a typed enum with `request|wish` on
-  `task_class=user_action`. Its absence means `request` for backward
-  compatibility.
-- `wish_key` is a stable, public-safe deduplication key. It is required for a
-  wish and has no authority semantics.
-- Existing multi-agent user-todo binding applies: a wish must declare
-  `bound_agent` or `goal_bound` where the current user-todo contract requires
-  one.
-- Existing `text`, `evidence`, `updated_at`, completion, supersede, and archive
-  behavior provide content and lifecycle. v0 does not add a second status
-  machine.
-- `action_kind` remains an extensible domain token. Runtime code must not infer
-  wish semantics from substrings in `text` or `action_kind`.
+- `human_attention_kind` 是 `task_class=user_action` 上的 typed enum：`request|wish`。字段缺失时按 `request` 处理，保持向后兼容。
+- `wish_key` 是稳定、public-safe 的去重 key。Wish 必须提供它，但它没有 authority 语义。
+- 继续使用现有 multi-agent user-todo binding：当当前 user-todo contract 要求时，wish 必须声明 `bound_agent` 或 `goal_bound`。
+- 复用现有 `text`、`evidence`、`updated_at`、complete、supersede 与 archive 行为承载内容和生命周期。v0 不新增第二套状态机。
+- `action_kind` 仍是可扩展的 domain token。运行时不得从 `text` 或 `action_kind` 子串推断 wish。
 
-### 3.2 Illegal combinations
+### 3.2 非法组合
 
-A wish must fail validation if it carries any of:
+Wish 携带以下任何字段时都必须校验失败：
 
-- `blocks_agent` or `global_gate`;
-- `decision_scope` or `required_decision_scopes`;
-- `decision_outcome`;
-- `unblocks_todo_id`;
-- a task class other than `user_action`.
+- `blocks_agent` 或 `global_gate`；
+- `decision_scope` 或 `required_decision_scopes`；
+- `decision_outcome`；
+- `unblocks_todo_id`；
+- `user_action` 之外的 task class。
 
-Completing or accepting a wish does not consume an authority requirement. If
-the requested follow-up later needs private access, production mutation,
-publication, or another protected action, that exact action still needs a
-normal `user_gate` and decision scope.
+完成或接受 wish 不会消费 authority requirement。如果后续动作需要 private access、production mutation、publication 或其他 protected action，那个精确动作仍需要普通 `user_gate` 和 decision scope。
 
-## 4. Authoring Surface
+## 4. 写入接口
 
-The first active call site is the shipped heartbeat path. Add a narrow helper
-under the existing todo CLI, provisionally:
+第一个活跃调用点是已发布的 heartbeat 路径。在现有 todo CLI 下增加一个窄 helper，暂定为：
 
 ```bash
 loopx todo capture-wishes \
@@ -154,60 +114,42 @@ loopx todo capture-wishes \
   --evidence '<public-safe pointer>'
 ```
 
-The helper is a convenience writer over canonical user todos, not a new store.
-It must:
+该 helper 是 canonical user todo 的便利写入器，不是新 store。它必须：
 
-- write `task_class=user_action human_attention_kind=wish`;
-- bind the response continuation to the authoring agent unless an explicit
-  goal-wide binding is supplied;
-- require a compact public-safe evidence pointer;
-- accept at most one newly recorded wish per material turn;
-- update evidence for an existing open `wish_key` rather than append a
-  duplicate;
-- cap active wishes per agent and return a typed `max_items_exceeded` or
-  `duplicate_updated` result;
-- perform no quota spend and claim no delivery progress by itself.
+- 写入 `task_class=user_action human_attention_kind=wish`；
+- 除非显式提供 goal-wide binding，否则把 response continuation 绑定到写入它的 agent；
+- 要求紧凑、public-safe 的 evidence pointer；
+- 每个 material turn 最多新增 1 个 wish；
+- 同一 `wish_key` 已打开时更新 evidence，而不是追加重复项；
+- 限制每个 agent 的活跃 wish 数，并返回 typed `max_items_exceeded` 或 `duplicate_updated` 结果；
+- 自身不 spend quota，也不声明 delivery progress。
 
-The exact command name is open to implementation review. The behavior above is
-the contract; extending `todo capture-followups` is acceptable only if it keeps
-agent follow-up and human-wish routing explicit and cannot silently change the
-role or task class.
+精确命令名留给实现评审。以上行为才是协议；只有在能保持 agent follow-up 与 human wish 路由显式、且不会静默改变 role/task class 时，才可选择扩展 `todo capture-followups`。
 
-## 5. Skill and Heartbeat Generation Rule
+## 5. Skill 与 Heartbeat 生成规则
 
-The generated heartbeat prompt and `loopx-project` skill should add one compact
-rule after primary validation and before accountable refresh/spend:
+生成的 heartbeat prompt 和 `loopx-project` skill 应在主任务 validation 之后、accountable refresh/spend 之前增加一条紧凑规则：
 
-> Primary work comes first. If this material turn revealed an evidence-backed
-> opportunity where human input has comparative advantage but the selected
-> action does not depend on it, optionally capture zero or one wish. Do not
-> invent a wish to satisfy the protocol, interrupt the main flow to ask it, or
-> convert a permission/runtime gap into a wish.
+> 主任务优先。如果本次 material turn 发现了一个有证据、Human 具有比较优势、但当前选中动作不依赖它的机会，可以选择捕获 0 或 1 个 wish。不得为了满足协议硬造 wish，不得中断主流程询问，也不得把 permission/runtime gap 转成 wish。
 
-Qualifying examples include:
+符合条件的例子包括：
 
-- a product preference whose answer can improve a later slice while the agent
-  can safely use a documented default now;
-- an optional introduction, review, or domain judgment with concrete expected
-  value;
-- a bounded evidence request that improves confidence but is not required for
-  the selected work.
+- 用户偏好可以改善后续切片，而 agent 当前可以安全使用有文档的默认值；
+- 有明确预期价值的可选引荐、审阅或领域判断；
+- 能提高置信度、但并非选中工作前置条件的有界证据请求。
 
-Non-qualifying examples include:
+不符合条件的例子包括：
 
-- credentials, private material access, destructive action, production
-  mutation, publication, or an explicit repository review rule: these remain
-  gates when the selected action needs them;
-- runtime capability discovery or ordinary agent-repair work;
-- an unranked idea with no evidence or expected value;
-- work the agent can simply add to its own runnable backlog.
+- credentials、private material access、destructive action、production mutation、publication 或显式 repository review rule：当选中动作依赖它们时，它们仍然是 gate；
+- runtime capability discovery 或普通 agent repair work；
+- 没有 evidence 或预期价值的未排序想法；
+- agent 可以直接加入自身 runnable backlog 的工作。
 
-The rule is intentionally `0..1`, not `1`. Wishlist capture must not become a
-new output quota or a reason for low-value prose.
+规则刻意写成 `0..1`，不是 `1`。Wishlist capture 不能变成新的输出 quota，也不能诱发低价值 prose。
 
-## 6. Interaction and Notification Semantics
+## 6. Interaction 与通知语义
 
-Wishes require a separate projection lane:
+Wish 需要单独的投影 lane：
 
 ```json
 {
@@ -224,34 +166,25 @@ Wishes require a separate projection lane:
 }
 ```
 
-They must be excluded from:
+它们必须从以下位置排除：
 
-- `gate_open_items` and quota/interaction blocking or action-required counts;
-- `user_channel.actions` and `user_channel.action_required`;
-- the predicate that turns a non-blocking `user_action` into immediate
-  `user_channel.notify=NOTIFY`;
-- `needs_user_or_controller`, selected-todo ranking, work-lane obligation,
-  quota allocation, and scheduler cadence.
+- `gate_open_items` 与 quota/interaction 的 blocking 或 action-required count；
+- `user_channel.actions` 与 `user_channel.action_required`；
+- 把非阻塞 `user_action` 转成即时 `user_channel.notify=NOTIFY` 的 predicate；
+- `needs_user_or_controller`、selected-todo ranking、work-lane obligation、quota allocation 与 scheduler cadence。
 
-The canonical todo-source lifecycle `open_count` may still include an open
-wish so source completeness remains true. Consumers must use the separate
-wishlist and blocking/action projections instead of treating that aggregate
-lifecycle count as routing authority.
+Canonical todo-source lifecycle 的 `open_count` 仍可包含打开的 wish，以保持 source completeness 为真。Consumer 必须使用单独的 wishlist 与 blocking/action projection，不能把这个聚合 lifecycle count 当成 routing authority。
 
-Delivery policy is `piggyback_or_digest`:
+呈现策略是 `piggyback_or_digest`：
 
-- when a turn already returns a material user-visible result, it may append at
-  most one newly captured wish;
-- a wish alone never changes `DONT_NOTIFY` to `NOTIFY`;
-- status and full review packets may show the bounded wishlist lane;
-- a later digest consumer may summarize wish deltas, but no recurring wishlist
-  scheduler belongs in v0.
+- 当一个 turn 本来就返回 material user-visible result 时，最多可附带 1 个新捕获的 wish；
+- 单独一个 wish 永远不能把 `DONT_NOTIFY` 改成 `NOTIFY`；
+- status 与 full review packet 可以展示有界 wishlist lane；
+- 后续 digest consumer 可以总结 wish delta，但 v0 不引入 recurring wishlist scheduler。
 
-## 7. Compact Packet Contract
+## 7. Compact Packet 协议
 
-The full quota payload should extend `todo_write_hint` with the exact wishlist
-writer template. The compact turn envelope should expose a distinct optional
-sidecar instead of placing it in required `next_cli_actions`:
+完整 quota payload 应在 `todo_write_hint` 中加入精确的 wishlist writer template。Compact turn envelope 应暴露独立的 optional sidecar，而不是把它塞进必须执行的 `next_cli_actions`：
 
 ```json
 {
@@ -270,157 +203,104 @@ sidecar instead of placing it in required `next_cli_actions`:
 }
 ```
 
-This field is model-facing behavior. Adding it must version the turn-envelope
-action-signature coverage and preserve full/compact semantic parity. An
-unsigned prose field is not sufficient because hosts could silently omit it or
-models could mistake it for a required action.
+该字段属于 model-facing behavior。新增它时必须升级 turn-envelope action-signature coverage，并保持 full/compact 语义一致。未签名的 prose 字段不够，因为 host 可能静默丢失它，model 也可能把它误当成 required action。
 
-The sidecar is eligible only on a material turn whose primary action remains
-the selected LoopX work. It is not a fallback when `should_run=false`, a
-replacement for writeback/settlement, or a new effect that settles the turn.
+只有在 material turn 中、且 primary action 仍是选中的 LoopX work 时，sidecar 才 eligible。它不是 `should_run=false` 时的 fallback，不替代 writeback/settlement，也不是一个会 settle turn 的新 effect。
 
-## 8. Wish Response and Promotion
+## 8. Wish 响应与 Promotion
 
-The user may ignore, complete, decline/supersede, or accept a wish through the
-existing todo lifecycle. A later convenience command may atomically:
+用户可以通过现有 todo lifecycle 忽略、完成、拒绝/supersede 或接受 wish。后续 convenience command 可以原子地：
 
-1. complete the exact wish;
-2. create a concrete agent successor; and
-3. preserve the wish id as lineage evidence.
+1. 完成精确 wish；
+2. 创建具体 agent successor；
+3. 保留 wish id 作为 lineage evidence。
 
-That transition promotes work priority, not authority. Any successor requiring
-a protected decision scope remains gated until the normal authority receipt
-exists. v0 does not infer acceptance from chat text or a generic completed
-`user_action`.
+这个迁移提升的是工作优先级，不是 authority。任何需要 protected decision scope 的 successor，在普通 authority receipt 出现前仍然 gated。v0 不从聊天文本或普通 completed `user_action` 推断接受。
 
-## 9. Public and Private Boundary
+## 9. 公共和私有边界
 
-Wishlist generation must use the same public-safe todo boundary as existing
-state:
+Wishlist generation 必须使用与现有状态相同的 public-safe todo 边界：
 
-- no credentials, raw logs, transcripts, private source bodies, local absolute
-  paths, internal links, or private organizational context;
-- evidence is a compact pointer or reusable public-safe summary;
-- private opportunities remain in owner-approved ignored local state unless
-  they can be generalized safely;
-- a wish cannot authorize reading the private material it references.
+- 不含 credentials、raw logs、transcripts、private source body、本地绝对路径、内部链接或私有组织上下文；
+- evidence 是紧凑 pointer 或可复用的 public-safe summary；
+- 私有机会留在 owner 批准的 ignored local state，除非能安全泛化；
+- wish 不能授权读取它所引用的 private material。
 
-The writer should reuse the existing follow-up safety scan and extend it only
-with typed wish validation. It must not add a second prose denylist as routing
-authority.
+Writer 应复用现有 follow-up safety scan，只增加 typed wish validation。不得再增加一套基于 prose denylist 的路由 authority。
 
-## 10. Smallest Useful Implementation Slice
+## 10. 最小可用实现切片
 
-Ship one cohesive behavior slice:
+交付一个 cohesive behavior slice：
 
-1. normalize and validate `human_attention_kind=request|wish` plus `wish_key`
-   on user todos;
-2. add one bounded, evidence-required todo writer with deduplication;
-3. project `wishlist_items` separately and prove that wishes do not enter the
-   user notification channel;
-4. add the exact optional-capture rule to the generated heartbeat and
-   `loopx-project` skill;
-5. expose the signed compact optional-sidecar hint with a versioned action
-   signature.
+1. 在 user todo 上 normalize/validate `human_attention_kind=request|wish` 与 `wish_key`；
+2. 增加一个有界、要求 evidence、支持去重的 todo writer；
+3. 单独投影 `wishlist_items`，并证明 wish 不进入用户通知通道；
+4. 在生成 heartbeat 和 `loopx-project` skill 中加入精确的 optional-capture 规则；
+5. 通过版本化 action signature 暴露签名过的 compact optional-sidecar hint。
 
-This slice has a real active caller: every eligible shipped heartbeat already
-performs primary validation and todo writeback. It does not require a dashboard,
-new capability, recurring scheduler, acceptance metric, or auto-promotion
-workflow before it is useful.
+这个切片有真实活跃调用方：每个 eligible 的已发布 heartbeat 已经执行 primary validation 和 todo writeback。它在产生价值前不需要 dashboard、新 capability、recurring scheduler、acceptance metric 或 auto-promotion workflow。
 
-## 11. Validation Criteria
+## 11. 验证标准
 
-The first implementation is acceptable when focused tests prove:
+第一版实现需要通过 focused tests 证明：
 
-1. adding the same wish to an otherwise identical quota state leaves
-   `should_run`, selected todo, `must_attempt`, delivery permission, spend
-   policy, and scheduler action unchanged;
-2. a wish never creates `user_channel.action_required=true` or changes
-   `DONT_NOTIFY` to `NOTIFY`;
-3. `user_gate` still takes precedence when an exact authority dependency exists;
-4. writer validation rejects every illegal field combination and requires
-   public-safe evidence;
-5. repeated `wish_key` capture updates rather than duplicates, and the active
-   cap is deterministic;
-6. full quota and compact turn-envelope packets preserve the same optional
-   sidecar semantics under the new action-signature coverage version;
-7. the shipped full, compact, brief, and thin heartbeat prompts preserve the
-   `0..1`, post-validation, non-interrupting rule;
-8. one model-behavior scenario executes the selected primary work and may
-   capture a qualifying wish without replacing or backtracking from that work;
-9. public/private scans reject local paths, credentials, raw evidence, and
-   private material in fixtures or docs.
+1. 在其他条件相同的 quota state 中增加同一个 wish，不改变 `should_run`、selected todo、`must_attempt`、delivery permission、spend policy 或 scheduler action；
+2. wish 永远不会生成 `user_channel.action_required=true`，也不会把 `DONT_NOTIFY` 改成 `NOTIFY`；
+3. 当精确 authority dependency 存在时，`user_gate` 仍然优先；
+4. writer validation 拒绝所有非法字段组合，并要求 public-safe evidence；
+5. 重复捕获同一 `wish_key` 时更新而非复制，active cap 确定且可测试；
+6. 在新的 action-signature coverage version 下，full quota 与 compact turn-envelope packet 保持相同 optional-sidecar 语义；
+7. 已发布 full、compact、brief、thin heartbeat prompt 都保留 `0..1`、post-validation、non-interrupting 规则；
+8. 一个 model-behavior scenario 执行选中的 primary work，并可捕获合格 wish，不能替换该工作或回退到 earlier action；
+9. 公私边界扫描拒绝 fixture/docs 中的本地路径、credential、raw evidence 和 private material。
 
-Wishlist capture itself is no-spend. A material primary turn still settles and
-spends through the existing causal writeback contract.
+Wishlist capture 本身 no-spend。Material primary turn 仍然通过现有 causal writeback contract settlement/spend。
 
-## 12. Alternatives Considered
+## 12. 备选方案
 
-### Add `user_wish` as a new task class
+### 新增 `user_wish` task class
 
-Rejected for v0. It would widen every task-class switch, CLI validator, state
-projection, compatibility path, and external sink even though storage,
-ownership, and lifecycle are already those of a non-blocking user action.
+v0 拒绝。它会扩大每个 task-class switch、CLI validator、state projection、compatibility path 和 external sink；但其存储、ownership 与 lifecycle 已经属于非阻塞 user action。
 
-### Use ordinary `user_action` with an `action_kind` convention
+### 用普通 `user_action` 加 `action_kind` 约定
 
-Rejected. Current interaction behavior can notify every visible user action,
-and substring or prose classification would make routing authority ambiguous.
+拒绝。当前 interaction behavior 可能通知每个可见 user action；substring/prose classification 还会让 routing authority 变得模糊。
 
-### Keep wishes only in `todo suggest`
+### 只把 wish 放在 `todo suggest`
 
-Rejected. The suggestion surface is intentionally read-only and requires later
-promotion, so it cannot preserve a small opportunity discovered as a normal
-turn side effect.
+拒绝。Suggestion surface 刻意只读且需要后续 promotion，无法保存在普通 turn 中发现的小机会。
 
-### Write every opportunity as an agent todo
+### 把每个机会都写成 agent todo
 
-Rejected. Some opportunities specifically depend on human preference,
-relationships, judgment, or optional evidence. Making them executable work
-misstates ownership and can pollute the runnable frontier.
+拒绝。有些机会明确依赖 human preference、relationship、judgment 或 optional evidence。把它们写成 executable work 会错误表达 ownership，并污染 runnable frontier。
 
-### Put wishlist generation only in prompt prose
+### 只在 prompt prose 中加入 wishlist generation
 
-Rejected. Without a typed writer, projection, and signed compact packet hint,
-the behavior drifts across hosts and can silently become either notification
-spam or forgotten chat context.
+拒绝。没有 typed writer、projection 与 signed compact packet hint，行为会在 host 间漂移，并静默退化为 notification spam 或被遗忘的 chat context。
 
-## 13. Follow-on Work After Evidence Exists
+## 13. 出现证据之后的后续工作
 
-Only after the first slice produces real usage evidence should LoopX consider:
+只有在第一切片产生真实使用证据后，LoopX 才考虑：
 
-- a user preference or digest policy for wishlist visibility;
-- accept/decline convenience commands and atomic agent-todo promotion;
-- value/acceptance metrics based on typed lifecycle events;
-- teaching `todo suggest` to return separate agent candidates and human wishes;
-- external projection sinks that render the existing wishlist lane.
+- 用户层的 wishlist visibility/digest preference；
+- accept/decline convenience command 与原子 agent-todo promotion；
+- 基于 typed lifecycle event 的 value/acceptance metric；
+- 教会 `todo suggest` 分开返回 agent candidate 与 human wish；
+- 渲染既有 wishlist lane 的 external projection sink。
 
-These are not required for v0 and must not delay the non-blocking authoring
-contract.
+这些都不是 v0 必需项，不应延迟非阻塞写入协议。
 
-## 14. Open Questions
+## 14. 开放问题
 
-1. Should the helper be `todo capture-wishes`, or should the existing
-   `capture-followups` command accept an explicit destination kind?
-2. Should v0 cap active wishes per agent, per goal, or both?
-3. Should piggyback delivery be part of the initial slice, or should the first
-   implementation expose wishes only through status/review packets?
-4. Which public-safe lifecycle field should record an explicit user decline
-   before a dedicated typed outcome exists?
+1. Helper 应命名为 `todo capture-wishes`，还是让现有 `capture-followups` 接受显式 destination kind？
+2. v0 应按 agent、按 goal，还是同时限制 active wish？
+3. Piggyback 呈现应进入初始切片，还是第一版只通过 status/review packet 暴露 wish？
+4. 在专用 typed outcome 出现前，哪一个 public-safe lifecycle field 最适合记录用户的显式 decline？
 
-## 15. Relationship to Existing Contracts
+## 15. 与现有协议的关系
 
-- [Decision Scope v0](../../reference/protocols/decision-scope-v0.md) remains
-  the authority source for gates and proves why a wish cannot satisfy a
-  protected action.
-- [Interaction Pattern Catalog](../../concepts/interaction-pattern-catalog.md)
-  defines scoped-gate fallback; wishlist capture extends the non-blocking side
-  without changing IP-003 gate precedence.
-- [Project agent todo contract](../../project-agent-todo-contract.md) remains
-  the canonical todo ownership and lifecycle surface.
-- [LoopX Turn v0](../../reference/protocols/loopx-turn-v0.md) remains the turn
-  result and settlement contract; wishlist capture is an optional sidecar, not
-  a new result kind.
-- [Model behavior qualification v0](../../reference/protocols/model-behavior-qualification-v0.md)
-  owns the real-packet proof that the optional hint does not displace selected
-  work or turn a non-blocking item into a gate.
+- [Decision Scope v0](../../reference/protocols/decision-scope-v0.md) 仍是 gate 的 authority 来源，也说明了为什么 wish 不能满足 protected action。
+- [Interaction Pattern Catalog](../../concepts/interaction-pattern-catalog.md) 定义 scoped-gate fallback；wishlist capture 只扩展非阻塞侧，不改变 IP-003 的 gate 优先级。
+- [Project agent todo contract](../../project-agent-todo-contract.md) 仍是 canonical todo ownership 与 lifecycle surface。
+- [LoopX Turn v0](../../reference/protocols/loopx-turn-v0.md) 仍是 turn result 与 settlement contract；wishlist capture 是 optional sidecar，不是新的 result kind。
+- [Model behavior qualification v0](../../reference/protocols/model-behavior-qualification-v0.md) 负责用真实 packet 证明 optional hint 不会挤掉 selected work，也不会把 non-blocking item 变成 gate。

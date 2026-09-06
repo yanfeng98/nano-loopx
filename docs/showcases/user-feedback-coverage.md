@@ -1,29 +1,23 @@
-# User Feedback Coverage Map
+# 用户反馈覆盖地图
 
-This map records how the owner-approved user-manual feedback set was translated
-into public Showcase material. It prevents repeated imports from producing
-duplicate cases and preserves useful negative decisions without publishing the
-private source URL or raw internal discussion.
+> [English](user-feedback-coverage.md)
 
-| Stable source key | Public disposition | Showcase mapping | Reason |
+这张地图记录了经所有者批准的用户手册反馈集是如何转化为公开案例展示材料的。它防止重复导入产生重复案例,并保留了有用的负面决定,同时不发布私有来源 URL 或原始内部讨论。
+
+| 稳定来源键 | 公开处置 | 案例展示映射 | 原因 |
 | --- | --- | --- | --- |
-| `cpp-algorithm-accuracy` | Promoted | [13+ hour C++ algorithm accuracy run](cases/independent-cpp-accuracy-long-run.md) | Concrete problem, >13h runtime, intervention statement, reported result, and a public method reference. |
-| `four-day-unattended-agent` | Promoted | [Four-day unattended agent run](cases/independent-four-day-unattended-agent.md) | Concrete duration, zero reported intervention, usefulness judgment, and an inspection surface. |
-| `public-engine-refactor` | Promoted | [Public Engine refactor](cases/independent-public-engine-refactor.md) | User report plus one public issue and seven merged PRs. |
-| `small-request-relief` | Feedback signal only | Not a standalone case | Positive satisfaction signal, but no duration, intervention, or inspectable outcome. |
-| `ecommerce-24x7-interest` | Not promoted | Not a realized case | Expresses interest in seller analytics and competitor monitoring; it does not report a completed LoopX deployment. |
-| `peer-harness-assessment` | Not promoted | Not a LoopX usage case | Positive assessment of the vision and a comparable harness, but not evidence that the reported workloads used LoopX. |
+| `cpp-algorithm-accuracy` | 已提升 | [13+ 小时 C++ 算法精度运行](cases/independent-cpp-accuracy-long-run.md) | 具体问题、>13h 运行时长、干预声明、报告的结果,以及一个公开方法引用。 |
+| `four-day-unattended-agent` | 已提升 | [四天无人值守 agent 运行](cases/independent-four-day-unattended-agent.md) | 具体时长、报告零干预、有用性判断,以及一个检查界面。 |
+| `public-engine-refactor` | 已提升 | [公共 Engine 重构](cases/independent-public-engine-refactor.md) | 用户报告加一个公开 issue 与七个合并 PR。 |
+| `small-request-relief` | 仅反馈信号 | 不作为独立案例 | 正向满意度信号,但没有时长、干预或可检查结果。 |
+| `ecommerce-24x7-interest` | 未提升 | 非已实现案例 | 表达了卖家分析与竞品监控的兴趣;它没有报告一次已完成的 LoopX 部署。 |
+| `peer-harness-assessment` | 未提升 | 非 LoopX 使用案例 | 对愿景与一个可比 harness 的正向评估,但不构成报告工作量曾使用 LoopX 的证据。 |
 
-## Import Boundary
+## 导入边界
 
-- Source revision: owner-approved manual revision `813`.
-- Published chat screenshots are owner-approved message excerpts from the
-  LoopX public Lark developer group; that source attribution does not make the
-  underlying projects, run state, or unselected chat context public.
-- Public assets are local, compressed, and contain no authenticated image URLs.
-- The four-day excerpt was cropped to remove chat identity and internal
-  reporting context.
-- Internal group screenshots, raw chat exports, contact details, credentials,
-  and private links are not published.
-- A future sync should update an existing source key or explicitly supersede it;
-  it should not create a second card for the same evidence cluster.
+- 来源修订:经所有者批准的手册修订版 `813`。
+- 已发布的聊天截图是来自 LoopX 公共 Lark 开发者群、经所有者批准的消息摘录;该来源归属并不会让底层项目、运行状态或未选中的聊天语境变公开。
+- 公开资产是本地的、压缩的,不包含带认证的图片 URL。
+- 四天摘录被裁剪,以移除聊天身份与内部报告语境。
+- 内部群截图、原始聊天导出、联系方式、凭据与私有链接不被发布。
+- 未来的同步应更新现有来源键,或明确取代它;不应为同一个证据簇创建第二张卡片。

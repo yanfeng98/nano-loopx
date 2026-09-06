@@ -1,90 +1,86 @@
-# Agent-Reach Ops Source Map
+# Agent-Reach Ops 信源地图
 
-Status: public-safe field pattern for connector-backed content operations.
+> [English](agent-reach-ops-source-map.md)
 
-This note turns the Agent-Reach value-explorer experiments into one reusable
-LoopX source profile inside the broader connector source map. It is not a hard
-dependency on Agent-Reach and it does not grant permission to publish. It
-describes how a LoopX agent can use Agent-Reach as a source router, then let
-LoopX own evidence, gates, drafts, monitors, and handoff state.
+状态：connector 支撑的内容运营的公开安全现场模式（field pattern）。
 
-Agents do not need to read this document before acting. The executable
-entrypoint is:
+这篇说明把 Agent-Reach value-explorer 实验变成更广 connector 信源地图中的一个
+可复用 LoopX 信源 profile。它不是对 Agent-Reach 的硬依赖，也不授予发布许可。
+它描述 LoopX Agent 如何把 Agent-Reach 用作信源路由器，然后由 LoopX 拥有证据、
+gates、草稿、监控与交接状态。
+
+Agent 无需先读本文才能行动。可执行入口是：
 
 ```bash
 loopx value-connectors source-map --connector agent_reach_ops_source_map --format json
 ```
 
-For all currently surfaced connector profiles, use:
+要获取当前所有浮出表面的 connector profiles，使用：
 
 ```bash
 loopx value-connectors source-map --format json
 ```
 
-## When To Use It
+## 何时使用
 
-Use this pattern when a LoopX agent needs to:
+当 LoopX Agent 需要以下能力时使用该模式：
 
-- find public signals for a post, reply, launch note, or contributor-facing
-  update;
-- compare whether an idea is a mature category, an emerging phrase, or weak
-  noise;
-- build a source-backed draft without copying raw timelines, private chats,
-  credentials, or local logs into LoopX state;
-- keep publishing auditable even when the owner grants broad posting
-  discretion.
+- 为一条帖子、回复、发布说明或面向贡献者的更新寻找公开信号；
+- 比较一个想法是成熟类别、新兴词组，还是微弱噪声；
+- 构建有信源支撑的草稿，而不把原始时间线、私聊、凭据或本地日志复制进
+  LoopX 状态；
+- 即使主人授予广泛发帖酌情权，也保持发布的可审计性。
 
-Do not use it for credential collection, account setup, private timeline dumps,
-mass outreach, captcha bypass, trading, paid data, or production actions.
+不要用它做凭据收集、账号设置、私有时间线转储、批量外联、验证码绕过、交易、
+付费数据或生产动作。
 
-## Operating Loop
+## 运行循环
 
-Every connector-backed content run should use this sequence:
+每次 connector 支撑的内容运行都应遵循该序列：
 
 ```text
 doctor -> route selection -> read-only source map -> maturity scoring
        -> ops brief -> draft packet -> publish/audit gate -> compact monitor
 ```
 
-The important rule is that Agent-Reach is the source router, not the source of
-truth for action. LoopX keeps the compact action contract:
+重要的规则是：Agent-Reach 是信源路由器，不是行动真相源。LoopX 保有紧凑的行动
+契约：
 
-- what source was read;
-- whether the boundary is public, logged-in read-only, private-needs-review, or
-  forbidden;
-- what claim the source supports;
-- what draft was produced;
-- what publish authority exists;
-- what monitor or stop condition follows.
+- 读的是哪个信源；
+- 边界是公开、登录只读、私有需审阅，还是禁止；
+- 该信源支撑什么断言；
+- 生成了什么草稿；
+- 有什么发布权威；
+- 随后有什么监控或停止条件。
 
-## Route Selection
+## 路由选择
 
-Start with:
+从以下命令开始：
 
 ```bash
 agent-reach doctor --json
 ```
 
-Treat the doctor output as capability evidence. A route is usable only when the
-active backend is available and the access boundary is clear.
+把 doctor 输出当作能力证据。只有当活跃后端可用且访问边界清晰时，一条路由才
+可用。
 
-Suggested route mapping:
+建议的路由映射：
 
-| Route | Typical backend | Boundary | Safe use |
+| 路由 | 典型后端 | 边界 | 安全用途 |
 | --- | --- | --- | --- |
-| GitHub | `gh CLI` | logged-in read | repo/search metadata, public stars, descriptions, issues/PR metadata when explicitly routed |
-| Web | Jina Reader | public no-login | public docs and articles, with light quoting only |
-| RSS | feedparser | public no-login | feed titles, links, timestamps, summaries |
-| V2EX | public API | public no-login | hot topics and public replies as community signal, usually monitor-grade |
-| Bilibili | public search API or `bili-cli` | public no-login | video title, author, play count, public URL |
-| X/Reddit/Xiaohongshu/Facebook/Instagram | platform CLI or OpenCLI | logged-in read | read-only public or account-visible metadata only; no posting without a separate publish action record |
+| GitHub | `gh CLI` | 登录只读 | repo/搜索元数据、公开 stars、描述、显式路由时的 issue/PR 元数据 |
+| Web | Jina Reader | 公开免登录 | 公开文档与文章，仅少量引用 |
+| RSS | feedparser | 公开免登录 | feed 标题、链接、时间戳、摘要 |
+| V2EX | 公开 API | 公开免登录 | 作为社区信号的热门话题与公开回复，通常是监控级 |
+| Bilibili | 公开搜索 API 或 `bili-cli` | 公开免登录 | 视频标题、作者、播放数、公开 URL |
+| X/Reddit/Xiaohongshu/Facebook/Instagram | 平台 CLI 或 OpenCLI | 登录只读 | 仅只读的公开或账号可见元数据；没有单独的发布动作记录则不发帖 |
 
-If a route needs browser cookies, platform login, private groups, DMs, account
-setup, or raw body expansion, stop at metadata-only and project a gate.
+如果一条路由需要浏览器 cookies、平台登录、私人群组、DM、账号设置或原始正文
+展开，就停在纯元数据并投影一个 gate。
 
-## Evidence Card Shape
+## 证据卡片形态
 
-Agents should emit compact cards before drafting:
+Agent 应在起草前发出紧凑证据卡片：
 
 ```yaml
 agent_reach_ops_signal_v0:
@@ -102,33 +98,33 @@ agent_reach_ops_signal_v0:
   maturity_reason: string
 ```
 
-`operation` must be `read`. A connector run that creates `external_write`
-cards is invalid for this source-map stage.
+`operation` 必须是 `read`。创建 `external_write` 卡片的 connector 运行对该
+source-map 阶段无效。
 
-## Maturity Scoring
+## 成熟度评分
 
-Keep the scoring deliberately simple so the next agent can reuse it:
+刻意保持评分简单，让下一个 Agent 可以复用：
 
-| Score | Meaning | Example signal |
+| 分数 | 含义 | 示例信号 |
 | --- | --- | --- |
-| 0 | Noise or unavailable route | unrelated hot topic, route missing, or stale source |
-| 1 | Weak exploratory signal | exact phrase appears but with little adoption |
-| 2 | Emerging signal | repeated usage, modest stars, replies, or public attention |
-| 3 | Mature signal | strong adoption, many stars/views/replies, or multiple independent sources |
+| 0 | 噪声或不可用路由 | 无关的热门话题、路由缺失或信源过期 |
+| 1 | 弱探索信号 | 精确短语出现，但采用度很低 |
+| 2 | 新兴信号 | 反复使用、适度的 stars/回复/公开关注 |
+| 3 | 成熟信号 | 强采用、大量 stars/views/回复，或多个独立信源 |
 
-For public GitHub search, stars can be a first-pass proxy:
+对于公开 GitHub 搜索，stars 可以是第一轮代理指标：
 
-- `>= 1000`: mature category signal;
-- `>= 100`: emerging category signal;
-- `>= 10`: weak but visible;
-- `< 10`: exploratory unless other sources corroborate it.
+- `>= 1000`：成熟类别信号；
+- `>= 100`：新兴类别信号；
+- `>= 10`：可见但弱；
+- `< 10`：仅当其他信源佐证才值得探索。
 
-For public video/community sources, use attention only as a clue. Do not copy
-unverified claims from drama, rumor, or account-risk videos into LoopX claims.
+对于公开视频/社区信源，只能把关注度当作线索。不要把来自戏剧、谣言或账号风险
+视频的未验证断言复制进 LoopX claims。
 
 ## Ops Brief
 
-Before drafting, produce a short brief:
+起草前先生成一份简短简报：
 
 ```yaml
 ops_brief:
@@ -145,86 +141,76 @@ ops_brief:
       body_angle:
       evidence_refs:
   stop_conditions:
-    - account boundary unclear
-    - source only supports metadata, not body quote
-    - post would repeat unverified platform drama
+    - 账号边界不清晰
+    - 信源只支持元数据，不支持正文引用
+    - 帖子会重复未验证的平台戏剧
 ```
 
-The brief is the handoff point. A different agent should be able to draft or
-review from it without reading raw connector output.
+简报是交接点。另一个 Agent 应能仅凭它起草或评审，而不必读原始 connector 输出。
 
-## Content-Ops Drafting
+## Content-Ops 起草
 
-A draft is valid only when it has:
+草稿只有具备以下全部要素才有效：
 
-- a named angle and target reader;
-- a source map with public/private status;
-- exact body text;
-- media plan;
-- repo or docs link when the post is about LoopX;
-- account/channel/timing record when publishing is allowed;
-- stop condition and first monitor plan.
+- 命名的角度与目标读者；
+- 带公开/私有状态的信源地图；
+- 精确正文文本；
+- 媒体计划；
+- 帖子与 LoopX 相关时的 repo 或 docs 链接；
+- 允许发布时的账号/渠道/时机记录；
+- 停止条件与首次监控计划。
 
-Broad owner permission may allow an agent to publish according to judgment, but
-it does not remove the audit requirement. The publish record still needs the
-final body, active account or channel, source refs, timestamp, and follow-up
-monitor boundary.
+主人广泛许可可能允许 Agent 自行判断发布，但不会免除审计要求。发布记录仍需要
+最终正文、活跃账号或渠道、信源引用、时间戳与后续监控边界。
 
-## Reusable Agent Prompt
+## 可复用 Agent Prompt
 
-When onboarding a new LoopX agent for creator/operator work, the preferred
-instruction is to call the CLI packet:
+在为创作者/运营工作接入新 LoopX Agent 时，首选指令是调用 CLI packet：
 
 ```text
-Run `loopx value-connectors source-map --format json` before drafting from
-external signals. Choose a read-only source profile, emit compact evidence
-cards, score maturity, and write an ops brief. Use `loopx value-connectors plan`
-before any signup, send, post, reply, upload, production action, credentialed
-read, or private-source expansion.
+从外部信号起草之前，先运行 `loopx value-connectors source-map --format json`。
+选择一个只读信源 profile，发出紧凑 evidence cards，打分成熟度，并撰写 ops brief。
+在任何注册、发送、发帖、回复、上传、生产动作、凭据读取或私有信源展开之前，
+使用 `loopx value-connectors plan`。
 ```
 
-The longer fallback prompt is:
+较长的后备 prompt 是：
 
 ```text
-Before drafting social content, run connector-first source mapping.
-Use Agent-Reach routes only for read-only signal collection unless a separate
-LoopX gate authorizes a publish action. Emit compact evidence cards, score
-maturity, write an ops brief, and draft from the brief. If publishing is
-authorized, record the exact body/account/time/source-map/stop-condition before
-posting. If the active account or source boundary is unclear, stop with a
-no-send packet.
+在起草社交内容之前，先运行 connector 优先的信源映射。
+除非单独的 LoopX gate 批准了发布动作，否则 Agent-Reach 路由只用于只读信号收集。
+发出紧凑 evidence cards，打分成熟度，撰写 ops brief，并据 brief 起草。
+若发布已获授权，发帖前记录精确的正文/账号/时间/source-map/停止条件。
+若活跃账号或信源边界不清晰，停下并输出 no-send packet。
 ```
 
-## Example Finding
+## 示例发现
 
-A value-explorer run using Agent-Reach routes found:
+一次使用 Agent-Reach 路由的 value-explorer 运行发现：
 
-- mature GitHub signals for `long-running AI agent`, `AI agent control plane`,
-  and `agent loop engineering`;
-- high Bilibili attention around Claude Code and AI Agent setup/tutorial
-  content;
-- weak V2EX hot-topic relevance for this exact LoopX angle at that moment.
+- `long-running AI agent`、`AI agent control plane` 与 `agent loop engineering`
+  的成熟 GitHub 信号；
+- 围绕 Claude Code 与 AI Agent 设置/教程内容的高 Bilibili 关注度；
+- 当时这一精确 LoopX 角度的 V2EX 热门话题相关性较弱。
 
-The reusable conclusion is:
+可复用结论是：
 
 ```text
-Connector-backed agents can find the trend. LoopX should make the action
-reviewable: evidence cards, gates, draft packets, and monitors.
+Connector 支撑的 Agent 可以找到趋势。LoopX 应当让动作可评审：evidence cards、
+gates、draft packets 与 monitors。
 ```
 
-## Productization Boundary
+## 产品化边界
 
-The first stable part is now productized as a packet:
+第一个稳定部分现已产品化为一个 packet：
 
-- `loopx value-connectors source-map --connector agent_reach_ops_source_map ...`;
+- `loopx value-connectors source-map --connector agent_reach_ops_source_map ...`；
 
-Keep live collection and publish tooling local until at least two successful
-batches prove the card shape and source boundaries. Productize only the stable
-parts:
+在至少两批成功批次证明卡片形态与信源边界之前，保持实时采集与发布工具本地化。
+只产品化稳定的部分：
 
-- `loopx content-ops draft --from-source-map ...`;
-- `loopx content-ops publish-record --from-draft ...`;
-- `loopx content-ops monitor --published-url ...`.
+- `loopx content-ops draft --from-source-map ...`；
+- `loopx content-ops publish-record --from-draft ...`；
+- `loopx content-ops monitor --published-url ...`。
 
-Do not productize raw provider payload retention, platform-specific cookies, or
-publish shortcuts.
+不要产品化原始 provider 载荷保留、平台特定 cookies 或发布捷径。

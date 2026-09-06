@@ -1,36 +1,33 @@
 # issue_fix_acceptance_loop_v0
 
-`issue_fix_acceptance_loop_v0` is the first executable LoopX protocol for repo
-issue fix work. Its goal is acceptance, not display: given a public issue/PR
-metadata signal, the loop must prove that an agent can move from signal to a
-validated fix artifact.
+> [English](issue-fix-acceptance-loop-v0.md)
 
-The initial implementation is a deterministic fixture command:
+`issue_fix_acceptance_loop_v0` 是首个可执行的 LoopX 仓库 issue fix 工作协议。
+它的目标是验收,而不是展示:给定公开 issue/PR 元数据信号,loop 必须证明 agent
+可以从信号推进到已验证的修复 artifact。
+
+初始实现是一个确定性 fixture 命令:
 
 ```bash
 loopx issue-fix acceptance-fixture --format json
 ```
 
-The command creates a temporary fixture workspace, runs a focused repro that
-fails, applies a minimal code patch, reruns the same focused validation, and
-returns an `issue_fix_validated_fix_artifact_v0`. The artifact is ready only
-when the repro failed before the patch and validation passed after the patch.
+该命令创建临时 fixture 工作区,运行一个失败的聚焦复现,应用一个最小代码补丁,
+重新运行同一聚焦校验,并返回 `issue_fix_validated_fix_artifact_v0`。只有当复现
+在补丁前失败、且校验在补丁后通过时,artifact 才就绪。
 
-The next fixture exercises the same repair path through a real temporary git
-repository and issue branch:
+下一个 fixture 通过真实临时 git 仓库与 issue branch 演练同一修复路径:
 
 ```bash
 loopx issue-fix repo-branch-fixture --format json
 ```
 
-It initializes a local fixture repo, commits the failing baseline, creates
-`codex/issue-123-public-metadata-fixture`, runs the repro, patches the branch,
-reruns validation, confirms the branch-local patch diff without exposing raw
-git output, and returns the same validated fix artifact shape with an extra
-`issue_fix_repo_branch_artifact_v0` section.
+它初始化本地 fixture 仓库,提交失败的 baseline,创建
+`codex/issue-123-public-metadata-fixture`,运行复现,给分支打补丁,重新运行校验,
+在不暴露 raw git 输出的情况下确认分支本地补丁 diff,并返回同一已验证修复
+artifact 形状,外加一个 `issue_fix_repo_branch_artifact_v0` 段。
 
-The promoted caller-approved branch mode moves the same contract onto a real
-local repository selected by the caller:
+被提升的 caller 批准分支模式把同一契约移到调用方选择的真实本地仓库:
 
 ```bash
 loopx issue-fix caller-repo-branch \
@@ -43,47 +40,39 @@ loopx issue-fix caller-repo-branch \
   --format json
 ```
 
-This mode creates or claims a `codex/` issue branch, runs only the
-caller-declared validation command, and returns
-`issue_fix_caller_repo_branch_packet_v0`. The public packet records the repo
-label, issue branch, validation pass/fail, repo-relative changed files, and PR
-review readiness. Before creating a new issue branch, it records a typed base
-snapshot, requires the approved local base branch to match its local tracking
-ref, creates from that immutable revision, and reads the new branch back against
-the snapshot. A stale, ahead, or diverged base fails closed before branch
-creation. An already-created issue branch remains claimable when the old base
-branch is no longer present. The command never refreshes remote refs
-implicitly; callers that need new remote evidence must fetch and reconcile it
-explicitly. It does not expose the local repo path, validation stdout or stderr,
-raw issue body/comment content, external remotes, or raw git output.
-Without `--execute`, the command is a dry-run plan and does not inspect or
-modify the local repository.
+该模式创建或认领一个 `codex/` issue 分支,只运行调用方声明的校验命令,并返回
+`issue_fix_caller_repo_branch_packet_v0`。公开 packet 记录仓库标签、issue 分支、
+校验通过/失败、repo-relative 变更文件与 PR review 就绪度。创建新 issue 分支前,
+它记录 typed base snapshot,要求已批准的本地 base 分支与其本地 tracking ref
+匹配,从该不可变 revision 创建,并对照 snapshot 回读新分支。过期、超前或分歧的
+base 会在分支创建前 fail closed。旧 base 分支不再存在时,已创建的 issue 分支仍
+可认领。该命令从不隐式刷新远程 refs;需要新远程证据的调用方必须显式 fetch 并
+对账。它不暴露本地仓库路径、校验 stdout 或 stderr、raw issue 正文/评论内容、
+外部 remotes 或 raw git 输出。不加 `--execute` 时,该命令是 dry-run 计划,不检查
+或修改本地仓库。
 
-## Product Contract
+## 产品契约
 
-The user-facing value is the validated repair path:
+用户可见价值是已验证的修复路径:
 
-1. public metadata intake establishes the repo/issue signal without copying
-   issue body text or comment body text;
-2. a repro command proves the bug is currently present;
-3. a code route names the files and reason for the minimal patch;
-4. the patch is applied in the fixture workspace;
-5. focused validation passes;
-6. a PR-review packet is ready, but no external comment, PR creation, merge, or
-   publish action is performed by this fixture.
+1. 公开元数据 intake 建立 repo/issue 信号,而不复制 issue 正文或评论正文;
+2. 复现命令证明 bug 当前存在;
+3. 代码路由为最小补丁指出文件与原因;
+4. 补丁在 fixture 工作区中应用;
+5. 聚焦校验通过;
+6. PR-review packet 就绪,但本 fixture 不执行任何外部评论、PR 创建、merge 或
+   publish 动作。
 
-For caller-approved local repositories, PR-review readiness is true only when
-the issue branch exists or is claimed, caller-declared validation passes, and
-there is repo-relative change evidence. External issue comments, PR creation,
-merge, and publish actions remain separate explicit caller decisions.
+对于 caller 批准的本地仓库,只有 issue 分支已存在或被认领、caller 声明的校验
+通过、且存在 repo-relative 变更证据时,PR-review 就绪度才为 true。外部 issue 评论、
+PR 创建、merge 与 publish 动作仍分别是显式 caller 决策。
 
-This keeps the protocol useful for automation while preserving safe defaults.
-The packet is evidence of a completed repair loop, not a substitute for the
-repair loop.
+这让协议对自动化有用,同时保留安全默认值。Packet 是已完成修复 loop 的证据,
+不是修复 loop 的替代品。
 
-## Public-Safe Fields
+## Public-Safe 字段
 
-The fixture packets must report:
+Fixture packets 必须报告:
 
 - `external_reads_performed: false`
 - `external_writes_performed: false`
@@ -93,32 +82,29 @@ The fixture packets must report:
 - `private_repo_state_read: false`
 - `destructive_git_used: false`
 
-Caller-approved repo mode differs in one narrow way: when `--execute` is used,
-`private_repo_state_read` is `true` because LoopX inspects the caller-approved
-local git repository. That packet must still keep `local_paths_captured: false`,
-must summarize validation stdout/stderr, and must not perform external issue
-comments, PR creation, merge, publish, or destructive git.
+Caller 批准仓库模式在一处狭窄地不同:使用 `--execute` 时,
+`private_repo_state_read` 为 `true`,因为 LoopX 检查 caller 批准的本地 git
+仓库。该 packet 仍必须保持 `local_paths_captured: false`,必须摘要校验
+stdout/stderr,并且不得执行外部 issue 评论、PR 创建、merge、publish 或破坏性
+git。
 
-Validation command output is summarized with pass/fail and exit code only. The
-fixture does not expose stdout, stderr, local temporary paths, or raw provider
-payloads in the artifact.
+校验命令输出只以通过/失败与退出码摘要。Fixture 不向 artifact 暴露 stdout、
+stderr、本地临时路径或 raw provider payloads。
 
-## Next Promotion
+## 下一步提升
 
-The next implementation step is agent-applied patch orchestration on top of the
-caller-approved repo branch mode: after the branch is prepared, the project
-agent should choose the minimal code route, apply a patch, rerun the declared
-validation, and then use the PR-ready packet as review evidence. External
-comments, PR creation, merge, or publish actions still require explicit caller
-action.
+下一个实现步骤是:在 caller 批准的仓库分支模式之上做 agent 应用补丁编排——
+分支准备好后,项目 agent 应选择最小代码路由、应用补丁、重新运行声明的校验,
+然后把 PR-ready packet 用作 review 证据。外部评论、PR 创建、merge 或 publish
+动作仍需要显式 caller 动作。
 
 ## Smoke
 
-The durable smoke is:
+持久化 smoke 是:
 
 ```bash
 python3 examples/issue-fix-acceptance-loop-smoke.py
 ```
 
-It exercises the CLI, checks the failure-before/fix-after validation sequence,
-and rejects local path exposure in the public artifact.
+它演练 CLI,检查 failure-before/fix-after 校验序列,并拒绝公开 artifact 中的本地
+路径暴露。

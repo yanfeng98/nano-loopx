@@ -1,403 +1,314 @@
-# Non-Technical Operator Status Model
+# 非技术 Operator 状态模型
 
-This note defines a first-screen status model for people who are operating a
-long-running agent goal but do not want to inspect prompts, logs, CLI output,
-or raw traces.
+> [English](nontechnical-operator-status-model.md)
 
-The model is intentionally product-facing. It translates LoopX state
-into plain-language cards:
+本说明为正在运营长程 agent goal 但不想检查 prompt、日志、CLI 输出或原始轨迹的人定义首屏状态模型。
 
-- what changed since the last check;
-- what the agent is doing now;
-- where progress is blocked;
-- what the agent plans next;
-- what the agent needs from the user;
-- how user feedback changes the control plane.
+该模型刻意面向产品。它把 LoopX 状态翻译成通俗语言卡片：
 
-The same model should work for engineering, benchmark, research, and
-creator-operator cases. The copy can change by domain, but the control-plane
-objects stay the same: goal, gate, todo, evidence, safe side path, run history,
-quota, and feedback.
+- 自上次检查以来发生了什么变化；
+- agent 现在在做什么；
+- 进展在哪里被阻塞；
+- agent 接下来计划什么；
+- agent 需要用户提供什么；
+- 用户反馈如何改变控制面。
 
-The first real target user is the maintainer/operator of Loop Agents. That
-person is not only asking "what did the agent do?" They are asking:
+同一模型应适用于工程、benchmark、研究与创作者-operator 案例。文案可以随领域变化，但控制面对象保持相同：goal、gate、todo、evidence、safe side path、run 历史、quota 与 feedback。
 
-- what external signals deserve attention;
-- which signals should become high-value anchors;
-- which agent lane owns the next step;
-- whether the agent is becoming more useful or merely busier;
-- where human judgment should change the loop.
+第一个真实目标用户是 Loop Agents 的 maintainer/operator。那个人不只问"agent 做了什么？"而是问：
 
-## Adoption Modes
+- 哪些外部信号值得关注；
+- 哪些信号应成为高价值锚点；
+- 哪条 agent 泳道拥有下一步；
+- agent 是变得更有用还是仅仅更忙；
+- 哪里的人类判断应当改变 loop。
 
-The status surface should support two adoption modes.
+## 采用模式
 
-### Read-Only Review Mode
+Status surface 应支持两种采用模式。
 
-In read-only mode, the user can connect existing agent work without adopting
-the LoopX control loop. The surface ingests public or consented artifacts such
-as issues, pull requests, documents, run summaries, compact logs, or manually
-entered feedback. It then shows a reviewable summary and captures human scores.
+### 只读评审模式
 
-This mode should not mutate the agent's plan. Its product value is measurement:
-the maintainer can see whether the agent created useful work, respected
-boundaries, consumed attention responsibly, and improved over time.
+只读模式下，用户可以连接既有 agent 工作，而不采用 LoopX 控制 loop。Surface 摄取公开或经同意的 artifacts，如 issues、pull requests、文档、run 摘要、紧凑日志或手动录入的反馈。然后显示可评审摘要并捕获人类评分。
 
-### LoopX Writeback Mode
+该模式不应改动 agent 的计划。其产品价值是度量：maintainer 可以看到 agent 是否创造了有用工作、是否尊重边界、是否负责任地消耗注意力，以及是否随时间改进。
 
-In writeback mode, the same feedback becomes control-plane input. Scores and
-comments can turn into gates, todo changes, selected anchors, reward notes,
-scope corrections, or next improvement targets. The important contract is that
-the display surface does not silently convert taste or fuzzy feedback into
-hard policy. It must show what will be written back and why.
+### LoopX 写回模式
 
-This two-step adoption path keeps the product easy to try while preserving the
-larger LoopX promise: review first, then controlled improvement.
+写回模式下，同一份反馈变成控制面输入。评分与评论可以变成 gates、todo 变更、选中锚点、reward 说明、scope 纠正或下一个改进目标。重要契约是：显示 surface 不悄悄把品味或模糊反馈变成硬策略。它必须显示将要写回什么以及为什么。
 
-## Agent Work Feed
+这个两步采用路径让产品容易尝试，同时保留更大的 LoopX 承诺：先评审，再受控改进。
 
-The default interaction should feel like reviewing a feed of agent work cards,
-not like operating a backend console. A user should be able to "swipe through"
-recent outputs and give low-friction feedback while still keeping every card
-auditable.
+## Agent 工作 Feed
 
-A work card represents a reviewed output, not a raw todo:
+默认交互应像评审一叠 agent 工作卡，而不是操作后端控制台。用户应当可以快速"浏览"近期输出并给出低摩擦反馈，同时保持每张卡片可审计。
 
-- `Output`: what the agent produced.
-- `Why now`: why this deserves attention instead of staying in history.
-- `Evidence`: artifact, validation, source boundary, or blocker.
-- `Cost`: token/quota cost and user-attention cost when available.
-- `Next proposal`: continue, stop, validate, promote, or ask.
-- `Feedback`: structured buttons that write to review state.
+工作卡表示一个被评审的输出，而不是原始 todo：
 
-The feed should prioritize management value:
+- `Output`：agent 产出了什么。
+- `Why now`（为什么现在）：为什么这值得关注而不是留在历史里。
+- `Evidence`（证据）：artifact、验证、来源边界或 blocker。
+- `Cost`（成本）：可得时的 token/quota 成本与用户注意力成本。
+- `Next proposal`（下一提案）：继续、停止、验证、晋升或询问。
+- `Feedback`（反馈）：写入评审状态的结构化按钮。
 
-- unresolved human gates;
-- high-value but uncertain outputs;
-- expensive repeated work patterns;
-- evidence gaps before promotion;
-- cards that may become anchors, showcases, or public-safe examples.
+Feed 应优先管理价值：
 
-The feed must stay inspectable. A card can be lightweight on the first screen,
-but the user should be able to open the evidence, PR, run summary, boundary
-note, or review history behind it. Otherwise the surface becomes attractive
-but untrustworthy.
+- 未解决的人类 gates；
+- 高价值但不确定的输出；
+- 昂贵的重复工作模式；
+- 晋升前的 evidence 缺口；
+- 可能成为锚点、showcase 或 public-safe 示例的卡片。
 
-## Design Principles
+Feed 必须保持可检查。卡片在首屏可以轻量，但用户应能打开其背后的 evidence、PR、run 摘要、边界说明或评审历史。否则 surface 会变得漂亮但不可信。
 
-1. **Start with user meaning, not runtime internals.** The first screen should
-   say "waiting for your publishing decision" before it says
-   `operator_gate`.
-2. **Keep blocked and moving work separate.** A user gate can block one route
-   while safe side work continues. The surface should show both facts.
-3. **Make evidence inspectable without making it raw.** Show compact evidence,
-   validation, and source boundaries; keep traces, credentials, private notes,
-   raw benchmark logs, and private creative material out of the card.
-4. **Treat feedback as a structured transition.** User feedback should become
-   a gate decision, preference hint, todo change, or product-improvement note,
-   not an untracked chat memory.
-5. **Review performance, not just status.** A Loop Agent should show where it
-   created value, where it lost points, what feedback changed, and what it
-   should improve next.
-6. **Make feedback cheap but structured.** The user should be able to dismiss,
-   approve, correct, promote, or gate a work card without reading a long run
-   report first.
-7. **Prefer one next action.** The first screen can link to a backlog, but it
-   should name the next concrete thing that will happen or the exact question
-   that needs a human answer.
+## 设计原则
 
-## Card Set
+1. **从用户意义开始，而不是 runtime 内部。** 首屏应说"等待你的发布决策"，然后才说 `operator_gate`。
+2. **把阻塞与进行中的工作分开。** 一个 user gate 可以阻塞一条路线，而安全侧路工作继续。Surface 应同时展示两个事实。
+3. **让 evidence 可检查但不原始。** 显示紧凑 evidence、验证与来源边界；把轨迹、凭据、私有笔记、原始 benchmark 日志与私有创作资料挡在卡片外。
+4. **把反馈当作结构化转变。** 用户反馈应变成 gate 决策、偏好提示、todo 变更或产品改进说明，而不是无追踪的聊天记忆。
+5. **评审表现，而不只是状态。** Loop Agent 应显示它在哪里创造价值、在哪里失分、什么反馈改变过，以及它接下来应当改进什么。
+6. **让反馈廉价但结构化。** 用户应能在不先读长 run 报告的情况下关闭、批准、纠正、晋升或 gate 一张工作卡。
+7. **青睐一个下一动作。** 首屏可以链接到待办，但它应命名下一个将要发生的具体事情，或需要人类回答的确切问题。
 
-### Work Feed
+## 卡片集
 
-Purpose: let the user quickly review recent agent outputs and turn fuzzy
-judgment into structured feedback.
+### 工作 Feed
 
-Suggested fields:
+用途：让用户快速评审近期 agent 输出，并把模糊判断变成结构化反馈。
 
-- `Card type`: progress, blocker, proposal, evidence, anchor candidate,
-  showcase candidate, or boundary warning.
-- `Summary`: one or two sentences of what the agent produced.
-- `Proof`: compact evidence and validation state.
-- `Cost`: token/quota cost, elapsed time, and attention cost where known.
-- `Suggested action`: continue, validate, promote, defer, stop, or ask.
-- `Feedback actions`: useful, not useful, wrong direction, evidence missing,
-  promote to anchor, private/risky.
+建议字段：
 
-The feed is the primary review surface. Other cards can appear as card details
-or filters, but the first screen should help the user clear the highest-value
-review items quickly.
+- `Card type`（卡片类型）：progress、blocker、proposal、evidence、anchor 候选、showcase 候选或边界警告。
+- `Summary`（摘要）：一两句话说明 agent 产出了什么。
+- `Proof`（证明）：紧凑 evidence 与验证状态。
+- `Cost`（成本）：已知时含 token/quota 成本、耗时与注意力成本。
+- `Suggested action`（建议动作）：继续、验证、晋升、推迟、停止或询问。
+- `Feedback actions`（反馈动作）：有用、没用、方向错误、evidence 缺失、晋升为锚点、私有/有风险。
+
+Feed 是主要评审 surface。其他卡片可以作为卡片详情或过滤器出现，但首屏应帮助用户快速清掉最高价值的评审条目。
 
 ### Goal Snapshot
 
-Purpose: remind the user what the long-running goal is and why the current
-work matters.
+用途：提醒用户长程 goal 是什么，以及当前工作为何重要。
 
-Suggested fields:
+建议字段：
 
-- `Goal`: one sentence from the registry or active state.
-- `Mode`: delivery, safe side path, planning proposal, waiting on user, or
-  paused.
-- `Owner`: registered peer or user.
-- `Freshness`: latest meaningful update time and whether status is fresh.
+- `Goal`（目标）：来自 registry 或活跃状态的一句话。
+- `Mode`（模式）：delivery、safe side path、规划提案、等待用户或暂停。
+- `Owner`（所有者）：注册 peer 或用户。
+- `Freshness`（新鲜度）：最新有意义更新时间与状态是否新鲜。
 
-Plain-language examples:
+通俗语言示例：
 
-- "Keeping the benchmark evaluation lane moving while a user gate waits."
-- "Preparing a creator-operator showcase with synthetic data only."
-- "Waiting for your decision before publishing; safe documentation work is
-  still moving."
+- "让 benchmark 评估泳道前进，同时一个 user gate 等待。"
+- "只用合成数据准备一个 creator-operator showcase。"
+- "等待你的决策再发布；安全的文档工作仍在推进。"
 
-### Since Last Check
+### 自上次检查后
 
-Purpose: answer "what changed?" before the user has to read history.
+用途：在用户不得不读历史之前回答"发生了什么变化？"
 
-Suggested fields:
+建议字段：
 
-- `Latest outcome`: delivered, partial progress, blocker recorded, no-op, or
-  planning proposal.
-- `Evidence`: compact validation or artifact summary.
-- `Confidence`: high, medium, low, or blocked.
-- `Boundary`: public-safe, private, requires approval, or internal-only.
+- `Latest outcome`（最新结果）：已交付、部分进展、记录 blocker、no-op 或规划提案。
+- `Evidence`（证据）：紧凑验证或 artifact 摘要。
+- `Confidence`（置信度）：高、中、低或阻塞。
+- `Boundary`（边界）：public-safe、私有、需要批准或仅限内部。
 
-This card should never claim outcome progress from a surface-only change. If a
-turn only prepared a contract or doc, say that plainly and point to the next
-outcome-bearing step.
+该卡片绝不应从 surface 性变更声称结果进展。如果 Turn 只准备了契约或文档，就直说，并指向下一个承载结果的步骤。
 
-### Signal Inbox
+### 信号收件箱
 
-Purpose: show which outside signals entered the loop and whether any are worth
-turning into work.
+用途：显示哪些外部信号进入了 loop，以及是否有任何值得变成工作的。
 
-Suggested fields:
+建议字段：
 
-- `Signal`: issue, PR, review comment, failing check, chat feedback, doc
-  change, benchmark result, or user note.
-- `Source`: public artifact, private source, connector, or manual entry.
-- `Fit`: ignore, monitor, candidate anchor, ask owner, or create todo.
-- `Boundary`: public-safe, private, requires owner review, or not usable.
+- `Signal`（信号）：issue、PR、评审评论、失败的检查、聊天反馈、文档变更、benchmark 结果或用户说明。
+- `Source`（来源）：公开 artifact、私有来源、连接器或手动录入。
+- `Fit`（契合度）：忽略、监控、候选锚点、询问 owner 或创建 todo。
+- `Boundary`（边界）：public-safe、私有、需要 owner 评审或不可用。
 
-This card is quiet by default. It should avoid turning every signal into work.
-The maintainer should see the few signals that might change priorities.
+该卡片默认安静。它应避免把每个信号变成工作。Maintainer 应看到少数可能改变优先级的信号。
 
-### Anchor Selection
+### 锚点选择
 
-Purpose: identify the small number of high-value anchors worth driving.
+用途：识别值得推动的少数高价值锚点。
 
-Suggested fields:
+建议字段：
 
-- `Anchor`: public issue, PR, failing check, stale review, user request,
-  showcase candidate, or internal management question.
-- `Why this matters`: credible pain, repeated workflow, public evidence, or
-  strategic value.
-- `Allowed action`: observe, route owner, diagnose, open PR, write proposal, or
-  ask human.
-- `Owner split`: LoopX maintainer, collaborator, repo maintainer, or adapter.
-- `Exit`: accepted, rejected, merged, blocked, unsafe, or showcase candidate.
+- `Anchor`（锚点）：公开 issue、PR、失败的检查、过期的评审、用户请求、showcase 候选或内部管理问题。
+- `Why this matters`（为何重要）：可信痛点、重复工作流、公开 evidence 或战略价值。
+- `Allowed action`（允许动作）：观察、路由 owner、诊断、开 PR、写提案或询问人类。
+- `Owner split`（所有者划分）：LoopX maintainer、collaborator、仓库 maintainer 或 adapter。
+- `Exit`（出口）：已接受、已拒绝、已合并、被阻塞、不安全或 showcase 候选。
 
-For open-source issue / PR pilots, this card is the bridge between growth and
-control. LoopX does not need to implement every solver; it needs to choose
-anchors well and keep the evidence reviewable.
+对开源 issue / PR 试点而言，该卡片是增长与控制之间的桥。LoopX 不需要实现每个 solver；它需要选好锚点并保持 evidence 可评审。
 
-### Current Work
+### 当前工作
 
-Purpose: show what the active agent is actually doing now.
+用途：显示活跃 agent 现在实际在做什么。
 
-Suggested fields:
+建议字段：
 
-- `Todo`: the selected todo title, shortened.
-- `Claim`: claimed agent and role.
-- `Scope`: human-readable lane, such as benchmark, productization docs,
-  runtime contract, or showcase.
-- `Stop condition`: the condition that makes the agent stop and ask.
+- `Todo`：选中的 todo 标题，缩短。
+- `Claim`：已认领 agent 与角色。
+- `Scope`（范围）：人类可读的泳道，如 benchmark、产品化文档、runtime 契约或 showcase。
+- `Stop condition`（停止条件）：让 agent 停下来询问的条件。
 
-For repository-writing tasks, this card should also show the selected workspace
-policy, whether repository policy permits self-merge, and whether an explicit
-peer review handoff exists.
+对写仓库任务，该卡片还应显示选中的 workspace 策略、仓库策略是否允许自合入，以及是否存在显式 peer 评审交接。
 
-### Blocker Or Gate
+### Blocker 或 Gate
 
-Purpose: make human decisions visible without implying the agent is helpless.
+用途：让人为决策可见，同时不暗示 agent 无能为力。
 
-Suggested fields:
+建议字段：
 
-- `Question`: the exact user or controller decision.
-- `Blocked route`: the work that must wait.
-- `Safe side path`: whether independent work may continue.
-- `Repeat policy`: whether the user should be reminded until resolved.
+- `Question`（问题）：确切的用户或 controller 决策。
+- `Blocked route`（被阻塞路线）：必须等待的工作。
+- `Safe side path`（安全侧路）：独立工作是否可以继续。
+- `Repeat policy`（重复策略）：是否应提醒用户直到解决。
 
-Plain-language copy should separate "the gated route waits" from "the whole
-goal is stopped." For example:
+通俗语言文案应把"被 gate 的路线在等待"与"整个 goal 停止"分开。例如：
 
 ```text
-Needs your decision before publishing the case write-up.
-Safe side path: continue polishing the public docs and synthetic demo.
+在发布案例稿之前需要你的决策。
+安全侧路：继续打磨公开文档与合成 demo。
 ```
 
-### Next Agent Move
+### 下一个 Agent 动作
 
-Purpose: answer "what will happen if I do nothing?"
+用途：回答"如果我什么都不做，会发生什么？"
 
-Suggested fields:
+建议字段：
 
-- `Next action`: one bounded action from quota/status.
-- `Validation`: the smoke, check, review, or artifact expected after work.
-- `Quota`: enough to say whether another automatic turn is allowed.
-- `Fallback`: what happens if validation fails or a blocker appears.
+- `Next action`（下一动作）：来自 quota/status 的一个有界动作。
+- `Validation`（验证）：工作后期望的 smoke、检查、评审或 artifact。
+- `Quota`：足以说是否允许再一次自动 Turn。
+- `Fallback`（回退）：验证失败或出现 blocker 时会发生什么。
 
-For non-technical users, quota should not be shown as raw internal counters by
-default. Use plain copy such as "another automatic turn is allowed" or
-"waiting until the next scheduled check."
+对非技术用户，quota 默认不应显示为原始内部计数器。使用通俗文案，如"允许再一次自动 Turn"或"等待下一次调度检查"。
 
-### What I Need From You
+### 我需要你做什么
 
-Purpose: convert user attention into a short, concrete action.
+用途：把用户注意力转成简短、具体的动作。
 
-Suggested fields:
+建议字段：
 
-- `Decision`: approve, reject, defer, pick an option, provide missing context,
-  or no action.
-- `Why now`: what the answer unlocks.
-- `Safe default`: what will continue if the user does not answer.
-- `Deadline`: only when the project has a real deadline.
+- `Decision`（决策）：批准、拒绝、推迟、选择选项、提供缺失上下文或无动作。
+- `Why now`（为何现在）：答案解锁了什么。
+- `Safe default`（安全默认值）：用户不回答时什么将继续。
+- `Deadline`（截止）：只有项目有真实截止时才显示。
 
-If no user todo is open, this card should say "No action needed" and be
-visually quiet. It should not manufacture a question to keep the UI busy.
+如果没有打开的 user todo，该卡片应显示"无需动作"并视觉安静。它不应为了保持 UI 忙碌而杜撰问题。
 
-### Feedback Capture
+### 反馈捕获
 
-Purpose: let the user steer without editing the control plane directly.
+用途：让用户不直接编辑控制面就能转向。
 
-Feedback options should map to structured writebacks:
+反馈选项应映射到结构化写回：
 
-| User input | Control-plane effect |
+| 用户输入 | 控制面效果 |
 | --- | --- |
-| "Approve this route." | Gate decision with scope and evidence reference. |
-| "Do not do this again." | Preference hint plus possible todo mutation. |
-| "This was useful." | Run-bound reward with compact reason. |
-| "The summary is unclear." | Product-improvement note or status-copy todo. |
-| "Focus on another lane." | Replan proposal or priority/todo update. |
-| "This contains private material." | Boundary correction and stop/escalation. |
+| "批准这条路线。" | 带 scope 与 evidence 引用的 gate 决策。 |
+| "不要再这样做。" | 偏好提示加可能 todo 变更。 |
+| "这个有用。" | 带紧凑理由的 run 绑定 reward。 |
+| "摘要不清楚。" | 产品改进说明或 status 文案 todo。 |
+| "转向另一条泳道。" | Replan 提案或优先级/todo 更新。 |
+| "这包含私有资料。" | 边界纠正与停止/升级。 |
 
-The surface should avoid turning inferred taste into hard policy. Explicit
-feedback can shape replanning, but private chat should not become public
-evidence, and soft preferences should remain distinguishable from safety,
-permission, or compliance gates.
+Surface 应避免把推断的品味变成硬策略。显式反馈可以塑形 replanning，但私有聊天不应变成公开 evidence，软偏好应保持与安全、权限或合规 gates 可区分。
 
-### Performance Review
+### 表现评审
 
-Purpose: help the maintainer judge whether the Loop Agent is improving.
+用途：帮助 maintainer 判断 Loop Agent 是否在改进。
 
-Suggested fields:
+建议字段：
 
-- `Value`: what useful artifact or decision was created.
-- `Quality`: accepted, corrected, rejected, blocked, or needs review.
-- `Control`: whether gates, scope, and boundaries were respected.
-- `Cost`: quota or attention spent relative to value.
-- `Learning`: what should change next time.
+- `Value`（价值）：创造了什么有用 artifact 或决策。
+- `Quality`（质量）：已接受、已纠正、已拒绝、被阻塞或需要评审。
+- `Control`（控制）：gates、scope 与边界是否被尊重。
+- `Cost`（成本）：相对于价值消耗的 quota 或注意力。
+- `Learning`（学习）：下次应改变什么。
 
-This is the main way fuzzy human feedback becomes durable without pretending it
-is a benchmark score. The review can stay lightweight, but it must be tied to
-evidence and a next improvement target.
+这是模糊人类反馈变成持久物的主要方式，而不假装它是 benchmark 分数。评审可以保持轻量，但它必须绑定 evidence 与下一个改进目标。
 
-### Project-Level Reward
+### 项目级 Reward
 
-Single-task benchmarks can measure whether an agent solved one task. They do
-not fully measure whether a long-running agent created useful value across a
-complex project. The management surface should therefore expose a
-project-level reward model:
+单任务 benchmark 可以度量 agent 是否解决了一个任务。它们不能完整度量一个长程 agent 是否在复杂项目上创造了有用价值。因此管理 surface 应暴露项目级 reward 模型：
 
 ```text
 reward = f(quantity, quality, token cost, user attention cost)
 ```
 
-The fields have different sources:
+字段有不同来源：
 
-- `Quantity`: completed tasks, accepted anchors, merged PRs, resolved
-  blockers, or other countable outputs.
-- `Quality`: human review, maintainer score, accepted/rejected outcomes,
-  correction rate, and evidence quality.
-- `Token cost`: run and quota accounting.
-- `User attention cost`: user gates, review requests, clarification turns,
-  approval steps, and manual interventions.
+- `Quantity`（数量）：完成的任务、已接受锚点、已合并 PR、已解决 blockers 或其他可计数输出。
+- `Quality`（质量）：人类评审、maintainer 评分、接受/拒绝结果、纠正率与 evidence 质量。
+- `Token cost`（token 成本）：run 与 quota 记账。
+- `User attention cost`（用户注意力成本）：user gates、评审请求、澄清 Turn、批准步骤与手动干预。
 
-This is where the intelligent display surface becomes more than a dashboard:
-it supplies the missing quality signal. A user can first connect existing
-agent work in read-only mode, score the work, and see whether the agent is
-creating value. After LoopX writeback is enabled, the same score can adjust
-gates, todos, anchors, reward notes, and next improvement targets.
+这里正是智能显示 surface 超越 dashboard 的地方：它补上缺失的质量信号。用户可以先用只读模式连接既有 agent 工作、评分工作，并看到 agent 是否在创造价值。LoopX 写回启用后，同一分数可以调整 gates、todos、锚点、reward 说明与下一个改进目标。
 
-## State Mapping
+## 状态映射
 
-The first screen should be generated from existing LoopX projections
-before adding new UI state.
+首屏应在添加新 UI 状态之前由既有 LoopX 投影生成。
 
-| Product card | Source fields |
+| 产品卡片 | 来源字段 |
 | --- | --- |
-| Goal Snapshot | registry goal, active state objective, latest status classification |
-| Since Last Check | run history, refresh-state delivery outcome, validation evidence |
-| Signal Inbox | connector events, user feedback, issue/PR metadata, doc changes |
-| Anchor Selection | planning queue proposals, promoted todos, future anchor packets |
-| Current Work | agent todos, `claimed_by`, advisory `agent_profile_v1`, optional hard leases when explicitly supplied |
-| Blocker Or Gate | user todos, operator gate, interaction contract, goal boundary |
-| Next Agent Move | quota decision, recommended action, next action, stop condition |
-| What I Need From You | user todo summary and concrete operator question |
-| Feedback Capture | reward overlay, gate command, todo update, future feedback signal |
-| Performance Review | run evidence, reward overlays, outcome classification, cost summary |
+| Goal Snapshot | registry goal、活跃状态目标、最新 status 分类 |
+| 自上次检查后 | run 历史、refresh-state 交付结果、验证 evidence |
+| 信号收件箱 | 连接器事件、用户反馈、issue/PR 元数据、文档变更 |
+| 锚点选择 | 规划队列提案、晋升 todos、未来锚点 packets |
+| 当前工作 | agent todos、`claimed_by`、建议性 `agent_profile_v1`、显式提供时的可选硬 leases |
+| Blocker 或 Gate | user todos、operator gate、interaction contract、goal boundary |
+| 下一个 Agent 动作 | quota 决策、推荐动作、下一动作、停止条件 |
+| 我需要你做什么 | user todo 摘要与具体 operator 问题 |
+| 反馈捕获 | reward 覆盖层、gate 命令、todo 更新、未来 feedback signal |
+| 表现评审 | run evidence、reward 覆盖层、结果分类、成本摘要 |
 
-Missing fields should degrade gracefully. When no explicit hard-lease row is
-supplied, show `claimed_by` as soft ownership and avoid claiming exclusive execution.
-Without `agent_profile_v1`, show the registered peer id and current claims; do
-not infer rank or authority from the identity name.
+缺失字段应优雅降级。当没有显式硬 lease 行时，把 `claimed_by` 显示为软所有权，避免声称排他执行。没有 `agent_profile_v1` 时，显示注册 peer id 与当前 claims；不从身份名推断排名或 authority。
 
-## Creator-Operator Example
+## 创作者-Operator 示例
 
-For a non-technical creator-operator case, the cards could read:
+对一个非技术创作者-operator 案例，卡片可以这样读：
 
 ```text
 Goal Snapshot
-Keep a weekly content research loop moving for a creator-operator.
+为一位创作者-operator 保持每周内容研究 loop 前进。
 
-Since Last Check
-The agent found three synthetic trend clusters and drafted two angle options.
-Evidence is demo data only; no real platform scrape is included.
+自上次检查后
+Agent 发现了三个合成趋势簇，并拟定了两个角度选项。
+Evidence 只是演示数据；不包含真实平台抓取。
 
-Current Work
-The selected peer is building the public-safe showcase storyboard.
+当前工作
+选中的 peer 正在构建 public-safe showcase 故事板。
 
-Blocker Or Gate
-Publishing remains blocked until the user approves tone and source policy.
-Safe side path: polish synthetic demo copy and feedback flow.
+Blocker 或 Gate
+在用户批准语气与来源策略之前，发布保持阻塞。
+安全侧路：打磨合成 demo 文案与反馈流程。
 
-Next Agent Move
-Generate the fake-data storyboard and validate that it contains no private
-material or autopublish claim.
+下一个 Agent 动作
+生成假数据故事板，并验证其中不含私有资料或自动发布声明。
 
-What I Need From You
-No action needed right now.
+我需要你做什么
+现在无需动作。
 ```
 
-This is the level of legibility the product should aim for: the user can see
-the work, the boundary, the gate, and the safe continuation without reading
-agent logs.
+这就是产品应追求的可读性水平：用户无需读 agent 日志就能看到工作、边界、gate 与安全延续。
 
-## Acceptance Criteria
+## 验收标准
 
-The first implementation of this model is ready when:
+该模型的第一个实现在以下情况就绪：
 
-- a public-safe status mock can render all cards from synthetic or existing
-  compact LoopX projections;
-- open user todos appear as concrete questions, not generic "owner gate" copy;
-- signal inbox and anchor selection can represent at least one public-safe
-  issue/PR pilot without requiring a custom issue-fix UI;
-- no-open-user-todo states render quietly without false urgency;
-- peer ownership and explicit review handoff are visible without overriding quota
-  or gate decisions;
-- feedback buttons map to explicit control-plane effects;
-- performance-review notes stay evidence-backed and distinguish value,
-  quality, control, cost, and learning;
-- private evidence, raw traces, credentials, and internal links cannot appear
-  in the public card payload.
+- 一个 public-safe status mock 可以从合成或既有紧凑 LoopX 投影渲染所有卡片；
+- 打开的 user todos 显示为具体问题，而不是泛化"owner gate"文案；
+- 信号收件箱与锚点选择可以在不要求定制 issue-fix UI 的情况下表示至少一个 public-safe issue/PR 试点；
+- 无打开 user todo 状态安静渲染，没有虚假紧迫感；
+- peer 所有权与显式评审交接可见，且不覆盖 quota 或 gate 决策；
+- 反馈按钮映射到显式控制面效果；
+- 表现评审说明保持 evidence 支撑，并区分价值、质量、控制、成本与学习；
+- 私有 evidence、原始轨迹、凭据与内部链接不得出现在公开卡片载荷中。
 
-This model should become the bridge between the current CLI/status contracts
-and future frontend or Lark first-contact surfaces.
+该模型应成为当前 CLI/status 契约与未来前端或 Lark 首接触 surface 之间的桥。

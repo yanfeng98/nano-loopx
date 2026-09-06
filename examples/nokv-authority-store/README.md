@@ -1,61 +1,34 @@
-# Stage 2A NoKV AuthorityStore candidate qualification (TEST ONLY)
+# Stage 2A NoKV AuthorityStore 候选资格判定(仅测试)
 
-This directory contains an explicit, write-producing single-node conformance
-probe for the Stage 2A `NoKVAuthorityStore` candidate. It is **TEST ONLY**.
-LoopX does not select NoKV by importing this code, and a successful run does
-not connect a runtime shadow, run a multi-Agent canary, or flip an authority
-source.
+此目录包含针对 Stage 2A `NoKVAuthorityStore` 候选的一个显式的、会产生写入的单节点一致性探针。它是**仅测试**。LoopX 不会因为导入这份代码就选择 NoKV,一次成功运行也不会连接运行时 shadow、运行多 Agent canary 或切换权威来源。
 
-The integration priority remains:
+集成优先级仍为:
 
-1. the native, full NoKV CLI as the primary operator and production surface;
-2. the NoKV Python SDK as the secondary programmable surface; and
-3. optional sidecars only as adapters around those surfaces, never as the main
-   authority API.
+1. 原生、完整的 NoKV CLI 作为主要运营与生产组件面;
+2. NoKV Python SDK 作为次要可编程组件面;
+3. 可选 sidecar 仅作为这些组件面之外的 adapter,绝不作主要权威 API。
 
-This probe intentionally exercises the current Python SDK bridge because it is
-the available raw byte-CAS seam. It always starts this checkout's reviewed
-`NoKVJsonLinesTransport` and `nokv_jsonl_helper.py`; it has no fake, skip, or
-"unverified but successful" CLI path. The helper admits exactly NoKV SDK
-`0.11.0` / Python API `1`, and the successful report repeats both values.
+该探针刻意使用当前 Python SDK 桥,因为它是可用的原始字节 CAS seam。它总是启动本检出中经评审的 `NoKVJsonLinesTransport` 与 `nokv_jsonl_helper.py`;它没有 fake、跳过或"未验证但成功"的 CLI 路径。该 helper 只接纳 NoKV SDK `0.11.0` / Python API `1`,成功报告会重复这两个值。
 
-## What it proves
+## 它证明了什么
 
-Against one **already existing** NoKV workbench, the probe starts three
-independent helper processes and verifies:
+针对一个**已存在**的 NoKV workbench,该探针启动三个独立的 helper 进程并验证:
 
-- the selected tenant/goal path is initially absent and can be created;
-- the stored path generation advances from 1 to 2 under exact generation CAS;
-- after the generation-2 CAS lands, an injected response loss is reconciled
-  from the durable authority envelope and operation receipt rather than from
-  the lower-layer response;
-- every successful CAS response is accepted only after a fresh read proves the
-  exact transaction in the current workbench incarnation;
-- two writes released together against generation 2 produce exactly one
-  generation-3 winner and one typed conflict;
-- the losing operation does not acquire a durable receipt; and
-- a third, freshly opened transport reads the winning envelope, its complete
-  three-entry history, the response-lost operation receipt, and the retained
-  winner receipt.
+- 选中的 tenant/goal 路径最初不存在且可以被创建;
+- 存储路径的 generation 在精确 generation CAS 下从 1 推进到 2;
+- generation-2 CAS 落地后,一次注入的响应丢失从持久的权威信封与操作 receipt 协调,而不是从下层响应协调;
+- 每个成功 CAS 响应只有在一次新鲜读取证明当前 workbench 化身中的确切事务后才被接受;
+- 针对 generation 2 同时释放的两次写产生恰好一个 generation-3 赢家与一个类型化冲突;
+- 失败的操作不会获得持久 receipt;
+- 第三个新打开的 transport 读取获胜信封、其完整三条目历史、响应丢失操作的 receipt 与保留的赢家 receipt。
 
-If the SDK, helper, workbench, backend, CAS, or independent readback cannot be
-proved, the process exits nonzero. The normal test suite uses deterministic
-fakes only to test this sequence and does **not** count as live evidence.
+如果 SDK、helper、workbench、后端、CAS 或独立回读无法证明,进程以非零退出。正常测试套件只使用确定性 fakes 测试该序列,**不**算作实时证据。
 
-The probe does not prove an atomic expected-incarnation publication fence,
-runtime shadow parity, a multi-Agent canary, authority promotion, HA, failover,
-restart recovery, capacity, or performance. NoKV generation can restart after
-workbench recreation, so the current adapter fails closed through authoritative
-post-write readback; preventing the stale-incarnation write itself requires a
-future provider primitive. The probe also does not create a workbench. A green
-run is Stage 2A single-node storage conformance evidence only.
+该探针不证明原子预期化身发布围栏、运行时 shadow 对等、多 Agent canary、权威晋升、HA、failover、重启恢复、容量或性能。NoKV generation 可以在 workbench 重建后重启,因此当前 adapter 通过权威的写后回读失败关闭;阻止过期化身写入本身需要未来的 provider 原语。该探针也不创建 workbench。绿色运行只是 Stage 2A 单节点存储一致性证据。
 
-## Inputs
+## 输入
 
-Use a current NoKV Python environment. Keep the client configuration in an
-ignored local file; do not commit credentials. Static routing is valid for a
-single-node NoKV deployment—etcd is not required by this probe. The following
-shape is illustrative:
+使用当前的 NoKV Python 环境。把客户端配置保留在被忽略的本地文件中;不要提交凭据。静态路由对单节点 NoKV 部署有效——此探针不要求 etcd。以下形态仅供说明:
 
 ```json
 {
@@ -82,32 +55,19 @@ shape is illustrative:
 }
 ```
 
-Configuration objects are exact-key contracts. An unknown top-level, routing,
-or object-store key fails before an SDK routing config, object-store config, or
-client is constructed. In particular, a misspelled explicit credential cannot
-silently fall through to NoKV's ambient provider chain. Intentionally omitted
-optional S3 credential fields retain the NoKV SDK's normal behavior.
+配置对象是精确键契约。未知的顶层、routing 或 object-store 键会在 SDK 路由配置、object-store 配置或客户端被构造之前失败。特别是,拼写错误的显式凭据不能静默落入 NoKV 的 ambient provider 链。有意省略的可选 S3 凭据字段保留 NoKV SDK 的正常行为。
 
-Pass only the absolute path to the Python executable that resolves the qualified
-NoKV SDK. The probe itself fixes the remaining argv to the interpreter isolation
-flag `-I` followed by the reviewed helper in this checkout; callers cannot
-supply a wrapper argument or an alternate helper path, and `PYTHONPATH`,
-`PYTHONHOME`, or user site-packages cannot redirect the `nokv` import away from
-that executable's own environment:
+只传决议出合格 NoKV SDK 的 Python 可执行文件的绝对路径。探针本身把剩余 argv 固定为解释器隔离标志 `-I` 加本检出中经评审的 helper;调用方不能提供包装参数或替代 helper 路径,`PYTHONPATH`、`PYTHONHOME` 或用户 site-packages 也不能把 `nokv` 导入重定向到那个可执行文件自身环境之外:
 
 ```text
 /path/to/nokv-python-environment/bin/python
 ```
 
-Choose a fresh tenant/goal pair for every run. The probe refuses to overwrite
-an existing authority envelope and deliberately leaves its three-generation
-test envelope behind for inspection. Use a disposable qualification namespace
-or remove it later with the native NoKV CLI according to that environment's
-retention policy.
+每次运行选择一个新鲜的 tenant/goal 对。探针拒绝覆盖已有权威信封,并刻意留下它的三代测试信封供检查。使用一次性资格命名空间,或之后按该环境的保留策略用原生 NoKV CLI 移除。
 
-## Run
+## 运行
 
-From the LoopX repository root:
+从 LoopX 仓库根:
 
 ```bash
 node --no-warnings --experimental-strip-types \
@@ -120,15 +80,4 @@ node --no-warnings --experimental-strip-types \
   --workbench existing-qualification-workbench
 ```
 
-`--execute-live` is mandatory and is checked before any helper starts. Exit 0
-means every listed live check passed. Any unavailable, failed, ambiguous,
-unfenced, pre-existing, or unreadable state exits nonzero with a compact JSON
-reason; provider stderr, endpoints, credentials, and raw SDK errors are not
-copied into that result. A successful JSON report includes
-`"qualification_scope":"stage_2a_single_node_store_conformance"`,
-`"nokv_sdk_version":"0.11.0"`, and `"nokv_api_version":1`. The two version
-fields are the helper's admission constants: the helper refuses to open a client
-for any other SDK version or API version, so a successful report implies them,
-but they are not values read back from the NoKV server. The report is Stage
-2A/helper-admission evidence only, not runtime-shadow, canary, HA, or
-production-readiness evidence.
+`--execute-live` 是强制性的,并且在任何 helper 启动前检查。退出 0 意味着所有列出的实时检查都通过。任何不可用、失败、歧义、未围栏、已存在或不可读的状态都以非零退出,并带紧凑 JSON 原因;provider stderr、端点、凭据与原始 SDK 错误不会复制进该结果。成功的 JSON 报告包含 `"qualification_scope":"stage_2a_single_node_store_conformance"`、`"nokv_sdk_version":"0.11.0"` 与 `"nokv_api_version":1`。这两个版本字段是 helper 的接纳常量:helper 拒绝对任何其他 SDK 版本或 API 版本打开客户端,因此成功报告蕴含它们,但它们不是从 NoKV 服务器回读的值。该报告只是 Stage 2A/helper 接纳证据,不是 runtime-shadow、canary、HA 或生产就绪证据。

@@ -1,53 +1,44 @@
-# RFC: Provider-Neutral Turn-Start Inbox Hook v0
+# RFC：Provider-Neutral Turn-Start Inbox Hook（v0）
 
-| Field | Value |
+> [English](provider-neutral-turn-start-inbox-hook-v0.md)
+
+| 字段 | 值 |
 |---|---|
-| Status | Implemented behind explicit provider configuration |
-| Date | 2026-08-26 |
-| Decision boundary | How fresh external inbox evidence reaches an Agent before it selects ordinary Goal work |
-| Core owner | Hook admission, ordering, bounded public receipt, and Agent-read obligation |
-| Provider owner | External read, provider schema validation, private cursor, and local inbox persistence |
-| Agent owner | Semantic triage and durable Goal/Todo/effect writeback |
+| 状态 | 已在显式 provider 配置后实现 |
+| 日期 | 2026-08-26 |
+| 决策边界 | 新鲜的外部收件箱证据如何在 Agent 选择常规 Goal 工作前到达它 |
+| 核心 owner | Hook 准入、排序、有界公开 receipt 与 Agent 读取义务 |
+| Provider owner | 外部读取、provider schema 校验、私有 cursor 与本地收件箱持久化 |
+| Agent owner | 语义分诊与持久的 Goal/Todo/effect 写回 |
 
-## Decision
+## 决策
 
-LoopX adds a provider-neutral `turn_start` capability-hook phase. An enabled
-provider hook runs before status and quota projection. It may perform bounded
-external reads, mutate declared owner-private inbox/cursor state, and—only when
-the provider registration explicitly requests `provider_message_reaction`—add
-one idempotent acknowledgement reaction to a captured, still-pending,
-human-authored message that the hook has read into the Agent's turn-start
-processing chain. This read acknowledgement is independent of mention, reply,
-question, and other attention classifications. The
-public result contains counts, booleans, status, and an error code; it cannot
-contain message content, provider payloads, credentials, destinations, profile
-names, or private cursor values.
+LoopX 增加一个 provider-neutral 的 `turn_start` capability-hook 阶段。启用的
+provider hook 在状态与 quota 投影之前运行。它可以执行有界的外部读取、修改已声明
+的 owner 私有 inbox/cursor 状态，并且——仅当 provider 注册显式请求了
+`provider_message_reaction` 时——对被捕获、仍待处理、且 hook 已读取进 Agent
+turn-start 处理链的人工消息添加一个幂等确认 reaction。这种读取确认独立于提及、
+回复、问题与其他注意力分类。公开结果包含计数、布尔值、状态与错误码；它不能包含
+消息内容、provider 载荷、凭证、目的地、profile 名或私有 cursor 值。
 
-The hook is complete only when fresh evidence is routed to Agent reading. A
-result with new observations must set `agent_read_required=true`. Its
-registration declares one bounded, public-safe `required_read` descriptor.
-The generic hook kernel validates that descriptor, deduplicates it by command,
-and projects it into both Agent and CLI interaction channels with
-`ordering=before_work`. A fresh ordinary material read emits a non-blocking user
-notification while preserving the already selected work lane. If the material
-remains durably pending on the next turn, the existing material-review lane
-preempts work for recovery. A direct question or verified reply still preempts
-on its first turn. The Agent reads the messages and chooses one typed semantic
-disposition:
+只有当新鲜证据被路由到 Agent 读取时，hook 才算完成。带新观察的结果必须设置
+`agent_read_required=true`。其注册声明一个有界的、公开安全的 `required_read`
+描述符。通用 hook 内核验证该描述符、按命令去重，并以 `ordering=before_work`
+把它投影进 Agent 与 CLI 交互通道。新鲜普通材料的读取发出非阻塞用户通知，同时保留
+已选定的工作 lane。如果该材料在下一 Turn 仍持久待处理，材料审阅 lane 会抢占工作
+进行恢复。直接问题或已验证回复仍在第一个 Turn 抢占。Agent 读取消息并选择一个
+typed 语义处置：
 
-- `steer_current_turn`: update the selected work without changing the durable
-  Goal frontier;
-- `replan_goal`: update Todo/vision/priority state before continuing;
-- `record_context`: commit a durable domain effect or evidence record;
-- `continue_current_work`: record that the message was considered but does not
-  change the current plan; or
-- `no_follow_up`: settle irrelevant or duplicate material explicitly.
+- `steer_current_turn`：更新选定工作，不改动持久 Goal frontier；
+- `replan_goal`：在继续前更新 Todo/vision/priority 状态；
+- `record_context`：提交持久的领域 effect 或证据记录；
+- `continue_current_work`：记录消息已被考虑，但不改变当前计划；或
+- `no_follow_up`：显式处置无关或重复材料。
 
-Provider code never chooses these outcomes. Core never interprets private
-message text. The Agent owns semantic judgment and must bind any material result
-to a durable effect receipt before inbox ACK.
+Provider 代码绝不选择这些结果。Core 绝不解释私有消息文本。Agent 拥有语义判断，
+并且必须在 inbox ACK 之前把任何材料结果绑定到持久 effect receipt。
 
-## Ordering
+## 排序
 
 ```text
 provider-neutral turn_start dispatch
@@ -61,53 +52,42 @@ provider-neutral turn_start dispatch
   -> ACK and resume the prior lane when appropriate
 ```
 
-Running the hook after quota selection is incorrect because fresh steering can
-arrive after ordinary work has already been chosen. Returning raw content in
-the public hook result is also incorrect because shared registries and Turn
-journals are public-safe control-plane surfaces. CLI request validation runs
-before hook dispatch, so an invalid quota request performs no provider read or
-owner-private write; a valid request still dispatches the hook before status
-collection and quota selection.
+在 quota 选择之后运行 hook 是错误的，因为新鲜的 steering 可能在常规工作已选定
+之后才到达。在公开 hook 结果中返回原始内容也是错误的，因为共享注册表与 Turn
+journal 是公开安全的控制面界面。CLI 请求校验在 hook 分发之前运行，因此无效的
+quota 请求不执行任何 provider 读取或 owner 私有写入；有效请求仍在状态收集与
+quota 选择之前分发 hook。
 
-## Failure and replay
+## 失败与重放
 
-- `empty` means a valid provider success envelope was read and no pending
-  message received its first Agent-owned turn-start read in this dispatch.
-- `provider_contract_error` means the success envelope did not match its
-  declared schema; it must never degrade to `empty`.
-- provider permission and availability failures remain typed and isolated.
-- duplicate hook identities run once; duplicate messages collapse by provider
-  message identity, and separate private read/effect receipts prevent duplicate
-  Agent-read observations and duplicate provider reactions.
-- collector-only capture performs no provider write. The acknowledgement is
-  admitted only after the turn-start hook reads and confirms a pending message.
-- reaction disablement never cancels the first-read obligation. Failed effects
-  retry from the owner-private pending-read set rather than relying on the
-  bounded provider overlap window; uncertain effects fail closed before create.
-  Replay is bounded by one aggregate per-dispatch attempt budget. A private
-  collector-scoped cursor rotates route priority across dispatches, while each
-  route keeps a private round-robin message cursor. A large or failing
-  acknowledgement backlog therefore cannot indefinitely block turn admission,
-  and every pending read remains eligible across routes and messages.
-- attention classification affects scheduling and reply policy, never whether
-  a successfully read pending message receives the acknowledgement.
-- a provider-owned self-message filter may run before inbox ingestion only from
-  a typed sender and an exact identity verified for the configured profile;
-  unresolved identity fails open to capture and cannot use display-name or body
-  heuristics.
-- provider-local cursors are single-flight and advance only after inbox and
-  cursor readback. History ingestion and acknowledgement replay use independent
-  cursor positions: an old topic's new reply is admitted by its new provider
-  message identity even while older acknowledgement debt remains.
-- `partial` multi-route success still requires Agent reading for accepted
-  observations while retaining a compact failure code for the incomplete
-  routes.
+- `empty` 表示读取到的 provider 成功 envelope 有效，且本次分发中没有待处理消息
+  收到其首次 Agent 拥有的 turn-start 读取。
+- `provider_contract_error` 表示成功 envelope 与其声明的 schema 不匹配；它绝不能
+  降级为 `empty`。
+- Provider 权限与可用性失败仍是严格类型化的、隔离的。
+- 重复的 hook 身份只运行一次；重复消息按 provider 消息身份折叠，独立的私有
+  读取/effect receipt 防止重复的 Agent 读取观察与重复 provider reaction。
+- 仅收集（collector-only）的捕获不执行任何 provider 写入。确认只在 turn-start hook
+  读取并确认待处理消息后才被准入。
+- Reaction 停用绝不取消首读义务。失败的 effect 从 owner 私有 pending-read 集合
+  重试，而不是依赖有界的 provider 重叠窗口；不确定的 effect 在 create 前
+  fail closed。重放受每次分发一个聚合尝试预算的约束。私有 collector-scoped cursor
+  在多次分发间轮换路由优先级，而每条路由保留私有的 round-robin 消息 cursor。
+  因此大型或失败中的确认积压不会无限期阻塞 turn 准入，且每次待处理读取跨路由与
+  消息保持合格。
+- 注意力分类影响调度与回复策略，永不决定成功读取的待处理消息是否收到确认。
+- Provider 自有的 self-message 过滤器只能在 inbox 摄入前，以一个 typed sender 与
+  为配置 profile 验证过的精确身份运行；身份未决时 fail open 到捕获，且不能使用
+  display-name 或正文启发式。
+- Provider 本地 cursor 是 single-flight 的，只在 inbox 与 cursor readback 后推进。
+  历史摄入与确认重放使用独立 cursor 位置：旧话题的新回复由其新的 provider 消息
+  身份准入，即使较旧确认欠账仍然存在。
+- `partial` 多路由成功仍然要求对已接受观察执行 Agent 读取，同时对不完整路由保留
+  紧凑失败码。
 
-The hook grants no repository, production, outbound-message, or arbitrary
-external-write authority. Its only allowed local writes are the registered
-owner-private inbox and cursor scopes. Its only admitted external write is the
-explicit `provider_message_reaction` scope: one configured reaction on a
-captured, still-pending message read by the Agent turn-start hook. Realtime
-collection cannot consume that scope. The public receipt
-must expose `external_writes_performed`; provider or private-receipt failure is
-`partial`, never a false success, and cannot discard the captured inbox event.
+该 hook 不授予仓库、生产、出站消息或任意外部写入权限。其唯一允许的本地写入是
+已注册的 owner 私有 inbox 与 cursor 范围。其唯一准入的外部写入是显式
+`provider_message_reaction` 范围：对被 Agent turn-start hook 读取过的捕获、仍待处理
+消息执行一个配置 reaction。Realtime 收集不能消耗该范围。公开 receipt 必须暴露
+`external_writes_performed`；provider 或私有 receipt 失败是 `partial`，绝不是虚假
+成功，也不能丢弃已捕获的 inbox 事件。

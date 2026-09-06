@@ -1,39 +1,31 @@
-# Field-Derived Project Control Patterns
+# 字段衍生的项目控制模式
 
-LoopX should grow from repeated real collaboration patterns, not only
-from abstract feature ideas. This document records public-safe mechanisms that
-have proven useful in documentation-heavy agent infrastructure work,
-long-window experiment control, and multi-project Codex collaboration.
+> [English](field-derived-patterns.md)
 
-The examples below are intentionally sanitized. Project-specific task ids,
-private paths, internal document links, production logs, and metric values
-belong in project-local payloads, not in the public LoopX repo.
+LoopX 应该从反复出现的真实协作模式中成长，而不是只从抽象的功能点子出发。
+本文记录已在文档密集型 Agent 基础设施工作、长窗口实验控制和多项目 Codex
+协作中被证明有用的 public-safe 机制。
 
-## 1. Authority Registry
+下面的示例刻意做了脱敏。项目特定的任务 id、私有路径、内部文档链接、生产日志和指标值，
+应放在项目本地的 payload 里，而不是 LoopX 公共仓库。
 
-Complex projects need an authority layer before they need more automation.
-When a repository has many design docs, TODO files, local mirrors, experiment
-reports, and archived notes, the first failure mode is not that an agent cannot
-read enough. It is that the agent reads the wrong source as current truth.
+## 1. 权威注册表
 
-A useful authority registry names:
+复杂的项目在需要更多自动化之前，先需要一层权威。当一个仓库有大量设计文档、
+TODO 文件、本地镜像、实验报告和归档笔记时，第一个失败模式不是 Agent 读得不够多；
+而是 Agent 把错误的来源当作当前真相。
 
-- default entry documents for a new controller tick;
-- topic ownership: which file is canonical for current priorities, system
-  design, validation, external sync, or historical evidence;
-- project material and repository links: which external docs, repo roots,
-  dashboards, issue trackers, or review surfaces are relevant to the goal;
-- source role and freshness: whether a source is the current authority, a
-  supporting reference, a historical note, a local mirror, or an owner-gated
-  evidence source;
-- document status: active, draft, diagnostic, external mirror, superseded,
-  deprecated, archived;
-- conflict rules: what wins when a TODO, design doc, mirror, and old run report
-  disagree;
-- update rules: when changing a canonical document also requires updating the
-  registry.
+一个有用的权威注册表会指明：
 
-LoopX should treat this as a first-class complex-project mechanism:
+- 新 controller tick 的默认入口文档；
+- 主题归属：哪个文件是当前优先级、系统设计、验证、外部同步或历史证据的权威；
+- 项目材料与仓库链接：哪些外部文档、仓库根、dashboard、issue tracker 或评审面与目标相关；
+- 来源角色与新鲜度：某个来源是当前权威、辅助参考、历史笔记、本地镜像，还是 owner 门控的证据来源；
+- 文档状态：active、draft、diagnostic、external mirror、superseded、deprecated、archived；
+- 冲突规则：当 TODO、设计文档、镜像和旧 run 报告说法不一致时，谁赢；
+- 更新规则：什么时候改一个 canonical 文档也要求更新注册表。
+
+LoopX 应把这当作一等公民的复杂项目机制：
 
 ```json
 {
@@ -65,143 +57,119 @@ LoopX should treat this as a first-class complex-project mechanism:
 }
 ```
 
-For `read-only-map`, the adapter should not just list files. It should report
-whether an authority registry exists, which default entries were inspected,
-which topics have canonical owners, and whether any active source conflicts
-with a deprecated or archived source.
+对于 `read-only-map`，adapter 不应只是罗列文件。它应报告是否存在权威注册表、
+检查了哪些默认入口、哪些主题有 canonical owner，以及是否有活跃来源与
+deprecated 或 archived 来源冲突。
 
-The same pattern applies outside documentation-heavy agent repositories. A
-platform migration or product integration goal often has several material
-classes at once: design docs, owner review notes, target and source
-repositories, migration checklists, dashboards, and validation records. LoopX
-should compact those into a public-safe material registry: expose roles,
-freshness, missing owner evidence, and next action, while keeping private URLs,
-repository paths, product configs, and raw review text in project-local payloads.
-This lets a new project agent know which sources are current without flooding
-its context with every old link.
+同样的模式也适用于非文档密集型 Agent 仓库。一个平台迁移或产品集成目标往往同时有
+好几类材料：设计文档、owner 评审笔记、目标与来源仓库、迁移清单、dashboard 和验证记录。
+LoopX 应把它们压缩成一个 public-safe 的材料注册表：暴露角色、新鲜度、缺失的 owner
+证据和下一步行动，同时把私有 URL、仓库路径、产品配置和原始评审文本留在项目本地
+payload 里。这让新项目 Agent 知道哪些来源是当前的，而不必把每个旧链接都灌进它
+的上下文。
 
-The near-term public pilot should use a sanitized complex-migration fixture.
-The fixture should model the material roles and freshness states that matter
-without naming private projects: current design authority, source repository,
-target repository, owner review surface, migration checklist, validation
-dashboard, and deprecated historical notes. Status, dashboard, and review
-packets should expose only the role, freshness, missing owner evidence, and next
-action; private URLs, repo roots, product configs, and raw review notes stay in
-project-local payloads.
+近期的公开试点应使用一个脱敏的复杂迁移 fixture。fixture 应建模关键的材料角色与
+新鲜度状态，而不点名私有项目：当前设计权威、来源仓库、目标仓库、owner 评审面、
+迁移清单、验证 dashboard 和已废弃的历史笔记。Status、dashboard 和 review packet
+应只暴露角色、新鲜度、缺失的 owner 证据和下一步行动；私有 URL、repo 根、产品配置和
+原始评审笔记留在项目本地 payload 里。
 
-## 2. Current-Belief TODO
+## 2. 当前信念 TODO
 
-For long-running projects, a TODO file is most valuable when it answers three
-questions:
+对于长跑项目，TODO 文件最有价值的时候，是它回答了三个问题：
 
-- what do we currently believe?
-- why do we believe it?
-- what is the next bounded action?
+- 我们当前相信什么？
+- 我们为什么相信它？
+- 下一个有界的行动是什么？
 
-This is different from a chronological task dump. Historical work should be
-kept, but it should be compressed into archives, diagnostic reports, or
-appendices once it no longer drives the next decision.
+这不同于按时间顺序的任务堆。历史工作要保持，但一旦它不再驱动下一个决策，
+就应压缩进归档、诊断报告或附录。
 
-LoopX should absorb this pattern into active goal state and
-read-only-map summaries:
+LoopX 应把这一模式吸收进活跃目标状态与 read-only-map 摘要：
 
-- `current_judgment`: compact belief;
-- `evidence_boundary`: what supports it and what does not;
-- `next_action`: one bounded next step;
-- `deferred_or_archived`: older lines that remain traceable but should not
-  drive current work.
+- `current_judgment`：紧凑的信念；
+- `evidence_boundary`：什么支持它、什么不支持；
+- `next_action`：一个有界的下一步；
+- `deferred_or_archived`：保留可追溯性但不应驱动当前工作的旧行。
 
-This makes state refreshes useful. A state-only update is not a log entry; it is
-a new current-belief surface for the next agent tick and dashboard.
+这让状态刷新变得有用。纯状态更新不是一条日志；它是给下一个 agent tick 和
+dashboard 的一层新的当前信念面。
 
-## 3. Bounded Derived State Inheritance
+## 3. 有界衍生状态继承
 
-LoopX may derive state from structured sources such as active-state Markdown,
-todo metadata comments, authority registries, JSON run records, and AST/source
-inspections. Derived state is useful only when it stays smaller and more
-auditable than the material it summarizes.
+LoopX 可以从结构化来源衍生状态，例如 active-state Markdown、todo 元数据注释、
+权威注册表、JSON run 记录和 AST/源码检查。衍生状态只有比它汇总的材料更小、
+更可审计时才有用。
 
-A derived-state surface should declare:
+一个衍生状态面应声明：
 
-- canonical source: the structured field, file, or command that can reconstruct
-  the full view;
-- inheritance rule: which source fields are copied, compacted, or deliberately
-  dropped;
-- item limits: top-N counts for hot paths, plus a cold path for the full list;
-- archive/prune rule: when old completed or superseded state must leave the
-  active projection;
-- projection semantics: whether status, quota, dashboard, or review packets may
-  schedule from the derived view or only display it.
+- canonical source：能重建完整视图的结构化字段、文件或命令；
+- 继承规则：哪些来源字段被复制、压缩或刻意丢弃；
+- 条目上限：热路径用 top-N 计数，外加一条完整列表的冷路径；
+- 归档/裁剪规则：旧的已完成或已被替代的状态何时必须离开活跃投影；
+- 投影语义：status、quota、dashboard 或 review packet 是只能展示衍生视图，
+  还是可以按它调度。
 
-Model-created state must not become a second source of truth. If an agent
-summarizes todos, benchmark cases, experiments, or authority sources, that
-summary should either point back to a parseable source or be written through a
-LoopX command that adds structured metadata. Unbounded lists belong behind
-detail pointers, not in heartbeat payloads or first-screen status.
+模型创建的状态不得成为第二个真相源。如果 Agent 汇总了 todo、benchmark 用例、
+实验或权威来源，该汇总要么指回一个可解析的来源，要么通过一个会添加结构化元数据的
+LoopX 命令写入。无界列表应藏在明细指针后面，而不是塞进 heartbeat payload 或首屏
+status。
 
-## 4. Managed External-Source Manifest
+## 4. 托管外部来源清单
 
-Many real projects depend on external documents, review surfaces, or product
-discussion artifacts. They should not be treated as ordinary links.
+很多真实项目依赖外部文档、评审面或产品讨论产物。它们不应被当作普通链接对待。
 
-A managed external-source manifest should track:
+一个托管的外部来源清单应追踪：
 
-- local mirror path;
-- stable source identifier;
-- source revision or fetched timestamp;
-- role: strategy doc, project wiki, validation doc, collaboration notes, etc.;
-- sync direction and whether remote is newer;
-- unresolved comments, highlights, or reviewer-visible marks that must be
-  preserved;
-- fetch-before-write rules.
+- 本地镜像路径；
+- 稳定的来源标识符；
+- 来源 revision 或抓取时间戳；
+- 角色：策略文档、项目 wiki、验证文档、协作笔记等；
+- 同步方向，以及远端是否更新；
+- 必须保留的未解决评论、高亮或 reviewer 可见标记；
+- fetch-before-write 规则。
 
-LoopX should not blindly copy external material into public status. The
-public compact record should say that a managed external source exists and
-whether it is fresh enough. The private payload can keep richer evidence.
+LoopX 不应盲目地把外部材料拷进公共 status。公开的紧凑记录应说明存在一个托管
+外部来源，以及它是否够新。私有 payload 可以保留更丰富的证据。
 
-This pattern prevents two common failures:
+这一模式预防两个常见失败：
 
-- overwriting reviewer-visible remote signal because a local mirror looks
-  cleaner;
-- letting a stale local note become the current project authority.
+- 因为本地镜像看起来更干净，就覆盖了 reviewer 可见的远端信号；
+- 让一份过期的本地笔记成为当前项目权威。
 
-## 5. Validation Surface Map
+## 5. 验证面映射
 
-Complex projects rarely have one validation command. Progress may be proven by
-different surfaces:
+复杂项目很少有单一的验证命令。进度可以由不同的面来证明：
 
-| Work type | Validation surface |
+| 工作类型 | 验证面 |
 | --- | --- |
-| Docs | markdown structure, links, authority registry, review notes |
-| External sync | manifest freshness, scoped fetch, comment/highlight preservation |
-| Benchmark/eval | run artifact, metric file, trace, paired baseline, claim boundary |
-| Code | unit tests, type checks, integration smoke |
-| PR/CI | branch status, CI checks, review comments |
-| Public release | sensitive scan, README quickstart, examples |
+| Docs | markdown 结构、链接、权威注册表、评审笔记 |
+| External sync | 清单新鲜度、限定抓取、评论/高亮保留 |
+| Benchmark/eval | run artifact、指标文件、trace、配对基线、声明边界 |
+| Code | 单元测试、类型检查、集成冒烟 |
+| PR/CI | 分支状态、CI 检查、评审评论 |
+| Public release | 敏感项扫描、README 快速上手、示例 |
 
-LoopX should require each complex-project map to name validation
-surfaces before proposing implementation work. This lets the dashboard show
-"ready for Codex" only when the next action has a credible verification path.
+LoopX 应要求每个复杂项目映射在提出实现工作之前就指明验证面。这样 dashboard 只有在
+下一步行动有可信的验证路径时，才显示"ready for Codex"。
 
-## 6. Experiment Board
+## 6. 实验看板
 
-Long-window experiment projects need an experiment board, not only a run log.
-The board should separate:
+长窗口实验项目需要实验看板，而不只是一份 run log。看板应区分：
 
-- objective and primary decision metric;
-- decision window and comparable baseline window;
-- guardrail metrics;
-- non-goals and unsafe shortcuts;
-- active tasks and what to watch;
-- completed anchors and route history;
-- launch or compute quota;
-- next handoff condition.
+- 目标与主决策指标；
+- 决策窗口与可比较的基线窗口；
+- 护栏指标；
+- 非目标与不安全捷径；
+- 活跃任务与需要关注的内容；
+- 已完成的锚点与路线历史；
+- launch 或计算配额；
+- 下一个 handoff 条件。
 
-The most important lesson is to anchor the goal identity in the decisive
-evidence. If the real objective is a long-window metric, a runtime cache risk,
-training-only movement, or one failed task should not become the goal identity.
+最重要的教训是：把目标身份锚定在决定性证据上。如果真实目标是长窗口指标，
+一个 runtime 缓存风险、仅训练侧的波动或一次失败任务，都不应成为目标身份。
 
-LoopX should model this as:
+LoopX 应这样建模：
 
 ```json
 {
@@ -216,96 +184,78 @@ LoopX should model this as:
 }
 ```
 
-Adapters should surface `waiting_on=external_evidence` until the decisive
-evidence is comparable. Human reward or decision advice should not be inferred
-from training-only guardrails.
+Adapter 在决定性证据可比较之前应显示 `waiting_on=external_evidence`。不应从
+仅训练侧的护栏推断人类奖励或决策建议。
 
-## 7. Gate Order
+## 7. 关卡顺序
 
-Several field failures become simpler if LoopX applies gates in a stable
-order:
+一些现场失败在 LoopX 以稳定顺序应用 gate 时会变得更简单：
 
-1. health and public/private safety;
-2. operator gate or project-controller opt-in;
-3. evidence readiness;
-4. compute quota;
-5. Codex execution.
+1. 健康与公共/私有安全；
+2. operator 关卡或项目 controller 的 opt-in；
+3. 证据就绪；
+4. 计算配额；
+5. Codex 执行。
 
-Compute quota decides how much automatic agent time a goal may consume. It does
-not authorize writes, production actions, or route decisions. Operator gates
-and human reward remain separate durable events.
+计算配额决定一个目标可以消耗多少自动 Agent 时间。它不授权写操作、生产动作或路线决策。
+Operator 关卡和人类奖励仍是独立的持久事件。
 
 ## 8. Handoff Packet
 
-A good handoff packet is short enough to forward, but precise enough to avoid
-re-discovery. It should include:
+一个好的 handoff packet 短到可以直接转发，又精确到避免重复摸索。它应包含：
 
-- goal id and current classification;
-- one recommended action;
-- files or surfaces inspected;
-- authority sources;
-- validation surfaces;
-- hard guards;
-- residual risks;
-- the exact condition that would allow the next stage.
+- goal id 与当前分类；
+- 一个推荐行动；
+- 检查过的文件或面；
+- 权威来源；
+- 验证面；
+- 硬护栏；
+- 残余风险；
+- 允许进入下一阶段的确切条件。
 
-It should not include raw private evidence. It should also not pretend to be
-user approval. If a project agent needs permission to cross a gate, LoopX
-should record an `operator_gate_*` run before the command becomes
-Codex-ready.
+它不应包含原始私有证据。它也不应假装是用户批准。如果项目 Agent 需要许可才能跨过一个
+gate，LoopX 应在该命令变成 Codex-ready 之前先记录一个 `operator_gate_*` run。
 
-## 9. Parallel Work Claims
+## 9. 并行工作声明
 
-Large projects often need several agents, but parallelism only works when
-claims are explicit:
+大型项目往往需要多个 Agent，但并行只有在声明明确时才管用：
 
-- registered agents remain equal peers;
-- claims and leases assign scoped read-only exploration, implementation, or
-  validation work;
-- write scopes should be disjoint;
-- a temporary task coordinator may accept bundle evidence, but repository
-  policy and operator gates still decide merge, publication, and production
-  authority.
+- 已注册的 Agent 仍是平等的 peer；
+- 声明与租约分配有界的只读探索、实现或验证工作；
+- 写作用域应互不相交；
+- 临时任务协调者可以接受 bundle 证据，但 merge、发布和生产的权威仍由仓库
+  策略与 operator 关卡决定。
 
-LoopX should record proposed peer task scopes in read-only maps, then let an
-eligible peer claim them or let the operator edit the task boundary.
+LoopX 应把提议的 peer 任务作用域记录在 read-only map 里，然后让合格 peer 声明它们，
+或让 operator 编辑任务边界。
 
-## 10. Anti-Patterns To Block
+## 10. 需要阻止的反模式
 
-LoopX should actively prevent these patterns:
+LoopX 应主动阻止这些模式：
 
-- treating a chat thread as the source of truth;
-- using automation cadence as the only expression of project priority;
-- letting an incidental runtime risk replace the real goal identity;
-- using training-only or non-comparable evidence as a route winner;
-- appending logs to a planning doc instead of updating the current belief;
-- copying private links, task ids, workspace paths, or raw logs into public
-  compact history;
-- overwriting managed external sources without checking remote comments or
-  reviewer marks;
-- letting the last completed slice choose the next action without checking the
-  goal's P0/P1/P2 priority stack;
-- handing a project agent a command before recording the operator gate that
-  makes the command valid.
+- 把聊天线程当作真相源；
+- 只用自动化节奏表达项目优先级；
+- 让偶然的 runtime 风险取代真实目标身份；
+- 用仅训练侧或不可比较的证据当作路线赢家；
+- 把日志追加进规划文档，而不是更新当前信念；
+- 把私有链接、任务 id、工作区路径或原始日志拷进公共紧凑历史；
+- 不检查远端评论或 reviewer 标记就覆盖托管外部来源；
+- 不看目标的 P0/P1/P2 优先级栈，就让最后一个完成的切片选择下一个行动；
+- 在记录使命令有效的 operator gate 之前，就把命令交给项目 Agent。
 
-## Near-Term Implementation Implications
+## 近期实现影响
 
-These field patterns imply four concrete LoopX surfaces:
+这些现场模式意味着四个具体的 LoopX 面：
 
-1. **Authority/material registry support**: `connect` and `read-only-map`
-   should accept or discover a project authority registry, including external
-   material and repository-link roles, then publish compact public-safe
-   coverage. The first fixture should be a sanitized complex-migration material
-   registry so implementation is grounded in a real multi-material control
-   problem without leaking project specifics.
-2. **Experiment board support**: experiment adapters should name primary metric,
-   decision window, guardrails, active-task section, and route-history section.
-3. **Validation surface map**: status and dashboard should show why a goal is
-   ready, waiting, or blocked in terms of validation surfaces, not only raw
-   classifications.
-4. **Handoff packet discipline**: every cross-thread packet should be short,
-   public-safe, and gated; packets are collaboration affordances, not durable
-   approval.
-5. **Priority-stack next action**: every controller tick should explain whether
-   the selected next action is P0, P1, or P2, and why it outranks adjacent
-   candidates.
+1. **权威/材料注册表支持**：`connect` 和 `read-only-map` 应接受或发现项目
+   权威注册表，包括外部材料与仓库链接角色，然后发布紧凑的 public-safe 覆盖范围。
+   第一个 fixture 应是脱敏的复杂迁移材料注册表，这样实现就有真实的、多材料
+   控制问题的锚点，而不会泄漏项目细节。
+2. **实验看板支持**：实验 adapter 应指明主指标、决策窗口、护栏、活跃任务
+   区和路线历史区。
+3. **验证面映射**：status 和 dashboard 应说明一个目标为何 ready、waiting 或
+   blocked，用验证面而不是只给原始分类。
+4. **Handoff packet 纪律**：每个跨线程 packet 都应短、public-safe 且有 gate；
+   packet 是协作便利工具，不是持久批准。
+5. **优先级栈下一个行动**：每个 controller tick 都应说明选中的下一个行动是
+   P0、P1 还是 P2，以及它为何胜过相邻候选。

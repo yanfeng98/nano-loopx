@@ -1,72 +1,60 @@
-# 0617: Blocked P0 With Safe P1/P2 Rotation
+# 0617:被阻塞的 P0 与安全的 P1/P2 轮换
 
-## Summary
+> [English](0617-blocked-p0-safe-rotation.md)
 
-A benchmark rotation had three active lanes. The highest-priority lane needed a
-large local image before it could run. Instead of silently spending compute or
-stalling the whole goal, LoopX surfaced the concrete user decision,
-kept that lane gated, and allowed safe no-upload fallback work on the other
-benchmark families.
+## 摘要
 
-This case demonstrates:
+一次基准轮换有三条活动 lane。最高优先级的 lane 在运行前需要一个大型本地镜像。LoopX 没有默默消耗算力、也没有拖住整个 goal,而是把具体的用户决策呈现出来,让该 lane 保持在关卡状态,并允许在其他基准族上做不涉及上传的安全兜底工作。
 
-- concrete user gate projection;
-- blocked-priority fallback selection;
-- quota discipline around gated work;
-- attention reduction for the operator.
+这个案例演示了:
 
-## Before
+- 具体用户关卡的投影;
+- 被阻塞优先级的兜底选择;
+- 围绕关卡工作的配额纪律;
+- 为操作者降低注意力负担。
 
-The operator wanted one long-running benchmark goal to rotate across several
-candidate families. One family became blocked because the next step required a
-large local dependency. The correct behavior was not "keep trying" and not
-"stop the entire project"; it was:
+## 之前
 
-1. ask the user whether to acquire the large dependency;
-2. avoid spending delivery compute on that gated lane;
-3. continue safe fallback work that does not depend on the decision.
+操作者希望一个长程基准 goal 在若干候选族之间轮换。其中一个族被卡住了,因为下一步需要一个大型本地依赖。正确的行为不是"继续重试",也不是"停掉整个项目",而是:
 
-## LoopX Behavior
+1. 询问用户是否要获取该大型依赖;
+2. 避免在被关卡化的 lane 上消耗交付算力;
+3. 继续做不依赖该决定的安全兜底工作。
 
-LoopX turns that situation into a structured control-plane decision:
+## LoopX 行为
 
-- the user todo names the blocked P0 decision;
-- the agent todo still contains lower-priority safe work;
-- `quota should-run` exposes a user-visible gate and a safe fallback contract;
-- the agent can continue only after it records why fallback is being selected.
+LoopX 把这种局面转化为结构化的控制面决策:
 
-The key product effect is that the user sees the decision that matters, while
-the agent is not forced into an idle loop.
+- 用户 todo 指明被阻塞的 P0 决定;
+- Agent todo 仍然包含低优先级的安全工作;
+- `quota should-run` 暴露用户可见的关卡与安全的兜底契约;
+- Agent 只有在记录下为何选择兜底之后才能继续。
 
-## Reproducible Demo
+关键的产品效果是:用户看到的是真正重要的那个决定,而 Agent 不必陷入空转循环。
 
-Run the synthetic public demo:
+## 可复现演示
+
+运行合成的公开 demo:
 
 ```bash
 python3 examples/showcase-0617-blocked-p0-safe-rotation-smoke.py
 ```
 
-The demo builds a sanitized status payload with:
+该 demo 构建一个脱敏后的状态 payload,包含:
 
-- a P0 user gate for a large image acquisition;
-- a P0 agent item blocked by that user gate;
-- a P1 safe fallback item for another benchmark lane.
+- 一个用于获取大型镜像的 P0 用户关卡;
+- 一个被该用户关卡阻塞的 P0 Agent 条目;
+- 一个面向另一条基准 lane 的 P1 安全兜底条目。
 
-It verifies that LoopX projects `scoped_user_gate_fallback`, marks the
-turn as actionable, requires user notification, and selects the non-gated
-fallback.
+它验证 LoopX 投影出 `scoped_user_gate_fallback`,把 Turn 标记为 actionable,要求用户通知,并选择未被关卡化的兜底。
 
-## Evidence Boundary
+## 证据边界
 
-This public case intentionally omits private screenshots, raw benchmark task
-text, local image names, internal links, and raw run logs. The behavior is
-represented by a synthetic fixture because the reusable product value is the
-control-plane pattern, not the original private artifact.
+这个公开案例刻意省略了私有截图、原始基准任务文本、本地镜像名、内部链接和原始运行日志。行为由合成 fixture 来表示,因为可复用的产品价值是控制面模式,而不是原始的私有工件。
 
-## Public Evidence Sequence
+## 公开证据序列
 
-1. A P0 lane becomes blocked by a concrete user decision.
-2. LoopX keeps that decision visible as a user todo.
-3. The agent selects a safe P1/P2 fallback instead of spending on the blocked
-   lane.
-4. The state records both facts: what is blocked and why progress can continue.
+1. 一条 P0 lane 因一个具体的用户决定而被阻塞。
+2. LoopX 把这个决定保持为可见的用户 todo。
+3. Agent 选择一条安全的 P1/P2 兜底,而不是在被阻塞的 lane 上消耗资源。
+4. 状态记录下两个事实:什么被阻塞了,以及为什么进展可以继续。

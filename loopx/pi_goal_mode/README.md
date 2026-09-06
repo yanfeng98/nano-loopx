@@ -1,82 +1,69 @@
-# LoopX Pi goal mode
+# LoopX Pi Goal 模式
 
-The Pi host adapter for LoopX. Pi is a terminal coding agent whose extensions
-register commands, tools, and event handlers; this adapter turns a Pi session
-into a LoopX-governed visible goal loop.
+> [English](README.md)
 
-## Surface
+Pi 的 LoopX 宿主适配器。Pi 是一个终端编码 agent，其 extensions 注册命令、工具与
+事件处理器；本适配器把 Pi 会话变成受 LoopX 管控的可见 Goal 循环。
 
-- **`/loopx`** — with no arguments, runs `loopx bootstrap-command-pack --project .`
-  and shows the packet as a widget plus a transcript entry. With a goal text
-  argument, runs `loopx start-goal --guided --project . --goal-text "<text>"
-  --host-surface pi` and delivers the returned packet directly to the agent as
-  a follow-up user message (`sendUserMessage` with `triggerTurn`), so the
-  guided transaction starts without a popup box or a manual Enter step.
-  `/loopx resume` re-arms auto-continuation after a user-driven pause or an
-  aborted run.
-- **`loopx_goal_activate`** — agent-callable tool. Binds the current session to
-  the host-verified Pi startup/session packet using its one-time
-  `activationToken`, plus the heartbeat `objective`/task_body, then starts the
-  quota-gated loop. Goal, agent, registry, and mutation capabilities are
-  derived from that packet; compatibility echoes are rejected when they do not
-  match the locked authority.
-- **`loopx_task_lease`** — agent-callable, explicit facade over the existing
-  `task_lease_v0` CLI. It supports `acquire`, `renew`, `transfer`, `release`,
-  and read-only `inspect`. The active Pi binding supplies `goalId` and the
-  current owner; the model cannot substitute either authority. Mutation calls
-  require a non-empty host-verified bound `agentId` and the host-issued
-  `task_lease_v0` capability. Typed
-  conflict and CAS payloads (for example `write_scope_conflict` and
-  `lease_cas_mismatch`) are preserved as the tool result.
-- **Goal loop** — on every `agent_settled`, the extension probes
-  `loopx quota should-run --runtime-profile generic_cli` for the bound goal.
-  LoopX decides whether to continue (the heartbeat task_body is injected as a
-  follow-up), wait with scheduler-hint backoff (unchanged-poll limits apply), or
-  stop at a validated terminal no-follow-up. Probe failures fail closed with a
-  bounded retry; the extension never self-declares closure.
-- **Abort boundary** — pressing Escape while Pi is running persists
-  `autoResume: false` before `agent_settled`, cancels any pending backoff timer,
-  and fences an in-flight quota probe. For persistent sessions, the loop stays
-  paused across Pi restarts until `/loopx resume` or a fresh goal activation
-  explicitly re-arms it.
+## 入口
 
-## Install / uninstall
+- **`/loopx`** —— 无参数时运行 `loopx bootstrap-command-pack --project .`，并把
+  packet 作为 widget 加一条 transcript 条目展示。带 goal 文本参数时，运行
+  `loopx start-goal --guided --project . --goal-text "<text>" --host-surface pi`，
+  并把返回的 packet 作为后续用户消息（`sendUserMessage`，带 `triggerTurn`）直接
+  交给 agent，因此引导事务无需弹出框或手工 Enter 步骤。
+  `/loopx resume` 在用户暂停或运行中止后重新武装自动延续。
+- **`loopx_goal_activate`** —— agent 可调用工具。用其一次性 `activationToken` 加
+  心跳 `objective`/task_body 把当前会话绑定到宿主校验的 Pi 启动/会话 packet，
+  然后启动 quota gated 循环。Goal、agent、registry 与变更能力都从该 packet 推导；
+  与锁定权威不匹配的兼容性 echo 被拒绝。
+- **`loopx_task_lease`** —— agent 可调用，显式封装现有 `task_lease_v0` CLI。它
+  支持 `acquire`、`renew`、`transfer`、`release` 与只读 `inspect`。活跃 Pi 绑定向
+  其提供 `goalId` 与当前 owner；模型不能替代任一经授权限。变更调用要求非空
+  宿主校验的绑定 `agentId` 与宿主签发的 `task_lease_v0` 能力。类型化冲突与 CAS
+  载荷（例如 `write_scope_conflict` 与 `lease_cas_mismatch`）作为工具结果保留。
+- **Goal 循环** —— 每次 `agent_settled`，extension 为绑定 goal 探测
+  `loopx quota should-run --runtime-profile generic_cli`。LoopX 决定是继续（心跳
+  task_body 作为后续注入）、带调度器提示退避地等待（unchanged-poll 限制适用），
+  还是在校验的终态 no-follow-up 处停止。探测失败带有限重试地 fail closed；
+  extension 绝不自我声明关闭。
+- **中止边界** —— Pi 运行期间按 Escape 会在 `agent_settled` 前持久化
+  `autoResume: false`，取消任何挂起的退避定时器，并为进行中的 quota 探测设围栏。
+  对持久会话，循环在 Pi 重启间保持暂停，直到 `/loopx resume` 或一次新的 goal
+  激活显式重新武装它。
+
+## 安装 / 卸载
 
 ```bash
 loopx slash-commands --install --surface pi --pi-project .
 loopx slash-commands --uninstall --surface pi --pi-project .
 ```
 
-Installs two LoopX-managed files into the project (loaded after project
-trust):
+向项目安装两个 LoopX 管理的文件（项目信任后加载）：
 
-- `.pi/extensions/loopx-goal.ts` — the extension adapter that registers
-  `/loopx`, `loopx_goal_activate`, `loopx_task_lease`, and the `agent_settled`
-  loop wiring.
-- `.pi/extensions/pi-goal-loop-runtime.mjs` — the quota/wait/store loop core
-  (not auto-discovered as an extension; the adapter imports it directly).
+- `.pi/extensions/loopx-goal.ts` —— 注册 `/loopx`、`loopx_goal_activate`、
+  `loopx_task_lease` 与 `agent_settled` 循环接线的 extension 适配器。
+- `.pi/extensions/pi-goal-loop-runtime.mjs` —— quota/wait/store 循环核心
+  （不会被自动发现为 extension；适配器直接导入它）。
 
-Pi's extension loader aliases `typebox` and the `@earendil-works/*` packages,
-so no local `node_modules` are required. The `--pi-project` flag points the
-installer at the target project so the command is correct even when run from
-another directory; `agent-onboard --agent-type pi --project <path>` emits the
-resolved project automatically.
+Pi 的 extension 加载器为 `typebox` 与 `@earendil-works/*` 包做别名，因此无需本地
+`node_modules`。`--pi-project` 标志把安装器指向目标项目，使命令即使从另一目录
+运行也正确；`agent-onboard --agent-type pi --project <path>` 自动输出解析后的
+项目。
 
-## State
+## 状态
 
-Bindings persist under `<project>/.loopx/pi/` (gitignored), keyed by session.
-Override with `LOOPX_PI_STATE_DIR`. Invoke the CLI binary via `LOOPX_BIN`.
+绑定持久化在 `<project>/.loopx/pi/` 下（gitignored），按会话为键。用
+`LOOPX_PI_STATE_DIR` 覆盖。用 `LOOPX_BIN` 调用 CLI 二进制。
 
-Sessions without a session file (`pi --no-session`) are ephemeral: the
-adapter uses a unique in-memory identity per extension instance and never
-persists its binding, so a later `--no-session` run cannot inherit the
-previous run's goal and must activate again through `loopx_goal_activate`.
+没有会话文件（`pi --no-session`）的会话是瞬态的：适配器为每个 extension 实例使用
+唯一的内存身份，绝不持久化其绑定，因此之后的 `--no-session` 运行不能继承上一次
+运行的 goal，必须经 `loopx_goal_activate` 再次激活。
 
-## Explicit task leases
+## 显式任务租约
 
-Lease support is explicit at the tool call, while its mutation capability is
-host-bound. Start the Pi flow with `/loopx <goal text>` and use the
-`pi_session_authority.token` from that startup packet when activating:
+租赁支持在工具调用处显式，而其变更能力为宿主绑定。用 `/loopx <goal text>` 启动
+Pi 流程，并在激活时使用该启动 packet 的 `pi_session_authority.token`：
 
 ```text
 loopx_goal_activate({
@@ -85,12 +72,11 @@ loopx_goal_activate({
 })
 ```
 
-The authority is locked to this Pi session. A later activation that changes the
-goal, agent, registry, or capability set returns a typed authority failure and
-does not reach the lease CLI. Re-run `/loopx <goal text>` in a new host session
-when a different authority is required.
+该权威锁定到此 Pi 会话。之后改变 goal、agent、registry 或能力集的激活返回类型化
+权威失败，不会到达租赁 CLI。需要不同权威时，在新主机会话中重跑
+`/loopx <goal text>`。
 
-After activation, call the lease tool with only the lifecycle fields:
+激活后，只带生命周期字段调用租赁工具：
 
 ```text
 loopx_task_lease({
@@ -102,10 +88,9 @@ loopx_task_lease({
 })
 ```
 
-`renew`, `transfer`, and `release` require the lease's `expectedVersion`;
-`transfer` additionally takes `newOwner` and `newIdempotencyKey`. `inspect`
-is read-only and only needs the active goal binding. Pi does not automatically
-acquire, renew, transfer, or release leases. The equivalent CLI fallback is:
+`renew`、`transfer` 与 `release` 要求租约的 `expectedVersion`；`transfer` 额外
+接收 `newOwner` 与 `newIdempotencyKey`。`inspect` 只读，只需要活跃 goal 绑定。
+Pi 不会自动 acquire、renew、transfer 或 release 租约。等价 CLI 回退是：
 
 ```bash
 loopx --registry <registry> --format json task-lease acquire \
@@ -113,9 +98,9 @@ loopx --registry <registry> --format json task-lease acquire \
   --idempotency-key <turn-key> --write-scope 'loopx/**'
 ```
 
-The same fallback uses `renew`, `transfer`, `release`, or `inspect` in place
-of `acquire`; `renew`/`transfer`/`release` pass `--expected-version`, and
-`transfer` also passes `--new-owner` and `--new-idempotency-key`:
+同一回退把 `acquire` 换成 `renew`、`transfer`、`release` 或 `inspect`；
+`renew`/`transfer`/`release` 传 `--expected-version`，`transfer` 还传
+`--new-owner` 与 `--new-idempotency-key`：
 
 ```bash
 loopx --registry <registry> --format json task-lease renew \
@@ -125,21 +110,16 @@ loopx --registry <registry> --format json task-lease inspect \
   --goal-id <goal> --todo-id <todo>
 ```
 
-The tool exposes public-safe typed receipts and conflicts only. It does not
-grant authority outside the active LoopX goal binding, bypass registration,
-change quota/scheduler/todo defaults, or copy Pi transcripts, credentials, or
-session paths into LoopX state.
+该工具只暴露公开安全类型化回执与冲突。它不授予活跃 LoopX goal 绑定之外的权威、
+不绕过注册、不改变 quota/scheduler/todo 默认值，也不把 Pi transcript、凭据或会话
+路径复制进 LoopX 状态。
 
-## Boundary
+## 边界
 
-The extension reads only LoopX public-safe state and never copies raw
-transcripts, credentials, or local session paths. Continuation is governed by
-LoopX quota; user prompts and aborted runs pause auto-resume; `/loopx resume`
-or re-activation re-arms it. No external writes happen without the active
-LoopX state or owner authorization.
+Extension 只读取 LoopX 公开安全状态，绝不复制原始 transcripts、凭据或本地会话
+路径。延续由 LoopX quota 管辖；用户 prompt 与中止运行暂停自动恢复；`/loopx
+resume` 或重新激活重新武装它。没有活跃 LoopX 状态或 owner 授权，不发生外部写入。
 
-On `session_shutdown` (session switch, fork, or reload) the extension instance
-is atomically disposed: every timer is cancelled and an in-flight quota probe
-that returns afterwards stops at the disposed guard, so the old session can
-never inject a follow-up or reschedule past the reload / session-replacement
-boundary.
+在 `session_shutdown`（会话切换、fork 或 reload）时，extension 实例被原子释放：
+每个定时器被取消，之后返回的进行中 quota 探测在释放守卫处停止，因此旧会话绝不
+能在 reload/会话替换边界之后注入后续或重新调度。

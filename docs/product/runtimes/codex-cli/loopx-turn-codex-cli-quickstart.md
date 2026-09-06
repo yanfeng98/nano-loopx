@@ -1,33 +1,28 @@
-# Run One LoopX Turn With Codex CLI
+# 用 Codex CLI 运行一次 LoopX Turn
 
-Status: experimental `isolated-headless` product path.
+> [English](loopx-turn-codex-cli-quickstart.md)
 
-LoopX Turn needs only three pieces:
+状态：实验性 `isolated-headless` 产品路径。
 
-1. **Agent CLI adapter**: the built-in `codex-cli` adapter translates one typed
-   LoopX request into one bounded Codex CLI run and returns one typed result.
-2. **Independent validator**: your command checks the real postcondition. It
-   does not trust the agent's completion claim.
-3. **One Turn command**: LoopX decides, Codex executes, the validator proves,
-   and LoopX commits.
+LoopX Turn 只需要三块：
+
+1. **Agent CLI adapter**：内置 `codex-cli` adapter 把一个类型化 LoopX 请求翻译成一次有边界的 Codex CLI 运行，并返回一个类型化结果。
+2. **独立校验器**：你的命令检查真实后置条件。它不信任 agent 的完成声明。
+3. **一条 Turn 命令**：LoopX 决策，Codex 执行，校验器证明，LoopX 提交。
 
 ```text
 LoopX decides -> Codex CLI executes -> validator proves -> LoopX commits
 ```
 
-## Before You Run
+## 运行之前
 
-You need a connected LoopX goal, a registered agent with a runnable todo, an
-isolated project workspace, and an executable validator. The validator receives
-the normalized host result on stdin and exits zero only when the actual artifact
-or state is correct.
+你需要一个已连接的 LoopX goal、一个带可运行 todo 的注册 agent、一个隔离项目 workspace，以及一个可执行校验器。校验器从 stdin 接收规范化 host 结果，并且只在实际 artifact 或状态正确时退出零。
 
-Check the local host once with `codex doctor`. If the default model is newer
-than the installed Codex CLI, update Codex or pass `--codex-model`.
+用 `codex doctor` 检查一次本地 host。如果默认模型比已安装的 Codex CLI 新，更新 Codex 或传 `--codex-model`。
 
-## Run One Turn
+## 运行一次 Turn
 
-For a write-capable coding todo:
+对于可写的编码类 todo：
 
 ```bash
 loopx turn run-once \
@@ -41,49 +36,37 @@ loopx turn run-once \
   --execute
 ```
 
-The built-in Codex adapter means there is no adapter program to write for this
-path. A different Agent CLI uses the same Turn contract through a thin
-`generic-cli` adapter that reads one JSON request from stdin and writes one JSON
-result to stdout.
+内置 Codex adapter 意味着该路径无需编写 adapter 程序。另一 Agent CLI 通过薄的 `generic-cli` adapter 使用同一 Turn 契约：从 stdin 读取一个 JSON 请求，向 stdout 写入一个 JSON 结果。
 
-## Read The Result
+## 读取结果
 
-The compact JSON result tells the caller what happens next:
+紧凑 JSON 结果告诉调用方接下来会发生什么：
 
-| Signal | Meaning |
+| 信号 | 含义 |
 | --- | --- |
-| `status=committed` | Independent validation passed; LoopX wrote the durable result and spent once. |
-| `result_kind=repair_required` | Keep the todo, repair the execution or artifact, then retry. |
-| `result_kind=replan_required` | The current route is no longer valid; write a successor or vision delta. |
-| `result_kind=wait` | No host work should run yet. |
-| `result_kind=user_action_required` | Show the concrete user action and do not invent a substitute. |
+| `status=committed` | 独立校验通过；LoopX 写入持久结果并 spend 一次。 |
+| `result_kind=repair_required` | 保留 todo，修复执行或 artifact，然后重试。 |
+| `result_kind=replan_required` | 当前路线不再有效；写后继或 vision 增量。 |
+| `result_kind=wait` | 现在不应运行任何 host 工作。 |
+| `result_kind=user_action_required` | 显示具体用户动作，不要发明替代品。 |
 
-A failed validator cannot commit or spend; replay invokes nothing. A new logical
-Turn uses a new stable `--turn-instance-id`, while retries reuse that id.
+失败的校验器不能提交或 spend；重放不调用任何东西。新逻辑 Turn 使用新的稳定 `--turn-instance-id`，而重试复用该 id。
 
-## Fit Another Runtime
+## 适配另一 Runtime
 
-Keep the same boundary when the Agent CLI is backed by a managed runtime:
+当 Agent CLI 由受管理 runtime 支撑时，保持相同边界：
 
-| Runtime owns | LoopX owns |
+| Runtime 拥有 | LoopX 拥有 |
 | --- | --- |
-| Session, turn, sandbox, raw event stream, platform outcome | Goal, todo, gate, control decision, compact evidence, durable outcome |
+| Session、turn、sandbox、原始事件流、平台结果 | Goal、todo、gate、控制决策、紧凑 evidence、持久结果 |
 
-The adapter carries the existing `turn_key` as a correlation id, creates or
-resumes the host run, consumes its Event/Outcome API, and emits one existing
-result kind. The validator independently reads tests, a grader, or platform
-state. Host observations such as requested, accepted, running, outcome-ready,
-failed, and resumed map to committed, repair, replan, or wait; they do not
-become new Turn states.
+Adapter 携带既有 `turn_key` 作为相关 id，创建或恢复 host run，消费其 Event/Outcome API，并发出一个既有结果种类。校验器独立读取测试、评分器或平台状态。Host 观察如 requested、accepted、running、outcome-ready、failed 与 resumed 映射到 committed、repair、replan 或 wait；它们不会变成新的 Turn 状态。
 
-Qualify a new adapter with a real task, scenario owner, adapter owner, validator,
-and measurable outcome. Add an event reference only after that call site proves
-the compact result cannot carry the evidence.
+用真实任务、场景 owner、adapter owner、校验器与可度量结果验证新 adapter。只有在调用点证明紧凑结果无法携带该 evidence 时，才添加事件引用。
 
-## Verify The Integration
+## 验证集成
 
-The repository ships a disposable qualification that keeps raw prompts,
-transcripts, credentials, and temporary workspaces out of LoopX state:
+仓库附带一个一次性资格验证，把原始 prompt、transcripts、凭据与临时 workspace 排除在 LoopX 状态之外：
 
 ```bash
 python3 examples/loopx-turn-codex-cli-e2e-smoke.py
@@ -94,17 +77,8 @@ python3 examples/loopx-turn-codex-cli-e2e-smoke.py \
   --real-codex-cli --turn-count 3 --codex-model <qualified-model>
 ```
 
-The first command is deterministic and model-free. The second makes one real
-Codex CLI call and must report `status=committed`, `validation_status=passed`,
-one quota spend, and a replay with no side effects. A compact
-`codex_cli_model_requires_newer_codex` result is a host compatibility failure,
-not task progress; it must show zero state writes and zero quota spend.
+第一条命令确定且与模型无关。第二条命令做一次真实 Codex CLI 调用，必须报告 `status=committed`、`validation_status=passed`、一次 quota spend，以及一个无副作用的重放。紧凑的 `codex_cli_model_requires_newer_codex` 结果是 host 兼容性失败，不是任务进展；它必须显示零状态写入与零 quota spend。
 
-The third command makes N real calls against one temporary goal and todo. It
-starts one opaque session, resumes it for Turns 2 through N, and independently
-validates every marker. With `--turn-count 3`, success reports
-`committed_turn_count=3`, `session_resumed=true`, and three quota spends. The
-session id remains private and is never printed or synced.
+第三条命令对同一个临时 goal 与 todo 做 N 次真实调用。它开始一个不透明 session，为 Turn 2 到 N 恢复它，并独立校验每个标记。用 `--turn-count 3`，成功报告 `committed_turn_count=3`、`session_resumed=true` 与三次 quota spend。Session id 保持私有，从不打印或同步。
 
-That is the complete partner-facing path. For implementation details, read the
-[adapter notes](codex-cli-automation-driver.md) or the [Turn protocol](../../../reference/protocols/loopx-turn-v0.md).
+这就是完整的伙伴面向路径。实现细节见 [adapter 说明](codex-cli-automation-driver.md) 或 [Turn 协议](../../../reference/protocols/loopx-turn-v0.md)。

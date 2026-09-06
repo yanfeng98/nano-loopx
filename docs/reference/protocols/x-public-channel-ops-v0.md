@@ -1,201 +1,168 @@
 # x_public_channel_ops_v0
+> [English](x-public-channel-ops-v0.md)
 
-Status: public-safe connector and publish-gate protocol v0.
+状态：公开安全 connector 与发布关卡协议 v0。
 
-`x_public_channel_ops_v0` defines how LoopX can support public X/Twitter
-research, draft preparation, and approved posting without storing raw platform
-material or turning a local operator workflow into a public repo skill.
+`x_public_channel_ops_v0` 定义 LoopX 如何在不存储原始平台物料、也不把本地操作员工作流变成公开仓库 skill 的情况下，支持公开 X/Twitter 研究、草稿准备与已批准发布。
 
-This protocol is intentionally generic. It does not encode a specific account,
-posting calendar, influencer list, launch copy, local browser profile, or
-private source library.
+本协议刻意保持通用。它不编码具体账户、发布日历、网红名单、发布文案、本地浏览器 profile 或私有来源库。
 
-## Boundary
+## 边界
 
-LoopX may store compact channel-operation records:
+LoopX 可以存储紧凑的 channel 操作记录：
 
-- source handles and public URLs;
-- whether a source read was metadata-only, public-content-read, or gated;
-- post angle, source map, draft state, asset plan, and approval state;
-- external-write result pointers, such as a public post URL after posting.
+- 来源句柄与公开 URL；
+- 来源读取是仅元数据、公开内容读取还是受关卡；
+- 帖子角度、来源映射、草稿状态、素材计划与批准状态；
+- 外部写入结果指针，如发布后的公开帖子 URL。
 
-LoopX must not store:
+LoopX 不得存储：
 
-- login cookies, browser profiles, credentials, or session artifacts;
-- raw timelines, raw post bodies from private or login-gated surfaces, raw
-  replies, analytics dumps, media streams, or screenshots with private state;
-- account-specific growth lists, private operator notes, or exact launch
-  schedules that only make sense for one maintainer;
-- unapproved post bodies as if they were publish permission.
+- 登录 cookie、浏览器 profile、凭据或会话工件；
+- 原始 timeline、来自私有或登录关卡界面的原始帖子正文、原始回复、分析转储、媒体流或带私有状态的截图；
+- 账户特定增长清单、私有操作员笔记或只对一个维护者有意义的精确发布时刻表；
+- 尚未批准的帖子正文，就像它们是发布许可一样。
 
-## Record Shape
+## 记录形状
 
 ### `x_source_observation_v0`
 
-Compact source-intake record.
+紧凑来源摄取记录。
 
-Required fields:
+必需字段：
 
-- `source_id`;
-- `source_url`;
-- `source_status`: `public`, `public_metadata_only`,
-  `login_gated_needs_owner_review`, or `forbidden`;
-- `read_mode`: `head_only_metadata`, `public_body_read`,
-  `browser_observation`, or `no_read`;
-- `allowed_use`: `metadata_only`, `summarize_and_transform`,
-  `do_not_quote`, or `forbidden`;
-- `terms_note`;
-- `next_gate`.
+- `source_id`；
+- `source_url`；
+- `source_status`：`public`、`public_metadata_only`、`login_gated_needs_owner_review` 或 `forbidden`；
+- `read_mode`：`head_only_metadata`、`public_body_read`、`browser_observation` 或 `no_read`；
+- `allowed_use`：`metadata_only`、`summarize_and_transform`、`do_not_quote` 或 `forbidden`；
+- `terms_note`；
+- `next_gate`。
 
-Default to `head_only_metadata` for public handles. Browser observation is not
-the default because opening X pages can autoload timelines, media, analytics,
-and engagement data.
+对公开句柄默认为 `head_only_metadata`。浏览器观察不是默认，因为打开 X 页面可能自动加载 timeline、媒体、分析与互动数据。
 
 ### `x_draft_packet_v0`
 
-No-send draft packet.
+不发送草稿包。
 
-Required fields:
+必需字段：
 
-- `target_reader`;
-- `angle_family`;
-- `source_map`;
-- `post_body`;
-- `asset_plan`;
-- `repo_or_product_link`;
-- `mention_plan`;
-- `timing_window`;
-- `anti_spam_checks`;
-- `publish_gate_id`.
+- `target_reader`；
+- `angle_family`；
+- `source_map`；
+- `post_body`；
+- `asset_plan`；
+- `repo_or_product_link`；
+- `mention_plan`；
+- `timing_window`；
+- `anti_spam_checks`；
+- `publish_gate_id`。
 
-The packet may be shared for review, but it is not publish permission.
+包可以分发评审，但它不是发布许可。
 
 ### `x_publish_gate_v0`
 
-Explicit human approval record.
+显式人类批准记录。
 
-Required fields:
+必需字段：
 
-- `gate_id`;
-- `approval_required=true`;
-- `autopublish_allowed=false`;
-- `approved_body_hash`;
-- `approved_assets`;
-- `approved_time_window`;
-- `approved_account_or_identity`;
-- `revocation_check`;
-- `stop_conditions`.
+- `gate_id`；
+- `approval_required=true`；
+- `autopublish_allowed=false`；
+- `approved_body_hash`；
+- `approved_assets`；
+- `approved_time_window`；
+- `approved_account_or_identity`；
+- `revocation_check`；
+- `stop_conditions`。
 
-Posting may proceed only when the current user/controller approval matches the
-exact body, assets, account identity, and time window.
+只有当前用户/controller 批准与精确正文、素材、账户身份与时间窗口匹配时，才可继续发布。
 
 ### `x_publish_result_v0`
 
-Compact result after an approved external write.
+已批准外部写入后的紧凑结果。
 
-Required fields:
+必需字段：
 
-- `published`;
-- `post_url` when visible;
-- `posted_at`;
-- `account_identity_status`;
-- `asset_upload_status`;
-- `first_hour_monitor_plan`;
-- `blocker` when not posted.
+- `published`；
+- 可见时的 `post_url`；
+- `posted_at`；
+- `account_identity_status`；
+- `asset_upload_status`；
+- `first_hour_monitor_plan`；
+- 未发布时的 `blocker`。
 
-Do not store cookies, upload payloads, raw screenshots, or engagement dumps.
+不要存储 cookie、上传载荷、原始截图或互动转储。
 
-## Posting-Time Policy
+## 发布时间策略
 
-Timing is a recommendation, not permission. Agents should re-research current
-platform guidance when timing materially affects a launch.
+时机是建议，不是许可。当时机实质影响发布时，agent 应重新研究当前平台指引。
 
-Generic default:
+通用默认：
 
-- For US/EU developer-tool audiences, prefer weekday 9:00-11:00 US Eastern
-  when the post should reach US East morning and Europe afternoon.
-- Tuesday to Thursday is usually stronger than Friday.
-- If constrained to the next 24 hours, choose the next available weekday
-  9:00-11:00 US Eastern slot and leave 30-60 minutes for replies.
-- Record the timezone conversion in `x_draft_packet_v0.timing_window`.
-- If the chosen time is outside the preferred window, mark it as a user or
-  business constraint rather than a platform optimum.
+- 对于美国/欧洲开发者工具受众，当帖子应触及美东早晨与欧洲下午时，优先工作日 9:00-11:00 美东时间。
+- 周二到周四通常比周五更强。
+- 若限制在接下来的 24 小时，选择下一个可用的工作日 9:00-11:00 美东时隙，并留 30-60 分钟回复。
+- 在 `x_draft_packet_v0.timing_window` 中记录时区转换。
+- 若所选时间在首选窗口之外，将其标记为用户或业务约束，而非平台最优。
 
-Exact publish windows are execution gates, not soft scheduler hints:
+精确发布窗口是执行关卡，不是软 scheduler 提示：
 
-- Store the approved window with an explicit timezone, for example
-  `2026-06-27 21:05-21:35 Asia/Shanghai`, plus any audience-time conversion.
-- Treat host wakeups, RRULEs, or heartbeat cadences as triggers to re-check the
-  gate, not as permission to post outside the approved window.
-- If the worker wakes before the window, it may preflight login/account/media
-  state but must not post early.
-- If the worker wakes after the window, record an `x_publish_result_v0` blocker
-  or local incident, ask for a new exact approval, and do not "catch up" by
-  posting late.
-- Do not rely on a wall-clock RRULE without confirming the host timezone
-  semantics for the publish surface.
+- 用显式时区存储已批准窗口，例如 `2026-06-27 21:05-21:35 Asia/Shanghai`，加任何受众时间转换。
+- 把 host 唤醒、RRULE 或 heartbeat 节奏当作重新检查关卡触发，而不是在批准窗口外发布的许可。
+- 若 worker 在窗口前唤醒，它可以预检登录/账户/媒体状态，但不得提前发布。
+- 若 worker 在窗口后唤醒，记录 `x_publish_result_v0` blocker 或本地 incident，请求新的精确批准，且不得以迟发「补上」。
+- 不要依赖墙上时钟 RRULE，而不确认发布界面的 host 时区语义。
 
-## Content Rules
+## 内容规则
 
-For LoopX launch or education content:
+对于 LoopX 发布或教育内容：
 
-- name the category as `loop engineering` when that is the claim;
-- define "control plane" as state, gates, evidence, quota, and handoff around
-  an agent loop, not merely a dashboard or front end;
-- emphasize local-first adoption when the conversion goal is repo visits or
-  installation;
-- include a repository/product link when making an open-source claim;
-- use one strong visual when it helps the reader understand the mechanism;
-- mention people sparingly and only when the post is relevant to their public
-  work or current conversation.
+- 当主张是那样时，把类别命名为 `loop engineering`；
+- 把「control plane」定义为 agent loop 周围的状态、关卡、证据、配额与交接，而非仅仅 dashboard 或前端；
+- 当转化目标是仓库访问或安装时，强调 local-first 采用；
+- 做开源主张时包含仓库/产品链接；
+- 当一个强视觉有助读者理解机制时使用它；
+- 少提人名，且只在帖子与其公开工作或当前对话相关时。
 
-Avoid:
+避免：
 
-- mass tagging;
-- repeated generic replies;
-- unsubstantiated benchmark, revenue, or customer claims;
-- private screenshots or raw operator state;
-- publishing from an account whose identity, login state, or approval boundary
-  is uncertain.
+- 大量标记；
+- 重复通用回复；
+- 无依据的 benchmark、收入或客户主张；
+- 私有截图或原始操作员状态；
+- 从身份、登录状态或批准边界不确定的账户发布。
 
-## Ego-Lite Browser Use
+## Ego-Lite 浏览器使用
 
-`ego-lite browser` may be used as a user-controlled browser channel when it is
-installed and the user has logged in. It is a runtime channel, not a durable
-public repo dependency.
+`ego-lite browser` 在已安装且用户已登录时可以用作用户控制的浏览器 channel。它是运行时 channel，不是持久化公开仓库依赖。
 
-Before using it for X:
+在用它处理 X 之前：
 
-1. Verify the requested action is inside an approved `x_publish_gate_v0`.
-2. Verify the account identity is acceptable for the post.
-3. Upload only approved assets.
-4. Stop for captcha, credentials, identity confusion, upload failure, or a
-   changed post body.
-5. After posting, record only `x_publish_result_v0` compact fields.
+1. 验证请求动作在已批准的 `x_publish_gate_v0` 内。
+2. 验证账户身份对该帖子可接受。
+3. 只上传已批准素材。
+4. 在 captcha、凭据、身份混淆、上传失败或帖子正文变更时停止。
+5. 发布后只记录 `x_publish_result_v0` 紧凑字段。
 
-## Anti-Spam And Reply Policy
+## 反垃圾与回复策略
 
-For cold or low-reputation accounts:
+对于新账户或低信誉账户：
 
-- each reply must have target-specific evidence in the first paragraph;
-- the ask must be concrete and low-pressure;
-- stop after one reply unless the owner engages;
-- if a public comment or post is minimized as spam, do not bump, repost, edit,
-  delete, or appeal without explicit owner approval.
+- 每条回复的第一段必须有目标特定证据；
+- 请求必须具体且低压；
+- 除非 owner 互动，否则一次回复后停止；
+- 若公开评论或帖子被降权为垃圾，未经显式 owner 批准不得顶起、转发、编辑、删除或申诉。
 
-Public lead monitoring should prefer metadata-only checks such as state,
-comment count, minimized status, author association, and updated timestamp
-until an owner approves body reads.
+公开潜在客户监控在 owner 批准正文读取之前，应优先仅元数据检查，如状态、评论数、降权状态、author association 与更新时间戳。
 
-## Fit With `content_ops_surface_v0`
+## 与 `content_ops_surface_v0` 的契合
 
-This protocol specializes the generic content-ops records:
+本协议特化通用 content-ops 记录：
 
-- `x_source_observation_v0` is a source-specific `source_item_v0`;
-- `x_draft_packet_v0` is a source-mapped `draft_item_v0`;
-- `x_publish_gate_v0` is a channel-specific `publish_gate_v0`;
-- `x_publish_result_v0` is compact external evidence after a gated write.
+- `x_source_observation_v0` 是来源特定 `source_item_v0`；
+- `x_draft_packet_v0` 是来源映射 `draft_item_v0`；
+- `x_publish_gate_v0` 是 channel 特定 `publish_gate_v0`；
+- `x_publish_result_v0` 是受关卡写入后的紧凑外部证据。
 
-Use this protocol for public product behavior and reusable connector guidance.
-Keep maintainer-specific social-media skills, exact launch calendars, and
-account operating notes in ignored local state or user-local Codex skills.
+用本协议处理公开产品行为与可复用 connector 指导。把维护者特定社交媒体 skill、精确发布日历与账户操作笔记留在忽略的本地状态或用户本地 Codex skills 中。

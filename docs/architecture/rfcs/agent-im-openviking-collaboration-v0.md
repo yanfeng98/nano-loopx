@@ -1,120 +1,112 @@
-# RFC: Agent IM, LoopX, And OpenViking Collaboration v0
+# RFC：Agent IM、LoopX 与 OpenViking 协同（v0）
 
-- Status: Draft
-- Scope: multi-host, multi-runtime agent collaboration
-- Decision type: architecture and staged integration contract
+> [English](agent-im-openviking-collaboration-v0.md)
 
-## Summary
+- 状态：Draft
+- 范围：多主机、多 runtime 的 agent 协同
+- 决策类型：架构与分阶段集成契约
 
-This RFC proposes three narrow, composable planes for long-running agent work:
+## 摘要
 
-1. **Agent IM and runtime delivery** owns rooms, direct messages, threads,
-   presence, host daemons, delivery, offline queues, and wake-up behavior.
-2. **LoopX** remains the single authority for goals, todos, claims and leases,
-   gates, quota, scheduling, evidence, handoff, and accepted state changes.
-3. **OpenViking** owns durable context, resource indexing, scoped recall, and
-   cross-session or cross-runtime context continuity.
+本 RFC 为长程 agent 工作提出三个狭窄、可组合的平面：
 
-The central rule is that an external task board is a LoopX projection with a
-small controlled-command facade, not a second writable kanban. Message
-delivery is not proof that control state changed. Every claim, gate decision,
-or handoff must be accepted by LoopX and return an idempotent receipt.
+1. **Agent IM 与 runtime 投递**拥有房间、私聊、线程、presence、宿主 daemon、
+   投递、离线队列与唤醒行为。
+2. **LoopX** 仍是 goal、todo、claim 与 lease、gate、quota、调度、证据、交接与
+   已接受状态变更的唯一权威。
+3. **OpenViking** 拥有持久上下文、资源索引、scoped 召回与跨会话或跨 runtime 的
+   上下文连续性。
 
-## Problem
+核心规则是：外部任务看板是 LoopX 的投影加一个小的受控命令 facade，而不是第二个
+可写 kanban。消息投递不等于控制状态已变更。每个 claim、gate 决策或交接都必须被
+LoopX 接受并返回幂等 receipt。
 
-Long-running work often spans several hosts and agent runtimes. The messaging
-layer can reconnect agents and deliver instructions, while a context service
-can restore useful history. Neither fact answers the control questions:
+## 问题
 
-- Which goal and todo may this agent advance now?
-- Has another agent already claimed the same work?
-- Is a user decision or write boundary blocking the next transition?
-- Did an earlier command actually commit, or was only a message delivered?
-- Which evidence is current enough to justify progress?
+长程工作常常横跨多个主机与 agent runtime。消息层可以把 agent 重新连接起来并投递
+指令，上下文服务可以恢复有用的历史。但这两件事都不能回答控制问题：
 
-When chat, memory, and task state all look writable, retries and stale views
-can produce duplicate claims, repeated implementation, invalid approvals, and
-ownership drift. A shared database does not solve this by itself; one contract
-must still own each transition.
+- 这个 agent 现在可以推进哪个 goal 和 todo？
+- 是否已有另一个 agent 认领了同一批工作？
+- 是否有用户决策或写边界阻挡下一次迁移？
+- 早先的命令真的提交了吗，还是只投递了一条消息？
+- 哪条证据新到足以支撑推进？
 
-## Goals
+当聊天、记忆与任务状态看起来都可写时，重试与过期视图可能产生重复认领、重复实现、
+非法批准与所有权漂移。共享数据库本身并不能解决这一问题；每个迁移仍必须由唯一的
+契约拥有。
 
-- Let heterogeneous agent runtimes collaborate through one IM space without
-  requiring them to become the same runtime.
-- Preserve a direct agent-native path from each runtime to LoopX.
-- Expose useful LoopX state in IM without creating another lifecycle owner.
-- Use OpenViking for scoped context continuity without turning recalled text
-  into current control authority.
-- Make retries, reconnects, and concurrent actions observable and idempotent.
-- Keep private context and effect authority scoped to the acting identity.
+## 目标
 
-## Non-Goals
+- 让异构 agent runtime 通过同一个 IM 空间协同，而不必成为同一个 runtime。
+- 为每个 runtime 保留一条直达 LoopX 的 agent 原生路径。
+- 在 IM 中展示有用的 LoopX 状态，而不引入另一个生命周期 owner。
+- 把 OpenViking 用于 scoped 上下文连续性，但不要把召回文本变成当前控制权威。
+- 让重试、重连与并发动作可观察、可幂等。
+- 保持私有上下文与效应权威限定在行动的 identity 上。
 
-- Replacing an agent runtime or its native tools.
-- Moving LoopX planning, quota, scheduling, or todo lifecycle into IM.
-- Treating OpenViking recall as a gate decision, claim, or permission grant.
-- Copying raw chat history, tool output, credentials, or private files into
-  public or broadly shared projections.
-- Designing a universal coordinator with durable authority over peer agents.
-- Weakening existing merge, publish, production, credential, or destructive
-  operation gates.
+## 非目标
 
-## Ownership Model
+- 替换某个 agent runtime 或其原生工具。
+- 把 LoopX 的规划、quota、调度或 todo 生命周期搬进 IM。
+- 把 OpenViking 召回当作 gate 决策、claim 或权限授予。
+- 把原始聊天历史、工具输出、凭证或私有文件复制到公开或广泛共享的投影中。
+- 设计一个对 peer agent 拥有持久权威的通用协调器。
+- 削弱现有的 merge、publish、生产、凭证或破坏性操作 gate。
 
-| Capability | Agent IM | LoopX | OpenViking |
+## 所有权模型
+
+| 能力 | Agent IM | LoopX | OpenViking |
 | --- | --- | --- | --- |
-| Rooms, messages, threads, presence | Owner | References only | Optional scoped index |
-| Runtime daemon and message delivery | Owner | Observes availability | Restores scoped context |
-| Goal and todo lifecycle | Projection | Owner | Context only |
-| Claims, leases, gates, quota | Controlled facade | Owner | Never authoritative |
-| Evidence acceptance and handoff | Delivery channel | Owner | Stores approved pointers or summaries |
-| Resources, memory, and recall | May carry pointers | Scope and authority boundary | Owner |
+| 房间、消息、线程、presence | Owner | 仅引用 | 可选 scoped 索引 |
+| Runtime daemon 与消息投递 | Owner | 观察可用性 | 恢复 scoped 上下文 |
+| Goal 与 todo 生命周期 | 投影 | Owner | 仅上下文 |
+| Claim、lease、gate、quota | 受控 facade | Owner | 永不权威 |
+| 证据接受与交接 | 投递通道 | Owner | 存储已批准的指针或摘要 |
+| 资源、记忆与召回 | 可携带指针 | 范围与权威边界 | Owner |
 
-There is one canonical LoopX todo and event history for each goal. Agent IM and
-OpenViking retain their own domain state, but neither stores an independently
-advanceable copy of the LoopX lifecycle.
+每个 goal 都只有一份规范的 LoopX todo 与事件历史。Agent IM 与 OpenViking 保留
+各自的领域状态，但两者都不存储一份可独立推进的 LoopX 生命周期副本。
 
-## Architecture
+## 架构
 
 ```mermaid
 flowchart LR
-    U["Human"] <--> IM["Agent IM Server"]
+    U["人"] <--> IM["Agent IM 服务器"]
 
-    IM <--> D1["Host A Delivery Daemon"]
-    IM <--> D2["Host B Delivery Daemon"]
+    IM <--> D1["主机 A 投递 daemon"]
+    IM <--> D2["主机 B 投递 daemon"]
     D1 <--> A1["Agent Runtime A"]
     D2 <--> A2["Agent Runtime B"]
 
-    A1 <--> C1["Host A LoopX Client/CLI"]
-    A2 <--> C2["Host B LoopX Client/CLI"]
-    C1 <-->|"commands, projections, receipts"| LX["Shared LoopX Control Plane"]
-    C2 <-->|"commands, projections, receipts"| LX
+    A1 <--> C1["主机 A LoopX Client/CLI"]
+    A2 <--> C2["主机 B LoopX Client/CLI"]
+    C1 <-->|"命令、投影、receipt"| LX["共享 LoopX 控制面"]
+    C2 <-->|"命令、投影、receipt"| LX
 
-    IM <-->|"read projection and controlled human command"| LX
+    IM <-->|"读取投影与受控人工命令"| LX
 
-    A1 <-->|"scoped context"| OV["OpenViking Context And Memory"]
-    A2 <-->|"scoped context"| OV
-    LX -->|"artifact and context pointers"| OV
+    A1 <-->|"scoped 上下文"| OV["OpenViking 上下文与记忆"]
+    A2 <-->|"scoped 上下文"| OV
+    LX -->|"artifact 与上下文指针"| OV
 ```
 
-The direct runtime-to-LoopX path is primary. An agent discovers, claims, and
-advances work through its local LoopX client or CLI even when no IM action
-occurred. Agent IM is a second ingress for human-visible projection and a small
-set of controlled commands. It must not proxy or replace routine agent
-lifecycle calls.
+直达 LoopX 的 runtime 路径是主路径。即使没有任何 IM 动作发生，agent 也通过其本地
+LoopX client 或 CLI 发现、认领并推进工作。Agent IM 是人可见投影与一小批受控命令
+的第二入口。它不得代理或替代常规的 agent 生命周期调用。
 
-Both ingress paths use the same transition contract:
+两条入口路径都使用同一迁移契约：
 
-- authenticated actor identity;
-- goal and todo scope;
-- expected state sequence or revision;
-- idempotency key;
-- command-specific evidence;
-- an accepted, rejected, conflict, or already-applied receipt.
+- 已认证的 actor identity；
+- goal 与 todo 范围；
+- 预期状态序列或 revision；
+- 幂等 key；
+- 命令专属证据；
+- 被接受、被拒绝、冲突或已应用的 receipt。
 
-## Projection Contract
+## 投影契约
 
-An IM room may display a compact projection such as:
+IM 房间可以展示紧凑投影，例如：
 
 ```json
 {
@@ -135,16 +127,14 @@ An IM room may display a compact projection such as:
 }
 ```
 
-The projection is content-minimal and actor-scoped. It may show another
-agent's ownership and a public-safe summary, but it does not expose private
-evidence by default. A room membership is not a LoopX write grant.
+投影是内容极简且限定 actor 的。它可以展示另一 agent 的所有权和一个公开安全的
+摘要，但默认不暴露私有证据。房间成员身份不是 LoopX 的写授权。
 
-Every projection carries freshness information. A stale card remains useful
-for orientation but cannot prove that a transition is still valid.
+每个投影都携带新鲜度信息。过期卡片仍可用于定位方向，但无法证明迁移仍有效。
 
-## Controlled Command Contract
+## 受控命令契约
 
-The first supported command should be `claim_todo`:
+第一个支持的命令应为 `claim_todo`：
 
 ```json
 {
@@ -157,129 +147,121 @@ The first supported command should be `claim_todo`:
 }
 ```
 
-LoopX returns one of:
+LoopX 返回以下之一：
 
-- `applied`: the transition committed;
-- `already_applied`: the same semantic command committed earlier;
-- `conflict`: current state no longer satisfies the expected revision;
-- `rejected`: identity, scope, gate, or policy disallows the command;
-- `failed`: no state change was accepted and the operation may need bounded
-  retry or repair.
+- `applied`：迁移已提交；
+- `already_applied`：同一语义命令更早已提交；
+- `conflict`：当前状态不再满足预期 revision；
+- `rejected`：identity、范围、gate 或策略不允许该命令；
+- `failed`：没有接受任何状态变更，操作可能需要有界重试或修复。
 
-The UI changes ownership only after an accepted receipt. It never infers
-success from a sent message, an optimistic card move, or agent prose.
+界面只在收到已接受的 receipt 后更改所有权。它绝不从一条已发送消息、一次乐观卡片
+移动或 agent 散文推断成功。
 
-## Context And Memory Contract
+## 上下文与记忆契约
 
-OpenViking receives scoped resources, approved summaries, and artifact
-pointers. It may help an agent recover:
+OpenViking 接收 scoped 资源、已批准摘要与 artifact 指针。它可以帮助 agent 恢复：
 
-- prior decisions and their evidence;
-- handoff summaries;
-- reusable project knowledge;
-- resource locations;
-- bounded lessons from earlier runs.
+- 先前的决策及其证据；
+- 交接摘要；
+- 可复用的项目知识；
+- 资源位置；
+- 早期 run 的有界教训。
 
-Recall remains an observation. Before recalled material affects execution,
-the runtime or capability must compare it with current LoopX state and source
-freshness. In particular:
+召回始终是一种观察。在召回材料影响执行之前，runtime 或能力必须把它与当前 LoopX
+状态及来源新鲜度对比。特别是：
 
-- a remembered approval does not satisfy a current user gate;
-- a remembered owner does not renew a claim or lease;
-- an old todo summary does not override a newer revision;
-- a context pointer does not grant access to its target;
-- a summary without inspectable evidence cannot prove completion.
+- 被记住的批准不满足当前的 user gate；
+- 被记住的 owner 不会续期 claim 或 lease；
+- 旧的 todo 摘要不能覆盖较新的 revision；
+- 上下文指针不授予对其目标的访问权；
+- 无可检查证据的摘要不能证明完成。
 
-## Identity And Authority
+## 身份与权威
 
-The same public-safe actor identity should be traceable across runtime, IM,
-LoopX, and OpenViking, while each system continues to enforce its own scope.
-Identity correlation does not imply authority inheritance.
+同一个公开安全的 actor identity 应可在 runtime、IM、LoopX 与 OpenViking 之间
+追溯，同时每个系统继续执行自己的范围。身份关联不等于权威继承。
 
-- Runtime credentials remain with the host or runtime.
-- IM delivery rights do not grant LoopX write scope.
-- LoopX task authority does not grant broad memory access.
-- Memory access does not grant effect authority.
-- A coordinator is a task-scoped role, not a durable superuser.
+- Runtime 凭证仍留在主机或 runtime。
+- IM 投递权不授予 LoopX 写范围。
+- LoopX 任务权威不授予宽泛的记忆访问。
+- 记忆访问不授予效应权威。
+- 协调器是任务限定的角色，不是持久的超级用户。
 
-## Reconnect And Replay
+## 重连与重放
 
-Agent IM may use at-least-once delivery so offline agents eventually receive a
-message. LoopX idempotency provides at-most-once semantic application for a
-command. OpenViking may restore context after a restart, but the runtime must
-still obtain fresh LoopX state before resuming work.
+Agent IM 可以采用至少一次投递，让离线 agent 最终收到消息。LoopX 幂等为命令提供
+至多一次的语义应用。OpenViking 可以在重启后恢复上下文，但 runtime 在恢复工作前
+仍必须获取新鲜 LoopX 状态。
 
-A safe reconnect sequence is:
+可靠的重连顺序是：
 
-1. Re-establish runtime and IM identity.
-2. Restore scoped context from OpenViking.
-3. Read the current LoopX projection and revision.
-4. Reconcile pending commands by idempotency key and receipt.
-5. Ask LoopX quota and gate surfaces whether work remains actionable.
-6. Resume only the selected bounded todo.
+1. 重新建立 runtime 与 IM 身份。
+2. 从 OpenViking 恢复 scoped 上下文。
+3. 读取当前 LoopX 投影与 revision。
+4. 按幂等 key 与 receipt 对账待处理命令。
+5. 向 LoopX quota 与 gate 界面询问工作是否仍可行动。
+6. 只恢复所选的有界 todo。
 
-## Failure Semantics
+## 失败语义
 
-| Failure | Required behavior |
+| 失败 | 必需行为 |
 | --- | --- |
-| IM delivery delayed | Do not infer task inactivity or reassign ownership |
-| Duplicate command | Return the original semantic result or `already_applied` |
-| Stale projection | Reject the command with conflict and refresh state |
-| LoopX unavailable | Keep the board read-only; do not queue an unbounded write |
-| OpenViking unavailable | Continue from current LoopX state with reduced context |
-| Runtime changes | Restore identity and context, then re-check current authority |
-| Private evidence unavailable | Show a redacted pointer or access warning, not the content |
+| IM 投递延迟 | 不得推断任务不活跃或重新指派所有权 |
+| 重复命令 | 返回原始语义结果或 `already_applied` |
+| 过期投影 | 以 conflict 拒绝命令并刷新状态 |
+| LoopX 不可用 | 保持看板只读；不排队无界写入 |
+| OpenViking 不可用 | 以缩减的上下文从当前 LoopX 状态继续 |
+| Runtime 变化 | 恢复身份与上下文，然后重新检查当前权威 |
+| 私有证据不可用 | 展示脱敏指针或访问警告，而非内容 |
 
-## Smallest Useful Slice
+## 最小有用切片
 
-The first implementation should remain narrow:
+首个实现应保持狭窄：
 
-1. Project LoopX goal status, selected todo, unclaimed count, and user-gate
-   count into one non-production IM room.
-2. Support only the `claim_todo` command.
-3. Require actor, goal/todo scope, expected revision, and idempotency key.
-4. Display the LoopX receipt next to the initiating interaction.
-5. Validate two hosts attempting the same claim and one daemon reconnect.
-6. Keep OpenViking integration read-only for scoped context retrieval and
-   artifact pointers during this slice.
+1. 把 LoopX goal 状态、选中 todo、未认领计数与 user-gate 计数投影到一个非生产
+   IM 房间。
+2. 只支持 `claim_todo` 命令。
+3. 要求 actor、goal/todo 范围、预期 revision 与幂等 key。
+4. 把 LoopX receipt 显示在发起交互旁边。
+5. 验证两个主机尝试同一认领与一次 daemon 重连。
+6. 在本切片期间，OpenViking 集成保持只读，仅用于 scoped 上下文检索与
+   artifact 指针。
 
-This tests the important composition boundary without first rebuilding every
-scheduler, memory writer, board interaction, or runtime adapter.
+这在不先重建每个调度器、记忆写入器、看板交互或 runtime adapter 的前提下，验证了
+重要的组合边界。
 
-## Validation
+## 验证
 
-The slice must prove:
+切片必须证明：
 
-- only one concurrent claim commits;
-- retrying the same command does not create a second transition;
-- a stale room card cannot override current LoopX state;
-- an agent can still claim and advance work directly through LoopX;
-- reconnect restores context but rechecks current authority;
-- private material does not appear in room projections, receipts, or public
-  logs;
-- the board remains read-only when LoopX cannot validate a command.
+- 只有一个并发认领会提交；
+- 重试同一命令不会产生第二次迁移；
+- 过期房间卡片不能覆盖当前 LoopX 状态；
+- agent 仍能直接通过 LoopX 认领并推进工作；
+- 重连恢复上下文但会重新检查当前权威；
+- 私有材料不出现在房间投影、receipt 或公开日志中；
+- 当 LoopX 无法验证命令时，看板保持只读。
 
-Measure outcome quality rather than message volume:
+衡量结果质量而非消息量：
 
-- state drift between projection and LoopX truth;
-- duplicate claims or duplicate implementation;
-- human attention needed to locate, forward, and unlock work;
-- recovery time after host or runtime interruption;
-- false acceptance or rejection of controlled transitions;
-- verified goal outcomes produced after handoff.
+- 投影与 LoopX 真值之间的状态漂移；
+- 重复认领或重复实现；
+- 定位、转发与解锁工作所需的人工注意力；
+- 主机或 runtime 中断后的恢复时间；
+- 受控迁移的误接受或误拒绝；
+- 交接后产出的已验证 goal 结果。
 
-## Open Questions
+## 未决问题
 
-1. Which LoopX projection fields are stable enough for the first public
-   contract?
-2. Should room-to-goal binding always require explicit owner confirmation?
-3. Which additional commands, if any, are simple enough to expose after claim?
-4. How should a context pointer communicate that the actor lacks access?
-5. What retention policy applies to receipts displayed in IM?
-6. Which eval should compare baseline manual coordination with the integrated
-   path?
+1. 哪些 LoopX 投影字段足够稳定，足以进入首个公开契约？
+2. 房间到 goal 的绑定是否总需要显式 owner 确认？
+3. 在 claim 之后，哪些附加命令（若有）简单到可以暴露？
+4. 上下文指针应如何传达 actor 缺少访问权？
+5. IM 中展示的 receipt 适用什么保留策略？
+6. 哪个 eval 应比较基线人工协调与集成路径？
 
-## Public References
+## 公开参考
 
 - [OpenViking: Inside the Context Database Architecture](https://blog.openviking.ai/post/openviking-context-database-architecture/)
 - [OpenViking for the Too Many Agents Problem](https://blog.openviking.ai/post/openviking-too-many-agents/)
@@ -287,6 +269,5 @@ Measure outcome quality rather than message volume:
 - [LoopX host integration surface v0](../../reference/protocols/host-integration-surface-v0.md)
 - [LoopX OpenViking session memory adapter v0](../../reference/protocols/openviking-session-memory-adapter-v0.md)
 
-These public sources support the component boundaries and integration
-assumptions. This RFC intentionally excludes private conversations, personal
-attribution, internal links, local paths, credentials, and raw transcripts.
+这些公开来源支撑组件边界与集成假设。本 RFC 有意排除私有对话、个人归因、内部链接、
+本地路径、凭证与原始记录。

@@ -1,64 +1,57 @@
-# Contributing To LoopX
+# 为 LoopX 做贡献
 
-You want to help improve LoopX? Great, and thank you. Contributions come in
-many shapes, and not all of them are code:
+> [English](CONTRIBUTING.md)
 
-- filing clear bug reports with reproduction steps;
-- triaging and reproducing issues;
-- improving documentation, examples, and smoke tests;
-- answering questions in issues or discussions;
-- reviewing pull requests and helping contributors navigate the review flow;
-- following the [Code of Conduct](CODE_OF_CONDUCT.md);
-- implementing a public task or fixing a bug.
+你想帮助改进 LoopX？很好，感谢你。贡献有很多形式，并非所有都是代码：
 
-Every one of these helps. The rest of this guide covers finding work, keeping
-public/private boundaries intact, validating changes, and getting a pull
-request merged.
+- 提交带复现步骤的清晰 bug 报告；
+- 分诊并复现 issue；
+- 改进文档、示例与冒烟测试；
+- 在 issue 或讨论中回答问题；
+- 评审 pull request 并帮助贡献者熟悉评审流程；
+- 遵循[行为准则](CODE_OF_CONDUCT.md)；
+- 实现公开任务或修复 bug。
 
-The best code contributions are small, reviewable, and tied to a public task
-or a clear bug.
+每一件事都有帮助。本指南其余部分涵盖寻找工作、维护公共/私有边界、验证变更
+以及让 pull request 合并。
 
-## Code Of Conduct
+最好的代码贡献是小而可评审，并与公开任务或明确 bug 相关。
 
-Everyone participating in LoopX community spaces, including maintainers and
-contributors, is expected to follow the
-[Contributor Covenant](CODE_OF_CONDUCT.md). Reports of unacceptable behavior
-can be sent to huangrt01@163.com; maintainers review every report promptly and
-keep the reporter's identity confidential to the extent possible.
+## 行为准则
 
-## Find Work
+所有参与 LoopX 社区空间（包括维护者与贡献者）的人都应遵循
+[贡献者公约](CODE_OF_CONDUCT.md)。不可接受行为的报告可发送至
+huangrt01@163.com；维护者会及时评审每份报告，并在可行范围内为举报者保密。
 
-Start with the [current technical directions](docs/project/technical-directions.md)
-to understand the active programs and their maturity, then use
-[docs/development/contributor-tasks.md](docs/development/contributor-tasks.md) to find public work that is useful,
-claimable, and safe to discuss in the repository.
+## 寻找工作
 
-If you do not see a matching task:
+从[当前技术方向](docs/project/technical-directions.md)开始，了解活跃项目及其
+成熟度，然后使用
+[docs/development/contributor-tasks.md](docs/development/contributor-tasks.md)
+寻找有用、可认领且可在仓库中安全讨论的公开工作。
 
-1. open a GitHub issue with the contributor task template;
-2. explain the problem, proposed scope, touched files, and validation command;
-3. wait for maintainer feedback before starting large or behavior-changing
-   work.
+如果没有匹配的任务：
 
-Small docs typo fixes and obviously safe cleanups can go straight to a pull
-request.
+1. 用贡献者任务模板打开 GitHub issue；
+2. 说明问题、提议范围、触及的文件与验证命令；
+3. 在开始大型或行为变更工作前等待维护者反馈。
 
-## Public And Private Boundaries
+小型文档错别字修复与明显安全的清理可以直接进入 pull request。
 
-LoopX coordinates local agent state, so some files are runtime data and
-must stay out of public contributions:
+## 公共与私有边界
 
-- do not commit `.loopx/`, `.codex/goals/`, or live
-  `ACTIVE_GOAL_STATE.md` files;
-- do not publish private benchmark traces, verifier output, raw agent sessions,
-  credentials, internal document links, or local machine paths;
-- do not run or duplicate maintainer-owned benchmark cases unless a maintainer
-  has split out a public issue for that work.
+LoopX 协调本地 agent 状态，因此某些文件是运行时数据，必须排除在公开贡献之外：
 
-Safe contribution surfaces include docs, examples, smoke tests, CLI diagnostics,
-schema docs, dashboard UI code, and sanitized fixtures.
+- 不要提交 `.loopx/`、`.codex/goals/` 或活动中的 `ACTIVE_GOAL_STATE.md` 文件；
+- 不要发布私有 benchmark 轨迹、verifier 输出、原始 agent 会话、凭据、内部
+  文档链接或本地机器路径；
+- 除非维护者为该工作拆分出公开 issue，否则不要运行或重复维护者拥有的
+  benchmark 用例。
 
-Run the public/private scan before sending docs or examples:
+安全的贡献面包括文档、示例、冒烟测试、CLI 诊断、schema 文档、dashboard UI
+代码与脱敏 fixture。
+
+发送文档或示例前运行公共/私有扫描：
 
 ```bash
 loopx check \
@@ -69,17 +62,15 @@ loopx check \
   --scan-path examples/
 ```
 
-## Local Development
+## 本地开发
 
-Use the [developer guide](docs/development/README.md) as the stable entry point.
-Before changing scheduler, quota, todo/gate, onboarding, agent-facing output,
-or release behavior, read the bilingual
-[testing and quality guide](docs/development/testing-and-quality.md).
-Before adding or consolidating a public smoke, use the bilingual
-[good smoke guide](docs/development/good-smokes.md) to define its durable
-invariant, independent oracle, cadence, and public-safe fixture boundary.
+使用[开发者指南](docs/development/README.md)作为稳定入口。在更改 scheduler、
+quota、todo/gate、onboarding、agent 面向输出或发布行为之前，阅读双语
+[测试与质量指南](docs/development/testing-and-quality.md)。在新增或整合公开
+冒烟之前，使用双语[良好冒烟指南](docs/development/good-smokes.md)定义其持久
+不变量、独立 oracle、节奏与公开安全 fixture 边界。
 
-Install and verify the checkout:
+安装并校验检出：
 
 ```bash
 git clone https://github.com/huangruiteng/loopx ~/loopx
@@ -89,7 +80,7 @@ loopx doctor
 loopx demo
 ```
 
-Common focused checks:
+常用聚焦检查：
 
 ```bash
 python -m pip install -e ".[test]"
@@ -102,117 +93,97 @@ loopx check --scan-path loopx/ --scan-path tests/ --scan-path examples/ --scan-p
 git diff --check
 ```
 
-Choose focused smokes and broader canaries by change risk; do not run every
-public smoke or a live model call for every patch. The quality guide explains
-the CI, local/manual, and release-only boundaries.
+按变更风险选择聚焦冒烟与更广的 canary；不要为每个补丁运行所有公开冒烟或
+现场模型调用。质量指南解释了 CI、本地/手动与仅发布边界。
 
-## License And DCO Sign-Off
+## 许可与 DCO 签署
 
-LoopX's unified open source core is licensed under the
-[Apache License 2.0](LICENSE). Unless you explicitly state otherwise before
-submission, contributions accepted into this repository are submitted under
-Apache-2.0 without additional terms or conditions. LoopX does not require a
-copyright assignment or contributor license agreement.
+LoopX 的统一开源核心基于
+[Apache License 2.0](LICENSE) 许可。除非在提交前明确说明，否则被本仓库
+接受的贡献按 Apache-2.0 提交，不附加额外条款或条件。LoopX 不要求版权转让
+或贡献者许可协议。
 
-Every pull-request commit must certify the
-[Developer Certificate of Origin 1.1](DCO) by including a sign-off trailer:
+每个 pull request 提交必须通过包含 sign-off 结尾证明
+[Developer Certificate of Origin 1.1](DCO)：
 
 ```text
 Signed-off-by: Your Name <your.email@example.com>
 ```
 
-Create that trailer with Git's `-s` option:
+使用 Git 的 `-s` 选项生成该结尾：
 
 ```bash
 git commit -s -m "feat: describe the change"
 ```
 
-The name and email must identify the person making the certification and must
-be information you are permitted to publish in the permanent Git history. If a
-commit is missing the trailer, amend it with `git commit --amend -s` or use an
-interactive rebase to sign the affected commits, then update the pull-request
-branch. The `DCO` pull-request check rejects unsigned commits.
+名称与邮箱必须标识做出证明的人，并且必须是你在永久 Git 历史中被允许发布的
+信息。如果提交缺少该结尾，用 `git commit --amend -s` 修正，或使用交互式
+rebase 签署相关提交，然后更新 pull request 分支。`DCO` pull request 检查
+会拒绝未签名的提交。
 
-Releases through `v0.4.7` remain under their original MIT terms. See the
-[licensing and v0.4.8 transition policy](docs/project/licensing.md) for the
-historical notice, patent-grant boundary, and open-core scope.
+`v0.4.7` 及之前的发布仍遵循其原始 MIT 条款。历史通知、专利授权边界与
+open-core 范围参见[许可与 v0.4.8 迁移政策](docs/project/licensing.md)。
 
-## Experimental Features
+## 实验性功能
 
-Use `loopx/experiments/<experiment-id>/` for an opt-in prototype that does not
-yet have a stable caller contract or participate in LoopX's default lifecycle.
-Keep its tests, examples, and scripts under matching `experiments/` paths so
-the prototype can be evaluated or removed as one unit. Core modules must not
-import experimental packages. See the
-[experiment placement and promotion policy](loopx/experiments/README.md).
+使用 `loopx/experiments/<experiment-id>/` 存放尚无稳定调用方契约、不参与
+LoopX 默认生命周期的 opt-in 原型。将其测试、示例与脚本放在匹配的
+`experiments/` 路径下，使原型可以作为整体被评估或移除。核心模块不得导入
+实验包。参见[实验放置与晋升政策](loopx/experiments/README.md)。
 
-## Host Loops And LoopX Turn
+## 宿主 Loop 与 LoopX Turn
 
-Treat LoopX Turn and a long-running host loop as separate layers:
+把 LoopX Turn 与长程宿主 loop 视为不同层级：
 
-- `loopx turn run-once` is one atomic governed transaction. It may decide,
-  invoke one bounded host segment, validate independently, write back, spend
-  once, and project the latest scheduler phase.
-- A Turn Loop Controller is an outer runtime owner. It decides when to wake,
-  invokes `run-once`, consumes the typed result, applies the shared
-  `scheduler_hint`, and either waits, routes a user action, repairs, replans,
-  continues, or stops.
-- A host adapter translates one typed request and result. It owns the opaque
-  host session and tools, but it does not own LoopX state, quota, completion,
-  validation, scheduler policy, or replan policy.
+- `loopx turn run-once` 是一次原子化的治理事务。它可以做决策、调用一个有界
+  宿主片段、独立验证、写回、消耗一次，并投影最新的调度器阶段。
+- Turn Loop Controller 是外层运行时所有者。它决定何时唤醒、调用
+  `run-once`、消费类型化结果、应用共享的 `scheduler_hint`，然后等待、路由
+  用户动作、修复、重规划、继续或停止。
+- 宿主适配器翻译一个类型化请求与结果。它拥有不透明的宿主会话与工具，
+  但不拥有 LoopX 状态、quota、完成、验证、调度器策略或重规划策略。
 
-Do not add a sleep loop, cron implementation, recurring daemon, operator
-notification path, or multi-Turn replan loop inside `run-once`. Do not copy
-Codex App heartbeat prompt rules into a second scheduler. Reuse the existing
-interaction, scheduler, autonomous-replan, todo, and TurnEnvelope contracts;
-only the runtime-specific act of applying a wakeup belongs in a scheduler
-adapter.
+不要在 `run-once` 内添加睡眠循环、cron 实现、周期守护进程、操作员通知路径
+或多 Turn 重规划循环。不要复制 Codex App 的 heartbeat 提示词规则到第二个
+scheduler。复用现有 interaction、scheduler、autonomous-replan、todo 与
+TurnEnvelope 契约；只有运行时特有的"应用唤醒"这一动作才属于 scheduler 适配器。
 
-A `replan_required` result is not permission to invoke the same todo again. A
-controller must first record a bounded todo or vision delta, obtain a fresh
-TurnEnvelope, and preserve the causal `(goal_id, agent_id, todo_id)` frontier.
-An opaque resumable host session is recovery metadata, not authority to bypass
-that decision.
+`replan_required` 结果不是再次调用同一 todo 的许可。控制器必须先记录一个有界
+todo 或 vision delta、获取新的 TurnEnvelope，并保留因果 `(goal_id, agent_id,
+todo_id)` 前沿。不透明的可恢复宿主会话是恢复元数据，不是绕过该决策的权限。
 
-Stage host-loop contributions in reviewable slices:
+按可评审切片分阶段提交宿主 loop 贡献：
 
-1. characterize current Codex App and Turn behavior with independently derived
-   fixtures;
-2. add a pure next-disposition decision table with no host or state effects;
-3. add one scheduler-owner adapter with a fake clock and fake host;
-4. add runtime-specific wakeup, notification, or presentation only after the
-   shared transition contract is stable.
+1. 用独立派生的 fixture 表征当前 Codex App 与 Turn 行为；
+2. 添加一个无宿主或无状态效应的纯 next-disposition 决策表；
+3. 添加一个带假时钟与假宿主的 scheduler-owner 适配器；
+4. 只有在共享迁移契约稳定后才添加运行时特定的唤醒、通知或展示。
 
-For every controller or host-loop change, prove:
+对每个控制器或宿主 loop 变更，证明：
 
-- scheduler owner, host surface, and execution mode are explicit and valid;
-- `wait`, user action, monitor-only, and cadence-only paths make no model call
-  and spend no quota;
-- material progress requires independent postcondition validation before
-  durable writeback and spend;
-- replay and interrupted-phase recovery are idempotent;
-- repair and replan remain distinct, and replan produces a fresh frontier
-  before another Turn; and
-- fixtures contain no raw prompts, transcripts, credentials, private state, or
-  host-local paths.
+- scheduler 所有者、宿主界面与执行模式显式且有效；
+- `wait`、用户动作、monitor-only 与 cadence-only 路径不做模型调用、不消耗
+  quota；
+- 在持久写回与消耗之前，实质性进展需要独立的 postcondition 验证；
+- 回放与中断阶段恢复是幂等的；
+- repair 与 replan 保持不同，replan 在下一个 Turn 前产生全新前沿；以及
+- fixture 不含原始提示词、transcript、凭据、私有状态或宿主本地路径。
 
-See the [LoopX Turn protocol](docs/reference/protocols/loopx-turn-v0.md) and the
-[Contributor Task Board](docs/development/contributor-tasks.md) for the staged controller plan.
+阶段性控制器计划参见 [LoopX Turn 协议](docs/reference/protocols/loopx-turn-v0.md)
+与[贡献者任务板](docs/development/contributor-tasks.md)。
 
-## Governance And Attribution
+## 治理与归属
 
-Repository roles and decision authority are defined in
-[Governance](.github/GOVERNANCE.md). Creator and contributor attribution is
-recorded in [docs/project/authors.md](docs/project/authors.md), while path-scoped maintenance and
-preferred review assignments are recorded in the same governance document.
-The public Git history records individual contributions. Contribution does not
-automatically grant merge or release authority, and an agent or automation
-identity is not a human maintainer.
+仓库角色与决策权限定义在
+[治理](.github/GOVERNANCE.md)。创建者与贡献者归属记录在
+[docs/project/authors.md](docs/project/authors.md)，而按路径划分的维护与
+优先评审指派记录在同一治理文档中。公开 Git 历史记录个人贡献。贡献不会
+自动授予合并或发布权限，agent 或自动化身份不是人类维护者。
 
-When naming or packaging a fork, integration, or hosted service, follow the
-project's [name and marks guidance](docs/project/trademarks.md).
+命名或打包 fork、集成或托管服务时，遵循项目的
+[名称与标识指南](docs/project/trademarks.md)。
 
-For dashboard changes:
+对于 dashboard 变更：
 
 ```bash
 cd apps/presentation/dashboard
@@ -221,24 +192,22 @@ npm run build
 npm run smoke:demo-readiness
 ```
 
-## Claiming A Task
+## 认领任务
 
-- Comment on the issue before starting non-trivial work.
-- If a maintainer marks it `claimed` or assigns it to you, keep the scope close
-  to the issue.
-- If you get stuck, comment with the blocker and what you already tried.
-- If you need to change the scope, ask first.
-- If there is no update for 14 days, maintainers may release the task so
-  someone else can pick it up.
+- 在开始非平凡工作前在 issue 下评论。
+- 如果维护者将其标记为 `claimed` 或指派给你，把范围贴近 issue。
+- 如果卡住了，评论说明阻塞点和你尝试过的方法。
+- 如果需要变更范围，先询问。
+- 如果 14 天没有更新，维护者可能释放该任务供他人接手。
 
-## Pull Request Checklist
+## Pull Request 清单
 
-Before opening a pull request:
+在打开 pull request 之前：
 
-- link the issue or task ID when one exists;
-- describe the behavior change and the validation you ran;
-- keep unrelated formatting or refactors out of the PR;
-- include docs or tests when changing user-visible behavior;
-- confirm that no private/local runtime state was committed.
+- 有 issue 或任务 ID 时链接它；
+- 描述行为变更与你运行的验证；
+- 把无关格式或重构排除在 PR 之外；
+- 变更用户可见行为时包含文档或测试；
+- 确认没有提交私有/本地运行时状态。
 
-Maintainers may ask for a smaller PR if the change mixes unrelated concerns.
+如果变更混杂了无关关注点，维护者可能要求更小的 PR。

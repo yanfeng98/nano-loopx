@@ -1,25 +1,11 @@
-# LoopX Public Website
+# LoopX 公共网站
 
-This directory owns the React/Vite, public-safe
-[LoopX homepage](https://huangruiteng.github.io/loopx/) published at the root
-of the GitHub Pages site. The frontstage exporter builds this application into
-the Pages root and publishes the compiled dashboard at `/frontstage/`.
+此目录拥有在 GitHub Pages 站点根目录发布的 React/Vite、public-safe [LoopX 首页](https://huangruiteng.github.io/loopx/)。frontstage 导出器把该应用构建到 Pages 根目录,并在 `/frontstage/` 发布编译后的 dashboard。
 
-Vite's base path is supplied by the exporter so links and assets work both at
-the repository Pages base (`/loopx/`) and in root-base local previews.
+Vite 的 base path 由导出器提供,因此链接与资源在仓库 Pages base(`/loopx/`)与根 base 本地预览中都能工作。
 
-The language switch keeps English as the default and provides a public-safe
-Chinese locale. `?lang=zh` is the shareable Chinese entry.
+语言切换保持英语为默认,并提供 public-safe 中文本地化。`?lang=zh` 是可分享的中文入口。
 
-The first-run CTA opens one setup dialog with a recommended Agent path and a
-manual Shell path. The Agent option copies the localized, public-safe setup
-contract; the Shell option copies the commands shown in the terminal section.
-The `See in action` CTA scrolls to the public evidence showcase and restarts the
-Issue Fix replay.
+首次运行 CTA 打开一个设置对话框,提供推荐的 Agent 路径与手动 Shell 路径。Agent 选项复制本地化的 public-safe 设置契约;Shell 选项复制终端区所示的命令。`See in action` CTA 滚动到公开证据 showcase,并重新启动 Issue Fix 重放。
 
-The homepage control-plane diagrams are synthetic UI. Finite, tabbed terminal
-replays summarize two public README trajectories; they are curated projections,
-not raw session logs. The full-screen viewer bundles only the two explicit
-`docs/assets/long-running-loop-*-trajectory.png` files. The site must not consume
-live LoopX state, local status feeds, private registries, raw logs, or write
-APIs.
+首页控制面示意图是合成 UI。有限、选项卡式的终端重放总结了两个公开 README 轨迹;它们是精选投影,不是原始会话日志。全屏查看器只打包两个显式的 `docs/assets/long-running-loop-*-trajectory.png` 文件。该站点不得消费实时 LoopX 状态、本地状态 feed、私有 registry、原始日志或写入 API。

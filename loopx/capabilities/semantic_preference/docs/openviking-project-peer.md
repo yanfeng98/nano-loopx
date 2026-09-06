@@ -1,28 +1,27 @@
-# OpenViking project peer provider
+# OpenViking 项目 Peer Provider
 
-LoopX includes a thin, opt-in OpenViking provider for project-scoped semantic
-preferences. One canonical project maps to one reserved OpenViking peer. Git
-worktrees and fresh clones of the same `origin` therefore share a memory scope,
-while another repository resolves to a different scope.
+> [English](openviking-project-peer.md)
 
-This adapter does not implement memory extraction, ranking, update, or
-supersede semantics. OpenViking owns those behaviors. LoopX only derives the
-project peer, performs bounded `find` calls, and returns the existing semantic
-preference provider protocol for a function-owned application and receipt.
+LoopX 附带一个单薄、opt-in 的 OpenViking provider，用于项目作用域的语义偏好。
+一个规范项目映射到一个保留的 OpenViking peer。同一 `origin` 的 Git worktrees
+与全新 clone 因此共享一个记忆作用域，而另一个仓库解析到不同的作用域。
 
-## Scope contract
+该适配器不实现记忆提取、排序、更新或 supersede 语义。OpenViking 拥有这些行为。
+LoopX 只推导项目 peer、执行有界的 `find` 调用，并为函数拥有的应用与回执返回
+既有语义偏好 provider 协议。
 
-- Identity comes from the normalized Git `origin`, never the checkout path.
-- A non-Git project must provide a stable `--loopx-project-id`.
-- Recall targets the exact project peer by default.
-- Each `find` binds the OpenViking request actor to the derived project peer.
-- User-global memory is available only through `--include-global-fallback`.
-- The default budget is one `find`; explicit global fallback needs at least two.
-- Only concrete preference nodes under the selected target are returned.
-- OpenViking failures remain subject to the outer surface's `fail_open` or
-  `fail_closed` policy.
+## 作用域契约
 
-Inspect the local scope without contacting OpenViking:
+- 身份来自规范化的 Git `origin`，绝不来自 checkout 路径。
+- 非 Git 项目必须提供稳定的 `--loopx-project-id`。
+- Recall 默认针对精确的项目 peer。
+- 每次 `find` 都把 OpenViking 请求主体（request actor）绑定到推导出的项目 peer。
+- 用户级全局记忆只能通过 `--include-global-fallback` 获得。
+- 默认预算是一次 `find`；显式全局回退至少需要两次。
+- 只返回所选目标下的具体偏好节点。
+- OpenViking 失败仍受外层表面 `fail_open` 或 `fail_closed` 策略约束。
+
+在不联系 OpenViking 的情况下检视本地作用域：
 
 ```bash
 loopx semantic-preference openviking-provider \
@@ -31,51 +30,42 @@ loopx semantic-preference openviking-provider \
   --describe-scope
 ```
 
-The output contains the peer id and target URIs, but not the repository URL or
-local checkout path. It also contains a bounded corpus inventory. The project
-peer preference corpus is primary; user-global preferences appear only when
-the caller explicitly enables global fallback.
+输出包含 peer id 与目标 URIs，但不含仓库 URL 或本地 checkout 路径。它还包含
+一个有界的 corpus inventory。项目 peer 偏好语料库是主语料；用户全局偏好只在
+调用方显式启用全局回退时出现。
 
-An OpenViking agent integration can use the returned `peer_id` when adding a
-user message to a session. For an isolated native write, create that session
-with self memory disabled, peer memory enabled, and the desired memory types
-allowed. Both the message peer and the request actor must be the same derived
-project peer. A message `peer_id` alone identifies the speaker; it does not
-authorize an extractor running as a different actor to update that peer.
-OpenViking then owns extraction, update, and supersede semantics inside the
-selected corpus.
+OpenViking agent 集成可以在向会话添加用户消息时使用返回的 `peer_id`。对于隔离的
+原生写入，创建该会话时禁用 self memory、启用 peer memory，并允许所需记忆类型。
+消息 peer 与请求主体必须是同一个推导出的项目 peer。仅凭消息 `peer_id` 标识
+发言者；它并不授权以不同 actor 运行的 extractor 更新该 peer。OpenViking 随后在
+所选语料库内部拥有提取、更新与 supersede 语义。
 
-Do not treat a completed extraction task as sufficient write evidence. A
-maintenance closure for this provider requires all of the following:
+不要把已完成的提取任务当作足够的写入证据。该 provider 的维护关闭需要满足以下
+全部条件：
 
-1. The task reports the expected add or update count and memory diff.
-2. Pending embedding or indexing work reaches zero without errors.
-3. A direct L2 read returns the new semantic content.
-4. A scoped `find` through the same project-peer provider recalls that content.
+1. 任务报告预期的 add/update 计数与 memory diff。
+2. 待处理的 embedding 或索引工作无错误地归零。
+3. 直接 L2 读取返回新的语义内容。
+4. 通过同一项目 peer provider 的一次作用域 `find` 召回该内容。
 
-If a trigger does not require a semantic change, emit a compact
-`no_write_rationale` maintenance receipt instead. Never persist raw memory in
-the receipt.
+如果某个 trigger 不需要语义变更，就发出一条紧凑的 `no_write_rationale`
+维护回执。绝不把原始记忆持久化在回执里。
 
-## Repository template versus semantic preference
+## 仓库模板与语义偏好
 
-For PR descriptions, the repository's current
-`.github/PULL_REQUEST_TEMPLATE.md` is the authoritative hard structure. Read it
-from the working revision when building the artifact. OpenViking stores only
-soft semantic preferences for how to fill that structure, such as reviewer
-language, useful detail, and risk-based validation. Do not copy the template
-body into OpenViking: doing so would create a stale second source of truth.
+对于 PR 描述，仓库当前的 `.github/PULL_REQUEST_TEMPLATE.md` 是权威的硬结构。
+构建工件时应从工作 revision 中读取它。OpenViking 只存储如何填充该结构的软性
+语义偏好，例如评审者语言、有用细节与基于风险的校验。不要把模板正文复制进
+OpenViking：那样会制造一份过时的第二真相源。
 
-When the repository template changes, assess the project-peer preference
-corpus because its interpretation may need to change. When explicit user
-feedback changes the prose preference, update that corpus through OpenViking's
-native extractor and complete the four-step readback above.
+当仓库模板变更时，评估项目 peer 偏好语料库，因为其解读可能需要变化。当显式
+用户反馈改变了行文偏好时，通过 OpenViking 的原生 extractor 更新该语料库，并完成
+上述四步回读。
 
-## Local-private hook config
+## 本地私有 hook 配置
 
-First activate the bundled provider. This command registers the preinstalled
-entrypoint only after a read-only `ov status` doctor succeeds; it does not
-install or configure OpenViking:
+首先激活捆绑 provider。该命令只在只读的 `ov status` doctor 成功后注册预安装的
+入口点；它不安装也不配置 OpenViking：
 
 ```bash
 loopx extension install \
@@ -84,8 +74,7 @@ loopx extension install \
   --format json
 ```
 
-Keep the hook config ignored and untracked. OpenViking service configuration
-remains local:
+保持 hook 配置为忽略且未跟踪。OpenViking 服务配置保持本地化：
 
 ```json
 {
@@ -113,20 +102,17 @@ remains local:
 }
 ```
 
-Expose `ov` on `PATH` and keep OpenViking's normal local configuration ready
-before activation. `loopx extension doctor openviking-semantic-preference
---execute` repeats the read-only `ov status` probe. Hook `args` may still carry
-project-scoping options; they do not alter the manifest-owned doctor.
+激活前把 `ov` 暴露到 `PATH` 并准备好 OpenViking 的常规本地配置。
+`loopx extension doctor openviking-semantic-preference --execute` 重复只读的
+`ov status` 探测。Hook `args` 仍可携带项目作用域选项；它们不改变 manifest 拥有的
+doctor。
 
-`loopx semantic-preference openviking-provider` remains a lazy delegating
-compatibility alias: ordinary LoopX CLI startup does not import the provider,
-and the alias loads it only when invoked. New integrations should use the
-extension activation and `extension_id` binding so enable, disable, upgrade,
-rollback, API compatibility, permission, and doctor state remain inspectable in
-one lifecycle.
+`loopx semantic-preference openviking-provider` 仍是一个惰性委托的兼容别名：
+普通 LoopX CLI 启动不导入该 provider，别名只在被调用时加载它。新集成应使用
+extension 激活与 `extension_id` 绑定，使 enable、disable、upgrade、rollback、
+API 兼容性、权限与 doctor 状态在一个生命周期内可检视。
 
-The consuming function remains the final application boundary. For Issue Fix,
-`build_issue_fix_pr_description()` owns one recall, fail-open preservation,
-preference attribution, the compact application receipt, and propagation of
-the provider's corpus inventory and maintenance guidance. It does not perform
-an automatic write or add a second provider call.
+消费函数仍是最终的应用边界。对于 Issue Fix，
+`build_issue_fix_pr_description()` 拥有一次 recall、fail-open 保留、偏好归属、
+紧凑应用回执，以及 provider 语料库清单与维护指引的传播。它不执行自动写入，
+也不追加第二次 provider 调用。

@@ -1,17 +1,17 @@
-# Integration Branch Reconcile
+# Integration Branch 对账
 
-Long-running repository work often has two simultaneous truths:
+> [English](README.md)
 
-- each feature or fix stays on its own reviewable branch;
-- one local integration branch must contain the latest reviewed form of every
-  source branch.
+长程仓库工作常常同时存在两个事实:
 
-`integration-branch-reconcile` makes the second truth machine-readable. It
-stores an ordered plan under ignored `.loopx/` state, compares current refs
-with the last successful sync receipt, and reconciles the integration branch
-through a temporary detached worktree.
+- 每个 feature 或 fix 留在自己的可审阅分支上;
+- 一个本地 integration branch 必须包含每个源分支最新的已审阅形式。
 
-## Configure
+`integration-branch-reconcile` 让第二个事实机器可读。它把有序计划存入被忽略的
+`.loopx/` 状态,把当前 refs 与最后一次成功同步 receipt 比较,并通过临时 detached
+worktree 对账 integration branch。
+
+## 配置
 
 ```bash
 loopx integration-branch configure \
@@ -24,29 +24,25 @@ loopx integration-branch configure \
   --format json
 ```
 
-Source order is significant. `configure` validates all refs but writes only
-`.loopx/integration-branch.json`. A different existing plan requires explicit
-`--replace`, which also clears its old sync receipt.
+源顺序是重要的。`configure` 校验所有 refs,但只写 `.loopx/integration-branch.json`。
+已存在的不同计划需要显式 `--replace`,它同时清除旧的同步 receipt。
 
-An alternate `--plan-file` must still resolve below the repository's `.loopx/`
-state root. Paths outside that root, traversal, and symlink escapes fail closed.
-The selected path must also be untracked and covered by the repository's ignore
-rules so the reported local ignored-state boundary remains true.
+备选的 `--plan-file` 仍必须解析到仓库 `.loopx/` 状态根之下。该根之外的路径、
+traversal 与 symlink 逃逸会 fail closed。选中的路径还必须是 untracked 且被仓库
+ignore 规则覆盖,以保证报告的本地 ignored-state 边界成立。
 
-## Detect review drift
+## 检测 review 漂移
 
 ```bash
 loopx integration-branch status --repo-path . --format json
 ```
 
-The first status is `drifted` with `never_synced`. After a successful sync,
-LoopX records the exact base, source, and integration SHAs. A later rebase,
-review fix, or additional source commit becomes `base_ref_moved`,
-`source_ref_moved`, or `integration_head_changed`.
+首次 status 是带 `never_synced` 的 `drifted`。成功后,LoopX 记录确切的 base、
+source 与 integration SHAs。之后的 rebase、review 修复或额外 source commit 会成为
+`base_ref_moved`、`source_ref_moved` 或 `integration_head_changed`。
 
-Remote-tracking refs do not move until Git observes the publisher's update. To
-make that observation part of the same typed operation, opt in to a
-remote-read-only refresh:
+Remote-tracking refs 直到 Git 观测到发布者的更新才会移动。要让该观测成为同一
+typed 操作的一部分,选择一次 remote 只读刷新:
 
 ```bash
 loopx integration-branch status \
@@ -55,14 +51,12 @@ loopx integration-branch status \
   --format json
 ```
 
-LoopX fetches only the remote-tracking refs named by the configured base or
-source refs, plus the integration branch's configured upstream when one
-exists, then resolves exact SHAs. It does not prune unrelated refs or replace
-existing `FETCH_HEAD` evidence. This observes another worker's published
-branch intent; it does not guess unpushed work, read private review text, or
-infer that a draft is approved for integration.
+LoopX 只 fetch 配置的 base 或 source refs 点名的 remote-tracking refs,加上
+integration branch 配置的 upstream(当存在时),然后解析精确 SHAs。它不清理无关
+refs,也不替代现有 `FETCH_HEAD` 证据。这观测另一个 worker 的已发布分支意图;
+它不猜测未推送工作、不读取私有 review 文本,也不推断 draft 已被批准集成。
 
-## Preview and sync
+## 预览与同步
 
 ```bash
 loopx integration-branch sync --repo-path . --format json
@@ -73,27 +67,21 @@ loopx integration-branch sync \
   --format json
 ```
 
-After the first sync, a source branch that only advances to a descendant is
-merged onto the last verified integration head. This preserves earlier merge
-and conflict-resolution decisions while incorporating the reviewed update. If
-the base, source set, integration head, or source ancestry no longer matches
-the receipt, LoopX rebuilds from the resolved base and all source SHAs in
-order. Preview removes its temporary worktree without changing refs. Execute
-updates the local integration branch only after every merge succeeds, then
-writes and rereads the receipt.
+首次同步后,只推进到后代分支的源分支,会被合并到上次验证的 integration head。
+这保留早期 merge 与冲突解决决策,同时并入已审阅的更新。如果 base、源集合、
+integration head 或源血缘不再匹配 receipt,LoopX 从已解析 base 与所有源 SHAs 按
+顺序重建。Preview 移除其临时 worktree,不改变 refs。Execute 只在每个 merge 都
+成功后更新本地 integration branch,然后写入并重读 receipt。
 
-Rebuilding merge commits can change `candidate_sha` timestamps between preview
-and execute. Compare `candidate_tree_sha` for stable content identity; execute
-also records it in the receipt.
+重建 merge commits 会在 preview 与 execute 之间改变 `candidate_sha` 时间戳。
+比较 `candidate_tree_sha` 获得稳定的内容身份;execute 也会把它记入 receipt。
 
-Preview remains read-only even when the integration branch worktree is dirty.
-Execute requires a clean checked-out integration worktree. A dirty worktree,
-merge conflict, missing ref, or concurrent plan/input/integration movement
-fails closed before candidate publication.
+即使 integration branch worktree 是脏的,Preview 也保持只读。Execute 需要干净的
+已检出 integration worktree。脏 worktree、merge 冲突、缺失 ref 或并发
+plan/input/integration 移动,会在候选发布前 fail closed。
 
-When ordered source heads require an intentional manual conflict resolution,
-build and validate that commit outside LoopX, then let LoopX verify and adopt
-it through the same receipt boundary:
+当有序源 heads 需要有意的手工冲突解决时,在 LoopX 之外构建并验证该 commit,然后
+让 LoopX 通过同一 receipt 边界验证并采纳它:
 
 ```bash
 loopx integration-branch sync \
@@ -107,18 +95,16 @@ loopx integration-branch sync \
   --format json
 ```
 
-The supplied commit must contain the configured base, every exact source SHA,
-and any observed integration upstream head as ancestors. LoopX does not choose
-or generate the resolution; it only verifies the immutable result before the
-normal local publication and readback flow.
+提供的 commit 必须把配置的 base、每个精确源 SHA 与任何观测到的 integration
+upstream head 作为祖先包含。LoopX 不选择或生成解法;它只在正常本地发布与回读流程
+之前验证不可变结果。
 
-When the supplied commit is already the integration branch head, execute only
-records the verified receipt. It does not reset or otherwise touch the checked
-out worktree.
+当提供的 commit 已经是 integration branch head 时,execute 只记录已验证 receipt。
+它不 reset 或以其他方式触碰已检出的 worktree。
 
-## Periodic or event-driven reconcile
+## 周期性或有事件驱动的对账
 
-Use the same command for timer-driven and provider-event-driven checks:
+对 timer 驱动与 provider-event 驱动检查使用同一命令:
 
 ```bash
 loopx integration-branch sync \
@@ -128,38 +114,34 @@ loopx integration-branch sync \
   --format json
 ```
 
-For LoopX-managed work, register that operation as a `continuous_monitor` Todo
-with a project-selected cadence and `next_due_at`. A host can wake on that
-deadline, run the command, and write back the returned exact-SHA evidence. A Git
-provider webhook may invoke the same command after a ref event for lower
-latency. Webhook authentication and event delivery belong to the provider
-extension, not to this repository-neutral capability.
+对于 LoopX 管理的工作,把该操作注册为带项目选择 cadence 与 `next_due_at` 的
+`continuous_monitor` Todo。Host 可以按 deadline 唤醒、运行命令并写回返回的精确
+SHA 证据。Git provider webhook 可以在 ref 事件后调用同一命令以获得更低延迟。
+Webhook 认证与事件投递属于 provider extension,不属于这个 repository-neutral
+capability。
 
-## Boundary
+## 边界
 
-The capability keeps a deliberately narrow write boundary:
+Capability 保持刻意狭窄的写边界:
 
-- by default it does not contact remotes; `--refresh-remotes` is read-only
-  against the remote repository and updates only configured base, source, and
-  integration-upstream remote-tracking refs;
-- it never pushes;
-- it never changes a source branch;
-- it never creates, retargets, approves, or merges a PR;
-- it never updates a protected base branch;
-- v0 uses ordered merge commits and does not squash or rewrite source history.
+- 默认不联系 remotes;`--refresh-remotes` 对远程仓库只读,只更新配置的 base、
+  source 与 integration-upstream remote-tracking refs;
+- 从不 push;
+- 从不更改源分支;
+- 从不创建、改目标、批准或合并 PR;
+- 从不更新受保护的 base branch;
+- v0 使用有序 merge commits,不 squash 也不重写源 history。
 
-Without `--refresh-remotes`, fetch or update source refs through the
-repository's normal workflow before running `status` or `sync`. Human review
-and aggregate merge authority remain outside this capability.
+没有 `--refresh-remotes` 时,在运行 `status` 或 `sync` 之前,通过仓库的正常工作流
+fetch 或更新源 refs。人类审查与聚合 merge authority 保持在本 capability 之外。
 
-## Validate
+## 验证
 
 ```bash
 python3 examples/integration-branch-cli-smoke.py
 python3 -m pytest -q tests/capabilities/test_integration_branch.py
 ```
 
-The public CLI smoke and focused pytest cover ignored plan state, read-only
-preview, ordered source updates, reviewed-candidate adoption, and local-only
-fail-closed dirty/conflict cases. They do not fetch, push, rewrite source
-branches, or change protected bases.
+公开 CLI smoke 与 focused pytest 覆盖被忽略的 plan 状态、只读预览、有序源更新、
+已审阅候选采纳,以及本地-only 的 fail-closed 脏/冲突 case。它们不 fetch、push、
+重写源分支,也不改变受保护 base。

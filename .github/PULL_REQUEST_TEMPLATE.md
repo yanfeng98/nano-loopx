@@ -1,56 +1,56 @@
-## Summary
+## 摘要
 
 -
 
-## Issue Or Task
+## Issue 或任务
 
-- Closes #
-- Contributor task ID:
+- 关闭 #
+- 贡献者任务 ID：
 
-## Validation
+## 验证
 
 - [ ] `python3 -m py_compile loopx/*.py`
 - [ ] `loopx check --scan-root .`
-- [ ] Other:
+- [ ] 其他：
 
-## Type of Change
+## 变更类型
 
-<!-- Mark the applicable options. -->
+<!-- 标记适用的选项。 -->
 
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Refactoring (no functional changes)
-- [ ] Documentation update
-- [ ] Test update
+- [ ] Bug 修复
+- [ ] 新功能
+- [ ] 破坏性变更
+- [ ] 重构（无功能变更）
+- [ ] 文档更新
+- [ ] 测试更新
 
-## LoopX Area
+## LoopX 领域
 
-<!-- Mark the primary area. Maintainers apply the matching GitHub label. -->
+<!-- 标记主要领域。维护者会应用匹配的 GitHub 标签。 -->
 
-- [ ] Control plane (goals, todos, quota, scheduler, registry, runtime)
-- [ ] Benchmark boundary (adapters, runners, verifiers, scoring, evidence)
-- [ ] Capability or extension (providers, adapters, skills)
-- [ ] Public docs or presentation surface (README, protocols, dashboard)
-- [ ] Build, packaging, installer, or CI
-- [ ] Host or runtime integration
+- [ ] 控制面（goals、todos、quota、scheduler、registry、runtime）
+- [ ] Benchmark 边界（adapters、runners、verifiers、scoring、evidence）
+- [ ] 能力或扩展（providers、adapters、skills）
+- [ ] 公开文档或展示界面（README、protocols、dashboard）
+- [ ] 构建、打包、安装器或 CI
+- [ ] 宿主或运行时集成
 
-## Technical Direction
+## 技术方向
 
-<!-- Select one. Direction labels route review; they do not imply maturity or merge authority. -->
+<!-- 选择一项。Direction 标签用于路由评审；它们不代表成熟度或合并权限。 -->
 
-- [ ] Core control-plane hardening
-- [ ] Long-horizon benchmark evidence
-- [ ] Operator surface and IM integration
-- [ ] Shared Goal Authority and cross-host coordination
-- [ ] Architecture and research incubator
+- [ ] 核心控制面加固
+- [ ] 长程 benchmark 证据
+- [ ] 操作员界面与 IM 集成
+- [ ] Shared Goal Authority 与跨宿主协调
+- [ ] 架构与研究孵化器
 
-- Target base branch:
-- Direction tracker or promotion unit:
+- 目标基线分支：
+- Direction 跟踪器或晋升单元：
 
-## Boundary Checklist
+## 边界检查清单
 
-- [ ] I did not commit `.loopx/`, `.codex/goals/`, live `ACTIVE_GOAL_STATE.md`, credentials, private benchmark traces, verifier output, raw agent sessions, internal document links, or local machine paths.
-- [ ] I did not duplicate maintainer-owned benchmark work unless a maintainer split out a public issue for it.
-- [ ] I kept the change scoped to the linked issue/task.
-- [ ] Every commit includes a DCO `Signed-off-by` trailer (`git commit -s`).
+- [ ] 我没有提交 `.loopx/`、`.codex/goals/`、活动中的 `ACTIVE_GOAL_STATE.md`、凭据、私有 benchmark 轨迹、verifier 输出、原始 agent 会话、内部文档链接或本地机器路径。
+- [ ] 除非维护者为该工作拆分出公开 issue，我没有重复维护者拥有的 benchmark 工作。
+- [ ] 我把变更范围限定在关联的 issue/任务内。
+- [ ] 每个提交都包含 DCO `Signed-off-by` 结尾（`git commit -s`）。

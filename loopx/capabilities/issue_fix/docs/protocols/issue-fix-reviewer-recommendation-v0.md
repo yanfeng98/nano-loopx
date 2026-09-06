@@ -1,59 +1,51 @@
 # issue_fix_reviewer_recommendation_v0
 
-`issue_fix_reviewer_recommendation_v0` is the public-safe contract for ranking
-people or teams who may be appropriate reviewers for an issue-fix change. It
-turns repository-native ownership evidence into an explainable recommendation;
-it does not itself assign a reviewer, request review, or grant publication
-authority. Its default downstream policy is to let the separately authorized
-`reviewer-request` command invite the top requestable candidate.
+> [English](issue-fix-reviewer-recommendation-v0.md)
 
-## Product Intent
+`issue_fix_reviewer_recommendation_v0` 是对 issue-fix 变更可能合适的 reviewer
+(人或团队)排序的 public-safe 契约。它把 repository-native ownership 证据变成
+可解释的推荐;它本身不指派 reviewer、不请求 review,也不授予发布 authority。
+其默认下游 policy 是让单独授权的 `reviewer-request` 命令邀请排名最高的可请求
+候选。
 
-A long-running issue-to-PR agent should not stop after producing a correct
-patch. It should also prepare a credible review route that helps the change
-reach a maintainer. Reviewer selection is therefore part of issue-fix planning,
-while the external GitHub review request remains a separately authorized,
-verified write.
+## 产品意图
 
-The contract must answer four questions:
+长程 issue-to-PR agent 不应在产出正确 patch 后停下。它还应准备一条可信的
+review 路由,帮助变更触达维护者。因此 reviewer 选择是 issue-fix 规划的一部分,
+而外部 GitHub review request 仍是单独授权、已验证的写。
 
-1. Which changed paths support this candidate?
-2. Is the candidate backed by repository policy, a repository-declared
-   maintainer map, contribution history, or a combination?
-3. Can the candidate be resolved to a requestable GitHub handle?
-4. Which public source reference explains the route, and how fresh is it?
-5. What human or repository-policy check remains before requesting review?
+契约必须回答四个问题:
 
-## Evidence Order
+1. 哪些变更路径支撑这个候选?
+2. 候选是否由仓库 policy、repository-declared 维护者映射、贡献历史或组合支撑?
+3. 候选能否解析为可请求的 GitHub handle?
+4. 哪个公开来源引用解释了路由,它有多新?
+5. 请求 review 前还剩下什么人工或仓库 policy 检查?
 
-The first implementation uses this conservative authority order:
+## 证据顺序
 
-1. the last matching rule from the repository's first supported `CODEOWNERS`
-   file: `.github/CODEOWNERS`, `CODEOWNERS`, then `docs/CODEOWNERS`;
-2. caller-verified repository maintainer maps whose most-specific path route
-   names a primary contact;
-3. author history for each exact changed path;
-4. author history for the nearest module directory when a new path has no
-   usable exact-path history;
-5. repository-declared fallback or cross-module contacts when no more-specific
-   route applies, or when the primary contact is excluded.
+首个实现使用这个保守的权威顺序:
 
-`CODEOWNERS` receives dominant scoring weight because it expresses executable
-repository policy. A maintainer map is stronger routing evidence than
-familiarity alone, but remains caller-verified and freshness-qualified rather
-than branch-protection authority. Git history is advisory familiarity evidence:
-commit count or recency does not by itself prove maintainer authority, current
-availability, or consent to review.
+1. 仓库第一个受支持 `CODEOWNERS` 文件的最后匹配规则:
+   `.github/CODEOWNERS`、`CODEOWNERS`,然后 `docs/CODEOWNERS`;
+2. caller 验证的仓库维护者映射,其最具体的路径路由点名 primary contact;
+3. 每个确切变更路径的 author history;
+4. 新路径没有可用 exact-path history 时,最近 module 目录的 author history;
+5. 没有更具体路由适用、或 primary contact 被排除时,仓库声明的 fallback 或
+   跨模块联系人。
 
-The pattern matcher intentionally supports a common, deterministic subset of
-`CODEOWNERS` syntax. The packet reports
-`codeowners_pattern_support: common_subset`; repositories that depend on more
-specialized matching semantics must verify the recommendation against their
-native platform policy.
+`CODEOWNERS` 获得主导评分权重,因为它表达可执行的仓库 policy。维护者映射是比
+纯熟悉度更强的路由证据,但仍保持 caller 验证与 freshness 限定,而不是
+branch-protection authority。Git history 是 advisory 熟悉度证据:提交数或近期度
+本身不能证明维护者 authority、当前可用性或审阅同意。
+
+模式匹配器有意支持 `CODEOWNERS` 语法的常见确定性子集。Packet 报告
+`codeowners_pattern_support: common_subset`;依赖更专门匹配语义的仓库必须对照
+其原生平台 policy 验证推荐。
 
 ## CLI
 
-Preview without reading the local repository:
+不读取本地仓库的预览:
 
 ```bash
 loopx issue-fix reviewer-plan \
@@ -67,8 +59,7 @@ loopx issue-fix reviewer-plan \
   --format json
 ```
 
-Read only the caller-approved local checkout and derive changed paths from a
-base ref:
+只读取 caller 批准的本地 checkout,并从 base ref 派生变更路径:
 
 ```bash
 loopx issue-fix reviewer-plan \
@@ -82,40 +73,38 @@ loopx issue-fix reviewer-plan \
   --format json
 ```
 
-`--execute` authorizes local repository inspection only. It does not authorize
-network access, a GitHub review request, a comment, a push, or a merge.
+`--execute` 只授权本地仓库检查。它不授权网络访问、GitHub review request、
+评论、push 或 merge。
 
-## Input Contract
+## 输入契约
 
-- `repo_path`: caller-approved local git checkout; never copied into output;
-- `repo`: compact public-safe repository label;
-- `changed_files`: optional explicit repo-relative paths;
-- `base_ref`: diff base used when changed files are not supplied;
-- `history_limit`: bounded history depth per path;
-- `max_candidates`: bounded result count;
-- `exclude_reviewers`: GitHub handles that must not be recommended, normally
-  including the PR author and known unavailable identities;
-- `exclude_author_names`: git display-name aliases for an excluded handle when
-  identity resolution is unavailable; only the count is retained in output;
-- `identity_map_json`: optional public-safe, human-verified mapping from git
-  display names to GitHub handles; the raw mapping is not retained, while the
-  resolved handle and `caller_verified_github_identity` evidence are visible;
-- `reviewer_sources_json`: optional
-  `issue_fix_reviewer_sources_input_v0` packet. Each source has a stable id,
-  `maintainer_map` kind, public HTTPS or repo-relative reference,
-  `authoritative|verified|advisory` trust, `current|stale|unknown` freshness,
-  a timezone-aware `observed_at`, and bounded routes. Routes use `path_prefix`,
-  `path_glob`, or
-  `repository_fallback`, and name primary and/or fallback GitHub handles;
-- `execute`: whether local repository state may be read.
+- `repo_path`:caller 批准的本地 git checkout;从不复制进输出;
+- `repo`:紧凑的 public-safe 仓库标签;
+- `changed_files`:可选的显式 repo-relative 路径;
+- `base_ref`:未提供变更文件时使用的 diff 基准;
+- `history_limit`:每路径的有界历史深度;
+- `max_candidates`:有界结果计数;
+- `exclude_reviewers`:不得被推荐的 GitHub handles,通常包括 PR author 与已知
+  不可用身份;
+- `exclude_author_names`:身份解析不可用时,被排除 handle 的 git display-name
+  aliases;输出只保留计数;
+- `identity_map_json`:可选的 public-safe、人工验证的 git display names 到
+  GitHub handles 映射;raw 映射不保留,而解析后的 handle 与
+  `caller_verified_github_identity` 证据可见;
+- `reviewer_sources_json`:可选的 `issue_fix_reviewer_sources_input_v0` packet。
+  每个源有稳定 id、`maintainer_map` kind、公开 HTTPS 或 repo-relative 引用、
+  `authoritative|verified|advisory` trust、`current|stale|unknown` freshness、
+  时区感知的 `observed_at` 与有界 routes。Routes 使用 `path_prefix`、
+  `path_glob` 或 `repository_fallback`,并命名 primary 和/或 fallback GitHub
+  handles;
+- `execute`:是否允许读取本地仓库状态。
 
-LoopX does not fetch or copy the linked page. The caller reads an approved
-public source, supplies only the compact route mapping, and keeps the source
-URL as provenance. This makes a GitHub maintainer-map issue, a repository doc,
-or a checked-in ownership file usable through one provider-neutral contract
-without storing the raw body.
+LoopX 不 fetch 也不复制链接页面。Caller 读取已批准的公开源,只提供紧凑路由映射,
+并把源 URL 保留为 provenance。这让 GitHub maintainer-map issue、仓库文档或
+checked-in ownership 文件,能通过一个 provider-neutral 契约使用,而不存储 raw
+正文。
 
-Example:
+示例:
 
 ```json
 {
@@ -148,66 +137,58 @@ Example:
 }
 ```
 
-Here the `reference` is evidence lineage, not an instruction to scrape the
-page. `path_prefix` and `path_glob` routes bind people to changed files;
-`repository_fallback` supplies a lower-ranked cross-module route only when no
-scoped route matches.
+这里的 `reference` 是证据血缘,不是抓取页面的指令。`path_prefix` 与 `path_glob`
+routes 把人与变更文件绑定;`repository_fallback` 只在没有 scoped route 匹配时
+提供低排名的跨模块 route。
 
-Changed paths must be non-empty and repo-relative. Preview mode does not
-inspect `repo_path` and returns `recommendation_status: preview_only`.
+变更路径必须非空且 repo-relative。预览模式不检查 `repo_path`,返回
+`recommendation_status: preview_only`。
 
-## Output Contract
+## 输出契约
 
-The packet uses `schema_version: issue_fix_reviewer_recommendation_v0` and
-contains:
+Packet 使用 `schema_version: issue_fix_reviewer_recommendation_v0` 并包含:
 
-- `recommendation_status`: `preview_only`, `candidates_ready`,
-  `identity_resolution_required`, or `no_candidates`;
-- `changed_files` and `changed_file_count` using repo-relative paths only;
-- ranked `candidates` with stable candidate id, optional GitHub handle,
-  requestability, score, source kinds, reason codes, matched paths,
-  `CODEOWNERS` patterns, history count, recency rank, path coverage, confidence,
-  compact `reviewer_source_evidence`, and deduplicated `source_refs`;
-- `evidence_summary` describing the authority order and fallbacks;
-- `policy` stating that recommendation is not assignment, the default request
-  strategy is `request_top_requestable_when_authorized`, the default maximum is
-  one reviewer, and external-review-request authority is required;
-- public-safety and side-effect flags.
+- `recommendation_status`:`preview_only`、`candidates_ready`、
+  `identity_resolution_required` 或 `no_candidates`;
+- `changed_files` 与 `changed_file_count`,只使用 repo-relative 路径;
+- 排序过的 `candidates`,带稳定候选 id、可选 GitHub handle、可请求性、分数、
+  来源种类、reason codes、匹配路径、`CODEOWNERS` 模式、历史计数、recency 排名、
+  路径覆盖、置信度、紧凑 `reviewer_source_evidence` 与去重 `source_refs`;
+- `evidence_summary` 描述权威顺序与 fallbacks;
+- `policy` 声明推荐不是指派、默认请求策略是
+  `request_top_requestable_when_authorized`、默认上限是一位 reviewer,且需要
+  external-review-request authority;
+- public-safety 与副作用标志。
 
-Candidates without a verified GitHub handle remain visible as familiarity
-evidence but are marked `requestable: false` with
-`github_identity_resolution_required`. The packet never exposes the underlying
-commit email.
+没有已验证 GitHub handle 的候选保持可见为熟悉度证据,但标记 `requestable: false`,
+带 `github_identity_resolution_required`。Packet 从不暴露底层 commit email。
 
-A human may resolve an ambiguous display name once. The caller-verified handle
-then becomes requestable and is reranked using the candidate's original
-repository contribution evidence; the human assertion resolves identity only
-and does not fabricate ownership or contribution evidence.
+人类可以一次性解析模糊 display name。Caller 验证的 handle 随后变为可请求,并用
+候选的原始仓库贡献证据重新排序;人工断言只解析身份,不捏造 ownership 或贡献
+证据。
 
-## Ranking Rules
+## 排序规则
 
-- Each matching `CODEOWNERS` path adds a dominant ownership score.
-- For each maintainer-map source, only the most-specific matching path route is
-  used; a repository fallback is used only when no scoped route matches.
-- A current verified primary contact ranks above history-only familiarity but
-  below a matching CODEOWNERS owner. Fallback contacts receive lower weight.
-- Trust and freshness reduce maintainer-map weight when the source is advisory,
-  unknown, or stale; they never remove the external-write gate.
-- Exact-path and module history at the selected base revision add bounded,
-  recency-weighted familiarity scores; feature-branch commits are not counted.
-- Bot-like identities found only in git history are excluded; an explicit
-  repository ownership rule remains authoritative.
-- Evidence from multiple changed paths raises path coverage.
-- A candidate supported by both ownership policy and history receives high
-  confidence; single-source evidence remains medium or low.
-- Excluded handles are removed before ranking.
+- 每个匹配的 `CODEOWNERS` 路径添加一个主导 ownership 分数。
+- 对每个维护者映射源,只使用最具体的匹配路径 route;仓库 fallback 只在没有
+  scoped route 匹配时使用。
+- 当前已验证的 primary contact 排名高于仅历史熟悉度,但低于匹配的 CODEOWNERS
+  owner。Fallback contacts 权重较低。
+- Trust 与 freshness 在源为 advisory、unknown 或 stale 时降低维护者映射权重;
+  它们从不移除外部写 gate。
+- 选定 base revision 上的 exact-path 与 module 历史,添加有界、recency 加权的
+  熟悉度分数;feature-branch commits 不计。
+- Git 历史中只发现的 bot 状身份被排除;显式仓库 ownership 规则保持权威。
+- 多条变更路径的证据提高路径覆盖。
+- 同时由 ownership policy 与历史支撑的候选获得高置信度;单一来源证据保持
+  中或低。
+- 被排除的 handles 在排序前移除。
 
-Scores only order evidence inside this packet. They must not be interpreted as
-a universal maintainer ranking or a performance metric.
+分数只在这个 packet 内给证据排序。它们不得被解释为通用维护者排名或绩效指标。
 
-## Required Boundaries
+## 必需边界
 
-Every valid packet preserves:
+每个有效 packet 保留:
 
 - `external_reads_performed: false`
 - `external_writes_performed: false`
@@ -220,55 +201,50 @@ Every valid packet preserves:
 - `automatic_request_policy: request_top_requestable_when_authorized`
 - `external_review_request_authority_required: true`
 
-`private_repo_state_read` is `false` in preview and `true` only after an
-explicit `--execute` against the caller-approved checkout. No raw `CODEOWNERS`
-file, maintainer-map body, raw git log, credentials, private material, or
-runtime state belongs in the packet. Public source references and the compact
-matched route evidence are retained because they are the audit trail.
+`private_repo_state_read` 在预览中为 `false`,只有对 caller 批准 checkout 显式
+`--execute` 后才为 `true`。Packet 中不应有任何 raw `CODEOWNERS` 文件、维护者映射
+正文、raw git log、凭据、私有材料或运行时状态。公开来源引用与紧凑匹配路由证据
+被保留,因为它们是审计线索。
 
-## Human And Repository Policy Gate
+## 人工与仓库 Policy Gate
 
-Before any external review request, the host agent or human must verify:
+任何外部 review request 前,host agent 或人工必须验证:
 
-- the PR author and unavailable reviewers are excluded;
-- the repository permits the request and any team handle is requestable;
-- each declared source is public, belongs to the intended repository context,
-  and has an honest trust/freshness label;
-- the recommendation still matches the final diff;
-- ownership is not being inferred solely from a large historical commit count;
-- sensitive or architectural changes receive any additional mandatory review.
+- PR author 与不可用 reviewers 已被排除;
+- 仓库允许该请求,且任何 team handle 可请求;
+- 每个声明的源是公开的、属于预期仓库上下文,并有诚实的 trust/freshness 标签;
+- 推荐仍匹配最终 diff;
+- ownership 不是仅从大量历史提交数推断的;
+- 敏感或架构变更接受任何额外强制 review。
 
-`loopx issue-fix reviewer-request` consumes the same evidence after fetching
-live PR metadata. The command must record a separate external-write decision,
-exclude the live author and existing reviewers, and verify the provider state.
-This recommendation schema must never be used as implicit review-request
-authority. See [issue_fix_reviewer_request_v0](issue-fix-reviewer-request-v0.md).
+`loopx issue-fix reviewer-request` 在 fetch 实时 PR 元数据后消费同一证据。命令
+必须记录独立的外部写决策,排除 live author 与现有 reviewers,并验证 provider
+状态。本推荐 schema 绝不能被用作隐式 review-request authority。见
+[issue_fix_reviewer_request_v0](issue-fix-reviewer-request-v0.md)。
 
-## Planned Extensions
+## 计划中的扩展
 
-Future versions may add repository-native signals with real call sites:
+未来版本可以添加带真实 callsites 的 repository-native 信号:
 
-- maintainer availability and explicit opt-out;
-- review-response and approval history;
-- automatic discovery of checked-in reviewer-source packets;
-- semantic module mapping for generated or moved files;
-- risk-class or sensitive-path reviewer requirements;
-- load balancing and fallback escalation after a stale review request;
-- repository-host identity resolution for teams and non-noreply authors.
+- 维护者可用性与显式 opt-out;
+- 审阅响应与批准历史;
+- 自动发现 checked-in reviewer-source packets;
+- 生成或移动文件的语义模块映射;
+- 风险类或敏感路径 reviewer 要求;
+- stale review request 后的负载均衡与 fallback 升级;
+- repository-host 对 teams 与非 noreply 作者的身份解析。
 
-These signals should extend the explainable evidence packet, not introduce an
-OpenViking-specific adapter or an independent reviewer state machine.
+这些信号应扩展可解释证据 packet,而不是引入 OpenViking 特定适配器或独立
+reviewer 状态机。
 
-## Validation
+## 验证
 
-Run:
+运行:
 
 ```bash
 python3 examples/issue-fix-reviewer-recommendation-smoke.py
 ```
 
-The smoke uses a temporary non-project-specific repository to verify
-`CODEOWNERS`, most-specific maintainer-map routes, repository fallback, source
-references, trust/freshness, exact-path history, module fallback, author
-exclusion, CLI execution, identity handling, and the no-external-write
-boundary.
+Smoke 使用临时非项目特定仓库,验证 `CODEOWNERS`、最具体维护者映射 routes、
+仓库 fallback、来源引用、trust/freshness、exact-path 历史、module fallback、
+author 排除、CLI 执行、身份处理与无外部写边界。

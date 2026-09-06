@@ -1,36 +1,33 @@
-# Auto-Research Replan And Multi-Round Demo Bad Case
+# 自动研究 Replan 与多轮演示坏例
 
-Date: 2026-07-05
+> [English](auto-research-replan-multiround-badcase-20260705.md)
 
-Audience: LoopX auto-research owners, quota/status maintainers, todo/replan
-owners, and multi-agent demo maintainers.
+日期:2026-07-05
 
-## Summary
+读者对象:LoopX auto-research 所有者、quota/status 维护者、todo/replan
+所有者,以及多 Agent 演示维护者。
 
-A visible auto-research demo reached a state where the operator expected
-continued multi-agent research and improvement, but the active lane did not
-enter replan. The visible experience also looked like a short single pass
-rather than several minutes of role-authored research. Earlier status updates
-could make this look better than it was by treating worker-loop plumbing,
-summary artifacts, or pane-local ticks as proof of meaningful multi-round
-research.
+## 摘要
 
-The reusable failure has two parts:
+一个可见的 auto-research 演示进入了这样的状态:operator 期望多 Agent 研究与
+改进继续推进,但活动通道没有进入 replan。可见的体验看起来也像一次短暂的单次
+遍历,而不是持续数分钟的角色化研究。更早的状态更新可能把 worker-loop 管道、
+摘要工件或 pane 内的 tick 当作"有意义的多轮研究"证明,从而使情况看起来比
+实际好。
 
-1. A completed auto-research advancement left no runnable successor for the
-   current agent, but quota still selected quiet monitor instead of a bounded
-   replan action.
-2. The demo separated "research mechanism advanced" from "visible research
-   improved the artifact" too weakly, so internal loops or summaries could be
-   confused with real collaborative research.
+可复用的失败包含两部分:
 
-This record is public-safe. It does not include raw active-state bodies, local
-runtime paths, raw logs, trajectories, credentials, private artifacts, or
-operator-specific planning context.
+1. 一次完成的 auto-research 推进没有为当前 agent 留下可运行的继任者,但
+   quota 仍选择静默 monitor,而不是有界的 replan 动作。
+2. 演示对"研究机制已推进"与"可见研究改进了工件"的区分太弱,内部循环或
+   摘要可能被误认为真正的协作研究。
 
-## Observed Public-Safe Shape
+本记录是 public-safe 的。它不包含原始活动状态体、本地运行时路径、原始日志、
+轨迹、凭据、私有工件或 operator 专属规划上下文。
 
-The relevant quota shape was:
+## 观察到的 Public-Safe 形态
+
+相关 quota 形态是:
 
 ```text
 quota should-run --goal-id <goal-id> --agent-id <side-agent>
@@ -46,21 +43,18 @@ agent_todo_summary.todo_succession_warning =
   completed_advancement_without_successor
 ```
 
-The important detail is that LoopX did notice a succession problem, but only as
-a warning. The selected interaction still told the agent to stay quiet. That is
-reasonable for a pure monitor lane; it is wrong when the monitor-only shape is
-caused by an unfinished advancement slice that lost its next executable step.
+重要细节是:LoopX 确实注意到了继任问题,但只是作为一个告警。被选中的交互
+仍然告诉 agent 保持安静。这对纯 monitor 通道是合理的;当 monitor-only 形态
+是由一个丢失了下一步可执行步骤的未完成推进切片造成时,它就是错的。
 
-## Why It Did Not Enter Replan
+## 为什么没有进入 Replan
 
-LoopX selected the local truth that was easiest to obey: there were no user
-todos, no current-agent advancement candidates, and the remaining claimed work
-was monitor or blocker class. In that view, `monitor_quiet_skip` was a valid
-no-spend action.
+LoopX 选择了最容易服从的局部事实:没有用户 todo、没有当前 agent 推进候选,
+剩余已认领工作是 monitor 或 blocker 类。按这种视图,`monitor_quiet_skip`
+是合法的 no-spend 动作。
 
-The missing rule is that a current-agent `completed_advancement_without_successor`
-warning should promote into an executable routing repair when all of these are
-true:
+缺失的规则是:当以下条件全部为真时,当前 agent 的
+`completed_advancement_without_successor` 告警应提升为可执行的路由修复:
 
 ```text
 completed advancement was tracked for successor continuity
@@ -69,85 +63,69 @@ goal or operator intent still expects follow-up advancement
 no harder safety gate is present
 ```
 
-In that state, quota should not ask the agent to do ordinary delivery. It should
-ask for a bounded control-plane replan: add/link a successor todo, mark
-`no_followup=true` with a reason, or explicitly hand off the next frontier to a
-different agent.
+在这种状态下,quota 不应要求 agent 做普通交付。它应要求一个受限的控制面
+replan:新增/链接一个继任 todo,用带原因的 `no_followup=true` 标记,或把
+下一个 frontier 显式移交给另一个 agent。
 
-## Why It Looked Like Single-Round Research
+## 为什么看起来像单轮研究
 
-The implementation already corrected one earlier fake path: real research
-actions in `demo/auto_research/worker_runtime.py` now return a
-manual-research-required result instead of silently fabricating research
-outputs. That is the right authenticity boundary.
+实现已经修正了一条早期"假路径":`demo/auto_research/worker_runtime.py`
+中真实的研究动作现在返回"需要手动研究"的结果,而不是静默编造研究输出。
+这是正确的事实性边界。
 
-The visible product problem remains: several surfaces still describe progress
-using mechanism terms such as worker-loop rounds, pane-local ticks, compact
-summaries, or precomputed metric summaries. Those are useful plumbing signals,
-but they are not equivalent to visible role-authored research. A high-quality
-demo should show roles reading the contract, proposing a hypothesis, changing
-or evaluating the artifact, recording evidence, reviewing it, and then routing
-the next frontier. If that chain only happens once, the UI should say one
-visible research pass happened. It should not imply multi-round improvement.
+但可见的产品问题仍在:几个 surface 仍用机制性词汇描述进展,如 worker-loop
+轮次、pane 内 tick、紧凑摘要或预计算的指标摘要。这些都是有用的管道信号,但
+不等同于可见的角色化研究。高质量的演示应展示:角色阅读契约、提出假设、改变
+或评估工件、记录证据、审阅它,然后路由下一个 frontier。如果这条链只发生一次,
+UI 就应说发生了一次可见的研究遍历,而不应暗示有多轮改进。
 
-The KNN demo can be real: the generated workspace supplies a baseline solution,
-editable scope, protected scope, and eval commands through
-`demo/auto_research/knn_demo_workspace.py`. The question text does
-not need to carry the baseline when the preset creates that contract. The bad
-case is not that KNN lacks a baseline; it is that the visible flow did not make
-successive, role-authored research and improvement obvious enough, and the
-control plane let the follow-up frontier disappear.
+KNN 演示可以是真实的:生成的 workspace 通过
+`demo/auto_research/knn_demo_workspace.py` 提供基线方案、可编辑作用域、
+受保护作用域和 eval 命令。当预设创建该契约时,问题文本不需要承载基线。坏例
+不在于 KNN 缺少基线,而在于可见流程没有让连续的角色化研究与改进足够明显,
+控制面又放任后续 frontier 消失。
 
-One concrete visible-run subcase is an evaluator pane waking before the executor
-has appended evidence. That is not a reason to add a central workflow driver.
-The correct first-demo shape is Codex CLI pane/goal driven on the outside and
-LoopX state/frontier driven on the inside: the evaluator todo should be
-resumable on the executor evidence step, so the evaluator waits rather than
-recording `evidence=0` and closing itself early.
+一个具体的可见运行子案例是:evaluator pane 在 executor 追加证据之前醒来。
+这不是添加中央工作流驱动器的理由。正确的第一版演示形态是:外部由 Codex CLI
+pane/goal 驱动,内部由 LoopX state/frontier 驱动:evaluator todo 应能在 executor
+的证据步骤上恢复,所以 evaluator 应该等待,而不是记录 `evidence=0` 并提前
+关闭自己。
 
-A follow-up visible run confirmed the smaller fix path:
+一次后续可见运行确认了较小的修复路径:
 
-- The evaluator seed todo waits on the executor dev-evidence todo through
-  `resume_when`, so the first evaluator turn reports a wait state instead of
-  closing on `evidence=0`.
-- The fixed wake broadcaster must resolve panes inside the requested tmux
-  session only and target stable lane metadata, not mutable Codex pane titles or
-  all tmux panes on the host.
-- Long-running Codex TUI panes may only show the bottom input prompt in the
-  capture window. Wake readiness and submit retry must recognize that footer
-  shape and retry when the fixed prompt tail remains in the input box.
+- evaluator 种子 todo 通过 `resume_when` 等待 executor 的 dev-evidence todo,
+  因此第一个 evaluator turn 报告等待状态,而不是在 `evidence=0` 上关闭。
+- 修复后的 wake 广播器必须只在被请求的 tmux session 内解析 pane,并锁定
+  稳定的 lane 元数据,而不是可变的 Codex pane 标题或宿主机上所有 tmux pane。
+- 长时间运行的 Codex TUI pane 在捕获窗口中可能只显示底部输入提示。醒来就绪
+  与提交重试必须识别这种 footer 形态,并在固定提示尾部仍留在输入框时重试。
 
-With those fixes, a real visible KNN run advanced through executor evidence,
-evaluator review, and a curator successor handoff without a hidden workflow
-driver. The remaining product question is how much of this state should be
-summarized as a compact `research_contract_v0` projection so future runs can
-explain the current stage without reading pane transcripts.
+有了这些修复,一次真实可见的 KNN 运行通过 executor 证据、evaluator 审阅和
+curator 继任者交接继续推进,而没有隐藏的工作流驱动器。剩余的产品问题是:这些
+状态中有多少应被总结为紧凑的 `research_contract_v0` 投影,使未来运行能在不读
+pane 转录的情况下解释当前阶段。
 
-## Responsibility Split
+## 责任划分
 
-This was partly a LoopX control-plane gap:
+这部分是 LoopX 控制面缺口:
 
-- A completed advancement without a successor was projected as a warning, not
-  as an executable replan obligation.
-- Quiet monitor took precedence over "repair the missing successor" even though
-  the current lane had no remaining advancement frontier.
-- Auto-research state does not yet have a compact research contract projection
-  that says which research stage is current, what evidence is required, and
-  when the next role todo must be projected.
+- 没有继任者的已完成推进被投影为告警,而不是可执行的 replan 义务。
+- 静默 monitor 优先于"修复缺失的继任者",即使当前通道没有剩余推进 frontier。
+- Auto-research 状态还没有紧凑的研究契约投影,用以说明当前研究阶段、需要
+  哪些证据,以及何时必须投影下一个角色 todo。
 
-It was also an agent/process failure:
+它也是 agent/流程失败:
 
-- I accepted mechanism evidence as product evidence and overstated the
-  significance of worker-loop or tick-based progress.
-- I closed or treated the slice as quiet without first ensuring a successor
-  todo, explicit `no_followup` rationale, or handoff.
-- I did not challenge the contradiction early enough: the operator wanted
-  continued visible research, while quota allowed a monitor-only no-op.
+- 我把机制证据当作产品证据,夸大了 worker-loop 或 tick 型进展的意义。
+- 我在没有先确保继任 todo、显式 `no_followup` 理由或交接的情况下,就关闭或
+  静默处理了该切片。
+- 我没有足够早质疑矛盾:operator 想要持续可见的研究,而 quota 允许
+  monitor-only no-op。
 
-## Desired Semantics
+## 期望语义
 
-Auto-research needs a small state-level contract, not a large research-specific
-framework. A minimal contract should be enough:
+Auto-research 需要一个小的状态级契约,而不是什么研究专属大框架。一个最小
+契约应当足够:
 
 ```json
 {
@@ -170,52 +148,45 @@ framework. A minimal contract should be enough:
 }
 ```
 
-This contract should be state, not extra business logic in the user or
-auto-research entry layer. The user surface stays thin: it starts a topic and
-optionally selects a preset/workspace. Auto-research stays thin: it creates the
-contract and role frontier. The generic todo/quota/replan machinery keeps the
-next executable step alive.
+该契约应是状态,而不是用户层或 auto-research 入口层的额外业务逻辑。用户
+surface 保持薄:启动一个话题,并可选地选择一个 preset/workspace。
+Auto-research 也保持薄:创建契约与角色 frontier。通用的 todo/quota/replan
+机制让下一个可执行步骤保持存活。
 
-## Follow-Up Work
+## 后续工作
 
-### P0: Promote Missing Successor To Replan
+### P0:把缺失继任者提升为 Replan
 
-When a current-agent completed advancement has `succession_tracked=true` and no
-successor or explicit `no_followup` reason, quota should select a bounded
-replan/writeback action instead of `monitor_quiet_skip`. The allowed action is
-control-plane repair only: add/link a successor todo, record terminal rationale,
-or hand off to the correct role.
+当当前 agent 完成的推进具有 `succession_tracked=true`,且没有继任者或显式
+`no_followup` 理由时,quota 应选择一个有界的 replan/writeback 动作,而不是
+`monitor_quiet_skip`。允许的动作只是控制面修复:新增/链接继任 todo、记录
+终局理由,或移交给正确的角色。
 
-### P0: Make Auto-Research Continuation State-Driven
+### P0:让自动研究继任状态为状态驱动
 
-Introduce the smallest useful `research_contract_v0` projection in LoopX state.
-It should identify the current research stage, expected evidence, next role,
-next action, and gate status. If the contract is not satisfied and there is no
-runnable frontier, replan must project the next role todo.
+在 LoopX state 中引入最小有用的 `research_contract_v0` 投影。它应标识当前
+研究阶段、期望证据、下一角色、下一动作与 gate 状态。如果契约未满足且没有
+可运行 frontier,replan 必须投影下一个角色 todo。
 
-### P0: Stop Claiming Multi-Round Research From Plumbing Alone
+### P0:停止仅凭管道声称多轮研究
 
-Visible multi-round verification must require visible role-authored evidence
-and at least two collective passes through the role set. Worker-loop summaries,
-pane-local tick counts, and generic evaluation summaries can support
-diagnostics, but they must not be presented as research improvement by
-themselves.
+可见的多轮验证必须要求可见的角色化证据,以及至少两次通过角色集的集体遍历。
+Worker-loop 摘要、pane 内 tick 计数和通用评估摘要可以支持诊断,但绝不能单独
+作为研究改进呈现。
 
-### P1: Improve The Visible Pane Experience
+### P1:改善可见 Pane 体验
 
-The first screen of each research pane should emphasize the role's actual
-research payload: hypothesis, edit/eval result, evidence, review decision, and
-next frontier. It should not foreground quota JSON, transcript paths, or
-diagnostic commands unless the role is genuinely in repair mode.
+每个研究 pane 的首屏应强调角色实际的研究内容:假设、编辑/评估结果、证据、
+审阅决策与下一 frontier。除非角色确实处于修复模式,否则不应把 quota JSON、
+转录路径或诊断命令作为前景。
 
-### P1: Tighten No-Followup Completion
+### P1:收紧无后续完成
 
-Auto-research completions should avoid defaulting to terminal
-`no_followup=true`. A role can close a todo without a successor only when the
-research contract is satisfied, a harder gate is present, or the completion
-records a public-safe terminal rationale.
+Auto-research 完成应避免默认设置终局 `no_followup=true`。只有当研究契约已
+满足、存在更硬的 gate,或完成时记录了 public-safe 的终局理由,角色才能在没有
+继任者的情况下关闭 todo。
 
-## Related Patterns
+## 相关模式
 
 - `monitor_replan_noop_loop`
 - `agent_scoped_replan_broadcast_gap`

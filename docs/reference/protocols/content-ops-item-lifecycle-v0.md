@@ -1,27 +1,23 @@
 # content_ops_item_v0
+> [English](content-ops-item-lifecycle-v0.md)
 
-Status: provider-neutral content-item lifecycle contract v0.
+状态：provider-neutral 内容项生命周期契约 v0。
 
-`content_ops_item_v0` gives the existing `content_ops` capability one stable
-identity and transition contract for articles, posts, replies, reposts, and
-profile updates. It is the state layer behind a managed operations queue. It is
-not a publisher and does not store draft bodies.
+`content_ops_item_v0` 为现有 `content_ops` capability 提供针对文章、帖子、回复、转发与资料更新的稳定标识与转换契约。它是托管运维队列背后的状态层。它不是发布者，也不存储草稿正文。
 
-## Item Boundary
+## Item 边界
 
-An item stores:
+一项 item 存储：
 
-- stable `item_id`, `item_kind`, and channel;
-- a positive revision plus exact `sha256:` content digest;
-- opaque `content_ref` and source refs owned by local/provider storage;
-- approval, delivery-intent, delivery, and readback receipts;
-- supersession lineage and the last applied event digest.
+- 稳定的 `item_id`、`item_kind` 与 channel；
+- 正值 revision 加精确的 `sha256:` 内容摘要；
+- 归本地/provider 存储所有的不透明 `content_ref` 与来源引用；
+- 审批、投递意图、投递与回读回执；
+- 接替血统与最后应用的 event 摘要。
 
-The public record never stores post/article bodies, credentials, browser
-profiles, login state, media payloads, raw timelines, or private source maps.
-Unknown fields fail validation so an adapter cannot silently add them.
+公开记录从不存储帖子/文章正文、凭据、浏览器 profile、登录状态、媒体载荷、原始 timeline 或私有源映射。未知字段会导致验证失败，使适配器无法静默增加它们。
 
-## Lifecycle
+## 生命周期
 
 ```text
 captured -> draft -> review_ready -> approved -> delivery_ready
@@ -31,40 +27,29 @@ captured -> draft -> review_ready -> approved -> delivery_ready
                          \-> superseded
 ```
 
-`delivery_ready` is optional. A provider may write a delivery receipt directly
-from `approved` when no scheduling intent is needed.
+`delivery_ready` 是可选的。当无需调度意图时，provider 可以从 `approved` 直接写入投递回执。
 
-Supported events are:
+支持的事件有：
 
-- `revise`: increments the revision and clears approval/effect state;
-- `submit_review`;
-- `approve`: binds an owner-authorized approval ref to one revision, digest,
-  effect kind, optional account, and optional time window;
-- `set_delivery_intent`: selects a provider without performing an effect;
-- `record_delivery`: records a provider effect that already happened;
-- `verify_readback`: proves exact URL and digest readback;
-- `revoke_approval`, `skip`, and `supersede`.
+- `revise`：递增 revision 并清除审批/生效状态；
+- `submit_review`；
+- `approve`：把一个 owner 授权的审批引用绑定到一个 revision、摘要、生效类型、可选账户与可选时间窗口；
+- `set_delivery_intent`：选择一个 provider 而不执行效果；
+- `record_delivery`：记录一个已经发生的 provider 效果；
+- `verify_readback`：证明精确 URL 与摘要回读；
+- `revoke_approval`、`skip` 与 `supersede`。
 
-Every event supplies `expected_state` and `expected_revision`. The transition
-fails closed on stale state, stale revision, digest mismatch, provider/account
-mismatch, expired approval, or changed reuse of an event id. An exact retry of
-the latest event returns `already_applied`.
+每个事件都提供 `expected_state` 与 `expected_revision`。转换在过期状态、过期 revision、摘要不匹配、provider/account 不匹配、审批过期或 event id 被变更复用时失效关闭。对最新事件的精确重试返回 `already_applied`。
 
-## Authority
+## 权限
 
-The lifecycle validates that approval, intent, delivery, and readback refer to
-the same item revision. It does not create approval authority. The caller must
-resolve `approval_ref` from an authorized LoopX decision or provider-owned
-receipt before persisting an `approve` event.
+生命周期验证审批、意图、投递与回读指向同一 item revision。它不创建审批权限。调用方必须在持久化 `approve` 事件之前，从已授权的 LoopX 决策或 provider 自有回执解析 `approval_ref`。
 
-Likewise, `record_delivery` does not call a provider. X through Ego Lite, a
-document publisher, or another extension performs the external effect under
-its own authority and writes back a compact receipt. Every CLI packet reports
-`external_writes_performed=false`.
+同样，`record_delivery` 不调用 provider。X（通过 Ego Lite）、一个文档发布器或另一个 extension 在其自有权限下执行外部效果，并写回紧凑回执。每个 CLI 包都报告 `external_writes_performed=false`。
 
 ## CLI
 
-Create a compact item:
+创建紧凑 item：
 
 ```bash
 loopx content-ops item-create \
@@ -77,7 +62,7 @@ loopx content-ops item-create \
   --format json
 ```
 
-Apply one event from caller-owned JSON:
+从调用方自有的 JSON 应用一个事件：
 
 ```bash
 loopx content-ops item-transition \
@@ -86,13 +71,8 @@ loopx content-ops item-transition \
   --format json
 ```
 
-The command returns the updated item, a read-only projection, and
-`content_ops_item_transition_receipt_v0`. Persistence remains caller-owned so
-private queues can stay ignored and provider-specific.
+该命令返回更新后的 item、一个只读投影与 `content_ops_item_transition_receipt_v0`。持久化仍由调用方所有，使私有队列得以保持忽略状态与 provider 特异性。
 
-## Relationship To X
+## 与 X 的关系
 
-[`x_public_channel_ops_v0`](x-public-channel-ops-v0.md) remains the X-specific
-source, draft, approval, and result protocol. Its records may be projected into
-this generic lifecycle, while account calendars, exact drafts, and Ego Lite
-session state remain local.
+[x_public_channel_ops_v0](x-public-channel-ops-v0.md) 仍是 X 专属的来源、草稿、审批与结果协议。其记录可投影到本通用生命周期中，而账户日历、精确草稿与 Ego Lite 会话状态保持本地。

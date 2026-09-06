@@ -1,4 +1,5 @@
 # 第 3 讲：从 Showcase 到第一次真实 Loop
+> [English](03-first-real-loop.md)
 
 > **本讲结论：** 第一次真实 Loop 不是“heartbeat 调一次模型”，而是外置 source state 被
 > 编译成适合有限上下文的 CLI packet 和 bounded action，执行结果经验证写回，再由

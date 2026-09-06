@@ -1,179 +1,154 @@
-# RFC: Provider-Neutral Post-Writeback Capability Hooks v0
+# RFC：Provider-Neutral Post-Writeback Capability Hooks v0
 
-| Field | Value |
+| 字段 | 内容 |
 |---|---|
-| Status | Draft, under maintainer review |
-| Date | 2026-08-26 |
-| Tracking issue | [#3479](https://github.com/huangruiteng/loopx/issues/3479) |
-| Source baseline | LoopX `11824ef5f` |
-| Decision boundary | How an installed capability may propose bounded follow-up work after a successful durable writeback without joining the primary transaction or gaining effect authority |
-| Core owner | Turn settlement and capability-hook lifecycle |
-| Capability owner | Policy for deciding whether and which intent to propose |
-| Effect owner | A separately authorized governed executor or sink |
+| 状态 | Draft，等待 maintainer 评审 |
+| 日期 | 2026-08-26 |
+| 跟踪 issue | [#3479](https://github.com/huangruiteng/loopx/issues/3479) |
+| 源码基线 | LoopX `11824ef5f` |
+| 决策边界 | 已安装 capability 如何在成功 durable writeback 后提出有边界的后续工作，同时不加入主事务、也不获得 effect 权限 |
+| Core owner | Turn settlement 与 capability-hook 生命周期 |
+| Capability owner | 决定是否提出 intent、提出哪类 intent 的策略 |
+| Effect owner | 单独授权的 governed executor 或 sink |
 
-> Language note: the
-> [Chinese version](./provider-neutral-post-writeback-capability-hooks-v0.zh-CN.md)
-> and this English version are semantic mirrors. A difference between them is
-> a defect.
+> 语言说明：本文与
+> [英文版](./provider-neutral-post-writeback-capability-hooks-v0.md)
+> 互为语义镜像；两者存在语义差异即为缺陷。
 
-## 1. Decision Summary
+## 1. 决策摘要
 
-LoopX should add a provider-neutral `post_writeback` capability-hook phase. The
-phase runs only after the primary durable-writeback step has produced a valid,
-committed receipt. An installed hook receives a compact public-safe receipt
-projection and may return zero or more typed, idempotent **intent proposals**.
+LoopX 应新增 provider-neutral 的 `post_writeback` capability-hook phase。
+该 phase 只在主 durable-writeback step 已产生合法、committed receipt 之后运行。
+已安装 hook 接收一份精简、public-safe 的 receipt projection，并可返回零个或多个
+typed、幂等的 **intent proposal**。
 
-The proposal does not execute an external effect. Core validates and records it
-in a bounded sidecar journal or outbox. A later governed executor must admit the
-intent against its own capability, write-scope, budget, and authorization
-policy before any effect occurs.
+Proposal 不执行外部 effect。Core 对其验证后写入有边界的 sidecar journal 或
+outbox。之后必须由另一个 governed executor 根据自身 capability、write scope、
+budget 与授权策略重新准入，才允许发生任何 effect。
 
-The authority split is deliberate:
+权威拆分如下：
 
 ```text
-primary Turn
+主 Turn
   -> validation
-  -> durable writeback + committed receipt        (core lifecycle authority)
-  -> isolated post-writeback hook dispatch
-       -> typed intent proposal                    (capability policy authority)
-       -> validated sidecar receipt                (core supervision authority)
-  -> quota spend based on the primary receipt only
+  -> durable writeback + committed receipt        （core 生命周期权威）
+  -> 隔离的 post-writeback hook dispatch
+       -> typed intent proposal                    （capability 策略权威）
+       -> validated sidecar receipt                （core 监督权威）
+  -> quota spend 只依赖主 receipt
 
 typed intent proposal
-  -> separately admitted governed execution
-  -> renderer / connector / external sink          (effect authority)
+  -> 单独准入的 governed execution
+  -> renderer / connector / external sink          （effect 权威）
 ```
 
-The hook is not another settlement step. Hook failure cannot roll back the
-primary writeback, prevent the matching quota spend, create a user gate, or
-silently acquire the primary Turn's write authority.
+Hook 不是新增 settlement step。Hook 失败不得回滚主 writeback、阻止与之匹配的
+quota spend、创建 user gate，也不得隐式继承主 Turn 的 write 权限。
 
-## 2. Problem
+## 2. 问题
 
-LoopX already has useful pieces, but they do not form an automatic
-post-writeback contract:
+LoopX 已有若干必要前件，但它们尚未形成自动 post-writeback contract：
 
-- `loopx_capability_hook_registration_v0` supports the read-only
-  `interaction_projection` phase. It demonstrates composition-root
-  registration, TypeScript-owned validation, bounded output, slot conflict
-  handling, and failure isolation.
-- `periodic_report` can reduce durable public-safe rollout events into a typed
-  trigger decision. Its runtime producer is called explicitly; the control
-  plane does not invoke it after a Todo completion or replan writeback.
-- the Turn settlement runtime has typed identities, ordered receipts, replay,
-  and a durable-writeback checkpoint.
-- rollout-event append is best-effort diagnostic logging. It intentionally
-  cannot turn a successful primary command into a failure.
-- some interaction contracts project command-shaped `post_writeback_actions`.
-  Those operator hints are not a registry, typed provider result, or authority
-  contract.
+- `loopx_capability_hook_registration_v0` 已支持只读的
+  `interaction_projection` phase，验证了 composition-root 注册、TypeScript
+  语义校验、有界输出、slot 冲突处理和故障隔离。
+- `periodic_report` 已能把 durable、public-safe rollout event 规约为 typed
+  trigger decision，但 runtime producer 仅能显式调用；Todo 完成或 replan
+  writeback 后，控制面不会自动调用它。
+- Turn settlement runtime 已有 typed identity、有序 receipt、replay 和
+  durable-writeback checkpoint。
+- rollout-event append 是 best-effort 诊断日志，设计上不会把一个成功的主命令
+  变成失败。
+- 部分 interaction contract 会投影 command 形态的 `post_writeback_actions`。
+  这些 operator hint 不是 registry、typed provider result 或权限 contract。
 
-Without a shared post-writeback boundary, each capability must choose between
-manual invocation, capability-specific imports in core, arbitrary callbacks,
-or duplicating lifecycle logic. The first cannot automate a long-running Goal;
-the other three create competing sources of truth or implicit effect authority.
+缺少共享 post-writeback 边界时，每个 capability 只能选择手动调用、让 core
+直接 import capability、接受任意 callback，或复制生命周期逻辑。第一种无法自动化
+长程 Goal；后三种会制造第二事实源或隐式 effect 权限。
 
-The immediate motivating case is a periodic-report trigger after a bounded
-segment completion or replan. The core contract must nevertheless be named and
-designed around the caller outcome, not that first provider.
+第一个需求是：在有边界的阶段完工或进入 replan 后产生 periodic-report trigger。
+但 core contract 必须以调用者所需 outcome 命名和设计，不能按第一个 provider 命名。
 
-## 3. Goals and Non-Goals
+## 3. 目标与非目标
 
-### 3.1 Goals
+### 3.1 目标
 
-The v0 contract must:
+V0 contract 必须：
 
-1. dispatch only from a committed primary durable-writeback receipt;
-2. keep registration and result validation provider-neutral and core-owned;
-3. expose only a compact, public-safe receipt projection;
-4. accept only typed, idempotent intent proposals;
-5. isolate registration, producer, timeout, validation, and conflict failures;
-6. make replay, deduplication, budgets, and ordering deterministic;
-7. preserve separate capability-policy, lifecycle, and effect authorities; and
-8. support a real completion/replan-to-periodic-report-intent test without
-   performing an external write.
+1. 只从 committed 主 durable-writeback receipt dispatch；
+2. 保持注册和结果校验 provider-neutral、由 core 拥有；
+3. 仅暴露精简、public-safe 的 receipt projection；
+4. 只接受 typed、幂等的 intent proposal；
+5. 隔离注册、producer、超时、校验与冲突失败；
+6. 让 replay、去重、budget 与顺序确定可复现；
+7. 继续分离 capability 策略、core 生命周期与 effect 权威；
+8. 能以真实 completion/replan writeback 为起点，验证产生 periodic-report
+   intent 的闭环，但不执行外部写。
 
-### 3.2 Non-goals
+### 3.2 非目标
 
-This RFC does not:
+本文不做以下事情：
 
-- automatically send a report, message, email, webhook, or document update;
-- add arbitrary shell commands, import strings, or user-provided callbacks as
-  a hook interface;
-- allow core settlement code to import `periodic_report` or any other concrete
-  capability;
-- put hook execution inside `append_rollout_event_once` or another low-level
-  persistence helper;
-- grant the hook the primary Turn's repository, network, credential, quota, or
-  write authority;
-- make hook completion a prerequisite for primary quota settlement;
-- reinterpret existing command-shaped `post_writeback_actions` as trusted
-  extension registrations;
-- define a general workflow engine or a dependency graph between hooks; or
-- promote the RFC itself to shipped behavior.
+- 自动发送报告、消息、邮件、webhook 或更新文档；
+- 以任意 shell command、import string 或用户 callback 作为 hook 接口；
+- 允许 core settlement 代码 import `periodic_report` 或其他具体 capability；
+- 把 hook execution 放进 `append_rollout_event_once` 等底层持久化 helper；
+- 授予 hook 主 Turn 的仓库、网络、凭据、quota 或 write 权限；
+- 让 hook 完成成为主 quota settlement 的前置条件；
+- 把现有 command 形态的 `post_writeback_actions` 解释成可信 extension 注册；
+- 定义通用 workflow engine 或 hook 依赖图；
+- 因为发布 RFC 就宣称实现已经交付。
 
-## 4. Ownership and Composition Boundary
+## 4. Ownership 与组合边界
 
-The contract has four owners with non-overlapping responsibilities.
+Contract 有四类 owner，职责互不重叠：
 
-| Concern | Owner | Authority |
+| 关注点 | Owner | 权威 |
 |---|---|---|
-| Legal dispatch point, receipt validation, registry admission, budgets, ordering, journal, replay, and failure receipts | LoopX core | Control-plane lifecycle only |
-| Whether a receipt is relevant and which intent should be proposed | Installed capability | Policy proposal only |
-| Binding an implementation to a capability registration | Host or CLI composition root | Installation and configuration only |
-| Rendering, connector calls, external writes, and readback | Governed executor or sink | Separately admitted effect authority |
+| 合法 dispatch 点、receipt 校验、registry 准入、budget、顺序、journal、replay 与失败 receipt | LoopX core | 仅控制面生命周期 |
+| Receipt 是否相关、应提出哪种 intent | 已安装 capability | 仅策略 proposal |
+| 把具体实现绑定到 capability registration | Host 或 CLI composition root | 仅安装与配置 |
+| Renderer、connector 调用、外部写和 readback | Governed executor 或 sink | 单独准入的 effect 权威 |
 
-Core must not branch on a capability identifier. The composition root may
-register an installed provider, but installation proves only that the provider
-is available and contract-compatible. It does not prove that an intent is
-authorized to execute.
+Core 不得按 capability identifier 分支。Composition root 可以注册已安装 provider，
+但“已安装”只证明 provider 可用且 contract 兼容，不证明它提出的 intent 已获执行授权。
 
-The TypeScript control-plane boundary remains the semantic owner of
-registration, input, result, and dispatch-receipt validation. Python may hold a
-callable adapter and invoke the TypeScript validators, as the existing
-interaction-projection hook does; it must not implement a second acceptance
-policy.
+TypeScript 控制面继续作为 registration、input、result 和 dispatch receipt 校验的
+语义 owner。Python 可以像现有 interaction-projection hook 一样持有 callable adapter
+并调用 TypeScript validator，但不得重新实现一套接受策略。
 
-## 5. Dispatch Point and Primary-Transaction Boundary
+## 5. Dispatch 点与主事务边界
 
-### 5.1 Admissible source
+### 5.1 合法 source
 
-A dispatch is admissible only when all of the following are true:
+只有同时满足以下条件，dispatch 才合法：
 
-- the settlement identity contains non-empty goal, agent, Todo, Turn, and
-  effect identities;
-- the durable-writeback receipt uses the same effect identity as the active
-  Turn settlement plan;
-- the durable-writeback step is committed, not prepared, rejected, inferred,
-  or merely present in prose;
-- the receipt has been checkpointed durably enough that replay can recover the
-  same dispatch identity; and
-- the selected execution profile enables post-writeback hooks.
+- settlement identity 具有非空 goal、agent、Todo、Turn 与 effect identity；
+- durable-writeback receipt 与当前 Turn settlement plan 使用相同 effect identity；
+- durable-writeback step 是 committed，而非 prepared、rejected、推断结果或仅存在于 prose；
+- receipt 已完成足够强的 durable checkpoint，使 replay 能恢复同一 dispatch identity；
+- 当前 execution profile 启用了 post-writeback hook。
 
-A successful diagnostic rollout-event append is not the source of authority.
-It may provide bounded event facts to a capability after the committed receipt
-has admitted dispatch, but a missing diagnostic event cannot change the truth
-of primary settlement.
+成功 append diagnostic rollout event 不是权威来源。Committed receipt 准入 dispatch
+后，rollout event 可以向 capability 提供有界事实；但 diagnostic event 丢失不得改变
+主 settlement 的事实。
 
-### 5.2 Placement
+### 5.2 位置
 
-The orchestrator boundary dispatches after the committed writeback receipt and
-before or after primary quota spend according to the host implementation. That
-relative scheduling must not alter semantics:
+Orchestrator boundary 在 committed writeback receipt 之后 dispatch。具体 host 可以
+在主 quota spend 前或后安排执行，但不得改变下列语义：
 
-- quota-spend eligibility depends only on the matching primary durable receipt;
-- hook dispatch has its own sidecar checkpoint and idempotency identity;
-- a process crash after primary writeback can replay the hook dispatch; and
-- a hook failure never removes or changes the primary receipt.
+- quota-spend eligibility 只依赖匹配的主 durable receipt；
+- hook dispatch 有独立的 sidecar checkpoint 和 idempotency identity；
+- primary writeback 后进程崩溃，仍能 replay 同一 hook dispatch；
+- hook 失败不删除、不改变主 receipt。
 
-The hook phase is therefore **post-writeback**, but outside the ordered primary
-settlement-step list. Adding it as a fifth primary step would make optional
-capability health authoritative over accounting and is rejected by this RFC.
+因此它是 **post-writeback** phase，但不属于主 settlement 的有序 step list。若将它
+作为第五个主 step，可选 capability 的健康状态就会支配 accounting，本文明确拒绝。
 
 ## 6. Registration Contract
 
-V0 introduces a phase-specific registration rather than weakening the
-read-only `interaction_projection` schema:
+V0 引入 phase-specific registration，不削弱只读 `interaction_projection` schema：
 
 ```json
 {
@@ -194,23 +169,18 @@ read-only `interaction_projection` schema:
 }
 ```
 
-Core validates exact fields, bounded token arrays, known event and intent kinds,
-duplicate-free identities, size limits, timeout limits, and the mandatory
-`isolate` policy before invoking a provider.
+Core 在调用 provider 之前校验 exact fields、有界 token arrays、已知 event/intent
+kind、无重复 identity、size/timeout limit，以及强制 `isolate` policy。
 
-The registration declares no executable command and no write scope. Intent
-proposals may declare the scope a later executor would need, but that is a
-request for admission, not authority held by the hook.
+Registration 不声明可执行 command，也不声明 write scope。Intent proposal 可以声明
+未来 executor 所需的 scope，但这只是准入请求，不是 hook 已持有的权限。
 
-Registration order is not execution priority. Core sorts admitted
-registrations by stable `hook_id` for deterministic dispatch. Hooks cannot
-depend on another hook's result in v0; a real dependency belongs in a separately
-governed workflow.
+Registration 顺序不代表执行优先级。Core 按稳定 `hook_id` 排序后 dispatch。V0 中
+hook 不得依赖另一个 hook 的 result；真实依赖应进入单独 governed workflow。
 
 ## 7. Input Contract
 
-Each admitted hook receives one immutable
-`loopx_post_writeback_hook_input_v0`:
+每个 admitted hook 接收一个 immutable `loopx_post_writeback_hook_input_v0`：
 
 ```json
 {
@@ -246,21 +216,18 @@ Each admitted hook receives one immutable
 }
 ```
 
-The source identities are public-safe opaque identifiers, not display names or
-raw provider payloads. Core chooses the bounded projection schema for each
-event kind. A registration cannot request the complete writeback payload.
+Source identity 是 public-safe opaque identifier，不是 display name 或 raw provider
+payload。Core 为每种 event kind 选择有界 projection schema；registration 不得请求
+完整 writeback payload。
 
-Input must exclude task prose, prompts, logs, trajectories, transcripts,
-credentials, environment values, local paths, repository contents, and
-unregistered external references. If the boundary cannot prove the compact
-projection safe, that hook is not invoked and receives an isolated failure
-receipt.
+Input 必须排除 task prose、prompt、log、trajectory、transcript、credential、环境变量值、
+local path、仓库内容和未注册外部引用。如果 boundary 无法证明 projection 安全，则不调用
+该 hook，并生成隔离的 failure receipt。
 
 ## 8. Typed Intent Result
 
-A provider returns a `loopx_post_writeback_hook_result_v0`. It is either
-`not_applicable` with no intents, or `proposed` with a bounded list of intents.
-One example intent is:
+Provider 返回 `loopx_post_writeback_hook_result_v0`：要么是没有 intent 的
+`not_applicable`，要么是带有界 intent list 的 `proposed`。示例 intent：
 
 ```json
 {
@@ -287,186 +254,156 @@ One example intent is:
 }
 ```
 
-Core accepts an intent only when:
+Core 仅在以下条件满足时接受 intent：
 
-- its hook, capability, dispatch, and kind match the admitted registration;
-- its serialized result stays within the declared budgets;
-- its payload uses the known schema for that intent kind;
-- its idempotency identity matches its semantic inputs;
-- it claims no performed external write or new authority; and
-- its requested scope is only a declarative input to later admission.
+- hook、capability、dispatch 和 kind 与 admitted registration 匹配；
+- 序列化结果没有超过 budget；
+- payload 使用该 intent kind 的已知 schema；
+- idempotency identity 与 semantic input 匹配；
+- 没有宣称已执行外部写或获得新权限；
+- requested scope 仅作为未来 admission 的声明输入。
 
-For periodic reports, the first useful intent requests trigger evaluation. The
-existing capability-owned trigger reducer remains authoritative for promotion.
-A later execution still uses the governed `compose-run -> renderer ->
-authorized sink` boundary; the hook does not skip any of those stages.
+对 periodic report 而言，最小可用 intent 只请求 trigger evaluation。既有
+capability-owned trigger reducer 继续拥有 promotion 判断。后续执行仍使用 governed
+`compose-run -> renderer -> authorized sink` 边界；hook 不跳过任何阶段。
 
-## 9. Idempotency, Replay, and Conflict Rules
+## 9. 幂等、Replay 与冲突规则
 
-`dispatch_id` is a stable digest of the committed receipt identity, hook
-identity, registration schema version, and event kind. `intent_id` is a stable
-digest of the dispatch identity, intent kind, policy version, and canonical
-typed payload.
+`dispatch_id` 是 committed receipt identity、hook identity、registration schema
+version 与 event kind 的稳定 digest。`intent_id` 是 dispatch identity、intent kind、
+policy version 与 canonical typed payload 的稳定 digest。
 
-The sidecar journal enforces:
+Sidecar journal 强制以下规则：
 
-- replay of the same dispatch and same canonical result is a no-op with the
-  original receipt returned;
-- the same dispatch identity with a different result is a conflict and the new
-  result is rejected;
-- a changed registration, policy version, or source receipt creates a new
-  identity rather than replacing history;
-- a crash between primary writeback and sidecar checkpoint can retry the same
-  dispatch;
-- a completed sidecar receipt is never reconstructed from a log message or a
-  provider claim; and
-- external executors deduplicate again on `intent_id` because hook recording
-  and effect execution are separate transactions.
+- 同一 dispatch 与同一 canonical result 的 replay 是 no-op，并返回原 receipt；
+- 同一 dispatch identity 产生不同 result 时判定冲突，拒绝新 result；
+- registration、policy version 或 source receipt 改变时产生新 identity，不覆盖历史；
+- primary writeback 与 sidecar checkpoint 之间崩溃时可重试同一 dispatch；
+- completed sidecar receipt 不得从日志文本或 provider 自述中重建；
+- external executor 还要基于 `intent_id` 再次去重，因为 hook 记录与 effect 执行是两个事务。
 
-The journal stores bounded typed packets and compact failure codes. It does not
-store raw provider exceptions, task context, credentials, or external payloads.
+Journal 只保存有界 typed packet 与精简 failure code，不保存 raw provider exception、
+task context、credential 或 external payload。
 
-## 10. Supervision, Budgets, and Failure Isolation
+## 10. 监督、Budget 与故障隔离
 
-Core applies per-hook and per-dispatch ceilings for invocation count, intent
-count, bytes, and wall time. A profile may disable the phase or admit only an
-allowlist of installed hooks. V0 executes hooks independently in stable order;
-one hook's failure does not consume another hook's result slot.
+Core 对每个 hook 和每次 dispatch 施加 invocation count、intent count、bytes 与 wall
+time 上限。Profile 可以关闭整个 phase，或只准入已安装 hook allowlist。V0 按稳定顺序
+独立运行各 hook；一个 hook 失败不会消耗另一个 hook 的 result slot。
 
-Failure receipts use stable codes such as:
+Failure receipt 使用稳定 code，例如：
 
-- `registration_rejected`;
-- `input_boundary_rejected`;
-- `producer_failed`;
-- `producer_timed_out`;
-- `result_contract_rejected`;
-- `intent_conflict`; and
-- `dispatch_budget_exhausted`.
+- `registration_rejected`；
+- `input_boundary_rejected`；
+- `producer_failed`；
+- `producer_timed_out`；
+- `result_contract_rejected`；
+- `intent_conflict`；
+- `dispatch_budget_exhausted`。
 
-Failures are observable and may be retried under a bounded policy with the same
-dispatch identity. They do not:
+失败可观察，也可在有界 policy 下用相同 dispatch identity 重试。但它不：
 
-- alter the primary durable receipt;
-- block matching quota spend;
-- change Todo state or selected work;
-- create a blocker or user-action gate;
-- invoke an external sink; or
-- spend another capability's quota.
+- 改变主 durable receipt；
+- 阻止匹配的 quota spend；
+- 改变 Todo state 或 selected work；
+- 创建 blocker 或 user-action gate；
+- 调用 external sink；
+- 消耗另一个 capability 的 quota。
 
-Repeated hook failure may produce a maintainer-facing diagnostic projection or
-a separately admitted repair Todo. That policy is outside v0 and cannot be
-inferred from exception text.
+重复失败未来可以产生 maintainer diagnostic projection 或单独准入的 repair Todo，
+但该策略不属于 v0，也不得从 exception text 推断。
 
-## 11. Smallest Useful Implementation Slices
+## 11. 最小可用实现切片
 
-### Slice 1: contracts and inert registry
+### Slice 1：Contract 与 inert registry
 
-- add TypeScript-owned validators for registration, input, result, intent, and
-  dispatch receipt;
-- add a Python callable adapter and deterministic registry;
-- support disabled, not-applicable, replay, conflict, budget, and isolated
-  failure tests;
-- do not wire a production settlement path or capability.
+- 新增 TypeScript-owned registration、input、result、intent、dispatch receipt validator；
+- 新增 Python callable adapter 与 deterministic registry；
+- 覆盖 disabled、not-applicable、replay、conflict、budget 与 isolated failure 测试；
+- 不接生产 settlement path，也不接具体 capability。
 
-### Slice 2: one primary lifecycle seam
+### Slice 2：一条主生命周期 seam
 
-- wire the hook dispatcher at one orchestrator-owned durable-writeback receipt
-  boundary;
-- persist a sidecar dispatch receipt and recover it on replay;
-- prove quota-spend eligibility and primary receipts are unchanged;
-- use an inert synthetic hook, default disabled.
+- 在一个 orchestrator-owned durable-writeback receipt boundary 接入 dispatcher；
+- 持久化 sidecar dispatch receipt，并能在 replay 时恢复；
+- 证明 quota-spend eligibility 与主 receipt 不变；
+- 使用 inert synthetic hook，默认关闭。
 
-### Slice 3: periodic-report intent producer
+### Slice 3：Periodic-report intent producer
 
-- register `periodic_report.runtime_trigger` at the composition root;
-- map eligible completion and replan projections into one trigger-evaluation
-  intent;
-- feed that intent to the existing periodic-report producer through a fake
-  scheduler or governed executor;
-- stop before any external sink.
+- 在 composition root 注册 `periodic_report.runtime_trigger`；
+- 把符合条件的 completion/replan projection 映射为一个 trigger-evaluation intent；
+- 通过 fake scheduler 或 governed executor 把 intent 交给既有 periodic-report producer；
+- 到 external sink 之前停止。
 
-### Slice 4: qualified expansion
+### Slice 4：验证后扩展
 
-- extend wiring to other primary writeback paths only after receipt/replay
-  parity is proven;
-- add an authorized sink path as a separate change with explicit credentials,
-  write-scope, readback, and rollback contracts.
+- 只有 receipt/replay parity 得到证明后，才扩展到其他 primary writeback path；
+- authorized sink path 作为单独改动，显式定义 credential、write scope、readback 与 rollback。
 
-Each slice should remain independently reviewable. Shipping Slice 1 does not
-mean automatic reports exist; shipping Slice 3 does not authorize report
-delivery.
+每个 slice 都应能独立 review。Slice 1 发布不代表已有自动报告；Slice 3 发布也不代表
+报告投递已经授权。
 
-## 12. Validation Matrix
+## 12. 验证矩阵
 
-| Case | Required result |
+| Case | 必须得到的结果 |
 |---|---|
-| Phase disabled or capability not installed | Zero provider invocations and no sidecar intent |
-| Registration malformed or exceeds budget | Registration rejected before provider invocation |
-| Primary validation or writeback fails | Zero post-writeback invocations |
-| Committed writeback | Exactly one dispatch identity per admitted hook |
-| Primary writeback replay | Same dispatch receipt; no duplicate intent |
-| Same identity, different payload | Conflict rejected and original receipt retained |
-| Provider raises, times out, or returns malformed output | Compact isolated failure; primary receipt and spend eligibility unchanged |
-| Multiple hooks | Stable order, independent budgets, and failure isolation |
-| Intent requests scope | Proposal recorded only; no authority or effect is granted |
-| Periodic-report completion threshold | One typed trigger-evaluation intent under a fake scheduler |
-| Periodic-report replan transition | One typed trigger-evaluation intent under a fake scheduler |
-| External-write assertion | No network or sink call before separate governed admission |
-| Public-boundary scan | No private names, URLs, paths, credentials, transcripts, raw logs, or provider payloads |
+| Phase disabled 或 capability 未安装 | Provider 零调用，无 sidecar intent |
+| Registration 非法或超过 budget | Provider 调用前拒绝 registration |
+| 主 validation 或 writeback 失败 | Post-writeback 零调用 |
+| Committed writeback | 每个 admitted hook 恰好一个 dispatch identity |
+| 主 writeback replay | 返回同一 dispatch receipt，不重复 intent |
+| 同一 identity、不同 payload | 冲突被拒绝，原 receipt 保留 |
+| Provider 抛错、超时或返回非法结果 | 精简隔离失败；主 receipt 与 spend eligibility 不变 |
+| 多 hook | 稳定顺序、独立 budget、故障隔离 |
+| Intent 请求 scope | 只记录 proposal，不授予权限、不执行 effect |
+| Periodic-report completion threshold | Fake scheduler 下产生一个 typed trigger-evaluation intent |
+| Periodic-report replan transition | Fake scheduler 下产生一个 typed trigger-evaluation intent |
+| External-write 断言 | 单独 governed admission 前无网络或 sink 调用 |
+| Public-boundary scan | 无私有名称、URL、路径、credential、transcript、raw log 或 provider payload |
 
-The end-to-end acceptance test must start at a real committed completion or
-replan writeback boundary, not by calling the periodic-report producer directly.
-It ends at a validated intent receipt, not at an external service.
+E2E acceptance test 必须从真实 committed completion/replan writeback boundary 开始，
+不能直接调用 periodic-report producer；它结束于 validated intent receipt，不结束于外部服务。
 
-## 13. Rejected Alternatives
+## 13. 被拒绝的替代方案
 
-### Import `periodic_report` from settlement code
+### 从 settlement 代码 import `periodic_report`
 
-This makes one capability part of core lifecycle and forces future capabilities
-to repeat the coupling.
+这会把一个 capability 变成 core 生命周期的一部分，并迫使未来 capability 重复耦合。
 
-### Run hooks inside the rollout-event append helper
+### 在 rollout-event append helper 内运行 hook
 
-The helper is best-effort diagnostic persistence. Giving it orchestration
-authority would either make diagnostics block primary work or hide hook loss
-behind a successful primary receipt.
+该 helper 是 best-effort diagnostic persistence。赋予它 orchestration 权威，要么让
+diagnostic 阻塞主工作，要么让 hook 丢失被成功主 receipt 掩盖。
 
-### Execute a command from `post_writeback_actions`
+### 执行 `post_writeback_actions` 中的 command
 
-A command string has no typed provider result, bounded payload, deterministic
-dedupe, or effect authority. It remains operator guidance, not the v0 hook
-contract.
+Command string 没有 typed provider result、有界 payload、确定性 dedupe 或 effect
+authority。它继续是 operator guidance，不是 v0 hook contract。
 
-### Let a hook call the sink directly
+### 让 hook 直接调用 sink
 
-This collapses policy and effect authority, bypasses write-scope admission and
-readback, and makes retries unsafe.
+这会合并策略与 effect 权威，绕过 write-scope admission/readback，并让重试不安全。
 
-### Add the hook as a primary settlement step
+### 把 hook 增加为主 settlement step
 
-Optional provider availability would become authoritative over quota accounting
-and Turn completion. The sidecar boundary preserves primary settlement truth.
+可选 provider 的健康状态会支配 quota accounting 与 Turn completion。Sidecar 边界
+才能保留主 settlement 事实。
 
-### Reuse `interaction_projection` unchanged
+### 原样复用 `interaction_projection`
 
-That phase is read-time, has an empty write scope, maps typed projection slots,
-and is evaluated before a primary effect. Post-writeback dispatch has a receipt
-source, replay identity, sidecar journal, and intent output. Reusing its schema
-would obscure materially different lifecycle semantics.
+该 phase 是 read-time、write scope 为空、映射 typed projection slot，且在 primary
+effect 之前评估。Post-writeback dispatch 则有 receipt source、replay identity、
+sidecar journal 与 intent output。复用同一 schema 会掩盖实质不同的生命周期语义。
 
-## 14. Promotion Gates and Open Implementation Choices
+## 14. Promotion Gate 与开放实现选择
 
-The architectural decisions above are stable for v0. Two implementation
-choices remain deliberately deferred to the first wiring PR:
+以上架构决策对 v0 已稳定。第一条 wiring PR 仍需确定两个实现选择：
 
-1. whether the sidecar journal is stored beside the Turn journal or in a
-   dedicated hook-outbox path; it must preserve atomic per-dispatch dedupe and
-   remain reconstructible from the committed receipt;
-2. whether a host dispatches immediately after checkpoint or from a recovery
-   queue; both must preserve the same identity, failure isolation, and primary
-   spend semantics.
+1. sidecar journal 放在 Turn journal 旁，还是独立 hook-outbox 路径；无论选择哪种，
+   都必须保持 atomic per-dispatch dedupe，并可从 committed receipt 恢复；
+2. host 在 checkpoint 后立即 dispatch，还是从 recovery queue dispatch；两者必须保持
+   相同 identity、故障隔离与主 spend 语义。
 
-The design may move from Draft only after maintainers accept the ownership
-split and one public test packet proves the validation matrix through Slice 2.
-Automatic external delivery requires a separate accepted effect-boundary
-change.
+只有 maintainer 接受 ownership 拆分、且一份公开测试 packet 通过 Slice 2 的验证矩阵，
+本文才可从 Draft 晋级。自动 external delivery 还需要单独接受 effect-boundary 改动。

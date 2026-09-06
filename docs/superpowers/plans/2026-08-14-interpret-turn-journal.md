@@ -1,37 +1,48 @@
-# Turn Journal Interpretation Implementation Plan
+# Turn Journal 解释实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a read-only `interpret_turn_journal` Effect Program lens that returns structured replay legality, identity mismatch, tombstone, and phase-order information.
+> [English](2026-08-14-interpret-turn-journal.md)
 
-**Architecture:** Keep the public lens in `loopx.control_plane.effect_program` beside the existing quota and Turn-result interpreters. Move the canonical Turn phase sequence into that core Effect Program module and retain `turn_driver.transaction.TRANSACTION_PHASES` as an alias, so interpretation and execution share one exact ordering rule without a circular import or duplicated tuple. Project typed violations into `EffectRequest.context`; never call executor, journal I/O, scheduling, or quota code.
+**目标：** 增加一个只读的 `interpret_turn_journal` Effect Program 视角（lens），返回结构化的
+回放合法性、身份不匹配、tombstone 与阶段顺序信息。
 
-**Tech Stack:** Python 3.12, frozen dataclasses, `StrEnum`, pytest, Markdown reference documentation.
+**架构：** 把公开 lens 放在 `loopx.control_plane.effect_program` 中，与现有的 quota 和
+Turn-result 解释器并列。把 canonical Turn 阶段序列移入该核心 Effect Program 模块，并保留
+`turn_driver.transaction.TRANSACTION_PHASES` 作为别名，使解释与执行共享同一个精确的排序规则，
+且没有循环导入或重复元组。把类型化的违规投影到 `EffectRequest.context`；绝不调用 executor、
+journal I/O、调度或 quota 代码。
 
-## Global Constraints
+**技术栈：** Python 3.12、frozen dataclasses、`StrEnum`、pytest、Markdown 参考文档。
 
-- The API is `interpret_turn_journal(journal, *, goal_id=None, agent_id=None, turn_key=None, capabilities=()) -> EffectTurn`.
-- Semantic mismatches return `EffectTurn` with `decision="replay_blocked"`; they do not raise.
-- `EffectObservation.should_run` is always `False`; `request.context["replay_legal"]` is the legality signal.
-- The lens performs no journal I/O, mutation, execution, scheduling, model call, or quota spending.
-- Existing journal and Turn wire schemas remain unchanged.
-- Terminal replay tombstones are exactly `committed`, `stopped`, and `failed`; failed recovery with `retry_failed=True` remains executor-owned.
-- Classification uses typed fields and exact equality, not substring heuristics.
+## 全局约束
+
+- API 是 `interpret_turn_journal(journal, *, goal_id=None, agent_id=None, turn_key=None, capabilities=()) -> EffectTurn`。
+- 语义不匹配返回带 `decision="replay_blocked"` 的 `EffectTurn`；它们不抛出异常。
+- `EffectObservation.should_run` 恒为 `False`；`request.context["replay_legal"]` 是合法性信号。
+- 该 lens 不做任何 journal I/O、变更、执行、调度、模型调用或 quota 花费。
+- 现有 journal 与 Turn wire schema 保持不变。
+- Terminal 回放 tombstones 精确为 `committed`、`stopped` 与 `failed`；带 `retry_failed=True`
+  的失败恢复仍归 executor 所有。
+- 分类使用类型化字段与精确相等，不使用子串启发式。
 
 ---
 
-### Task 1: Establish The Legal Replay Lens And Canonical Phase Source
+### 任务 1：建立合法回放 lens 与 canonical 阶段来源
 
-**Files:**
-- Create: `tests/control_plane/test_effect_turn_turn_journal.py`
-- Modify: `loopx/control_plane/effect_program.py`
-- Modify: `loopx/control_plane/turn_driver/transaction.py`
+**文件：**
+- 创建：`tests/control_plane/test_effect_turn_turn_journal.py`
+- 修改：`loopx/control_plane/effect_program.py`
+- 修改：`loopx/control_plane/turn_driver/transaction.py`
 
-**Interfaces:**
-- Consumes: existing `EffectRequest`, `EffectInterpretation`, `EffectObservation`, `EffectNext`, and `EffectTurn` dataclasses.
-- Produces: `TurnTransactionPhase`, `TURN_TRANSACTION_PHASES`, and `interpret_turn_journal(...) -> EffectTurn`; preserves `turn_driver.transaction.TRANSACTION_PHASES` as the same tuple.
+**接口：**
+- 消费：现有 `EffectRequest`、`EffectInterpretation`、`EffectObservation`、`EffectNext` 与
+  `EffectTurn` dataclasses。
+- 产出：`TurnTransactionPhase`、`TURN_TRANSACTION_PHASES` 与
+  `interpret_turn_journal(...) -> EffectTurn`；把 `turn_driver.transaction.TRANSACTION_PHASES`
+  保留为同一元组。
 
-- [ ] **Step 1: Write the failing legal-journal test**
+- [ ] **步骤 1：编写失败中的合法 journal 测试**
 
 ```python
 from copy import deepcopy
@@ -114,15 +125,15 @@ def test_turn_journal_reports_legal_replay_without_mutating_input() -> None:
     assert journal == before
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [ ] **步骤 2：运行测试并验证 RED**
 
-Run: `python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py::test_turn_journal_reports_legal_replay_without_mutating_input`
+运行：`python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py::test_turn_journal_reports_legal_replay_without_mutating_input`
 
-Expected: collection fails because `interpret_turn_journal` does not exist.
+预期：集合失败，因为 `interpret_turn_journal` 不存在。
 
-- [ ] **Step 3: Add the canonical phase enum and minimal legal lens**
+- [ ] **步骤 3：添加 canonical 阶段枚举与最小合法 lens**
 
-In `effect_program.py`, define the canonical phases and implement the public signature:
+在 `effect_program.py` 中定义 canonical 阶段并实现公开签名：
 
 ```python
 class TurnTransactionPhase(StrEnum):
@@ -190,38 +201,38 @@ def interpret_turn_journal(
     )
 ```
 
-In `turn_driver/transaction.py`, import `TURN_TRANSACTION_PHASES` and keep compatibility:
+在 `turn_driver/transaction.py` 中导入 `TURN_TRANSACTION_PHASES` 并保持兼容：
 
 ```python
 TRANSACTION_PHASES = TURN_TRANSACTION_PHASES
 ```
 
-- [ ] **Step 4: Run legal-lens and transaction regression tests**
+- [ ] **步骤 4：运行合法 lens 与 transaction 回归测试**
 
-Run: `python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py tests/test_loopx_turn_transaction.py`
+运行：`python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py tests/test_loopx_turn_transaction.py`
 
-Expected: all tests pass.
+预期：全部测试通过。
 
-- [ ] **Step 5: Commit the legal lens seam**
+- [ ] **步骤 5：提交合法 lens 接缝**
 
 ```bash
 git add -- tests/control_plane/test_effect_turn_turn_journal.py loopx/control_plane/effect_program.py loopx/control_plane/turn_driver/transaction.py
 git commit -m "feat(effect): interpret legal turn journal replay"
 ```
 
-### Task 2: Return Typed Violations For Illegal And Tombstone States
+### 任务 2：为非法与 tombstone 状态返回类型化违规
 
-**Files:**
-- Modify: `tests/control_plane/test_effect_turn_turn_journal.py`
-- Modify: `loopx/control_plane/effect_program.py`
+**文件：**
+- 修改：`tests/control_plane/test_effect_turn_turn_journal.py`
+- 修改：`loopx/control_plane/effect_program.py`
 
-**Interfaces:**
-- Consumes: `TURN_TRANSACTION_PHASES` and `interpret_turn_journal` from Task 1.
-- Produces: `TurnJournalViolation(StrEnum)` and complete structured replay results in `EffectRequest.context`.
+**接口：**
+- 消费：任务 1 中的 `TURN_TRANSACTION_PHASES` 与 `interpret_turn_journal`。
+- 产出：`TurnJournalViolation(StrEnum)` 以及 `EffectRequest.context` 中完整的结构化回放结果。
 
-- [ ] **Step 1: Add failing identity, phase, terminal, and malformed tests**
+- [ ] **步骤 1：添加失败中的身份、阶段、terminal 与格式错误测试**
 
-Add tests that mutate only controlled fixture fields and assert literal outcomes:
+添加只改动受控 fixture 字段并断言字面结果的测试：
 
 ```python
 def test_turn_journal_accumulates_identity_and_phase_violations() -> None:
@@ -281,15 +292,15 @@ def test_turn_journal_blocks_non_terminal_and_malformed_trace() -> None:
     )
 ```
 
-- [ ] **Step 2: Run the new tests and verify RED**
+- [ ] **步骤 2：运行新测试并验证 RED**
 
-Run: `python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py`
+运行：`python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py`
 
-Expected: tests fail because Task 1 does not yet compare trace identity or classify blocked replay.
+预期：测试失败，因为任务 1 尚未比较 trace 身份或对阻止的回放分类。
 
-- [ ] **Step 3: Implement exact identity comparison and typed violations**
+- [ ] **步骤 3：实现精确身份比较与类型化违规**
 
-Add the enum and helpers in `effect_program.py`:
+在 `effect_program.py` 中添加枚举与辅助函数：
 
 ```python
 class TurnJournalViolation(StrEnum):
@@ -313,49 +324,51 @@ def _values_match(values: tuple[str, ...]) -> bool:
     return bool(values) and len(set(values)) == 1
 ```
 
-Update `interpret_turn_journal` to:
+更新 `interpret_turn_journal`：
 
-1. require journal/envelope/settlement goal, envelope/settlement owner, and journal/transaction Turn key;
-2. append the explicit expectation to each comparison when supplied;
-3. compare optional host-result and receipt Turn keys only when present;
-4. distinguish non-list phases from list values that are not the canonical prefix;
-5. classify `in_progress` and `scheduler_action_required` as known non-terminal state, with unknown values classified as unsupported;
-6. set legality from an empty violation list;
-7. emit `replay_blocked`, `block_replay`, and domain-neutral readback when any violation exists.
+1. 要求 journal/envelope/settlement 的 goal、envelope/settlement 的 owner 与
+   journal/transaction 的 Turn key；
+2. 提供显式期望时，对每次比较追加该期望；
+3. 只有当可选的 host-result 与 receipt Turn key 存在时才比较它们；
+4. 区分非列表阶段与不是 canonical 前缀的列表值；
+5. 把 `in_progress` 与 `scheduler_action_required` 分类为已知的非 terminal 状态，未知值分类
+   为 unsupported；
+6. 以空的违规列表计算合法性；
+7. 存在任何违规时输出 `replay_blocked`、`block_replay` 与领域中立 readback。
 
-The final legality calculation is:
+最终合法性计算为：
 
 ```python
 replay_legal = not violations
 context["violations"] = tuple(violation.value for violation in violations)
 ```
 
-- [ ] **Step 4: Run focused tests and existing Effect Program regressions**
+- [ ] **步骤 4：运行聚焦测试与现有 Effect Program 回归**
 
-Run: `python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py tests/control_plane/test_effect_interpreter_packet.py tests/control_plane/test_effect_turn_turn_result.py tests/test_loopx_turn_transaction.py tests/test_loopx_turn_executor.py`
+运行：`python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py tests/control_plane/test_effect_interpreter_packet.py tests/control_plane/test_effect_turn_turn_result.py tests/test_loopx_turn_transaction.py tests/test_loopx_turn_executor.py`
 
-Expected: all tests pass.
+预期：全部测试通过。
 
-- [ ] **Step 5: Commit structured violation behavior**
+- [ ] **步骤 5：提交结构化违规行为**
 
 ```bash
 git add -- tests/control_plane/test_effect_turn_turn_journal.py loopx/control_plane/effect_program.py
 git commit -m "feat(effect): report blocked turn journal replay"
 ```
 
-### Task 3: Document And Validate The Read-Only Contract
+### 任务 3：记录并验证只读契约
 
-**Files:**
-- Modify: `docs/reference/effect-interpreter-packet.md`
-- Track: `docs/superpowers/plans/2026-08-14-interpret-turn-journal.md`
+**文件：**
+- 修改：`docs/reference/effect-interpreter-packet.md`
+- 跟踪：`docs/superpowers/plans/2026-08-14-interpret-turn-journal.md`
 
-**Interfaces:**
-- Consumes: final `interpret_turn_journal` behavior from Tasks 1 and 2.
-- Produces: public guidance describing identity, tombstone, replay, and no-authority semantics.
+**接口：**
+- 消费：任务 1 与 2 的最终 `interpret_turn_journal` 行为。
+- 产出：描述身份、tombstone、回放与无 authority 语义的公开指南。
 
-- [ ] **Step 1: Update the reference documentation**
+- [ ] **步骤 1：更新参考文档**
 
-Add a `Turn Journal Lens` section that states:
+添加一个 `Turn Journal Lens` 章节，说明如下：
 
 ```markdown
 ## Turn Journal Lens
@@ -371,9 +384,9 @@ execute, retry, schedule, write state, or spend quota. Semantic mismatches are
 returned as typed violation values instead of exceptions.
 ```
 
-- [ ] **Step 2: Run formatting and focused validation**
+- [ ] **步骤 2：运行格式检查与聚焦验证**
 
-Run:
+运行：
 
 ```powershell
 python -m pytest -q tests/control_plane/test_effect_turn_turn_journal.py tests/control_plane/test_effect_interpreter_packet.py tests/control_plane/test_effect_turn_turn_result.py tests/test_loopx_turn_transaction.py tests/test_loopx_turn_executor.py
@@ -383,33 +396,34 @@ loopx canary premerge --from-git-diff --git-diff-base upstream/main
 git diff --check upstream/main...HEAD
 ```
 
-Expected: every command exits zero. If the canary reports an explicit skip, record the skip and its reason rather than claiming that surface was tested.
+预期：每条命令退出码为零。如果 canary 报告显式跳过，记录跳过及其原因，而不是声称该表面已测试。
 
-- [ ] **Step 3: Run the public/private boundary scan**
+- [ ] **步骤 3：运行公开/私有边界扫描**
 
-Run:
+运行：
 
 ```powershell
 git diff --name-only upstream/main...HEAD
 git diff upstream/main...HEAD | Select-String -Pattern 'credential|secret|private state|raw log|trajectory|verifier output|[A-Z]:\\|file://|localhost' -CaseSensitive:$false
 ```
 
-Expected: only the scoped product, test, reference, spec, and plan files appear; no credential, private-state, raw-evidence, local-path, or internal-link content is present.
+预期：只出现范围内的 product、test、reference、spec 与 plan 文件；没有 credential、
+private-state、raw-evidence、local-path 或 internal-link 内容。
 
-- [ ] **Step 4: Commit documentation and plan**
+- [ ] **步骤 4：提交文档与计划**
 
 ```bash
 git add -- docs/reference/effect-interpreter-packet.md docs/superpowers/plans/2026-08-14-interpret-turn-journal.md
 git commit -m "docs(effect): explain turn journal replay lens"
 ```
 
-- [ ] **Step 5: Verify the final branch state**
+- [ ] **步骤 5：验证最终分支状态**
 
-Run:
+运行：
 
 ```powershell
 git status --short --branch
 git log --oneline upstream/main..HEAD
 ```
 
-Expected: the worktree is clean and the scoped commits are listed.
+预期：工作树干净且列出了范围内提交。

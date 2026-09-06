@@ -1,132 +1,76 @@
-# Exploration Result Layer
+# 探索结果层
 
-[中文](README.zh-CN.md)
+[English](README.md)
 
-Status: supported optional capability; default-off harness execution contract.
+状态：受支持的 optional capability；harness 执行契约默认关闭。
 
-## At a Glance
+## 概览
 
-LoopX Explore is a supported, default-off optional capability for
-long-running exploration goals (software research, security attack-surface
-mapping, domain studies). It turns "go look around" into a bounded,
-observable, gated process with three pillars:
+LoopX Explore 是面向长程探索目标（软件研究、安全攻击面测绘、领域调研）的受支持、默认关闭的可选能力。它把“到处看看”变成有界、可观测、有门控的流程，包含三根支柱：
 
-1. **Explore Graph** - an append-only, public-safe evidence topology
-   (nodes / edges / findings) plus bounded projections, Mermaid export, and
-   canonical/executive presentation. It answers: what has been explored,
-   where the loop is blocked and why, and what was found.
-2. **Explore Harness** - deny-by-default, read-only branch planners
-   (`todo-branch-plan`, `worker-branch-plan`) that rank and bundle next
-   steps (DSpark-style confidence/prefix/load, `adaptive-resilient` and
-   `moe-router` profiles, resource-aware portfolio), without claiming,
-   launching, or spending.
-3. **Combined-surface research** - worker lanes explore multiple surfaces
-   in parallel; episode groups share expensive setup across variants;
-   replay/counterfactual/trace runtimes compare routes; typed
-   `supports` / `refutes` / `leads_to` edges merge findings back into one
-   evidence topology. Closed, evidence-backed surfaces with an explicit
-   reason to be tested together become **composition gaps** that derive
-   joint-experiment successor todos (see "Composition Frontier").
+1. **Explore Graph** —— append-only、public-safe 的证据拓扑（nodes / edges / findings）+ 有界投影、Mermaid 导出、canonical/executive 双视图展示。它回答：探索过什么、循环卡在哪里以及为什么、发现了什么。
+2. **Explore Harness** —— 默认拒绝、只读的分支规划器（`todo-branch-plan`、`worker-branch-plan`），对下一步进行排序与打包（DSpark 风格 confidence/prefix/load、`adaptive-resilient` 与 `moe-router` 配置档、资源感知 portfolio），不 claim、不 launch、不 spend。
+3. **组合面研究** —— worker lanes 并行探索多个面；episode 分组在变体之间共享昂贵的准备阶段；replay/counterfactual/trace 运行时对比路线；typed `supports` / `refutes` / `leads_to` 边把各面发现合并回同一张证据拓扑。
+   当已闭环、有证据的多个面之间存在显式理由需要组合验证时，它们会成为 **composition gap**，并衍生 joint experiment 后继 todo（见下文“Composition Frontier”）。
 
-**When to use it:** exploration goals that outgrow a todo list - where
-"what did we try, what worked, what is blocked" must be readable as a graph
-and where next steps should be planned across several parallel directions.
+**何时使用：** 探索目标已经超出 todo 列表能表达的范围——需要把“试过什么、什么有效、卡在哪里”读成一张图，并且下一步需要在多条并行方向上规划。
 
-**What it is not:** not a resident scheduler, not a worker launcher, not a
-process engine. Everything below is analysis or evidence unless an operator
-executes it through the normal LoopX lifecycle.
+**它不是：** 不是常驻调度器、不是 worker launcher、不是流程引擎。以下所有内容都是分析或证据，除非 operator 通过正常 LoopX 生命周期执行它。
 
-## Quick Start
+## 快速开始
 
-Enable the gates, record evidence, project, and plan:
+开启门控、记录证据、投影与规划：
 
 ```bash
 loopx configure-goal --goal-id <id> --explore-graph-enabled \
   --explore-harness-enabled --explore-harness-profile adaptive-resilient --execute
 
-loopx explore node --goal-id <id> --title "Attack surface A" --status exploring
+loopx explore node --goal-id <id> --title "攻击面 A" --status exploring
 loopx explore edge --goal-id <id> --from A --to B --type leads_to
-loopx explore finding --goal-id <id> --title "Key finding" --node A --status confirmed
+loopx explore finding --goal-id <id> --title "关键发现" --node A --status confirmed
 
 loopx explore summary --goal-id <id>
 loopx explore graph --goal-id <id> --graph-format mermaid --out explore.mmd
 loopx explore worker-branch-plan --goal-id <id> --harness-profile adaptive-resilient --worker-width 3
 ```
 
-Both gates are separate and default-off (see "Independent Per-Goal Opt-In
-Gates"). When closed, evidence-backed surfaces have an explicit reason to be
-tested together, the next `quota should-run` / turn packet projects a
-composition gap and can derive a joint-experiment successor todo (see
-"Composition Frontier"). The detailed contract follows.
+两个门控相互独立且默认关闭（见下文“每 goal 独立 Opt-In 门控”）。以下是详细契约。
+当已闭环、有证据的多个面之间存在显式理由需要组合验证时，下一次 `quota should-run` / turn packet 会投影 composition gap，并可衍生 joint experiment 后继 todo（见下文“Composition Frontier”）。
 
-Long-running exploration goals (for example a Codex loop studying an external
-software domain through LoopX) produce results that operators want to read as
-a topology, not as an agent action log: what has been explored, where the loop
-is blocked and why, and what was found.
+长程探索目标（例如通过 LoopX 研究某个外部软件领域的 Codex loop）产生的结果，operator 希望读成**拓扑**，而不是 agent 动作日志：探索过什么、循环卡在哪里以及为什么、发现了什么。
 
-## Role Boundaries
+## 角色边界
 
-In one breath:
+一句话概括：
 
-- **Explore capability (this layer)** owns the structured exploration
-  EVIDENCE: a compact, public-safe, append-only node/edge/finding/blocked-
-  frontier log plus bounded read-model projections. This is research
-  evidence, not a display artifact -- its downstream consumers are vision
-  checkpoints, replanning, successor-todo generation, and user gates first,
-  and presentation second. That is why the log lives under
-  `loopx/capabilities/explore/`, not under `loopx/presentation/`.
-- **Presentation** renders the public-safe explore projection into operator
-  surfaces (Mermaid graph, Feishu/Lark Base rows, cards). The reusable
-  display implementation lives in
-  `loopx.extensions.lark.presentation.explore_results`; core retains no Lark
-  capability facade. Compatibility CLI delegates require explicit extension
-  activation before they invoke this provider-owned display behavior.
-- **Value connectors** remain the boundary for external signal input,
-  permissions, and source authority. The Lark explore sink is display only
-  and must never be conflated with a connector.
+- **Explore 能力（本层）** 拥有结构化探索**证据**：紧凑、public-safe、append-only 的 node/edge/finding/blocked-frontier 日志，以及有界读模型投影。这是研究证据，不是展示产物——下游消费者首先是 vision checkpoint、replan、后继 todo 生成和 user gate，其次才是展示。因此日志位于 `loopx/capabilities/explore/`，而不是 `loopx/presentation/`。
+- **展示（Presentation）** 把 public-safe 探索投影渲染成 operator 界面（Mermaid 图、飞书/Lark Base 行、卡片）。可复用展示实现位于 `loopx.extensions.lark.presentation.explore_results`；核心不保留 Lark 能力外观。兼容 CLI 委托在调用 provider 所属展示行为前必须显式激活扩展。
+- **Value connectors** 仍是外部信号输入、权限和来源权威的边界。Lark 探索 sink 仅用于展示，绝不可与 connector 混为一谈。
 
-## State Contract
+## 状态契约
 
-- Reads: `goals/<goal-id>/explore-result-log.jsonl` under the LoopX runtime
-  root (`loopx_explore_result_event_v0` events appended by `loopx explore
-  node|edge|finding`). Presentation sinks may additionally read local display
-  config such as `.loopx/lark-explore.json`.
-- Writes: the explore result log (append-only), the local board config
-  (`loopx_lark_explore_local_config_v0`, including the result-id to Lark
-  record-id map) from the presentation sink, and, only with `--execute`, Lark
-  Base rows through `lark-cli`.
-- Write owner: the operator-triggered CLI. Agents append result events; only
-  an explicit `--execute` run touches the shared Lark surface.
-- Proof of transition: every sync payload lists the exact `lark-cli` commands
-  it ran or would run, per-row record ids, and the refreshed record map that
-  the next sync reuses.
+- 读取：LoopX runtime root 下 `goals/<goal-id>/explore-result-log.jsonl`（`loopx_explore_result_event_v0` 事件，由 `loopx explore node|edge|finding` 追加）。展示 sink 还可读取本地展示配置，如 `.loopx/lark-explore.json`。
+- 写入：探索结果日志（append-only）、本地 board 配置（`loopx_lark_explore_local_config_v0`，含 result-id 到 Lark record-id 的映射，由展示 sink 维护），以及仅 `--execute` 时通过 `lark-cli` 写入的 Lark Base 行。
+- 写所有者：operator 触发的 CLI。agent 只追加结果事件；只有显式 `--execute` 才会触碰共享 Lark 面。
+- 迁移证明：每个同步 payload 列出它实际运行或将要运行的确切 `lark-cli` 命令、逐行 record ids，以及下次同步复用的刷新 record map。
 
-## Result Event Model
+## 结果事件模型
 
-One JSONL event per line, `loopx_explore_result_event_v0`, three kinds:
+每行一个 JSONL 事件，`loopx_explore_result_event_v0`，三种：
 
-| Kind | Identity | Purpose |
+| 种类 | 身份 | 用途 |
 | --- | --- | --- |
-| `node` | `--node-id` (or derived from title) | An explored question, area, hypothesis, experiment, or artifact. Status: `open`, `exploring`, `blocked` (requires `--blocked-reason`), `resolved`, `dead_end`. Re-record the same id to update it. |
-| `edge` | derived from `from/type/to` | Typed relation: `subtopic_of`, `depends_on`, `answers`, `supports`, `refutes`, `leads_to`. |
-| `finding` | `--finding-id` (or derived from title) | A discovery, optionally attached to a node. Status: `tentative`, `confirmed`, `refuted`. |
+| `node` | `--node-id`（或由 title 派生） | 被探索的问题、区域、假设、实验或工件。状态：`open`、`exploring`、`blocked`（必须 `--blocked-reason`）、`resolved`、`dead_end`。同 id 重录即更新。 |
+| `edge` | 由 `from/type/to` 派生 | typed 关系：`subtopic_of`、`depends_on`、`answers`、`supports`、`refutes`、`leads_to`。 |
+| `finding` | `--finding-id`（或由 title 派生） | 发现，可挂到节点。状态：`tentative`、`confirmed`、`refuted`。 |
 
-Events are sanitized at record time: compact text limits, credential-like
-markers rejected, and evidence refs must be public relative refs or opaque ids
-(for example `ov:doc:lustre-survey`), never local absolute paths.
+事件在记录时做净化：紧凑文本上限、拒绝凭据类标记、evidence refs 必须是公共相对 ref 或不透明 id（例如 `ov:doc:lustre-survey`），绝不允许本地绝对路径。
 
-## Projection And Topology
+## 投影与拓扑
 
-`loopx explore summary` folds the log into
-`loopx_explore_result_projection_v0`: latest state per node/edge/finding,
-status counts, the blocked list with reasons, the exploring frontier, a
-parent/`subtopic_of` topology tree, and Mermaid flowchart source.
-`loopx explore graph --graph-format mermaid|json [--out <file>]` exports the
-topology for a Feishu doc, whiteboard, or any Mermaid renderer.
+`loopx explore summary` 把日志折叠成 `loopx_explore_result_projection_v0`：每个 node/edge/finding 的最新状态、状态计数、带原因的 blocked 列表、exploring frontier、parent/`subtopic_of` 拓扑树和 Mermaid 流程源。`loopx explore graph --graph-format mermaid|json [--out <file>]` 导出拓扑，供飞书文档、白板或任意 Mermaid 渲染器使用。
 
-Focused exports are bounded evidence views, not executive decision views by
-default. They preserve machine-oriented node identity, edge semantics, and
-ancestor context while reducing the amount of canonical topology rendered:
+聚焦导出是有界证据视图，默认不是 executive 决策视图。它们保留面向机器的节点身份、边语义和祖先上下文，同时减少渲染的 canonical 拓扑量：
 
 ```bash
 loopx explore graph \
@@ -138,166 +82,66 @@ loopx explore graph \
   --out explore-focused-evidence.mmd
 ```
 
-Repeated statuses match any requested status, repeated tags match any exact
-requested tag, and the status and tag groups are combined with AND. Matching
-nodes keep their ancestors by default so the focused graph retains explanatory
-context; pass `--no-include-ancestors` for a leaf-only view. Filtering changes
-only the graph export. It does not mutate the full result projection or the
-Lark node, edge, and finding tables.
+重复 status 匹配任意一个请求状态，重复 tag 匹配任意一个精确请求 tag，status 组与 tag 组之间是 AND。命中的节点默认保留祖先以保留解释上下文；传 `--no-include-ancestors` 可只留叶子。过滤只影响图导出，不改变完整结果投影或 Lark 的 node/edge/finding 表。
 
-An owner-facing executive graph is a separate display projection over that
-canonical evidence, not a second evidence source. Do not sync a full or focused
-canonical export directly into an executive whiteboard merely because it is
-smaller. The projection should compress the evidence into the decision roles
-the operator needs to see:
+面向 owner 的 executive 图是基于这份 canonical 证据的独立展示投影，不是第二份证据源。不要因为 canonical 导出更小就直接把它同步进 executive 白板。投影应把证据压缩成 operator 需要看到的决策角色：
 
-- decision contract and primary metric;
-- baseline and current incumbent;
-- decisive negative or retired evidence;
-- active work or capacity slots;
-- material risk and guardrails;
-- terminal decision gate;
-- next decision or evidence gap.
+- 决策契约与主指标；
+- 基线与当前 incumbent；
+- 决定性负向或已退休证据；
+- 活跃工作或容量槽位；
+- 重大风险与护栏；
+- 终态决策门；
+- 下一个决策或证据缺口。
 
-The default cardinality policy is graph growth. Preserve material decision and
-evidence nodes and their relationships; semantic compression means tightening
-labels, removing true duplication while retaining lineage, and organizing the
-view into semantic sections or linked subgraphs. It does not mean dropping a
-material node because the graph crossed a generic threshold such as 20 nodes.
-Stable canonical ids must survive relayouts and movement between sections so
-the owner can trace every displayed decision and evidence item back to source.
+默认基数策略是图增长。保留有实质意义的决策与证据节点及其关系；语义压缩指收紧标签、在保留 lineage 的前提下去掉真正的重复、按语义分组或链接子图。它不意味着因为图跨过“20 节点”之类的通用阈值就丢弃实质节点。稳定 canonical id 必须在重排和移动后依然存活，以便 owner 能追溯每个展示的决策和证据项到源头。
 
-Hard `max_nodes` and `max_edges` limits are allowed only in an explicit opt-in
-presentation policy. That policy must name its scope, rationale, overflow or
-linked-subgraph behavior, and material-node preservation rule. Without such a
-policy, treat both limits as unbounded; never infer a hard cap from renderer
-convenience, an earlier graph size, or a generic executive-view convention.
+硬性 `max_nodes` / `max_edges` 上限只允许出现在显式 opt-in 的展示策略里。该策略必须写明范围、理由、溢出或链接子图行为、实质节点保留规则。没有这样的策略时，两个上限都视为无界；绝不能从渲染器便利、早期图大小或通用 executive 视图约定推断硬上限。
 
-Keep a fail-fast guard that rejects accidental identity with the canonical
-export. Before syncing, render with the target renderer, run overlap and
-text-overflow checks, and visually inspect the actual preview. Repair readability
-through relayout, shorter labels, larger frames, or more semantic subgraphs
-rather than deleting material evidence. After syncing, verify the remote source
-or digest matches the validated projection. The canonical JSON and
-Nodes/Edges/Findings tables remain complete and authoritative throughout this
-presentation step.
+保持一个 fail-fast 守卫，拒绝与 canonical 导出产生意外同一性。同步前先用目标渲染器渲染，运行重叠与文本溢出检查，并目视检查实际预览。通过重排、更短标签、更大画布或更多语义子图修复可读性，而不是删除实质证据。同步后验证远端来源或 digest 与已验证投影一致。canonical JSON 与 Nodes/Edges/Findings 表在整个展示步骤中保持完整且权威。
 
-`loopx explore presentation --goal-id <id>` builds a presentation bundle from
-one canonical result projection. It always includes a complete `canonical`
-view and a derived `executive` view with source-node lineage. Both views carry
-the same timestamp-free `source_digest` and event-based `source_revision`.
-The executive view selects active and decision-tagged nodes, representative
-counterevidence neighborhoods, material one-hop relations, and ancestors; it
-does not store facts independently.
+`loopx explore presentation --goal-id <id>` 从一份 canonical 结果投影构建展示包。它始终包含完整的 `canonical` 视图和带源节点 lineage 的派生 `executive` 视图。两个视图携带相同的无时间戳 `source_digest` 和基于事件的 `source_revision`。executive 视图选择活跃与决策标记节点、代表性反证邻域、实质性一跳关系与祖先；它不独立存储事实。
 
-The bundle recommends `presentation_mode=canonical_only|dual_view` from
-multiple advisory signals rather than a single node-count cutoff. Current
-reason codes are `low_decision_density`, `excessive_terminal_branches`,
-`deep_decision_path`, and `readability_check_failed`. Static graph shape can
-estimate readability risk, including excessively flat root topology; a caller
-may also supply renderer observations for overlap, text overflow, or abnormal
-canvas expansion. Both canonical and executive views use a top-to-bottom
-evidence timeline: stable source order starts at the top, bounded epochs add
-navigation, and later evidence extends the board downward instead of widening
-the first rank. Every original canonical node and edge remains present. These
-signals and layout choices only control presentation. They never authorize
-canonical truncation.
+展示包基于多个咨询信号推荐 `presentation_mode=canonical_only|dual_view`，而不是单一节点数阈值。当前 reason codes：`low_decision_density`、`excessive_terminal_branches`、`deep_decision_path`、`readability_check_failed`。静态图形形状可估算可读性风险（包括过度扁平的根拓扑）；调用方可额外提供重叠、文本溢出或异常画布扩张的渲染器观测。canonical 与 executive 视图都使用自上而下的证据时间线：稳定源顺序从顶部开始，有界 epoch 增加导航，后续证据向下扩展 board 而不是加宽第一层。每个原始 canonical 节点与边仍然存在。这些信号与布局选择只控制展示，绝不允许 canonical 截断。
 
-## Optional Todo Branch Plan
+## 可选 Todo 分支规划
 
-`loopx explore todo-branch-plan` is a narrow opt-in harness for
-exploration goals that need to try several plausible next todos at once. It
-uses a CPU branch-prediction analogy plus a DSpark-inspired scheduler: rank
-open agent todos, estimate branch confidence and expected evidence units,
-choose a confidence-scheduled verification prefix, select one `primary` branch
-plus safe `speculative` branches, and reject branches whose declared write
-scopes overlap an already-selected branch.
+`loopx explore todo-branch-plan` 是面向探索目标的窄 opt-in harness：一次尝试多个看起来都合理的下一个 todo。它使用 CPU 分支预测类比 + DSpark 启发调度器：对 open agent todos 排序，估计分支置信度与预期证据单位，选择置信度调度的验证前缀，选一个 `primary` 分支加安全的 `speculative` 分支，拒绝声明写作用域与已选分支重叠的分支。
 
-Accuracy note on the DSpark citation (arXiv:2607.05147): real DSpark truncates
-a semi-autoregressive draft block at the first per-step confidence below a
-fixed threshold, and uses the cumulative product of per-step confidences only
-as a calibration diagnostic. The prefix-survival theta model here (survival
-product x throughput curve) is a loopx-specific extension for *serially
-dependent* todo chains. It must not be used to size independent parallel
-worker lanes -- that misuse capped an early calibration run's treatment arm
-at 5 of 10 lanes; worker plans now use `schedule_independent_lanes` instead.
+关于 DSpark 引文（arXiv:2607.05147）的准确性说明：真实 DSpark 会在每个 per-step 置信度低于固定阈值的第一个位置截断半自回归 draft 块，并且只把 per-step 置信度累乘作为校准诊断。这里的 prefix-survival theta 模型（survival product × throughput 曲线）是 LoopX 特有的、面向**串行依赖** todo 链的扩展。绝不能用它来衡量独立并行 worker lanes 的规模——早期校准运行曾因此把 treatment arm 截到 5/10 lanes；worker 规划现在使用 `schedule_independent_lanes` 代替。
 
-The command is read-only and sits behind the same per-goal opt-in gate as
-`worker-branch-plan` (see "Per-Goal Opt-In Gate" below): without
-`explore_harness.enabled=true` on the goal's orchestration boundary it returns
-a disabled packet, and `--width` is capped by `max_children` in addition to
-its own ceiling. It does not claim todos, acquire leases, launch agents,
-spend quota, or change the active state. Instead it emits a prediction
-packet with:
+命令只读，并与 `worker-branch-plan` 一样受 per-goal opt-in 门控（见下文）：没有 `explore_harness.enabled=true` 时返回 disabled packet，`--width` 在自身上限之外还被 `max_children` 封顶。它不 claim todo、不 acquire lease、不 launch agent、不 spend quota、不改变 active state。它只输出预测 packet：
 
-- selected branches, confidence, hazards, and reason codes;
-- excluded `continuous_monitor` diagnostics, which remain visible but never
-  enter the exploration scheduler or consume branch width;
-- a dry-run A/B estimate comparing baseline serial execution with the
-  DSpark-style selected prefix (`ab_result.estimated_speedup_vs_baseline`);
-- suggested `loopx todo claim` and `loopx task-lease acquire` commands for a
-  human operator or registered peer runner to execute explicitly;
-- the safety boundary that keeps the packet advisory rather than an
-  replacement for `quota should-run`.
+- 选中的分支、置信度、hazards 与 reason codes；
+- 被排除的 `continuous_monitor` 诊断——仍可见，但绝不进入探索调度器或消耗分支宽度；
+- 基线串行执行与 DSpark 风格选中前缀的 dry-run A/B 估计（`ab_result.estimated_speedup_vs_baseline`）；
+- 供 operator 或注册 peer runner 显式执行的 `loopx todo claim` / `loopx task-lease acquire` 建议；
+- 保持 packet 咨询性、而非替代 `quota should-run` 的安全边界。
 
-An advancement todo may opt into typed result diagnostics by attaching one or
-more explicit Explore node ids:
+advancement todo 可通过挂一个或多个显式 Explore node id 选择 typed 结果诊断：
 
 ```bash
 loopx todo add --goal-id <id> --role agent --text "Evaluate the rejected route" \
   --task-class advancement_task --explore-result-node-ref node_rejected_route
 ```
 
-`todo-branch-plan` resolves only those explicit links. Its bounded
-`typed_evidence_audit` reports linked node lifecycle, finding statuses,
-relevant `supports`/`refutes` edges, unknown ids, and dead-end/refutation
-hazards. The audit is diagnostic-only (`score_delta=0`) and cannot claim,
-lease, launch, write state, or spend quota. Unlinked todos retain the prior
-planner behavior. Repair a stale link by replacing it with another repeated
-`--explore-result-node-ref`, or remove all links with
-`loopx todo update ... --clear-explore-result-node-refs`.
+`todo-branch-plan` 只解析这些显式链接。它的有界 `typed_evidence_audit` 报告链接节点的生命周期、finding 状态、相关 `supports`/`refutes` 边、未知 id、dead-end/refutation hazards。审计仅诊断（`score_delta=0`），不能 claim、lease、launch、写状态或 spend quota。未链接的 todo 保持原 planner 行为。修复过期链接：用另一个重复的 `--explore-result-node-ref` 替换，或用 `loopx todo update ... --clear-explore-result-node-refs` 全部移除。
 
-Todos without declared write scopes are treated as speculative read or
-coordination work by default, because many exploration tasks are read-only.
-Use `--no-allow-unscoped-parallel` when the controller wants unknown scopes to
-collapse back to single-branch execution.
+没有声明写作用域的 todo 默认视为投机性读取或协调工作，因为许多探索任务只读。当控制器希望未知作用域折叠回单分支执行时，使用 `--no-allow-unscoped-parallel`。
 
-Scope conflicts are based only on mutable `required_write_scopes`. Do not put a
-shared base checkout or an already-built immutable input in that field merely
-because multiple experiments read it. Represent reusable inputs with existing
-public-safe capability labels such as `shared_implementation:<name>` or
-`shared_artifact:<name>`, then give each experiment its own variant or launch
-output scope. Those lanes may run in parallel. If the shared build itself is
-still mutable, keep its path in `required_write_scopes`; the planner will
-correctly serialize lanes that could write the same artifact.
+作用域冲突只看可变 `required_write_scopes`。不要把共享基础 checkout 或已构建的不可变输入放进该字段，仅仅因为多个实验都会读它。用现有 public-safe 能力标签表达可复用输入，如 `shared_implementation:<name>` 或 `shared_artifact:<name>`，然后给每个实验自己的变体或 launch 输出作用域。这些 lane 可以并行。如果共享构建本身仍是可变的，把它的路径留在 `required_write_scopes` 中；planner 会正确串行化可能写入同一工件的 lane。
 
-## Optional Worker Branch Plan
+## 可选 Worker 分支规划
 
-`loopx explore worker-branch-plan` is the worker-lane version of the same
-experiment. It does not treat a branch as one todo. A worker branch is a
-predicted lane containing a small bundle of LoopX todos, an objective slice,
-required capabilities, write scopes, dependency hints, expected evidence,
-confidence, and suggested claim/lease commands.
+`loopx explore worker-branch-plan` 是同一实验的 worker-lane 版本。它不把一个分支当作一个 todo。一个 worker branch 是一条预测 lane，包含一小束 LoopX todos、一个目标切片、所需能力、写作用域、依赖提示、预期证据、置信度和建议的 claim/lease 命令。
 
-Sharing `shared_implementation:*` or `shared_artifact:*` capabilities does not
-make worker lanes mutually exclusive. This supports one shared implementation
-or artifact-build stage followed by independent long/short-style experiment
-lanes that write separate variant or launch directories. The shared inputs must
-be immutable for that execution wave; an in-progress shared build remains a
-write scope and therefore remains a real conflict.
+共享 `shared_implementation:*` 或 `shared_artifact:*` 能力不会让 worker lanes 互斥。这支持一个共享实现/工件构建阶段，随后是写入独立变体或 launch 目录的 long/short 风格实验 lane 并行。共享输入在该执行波内必须是不可变的；进行中的共享构建仍是写作用域，因此仍是真实冲突。
 
-`continuous_monitor` todos are observation/control-plane lanes, not exploration
-work. The planner keeps them in `rejected_worker_branches` with
-`selection_status=excluded_non_exploration_lane`, but never bundles them with
-advancement todos or charges them against `worker_width`. A monitor transition
-may create or unblock a successor advancement todo through the normal todo
-lifecycle; that successor can participate in the next read-only planning call.
+`continuous_monitor` todos 是观测/控制面 lane，不是探索工作。planner 把它们放在 `rejected_worker_branches`，`selection_status=excluded_non_exploration_lane`，但绝不把它们与 advancement todos 打包，也不计入 `worker_width`。monitor 迁移可通过正常 todo 生命周期创建或解锁后继 advancement todo；该后继可参与下一次只读规划调用。
 
-### Resource-Aware Portfolio Planning
+### 资源感知 Portfolio 规划
 
-Both branch planners can apply independent capacity ceilings to advancement
-todos that declare one `resource_lane:<key>` capability. Capacities and current
-occupancy are request inputs, not persisted control-plane state:
+两个分支规划器都可以对声明了 `resource_lane:<key>` 能力的 advancement todos 应用独立容量上限。容量与当前占用是请求输入，不是持久化控制面状态：
 
 ```bash
 loopx explore worker-branch-plan --goal-id <id> --worker-width 5 \
@@ -305,82 +149,32 @@ loopx explore worker-branch-plan --goal-id <id> --worker-width 5 \
   --resource-capacity short_pool=3 --resource-usage short_pool=1
 ```
 
-The same repeatable flags work with `todo-branch-plan`; `--width` or
-`--worker-width` remains the overall plan ceiling. In this example the packet
-may assign one new `long_pool` slot and two new `short_pool` slots. Each selected
-branch carries `resource_lane` plus a `resource_assignment`, and the top-level
-`resource_portfolio` reports capacity, current usage, available, selected, and
-remaining slots per lane.
+同样的可重复 flag 也适用于 `todo-branch-plan`；`--width` 或 `--worker-width` 仍是整体规划上限。示例中 packet 可能分配 1 个新 `long_pool` 槽和 2 个新 `short_pool` 槽。每个选中分支携带 `resource_lane` 与 `resource_assignment`，顶层 `resource_portfolio` 报告每个 lane 的 capacity、当前 usage、available、selected 与剩余槽位。
 
-Declaring resource capacities is an explicit portfolio-fill mode: the requested
-overall width becomes the selection ceiling instead of the legacy confidence
-prefix, while existing scores, hazards, and typed evidence remain unchanged.
-An available slot therefore makes a ranked candidate eligible for the analysis
-packet; it is not evidence that the candidate is valuable enough to execute.
-The agent must still apply the goal's evidence, serving-cost, quota, claim, and
-lease gates before launch.
+声明资源容量是显式 portfolio-fill 模式：请求的整体宽度成为选择上限，而不是旧的置信度前缀；现有分数、hazards 与 typed evidence 保持不变。可用槽位只说明候选有资格进入分析 packet，不代表候选值得执行。agent 仍必须在 launch 前应用 goal 的 evidence、serving-cost、quota、claim 与 lease 门。
 
-When a higher-ranked candidate is rejected because its dependency is not in the
-selected wave, its write scope conflicts with an already selected branch, or it
-has another planner hazard, selection keeps scanning. A later safe candidate in
-the same resource lane can backfill the released predicted slot in the same
-call. `continuous_monitor` todos stay diagnostic-only and never consume a
-resource slot, even if they carry a resource-lane capability.
+当高排名候选因其依赖不在选中波内、写作用域与已选分支冲突或存在其他 planner hazard 而被拒绝时，选择继续扫描。同一资源 lane 中更靠后的安全候选可在同一次调用中回填被释放的预测槽位。`continuous_monitor` todos 保持仅诊断，即使携带 resource-lane 能力也不消耗资源槽。
 
-Resource inputs are optional. With no `--resource-capacity`, unlaned and legacy
-todos retain the existing width/scheduler behavior. In resource-aware mode,
-untagged todos retain their previous unconstrained behavior, while a tagged lane
-must have a matching declared capacity. Usage without a matching capacity fails
-closed to catch misspelled lane keys.
+资源输入可选。没有 `--resource-capacity` 时，无 lane 与 legacy todos 保留现有 width/scheduler 行为。资源感知模式下，无 tag todos 保持原来的无约束行为；带 tag lane 必须有匹配的声明容量。使用没有匹配容量的 usage 会 fail closed，以捕捉拼错的 lane key。
 
-This remains analysis-only evidence: `resource_portfolio.score_delta=0`, typed
-evidence keeps `score_delta=0`, and the planner is read-only. Capacity and usage
-do not claim todos, acquire leases, launch workers, write state, or grant quota
-authority. They only constrain the predicted portfolio; execution still enters
-the normal LoopX lifecycle described below.
+这仍是仅分析证据：`resource_portfolio.score_delta=0`、typed evidence 保持 `score_delta=0`、planner 只读。容量与占用不 claim todo、不 acquire lease、不 launch worker、不写状态、不授予 quota 权威。它们只约束预测 portfolio；执行仍进入下面描述的正常 LoopX 生命周期。
 
-This command is read-only and opt-in per goal. It is designed to sit on top of
-the existing LoopX harness, not beside it and not instead of it:
+该命令只读、per-goal opt-in。它设计为**叠加在现有 LoopX harness 之上**，而不是并排或取代：
 
-1. LoopX supplies the harness inputs: quota/status context outside this command,
-   the open agent todo projection, explore result projection, ownership,
-   capabilities, and write-scope metadata.
-2. The opt-in planner groups todos into worker-lane candidates and uses
-   DSpark-style confidence/prefix/load scoring to pick a worker branch prefix.
-3. Execution must return to the normal LoopX path: `quota should-run`,
-   `todo claim`, `task-lease acquire`, worker execution, `explore node|edge|finding`,
-   `refresh-state`, and `quota spend-slot`.
+1. LoopX 提供 harness 输入：quota/status 上下文、open agent todo 投影、explore result 投影、所有权、能力、写作用域元数据。
+2. opt-in planner 把 todos 分组为 worker-lane 候选，用 DSpark 风格 confidence/prefix/load 打分选择 worker branch 前缀。
+3. 执行必须回到正常 LoopX 路径：`quota should-run`、`todo claim`、`task-lease acquire`、worker 执行、`explore node|edge|finding`、`refresh-state`、`quota spend-slot`。
 
-For goals that have opted in, the packet therefore contains
-`harness_compatibility` and `boundary` fields: `replaces_loopx_runtime=false`,
-`launches_workers=false`, and `claim_and_lease_are_suggested_only=true`; the
-deny-by-default disabled packet carries the `boundary` block plus the opt-in
-`required_contract` instead. The packet can be used by a controller or human
-operator to decide which workers to start, but it cannot launch workers or
-mutate the control plane on its own.
+因此 packet 对已 opt-in 的 goal 包含 `harness_compatibility` 与 `boundary` 字段：`replaces_loopx_runtime=false`、`launches_workers=false`、`claim_and_lease_are_suggested_only=true`；deny-by-default 的 disabled packet 携带 `boundary` 块和 opt-in `required_contract`。packet 可被控制器或 operator 用来决定启动哪些 worker，但不能自行 launch worker 或变更控制面。
 
-### Independent Per-Goal Opt-In Gates
+### 每 Goal 独立 Opt-In 门控
 
-Explore Graph and Explore Harness are separate optional capabilities. Enabling
-one never enables the other:
+Explore Graph 与 Explore Harness 是相互独立的可选能力。开启一个绝不开启另一个：
 
-- `explore_graph.enabled` controls durable graph projection and any already
-  configured presentation sink. After each successful material
-  `refresh-state` transaction, LoopX folds the canonical Explore evidence and
-  runs the configured sink. Semantic digests make an unchanged refresh a
-  zero-write operation. A configured row sink is complete only after a
-  row/result-id readback verifies the projection. A failed sync or readback
-  does not advance its digest, so the next material refresh retries it.
-  Visual sinks also preflight their deterministic delivery marker: an existing
-  marker reconciles the prior write without publishing again, while a bounded
-  readback timeout stops further calls in that stage batch and leaves a
-  retryable receipt instead of blindly repeating remote writes.
-- `spawn_policy.explore_harness.enabled` controls only the read-only branch
-  planners described below. It does not create, update, or publish a graph.
+- `explore_graph.enabled` 控制持久图投影与任何已配置的展示 sink。每次成功的 material `refresh-state` 事务后，LoopX 折叠 canonical Explore 证据并运行已配置 sink。语义 digest 让未变更的 refresh 成为零写操作。已配置行 sink 只有在 row/result-id readback 验证投影后才算完成。失败同步或 readback 不推进其 digest，下次 material refresh 会重试。视觉 sink 还会预检确定性交付标记：已有标记对先前写做对账而不重复发布；有界 readback 超时在该 stage batch 停止后续调用并留下可重试 receipt，而不是盲目重复远端写。
+- `spawn_policy.explore_harness.enabled` 只控制下面描述的只读分支规划器。它不创建、更新或发布图。
 
-Both gates are absent/false by default. A common operating mode is Graph on
-and Harness off: keep an operator-facing topology current without changing
-how work is planned.
+两个门控默认缺失/false。常见模式是 Graph on、Harness off：保持 operator 面向的拓扑最新，同时不改变工作的规划方式。
 
 ```yaml
 # inside the registered goal entry
@@ -392,7 +186,7 @@ spawn_policy:
     enabled: false
 ```
 
-Configure the gates independently instead of editing the registry:
+通过增量配置命令而不是直接编辑 registry 来配置门控：
 
 ```bash
 loopx configure-goal --goal-id <id> \
@@ -401,47 +195,28 @@ loopx configure-goal --goal-id <id> \
   --execute
 ```
 
-Use `--no-explore-graph-enabled` to stop automatic graph work. Disabling the
-gate preserves existing evidence and display state; it only prevents future
-automatic projection and sink writes.
+用 `--no-explore-graph-enabled` 停止自动图工作。关闭门控保留已有证据与展示状态；只是阻止未来的自动投影与 sink 写入。
 
-When a single run may update local state but is not authorized to write any
-configured external sink, keep the graph enabled and pass
-`refresh-state --suppress-external-sinks`. LoopX still updates the canonical
-local Explore projection, reports the suppression boundary in the refresh
-packet, and leaves row/visual digests unchanged so a later authorized refresh
-can retry delivery. This run-scoped boundary does not change the goal's Graph
-or Harness opt-in settings.
+当单次运行可更新本地状态但无权写入任何已配置外部 sink 时，保持 graph enabled 并传 `refresh-state --suppress-external-sinks`。LoopX 仍更新 canonical 本地 Explore 投影，在 refresh packet 中报告抑制边界，并让 row/visual digest 不变，以便后续授权 refresh 可重试交付。这个 run 级边界不改变 goal 的 Graph 或 Harness opt-in 设置。
 
-Graph-on is a material-delivery postcondition, not a best-effort reminder.
-An authorized `refresh-state` fails when a configured sink cannot sync and
-read back; the caller must retry before claiming delivery. A suppressed run
-may still commit canonical local state, but its packet reports an unsatisfied,
-retryable postcondition and requires a concrete authorized-sync successor.
-With no configured sink, local projection satisfies the postcondition. This
-contract does not enable Explore Harness.
+Graph-on 是 material 交付后置条件，不是尽力提醒。授权的 `refresh-state` 在已配置 sink 无法同步和 readback 时失败；调用方必须重试后才能声称交付。被抑制的运行可提交 canonical 本地状态，但其 packet 报告未满足、可重试的后置条件，并要求具体的授权同步后继。没有配置 sink 时，本地投影满足后置条件。该契约不启用 Explore Harness。
 
-#### Explore Harness planning gate
+#### Explore Harness 规划门
 
-Both opt-in planners — `todo-branch-plan` and `worker-branch-plan` —
-are deny-by-default. The gate lives on the registered goal's `spawn_policy`,
-the single writable source that the quota/status pipeline projects into
-`quota should-run` as `goal_boundary.orchestration`. No other registry key is
-honored: a second source would be an authorization surface invisible to the
-quota boundary.
+两个 opt-in 规划器（`todo-branch-plan` 与 `worker-branch-plan`）都是 deny-by-default。门位于注册 goal 的 `spawn_policy`——这是 quota/status 管道投影进 `quota should-run` 的 `goal_boundary.orchestration` 的唯一可写来源。其他 registry key 一律不生效：第二个来源将是 quota 边界不可见的授权面。
 
 ```yaml
 # inside the registered goal entry
 spawn_policy:
-  spawn_allowed: false    # "allowed" is the accepted alias
+  spawn_allowed: false    # "allowed" 是接受的别名
   max_children: 3
   explore_harness:
-    enabled: false        # default: both explore planners are disabled;
-                          # must be boolean true — anything else fails closed
-    profile: generic      # optional pin; overrides the CLI-requested profile
+    enabled: false        # 默认：两个探索规划器都关闭；
+                          # 必须是 boolean true —— 其它值 fail closed
+    profile: generic      # 可选 pin；覆盖 CLI 请求的 profile
 ```
 
-Use the incremental configuration path instead of editing the registry:
+使用增量配置路径而不是编辑 registry：
 
 ```bash
 loopx configure-goal \
@@ -451,73 +226,38 @@ loopx configure-goal \
   --execute
 ```
 
-This is analysis-only while spawn permission remains disabled. Use
-`--no-explore-harness-enabled` to close the gate again, or
-`--clear-explore-harness-profile` to let each planner request its own profile.
-Preview without `--execute` shows the exact orchestration delta and preserves
-unrelated `spawn_policy` keys.
+在 spawn 权限仍关闭时这仅是分析。用 `--no-explore-harness-enabled` 再次关闭门，或用 `--clear-explore-harness-profile` 让各 planner 请求自己的 profile。不带 `--execute` 的 preview 显示确切 orchestration delta，并保留无关的 `spawn_policy` keys。
 
-The planner folds this boundary into an `orchestration_gate` section of the
-packet and behaves as follows:
+planner 把这个边界折叠进 packet 的 `orchestration_gate` 节，行为如下：
 
-| Boundary state | Planner behavior |
+| 边界状态 | Planner 行为 |
 | --- | --- |
-| `enabled=false` (or goal unregistered / no boundary) | Explicit disabled packet with `required_contract`; no branches are emitted. |
-| `enabled=true`, `spawn_allowed=false` | Read-only ranking and bundle analysis only; every `suggested_commands` list is emptied. |
-| `enabled=true`, `spawn_allowed=true`, `max_children>0` | Suggested claim/lease commands are emitted, still dry-run only. |
-| any enabled state | Lane width (`--width` / `--worker-width`) is capped by `max_children` in addition to the planner's own ceiling (`MAX_BRANCH_WIDTH` / `MAX_WORKER_LANES`); the binding cap is recorded in `orchestration_gate.width_cap_source`. |
+| `enabled=false`（或 goal 未注册 / 无边界） | 显式 disabled packet，带 `required_contract`；不输出分支。 |
+| `enabled=true`、`spawn_allowed=false` | 只读排序与 bundle 分析；所有 `suggested_commands` 列表被清空。 |
+| `enabled=true`、`spawn_allowed=true`、`max_children>0` | 输出建议 claim/lease 命令，仍仅 dry-run。 |
+| 任意 enabled 状态 | Lane 宽度（`--width` / `--worker-width`）在 planner 自身上限（`MAX_BRANCH_WIDTH` / `MAX_WORKER_LANES`）之外还被 `max_children` 封顶；绑定上限记录在 `orchestration_gate.width_cap_source`。 |
 
-`spawn_allowed=true` with `max_children=0` is treated as a contradiction and
-degrades to the analysis-only state rather than granting capacity.
+`spawn_allowed=true` 且 `max_children=0` 视为矛盾，降级为仅分析状态，而不是授予容量。
 
-The gate is defense-in-depth for the planning surface, not a substitute for
-runtime authority: permission, quota, gates, claims, leases, spend, and state
-projection remain owned by the normal LoopX lifecycle regardless of the gate
-state. `examples/explore-worker-plan-gate-smoke.py` covers the four states
-for both planners, the `max_children` cap, and the CLI default-off path end
-to end.
+门是规划面的 defense-in-depth，不是运行时权威的替代：权限、quota、gates、claims、leases、spend 与状态投影无论门状态如何都归正常 LoopX 生命周期所有。`examples/explore-worker-plan-gate-smoke.py` 端到端覆盖两个 planner 的四种状态、`max_children` 上限与 CLI 默认关闭路径。
 
-Use this worker-lane planner when the experiment is about dynamic branching:
-several Codex workers exploring different routes, each route managing multiple
-todos, then verified results merging back into the explore graph. Use
-`todo-branch-plan` for the smaller micro-kernel case where the branch is just
-one candidate todo.
+当实验是关于动态分支时使用 worker-lane planner：多个 Codex worker 探索不同路线，每条路线管理多个 todos，验证后的结果合并回 explore graph。较小的微内核场景（分支只是一个候选 todo）使用 `todo-branch-plan`。
 
-## Composition Frontier
+## Composition Frontier（组合面实验衍生）
 
-The harness also projects **composition gaps** - the explicit combined-surface
-todo derivation. When two individually covered surfaces have an
-evidence-linked reason to be tested together, LoopX preserves that untested
-relation as a gap instead of treating each surface as finished.
+Harness 还会投影 **composition gaps**——显式的组合面 todo 衍生。当两个单独已覆盖的面之间存在有证据关联、需要放在一起验证时，LoopX 把这段未测试关系保留为 gap，而不是把每个面当作已完结。
 
-A composition experiment is an existing open Explore `experiment` node with at
-least two outgoing `depends_on` edges to closed (`resolved` / `dead_end`),
-evidence-backed input nodes. Only explicit graph edges qualify; the projection
-never infers arbitrary node pairs, so the runtime and reviewer surface stay
-linear in the recorded graph.
+组合实验是一个已存在的 open Explore `experiment` 节点，带有至少两条指向已闭环（`resolved` / `dead_end`）、有证据输入节点的 `depends_on` 出边。只有显式图边才合格；投影绝不推断任意节点对，因此运行时与 reviewer 面保持与已记录图线性相关。
 
-`project_live_explore_composition_frontier` folds this into
-`loopx_explore_composition_frontier_v0` during `quota should-run` and turn
-packets when `spawn_policy.explore_harness.enabled=true`:
+`project_live_explore_composition_frontier` 在 `quota should-run` 与 turn packets 中把它折叠成 `loopx_explore_composition_frontier_v0`（当 `spawn_policy.explore_harness.enabled=true` 时）：
 
-- `gaps[]` (`loopx_explore_composition_gap_v0`): `gap_id`,
-  `experiment_node_ref`, `input_node_refs`, status `pending|scheduled`,
-  `required_outcome=joint_experiment_result`, and a `successor_summary`
-  ("Run the bounded joint experiment: ...") with a `successor_binding` whose
-  `explore_result_node_refs` points at the experiment node.
-- `selected_gap`: the first pending gap (pending sorts before scheduled, then
-  by input count descending, then by stable gap id); at most 3 gaps are
-  projected (`MAX_PROJECTED_GAPS`).
-- A gap is closed only by an evidence-backed composition experiment or an
-  evidence-backed dismissal - not by reading context, acknowledging a packet,
-  completing an unrelated todo, or restating the same conclusion.
+- `gaps[]`（`loopx_explore_composition_gap_v0`）：`gap_id`、`experiment_node_ref`、`input_node_refs`、状态 `pending|scheduled`、`required_outcome=joint_experiment_result`、`successor_summary`（“Run the bounded joint experiment: ...”），以及 `successor_binding`，其 `explore_result_node_refs` 指向实验节点。
+- `selected_gap`：第一个 pending gap（pending 排在 scheduled 之前，再按输入数降序、按稳定 gap id 排序）；最多投影 3 个 gap（`MAX_PROJECTED_GAPS`）。
+- gap 只能被有证据的组合实验或有证据的驳回关闭——不能靠读上下文、acknowledge packet、完成无关 todo 或复述同一结论关闭。
 
-The gap becomes a normal runnable successor: a todo bound to the experiment
-node (`--explore-result-node-ref <experiment-node>`), executed through the
-normal LoopX lifecycle. The conceptual contract is in
-[`research-exploration-control-plane-v0`](../../../docs/architecture/rfcs/research-exploration-control-plane-v0.md).
+gap 变成正常的可运行后继：一个绑定到实验节点的 todo（`--explore-result-node-ref <experiment-node>`），通过正常 LoopX 生命周期执行。概念契约见 [`research-exploration-control-plane-v0`](../../../docs/architecture/rfcs/research-exploration-control-plane-v0.zh-CN.md)。
 
-Create one explicitly:
+显式创建一个：
 
 ```bash
 loopx explore node --goal-id <id> --title "Combine A and B" --kind experiment --status open
@@ -525,41 +265,21 @@ loopx explore edge --goal-id <id> --from <experiment> --to A --type depends_on
 loopx explore edge --goal-id <id> --from <experiment> --to B --type depends_on
 ```
 
-Once A and B are `resolved` / `dead_end` with evidence, the next quota/turn
-packet projects a pending composition gap and can derive the joint-experiment
-successor todo.
+一旦 A 与 B 为 `resolved` / `dead_end` 且带证据，下一次 quota/turn packet 就会投影 pending composition gap，并可衍生 joint experiment 后继 todo。
 
-### Adaptive Resilient Harness Profile
+### Adaptive Resilient Harness 配置档
 
-The `adaptive-resilient` worker harness profile captures the useful design
-lessons from long-horizon exploration campaigns without copying an
-experiment's incidental controls. It is not any single calibration run's
-configuration made permanent. The profile keeps the parts that generalized well:
+`adaptive-resilient` worker harness 配置档吸收长程探索战役的设计经验，而不复制单个实验的偶然控制。它不是任何一次校准运行的永久配置。它保留泛化良好的部分：
 
-- independent-lane admission for lane count, where `--worker-width` is a
-  ceiling and the planner may select fewer lanes -- but only for auditable
-  reasons (queue exhaustion or measured interference), recorded per refusal
-  in `admission_audit`. Expected evidence across parallel lanes is additive;
-  the old cross-lane survival product treated independent worker processes as
-  a serial speculative chain and structurally under-filled the width;
-- value-first branch packing, where `--max-todos-per-branch` is a ceiling and
-  branches are not padded just to look full;
-- lane start staggering as runner guidance, because staggered launches reduced
-  correlated infrastructure pressure;
-- retry/backoff and infrastructure-family cooldown hints for repeated
-  transient failures such as a provider service being unreachable;
-- explicit A/B metadata so future runs can compare the profile against the
-  priority-order baseline.
+- 独立 lane 准入：`--worker-width` 是上限，planner 可少选 lane——但只能基于可审计原因（队列耗尽或实测干扰），每次拒绝记录在 `admission_audit`。并行 lane 的预期证据是加法；旧的跨 lane survival product 把独立 worker 进程当作串行投机链，结构性欠填宽度；
+- value-first 分支打包：`--max-todos-per-branch` 是上限，不为看起来满而填充分支；
+- lane 启动错峰作为 runner 指导，因为错峰降低相关基础设施压力；
+- 对重复瞬时失败（如 provider 服务不可达）的 retry/backoff 与基础设施族冷却提示；
+- 显式 A/B 元数据，便于未来把该配置档与 priority-order 基线对比。
 
-It deliberately does not control segment duration, does not force N=10, does
-not saturate every available branch, and does not enable the earlier
-coverage-floor calibration arm by default. Those remain runner or future-experiment decisions, not part of
-the generalized harness design.
+它刻意不控制分段时长、不强制 N=10、不饱和每个可用分支，也不默认启用早期 coverage-floor 校准 arm。这些仍是 runner 或未来实验决策，不属于泛化 harness 设计。
 
-Retry/backoff and infrastructure cooldown are planner metadata for an external
-runner; the generic runtime does not enforce them. Runtime results expose this
-boundary explicitly instead of implying that selecting the profile activates a
-hidden retry loop.
+Retry/backoff 与基础设施冷却是给外部 runner 的 planner 元数据；通用运行时不强制它们。运行时结果显式暴露该边界，而不是暗示选择配置档就激活隐藏重试循环。
 
 ```text
 loopx explore worker-branch-plan \
@@ -569,51 +289,17 @@ loopx explore worker-branch-plan \
   [--max-todos-per-branch <ceiling>]
 ```
 
-Use `--branch-fill-policy value-first` explicitly when you want the same
-no-forced-fill behavior without the rest of the profile metadata. Use
-`bundle-by-affinity` for the older compact grouping behavior.
+需要同样的 no-forced-fill 行为但不带其余配置档元数据时，显式使用 `--branch-fill-policy value-first`；旧 compact 分组行为用 `bundle-by-affinity`。
 
-### MoE Router Harness Profile
+### MoE Router Harness 配置档
 
-The `moe-router` profile treats worker-lane planning as MoE-style routing
-under a fixed worker ceiling: task families (affinity keys such as
-`scope:artifacts/<task>`) are the experts, todos are the routed tokens, and
-lanes are just serving slots. It extends `adaptive-resilient` with a learned,
-cross-epoch routing layer fed through `--router-state`:
+`moe-router` 配置档把 worker-lane 规划当作固定 worker 上限下的 MoE 式路由：task families（affinity keys，如 `scope:artifacts/<task>`）是 experts，todos 是路由 token，lanes 只是 serving 槽位。它在 `adaptive-resilient` 之上扩展了一个跨 epoch 的学习路由层，通过 `--router-state` 输入：
 
-- **Router state** (`loopx.capabilities.explore.router_state`, schema
-  `loopx_explore_router_state_v0`): per-family EMAs of raw value rate
-  (deliberately NOT novelty-discounted, so the estimator measures the
-  environment rather than the router's own rerun policy), probe duration,
-  acceptance rate, and infra failures, plus a global first-seen
-  observation-key ledger that supplies each family's novelty prediction.
-  The runner owns persistence and calls `observe_epoch` /`advance_epoch` at
-  epoch boundaries -- the same cadence as the existing infra cooldown.
-- **Routing score vs value bookkeeping** (the DeepSeek-V3 aux-loss-free
-  invariant): each branch carries `routing_score = static score x
-  (1 + UCB + coverage bonus + bias - infra penalty)` used ONLY for ordering,
-  while `calibrated_confidence` (x family accept rate) and
-  `novelty_adjusted_evidence_units` (x predicted novelty) feed admission and
-  stay bias-free. The bias is a per-family scalar updated +/-gamma from
-  coverage/novelty debt and surplus -- not load equality, which has no
-  intrinsic value here -- with decay and clamping against windup.
-- **Bundle length** is the faithful DSpark analog (arXiv:2607.05147): a
-  lane's serial todo bundle is the draft block, and it truncates at the first
-  todo whose calibrated acceptance confidence drops below
-  `bundle_confidence_threshold` (`confident-prefix` fill policy). A
-  wall-clock straggler guard (`bundle_straggler_factor` x median measured
-  probe duration) caps the serial tail; it binds only on measured durations
-  so cold-start defaults cannot silently force every bundle to length 1.
-- **Load calibration**: pass the previous epoch's observed
-  `{parallel_wall_minutes, max_branch_minutes, branch_count}` via
-  `--load-profile` and lane admission prices measured interference through
-  `calibrate_load_factor` instead of the hardcoded 0.2 prior.
-- **Opportunistic expansion**: after calibration showed `moe-router` had better
-  active-lane efficiency but wasted too many worker slots, the profile keeps
-  the theta-peak core lanes and then admits additional positive-yield lanes up
-  to a utilization floor. This is not saturated fill: each extra lane must
-  clear an auditable independent lane-value floor, and refusals remain in
-  `admission_audit`.
+- **Router state**（`loopx.capabilities.explore.router_state`，schema `loopx_explore_router_state_v0`）：每个 family 的 raw value rate EMA（刻意不做 novelty 折扣，让估计器测量环境而不是 router 自己的重跑策略）、probe duration、acceptance rate、infra failures，以及全局 first-seen observation-key ledger，为每个 family 提供 novelty 预测。runner 拥有持久化，并在 epoch 边界调用 `observe_epoch` / `advance_epoch`——与现有 infra cooldown 同频。
+- **Routing score 与 value bookkeeping 分离**（DeepSeek-V3 aux-loss-free 不变量）：每个分支携带 `routing_score = static score x (1 + UCB + coverage bonus + bias - infra penalty)`，仅用于排序；`calibrated_confidence`（× family accept rate）与 `novelty_adjusted_evidence_units`（× 预测 novelty）用于准入并保持无偏。bias 是每个 family 的标量，由 coverage/novelty debt 与 surplus 以 +/-gamma 更新——不是负载均衡，负载均衡在此没有内在价值——带衰减与防 windup 钳制。
+- **Bundle length** 是忠实的 DSpark 类比（arXiv:2607.05147）：lane 的串行 todo bundle 是 draft block，在第一个校准接受置信度低于 `bundle_confidence_threshold` 的 todo 处截断（`confident-prefix` fill policy）。wall-clock straggler guard（`bundle_straggler_factor` × 实测 median probe duration）封顶串行尾部；它只绑定实测时长，因此 cold-start 默认不会悄悄把所有 bundle 压成 1。
+- **负载校准**：通过 `--load-profile` 传入上一 epoch 观测到的 `{parallel_wall_minutes, max_branch_minutes, branch_count}`，并用 `calibrate_load_factor` 给 lane 准入定价实测干扰，而不是硬编码 0.2 先验。
+- **机会主义扩张**：校准显示 `moe-router` 活跃 lane 效率更好但浪费 worker 槽后，配置档保留 theta-peak 核心 lanes，再按利用率下限准入额外 positive-yield lanes。这不是饱和填充：每条额外 lane 必须通过可审计的独立 lane 价值下限，拒绝留在 `admission_audit`。
 
 ```text
 loopx explore worker-branch-plan \
@@ -624,213 +310,76 @@ loopx explore worker-branch-plan \
   [--load-profile <observed_profile.json>]
 ```
 
-Without `--router-state` the profile still plans (router disabled, cold
-static scoring); passing state to a non-router profile is ignored, which
-keeps `adaptive-resilient` clean as the B-min ablation arm.
+不传 `--router-state` 时该配置档仍可规划（router 禁用、冷静态打分）；把 state 传给非 router 配置档会被忽略，这保持 `adaptive-resilient` 作为 B-min 消融 arm 干净。
 
-### Recoverable Execution Episodes
+## 可恢复执行 Episode
 
-The budget-arm runtime has an optional, software-agnostic execution seam for
-experiments that share an expensive setup prefix. A seed and its scheduled
-variants become one **episode group**: the adapter prepares the base state
-once, then executes each baseline or variant suffix from that same state.
-LoopX owns grouping, observation accounting, and router feedback; the adapter
-owns every application-specific fact, including how to restore isolation.
+budget-arm 运行时为共享昂贵 setup 前缀的实验提供可选、软件无关的执行 seam。一个 seed 及其计划变体组成一个 **episode group**：adapter 准备一次基础状态，然后从同一状态执行每个基线或变体后缀。LoopX 拥有分组、观测记账与 router 反馈；adapter 拥有所有应用特定事实，包括如何恢复隔离。
 
-An adapter opts in only by implementing all three methods:
+adapter 通过实现全部三个方法 opt-in：
 
-- `prepare_episode_group(seed_item, episode_items, **context)` returns a dict
-  with an in-memory `handle`, one suffix-free `prefix_record`, and optionally
-  an opaque, public-safe `checkpoint_ref`;
-- `execute_episode(handle, item, **context)` restores or clones the prepared
-  state as needed and returns observations produced only by that item suffix;
-- `release_episode_group(handle, **context)` releases the adapter-owned state
-  and is called on every path where a handle crossed the boundary, including
-  suffix failure. (If prepare returns a malformed dict without a `handle`,
-  the adapter kept ownership and no release call is possible.)
+- `prepare_episode_group(seed_item, episode_items, **context)` 返回带内存 `handle` 的 dict、一个无后缀的 `prefix_record`，以及可选的不透明、public-safe `checkpoint_ref`；
+- `execute_episode(handle, item, **context)` 按需恢复或克隆已准备状态，只返回该 item 后缀产生的观测；
+- `release_episode_group(handle, **context)` 释放 adapter 拥有的状态，并在任何 handle 越过边界后都会调用，包括后缀失败（若 prepare 返回缺少 `handle` 的畸形 dict，adapter 保留所有权且不会收到 release 调用）。
 
-The legacy `execute` method stays optional for episode adapters: the runtime
-only consults it when `prepare_episode_group` returns `None` for a group.
+legacy `execute` 方法对 episode adapters 保持可选：仅当 `prepare_episode_group` 返回 `None` 时 runtime 才咨询它。
 
-Suffix calls are currently sequential *within* a group, but distinct groups
-with disjoint concurrency keys run concurrently on separate workers against
-the same adapter instance. The three episode methods must therefore be
-thread-safe across groups, and concurrently active groups must never alias
-mutable execution state. Sequential handle reuse, immutable shared handles,
-and adapter-managed shared resources remain valid when their isolation and
-lifecycle are safe. Before every suffix call, including the baseline suffix,
-the adapter must restore or clone the same prepared state; changes made by one
-suffix must never leak into the next. Because a group serializes its suffixes
-into one worker lane, an epoch's parallelism is bounded by its group count: an
-adapter whose prepare is cheap for a given group (for example a single-item
-group with no variants) should return `None` there to keep the legacy path and
-avoid paying prepare/release for nothing.
+组内后缀当前是**串行**的，但 concurrency keys 互斥的不同组可在同一 adapter 实例上的不同 worker 并发运行。三个 episode 方法因此必须跨组线程安全，且并发活动组绝不能别名可变执行状态。顺序 handle 复用、不可变共享 handle 与 adapter 管理的共享资源在隔离与生命周期安全时仍有效。每次后缀调用前，包括基线后缀，adapter 必须恢复或克隆同一已准备状态；一个后缀的改动绝不能泄漏进下一个后缀。因为组把后缀串行进一个 worker lane，epoch 的并行度受组数约束：prepare 便宜的 adapter（例如单 item 无变体的组）应在该组返回 `None` 以保留 legacy 路径，避免无谓的 prepare/release。
 
-The core has no VM, GUI, browser, process, or industrial-software type. For a
-black-box desktop application, an adapter might implement the handle with a VM
-snapshot, an application restart plus deterministic action replay, or an
-isolated profile copy. A different exploration domain can use an API sandbox,
-filesystem snapshot, simulator state, or any other recoverable mechanism
-without changing the harness runtime.
+核心没有 VM、GUI、browser、process 或工业软件类型。对于黑盒桌面应用，adapter 可用 VM 快照、应用重启加确定性动作回放、或隔离 profile 副本实现 handle。其他探索领域可用 API sandbox、文件系统快照、模拟器状态或任何其他可恢复机制，无需改变 harness runtime。
 
-`prepare_episode_group` may return `None` before making side effects to request
-legacy, fresh `execute` calls for that group. Those fallback calls remain
-sequential inside the already-admitted group. A prepare exception never falls
-back silently because the environment may already be partially changed; it is
-handled by the configured item failure policy. A partial three-method
-implementation also fails closed. If prepare itself raises after making side
-effects, cleanup remains the adapter's responsibility because no valid handle
-has crossed the boundary; LoopX guarantees only that it will not silently run
-fresh items in that uncertain state.
+`prepare_episode_group` 可在产生副作用前返回 `None` 以请求该组 legacy、fresh `execute` 调用。这些 fallback 调用在已准入组内保持串行。prepare 异常绝不静默 fallback，因为环境可能已部分改变；它由配置的 item failure policy 处理。三方法部分实现也 fail closed。如果 prepare 在产生副作用后 raise，清理仍是 adapter 的责任，因为没有合法 handle 越过边界；LoopX 只保证不会在该不确定状态下静默运行 fresh items。
 
-Grouping validates seed identities before fatal-mode planning and validates
-the compiled epoch before any episode lifecycle call. Seed and variant ids
-must be non-empty and globally unambiguous, and every variant's `seed_item_id`
-must name a valid seed in that epoch. `list_seed_items` and, for variant checks,
-`compile_variant` necessarily run before the corresponding validation. Under
-the `fatal` policy, structural preflight raises `ValueError` before any
-prepare, suffix execute, or release call. Under the default `record` policy,
-each malformed item becomes one structured error record with
-`episode_stage="group_validation"`, while every well-formed group still runs.
-Because record mode completes the epoch, its checkpoint records catalog
-consumption and resume does not re-pick the same malformed spec into a crash
-loop.
+分组在 fatal-mode 规划前验证 seed 身份，并在任何 episode 生命周期调用前验证编译后的 epoch。seed 与 variant id 必须非空且全局无歧义，每个 variant 的 `seed_item_id` 必须命名该 epoch 中的合法 seed。`list_seed_items` 与（对 variant 检查）`compile_variant` 必须在对应验证前运行。在 `fatal` policy 下，结构预检在任何 prepare、suffix execute 或 release 调用前 raise `ValueError`。在默认 `record` policy 下，每个畸形 item 变成一条结构化错误记录，`episode_stage="group_validation"`，而每个合法组仍运行。因为 record 模式完成 epoch，其 checkpoint 记录 catalog 消费，resume 不会把同一畸形 spec 重新挑进崩溃循环。
 
-Failure records stay truthful about which stage failed. A cleanup failure
-after a successful group does not rewrite history: the prefix record keeps its
-own `execution_status` and `accepted` flag, and the release failure travels in
-`episode_release_error` plus `episode_stage="release"` (with
-`retryable_infra_error` propagated). Under the fatal policy, when a suffix
-error and a release error occur together, the suffix error propagates with the
-cleanup failure chained as its `__cause__` — neither failure is swallowed.
+失败记录如实说明失败发生在哪个 stage。组成功后的清理失败不改写历史：prefix record 保留自己的 `execution_status` 与 `accepted` flag，release 失败携带在 `episode_release_error` 加 `episode_stage="release"`（传播 `retryable_infra_error`）。fatal policy 下 suffix 错误与 release 错误同时发生时，suffix 错误传播，清理失败作为其 `__cause__` 链上——两个失败都不被吞。
 
-Records carry generic execution lineage only:
-`execution_group_id`, `record_kind=shared_prefix|episode_suffix|standalone`,
-`seed_item_id`, `prefix_reused`, and optional `checkpoint_ref`. The novelty
-ledger sees the shared prefix once and each suffix separately. Router feedback
-folds one group's prefix and suffixes into one probe, so sibling branches do
-not masquerade as independent family runs. The folded probe carries integer
-`accepted_count` and `attempt_count`; the router sums those counts across
-same-family groups, so its acceptance sample is suffix-count-weighted instead
-of giving a small group and a large group equal weight.
+记录只携带通用执行 lineage：`execution_group_id`、`record_kind=shared_prefix|episode_suffix|standalone`、`seed_item_id`、`prefix_reused`、可选 `checkpoint_ref`。novelty ledger 把共享前缀记一次、每个后缀各记一次。Router 反馈把一个组的 prefix 与 suffixes 折成一个 probe，因此兄弟分支不会伪装成独立 family runs。折叠 probe 携带整数 `accepted_count` 与 `attempt_count`；router 对同 family 组的这些计数求和，因此 acceptance sample 按 suffix 数加权，而不是给小组与小组等权。
 
-Runtime results report shared-prefix, suffix, and standalone compute with two
-explicit reuse views. `avoided_recompute_minutes = prefix_minutes *
-(attempted_episode_count - 1)` measures structural prefix reuse, including an
-attempted suffix that later failed. `successful_avoided_recompute_minutes =
-prefix_minutes * (successful_episode_count - 1)` is the conservative result
-view and excludes `adapter_error` suffixes; those remain visible through
-`episode_error_count`.
+运行时结果以两个显式复用视图报告 shared-prefix、suffix 与 standalone 算力。`avoided_recompute_minutes = prefix_minutes * (attempted_episode_count - 1)` 度量结构前缀复用（含后来失败的 attempted suffix）。`successful_avoided_recompute_minutes = prefix_minutes * (successful_episode_count - 1)` 是保守结果视图，排除 `adapter_error` suffixes；它们通过 `episode_error_count` 仍可见。
 
-Two metric caveats when comparing an episode arm against a standalone arm:
-`novel_value` totals and AUC stay comparable (the first-seen ledger dedupes
-identically in both modes), but `raw_value_total` does not — a standalone arm
-re-reports base-state observations inside every item record while an episode
-arm reports them once per group. And because groups serialize suffixes,
-`requested_worker_minutes` charges workers the scheduler structurally cannot
-engage when groups are fewer than workers; `execution_unit_count` per epoch
-records the real dispatch width. `effective_compute_minutes` sums the reported
-prefix, suffix, and standalone durations but excludes release/cleanup; use
-`epoch_wall_minutes` and arm `elapsed_minutes` for end-to-end timing that also
-includes lifecycle and scheduler overhead. The standard `aggregate_arms`
-comparison exposes each arm's `execution_metrics` alongside its value metrics.
+对比 episode arm 与 standalone arm 时有两条指标注意事项：`novel_value` 总量与 AUC 可比（first-seen ledger 在两种模式同样去重），但 `raw_value_total` 不可比——standalone arm 会在每条 item 记录里重复报告基态观测，episode arm 每组分一次。因为组串行化 suffixes，`requested_worker_minutes` 在组数少于 workers 时会把 scheduler 结构性无法参与的 workers 计费；`execution_unit_count` 记录每个 epoch 的真实派发宽度。`effective_compute_minutes` 汇总报告 prefix、suffix 与 standalone 时长但排除 release/cleanup；端到端计时用 `epoch_wall_minutes` 与 arm `elapsed_minutes`（包含 lifecycle 与 scheduler 开销）。标准 `aggregate_arms` 比较暴露每个 arm 的 `execution_metrics` 与 value metrics。
 
-This adapter checkpoint is deliberately distinct from the harness restart
-manifest below. The adapter handle is live execution state and is never
-serialized by LoopX; the epoch-boundary manifest restores scheduler and
-accounting state after a process restart.
+这个 adapter checkpoint 与下面的 harness restart manifest 刻意不同。adapter handle 是活执行状态，LoopX 绝不序列化它；epoch 边界 manifest 在进程重启后恢复 scheduler 与记账状态。
 
-### Runtime Restart And Item Failures
+### 运行时重启与 Item 失败
 
-`run_budget_arm` can write an atomic epoch-boundary checkpoint manifest.
-Restart is opt-in: start an arm with `resumable=True` (or an explicit
-`checkpoint_path`), then pass `resume=True` to restore completed epochs,
-novelty keys, router state, catalog consumption,
-cumulative metrics, coverage timestamps, and the next epoch. Missing, corrupt,
-or runtime-incompatible manifests fail closed with a concrete `ValueError`;
-loose rolling progress files are observability only and are never restart
-authority.
+`run_budget_arm` 可写原子 epoch 边界 checkpoint manifest。重启 opt-in：以 `resumable=True`（或显式 `checkpoint_path`）启动 arm，再传 `resume=True` 恢复已完成的 epochs、novelty keys、router state、catalog 消费、累计指标、coverage 时间戳与下一个 epoch。缺失、损坏或运行时不兼容的 manifest 以具体 `ValueError` fail closed；松散的滚动进度文件仅用于观测，绝不是重启权威。
 
-Adapter exceptions default to the `record` item failure policy: the failed item
-becomes a zero-value structured observation and independent queue lanes keep
-running. Concurrency keys are released in every path. Pass
-`item_failure_policy="fatal"`, or set the adapter's `item_failure_policy`
-attribute to `"fatal"`, to retain exception propagation. These policies isolate
-work-item failures; they do not implement the planner profile's retry/backoff or
-cooldown guidance.
+Adapter 异常默认 `record` item failure policy：失败 item 变成零值结构化观测，独立队列 lanes 继续运行。Concurrency keys 在每条路径都释放。传 `item_failure_policy="fatal"`（或设置 adapter 的 `item_failure_policy` 属性为 `"fatal"`）保留异常传播。这些策略隔离工作项失败；它们不实现 planner profile 的 retry/backoff 或 cooldown 指导。
 
-## Presentation Sink: Lark Mapping
+## 展示 Sink：Lark 映射
 
-| LoopX concept | Lark surface |
+| LoopX 概念 | Lark 表面 |
 | --- | --- |
-| node | `Nodes` table row keyed by `LoopX Result ID`; `Status=blocked` rows carry `Blocked Reason` |
-| edge | `Edges` table row keyed by `LoopX Result ID`; `From Node Link` and `To Node Link` are linked-record cells pointing at `Nodes`, so the Base data model itself carries the topology |
-| finding | `Findings` table row keyed by `LoopX Result ID`; latest event wins |
-| row lineage | `Row Lifecycle`, `Supersedes`, `Superseded By`, `Source ID` columns |
-| dashboard card | transport-free interactive card content from the same projection |
+| node | `Nodes` 表行，键为 `LoopX Result ID`；`Status=blocked` 行带 `Blocked Reason` |
+| edge | `Edges` 表行，键为 `LoopX Result ID`；`From Node Link` / `To Node Link` 是指向 `Nodes` 的 linked-record 单元格，因此 Base 数据模型本身承载拓扑 |
+| finding | `Findings` 表行，键为 `LoopX Result ID`；最新事件胜出 |
+| row lineage | `Row Lifecycle`、`Supersedes`、`Superseded By`、`Source ID` 列 |
+| dashboard card | 来自同一投影的免传输交互卡片内容 |
 
-Record identity follows the Lark Kanban adapter contract: rows are matched by
-the `LoopX Goal ID` + `LoopX Result ID` columns, remembered in the local
-config as `result_records`, and the map is rebuilt from all goal-filtered
-remote pages before executed upserts. Executed sync compares canonical values
-with the remote row and skips unchanged records. Newly created record ids are
-persisted immediately, so an interrupted large-graph sync can resume without
-recreating rows that were already delivered.
+记录身份遵循 Lark Kanban adapter 契约：行按 `LoopX Goal ID` + `LoopX Result ID` 列匹配，记在本地配置的 `result_records`，执行 upsert 前从所有 goal 过滤的远端页面重建映射。执行同步对比 canonical 值与远端行，跳过未变记录。新建记录 id 立即持久化，因此被中断的大图同步可恢复，不会重建已交付行。
 
-For the issue-fix domain, the default `lark-kanban sync-loopx-todos` call also
-projects material domain-state, todo, and rollout transitions into this result
-layer. It invokes remote Explore sync only when a timestamp-free semantic graph
-digest differs from the last successful sink digest. This keeps the graph
-continuously current without spending writes on unchanged CI/review polls. It
-uses the result layer only and does not enable or depend on Explore Harness
-worker orchestration.
+对 issue-fix 领域，默认 `lark-kanban sync-loopx-todos` 调用也会把 material domain-state、todo 与 rollout 迁移投影进该结果层。它仅在无时间戳语义图 digest 与上次成功 sink digest 不同时才调用远端 Explore sync。这让图持续最新而不在未变 CI/review polls 上浪费写入。它只使用结果层，不启用或依赖 Explore Harness worker 编排。
 
-An optional owner-facing stage document is configured separately because linked
-Base rows and rendered graphs are different delivery receipts. Configure the
-Docx and its first whiteboard with `explore feishu-visual-configure`; the Docx
-may be a root-level resource inside the same Base so the graph and Kanban share
-one operator entry point. Each bounded Evidence Stage owns one document section
-and one independent whiteboard. Missing sections and blank whiteboards are
-created automatically when the sink has a Docx token. Stage capacity is
-configurable from 10 through 20 nodes and defaults to 14. Full Nodes, Edges, and
-Findings always remain in the canonical Base.
+可选 owner 面向的 stage 文档单独配置，因为 linked Base 行与渲染图是不同的交付回执。用 `explore feishu-visual-configure` 配置 Docx 与其第一个白板；Docx 可以是同一 Base 内的根级资源，让图与 Kanban 共享一个 operator 入口。每个有界 Evidence Stage 拥有一个文档节与一个独立白板。sink 有 Docx token 时自动创建缺失节与空白白板。Stage 容量可配置为 10-20 个节点，默认 14。完整 Nodes、Edges 与 Findings 始终保留在 canonical Base。
 
-`board_style` is the first-class layout contract and is independent from
-`projection_mode`, which controls evidence selection. Two styles are supported:
+`board_style` 是一等布局契约，与控制证据选择的 `projection_mode` 独立。两种样式：
 
-| Board style | Best fit | Rendering behavior |
+| Board style | 最佳场景 | 渲染行为 |
 | --- | --- | --- |
-| `auto_flow` | Generic or single-lane Explore graphs | Mermaid chooses the graph layout while LoopX preserves stage order, lanes, statuses, and real directed edges. |
-| `semantic_lane_columns` | Operator boards with meaningful parallel lanes such as PR issue-fix and capability work | LoopX emits deterministic SVG columns, keeps each lane top-to-bottom, and draws the real within-stage directed edges. |
+| `auto_flow` | 通用或单 lane Explore 图 | Mermaid 选择图布局，LoopX 保留 stage 顺序、lanes、statuses 与真实有向边 |
+| `semantic_lane_columns` | 有意义并行 lanes 的 operator board，如 PR issue-fix 与能力工作 | LoopX 输出确定性 SVG 列，保持每个 lane 自上而下，并绘制 stage 内真实有向边 |
 
-The renderer (`mermaid` or `stage_svg`) is an implementation detail derived
-from `board_style`. Existing local configs that only store `renderer=mermaid`
-remain readable as `auto_flow`.
+渲染器（`mermaid` 或 `stage_svg`）是派生自 `board_style` 的实现细节。只存 `renderer=mermaid` 的旧本地配置仍按 `auto_flow` 读取。
 
-On first configuration, omitting `--board-style` defaults the new visual role
-to `auto_flow`. On later calls for the same role, omission preserves the stored
-style and its validated renderer. This makes Docx or Evidence Stage token
-maintenance a patch operation instead of an implicit style reset. Pass an
-explicit `--board-style` only when intentionally switching the layout.
+首次配置省略 `--board-style` 时，新视觉角色默认 `auto_flow`。后续对同一角色省略时保留已存样式及其已验证渲染器。这让 Docx 或 Evidence Stage token 维护变成 patch 操作，而不是隐式样式重置。仅在有意切换布局时传显式 `--board-style`。
 
-A material sync checkpoints `canonical_rows_semantic_digest`
-and `visual_semantic_digest` independently. If whiteboard publication fails
-after Base rows succeed, the next run retries only the visual sink instead of
-rewriting unchanged rows. `status=synced` therefore means every configured sink
-completed; callers can inspect `canonical_rows_status` and `visual_status`
-separately.
+material sync 独立 checkpoint `canonical_rows_semantic_digest` 与 `visual_semantic_digest`。Base 行成功后白板发布失败时，下次运行只重试视觉 sink，而不是重写未变行。因此 `status=synced` 表示每个已配置 sink 都完成；调用方可分别检查 `canonical_rows_status` 与 `visual_status`。
 
-The default `canonical_filtered` projection obeys configured status/tag filters.
-Projects define lanes with `lane-<name>` tags on work nodes or their ancestors.
-Each stage groups its nodes by lane and keeps real directed relations visible
-inside that board, including cross-lane edges. Issue-fix projections therefore
-show their PR delivery and LoopX capability lanes together, while a one-lane
-project such as zjxmt renders one lane without synthetic empty structure. This
-changes presentation only, never evidence state.
+默认 `canonical_filtered` 投影遵守配置的 status/tag 过滤器。项目用工作节点或其祖先上的 `lane-<name>` tags 定义 lanes。每个 stage 按 lane 分组节点，并保持 board 内真实有向关系可见，包括跨 lane 边。issue-fix 投影因此同时显示 PR 交付 lane 与 LoopX 能力 lane；单 lane 项目（如 zjxmt）渲染一个 lane 而不生成合成空结构。这只改变展示，绝不改变证据状态。
 
-For a same-source dual view, configure stage documents by role. Repeat
-`--stage-whiteboard-token` for already-created stage boards; missing boards are
-created under matching `Evidence Stage NN` sections when `--docx-token` is set:
+同一来源双视图按角色配置 stage 文档。对已创建的 stage boards 重复 `--stage-whiteboard-token`；`--docx-token` 设置时缺失 boards 在匹配的 `Evidence Stage NN` 节下自动创建：
 
 ```bash
 loopx explore feishu-visual-configure \
@@ -850,44 +399,19 @@ loopx explore feishu-visual-configure \
   --execute
 ```
 
-`feishu-sync` then generates both views in one local projection step and
-publishes one whiteboard per stage. It always publishes the canonical role and
-publishes the executive role when the bundle recommends `dual_view`. A derived
-view whose source revision or digest differs from the current canonical
-projection is rejected before any whiteboard command runs. Legacy grid/SVG
-renderer configuration fails with an explicit migration message instead of
-silently publishing the wrong visual form.
+`feishu-sync` 随后在一次本地投影步骤中生成两个视图，每个 stage 发布一个白板。它始终发布 canonical 角色，并在 bundle 推荐 `dual_view` 时发布 executive 角色。派生视图的 source revision 或 digest 与当前 canonical 投影不同时，会在任何白板命令运行前被拒绝。legacy grid/SVG renderer 配置以显式迁移消息失败，而不是悄悄发布错误视觉形式。
 
-The visual sync is not satisfied when any recommended role is missing from the
-configured sinks. Its top-level receipt stays `published=false`, names the
-missing roles, and returns a retryable configuration action; successful
-per-role diagnostics may still be inspected, but they cannot make the overall
-sink look current or advance its delivery checkpoint.
+任一推荐角色缺失于已配置 sinks 时视觉同步不满足。其顶层回执保持 `published=false`，列出缺失角色，返回可重试配置动作；成功的 per-role 诊断仍可检查，但不能让整体 sink 显得最新或推进交付 checkpoint。
 
-Executable sync is singleflight per local board config across both the direct
-`feishu-sync` command and automatic material refresh. An overlapping process
-fails before row, visual, or checkpoint writes with `status=sync_busy`,
-`retryable=true`, and `external_write_performed=false`; dry-runs remain
-concurrent because they cannot mutate the sink. Retry after the active process
-exits instead of allowing two upsert scans to create duplicate Result IDs or
-overwrite each other's local checkpoint snapshot.
+可执行同步在直接 `feishu-sync` 命令与自动 material refresh 之间按本地 board config 单飞。重叠进程在 row、visual 或 checkpoint 写入前以 `status=sync_busy`、`retryable=true`、`external_write_performed=false` 失败；dry-run 保持并发，因为它们不改变 sink。在活动进程退出后重试，而不是允许两次 upsert 扫描创建重复 Result IDs 或互相覆盖本地 checkpoint 快照。
 
-The lock is reentrant inside one execution context, so a batch that already
-owns the board lock can call the direct command or automatic material sync
-without rejecting itself as `sync_busy`. Reuse never crosses an execution
-context or process; independent writers still fail fast.
+锁在同一执行上下文内可重入，因此已拥有 board 锁的 batch 可调用直接命令或自动 material sync，而不会把自己拒绝为 `sync_busy`。复用绝不跨执行上下文或进程；独立 writer 仍快速失败。
 
-The text `From Node` / `To Node` columns remain stable public ids for
-automation and review, while the linked-record columns are the Feishu-native
-graph substrate. A Base plugin, relationship-aware view, or Feishu dashboard
-component can read those links directly; LoopX must not downgrade the graph
-back to a screenshot-only artifact.
+`From Node` / `To Node` 文本列是给自动化与 review 的稳定公共 id，linked-record 列是飞书原生图基底。Base 插件、关系感知视图或飞书 dashboard 组件可直接读取这些链接；LoopX 绝不能把图降级成仅截图工件。
 
-This sink is a presentation boundary, not a value connector. Value connectors
-own external signal input, permissions, and source authority; presentation
-sinks render public-safe explore projections for operators.
+该 sink 是展示边界，不是 value connector。Value connectors 拥有外部信号输入、权限与来源权威；展示 sink 为 operator 渲染 public-safe 探索投影。
 
-## CLI Surface
+## CLI 表面
 
 ```text
 loopx explore schema
@@ -905,21 +429,13 @@ loopx explore feishu-sync --goal-id <id> [--sink-visibility owner-only|shared] [
 loopx explore feishu-card --goal-id <id> [--card-file <file>] [--message-id om_...]
 ```
 
-`feishu-setup` and `feishu-sync` are dry-run unless `--execute` is set; the
-dry-run payload contains the full command plan for review.
+`feishu-setup` 与 `feishu-sync` 默认 dry-run，除非 `--execute`；dry-run payload 含完整命令计划供 review。
 
-## Review Boundary
+## Review 边界
 
-Rows and cards deliberately exclude raw agent transcripts, worker commands,
-credentials, and local absolute paths. Evidence lives behind compact public
-refs; the private material itself stays in the goal's normal local state or
-memory backend. `--sink-visibility shared` additionally redacts private
-links and external ids through the shared Kanban redaction rules before rows
-leave the machine. Card content is build-only: sending or updating the actual
-Lark message is the job of an approved gateway (bot or lark-cli) after the
-operator permits the write.
+行与卡片刻意排除 raw agent transcripts、worker commands、credentials 与本地绝对路径。证据位于紧凑公共 ref 之后；私有材料本身留在 goal 的正常本地状态或 memory backend。`--sink-visibility shared` 在行离开机器前还会通过 shared Kanban 脱敏规则脱敏私有链接与外部 id。卡片内容仅构建：实际发送或更新 Lark 消息是获批 gateway（bot 或 lark-cli）在 operator 允许写后的事。
 
-## Validation
+## 验证
 
 ```bash
 python3 examples/explore-result-layer-smoke.py
@@ -930,25 +446,6 @@ python3 -m pytest -q \
   tests/test_explore_router_acceptance.py
 ```
 
-The smoke proves the projection contract (folding, blocked reasons, tree,
-Mermaid), record-time path rejection, dry-run default, paginated discovery,
-zero-write idempotent resync, single-row drift repair, nested create-receipt
-handling, shared-visibility redaction, transport-free card
-content, the opt-in todo branch-plan packet, the adaptive resilient
-worker harness profile, and the CLI surface against a temp registry, without
-live Lark credentials. It additionally proves the worker-lane router
-contracts: requested width is no longer silently clamped below the worker
-ceiling, idle lanes are queue-exhaustion (not a cap) under independent-lane
-admission, the routing bias reorders lanes without touching value
-bookkeeping, confident-prefix bundles truncate at the calibrated threshold
-and collapse for reject-heavy families, the router-state novelty ledger
-dedupes across epochs while coverage debt accrues bias, and observed load
-profiles calibrate admission through the CLI flags.
+smoke 证明投影契约（折叠、blocked reasons、树、Mermaid）、记录时路径拒绝、dry-run 默认、分页发现、零写幂等 resync、单行漂移修复、嵌套 create-receipt 处理、shared 可见性脱敏、免传输卡片内容、opt-in todo branch-plan packet、adaptive resilient worker harness 配置档，以及针对临时 registry 的 CLI 表面，无需 live Lark credentials。它还证明 worker-lane router 契约：请求宽度不再被静默压到 worker 上限以下、独立 lane 准入下空闲 lanes 是队列耗尽（不是上限）、routing bias 在不动 value bookkeeping 的情况下重排 lanes、confident-prefix bundles 在校准阈值截断并对 reject-heavy families 坍缩、router-state novelty ledger 跨 epochs 去重而 coverage debt 累积 bias、观测负载配置档通过 CLI flags 校准准入。
 
-The runtime smoke and focused pytest modules also cover recoverable prefix
-reuse, prefix/suffix novelty and dual reuse accounting, suffix-count-weighted
-router acceptance, explicit legacy fallback, restart compatibility, cleanup on
-recorded and fatal failures, concurrent groups without mutable-state aliasing,
-fatal structural preflight, record-mode malformed-item isolation with resume
-continuity, aggregate metric projection, and episode-only adapters without a
-legacy `execute` method.
+runtime smoke 与聚焦 pytest 模块还覆盖：可恢复 prefix 复用、prefix/suffix novelty 与双复用记账、按 suffix 数加权的 router acceptance、显式 legacy fallback、重启兼容、recorded 与 fatal 失败下的清理、无可变状态别名的并发组、fatal 结构预检、record-mode 畸形 item 隔离与 resume 连续性、聚合指标投影，以及无 legacy `execute` 方法的 episode-only adapters。

@@ -1,29 +1,21 @@
 # rollback_packet_v0
+> [English](rollback-packet-v0.md)
 
-`rollback_packet_v0` is the public-safe compensation protocol for long-running
-LoopX work. It describes what must be undone, fixed forward, cleaned up, or
-monitored after a delivery step creates risk. It is a plan and evidence
-packet, not an execution permission.
+`rollback_packet_v0` 是长程 LoopX 工作的公开安全补偿协议。它描述投递步骤造成风险之后必须撤销、修复前进、清理或监控的内容。它是计划与证据包，不是执行许可。
 
-Rollback in LoopX is broader than `git revert`. A long-horizon task may need to
-compensate repository commits, local state projections, external resources,
-open PRs, cached public surfaces, todo ownership, or user gates. The packet
-keeps those relationships explicit so agents do not erase history, repeat the
-same unsafe action, or leave the operator guessing what remains exposed.
+LoopX 中的回滚比 `git revert` 更广。长程任务可能需要补偿仓库提交、本地状态投影、外部资源、开放 PR、缓存公开界面、todo 所有权或用户关卡。包使这些关系显式，使 agent 不抹除历史、不重复同一不安全动作，也不让操作员猜测仍暴露什么。
 
-## Product Contract
+## 产品契约
 
-The packet exists to answer five questions:
+包存在的目的是回答五个问题：
 
-1. What visible or durable state is affected?
-2. Which todo, rollout event, commit, PR, or external resource caused it?
-3. Is the next safe action a revert, fix-forward patch, state correction,
-   support request, external cleanup, or monitor?
-4. Who must approve protected or destructive steps?
-5. Which validation and public/private boundary checks prove the compensation
-   is complete?
+1. 哪些可见或持久化状态受影响？
+2. 是哪个 todo、rollout 事件、commit、PR 或外部资源导致的？
+3. 下一安全动作是 revert、fix-forward 补丁、状态修正、支持请求、外部清理还是 monitor？
+4. 谁必须批准受保护或破坏性步骤？
+5. 哪些验证与公开/私有边界检查证明补偿已完成？
 
-## Shape
+## 形状
 
 ```json
 {
@@ -114,82 +106,64 @@ The packet exists to answer five questions:
 }
 ```
 
-## Kinds
+## 种类
 
-Allowed trigger kinds:
+允许的触发种类：
 
-- `validation_regression`;
-- `public_boundary_leak`;
-- `operator_request`;
-- `external_setup_partial_failure`;
-- `wrong_owner_or_lane`;
-- `bad_state_projection`;
-- `release_or_publish_mistake`.
+- `validation_regression`；
+- `public_boundary_leak`；
+- `operator_request`；
+- `external_setup_partial_failure`；
+- `wrong_owner_or_lane`；
+- `bad_state_projection`；
+- `release_or_publish_mistake`。
 
-Allowed plan step kinds:
+允许的计划步骤种类：
 
-- `git_revert`: create a normal revert commit;
-- `fix_forward`: keep history and add a correcting patch;
-- `history_rewrite`: rewrite public branch history; always protected;
-- `state_compensation`: correct LoopX active state, todo metadata, or rollout
-  event projections;
-- `external_cleanup`: clean up an external resource;
-- `support_request`: ask a provider to remove read-only or cached surfaces;
-- `todo_supersede`: replace stale todos with successor work;
-- `validation`: prove the compensation state.
+- `git_revert`：创建正常 revert 提交；
+- `fix_forward`：保留历史并添加修正补丁；
+- `history_rewrite`：重写公开分支历史；始终受保护；
+- `state_compensation`：修正 LoopX active state、todo 元数据或 rollout 事件投影；
+- `external_cleanup`：清理外部资源；
+- `support_request`：请 provider 移除只读或缓存界面；
+- `todo_supersede`：用 successor 工作替换过期 todos；
+- `validation`：证明补偿状态。
 
-## Commit And Todo Linkage
+## 提交与 Todo 关联
 
-Commit-to-todo linkage is the minimum useful rollback anchor. A public PR or
-commit should be traceable to:
+提交到 todo 的关联是最小有用回滚锚点。公开 PR 或提交应可追溯至：
 
-- one or more `todo_id` values;
-- one or more rollout event ids when available;
-- validation commands or public-safe evidence refs;
-- successor todos or no-follow-up rationale after completion.
+- 一个或多个 `todo_id` 值；
+- 可用时的一个或多个 rollout 事件 id；
+- 验证命令或公开安全证据引用；
+- 完成后的 successor todos 或 no-follow-up 理由。
 
-This linkage does not require every commit message to encode every detail. It
-does require enough durable state for a later agent to answer "which todo does
-this commit compensate, supersede, or validate?" without reading private chat
-history.
+该关联不要求每条提交消息编码全部细节。它要求足够持久化状态，使后续 agent 能回答「此提交补偿、接替或验证哪个 todo？」而无需读取私有聊天历史。
 
-When linkage is missing, use a rollback packet to create the missing
-compensation todos before touching history.
+关联缺失时，用 rollback 包在触碰历史之前创建缺失的补偿 todos。
 
-## Safety Rules
+## 安全规则
 
-- A rollback packet does not authorize destructive git commands, force pushes,
-  production actions, provider support requests, external deletes, or public
-  comments.
-- `history_rewrite` requires explicit user or maintainer approval and a backup
-  or equivalent recovery point.
-- Provider-owned read-only refs, cached views, or search indexes are external
-  cleanup. If normal repository commands cannot remove them, the packet must
-  keep a user/support gate or monitor todo open.
-- External-resource setup should prefer partial-success preservation over
-  deletion. If a usable board, base, environment, or artifact was created,
-  save the minimum usable local config first, then treat optional enrichment
-  failures as warnings or follow-up work.
-- Fix-forward is preferred when it avoids protected history operations and
-  fully removes user-facing risk.
-- Public fixtures and packets must not include raw logs, raw transcripts,
-  credentials, local absolute paths, or private source bodies.
+- rollback 包不授权破坏性 git 命令、force push、生产动作、provider 支持请求、外部删除或公开评论。
+- `history_rewrite` 需要显式用户或 maintainer 批准以及备份或等价恢复点。
+- Provider 自有的只读引用、缓存视图或搜索索引是外部清理。若普通仓库命令无法移除它们，包必须保持用户/支持关卡或 monitor todo 开放。
+- 外部资源设置应优先保存部分成功，而非删除。若可用板、base、环境或工件已创建，先保存最小可用本地配置，然后把可选富化失败视为警告或后续工作。
+- 当 fix-forward 能避免受保护历史操作并完全移除用户可见风险时，优先使用它。
+- 公开 fixture 与包不得包含原始日志、原始 transcript、凭据、本地绝对路径或私有源正文。
 
-## Acceptance Checks
+## 验收检查
 
-A valid packet or implementation must prove:
+一个有效包或实现必须证明：
 
-- `schema_version` is exactly `rollback_packet_v0`;
-- every plan step has `step_id`, `kind`, `action`, `requires_gate`,
-  `destructive`, and `automatable_by_agent`;
-- destructive or provider-owned actions require a gate;
-- the packet links at least one todo, rollout event, commit/PR ref, or external
-  resource ref;
-- todo compensation is explicit when work remains after the rollback step;
-- validation commands are public-safe labels, not raw logs;
-- boundary flags are present and false.
+- `schema_version` 恰好是 `rollback_packet_v0`；
+- 每个计划步骤有 `step_id`、`kind`、`action`、`requires_gate`、`destructive` 与 `automatable_by_agent`；
+- 破坏性或 provider 自有动作需要关卡；
+- 包关联至少一个 todo、rollout 事件、commit/PR 引用或外部资源引用；
+- 回滚步骤后仍有工作时 todo 补偿显式；
+- 验证命令是公开安全标签，而非原始日志；
+- 边界标志存在且为 false。
 
-The durable smoke is:
+持久化 smoke 是：
 
 ```bash
 python3 examples/protocol/rollback-packet-protocol-smoke.py

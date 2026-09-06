@@ -1,45 +1,34 @@
-# Dashboard Budget Governance Contract
+# Dashboard 预算治理合同
 
-Status: public-safe v0 contract for the LoopX ops dashboard.
+> [English](dashboard-budget-governance-contract.md)
 
-LoopX budget and governance are already present in the kernel objects: quota,
-scheduler hints, todo ownership, gates, run history, and evidence pointers. The
-dashboard contract turns those machine fields into operator concepts without
-creating a browser-side source of truth.
+状态:面向 LoopX ops dashboard 的公开安全 v0 合同。
 
-## Operator Concepts
+LoopX 的预算与治理已经体现在内核对象中:配额、scheduler 提示、todo 所有权、gate、run history 与证据指针。Dashboard 合同把这些机器字段转化为运营者概念,但不会在浏览器侧建立第二个事实来源。
 
-| Operator concept | Source fields | Meaning in the dashboard |
+## 运营者概念
+
+| 运营者概念 | 来源字段 | Dashboard 中的含义 |
 | --- | --- | --- |
-| Budget | `quota.compute`, `quota.allowed_slots`, `quota.spent_slots`, `quota.state` | How much automatic agent time this goal may consume in the current quota window, and whether it can run now. |
-| Cadence | `scheduler_hint.codex_app`, `scheduler_hint.unchanged_poll`, `scheduler_hint.reset_policy`; opt-in cold detail from `scheduler_hint.cold_path_detail.local_scheduler` | How often the host should wake the agent, when backoff applies, and when user feedback or new work resets the interval. |
-| Spend rule | `interaction_contract.cli_channel.spend_policy`, `scheduler_hint.unchanged_poll.spend_policy`, `work_lane_contract` | Which transitions spend quota and which lifecycle checks are no-spend. |
-| Human controls | user todos, operator gates, `local_dashboard_api`, future control-plane dry-run/apply paths | What a human can approve, pause, override, or resume, and whether the browser is allowed to preview or apply a change. |
-| Evidence | todo ids, run ids, quota spend events, compact artifacts, source warnings | Why the dashboard believes the current budget/governance state and where to audit it. |
+| 预算 | `quota.compute`, `quota.allowed_slots`, `quota.spent_slots`, `quota.state` | 该 Goal 在当前配额窗口内可以消耗多少自动 Agent 时间,以及现在是否可以运行。 |
+| 节奏 | `scheduler_hint.codex_app`, `scheduler_hint.unchanged_poll`, `scheduler_hint.reset_policy`;`scheduler_hint.cold_path_detail.local_scheduler` 提供的可选用冷细节 | host 应该多久唤醒一次 Agent,何时启用退避,以及用户反馈或新工作何时重置间隔。 |
+| 消耗规则 | `interaction_contract.cli_channel.spend_policy`, `scheduler_hint.unchanged_poll.spend_policy`, `work_lane_contract` | 哪些转换消耗配额,哪些生命周期检查不消耗。 |
+| 人工控制 | user todos、operator gates、`local_dashboard_api`、未来的控制面 dry-run/apply 路径 | 人类可以批准、暂停、覆盖或恢复什么,以及浏览器是否被允许预览或应用变更。 |
+| 证据 | todo ids、run ids、配额消耗事件、紧凑制品、源文件警告 | Dashboard 为什么相信当前的预算/治理状态,以及去哪里审计它。 |
 
-The dashboard should phrase these concepts for operators, but drill-down views
-may still show the exact machine tokens for debugging.
+Dashboard 应该用运营者语言表述这些概念,但下钻视图仍可显示精确的机器 token 以便调试。
 
-## Control Semantics
+## 控制语义
 
-- **Pause automatic work:** projected as a quota/control-plane policy change,
-  not as a hidden browser flag. Apply paths require local loopback opt-in and a
-  preview id, or the equivalent CLI command.
-- **Run now / override cadence:** starts with a fresh `quota should-run`; it
-  does not skip gates, claims, write scope, or capability checks.
-- **Reset cadence:** follows `scheduler_hint.reset_policy`. User feedback, new
-  or reassigned todos, gate resolution, and material state transitions reset the
-  host interval to the profile's initial value before backoff resumes.
-- **Stop or final-check loops:** Codex CLI TUI and Claude Code loop final
-  checks, loop exits, cadence changes, and monitor-only quiet polls are
-  no-spend transitions unless they produce validated work and writeback.
-- **Spend quota:** only after durable writeback: todo/state/evidence update,
-  `refresh-state`, then one `quota spend-slot` event.
+- **暂停自动工作:**以配额/控制面策略变更的方式呈现,而不是隐藏的浏览器标志。应用路径需要本地 loopback 明确启用与预览 id,或等效的 CLI 命令。
+- **立即运行/覆盖节奏:**以一次全新的 `quota should-run` 开始;它不跳过 gate、claim、写入范围或 capability 检查。
+- **重置节奏:**遵循 `scheduler_hint.reset_policy`。用户反馈、新增或重新分配的 todo、gate 解决以及实质性的状态转换,都会在退避恢复之前把 host 间隔重置为 profile 的初始值。
+- **停止或最终检查 Loop:**Codex CLI TUI 与 Claude Code Loop 的最终检查、Loop 退出、节奏变化以及仅监听的静默轮询都是不消耗配额的转换,除非它们产生了经过验证的工作与写回。
+- **消耗配额:**仅在持久写回之后:todo/状态/证据更新、`refresh-state`,然后一个 `quota spend-slot` 事件。
 
-## Dashboard Projection
+## Dashboard 投影
 
-The ops frontstage may render a compact `Budget & Governance` panel derived
-from `goal_channel_projection_v0`:
+ops 前台可以渲染一个从 `goal_channel_projection_v0` 派生的紧凑 `Budget & Governance` 面板:
 
 ```json
 {
@@ -57,22 +46,19 @@ from `goal_channel_projection_v0`:
 }
 ```
 
-The panel is read-only. It may link to todo ids, run events, local dry-run
-capabilities, and source warnings, but it must not mutate project truth directly.
+面板是只读的。它可以链接到 todo id、run 事件、本地 dry-run 能力和源文件警告,但不得直接修改项目事实。
 
-## Acceptance Anchors
+## 验收锚点
 
-- `frontstage-budget-governance` renders budget, cadence, spend rule, controls,
-  and evidence from compact projection fields.
-- The copy says cadence/final-check/monitor-only transitions are no-spend.
-- Write affordances remain behind `local_dashboard_api` loopback opt-in and
-  preview-locked APIs.
-- Public docs link this contract from the dashboard/status docs index.
+- `frontstage-budget-governance` 从紧凑投影字段渲染预算、节奏、消耗规则、控制与证据。
+- 文案说明节奏/最终检查/仅监听转换不消耗配额。
+- 写入入口仍受 `local_dashboard_api` loopback 启用与预览锁定 API 的保护。
+- 公开文档从 dashboard/状态文档索引链接本合同。
 
-## Related Contracts
+## 相关合同
 
-- [Quota allocation](../../quota-allocation.md)
-- [Status data contract](../../status-data-contract.md)
-- [Long-task cadence hint](../../operations/long-task-cadence-policy.md)
-- [Frontstage dashboard interaction baseline](../../product/surfaces/frontstage-dashboard-interaction-baseline.md)
-- [Runtime connector catalog](../../integrations/runtime-connector-catalog.md)
+- [配额分配](../../quota-allocation.md)
+- [状态数据合同](../../status-data-contract.md)
+- [长任务节奏策略](../../operations/long-task-cadence-policy.md)
+- [Frontstage dashboard 交互基线](../../product/surfaces/frontstage-dashboard-interaction-baseline.md)
+- [Runtime connector 目录](../../integrations/runtime-connector-catalog.md)

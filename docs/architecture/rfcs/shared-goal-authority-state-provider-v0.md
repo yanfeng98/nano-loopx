@@ -1,129 +1,104 @@
-# RFC: LoopX Shared Control-Plane Authority and Pluggable State Providers (v0)
+# RFC：LoopX 共享控制面权威与可插拔状态 Provider（v0）
 
-- Status: Draft, under maintainer review
-- Initially proposed by: NoKV Lab
-- Widened by: LoopX maintainers
-- Date: 2026-08-05; revised 2026-09-05
-- Scope: one provider-neutral LoopX authority contract with built-in file,
-  optional NoKV, and optional PostgreSQL provider profiles, complementing
+- 状态：Draft，正在接受 maintainer review
+- 最初提案方：NoKV Lab
+- 扩展修订方：LoopX maintainer
+- 日期：2026-08-05；修订于 2026-09-05
+- 范围：一个 provider-neutral 的 LoopX 权威合同，支持内置 file、可选 NoKV
+  与可选 PostgreSQL provider profile，用来补充
   [`host-integration-surface-v0`](../../reference/protocols/host-integration-surface-v0.md)
-- Source baseline: LoopX `a0c20f1779d273e7aaa4bd3ea166d145d466e6d5`
-- Provider API baseline: NoKV `7bb3ffd6512fd57d9c0f193aa6d9c5b935d77f30`
-  (release 0.11.0, Python API 1, Holt pinned to 0.8.6). The Stage 2A executable
-  qualification admits only that SDK contract and this checkout's helper. It
-  remains candidate evidence, not a merge gate or authority promotion
-- PostgreSQL baseline: the TypeScript Stage 2B candidate implements the store
-  contract, transaction-local tenant context, forced row-level security, and
-  bounded canonical commit admission, and has passed a real PostgreSQL 16
-  transaction matrix. No shared authority service, runtime caller, principal
-  authentication/tenant authorization, measured capacity/retention profile, or
-  authority promotion ships yet
-- Language note: the
-  [Chinese version](./shared-goal-authority-state-provider-v0.zh-CN.md) and this
-  English version are semantic mirrors. A difference between them is a defect.
+- 源码基线：LoopX `a0c20f1779d273e7aaa4bd3ea166d145d466e6d5`
+- Provider API 基线：NoKV `7bb3ffd6512fd57d9c0f193aa6d9c5b935d77f30`
+  （release 0.11.0、Python API 1、Holt 固定为 0.8.6）。Stage 2A 的可执行资格
+  验证只接受这份 SDK 合同与本 checkout 的 helper；它仍是候选证据，不是合并门槛
+  或 authority promotion
+- PostgreSQL 基线：TypeScript Stage 2B candidate 已实现 store contract、
+  transaction-local tenant context、forced row-level security 与有界 canonical
+  commit admission，且已通过真实 PostgreSQL 16 transaction matrix；shared
+  authority service、runtime caller、principal authentication/tenant authorization、
+  实测 capacity/retention profile 与 authority promotion 均尚未交付
+- 语言说明：[英文版](./shared-goal-authority-state-provider-v0.md)与本中文版互为
+  语义镜像；两者不一致属于缺陷
 
-## Current implementation checkpoint
+## 当前实现检查点
 
-The machine-owned coordination projection now has one packaged,
-provider-neutral record contract shared by Python and TypeScript. File, NoKV,
-and PostgreSQL candidates consume the same canonical Todo read shape; a
-provider-bound projection rejects an unknown field rather than silently losing
-it. Removing a declared field requires explicit compatibility evidence and
-maintainer approval, even when the field is stored but not yet read by a
-decision path.
+machine-owned coordination 投影现已有一份由 Python 与 TypeScript 共享的、随包
+发布且 provider-neutral 的 record contract。file、NoKV 与 PostgreSQL 候选读取同一
+份 canonical Todo read shape；provider-bound 投影遇到未知字段会拒绝，而不是静默
+丢失。删除已声明字段必须提供显式兼容性证据并获得 maintainer 批准，即便该字段已经
+存储但尚未进入决策读取路径。
 
-The native domain alternative now separates Markdown location metadata while
-retaining archival semantics. Appendix C's Todo domain/projection decision
-records the compatibility boundary and the next local qualification plan;
-the existing v0 capture and persisted heads are not silently migrated.
+新增原生 domain 选项将 Markdown 位置 metadata 分离，但保留归档语义。附录 C 的
+Todo domain/projection 决策记录兼容边界与下一步 file-first 资格化计划；现有 v0
+capture 与已持久化 head 不会被静默迁移。
 
-This does not promote a provider or make the whole active-state Markdown file
-generated. Markdown remains canonical in default local mode. In a later,
-explicit shared-authority promotion, only sections covered by the typed
-contract become deterministic compatibility projections; free-form human
-narrative remains outside the coordination head.
+这不晋升任何 provider，也不会把整份 active-state Markdown 变成生成文件。默认本地
+模式下 Markdown 仍是 canonical；未来显式晋升 shared authority 后，也只有 typed
+contract 覆盖的 section 才成为确定性的兼容投影，自由的人类叙事仍在 coordination
+head 之外。
 
-## Document map and maintenance contract
+## 文档地图与维护约定
 
-This RFC separates durable decisions from delivery evidence:
+本文将稳定决策与交付证据分开维护：
 
-- Sections 0-10 define the problem, authority contract, provider boundary,
-  migration rules, and acceptance criteria.
-- Section 11.1 is the normative delivery plan. Section 11.2 is a
-  non-normative execution ledger: it records what a dated `main` revision has
-  proved, but does not silently amend the contract. Section 11.3 lists the
-  remaining qualification and promotion work.
-- Section 12 contains unresolved owner decisions. An implementation may not
-  infer approval from a proposed answer.
-- Appendices A and B retain evidence and decision history; Appendix C contains
-  the detailed Stage 2C contract proposed by Section 12. When implementation
-  changes, update the ledger; when architecture changes, update the normative
-  section and record the decision explicitly.
+- 第 0-10 节定义问题、authority contract、provider 边界、迁移规则与验收条件。
+- 第 11.1 节是规范性交付计划；第 11.2 节是非规范性的执行台账，只记录某个日期的
+  `main` 已证明什么，不以进展记录静默修改合同；第 11.3 节列出剩余验证与晋升工作。
+- 第 12 节记录尚未解决的 owner 决策。实现不得把“拟议答案”当作已经批准。
+- 附录 A/B 保留证据与决策历史；附录 C 承载第 12 节提出的 Stage 2C 详细合同。实现
+  变化更新台账；架构变化修改规范正文，并显式记录决策。
 
-RFC maturity and delivery maturity are independent. A shipped experiment does
-not accept this RFC, and a dated status entry never overrides a normative
-invariant. If the execution ledger becomes difficult to review, it moves to a
-companion `*-execution.md` document without dropping its evidence links.
+RFC maturity 与 delivery maturity 相互独立：实验已合入不代表 RFC 已 accepted，带日期
+的状态段也不能覆盖规范性不变量。执行台账过长、影响 review 时，可整体迁移到配套的
+`*-execution.md`，但不得丢失证据链接。
 
 ---
 
-## 0. An Example to Help Everyone Understand
+## 0. 一个用来帮助大家理解的例子
 
-Example 1: a walkthrough of a real machine -> human -> machine handoff, and why
-it wastes time
+例 1：模拟一次真实的机器 -> 人 -> 机器 handoff，为什么浪费时间
 
-Suppose my agent on the devbox finishes a Rust PR, and the agent on my laptop is
-responsible for review. The handoff looks like this:
+比如，我在开发机上的 agent 做完了一个 Rust PR，笔记本上的 agent 负责 review。
+整个交接过程按时间顺序是这样的：
 
-- **T0**: the devbox agent finishes the change and opens the PR;
-- **T1**: the code is delivered at a pinned head SHA. Git already handles this,
-  so moving the code is not the problem;
-- **T2**: I manually send the PR, source task, and review instructions to the
-  laptop agent so that it knows there is work to do;
-- **T3**: the laptop agent takes the work, but if its response is lost, I can
-  only infer later from its behavior whether the claim actually succeeded.
+- **T0**：开发机 agent 完成修改并创建 PR；
+- **T1**：代码通过固定的 head SHA 交付。这一步由 Git 完成，所以代码传递本身
+  不是问题；
+- **T2**：我手工把 PR、源任务和 review 要求发给笔记本上的 agent，告诉它有新活；
+- **T3**：笔记本 agent 接单，但如果响应刚好丢失，我只能从它后来的行为反推它
+  是否真的认领成功。
 
-T2 and T3 are where the time disappears. One machine has already finished, but
-the next machine is still waiting for a person to relay the work. Even after it
-takes the job, there is no proof that can be recovered after a crash. A faster
-harness or model cannot make up for the hours when the human is away.
+真正浪费时间的是 T2 和 T3：机器已经把工作做完了，下一台机器却还在等人转发；
+即使已经接单，也没有一张可以在崩溃后重新取回的凭证。Harness 再快、模型推理再
+快，也补不回人离开电脑以后这段空等。
 
-The full need clearly includes both "tell the next machine" and "prove that it
-really took the work." The first RFC should not swallow messaging, scheduling,
-quota, run history, and every LoopX file at once. This version starts with the
-hardest small piece: when the laptop claims the review todo, only one endpoint
-may win, and that winner must be able to replay its original receipt. Delivery
-and wake-up remain with the
-[`Agent IM, LoopX, And OpenViking Collaboration v0`](./agent-im-openviking-collaboration-v0.md)
-delivery plane.
+完整需求显然同时包含“怎么通知下一台机器”和“怎么确认它真的接住了”。但第一版
+RFC 不应该一口吞掉消息、调度、配额、run history 和所有 LoopX 文件。本版先把最
+硬的一段做对：笔记本认领 review todo 时，只有一个端能成功，并且成功后拿到一张
+可重放的原始回执。通知和唤醒仍由
+[`Agent IM、LoopX 与 OpenViking 协作 v0`](./agent-im-openviking-collaboration-v0.md)
+里的 delivery plane 负责。
 
-## 1. What This RFC Chooses
+## 1. 这份 RFC 最后选择了什么
 
-Think of the authority as the only bookkeeper. Endpoints never edit the ledger
-directly; they submit a request saying, "I want to claim this work." The
-bookkeeper checks the target todo, identity, named dependencies, and gates. If
-the request passes, the claim, lease, and receipt are written together. If it
-fails, the requester gets an explicit reason.
+把 authority 想象成唯一的记账员。各端不直接改账，只提交“我要认领这项工作”的
+申请。记账员检查目标 todo、身份、命名依赖和 gate；通过就把认领、lease 和回执
+一起记下，不通过就明确告诉申请人原因。
 
-This time the bookkeeper gets one small ledger. We are not moving every LoopX
-file into a remote store, and we are not creating three competing semantic
-authorities:
+这次只给记账员一本很小的账，而不是把 LoopX 的所有文件都搬进远端，也不是建立
+三个互相竞争的语义权威：
 
-1. one goal that explicitly opts into shared mode has one **canonical
-   coordination aggregate**;
-2. each successful operation's state transition and original receipt land in
-   the **same compare-and-set (CAS)**;
-3. the LoopX authority makes decisions, while file, NoKV, or PostgreSQL
-   providers only persist reviewed transactions reliably;
-4. run history, status, quota, scheduler state, host sessions, and evidence
-   bodies stay with their existing owners instead of entering this ledger.
+1. 一个显式启用共享模式的 Goal，只有一份 **canonical coordination aggregate**；
+2. 每条成功 operation 的状态变化和原始 receipt 必须在**同一次 CAS**里落账；
+3. LoopX authority 负责判断，file、NoKV 或 PostgreSQL provider 只负责可靠持久化
+   经过评审的 transaction；
+4. run history、status、quota、scheduler、host session 和 evidence body 继续由各自的
+   owner 管理，不塞进这本协调账。
 
-NoKV and PostgreSQL are optional providers behind the bookkeeper. Agents do not
-connect directly to either provider for controlled writes, and neither provider
-becomes the LoopX control-plane authority. The file provider is the first
-deterministic/parity backend; the current local file-based control plane remains
-the default authority path until a separately reviewed authority-source
-promotion.
+NoKV 与 PostgreSQL 是记账员身后的可选 provider。Agent 不会为受控写入直接连接
+任一 provider，两者也都不会因此变成 LoopX 的控制面权威。file provider 是第一
+个 deterministic/parity backend；在另一次经过评审的权威源切换之前，当前本地
+file-based control plane 仍是默认 authority path。
 
 ```text
 Agent client
@@ -141,253 +116,214 @@ provider-neutral store contract
    file         NoKV       PostgreSQL
 ```
 
-The invariant is one semantic writer regardless of deployment. A shared
-service may host the LoopX authority together with authentication, tenancy,
-audit, and a PostgreSQL or NoKV provider. Those are deployment concerns: an
-Agent still calls LoopX APIs and cannot bypass the authority by writing tables,
-documents, or files directly.
+无论如何部署，都只能有一个语义写入者。shared service 可以共同托管 LoopX
+authority、认证、租户、审计，以及 PostgreSQL 或 NoKV provider；这些是部署问题。
+Agent 仍只调用 LoopX API，不能通过直接写表、document 或 file 绕过 authority。
 
-The first runnable slice began with one command, `claim_work`. For an existing
-eligible todo, it records the soft claim, lease/fence, and receipt together.
-Stage 3 extends that reference contract with renew, release, reclaim, and
-completion while keeping the modules coverage-only. The initial slice answers
-the two questions most likely to cause an incident—who wins when two endpoints
-claim at once, and how a lost response recovers its original receipt.
+第一个能跑的切片从 `claim_work` 开始：对一个已经存在且可执行的 todo，同时写入
+soft claim、lease/fence 和 receipt。Stage 3 在保持模块 coverage-only 的前提下，
+把参考合同扩展到 renew、release、reclaim 与 completion。初始切片先回答两件最容易
+出事故的事——多人同时抢单时谁赢，以及响应丢失后怎样找回原回执。
 
-The contention unit is `(goal_id, todo_id)` plus the preconditions actually
-referenced by that todo, not the whole goal. Two endpoints claiming the same
-todo yield one winner. Two endpoints claiming independent todos under one goal,
-with unchanged target-scoped authorization, dependency, and gate facts, should
-both succeed even if their first writes compete for the same aggregate CAS. The
-authority reloads, revalidates, and retries internally instead of exposing an
-unrelated provider-head advance as a domain conflict. This preserves the
-todo-level concurrency shape in LoopX's current public contract in
-[`architecture.md`](../../architecture.md).
+这里的争用单元是 `(goal_id, todo_id)` 及该 todo 实际引用的 precondition，不是整个
+Goal。两个端抢同一个 todo 时只能一胜；两个端认领同一 Goal 下彼此独立、目标范围
+内的 authorization、dependency 和 gate 均未变化的 todo 时，即使底层先后竞争同一
+个 aggregate CAS，authority 也应 reload、重验并在内部完成重试，而不是把 provider
+head 前进暴露成业务冲突。这与 LoopX 当前公开
+[`architecture.md`](../../architecture.md) 中 todo-level 的并发形状保持一致。
 
-Here is the failure sequence that matters most. Operation A succeeds with lease
-`L1`, epoch `7`, but its response is lost. Operation B then advances another
-independent todo in the same goal; B does not take over A's todo. When A
-restarts and retries the same request, it must recover its original receipt
-field for field. "This was already applied" plus B's current revision is not
-enough: without `L1`, epoch `7`, and its expiry, A still cannot prove that it
-was authorized to do the work.
+举一个最关键的失败序列：operation A 成功拿到 lease `L1`、epoch `7`，但响应丢了；
+随后同一 Goal 里另一个独立 todo 的 operation B 又把账本推进了一页；B 没有接管
+A 的 todo。A 重启后再次提交同一申请，必须逐字段取回自己当时的原始 receipt。
+只告诉 A “这笔账以前记过”以及 B 的当前版本不够，因为没有 `L1`、epoch `7` 和
+expiry，A 仍然无法证明自己获准执行过这项工作。
 
-### 1.1 The durable abstraction: storage, semantic authority, and reconciliation
+### 1.1 稳定抽象：存储面、语义权威与持续协调
 
-The highest-value boundary is not "the LoopX server" versus "the NoKV server"
-as two competing databases. It is three separately owned layers that may be
-co-deployed while preserving different correctness contracts:
+这里最高价值的边界，不是把“LoopX Server”和“NoKV Server”理解成两个彼此竞争的
+数据库，而是三个拥有不同正确性合同、可以共同部署但必须分别归属的层次：
 
-| Layer | Owns | Must not own |
+| 层次 | 负责什么 | 绝不能负责什么 |
 | --- | --- | --- |
-| Storage plane | Durable bytes and artifacts, provider generation CAS, snapshots, and provider recovery | Goal/todo meaning, actor eligibility, leases, or authority receipts |
-| Semantic authority | Normalized commands, target-scoped preconditions, claims, lease epochs, fencing, revisions, and original receipts | Raw artifact bodies, provider placement, or background scheduling state |
-| Reconciliation layer | Observation, expired-lease recovery, wake-request emission, and continuous Supervisor decisions through the same command contract | Direct head mutation, provider bypass, or a second source of coordination truth |
+| 存储面 | 耐久字节与 artifact、provider generation CAS、snapshot 与 provider recovery | Goal/todo 语义、actor eligibility、lease 或 authority receipt |
+| 语义权威 | normalized command、目标范围 precondition、claim、lease epoch、fencing、revision 与原始 receipt | raw artifact body、provider placement 或后台调度状态 |
+| 持续协调层 | 通过同一 command contract 完成观察、过期 lease 恢复、wake request 与持续 Supervisor 决策 | 直接改写 head、绕过 provider 边界，或形成第二个 coordination 真相源 |
 
-The built-in file backend is the first parity implementation; NoKV is the
-initial shared-store candidate; PostgreSQL is the planned service-provider
-profile. Each must pass the staged qualification below. The LoopX increment is
-the semantic authority that turns an opaque provider transaction into a trusted
-`claim_work` result and, later, into recoverable execution ownership.
-The reconciliation layer is a client of that authority, not another writer: a
-Supervisor observes projections and issues typed commands such as reclaim or
-requests a delivery-plane wake, while its scan cursor and scheduling state
-remain outside the coordination head. The delivery plane still owns transport
-and endpoint reachability; a delivered wake never proves an authority command
-committed.
+内置 file backend 是第一个 parity 实现；NoKV 是最初的 shared-store 候选；
+PostgreSQL 是规划中的 service-provider profile。三者都必须通过下文的分阶段验证。
+LoopX 的增量是语义权威：它把 opaque provider transaction 变成可信的 `claim_work`
+结果，并在后续扩展成可恢复的执行权。持续协调层只是 authority 的 client，不是另
+一个 writer：Supervisor 观察 projection，通过 typed command 发起 reclaim，或请求
+delivery plane 执行 wake；它自己的 scan cursor 与调度状态继续留在 coordination
+head 之外。Transport 与 endpoint reachability 仍由 delivery plane 负责；wake 已送达
+永远不能证明 authority command 已提交。
 
-The same NoKV deployment may serve two intentionally separate paths:
+同一套 NoKV deployment 可以服务两条刻意分开的路径：
 
-- the **coordination path** stores only the canonical head and is writable only
-  through authority-owned credentials;
-- the **artifact path** may accept scoped checkpoint or evidence publication
-  from a runtime, but only an opaque pointer, digest, and privacy class enter a
-  reviewed coordination transition.
+- **coordination path** 只保存 canonical head，并且只有 authority 持有写 credential；
+- **artifact path** 可以允许 runtime 在受限 scope 内发布 checkpoint 或 evidence，
+  但只有 opaque pointer、digest 与 privacy class 可以进入经 review 的 coordination
+  transition。
 
-A recoverable workflow publishes an immutable checkpoint or evidence artifact
-first, then commits its pointer with the relevant coordination transition.
-Failure before the second step leaves an unreferenced artifact for independent
-retention or collection; it must not leave the head pointing at an object that
-was never durably published. Sharing a physical provider therefore does not
-merge the two ownership contracts or require a cross-domain transaction.
+可恢复工作流先发布 immutable checkpoint 或 evidence artifact，再在相关 coordination
+transition 中提交它的 pointer。若第二步之前失败，只会留下由独立 retention 或
+collection 处理的无引用 artifact；绝不能让 head 指向从未耐久发布的对象。因此，
+共享同一个物理 provider 不会合并两套 ownership contract，也不要求跨领域事务。
 
-Physical co-location is allowed. One deployment bundle may start a NoKV or
-PostgreSQL provider, a LoopX authority endpoint, and a Supervisor worker. Here,
-"separate" means separately owned contracts and credentials; it does not
-require a separate repository, process, binary, or license in v0. An embedded
-authority is sufficient for trusted local qualification. A shared deployment
-needs an online authority boundary so that untrusted or stale clients cannot
-publish a forged coordination head even when they legitimately hold scoped
-artifact credentials.
+物理上允许共同部署。一套 deployment bundle 可以同时启动 NoKV 或 PostgreSQL
+provider、LoopX authority endpoint 和 Supervisor worker。这里的“分开”是指 contract 与
+credential 分别归属；v0 不要求它们必须拆成不同仓库、进程、binary 或 license。
+可信本地验证可以使用 embedded authority。共享部署则需要在线 authority boundary，
+确保不可信或过期 client 即使合法持有受限 artifact credential，也无法发布伪造的
+coordination head。
 
-### 1.2 Capability horizon and deployable product boundary
+### 1.2 能力展望与可部署产品边界
 
-The layers above create a staged capability horizon without widening the v0
-ledger:
+上述分层在不扩大 v0 ledger 的前提下形成了分阶段能力展望：
 
-| Horizon | Added capability | Proof required before promotion |
+| 阶段 | 新增能力 | promotion 前必须证明什么 |
 | --- | --- | --- |
-| Deterministic shared coordination | Provider-neutral authority, state-plus-receipt CAS, replay, and target-scoped rebase | File-backed conformance and the P0 checks in Section 10 |
-| Recoverable execution ownership | Renew, release, expired-lease reclaim, stale-fence rejection, and atomic completion with an accepted continuation/evidence pointer | Crash and clock-boundary tests showing that a superseded executor cannot write back |
-| Continuous reconciliation | Supervisor observation, reclaim, delivery-plane wake requests, and remote-resume orchestration through authority commands | Restart-safe reconciliation with no direct provider writes or in-memory correctness dependency |
-| Service-grade shared control plane | Authenticated principals, tenant-to-goal isolation, audit, bounded capacity, observability, service recovery, and eventually HA | An explicit deployment and migration contract with no authority bypass or silent local fallback |
+| 确定性共享协调 | provider-neutral authority、state-plus-receipt CAS、replay 与目标范围 rebase | file-backed conformance 与第 10 节的 P0 检查 |
+| 可恢复执行权 | renew、release、过期 lease reclaim、stale-fence rejection，以及带 continuation/evidence pointer 的原子 completion | crash 与 clock-boundary 测试证明被替代 executor 无法 write back |
+| 持续协调 | Supervisor observation、reclaim、delivery-plane wake request，以及通过 authority command 编排 remote resume | restart-safe reconciliation，且没有直接 provider write 或内存正确性依赖 |
+| 服务级共享控制面 | authenticated principal、tenant-to-goal 隔离、audit、有界容量、observability、service recovery，以及最终的 HA | 显式 deployment 与 migration contract，且不存在 authority bypass 或静默本地 fallback |
 
-This horizon does not move quota accounting, run history, raw evidence,
-delivery state, or Supervisor runtime state into the coordination aggregate.
-Those capabilities keep the owners and ledgers listed in Section 3 and connect
-through typed commands, projections, or opaque pointers.
+这份能力展望不会把 quota accounting、run history、raw evidence、delivery state 或
+Supervisor runtime state 搬进 coordination aggregate。这些能力继续由第 3 节所列的
+owner 与 ledger 管理，通过 typed command、projection 或 opaque pointer 连接。
 
-A thin network wrapper around the Apache coordination core is not by itself a
-new product boundary. A separately distributed service becomes meaningful only
-when it owns the network trust boundary and material authority/reconciliation
-capabilities such as authentication, continuous supervision, remote recovery,
-migration, audit, multi-tenancy, or HA. If the project later creates a
-separately licensed server distribution, that boundary should follow this
-deployable semantic-authority and reconciliation surface, not the NoKV adapter
-or provider-neutral core. This RFC neither requires a repository split nor
-selects separate license terms; the current policy remains
-[`LoopX Licensing`](../../project/licensing.md).
+给 Apache coordination core 套一层很薄的网络 wrapper，本身不足以形成新的产品边界。
+只有当一个独立交付的服务真正拥有网络信任边界，以及 authentication、持续监督、
+远程恢复、migration、audit、multi-tenancy 或 HA 等实质 authority/reconciliation
+能力时，独立发行才有意义。若项目将来创建单独授权的 server distribution，它的
+边界应沿着这一可部署的语义权威与持续协调 surface 切分，而不是沿 NoKV adapter 或
+provider-neutral core 切分。本 RFC 既不要求拆仓，也不选择独立 license；当前政策
+仍以 [`LoopX Licensing`](../../project/licensing.md) 为准。
 
-### 1.3 Prospective license path by distribution boundary
+### 1.3 按发行边界演进许可证的候选路径
 
-This subsection is non-normative and does not change the license of any current
-LoopX source or release. It records the boundary that a future license RFC
-should evaluate if the service-grade horizon becomes a separately shipped
-product.
+本小节是非规范性说明，不改变任何当前 LoopX 源码或已发布版本的许可证。它记录的
+是：若服务级能力未来成为独立交付产品，后续 license RFC 应沿什么边界评估。
 
-| Distribution boundary | Delivery horizon | Recommended path |
+| 发行边界 | 交付阶段 | 推荐路径 |
 | --- | --- | --- |
-| RFCs, schemas, typed commands, receipts, provider-neutral decisions, store contracts/codecs, client SDKs, conformance fixtures, and examples | Stages 1-4 | Remain in the Apache-2.0 open core so runtimes and providers can implement one coordination contract without adopting a server distribution |
-| Embedded/local authority, file parity backend, and shared-store adapters for NoKV or PostgreSQL | Stages 1-4 | Remain Apache-2.0; an adapter does not acquire LoopX semantic authority, and the underlying provider keeps its own license |
-| Test-only shadowing, canary, migration fixtures, and authority-source promotion proof | Stages 3-4 | Remain Apache-2.0 qualification material; evidence that a deployment is correct is not by itself a separately licensed product |
-| Independently versioned shared-authority server that owns authentication, tenant isolation, audit, durable receipt service, migration/promotion, capacity controls, recovery, and HA | Stage 5 | May be evaluated for AGPL-3.0 in a separate license RFC once this is more than a thin wrapper around the Apache core |
-| Persistent Supervisor/reconciliation worker shipped as part of that server distribution | Stage 5 | May follow the server's AGPL-3.0 candidate terms when it owns restart-safe observation, reclaim, remote-resume orchestration, and wake requests through authority commands |
-| Separately delivered managed operations or enterprise-only modules | After a service boundary exists | May use separate commercial terms when they are not included in the Apache or AGPL distribution and their dependency boundary is explicit |
+| RFC、schema、typed command、receipt、provider-neutral decision、store contract/codec、client SDK、conformance fixture 与示例 | Stage 1-4 | 继续属于 Apache-2.0 open core，让 runtime 与 provider 无需采用 server distribution 也能实现同一协调合同 |
+| embedded/local authority、file parity backend，以及 NoKV/PostgreSQL shared-store adapter | Stage 1-4 | 继续使用 Apache-2.0；adapter 不会取得 LoopX 语义权威，底层 provider 继续遵守自身许可证 |
+| TEST ONLY shadow、canary、迁移 fixture 与 authority-source promotion proof | Stage 3-4 | 继续作为 Apache-2.0 资格验证材料；证明某个 deployment 正确，并不会自动形成独立授权的产品 |
+| 独立版本化、真正拥有认证、租户隔离、审计、耐久回执服务、迁移/promotion、容量治理、恢复与 HA 的 shared-authority server | Stage 5 | 当它已不再只是 Apache core 的薄 wrapper 时，可以通过独立 license RFC 评估 AGPL-3.0 |
+| 随该 server distribution 交付的 Persistent Supervisor/reconciliation worker | Stage 5 | 当它真正拥有 restart-safe observation、reclaim、remote-resume 编排与经 authority command 发出的 wake request 时，可以跟随 server 的 AGPL-3.0 候选条款 |
+| 独立交付的 managed operations 或 enterprise-only module | 形成服务边界之后 | 若它们不包含在 Apache 或 AGPL distribution 内，且依赖边界明确，可以采用独立商业条款 |
 
-An illustrative package boundary, if these distributions are later created,
-is:
+若将来真的创建这些发行物，示意性的 package 边界可以是：
 
 ```text
 loopx/control_plane/coordination/             Apache-2.0
 packages/loopx-authority-client/              Apache-2.0
 packages/loopx-authority-provider-*/          Apache-2.0
 packages/loopx-shared-authority-server/       AGPL-3.0 candidate
-packages/loopx-persistent-supervisor/         AGPL-3.0 candidate, or part of the server
+packages/loopx-persistent-supervisor/         AGPL-3.0 candidate，或并入 server
 ```
 
-The names are illustrative rather than a Stage 0 layout requirement. The
-dependency direction is the durable rule: an AGPL server distribution may
-consume Apache contracts, core logic, and providers; Apache artifacts must not
-import, bundle, or require the AGPL server. The NoKV or PostgreSQL server is
-not relicensed by a LoopX adapter, and an adapter must not be used as an
-artificial license boundary.
+这些名称不是 Stage 0 的目录要求。长期不变量是依赖方向：AGPL server distribution
+可以消费 Apache contract、core 与 provider；Apache artifact 不得 import、bundle 或
+依赖 AGPL server。LoopX adapter 不会重许可 NoKV 或 PostgreSQL server，也不应把
+adapter 人为包装成许可证边界。
 
-Any Stage 5 license proposal must satisfy all of these gates before changing
-the current policy:
+任何 Stage 5 许可证提案都必须先满足以下门槛，才能改变当前政策：
 
-1. identify one independently deployable and versioned server artifact;
-2. show that the artifact owns a real network trust and reconciliation
-   boundary rather than only forwarding Apache-core calls;
-3. preserve Apache client, protocol, embedded-mode, provider, and conformance
-   paths for interoperable adoption;
-4. define package metadata, nested license/NOTICE files, SPDX markings, and
-   build checks that prevent cross-license bundling;
-5. decide the inbound contribution policy before accepting contributions to
-   any AGPL component, especially if commercial dual licensing may be needed;
-6. apply any change prospectively through an explicit version boundary without
-   narrowing rights already granted by MIT or Apache releases.
+1. 明确一个可以独立部署、独立版本化的 server artifact；
+2. 证明它拥有真实的网络信任与持续协调边界，而不只是转发 Apache core 调用；
+3. 保留 Apache client、protocol、embedded mode、provider 与 conformance 路径，
+   继续支持互操作采用；
+4. 定义 package metadata、嵌套 LICENSE/NOTICE、SPDX 标记与构建检查，阻止跨许可证
+   artifact 被意外打包；
+5. 在 AGPL 组件接受贡献之前确定 inbound contribution policy，尤其是在未来可能
+   需要商业双授权时；
+6. 通过明确版本边界向前生效，不缩窄已经由 MIT 或 Apache 发布版授予的权利。
 
-The current RFC therefore keeps Stages 1-4 under the repository's Apache-2.0
-policy. Stage 5 creates a decision point, not an automatic license transition.
-No source path becomes AGPL-3.0 merely because it implements a shared-authority
-contract or passes a remote-provider canary.
+因此，本 RFC 继续让 Stage 1-4 遵循仓库的 Apache-2.0 政策。Stage 5 只是形成新的
+决策点，不会自动触发许可证切换。源码不会仅仅因为实现 shared-authority contract
+或通过远端 provider canary 就变成 AGPL-3.0。
 
-## 2. What We Will Do, and What We Will Not
+## 2. 要做的，以及不要做的
 
-**What this version will do**
+**这版要做的**
 
-- give one shared goal an online, provider-neutral coordination authority;
-- make concurrent claims on the same todo resolve to one accepted owner while
-  allowing independent todos to succeed after an internal CAS rebase;
-- bind each operation identity to one normalized request digest and reject the
-  same id when it is reused with different semantics;
-- recover the original receipt after later operations advance the ledger;
-- define one semantic authority boundary and the file, NoKV, and PostgreSQL
-  provider profiles behind it;
-- keep LoopX's default local mode unchanged;
-- say how every existing durable state category joins—or stays outside—this
-  boundary.
+- 为一个共享 Goal 提供在线、provider-neutral 的 coordination authority；
+- 让同一 todo 的并发 claim 只接受一个 owner，同时允许独立 todo 在内部 CAS rebase
+  后分别成功；
+- 把每个 operation identity 绑定到一份 normalized request digest，换一套语义复用
+  同一个 id 时明确拒绝；
+- 即使后续 operation 已推进账本，也能找回原始 receipt；
+- 定义一个语义权威边界，以及位于其后的 file、NoKV、PostgreSQL provider profile；
+- 保持 LoopX 默认本地模式不变；
+- 把现有每一类持久状态该怎么接入说清楚。
 
-**What this version explicitly will not do**
+**这版明确不做的**
 
-- build a generic distributed filesystem or database for all LoopX state;
-- support offline multi-writer merge or offline controlled writes;
-- mix message delivery, wake-up, presence, or an Agent IM protocol into the
-  storage contract;
-- ship production multi-tenant deployment, authentication, HA, or provider
-  failover in the Stage 0 reference slice;
-- move quota, scheduler state, run history, raw evidence, host sessions, or
-  extension-owned ledgers into the coordination head;
-- automatically promote the current event projection or any provider;
-- let an agent or extension bypass the authority and connect to storage.
+- 不给所有 LoopX 状态造一个通用分布式文件系统或数据库；
+- 不做离线多写者 merge，也不允许离线创建受控写；
+- 不把 message delivery、wake-up、presence 或 Agent IM 协议混进存储合同；
+- 不在 Stage 0 参考切片中交付生产级多租户部署、认证、HA 或 provider failover；
+- 不把 quota、scheduler、run history、raw evidence、host session 或 extension ledger
+  搬进 coordination head；
+- 不自动 promotion 当前 event projection 或任一 provider；
+- 不允许 Agent 或 extension 绕过 authority 直连存储。
 
-## 3. What LoopX Stores Today, and How Each Part Connects
+## 3. LoopX 现在有哪些账，各自怎么接入
 
-The owner's key question was that LoopX state already lives across several
-files, and not every durable file belongs in one head. Two machines can both
-have a correct local route; status is computed; quota accounting is an
-append-style ledger. These are different write models.
+Owner 提出的关键问题是：LoopX 现有状态分散在不同文件里，不能看到一个持久化
+文件就把它塞进同一个 head。比如两台机器各自记录的本地路径都是真的；status 是
+算出来的；quota accounting 又是一笔笔追加的账。它们不是同一种写模型。
 
-The table below therefore lays the ledgers out first: who writes each one
-today, how it is written, and where it belongs after shared mode exists. It is
-organized by logical state and field group rather than a fixed file count. One
-physical file may mix several owners, and a new host or extension may add local
-artifacts without changing this RFC.
+所以下表先把这些账摊开：今天谁在写、怎么写，以及进入共享模式后应该归到哪里。
+它按逻辑状态和字段组组织，而不按固定文件数组织；一个物理文件可以混合多个
+owner，新 host 或 extension 也可以新增本地 artifact，而无需修改本 RFC。
 
-Integration classes used below:
+下表采用这些接入类别：
 
-- **shared canonical**: authoritative only after explicit shared-mode opt-in;
-- **derived**: recompute from its named source; never accept lifecycle writes;
-- **synchronized ledger**: replicate or union by stable identity under its own
-  append contract, not through the coordination head;
-- **host-local**: valid only for one host, runtime, or checkout;
-- **independent ledger**: retains its capability or accounting owner;
-- **excluded body**: only a redacted digest or pointer may cross the boundary.
+- **shared canonical**：只有显式启用 shared mode 后才是权威；
+- **derived**：从所命名的 source 重算；永不接受 lifecycle 写入；
+- **synchronized ledger**：依据稳定 identity 和自身 append 合同复制或求并集，
+  不进入 coordination head；
+- **host-local**：只对一个 host、runtime 或 checkout 有效；
+- **independent ledger**：保留其 capability 或 accounting owner；
+- **excluded body**：跨边界时只允许 redacted digest 或 pointer。
 
-| Logical state / current surface | Current owner and write model | v0 integration strategy |
+| 逻辑状态 / 当前 surface | 当前 owner 与写模型 | v0 接入策略 |
 | --- | --- | --- |
-| Todo lifecycle, soft claim, dependency, and gate fields in `ACTIVE_GOAL_STATE.md` | Markdown active state remains the current source of truth. Todo commands use a local file lock and whole-document replacement. A state-event projection is used only when an event log already exists. | Only the normalized fields required to validate the P0 commands become **shared canonical** after opt-in. Markdown remains canonical in default mode and becomes a local projection for migrated fields in shared mode. Private prose stays excluded. |
-| Optional hard task leases under `goals/<goal>/task-leases/` | Per-todo JSON is atomically replaced under a goal-local lock; release retains an inactive terminal record so version and `lease_epoch` cannot ABA across re-acquire. Lease effectiveness also reads todo status, soft claim, exclusions, and registered agents. | Fold claim, lease, terminal generation, and fence into the same shared aggregate and authority revision. Do not keep an independently writable lease file in shared mode. |
-| Applied-operation receipts | LoopX has scoped receipt precedents, including Turn journals and heartbeat receipts, but no durable shared-goal operation-to-receipt index. | Add the replayable receipt index as **shared canonical**, committed in the same CAS as the state transition. |
-| Project-registry logical identity, agent profiles, grants, and policy | Project registry is local configuration written as a JSON replacement. These fields are mixed with routes and private references. | The authority consumes an explicitly versioned compact authorization projection or digest. The whole registry is not stored in the coordination head, and registry mutation is not a P0 command. |
-| Project/global registry routes: `source_registry`, repo checkout, state file, runtime root | The global registry is a synchronized host-local route projection and records absolute local paths. | **Host-local**. Share stable goal/repository identity where needed, never route paths. |
-| Candidate state events in `events.jsonl` | The current migration bridge keeps Markdown authoritative. Event append uses local locking; multi-event append is not a transaction. | Read-only shadow/canary input. This RFC does not promote it or use it to prove atomic completion. |
-| Run JSON/Markdown and raw evidence bodies | Run writers reserve local artifact names and then write detailed records. Content and paths may be private. | **Excluded body** or external artifact-store object. The aggregate may carry only an opaque pointer, digest, privacy class, and exact code revision when a later command requires them. |
-| `runs/index.jsonl` run history | A mixed append index references run artifacts and may contain absolute paths. It also carries several classifications, including quota accounting rows. | A future **synchronized ledger** needs stable identities, deduplication, and redaction. It is not part of the coordination head. |
-| `rollout-event-log.jsonl` | A mixed public-safe diagnostic stream. Core CLI rollout append is intentionally best-effort and happens after the primary command; ordinary todo events are not keyed by the controlled operation identity. | **Derived** observability projection. A failed rollout append cannot invalidate or prove a coordination commit. |
-| Status and attention, including `status-projection-cache/*.json` | Status is derived from registry, active state, run history, leases, and other inputs. Its optional cache is a replaceable host-local snapshot whose key includes local route inputs. | **Derived**; cache remains **host-local** and may be discarded. |
-| Quota policy | Local policy is configured in registry fields. | Configuration input outside the head. A receipt may reference the policy revision used, but the coordination provider does not own policy. |
-| Quota accounting (`quota_slot_spent` / `quota_slot_voided`) | Detailed JSON/Markdown plus `runs/index.jsonl` rows form an append-style accounting history. Current rows have no shared operation identity or cross-artifact transaction. | **Independent ledger**. A distributed implementation needs idempotent debit/void identities and its own retention contract. |
-| Quota enforcement and `should-run` decisions | Computed from policy, todo/status projections, run history, scheduler context, and actor scope. A heartbeat receipt is a specialized rollout use. | **Derived decision**. If a future global budget gates claims, it should issue a separate reservation/grant receipt; the head may reference that receipt but must not absorb the quota ledger. |
-| Scheduler state, liveness, host backoff, and RRULE observations | Per-goal, per-agent, per-surface JSON reflects the host that owns the scheduler. | **Host-local**. Never resolve two valid host observations by overwriting one global value. |
-| Turn journals, `turn-sessions/`, and Pi `.loopx/pi/` bindings | Runtime recovery and session bindings are written for one host/session and may contain local paths or task bodies. | **Host-local**. Turn journals are a receipt-design precedent, not shared coordination state. |
-| Supervisor, domain-state, and extension runtime files | Each capability defines its own schema, privacy, append/upsert rules, and effect receipts. | **Independent ledger** or **host-local**, according to that capability contract. No generic import into the head. |
+| `ACTIVE_GOAL_STATE.md` 中的 todo lifecycle、soft claim、dependency 与 gate 字段 | Markdown active state 仍是当前真相源。Todo 命令在本地文件锁下整文替换；仅当 event log 已存在时才使用 state-event projection。 | 启用 shared mode 后，只有校验 P0 命令所需的 normalized fields 成为 **shared canonical**。默认模式下 Markdown 继续 canonical；shared mode 下，它对已迁移字段变为本地 projection。私有 prose 排除。 |
+| `goals/<goal>/task-leases/` 下的可选 hard task lease | 每个 todo 的 JSON 在 goal-local lock 下原子替换；release 保留 inactive terminal record，避免 re-acquire 时 version 与 `lease_epoch` 发生 ABA。Lease 是否有效还读取 todo status、soft claim、exclusion 和 registered agents。 | 把 claim、lease、terminal generation 与 fence 折入同一个 shared aggregate 和 authority revision。Shared mode 下不保留独立可写 lease file。 |
+| 已应用 operation receipt | LoopX 已有 scoped receipt 先例，包括 Turn journal 与 heartbeat receipt，但没有耐久的 shared-goal operation-to-receipt index。 | 新增可重放 receipt index 作为 **shared canonical**；它与 state transition 在同一次 CAS 中提交。 |
+| Project registry 的逻辑 identity、agent profile、grant 与 policy | Project registry 是本地配置，以 JSON replacement 写入。这些字段与 route、私有 reference 混在一起。 | Authority 消费显式版本化的紧凑 authorization projection 或 digest。整个 registry 不进入 coordination head，registry mutation 也不是 P0 命令。 |
+| Project/global registry route：`source_registry`、repo checkout、state file、runtime root | Global registry 是同步得到的 host-local route projection，并记录本地绝对路径。 | **Host-local**。需要时共享稳定 Goal/repository identity，绝不共享 route path。 |
+| `events.jsonl` 中的候选 state event | 当前 migration bridge 仍以 Markdown 为权威。Event append 使用本地锁；多 event append 不是 transaction。 | 只作 read-only shadow/canary input。本 RFC 不 promotion 它，也不用它证明 atomic completion。 |
+| Run JSON/Markdown 与 raw evidence body | Run writer 预留本地 artifact name，再写入详细 record。内容和 path 可能是私有的。 | **Excluded body** 或外部 artifact-store object。只有在后续命令需要时，aggregate 才可携带 opaque pointer、digest、privacy class 与精确 code revision。 |
+| `runs/index.jsonl` run history | 混合 append index，引用 run artifact，可能包含绝对路径；也携带包括 quota accounting row 在内的多种分类。 | 未来的 **synchronized ledger** 需要稳定 identity、deduplication 与 redaction。它不进入 coordination head。 |
+| `rollout-event-log.jsonl` | 混合的 public-safe diagnostic stream。核心 CLI rollout append 刻意 best-effort，发生在主命令之后；普通 todo event 不按受控 operation identity 建键。 | **Derived** observability projection。Rollout append 失败不能使 coordination commit 失效，也不能证明 commit。 |
+| Status 与 attention，包括 `status-projection-cache/*.json` | Status 从 registry、active state、run history、lease 等输入派生。可选 cache 是可替换的 host-local snapshot，其 key 包含本地 route input。 | **Derived**；cache 仍是 **host-local**，可随时丢弃。 |
+| Quota policy | 本地 policy 配置在 registry 字段中。 | Head 之外的 configuration input。Receipt 可以引用本次采用的 policy revision，但 coordination provider 不拥有 policy。 |
+| Quota accounting（`quota_slot_spent` / `quota_slot_voided`） | 详细 JSON/Markdown 加 `runs/index.jsonl` row 形成 append-style accounting history。当前 row 没有 shared operation identity 或跨 artifact transaction。 | **Independent ledger**。分布式实现需要 idempotent debit/void identity 与独立 retention contract。 |
+| Quota enforcement 与 `should-run` decision | 从 policy、todo/status projection、run history、scheduler context 和 actor scope 计算。Heartbeat receipt 是特殊 rollout 用法。 | **Derived decision**。若未来全局 budget 要 gate claim，应签发独立 reservation/grant receipt；head 可引用它，但不能吸收 quota ledger。 |
+| Scheduler state、liveness、host backoff 与 RRULE observation | Per-goal、per-agent、per-surface JSON 反映拥有该 scheduler 的 host。 | **Host-local**。不能把两个都有效的 host observation 当作冲突并用一个 global value 覆盖。 |
+| Turn journal、`turn-sessions/` 与 Pi `.loopx/pi/` binding | Runtime recovery 与 session binding 为一个 host/session 写入，可能包含本地 path 或 task body。 | **Host-local**。Turn journal 是 receipt 设计先例，不是 shared coordination state。 |
+| Supervisor、domain-state 与 extension runtime file | 每个 capability 定义自己的 schema、privacy、append/upsert rule 与 effect receipt。 | 依 capability contract 保持为 **independent ledger** 或 **host-local**。不得通用导入 head。 |
 
-Source anchors for the classifications include
-[`architecture.md`](../../architecture.md),
-[`event-store-migration-bridge-v0`](../../reference/protocols/event-store-migration-bridge-v0.md),
-`loopx/control_plane/work_items/task_lease.py`,
-`loopx/cli_rollout.py`,
-`loopx/control_plane/runtime/status_projection_cache.py`,
-`loopx/control_plane/quota/slot_accounting.py`,
-`loopx/global_registry.py`, and the host state in
-`loopx/control_plane/scheduler/state.py`,
-`loopx/control_plane/turn_driver/codex_cli.py`,
-and `loopx/pi_goal_mode/pi-goal-loop-runtime.mjs`.
+上述分类的源码锚点包括
+[`architecture.md`](../../architecture.md)、
+[`event-store-migration-bridge-v0`](../../reference/protocols/event-store-migration-bridge-v0.md)、
+`loopx/control_plane/work_items/task_lease.py`、
+`loopx/cli_rollout.py`、
+`loopx/control_plane/runtime/status_projection_cache.py`、
+`loopx/control_plane/quota/slot_accounting.py`、
+`loopx/global_registry.py`，以及这些 host state：
+`loopx/control_plane/scheduler/state.py`、
+`loopx/control_plane/turn_driver/codex_cli.py` 和
+`loopx/pi_goal_mode/pi-goal-loop-runtime.mjs`。
 
-## 4. What Goes Into This Coordination Ledger
+## 4. 这本协调账里到底放什么
 
-One provider key stores one goal's aggregate (head schema v1). The illustrative shape is:
+一个 provider key 保存一个 Goal 的 aggregate（head schema v1）。以下形状仅作说明：
 
 ```json
 {
@@ -448,43 +384,34 @@ One provider key stores one goal's aggregate (head schema v1). The illustrative 
 }
 ```
 
-The schema contains no raw todo body, transcript, credential, absolute path,
-or raw evidence. It contains only the facts needed to adjudicate the command
-slice and recover its proof. As in current LoopX, a claimed todo remains `open`,
-without inventing a `claimed` lifecycle status that local mode does not have.
-In the target contract, `claimed_by` carries soft ownership and the lease/fence
-carries execution authority. The default `legacy` handoff mode does not honor
-this: when the two records diverge, the markdown claimant wins on the write
-path. A goal that declares `hard_lease` turns the divergence into a typed
-error and requires the key at completion. See Appendix B.
+该 schema 不包含 raw todo body、transcript、credential、绝对路径或 raw evidence。
+它只包含裁决这一命令切片与恢复其凭证所需的事实。与现有 LoopX 一致，claim 后
+todo 仍为 `open`，不会引入一个本地状态机不存在的 `claimed` status。在目标合同里，
+soft ownership 由 `claimed_by` 表示，执行权由 lease/fence 表示；默认的 `legacy`
+交接模式没有做到这一点：两本账分叉时，软认领方在写路径上实际胜出。声明了
+`hard_lease` 的 goal 会把分叉变成类型化错误，并在完成时要求钥匙，详见附录 B。
 
-Each eligibility revision or digest is scoped to the snapshot referenced by the
-target todo: authorization covers only that todo's actor scope, dependency
-covers only its transitive dependency closure, and gate covers only gates that
-actually constrain it. These are not goal-wide revisions under new names. The
-reference slice fixes `write_scopes=[]`. When non-empty scopes are introduced,
-overlap with another active lease is a real cross-todo precondition: an internal
-rebase must revalidate it and reject the claim on overlap.
+这里的 eligibility revision/digest 都是目标 todo 所引用的快照：authorization 只覆盖
+该 todo 的 actor scope，dependency 只覆盖它的传递依赖闭包，gate 只覆盖实际约束
+它的 gate。它们不是换一个名字继续使用 Goal-wide revision。参考切片固定
+`write_scopes=[]`；未来接入非空 write scope 时，与其他 active lease 的 scope overlap
+也是该 claim 的真实跨 todo precondition，必须在内部 rebase 后重验并在冲突时拒绝。
 
-Those target-scoped tokens have a coverage and no-ABA obligation. Any semantic
-change to the target's claim state or lease epoch must advance `todo_revision`.
-Any change to its allowed actors, dependency closure or satisfaction decision,
-or constraining gate set or decision must advance the corresponding revision
-and digest where present. A token must never be reused for a different snapshot.
-If the authority cannot prove this coverage, it must not internally rebase. The
-deterministic reference validates a static bootstrap snapshot; it does not yet
-qualify a dynamic publisher for these projections.
+这些 target-scoped token 还承担 coverage 与 no-ABA 义务。目标 todo 的 claim state
+或 lease epoch 发生任何语义变化，都必须推进 `todo_revision`；allowed actor、依赖
+闭包或满足结论、实际约束它的 gate 集合或结论发生变化，都必须推进对应 revision，
+并在存在 digest 时同时更新 digest。同一个 token 不得复用于不同快照。Authority
+无法证明这些覆盖关系时，不得内部 rebase。Deterministic reference 只验证静态
+bootstrap snapshot，尚未资格化动态 projection publisher。
 
-The original receipt proves that an operation was accepted at one authority
-revision. It does not prove that its lease remains current. A replay response
-therefore returns the field-for-field equivalent `original_receipt` plus
-separately named current observations such as `observed_authority_revision` and
-`authorization_status=active|expired|superseded`.
+原始 receipt 证明某 operation 在某个 authority revision 被接受；它不证明对应
+lease 当前仍有效。因此 replay response 返回逐字段等价的 `original_receipt`，同时
+另行命名当前 observation，例如 `observed_authority_revision` 和
+`authorization_status=active|expired|superseded`。
 
-## 5. How a Command Lands and How a Lost Receipt Comes Back
+## 5. 受控命令怎样落账，崩溃后怎样找回回执
 
-The request envelope uses `operation_id` to avoid collision with existing CLI
-uses of `command_id`:
+Request envelope 使用 `operation_id`，以免与现有 CLI 中 `command_id` 的用法冲突：
 
 ```json
 {
@@ -507,182 +434,148 @@ uses of `command_id`:
 }
 ```
 
-The authority normalizes the complete semantic request and computes
-`request_digest`. Actor, goal, command type, target todo revision, named
-authorization/dependency/gate preconditions, and command parameters are
-covered. Transport retry metadata is not. The goal-wide `authority_revision`
-is not a client domain precondition and is not part of the request digest. A
-caller may carry a previously observed head revision only as transport
-metadata; changing that observation does not create a new semantic operation.
+Authority 规范化完整的语义 request 并计算 `request_digest`。Digest 覆盖 actor、
+Goal、command type、target todo revision、命名的 authorization/dependency/gate
+precondition 与 command parameter；不覆盖 transport retry metadata。Goal-wide
+`authority_revision` 不属于客户端业务前置条件，也不进入 request digest。调用方如需
+携带读到的 head revision，只能把它作为 transport observation；改变该观测不构成
+一条新的语义 operation。
 
-For every request, the authority performs this sequence:
+对每个 request，authority 执行以下顺序：
 
-1. load the aggregate and provider generation;
-2. look up `operation_id` before applying current-state validation;
-3. if the id exists with the same digest, return `already_applied` and the
-   stored original receipt without writing;
-4. if the id exists with a different digest, return typed
-   `operation_identity_mismatch` and do not write;
-5. validate actor scope, target todo revision, named preconditions,
-   eligibility, claim state, and the empty-scope lease rules implemented by this
-   reference slice;
-6. compute the next coordination state and original receipt in the authority;
-7. add both the transition and receipt-index entry to one deterministic
-   envelope and submit one provider CAS;
-8. after a conflict or ambiguous provider response, reload and repeat the
-   receipt lookup before classifying the result;
-9. if no receipt exists and the generation did not advance, fail closed with
-   `provider_outcome_unproved`. If the generation advanced, revalidate the
-   target todo and named preconditions; when those facts are unchanged, retry
-   against the latest head. Receipt absence never proves success: an eventual
-   `applied` requires a new successful CAS; and
-10. after a CAS miss, stop rebasing when relevant facts no longer permit the
-    command. Initial invalid requests still follow ordinary domain validation.
-    An unrelated head advance is not a domain conflict. Exhausting the bounded
-    contention retry budget returns typed `failed` and creates no receipt.
+1. load aggregate 与 provider generation；
+2. 在执行当前状态校验之前查找 `operation_id`；
+3. id 已存在且 digest 相同：返回 `already_applied` 与已存原始 receipt，不写入；
+4. id 已存在但 digest 不同：返回 typed `operation_identity_mismatch`，不写入；
+5. 校验 actor scope、目标 todo revision、命名 precondition、eligibility、claim state
+   与本 reference 切片实现的 empty-scope lease rule；
+6. 在 authority 中计算 next coordination state 与 original receipt；
+7. 把 transition 和 receipt-index entry 一起放进一个确定性 envelope，并提交一次
+   provider CAS；
+8. provider 返回 conflict 或 ambiguous 后，reload，并在分类结果前重新查 receipt；
+9. receipt 不存在且 generation 未前进时，以 `provider_outcome_unproved` fail closed；
+   generation 已前进时，重新校验目标 todo 与命名 precondition，相关事实未变才基于
+   latest head 重试。Receipt 缺失本身绝不证明成功；最终 `applied` 必须来自一笔新的
+   successful CAS；
+10. CAS miss 后，只有相关事实仍允许原命令时才继续 rebase；初始无效请求仍按普通
+    domain validation 拒绝。纯粹的无关 head 前进不会成为业务 conflict；持续
+    contention 耗尽 retry budget 时返回 typed `failed`，且不得创建 receipt。
 
-The API result classes are:
+API result class 如下：
 
-| Result | Meaning |
+| Result | 含义 |
 | --- | --- |
-| `applied` | State and original receipt committed together. |
-| `already_applied` | The same operation and digest committed earlier; the stored original receipt is returned. |
-| `conflict` | No receipt exists for this operation and the target todo or a named precondition is stale. |
-| `rejected` | Identity, eligibility, gate, or command validation failed without a state change. |
-| `failed` | No accepted result can be proved, or unrelated provider contention exhausted the internal retry budget. Retry only under bounded infrastructure policy. |
+| `applied` | State 与原始 receipt 一起提交。 |
+| `already_applied` | 相同 operation 与 digest 早已提交；返回已保存的原始 receipt。 |
+| `conflict` | 此 operation 不存在 receipt，且目标 todo 或命名 precondition 已 stale。 |
+| `rejected` | Identity、eligibility、gate 或命令校验失败，未改变状态。 |
+| `failed` | 无法证明存在 accepted result，或无关 provider contention 耗尽内部 retry budget；仅可依据有界基础设施策略重试。 |
 
-`conflict`, `rejected`, and `failed` are not success proofs and do not receive
-fabricated applied receipts.
+`conflict`、`rejected` 和 `failed` 都不是成功凭证，不得得到伪造的 applied receipt。
 
-### 5.1 The first command: `claim_work`
+### 5.1 第一个命令：`claim_work`
 
-- `claim_work`: in one transition, verify an existing runnable todo, set its
-  claimant, create a lease, mint the next lease epoch, and store the original
-  receipt. Its required fields are `todo_id`, `expected_todo_revision`,
-  `expected_preconditions`, and `lease_ttl_seconds`.
+- `claim_work`：在一个 transition 中校验已有 runnable todo、设置 claimant、创建
+  lease、铸造下一个 lease epoch，并保存原始 receipt。它的必填字段是 `todo_id`、
+  `expected_todo_revision`、`expected_preconditions` 与 `lease_ttl_seconds`。
 
-An accepted claim advances both `authority_revision` and the target
-`todo_revision`. It operates only on a todo installed by explicit
-bootstrap/migration and never creates an unknown todo as a side effect. The
-deterministic reference eligibility input is the compact tuple
-`allowed_agent_ids`, `dependencies_satisfied`, and `gates_open`, bound to the
-named authorization, dependency, and gate revisions and digest.
+Accepted claim 同时推进 `authority_revision` 与目标 `todo_revision`。它只能操作由
+显式 bootstrap/migration 安装的 todo，绝不把未知 todo 作为副作用创建。
+Deterministic reference 的 eligibility input 是紧凑元组 `allowed_agent_ids`、
+`dependencies_satisfied` 与 `gates_open`，并绑定到所命名的 authorization、
+dependency、gate revision 与 digest。
 
-`authority_revision` is the goal-wide commit sequence for accepted commands.
-It serves audit, read-model, and receipt ordering; it is not a shared optimistic
-concurrency precondition for every command. The aggregate still commits
-serially through `provider_generation`. A CAS loser decides whether to rebase
-from its target todo and named preconditions, rather than requiring a caller to
-mint a new operation merely because an independent todo committed first.
+`authority_revision` 是每条 accepted command 的 Goal-wide commit sequence，用于
+审计、read model 和 receipt ordering，不是所有命令共享的 optimistic-concurrency
+前置条件。底层 aggregate 仍以 `provider_generation` 串行提交；CAS loser 必须根据
+自己的 target todo 与命名 precondition 决定是否内部 rebase，而不能仅因另一个独立
+todo 已提交就要求调用方重新发一条 operation。
 
-Unknown command types fail closed. Transfer or delegated assignment,
-arbitrary todo/gate mutation, quota reservation, and external effects still
-require later runtime contracts and qualification. Non-empty write scopes and
-cross-todo scope-overlap rejection likewise require a later command contract
-and qualification. The recoverable-execution verbs below were called Stage 3
-in the historical #3669 implementation sequence. Under the current delivery
-sequence in Section 11, that merged work is part of the Stage 0 reference foundation,
-not the Stage 3 remote-shadow phase in Section 11. Steps 1 through
-4 and 7 through 10 of Section 5 (identity, digest, replay, CAS, reload, rebase,
-budget) apply to every verb unchanged, and only the per-verb preconditions and
-transition (steps 5 and 6) differ.
+未知 command type fail closed。transfer 或 delegated assignment、任意 todo/gate
+mutation、quota reservation 与 external effect 仍需要后续 runtime 合同与
+qualification；非空 write scope 与跨 todo scope-overlap 拒绝同样需要后续 command
+contract 与 qualification。下面的可恢复执行动词在 #3669 历史实施序列中曾称为
+Stage 3；按照第 11 节当前的交付编号，已合入的这部分属于 Stage 0 reference foundation，
+不是第 11 节的 Stage 3 远端 shadow 阶段。第 5 节的步骤 1-4 与 7-10
+（identity、digest、replay、CAS、reload、rebase、budget）对每个动词原样适用，只有
+每动词的前置条件与迁移（步骤 5-6）不同。
 
 ### 5.2 `renew_work`
 
-Required fields: `todo_id`, `expected_todo_revision`, `lease_id`,
-`expected_lease_epoch`, `lease_ttl_seconds`. The caller presents the fence it
-believes it holds; the authority rejects a missing lease, a fence whose
-lease id or epoch differs (typed `stale_lease_fence`), a caller that is not
-the recorded holder (typed `not_lease_holder`), and a lease the authority's
-own clock has already seen expire (typed `lease_not_active`; see Section
-6.4). An accepted renewal extends `expires_at` from the authority clock,
-keeps the lease id and epoch unchanged, and advances both
-`authority_revision` and the target `todo_revision`: the validity interval
-is a revision-covered fact, so a reclaim built on pre-renewal observations
-conflicts instead of surviving the internal rebase.
+必填字段：`todo_id`、`expected_todo_revision`、`lease_id`、
+`expected_lease_epoch`、`lease_ttl_seconds`。调用方出示自认持有的栅栏；缺席
+lease、lease id 或 epoch 不符（typed `stale_lease_fence`）、调用方不是记录的
+持有者（typed `not_lease_holder`）、以及 authority 自己的时钟已判过期的 lease
+（typed `lease_not_active`，见 6.4）均被拒绝。被接受的续约用 authority 时钟延展
+`expires_at`，lease id 与 epoch 不变，并同时推进 `authority_revision` 与目标
+`todo_revision`：有效期是被 revision 覆盖的事实，携带续约前观测的 reclaim 会
+冲突，而不是搭内部 rebase 穿过去。
 
 ### 5.3 `release_work`
 
-Required fields: `todo_id`, `expected_todo_revision`, `lease_id`,
-`expected_lease_epoch`. Release is the holder giving up early, so it is
-valid only while the lease is still active: the claim is cleared under the
-live holder gate and the lease is released in the same transition. The
-accepted transition clears `claimed_by`, deletes the lease entry, and
-advances both revisions, while the todo's `last_lease_epoch` watermark is
-retained unchanged - in the shared aggregate the watermark IS the terminal
-record, so the next claim mints strictly above it and release can never
-A/B/A. An expired lease is not releasable; its resolution belongs to
-reclaim.
+必填字段：`todo_id`、`expected_todo_revision`、`lease_id`、
+`expected_lease_epoch`。release 是持有者提前放弃，因此只在 lease 仍活跃时有效：
+在真实 holder gate 下清除 claim，并在同一迁移里退租。被接受的迁移清空
+`claimed_by`、删除 lease 条目并推进两个 revision，而 todo 的 `last_lease_epoch`
+水位保持不变——在共享聚合里水位就是终结记录，下一次 claim 必须严格高于它铸造，
+release 因此不可能 A/B/A。过期的 lease 不可 release，它的归宿是 reclaim。
 
 ### 5.4 `reclaim_work`
 
-Required fields: `todo_id`, `expected_todo_revision`,
-`expected_preconditions`, `lease_ttl_seconds`. Reclaim is a standing
-delegation to eligible agents: when the authority's own clock has seen the
-recorded lease expired for at least the reclaim grace window (Section 6.4),
-any agent in the target's `allowed_agent_ids` may take the work over. The
-authority adjudicates expiry and synthesizes the delegation; the core then
-enforces everything else through the minimal privileged step - clear the
-stale claim under the delegation, then run the ordinary claim composition,
-so the new lease passes the same holder gate as any first claim. The
-accepted transition mints the next lease epoch, sets the reclaiming agent
-as claimant, advances both revisions and the watermark, and the receipt
-records the superseded owner and epoch. A lease inside its validity or
-grace window is typed `lease_not_reclaimable`; an unclaimed todo is typed
-`todo_not_claimed` (use `claim_work`).
+必填字段：`todo_id`、`expected_todo_revision`、`expected_preconditions`、
+`lease_ttl_seconds`。reclaim 是对合格 agent 的常设委托：当 authority 自己的时钟
+看到记录的 lease 已过期至少一个 reclaim 宽限窗（见 6.4），目标
+`allowed_agent_ids` 里的任何 agent 都可接管。authority 裁决过期并合成委托；核心
+随后经由最小特权步骤执行其余全部规则——在委托下清除陈旧 claim，然后走与首次
+claim 完全相同的组合，新 lease 因此通过同一个真实 holder gate。被接受的迁移铸造
+下一个 lease epoch、把接管者设为 claimant、推进两个 revision 与水位，receipt 记录
+被替代的 owner 与 epoch。仍在有效期或宽限窗内的 lease 是 typed
+`lease_not_reclaimable`；无人认领的 todo 是 typed `todo_not_claimed`（请用
+`claim_work`）。
 
 ### 5.5 `complete_work`
 
-Required fields: `todo_id`, `expected_todo_revision`, `lease_id`,
-`expected_lease_epoch`, `no_followup`, `successor_todo_ids`, `evidence`.
-Completion requires the active lease fence: the core's terminal gate
-verifies the caller is the claimant and the holder of the presented fence,
-and an expired or superseded fence is typed exactly like every other
-stale write. One accepted transition records everything at once: the todo
-becomes durably `done` with an explicit `completion_continuation` derived
-from the recorded fields (`no_followup` | `successor` | `active_goal`,
-with both-set combinations refused exactly like the local write), the
-lease retires, declared successors are created as open, unclaimed,
-revision-zero todos inheriting the parent's execution context, and the
-optional evidence pointer lands on the completed record. Evidence is a
-portability boundary, not free text: the `pointer` must use the
-provider-neutral `artifact://<public|private>/<opaque-artifact-id>` URI
-shape (never a host filesystem path, provider URL, query, or credential),
-the URI privacy namespace must equal the sibling `privacy_class`, the
-`digest` must be a sha256 content digest, and `privacy_class` is the closed
-vocabulary `public | private` - per Section 1.1, never a body. The command
-boundary and head validation enforce this through one shared oracle. The
-persisted record satisfies the local durable-completion
-projection seam field for field, so both worlds read one truth.
+必填字段：`todo_id`、`expected_todo_revision`、`lease_id`、
+`expected_lease_epoch`、`no_followup`、`successor_todo_ids`、`evidence`。完成
+要求活跃的 lease 栅栏：核心的 terminal gate 校验调用方是 claimant 且持有出示的
+栅栏，过期或被替代的栅栏与其他陈旧写入一样 typed 拒绝。一次被接受的迁移同时落
+账所有事实：todo 变为持久 `done` 并携带显式 `completion_continuation`（由记录
+字段导出：`no_followup` | `successor` | `active_goal`，两者同置与本地写入一样被
+拒）、lease 退役、声明的 successor 以 open、无人认领、revision 0 的形态继承父
+项执行上下文被创建，可选的 evidence pointer 落在完成记录上。evidence 是一条可
+携带性边界，不是自由文本：`pointer` 必须使用 provider-neutral 的
+`artifact://<public|private>/<opaque-artifact-id>` URI 形状（绝不是主机文件系统
+路径、provider URL、query 或 credential），URI 内的隐私 namespace 必须与同层
+`privacy_class` 相等，`digest` 是 sha256 内容摘要，`privacy_class` 是闭合词表
+`public | private`——按 §1.1，绝不是 body；命令边界与 head 校验通过同一个共享
+oracle 执行这条合同。持久记录逐字段满足本地
+durable-completion 投影 seam，两个世界读同一份真相。
 
-### 5.6 The stale-fence rule
+### 5.6 stale-fence 规则
 
-Every fence-carrying verb presents `(lease_id, expected_lease_epoch)`. A
-presented fence that does not match the recorded lease is a terminal typed
-rejection - `stale_lease_fence` - and is never retried past by the internal
-rebase: a superseded executor's writes stay rejected no matter how many
-unrelated commands advance the aggregate. This, plus epoch minting on every
-takeover, is the mechanism behind the Stage 3 horizon proof that a
-superseded executor cannot write back.
+每个携带栅栏的动词出示 `(lease_id, expected_lease_epoch)`。与记录的 lease 不符
+的栅栏是终态 typed 拒绝——`stale_lease_fence`——并且绝不被内部 rebase 重试穿越：
+无论多少无关命令推进聚合，被替代执行者的写入始终被拒。这一条加上每次接管都铸
+新 epoch，就是 Stage 3 horizon 证明"被替代的执行者无法写回"的机制。
 
-## 6. Who Decides and Who Stores
+## 6. 谁做判断，谁负责保存
 
-### 6.1 The authority is the bookkeeper
+### 6.1 Authority 是记账员
 
-The LoopX authority owns:
+LoopX authority 负责：
 
-- request normalization and digesting;
-- actor, todo, dependency, gate, and authorization validation;
-- domain-conflict decisions over the target todo and named preconditions, plus
-  bounded CAS rebase after unrelated head advances;
-- the `authority_revision` commit sequence and todo revision transitions;
-- time, lease id, lease epoch, and expiry minting;
-- receipt contents and replay classification;
-- privacy filtering and command-specific invariants.
+- request normalization 与 digest；
+- actor、todo、dependency、gate 与 authorization 校验；
+- 目标 todo 与命名 precondition 的业务冲突判定，以及无关 head 前进后的有界
+  CAS rebase；
+- `authority_revision` commit sequence 与 todo revision transition；
+- 铸造 time、lease id、lease epoch 与 expiry；
+- receipt 内容与 replay classification；
+- privacy filtering 与 command-specific invariant。
 
-### 6.2 The provider keeps the ledger durable
+### 6.2 Provider 只负责把账存稳
 
-The provider contract is intentionally semantic-free:
+Provider contract 刻意不含语义：
 
 ```text
 load()
@@ -698,49 +591,42 @@ compare_and_put(
    | failed
 ```
 
-The provider must serialize the complete aggregate deterministically and
-provide atomic conditional replacement, durable success,
-same-key read-after-write reconciliation, and a typed ambiguous result when it
-cannot prove whether a write committed. It must not parse LoopX commands, mint
-clocks or leases, decide eligibility, or synthesize authority receipts. The
-domain `operation_id` and request-digest replay contract exist only in the
-authority and its atomically stored receipt index; they are not provider API
-arguments. A provider may generate a private publication-attempt identifier,
-but that identifier has no LoopX authority meaning.
+Provider 必须对完整 aggregate 做确定性序列化，并提供 atomic conditional
+replacement、durable success、same-key
+read-after-write reconciliation，并在无法证明写入是否提交时返回 typed ambiguous。
+它不得解析 LoopX command、铸造 clock/lease、裁决 eligibility 或合成 authority
+receipt。领域 `operation_id` 与 request-digest replay 合同只存在于 authority 及其
+原子保存的 receipt index 中，不是 provider API 参数。Provider 可以生成私有的
+publication-attempt identifier，但该 identifier 不具有 LoopX authority 语义。
 
-A provider instance or handle is bound to one `goal_id` and provider key before
-these methods are called; omitting `goal_id` from the verbs does not make the
-key global.
+调用这些方法之前，provider instance 或 handle 已绑定一个 `goal_id` 与 provider
+key；动词中省略 `goal_id` 并不表示该 key 是 global。
 
-The receipt index cannot be a separately published document under this
-two-verb contract. Publishing receipt first can record success for a transition
-that never happened; publishing state first can lose the only proof after a
-crash. Splitting it later requires a provider-neutral multi-record transaction
-or commit-marker protocol and a new reviewed contract.
+在这个二动词合同下，receipt index 不能作为单独 document 发布。先发布 receipt
+可能为从未发生的 transition 记录成功；先发布 state 则可能在 crash 后丢失唯一
+凭证。将来若要拆分，必须有 provider-neutral 的 multi-record transaction 或
+commit-marker protocol，并通过新的合同 review。
 
-#### 6.2.1 Three provider profiles, one authority
+#### 6.2.1 三种 provider profile，一个权威
 
-| Provider profile | Role in this RFC | Promotion requirement |
+| Provider profile | 在本 RFC 中的角色 | 晋升要求 |
 | --- | --- | --- |
-| file | Built-in deterministic and parity backend. Current Markdown, registry JSON, event JSONL, run files, and task-lease files remain canonical until their owning contracts are explicitly promoted. | Prove parity and crash recovery behind the same typed transaction boundary before any file aggregate becomes canonical. |
-| NoKV | Optional shared-store provider for online coordination. It contributes generation CAS and store-lineage primitives, not LoopX semantics. | Close recovery/availability blockers, qualify capacity and HA, then pass shadow parity and the bounded canary. |
-| PostgreSQL | Optional provider behind an authenticated LoopX authority service for multi-Agent or private deployments. PostgreSQL tables and roles are service implementation details. | Implement the same conformance contract, transaction isolation, fencing, idempotency, cursor, audit, and fail-closed network behavior; no direct Agent database access. |
+| file | 内置 deterministic 与 parity backend。当前 Markdown、registry JSON、event JSONL、run file 与 task-lease file 在各自合同显式晋升前仍是 canonical。 | 任一 file aggregate 成为 canonical 前，必须在同一 typed transaction boundary 后证明 parity 与崩溃恢复。 |
+| NoKV | 在线协调的可选共享存储 provider。它提供 generation CAS 与 store-lineage 原语，不提供 LoopX 语义。 | 关闭 recovery/availability 阻塞，验证容量与 HA，再通过 shadow parity 与有界 canary。 |
+| PostgreSQL | 面向 multi-Agent 或私有部署、位于已认证 LoopX authority service 背后的可选 provider。PostgreSQL 表与 role 是 service 实现细节。 | 实现同一 conformance contract、transaction isolation、fencing、幂等、cursor、审计与网络故障 fail-closed；Agent 不得直连数据库。 |
 
-Physical database or cluster co-location does not merge ownership. A deployment
-should isolate LoopX control-plane records from application-domain records with
-separate schemas and roles, and relate them only through opaque identities or
-digests. Provider-specific payloads do not enter the provider-neutral LoopX
-schema.
+物理数据库或 cluster 共同部署不会合并 ownership。部署应以独立 schema 与 role 隔离
+LoopX 控制面记录与应用领域记录，只通过 opaque identity 或 digest 建立关联。
+provider-specific payload 不进入 provider-neutral 的 LoopX schema。
 
-#### 6.2.2 Target store contract after the reference CAS slice
+#### 6.2.2 参考 CAS 切片之后的目标 store contract
 
-The current Stage 2/3 reference implementation deliberately uses the smaller
-`load` / `compare_and_put` document seam above. It proves the lifecycle and
-receipt invariants needed before widening the persistence boundary; it does not
-claim to implement the future service-grade transaction API.
+当前 Stage 2/3 参考实现刻意使用上面的较小 `load` / `compare_and_put` document
+seam。它先证明扩大持久化边界所需的 lifecycle 与 receipt 不变量；它不声称已实现
+未来 service-grade transaction API。
 
-The next LoopX-owned TypeScript boundary should express at least these logical
-operations (exact names and wire shapes remain implementation decisions):
+下一步由 LoopX 持有的 TypeScript boundary 至少应表达以下逻辑操作（精确命名与
+wire shape 仍由实现阶段决定）：
 
 ```text
 load_authority(goal_id)
@@ -759,709 +645,577 @@ read_receipt(operation_id)
 scan_committed(after_cursor, limit)
 ```
 
-This contract owns atomic event/projection/receipt persistence, opaque provider
-revisions, cursors, and durable readback. LoopX still owns operation identity,
-request normalization, legal transitions, claim/lease fencing, Turn admission,
-quota semantics, settlement idempotency, and receipt meaning. In particular,
-an adapter must not reinterpret a provider transaction result as a domain
-decision.
+这份合同负责原子 event/projection/receipt 持久化、opaque provider revision、cursor
+与耐久 readback。LoopX 仍负责 operation identity、request normalization、合法
+transition、claim/lease fencing、Turn admission、quota 语义、settlement 幂等，以及
+receipt 的含义。特别是，adapter 不得把 provider transaction result 重新解释为领域
+判断。
 
-The Stage 1 TypeScript contract makes read failure classes explicit. A proven
-`missing` head is different from `unavailable` storage, while corrupt bytes or
-an invalid lineage are `failed`; only proven absence may authorize bootstrap.
-Commit has the closed storage outcomes `applied | conflict | ambiguous |
-failed`. `ambiguous` means a publish was attempted but durability cannot be
-proved from the response, so the authority must reconcile through
-`read_receipt` and a fresh head read. A provider exception or human-readable
-error string is never itself commit proof.
+Stage 1 的 TypeScript contract 让读取失败类别显式化：已证明的 `missing` head 与
+`unavailable` 存储不同；损坏字节或无效 lineage 是 `failed`；只有证明不存在才允许
+bootstrap。Commit 具有封闭的存储结果 `applied | conflict | ambiguous | failed`。
+`ambiguous` 意味着发布已尝试、但无法从响应证明持久性，因此 authority 必须通过
+`read_receipt` 与一次新的 head 读取进行 reconcile。Provider exception 或人类可读的
+error string 本身永远不是 commit proof。
 
-The three adapters implement those logical verbs through different native
-primitives; the contract does not pretend they are interchangeable databases:
+三个 adapter 通过不同原生原语实现这些逻辑动词；本 contract 不假装它们是可互换的
+数据库：
 
 | Concern | File Stage 1 | NoKV Stage 2A | PostgreSQL Stage 2B |
 | --- | --- | --- | --- |
-| conditional revision | revision chain compared under the cross-process document lock | path `generation` passed to compare-and-publish | per-tenant/per-goal head-row revision, checked under a row lock or conditional update |
-| atomic event/projection/receipt commit | one complete journal document, file fsync, atomic rename, directory fsync | one generation-CAS envelope; receipt and scan data remain embedded until a qualified multi-record protocol exists | one SQL transaction updating the head and inserting ordered event/receipt rows |
-| operation uniqueness | retained journal rejects duplicate `operation_id` | authority receipt index in the CAS envelope | unique `(tenant_id, goal_id, operation_id)` constraint, used as storage fencing rather than a domain decision |
-| cursor | document-local monotonically increasing opaque string | embedded journal cursor, still subject to capacity qualification | per-goal sequence allocated in the same transaction; never a global ordering claim |
-| lineage | durable directory `store-identity` | workbench plus never-reused `workspace_incarnation_id` | service-managed database incarnation bound to the provider deployment |
-| trust boundary | trusted embedded LoopX process | LoopX-authority-owned NoKV credentials | authenticated tenant-scoped LoopX service role; Agents never receive table credentials |
+| 条件 revision | 跨进程文档锁下比较 revision chain | path `generation` 传入 compare-and-publish | 每租户/每 goal 的 head-row revision，在 row lock 或 conditional update 下检查 |
+| 原子 event/projection/receipt commit | 一个完整 journal 文档、文件 fsync、原子 rename、目录 fsync | 一个 generation-CAS envelope；合格 multi-record protocol 存在前，receipt 与 scan 数据保持嵌入 | 一笔 SQL transaction：更新 head 并插入有序 event/receipt row |
+| operation 唯一性 | retained journal 拒绝重复 `operation_id` | CAS envelope 中的 authority receipt index | `(tenant_id, goal_id, operation_id)` unique constraint，作为存储 fencing 而非领域判断 |
+| cursor | 文档内单调递增 opaque string | 内嵌 journal cursor，仍受 capacity qualification 约束 | 同一 transaction 内分配的 per-goal sequence；绝不是全局排序声明 |
+| lineage | durable directory `store-identity` | workbench 加永不复用的 `workspace_incarnation_id` | 服务托管的 database incarnation，绑定 provider deployment |
+| trust boundary | 可信的 embedded LoopX process | LoopX-authority 持有的 NoKV credentials | 已认证、tenant-scoped 的 LoopX service role；Agent 绝不获得 table credentials |
 
-For PostgreSQL, `commit_authority` is one transaction, not a series of
-independent repository calls: lock or conditionally update the scoped head,
-verify the expected provider revision, allocate the next scoped cursor, insert
-the committed transaction/events/receipts, update the projection head, and
-commit. A connection failure before any write is a proved `failed` result; a
-connection loss after commit may have started is `ambiguous` and is reconciled
-by the unique operation row and receipt read. `READ COMMITTED` plus an explicit
-per-head row lock/conditional update can implement this contract; choosing
-`SERIALIZABLE` is an adapter decision, not a substitute for LoopX CAS,
-operation identity, or lease fencing. Authentication, tenant routing, audit,
-pool exhaustion, cancellation, timeout, and failover must all fail closed at
-the service boundary.
+对 PostgreSQL 而言，`commit_authority` 是一笔 transaction，而不是一系列独立
+repository 调用：锁定或条件更新 scoped head、校验期望的 provider revision、分配下一个
+scoped cursor、插入已提交 transaction/events/receipts、更新 projection head，然后提交。
+任何写入发生前的 connection failure 是已证明的 `failed` 结果；commit 开始后失去连接
+属于 `ambiguous`，通过 unique operation row 与 receipt read 进行 reconcile。
+`READ COMMITTED` 加显式 per-head row lock/conditional update 可以实现本合同；选择
+`SERIALIZABLE` 是 adapter decision，不是 LoopX CAS、operation identity 或 lease
+fencing 的替代品。Authentication、tenant routing、audit、pool exhaustion、
+cancellation、timeout 与 failover 必须在 service boundary 全部 fail closed。
 
-For NoKV, the existing `load` / `compare_and_put` reference already maps
-missing, generation conflict, ambiguous publication, and workbench-incarnation
-lineage. It does **not** yet prove the widened event/receipt/cursor service
-contract. Until capacity, retention, restart/restore, availability, and HA are
-qualified, `read_receipt` and `scan_committed` can only be implemented by
-reading the retained journal inside the one CAS envelope; they must not be
-silently mapped to an eventually consistent listing API.
+对 NoKV 而言，现有 `load` / `compare_and_put` reference 已经覆盖 missing、
+generation conflict、ambiguous publication 与 workbench-incarnation lineage。它**尚不**
+证明扩宽后的 event/receipt/cursor service contract。在 capacity、retention、
+restart/restore、availability 与 HA 通过资格验证之前，`read_receipt` 与
+`scan_committed` 只能通过读取单一 CAS envelope 内保留的 journal 实现；绝不能静默映射到
+最终一致的 listing API。
 
-The file provider is therefore conformance evidence, not a production-scale
-event store. Its retained journal intentionally makes atomicity and historical
-receipt replay easy to inspect, at the cost of whole-document growth. That
-tradeoff is acceptable for Stage 1 and is explicitly not inherited as the
-PostgreSQL physical schema or accepted as NoKV capacity proof.
+file provider 因此只是 conformance evidence，不是生产规模 event store。其保留的
+journal 有意让原子性与历史 receipt replay 容易检查，代价是整文档增长。这一取舍对
+Stage 1 可接受，并且明确不被继承为 PostgreSQL 物理 schema，也不作为 NoKV capacity
+证明被接受。
 
-### 6.3 The three version numbers are not the same thing
+### 6.3 三个版本号不是一回事
 
-| Domain | Owner | Meaning | Consumer |
+| 版本域 | Owner | 含义 | Consumer |
 | --- | --- | --- | --- |
-| `provider_generation` | Provider | Opaque token for conditional replacement of stored bytes | Authority/provider seam only |
-| `authority_revision` | LoopX authority | Per-goal logical commit sequence after an accepted command | Audit, receipts, and read models; not a shared precondition for every domain command |
-| `lease_epoch` | LoopX authority | Per-todo fencing generation for ownership; advances on a new lease generation, not ordinary renewal | Executors and accepted writeback |
+| `provider_generation` | Provider | 条件替换已存字节的 opaque token | 仅 authority/provider seam |
+| `authority_revision` | LoopX authority | 接受一条 command 后的 per-goal 逻辑 commit sequence | 审计、receipt 与 read model；不作为所有业务命令的共享前置条件 |
+| `lease_epoch` | LoopX authority | Ownership 的 per-todo fencing generation；新 lease generation 时推进，普通 renewal 不推进 | Executor 与获准 writeback |
 
-A backend may often advance its generation once per accepted command, but
-numerical equality is never a contract. Migration, repair, or provider metadata
-may change provider generation without granting a new LoopX authority revision.
+Backend 常会对每条 accepted command 推进一次 generation，但数值相等永远不是合同。
+Migration、repair 或 provider metadata 可以改变 provider generation，而不授予新的
+LoopX authority revision。
 
-A provider's document generation or database revision implements
-`provider_generation` only. The LoopX authority remains responsible for the
-other two domains and for the receipt stored inside the transaction.
+Provider 的 document generation 或 database revision 只实现
+`provider_generation`。LoopX authority 继续负责另外两个版本域与 transaction 内
+的 receipt。
 
-### 6.4 Expiry adjudication and the binding fence
+### 6.4 过期裁决与绑定围栏
 
-Wall-clock facts have exactly one judge: the authority that is applying a
-command, reading the loaded head's `expires_at` against its own clock. A
-caller's opinion of time is request motivation, never evidence; the core
-stays clockless and receives only the adjudicated active/expired verdict.
-Renewal, release, and completion require the lease to be active at
-adjudication time. Reclaim additionally requires the lease to have been
-expired for at least a configurable grace window whose lower bound is the
-maximum expected clock skew between endpoints in the deployment; the grace
-in force is the executor's declared parameter, and the configuration
-boundary is itself fail-closed: only a finite, non-negative number is
-accepted, because a NaN, negative, or boolean grace would advance a
-takeover instead of delaying it. Correctness never
-depends on the grace value - even a holder that believes itself alive is
-fenced by the epoch the reclaim minted, so skew can only delay a takeover,
-never corrupt one. Because renewal advances `todo_revision` (Section 5.2), the validity
-interval is also revision-covered, closing the rebase path a reclaim could
-otherwise ride across a concurrent renewal.
+墙钟事实只有一个裁判：正在应用命令的 authority，用它自己的时钟对照已 load head
+的 `expires_at`。调用方对时间的看法只是请求动机，绝不是证据；核心保持无时钟，
+只接收裁决后的 active/expired 结论。renew、release、complete 要求裁决时 lease
+活跃。reclaim 额外要求 lease 已过期至少一个可配置的宽限窗，其下限是部署内端点
+间的最大预期时钟偏差；生效的宽限值是 executor 声明的参数，且配置边界本身
+fail-closed：只接受有限、非负的数值，因为 NaN、负数或布尔宽限会把接管提前而不
+是推迟。正确性从不依赖宽限值——即使自认还活着的持有者也会被 reclaim 铸出的
+epoch 栅栏挡住，偏差只可能推迟接管，绝不可能弄脏接管。又因续约推进 `todo_revision`（5.2 节），有效期同样被
+revision 覆盖，reclaim 借并发续约的 rebase 穿越通道被双重关死。
 
-The store-lineage binding fence closes the restore hazard measured in the
-Stage 2 status: `provider_generation` alone cannot carry lifecycle
-identity. The provider contract gains one read-only verb,
-`store_identity() -> str`, returning a stable identity for the store
-lineage: the NoKV adapter binds `workbench` plus the never-reused
-`workspace_incarnation_id` the service mints per workbench incarnation; the
-file provider serializes creation under its cross-process lock and publishes a
-strictly formatted identity through complete temp write, fsync, atomic rename,
-and parent-directory fsync.
-`bootstrap` embeds the identity in the head (`store_binding`), and the
-authority refuses every command - typed `store_lineage_mismatch` - whenever
-the loaded head's binding differs from the provider's identity, re-checking
-after every reload. A restore therefore preserves frozen bytes and lineage
-without granting live authority, exactly as the Stage 1 boundary requires;
-promoting restored state needs an explicit, reviewed re-bootstrap that
-mints a new binding. Known residual: a byte-for-byte copy of a file-backed
-store directory copies the identity file with it, so the file provider's
-fence detects relocation only when the identity file is excluded from the
-copy; the NoKV incarnation identity has no such gap and is the
-authoritative fence for shared deployments.
+store-lineage 绑定围栏关闭 Stage 2 状态中量化过的 restore 隐患：仅靠
+`provider_generation` 无法承载生命周期身份。provider 合同新增一个只读动词
+`store_identity() -> str`，返回该存储血统的稳定身份：NoKV adapter 绑定
+`workbench` 加服务端为每个 workbench 化身铸造、永不复用的
+`workspace_incarnation_id`；file provider 在跨进程锁内串行化创建，以完整临时写入、
+fsync、原子 rename、父目录 fsync 发布严格格式的身份文件。
+`bootstrap` 把身份嵌进 head（`store_binding`），authority 在 loaded head 的绑定
+与 provider 身份不符时拒绝一切命令——typed `store_lineage_mismatch`——并在每次
+reload 后复查。restore 因此保存冻结字节与血统而不授予在场权威，正如 Stage 1
+边界所要求；晋升恢复态需要显式、经评审的 re-bootstrap 铸造新绑定。已知残余：
+file 存储目录的逐字节拷贝会连身份文件一起拷走，故 file provider 的围栏只在拷贝
+排除身份文件时才检测得到迁移；NoKV 的化身身份没有这个缺口，是共享部署的权威
+围栏。
 
-Adding the binding is a schema change, not a reinterpretation: heads carry
-`loopx_coordination_head_v1`, and a legacy `loopx_coordination_head_v0`
-document (the Stage 2 shape without `store_binding`) is classified as
-`head_schema_migration_required` - a typed failure, never an unclassified
-validation crash, and never silently readable as current. The only upgrade
-path is the explicit `migrate_head_v0_to_v1` operation: an operator attests
-the reviewed store's own identity (`provider.store_identity()` on the store
-they have verified is the authoritative lineage) and writes the migrated
-head back through the same CAS. The binding is deliberately never inferred
-from whichever provider a head happens to be loaded through - an automatic
-binding would let any restored copy of a v0 store authorize itself, which
-is the exact capture this fence exists to prevent. Migration recognizes only
-the Stage 2 writer's actual output subset: `open` todo records and
-`claim_work` receipts with the exact v0 field sets. The old v0 validator did
-not close the todo status vocabulary; unknown status values and Stage 3-only
-fields under a v0 token are therefore treated as corruption requiring manual
-repair, not grandfathered into new authority.
+加入绑定是一次 schema 变更，不是重释义：head 携带
+`loopx_coordination_head_v1`，而 legacy `loopx_coordination_head_v0` 文档
+（Stage 2 的形状，没有 `store_binding`）被分类为
+`head_schema_migration_required`——typed 失败，绝不是未分类的校验崩溃，也绝不
+会被当作当前文档静默读取。唯一升级路径是显式的 `migrate_head_v0_to_v1` 操作：
+operator 亲证经其评审的存储自身身份（对确认为权威血统的存储调用
+`provider.store_identity()`），再经同一 CAS 写回迁移后的 head。绑定被刻意设计
+为绝不从"head 恰好经由哪个 provider 载入"推断——自动绑定会让 v0 存储的任何恢复
+拷贝为自己授权，而这正是该围栏要防止的捕获。迁移只识别 Stage 2 writer 实际可
+产出的子集：精确 v0 字段集的 `open` todo 与 `claim_work` receipt。旧 v0 validator
+没有钉死 todo status 词表；未知 status 或挂在 v0 token 下的 Stage 3-only 字段因此
+按需人工修复的 corruption fail closed，不会被 grandfather 成新权威。
 
-## 7. Keep Every Receipt First; Compact Later
+## 7. 回执先全部保留，压缩以后再谈
 
-v0 uses `retain_all_v0`: no committed receipt-index entry may be garbage
-collected, expired, or omitted from a snapshot. This is intentionally a
-correctness-first proof boundary, not a production-scale retention claim.
+v0 使用 `retain_all_v0`：任何已提交 receipt-index entry 都不得 GC、过期或从
+snapshot 中省略。这是 correctness-first 的证明边界，不是 production-scale retention
+承诺。
 
-If a receipt-index entry is present but its original receipt is missing or
-invalid, the authority fails closed as a provider-protocol violation. It has no
-fallback to provider publication history and must not reconstruct a receipt
-from the current head.
+若 receipt-index entry 已存在，但其原始 receipt 缺失或无效，authority 将其视为
+provider-protocol violation 并 fail closed。它不能 fallback 到 provider publication
+history，也不得从当前 head 重建 receipt。
 
-A bounded retention window, receipt segmentation, or external receipt ledger
-requires a later RFC that preserves atomic proof and defines behavior outside
-the window. Until then, compaction may rewrite bytes but must carry the complete
-receipt index forward.
+有界 retention window、receipt segmentation 或 external receipt ledger 都需要后续
+RFC：它必须保持 atomic proof，并定义窗口之外的行为。在此之前，compaction 可以
+重写字节，但必须携带完整 receipt index。
 
-### 7.1 Proposed amendment: sealed receipt segments (owner decision, Q5)
+### 7.1 拟议修正：封存回执段（owner 决策，Q5）
 
-`retain_all_v0` in one CAS document cannot reach a multi-agent canary: the
-Stage 2 measurements showed ~750 bytes per receipt, a ~7x claim-latency
-growth across 120 receipts, and quadratic cumulative republish. Stage 3
-adds four more receipt-writing verbs, so the growth rate only worsens. The
-sentence above deliberately requires a reviewed amendment before receipts
-may leave the single document; this subsection is that amendment, proposed
-with evidence and NOT yet in force.
+单 CAS 文档里的 `retain_all_v0` 撑不到多 agent canary：Stage 2 实测每 receipt
+约 750 字节、120 个 receipt 内 claim 延迟涨约 7 倍、累计重发布平方增长。Stage 3
+又新增四个写 receipt 的动词，增长率只会更差。上文那句已明确要求 receipt 离开单
+文档前必须有经评审的修正案；本小节就是该修正案，附证据提出，**尚未生效**。
 
-Design (measured against two alternatives on a live NoKV stack, 150
-transitions each): the head keeps a bounded receipt window; when the window
-fills, the authority seals it into an immutable receipt-segment object at a
-sibling path (`goals/<goal>/receipts/segment-<seq>.json`), published
-create-only through the artifact path BEFORE the CAS that drops the sealed
-receipts from the head and appends `{path, sha256, count}` to a segment
-chain - the artifact-first order of Section 1.1, so the head never
-references bytes that were not durably published. Every committed receipt
-stays verifiable: replay looks in the window first, then dereferences the
-chain; a missing or digest-mismatched segment is a provider-protocol
-violation and fails closed, the segment-level form of the Section 7
-fail-closed rule. NoKV's publication semantics make sealing exactly-once
-for free: `operation_id` and `artifact_revision_id` are root-scoped-unique
-with immutable-input replay, so a seal retried after a crash between the
-segment publish and the head CAS replays idempotently (verified live) -
-but both ids MUST derive from workbench, path, and content, or a second
-lineage reusing the same derivation is rejected as id reuse.
+设计（在 live NoKV 栈上与两个替代方案各跑 150 笔迁移对比）：head 保留一个有界
+receipt 窗口；窗口写满时，authority 把它封存为兄弟路径
+（`goals/<goal>/receipts/segment-<seq>.json`）上的不可变回执段对象，经 artifact
+路径 create-only 发布，**先于**将封存回执从 head 删除并把 `{path, sha256,
+count}` 追加进段链的那次 CAS——即 §1.1 的 artifact-first 次序，head 绝不引用未
+持久发布的字节。每条已提交 receipt 保持可验证：replay 先查窗口、再解引用段链；
+段缺失或摘要不符是 provider-protocol violation 并 fail closed，即 §7 fail-closed
+规则的段级形态。NoKV 的发布语义让封存免费获得 exactly-once：`operation_id` 与
+`artifact_revision_id` 是 root 级唯一并带不可变输入重放，段发布与 head CAS 之间
+崩溃后的重试是幂等重放（已 live 验证）——但两个 id **必须**由 workbench、path、
+内容共同导出，否则第二条血统复用同一推导会被判 id 重用而拒绝。
 
-Measured verdict (debug stack, relative numbers): sealed segments keep the
-head 19x smaller (5.8 KiB vs 112 KiB at 150 receipts), publish 7.5x fewer
-cumulative bytes, and hold per-transition latency flat where retain_all
-grows, for +3% provider round trips; recovering an already-sealed receipt
-costs ~160 ms versus ~43 ms in-head. The receipt-per-object alternative is
-dominated: it pays an extra object publish on every transition (about 2x
-latency throughout) and still grows the head linearly through its pointer
-index. Window size is a deployment parameter; 16 was measured.
+实测裁决（debug 栈，相对数字）：封存段让 head 缩小 19 倍（150 receipt 时 5.8
+KiB 对 112 KiB）、累计发布字节少 7.5 倍、每笔延迟保持平坦而 retain_all 持续增
+长，代价是 +3% provider 往返；恢复已封存回执约 160 ms 对 in-head 约 43 ms。
+receipt-per-object 替代方案被全面支配：每笔迁移多付一次对象发布（全程约 2 倍
+延迟），head 还要经指针索引线性增长。窗口大小是部署参数；实测值为 16。
 
-Until the owner accepts this amendment (Section 12 Q5), `retain_all_v0`
-remains in force and the Stage 3 verbs ship on it unchanged.
+在 owner 接受本修正案（§12 Q5）之前，`retain_all_v0` 继续生效，Stage 3 动词原样
+运行其上。
 
-### 7.2 Ten-day goals: local storage qualification target (proposal)
+### 7.2 十天 Goal：本地存储资格化目标（提案）
 
-A supported goal must remain executable for **at least ten elapsed days**, across
-process restarts, sleeping hosts, delayed receipts, and binary upgrades, without
-manual history truncation or a storage-driven goal reset. Ten days is a minimum
-qualification horizon, not a receipt expiry or a maximum goal lifetime. This
-amendment sets the product target; no current provider is declared qualified by
-this text, and `retain_all_v0` remains the shipped rule until a reviewed cutover.
+<a id="72-ten-day-goals-local-storage-qualification-target-proposal"></a>
 
-#### Workload and cost model
+受支持的 goal 必须能**至少持续十个自然日**，跨进程重启、主机休眠、迟到回执和
+二进制升级继续执行，不依赖人工截断历史或因存储问题重建 goal。十天是最低资格化
+周期，不是 receipt 过期时间或 goal 寿命上限。本修订设定产品目标，不宣称当前任何
+provider 已通过；经评审切换前，已交付规则仍是 `retain_all_v0`。
 
-Elapsed time alone is not a capacity specification. The initial local qualification
-matrix uses the following **proposed workloads**, not measured usage or promises:
+#### 工作负载与成本模型
 
-| Profile | Workload per goal | Qualification horizon |
+只规定时长不足以定义容量。首轮本地资格化采用以下**提议负载**，不是实测用量或承诺：
+
+| Profile | 每个 goal 的负载 | 资格化周期 |
 | --- | --- | --- |
-| Minimum continuity | Three continuously leased Todos, TTL 600 s, renewal every 300 s: 864 renewals/day before other writes | 10 days; 8,640 renewals plus lifecycle/receipt traffic |
-| Local design target | Eight registered agents; four concurrent writers on distinct Todos plus same-Todo races; up to 1,000 active Todo/lease/gate records; 10,000 committed transactions/day including renewals, receipts and capture | 10 days; 100,000 commits; 30-day / 300,000-commit headroom run |
-| Payload and backlog axes | Live projection 8 KiB, 64 KiB and 1 MiB; new event/receipt payload up to 4 KiB per commit; 5:1 reads/writes; 10 commits/s bursts for 60 s; 24 h of projection-consumer lag | Exercise each axis separately and the combined local target; count retries/conflicts separately from commits |
+| 最低连续性 | 三个持续持有 lease 的 Todo，TTL 600 s、每 300 s renew：其他写入之外每天 864 次 renew | 10 天；8,640 次 renew 加生命周期／回执写入 |
+| 本地设计目标 | 八个注册 agent；四个并发 writer 操作不同 Todo，另加同 Todo 竞争；最多 1,000 个活跃 Todo/lease/gate record；每天 10,000 次已提交 transaction，含 renew、receipt 和 capture | 10 天共 100,000 次 commit；另跑 30 天／300,000 次余量验证 |
+| Payload 与积压维度 | live projection 分别为 8 KiB、64 KiB、1 MiB；每次新增 event/receipt payload 至多 4 KiB；读写比 5:1；每秒 10 次 commit、持续 60 s 的突发；projection consumer 落后 24 h | 分别验证各维度及组合本地目标；retry/conflict 与 commit 分开计数 |
 
-Each fixture declares active versus archived records, serialized sizes, command
-mix, index size, and capture fan-out; a model Turn can cause several commits.
-Keep live-state size fixed when isolating history growth, then grow live state
-separately. No goal-wide unbounded list of completed Todos or receipts may be
-hidden inside the supposedly fixed live projection.
+每个 fixture 声明活跃／归档记录、序列化大小、命令比例、索引大小和 capture 放大倍数；
+一个模型 Turn 可能产生多次 commit。验证历史增长时固定 live state，之后单独增加
+live state。不能把所有已完成 Todo 或 receipt 的无界列表藏在所谓固定的 live projection。
 
-For the current `FileAuthorityStore`, a fixed projection of P bytes retained in
-each of N transactions costs approximately P*N final history bytes and
-P*N*(N+1)/2 cumulative document-publication bytes, before head, event, receipt,
-and envelope overhead. Normal reads also decode and validate the full chain.
-With P=15 KiB, the renewal-only case gives about **534 GiB** of cumulative
-publication at day 10 and **4.69 TiB** at day 30. The former 380 MiB estimate was
-only N*P at day 30, not the cumulative rewrite of retained projections. These
-are analytical payload estimates, not physical SSD writes or measured latency;
-growing receipt indexes inside every projection can make the model worse.
+当前 `FileAuthorityStore` 每笔保留 P 字节 projection，N 笔约产生 P*N 最终历史字节，
+累计文档发布量约 P*N*(N+1)/2，尚未计 head、event、receipt 和 envelope。普通读取还会
+解码、验证完整链。P=15 KiB 时，仅 renew 的例子在第 10 天累计发布约 **534 GiB**，
+第 30 天约 **4.69 TiB**。旧文中的 380 MiB 只算了第 30 天的 N*P，并非保留历次
+projection 后的累计重写。这是 payload 解析估算，不是 SSD 物理写入或实测延迟；
+若每个 projection 自身还包含不断增长的 receipt index，成本可能更高。
 
-#### Preferred local direction and compatibility boundary
+#### 本地优先方向与兼容边界
 
-Qualify an **embedded transactional store, with SQLite as the first candidate**,
-behind the existing TypeScript `AuthorityStore` owner. A local goal must not
-require a PostgreSQL service. The file-v0 provider remains a conformance/import
-baseline; no general-purpose ten-day promotion may rely on its full-history
-rewrite. SQLite is a design preference pending durability, dependency/package,
-Windows/macOS/Linux and supported Node-version qualification, not a new shipped
-provider id or default flip. A segmented file log remains the comparison option;
-PostgreSQL remains the independent shared-service path.
+在既有 TypeScript `AuthorityStore` owner 后资格化**嵌入式事务存储，首选候选为
+SQLite**。本地 goal 不应依赖 PostgreSQL 服务。file-v0 保留作 conformance/import
+基线，通用十天 goal 晋升不能依靠其全历史重写。SQLite 是待验证耐久性、依赖／打包、
+Windows/macOS/Linux 和受支持 Node 版本后的设计偏好，不是已交付 provider id 或默认
+切换。分段文件日志作为比较候选；PostgreSQL 继续走独立的共享服务路线。
 
-A database swap alone is insufficient. The complete slice must:
+只替换数据库不够。完整切片必须：
 
-- Atomically publish current state, operation/digest uniqueness, original
-  receipts, ordered cursor, and any projection outbox entry. Use indexed
-  operation lookup and cursor paging. Preserve the existing ambiguous-commit,
-  CAS, lineage, and domain fencing semantics; storage never decides Todo policy.
-- Keep live head independent of total history. Use periodic verified checkpoints
-  plus committed state deltas or immutable state blocks; retain original receipts
-  outside the hot head. Bound both replay tail and index/root metadata. A head
-  containing every sealed-segment pointer is still unbounded, and scanning a
-  receipt-segment chain for old retries is not an indexed lookup.
-- Preserve the logical `scanCommitted` contract: it currently returns a full
-  projection for each transaction. Reconstruct the exact version from checkpoint
-  and deltas with bounded paging, or version the contract and migrate every
-  consumer explicitly. Do not silently remove historical projections. Existing
-  events have not been proven sufficient to reconstruct them; canonical state
-  deltas need independent equivalence checks.
-- Move the authority's growing in-head receipt index through an explicit versioned
-  migration, together with provider storage. Preserve request-digest conflict
-  detection and byte-equivalent original receipt fields after checkpointing,
-  restart, and later unrelated commits. Caching cannot be the correctness path.
+- 原子发布 current state、operation/digest 唯一性、原始 receipt、有序 cursor，以及
+  projection outbox entry。operation lookup 与 cursor 分页走索引；保留 ambiguous
+  commit、CAS、lineage、domain fencing 语义，存储层不决策 Todo policy。
+- live head 不随总历史增长。使用周期性校验 checkpoint 加 committed state delta 或
+  immutable state block；原始 receipt 移出 hot head。replay tail 与 index/root metadata
+  都要有界。head 保存全部封存段 pointer 仍然无界，扫描段链也不等于索引查询。
+- 保留 `scanCommitted` 逻辑合同：它目前每笔返回完整 projection。通过 checkpoint/delta
+  有界分页重建精确版本，或显式升版并迁移每个 consumer；不能静默删除历史 projection。
+  尚未证明现有 event 足以重建，因此 canonical state delta 需要独立等价验证。
+- authority 的 in-head receipt index 与 provider storage 一起显式升版迁移。checkpoint、
+  restart 和后续无关 commit 后，request-digest 冲突检测与原始 receipt 字段仍逐字节等价。
+  cache 不能成为正确性的唯一来源。
 
-This is one local persistence slice with real CLI callers and consumer readback,
-not separate leaf-helper ports or a second semantic kernel. It includes the
-capture outbox and paginated archived-Todo/history reads needed by status/quota;
-other stores and raw artifacts are measured separately, not claimed fixed by it.
+这是包含真实 CLI caller 和 consumer readback 的一个本地持久化切片，不是零散 helper
+迁移或第二个语义 kernel。它覆盖 capture outbox、status/quota 所需归档 Todo/history 分页；
+其他存储和原始 artifact 单独计量，不宣称随本切片一起解决。
 
-#### Proposed acceptance budgets
+#### 提议验收预算
 
-On a declared local SSD host, report OS/filesystem, CPU/RAM, Node/database versions,
-durability settings, sample count, p50/p95/p99, lock wait, RSS, database/WAL/archive
-size, and logical bytes written. Include cold CLI startup separately from warm
-store service time; never disable fsync/checkpoint safety to pass.
+在声明配置的本地 SSD 主机上，报告 OS/filesystem、CPU/RAM、Node/database 版本、耐久
+配置、样本数、p50/p95/p99、lock wait、RSS、database/WAL/archive 大小与逻辑写入字节。
+冷 CLI 启动与 warm store service time 分开；不得关闭 fsync/checkpoint 安全性换成绩。
 
-For the 64 KiB live-state axis at 10,000 versus 100,000 commits:
+64 KiB live state 下，对比 10,000 与 100,000 次历史 commit：
 
-- Warm head load and indexed original-receipt read p95 <= 50 ms; durable commit
-  p95 <= 100 ms. History-growth p95 ratio <= 2 with the same live state and load.
-- Warm scan of 100 transactions p95 <= 250 ms; cold open plus first authoritative
-  read <= 2 s; bounded crash recovery <= 30 s. Full archive integrity audit is
-  separate and may be linear, but normal startup may not require it.
-- Storage work adds <= 200 ms p95 to a complete CLI mutation against the matched
-  10,000-commit baseline. Measure full status/quota latency too; do not hide a
-  history scan in a compatibility consumer or amortize process startup away.
-- At fixed live state and delta sizes, cumulative logical writes, retained bytes,
-  and recovery work must have declared bounds. From 10,000 to 100,000 commits,
-  cumulative bytes written must grow <= 15x, not the roughly 100x quadratic
-  rewrite; instrument checkpoint, index, WAL and compaction work. Stable-state
-  RSS must not scale with the number of historical transactions. Report the
-  1 MiB axis and 300,000-commit headroom separately; failures narrow the supported
-  profile rather than disappearing into averaged results.
+- warm head load 和索引原始 receipt read 的 p95 <= 50 ms；durable commit p95 <= 100 ms。
+  固定 live state 与负载时，历史增长的 p95 比值 <= 2。
+- warm scan 100 笔 p95 <= 250 ms；cold open 加首次权威读取 <= 2 s；有界 crash recovery
+  <= 30 s。全量 archive integrity audit 可线性增长，但普通启动不能依赖它。
+- 相对匹配的 10,000 次基线，完整 CLI mutation 的存储成本增量 p95 <= 200 ms。
+  同时报告完整 status/quota 延迟；不得将历史扫描藏进 compatibility consumer，也不能
+  用进程启动摊销掩盖成本。
+- 固定 live state/delta 大小时，累计逻辑写入、保留字节、恢复工作须有明确上界。
+  从 10,000 到 100,000 笔累计写入增长 <= 15 倍，不能呈平方重写的约 100 倍；纳入
+  checkpoint、index、WAL、compaction 计量。稳定态 RSS 不得随历史交易数增长。
+  1 MiB 与 300,000 次余量维度单独报告；失败应缩小支持范围，不能藏在平均值里。
 
-These thresholds are proposed engineering budgets, not current measurements.
-Review them against the first matched baseline before activation; do not relax
-correctness, silently change the workload, or advertise an unqualified horizon.
+以上是提议工程预算，不是当前实测。在启用前依据首轮匹配基线评审，不得放松正确性、
+静默改变负载或宣称未资格化的连续运行周期。
 
-#### Retention, recovery and delivery gates
+#### 保留、恢复与交付门禁
 
-Ten-day operation does not authorize day-11 deletion. Keep operation identity,
-digest and original receipts for the goal lifetime under the initial policy,
-including at least the day-1 retry after day 10 and day 30. Physical compaction
-may remove redundant encodings only when the retained checkpoint/log/index can
-reconstruct every promised historical record. Cold archive must remain
-addressable and verified; unavailable proof fails closed, never as a fresh
-operation. Any later expiry requires a versioned retention contract and explicit
-outside-window response; neither a TTL nor a tombstone permits duplicate effects.
+十天执行不授权第十一天删历史。初始策略在 goal 全生命周期保留 operation identity、
+digest 和原始 receipt，至少覆盖第 10／30 天重放第 1 天操作。只有保留的 checkpoint/log/
+index 能重建全部承诺历史时，物理 compaction 才能删除冗余编码。cold archive 必须可寻址
+且可验证；证明不可用时 fail closed，不能当作新操作。后续 expiry 必须有版本化 retention
+合同及窗口外响应；TTL 或 tombstone 都不能授权重复 effect。
 
-Checkpoint/segment publication must be crash-safe with a durable manifest/root
-switch. Reclaim old bytes only after durable replacement and every registered
-consumer's persisted cursor or explicit full-resync decision; protect lagging
-projection outboxes, exports, and backups. Set byte/lag admission budgets and
-surface maintenance/backpressure before disk exhaustion. Admission must reserve
-recovery space; ENOSPC or an interrupted commit cannot erase proof or count as a
-successful write. Total audit storage may grow linearly with useful history;
-only the hot path and maintenance batches are bounded.
+checkpoint/segment 发布需支持崩溃恢复并耐久切换 manifest/root。仅在替代数据耐久且每个
+注册 consumer 的持久 cursor 已推进或显式选择 full-resync 后回收旧字节；保护落后的
+projection outbox、export 和 backup。设置 byte/lag 准入预算，在磁盘耗尽前暴露 maintenance/
+backpressure，并为恢复预留空间；ENOSPC 或提交中断不能抹除证明或算作成功写入。
+总审计存储可以随有用历史线性增长；有界的是热路径和维护批次。
 
-Sleeping or restarting a host does not preserve an expired lease: resume must
-re-read authority and reacquire through normal epoch fencing. Continuity means
-the same durable goal resumes safely, not that a process or lease stays alive.
+主机休眠或重启不能保留已过期 lease；恢复时必须重读 authority，并经正常 epoch fence
+重新获取权限。连续性是同一个耐久 goal 安全恢复，不是进程或 lease 永远存活。
 
-Qualification has two separate exits: accelerated 100,000/300,000-commit tests
-prove volume, while an actual >=10-day synthetic-goal soak proves elapsed-time
-continuity. Exercise day-1 historical retries, duplicate/different-digest writes,
-concurrent CAS, daily reopen, host sleep, lease expiry, 24 h consumer lag, crashes
-around append/checkpoint/index publication, disk-full, backup/restore lineage,
-and a supported upgrade/rollback. Compare final state, receipts and cursor scan
-to an independent reference; no lost acknowledged commit or repeated effect is
-acceptable. Use disposable goals, never active user state. Compressed clocks do
-not qualify wall-clock endurance; publishing this RFC starts no soak or monitor.
+资格化有两个独立出口：加速的 100,000/300,000 次测试证明容量，真实 **>=10 天**合成
+Goal soak 证明自然时间连续性。覆盖第 1 天历史 retry、同 id 同／异 digest、并发 CAS、
+每日 reopen、休眠、lease expiry、24 h consumer lag、append/checkpoint/index 发布前后
+crash、disk-full、backup/restore lineage，以及一次受支持 upgrade/rollback。与独立参考
+对比 final state、receipt、cursor scan；不接受丢失已确认 commit 或重复 effect。只用
+一次性 goal，不碰活跃用户状态。压缩时钟不证明自然时间耐久性；发布本 RFC 不启动 soak
+或 monitor。
 
-A code PR can land while soak evidence remains pending, with promotion held.
-Promotion requires both exits, explicit import/fencing/export rehearsal and
-maintainer review. Publish compact reproducible evidence, not raw private logs.
+代码 PR 可在 soak 证据待补时合入，但 promotion 继续 hold。两个出口、显式 import/
+fencing/export 演练与 maintainer review 都通过才可晋升。发布紧凑可复现证据，不发布
+原始私有日志。
 
-## 8. Local Mode Stays the Default; Shared Mode Is an Explicit Migration
+## 8. 默认本地模式不变，共享模式必须显式迁移
 
-### Default local mode
+### 默认本地模式
 
-- Existing project registry, Markdown active state, run history, optional task
-  leases, status, quota, and host behavior remain unchanged.
-- Installing a provider does not enable shared authority.
-- The current event-store bridge still reports Markdown as source of truth and
-  does not allow automatic promotion.
+- 现有 project registry、Markdown active state、run history、可选 task lease、
+  status、quota 与 host behavior 保持不变。
+- 安装 provider 不会启用 shared authority。
+- 当前 event-store bridge 仍报告 Markdown 为真相源，不允许自动 promotion。
 
-Two deployment shapes share the same semantics:
+两种部署形态共享完全相同的语义：
 
 | Deployment | Authority boundary | Provider |
 | --- | --- | --- |
-| embedded/local | LoopX authority runs in the trusted local process; existing local writers remain canonical until promotion | file |
-| shared service | Agents call an authenticated LoopX authority API; the service owns provider credentials, tenancy, and audit | NoKV or PostgreSQL |
+| embedded/local | LoopX authority 运行在可信本地进程；晋升前，现有本地 writer 仍是 canonical | file |
+| shared service | Agent 调用已认证的 LoopX authority API；service 持有 provider credential、租户与审计 | NoKV 或 PostgreSQL |
 
-An Agent is an API client in both shapes. Direct provider access never becomes
-an alternative shared mode.
+在两种形态中，Agent 都只是 API client。直接访问 provider 永远不会成为另一种
+shared mode。
 
 ### Shared-authority mode
 
-Shared mode is an explicit per-goal choice. A reviewed implementation must:
+Shared mode 是按 Goal 显式选择。经 review 的实现必须：
 
-1. pin the source registry, active state, and privacy boundary;
-2. stop or fence local writers during migration;
-3. normalize only the scoped coordination fields into an initial aggregate;
-4. validate todo/claim/lease/gate parity and an empty receipt index;
-5. record the shared-mode declaration and authority endpoint/provider binding;
-6. route every P0 write through the online authority;
-7. render Markdown, local lease views, rollout rows, and status only as
-   projections for the migrated fields.
+1. 钉住 source registry、active state 与 privacy boundary；
+2. 迁移期间停止或 fence 本地 writer；
+3. 只把 scope 内的 coordination field 规范化为初始 aggregate；
+4. 校验 todo/claim/lease/gate parity 与空 receipt index；
+5. 记录 shared-mode declaration 及 authority endpoint/provider binding；
+6. 让所有 P0 写都经过在线 authority；
+7. 对已迁移字段，仅把 Markdown、local lease view、rollout row 与 status 渲染为
+   projection。
 
-Bootstrap is a fenced administrative migration before controlled shared writes,
-not a P0 agent command: it may create the initial aggregate with the selected
-existing todos and an empty receipt index. Its source digest and mode
-declaration must be durable so a restart can distinguish bootstrap from an
-uninitialized provider.
+Bootstrap 是受 fence 保护、发生在受控 shared write 之前的行政迁移，不是 P0 agent
+command：它可以用选定的现有 todo 和空 receipt index 创建初始 aggregate。它的
+source digest 与 mode declaration 必须耐久保存，让 restart 能区分 bootstrap 与尚未
+初始化的 provider。
 
-Before the first shared write, migration may roll back to the untouched local
-source. After a shared write, automatic fallback to local writers is forbidden:
-it would create two authorities. Recovery must restore the authority or perform
-a separately reviewed, fenced export and mode transition.
+第一次 shared write 之前，迁移可以回滚到未改动的本地 source。发生第一次 shared
+write 后，禁止自动 fallback 到本地 writer，否则会产生两个 authority。恢复必须
+修复 authority，或执行另行 review 的 fenced export 与 mode transition。
 
-Provider shadowing and read-only canaries may collect evidence, but neither
-changes the source of truth. Promotion is explicit and must follow the existing
-fail-closed migration discipline.
+Provider shadowing 与 read-only canary 可以采集 evidence，但两者都不改变真相源。
+Promotion 必须显式发生，并遵循现有 fail-closed migration discipline。
 
-## 9. What Happens Offline and What Must Stay Local
+## 9. 断网时怎么办，哪些数据不能出机器
 
-When a shared-mode authority is unavailable:
+Shared-mode authority 不可用时：
 
-- cached projections may be read only when marked stale;
-- no new controlled write is accepted;
-- already authorized local computation may continue only under the existing
-  lease and effect boundaries;
-- there is no automatic local-file write fallback.
+- cached projection 只有标记 stale 后才可读取；
+- 不接受新的受控写入；
+- 已授权的本地计算只能在现有 lease 与 effect boundary 内继续；
+- 不自动 fallback 到本地文件写入。
 
-This RFC sets no wake latency or heartbeat topology. Delivery may use pull,
-push, or an IM daemon under the Agent IM RFC, but a delivered message is never
-proof that a coordination command committed.
+本 RFC 不规定 wake latency 或 heartbeat topology。Delivery 可以在 Agent IM RFC 下用
+pull、push 或 IM daemon，但消息已送达永远不能证明 coordination command 已提交。
 
-The shared aggregate and receipts may contain compact public-safe or explicitly
-scoped private metadata: stable ids, credential-free repository identity,
-exact code revision, digests, gate/dependency refs, claim and lease fields, and
-privacy-classified opaque pointers. They must not contain credentials, raw
-evidence, raw todo prose, transcripts, raw logs, or local absolute paths.
+Shared aggregate 与 receipt 可以包含紧凑的 public-safe 或显式 scoped private
+metadata：stable id、无 credential 的 repository identity、精确 code revision、digest、
+gate/dependency ref、claim/lease field 与按 privacy class 标注的 opaque pointer。不得
+包含 credential、raw evidence、raw todo prose、transcript、raw log 或本地绝对路径。
 
-## 10. How We Accept the First Stage
+## 10. 第一阶段怎么验收
 
-All checks are machine-verifiable:
+全部检查均可由机器验证：
 
-1. two actors claiming the same todo from one provider generation yield exactly
-   one `applied`; the loser receives a target-specific `conflict` and no lease;
-   the winner's todo remains `open`, with ownership expressed by `claimed_by`
-   and its lease;
-2. two actors claiming two independent todos in the same goal from one provider
-   generation, with `write_scopes=[]` and unchanged target-scoped authorization,
-   dependency, and gate facts, both receive `applied`; the first CAS loser
-   reloads, revalidates its relevant preconditions, and rebases internally,
-   while the goal audit sequence, both todo revisions, and both receipts each
-   advance only once;
-3. immediate replay with the same operation id and digest returns the original
-   receipt without changing state;
-4. historical A/B/A replay survives reconstruction of the authority handle
-   while the same deterministic provider fake retains its aggregate, and
-   returns A's original receipt field for field after B advances the head;
-5. the same operation id with a different normalized digest is rejected and
-   changes neither state nor receipt index;
-6. fault injection around the provider CAS never exposes state without its
-   receipt or a receipt without its state;
-7. ambiguous provider responses reconcile by reloading the receipt index: a
-   stored receipt recovers success, same-generation absence fails unproved, and
-   absence after a generation advance can only succeed through a new successful
-   CAS after revalidation;
-8. claim rejects an unknown, stale target/precondition, ineligible,
-   dependency-blocked, or gate-blocked todo without creating state or a receipt;
-9. sustained unrelated provider contention that exhausts the internal retry
-   budget returns typed `failed`, creates no receipt for the operation, and is
-   not mislabeled as a domain conflict;
-10. retained receipts survive reload fixtures with no receipt GC;
-11. provider generation, authority revision, and lease epoch are tested as
-   distinct domains;
-12. privacy scans find no credential, raw body, transcript, or absolute path;
-13. default local mode remains behaviorally unchanged, and shared mode never
-    falls back to an unfenced local writer.
+1. 两个 actor 从同一 provider generation claim 同一 todo，恰好一个得到
+   `applied`；loser 得到 target-specific `conflict`，且没有 lease；winner 的 todo
+   仍为 `open`，ownership 由 `claimed_by` 与 lease 表达；
+2. 两个 actor 从同一 provider generation claim 同一 Goal 下两个独立 todo；在本
+   reference 中二者 `write_scopes=[]`，且目标范围内的 authorization、dependency、
+   gate 均未变化。第一次 CAS 的 loser 在 reload 与相关 precondition 重验后内部
+   rebase，最终两者都得到 `applied`；Goal audit sequence、两个 todo revision 与
+   两条 receipt 均只推进一次；
+3. 以相同 operation id 与 digest 立即 replay，返回原始 receipt 且不改变状态；
+4. 历史 A/B/A replay 在同一 deterministic provider fake 保留 aggregate、重建
+   authority handle 后仍成立，并在 B 推进 head 后逐字段返回 A 的原始 receipt；
+5. 相同 operation id 搭配不同 normalized digest 时被拒绝，state 与 receipt index
+   均不改变；
+6. Provider CAS 周围的 fault injection 永远不能暴露无 receipt 的 state 或无 state
+   的 receipt；
+7. ambiguous provider response 通过 reload receipt index reconcile：找到 receipt
+   才恢复成功；同 generation 下缺失则 failed/unproved；generation 前进后缺失也必须
+   重验并由一笔新的 successful CAS 才能得到 `applied`；
+8. 对未知 todo、stale target/precondition、不符合 eligibility、dependency blocked 或 gate
+   blocked 的 claim，拒绝且不创建 state 或 receipt；
+9. 持续无关 provider contention 耗尽内部 retry budget 时返回 typed `failed`，不生成
+   当前 operation 的 receipt，也不伪装成业务 conflict；
+10. 保留的 receipt 经 reload fixture 后仍存在，不发生 receipt GC；
+11. 测试分别处理 provider generation、authority revision 与 lease epoch；
+12. privacy scan 不得发现 credential、raw body、transcript 或绝对路径；
+13. 默认本地模式的行为不变，shared mode 永不 fallback 到未 fenced 的本地 writer。
 
-The companion provider probes are evidence for a candidate implementation, not
-permission to weaken these normative checks. Performance measurements and a
-particular deployment topology are deliberately non-normative.
+配套 provider probe 是候选实现的 evidence，不构成弱化上述 normative check 的许可。
+性能测量与具体部署 topology 被刻意设为 non-normative。
 
-## 11. Staged Delivery
+## 11. 分阶段交付
 
-### 11.1 Normative stage plan
+### 11.1 规范性交付计划
 
-The delivery program has one shared foundation and two provider-specific
-tracks. Workstream labels are responsibility boundaries, not authority grants:
+交付计划由一条共享基础线和两条 provider-specific 线组成。下列 workstream 是职责
+边界，不是额外的 authority grant：
 
-| Workstream | Primary responsibility |
+| Workstream | 主要职责 |
 | --- | --- |
-| LoopX core owner | TypeScript-owned semantic transaction boundary; file-provider parity and promotion; migration, local-writer fencing, projection flip, rollback, and the single authority-source decision |
-| NoKV provider owner | NoKV adapter; live recovery, capacity, and HA qualification; feedback into the shared store contract without moving semantics into NoKV |
-| PostgreSQL provider owner | Generic PostgreSQL provider/service; transaction isolation, authentication, tenancy, audit, and operational deployment contract |
-| Joint qualification | Provider conformance matrix, one-way shadow parity, one-Goal/two-Agent TEST ONLY canary, and promotion evidence |
+| LoopX core owner | TypeScript 持有的语义 transaction boundary；file-provider parity 与晋升；migration、本地 writer fencing、projection flip、rollback，以及单一权威源决策 |
+| NoKV provider owner | NoKV adapter；live recovery、容量与 HA 资格验证；在不把语义下沉到 NoKV 的前提下反馈并共同完善 shared store contract |
+| PostgreSQL provider owner | 通用 PostgreSQL provider/service；transaction isolation、认证、租户、审计与运维部署合同 |
+| 联合验证 | Provider conformance matrix、单向 shadow parity、一个 Goal/两个 Agent 的 TEST ONLY canary，以及晋升证据 |
 
-The shared control plane is a composition of independently owned ledgers, not
-one large coordination aggregate. Stage 3/4 qualification must preserve these
-ownership and proof boundaries:
+Shared control plane 是多个独立 ledger 的组合，不是一张巨大的 coordination aggregate。
+Stage 3/4 qualification 必须保持以下 ownership 与 proof 边界：
 
-| Ledger / decision | Authority and stable identity | Failure boundary | Stage 3/4 proof |
+| Ledger / decision | Authority 与稳定 identity | 失败边界 | Stage 3/4 证明 |
 | --- | --- | --- | --- |
-| Coordination head, Todo/claim, and lease fence | `AuthorityStore`; `(tenant_id, goal_id)`, `operation_id`, authority revision, and lease epoch | provider CAS/transaction plus operation-receipt readback | provider parity for projection, legal claim/lease transitions, fence, receipt, head, and cursor |
-| Turn admission and quota | independent Turn/quota ledgers; obligation, admission, debit, and void receipt identities | their own append/idempotency boundary; never absorbed into a coordination commit | end-to-end observation that admitted work references the accepted coordination head and accounts quota once |
-| Delivery, inbox, and external effects | independent delivery/inbox/provider ledgers; event cursor, effect identity, and provider receipt | connector/effect ambiguity is reconciled at its owning ledger | end-to-end observation that steering changes a later decision and an effect is not duplicated |
-| Settlement and run history | independent settlement journal and run ledger; settlement/phase receipt and run identity | ordered settlement checkpoints and idempotent replay | end-to-end observation of exactly-once settlement across restart, referenced from rather than stored inside coordination state |
+| Coordination head、Todo/claim 与 lease fence | `AuthorityStore`；`(tenant_id, goal_id)`、`operation_id`、authority revision 与 lease epoch | provider CAS/transaction 加 operation-receipt 回读 | projection、合法 claim/lease transition、fence、receipt、head 与 cursor 的 provider parity |
+| Turn admission 与 quota | 独立 Turn/quota ledger；obligation、admission、debit 与 void receipt identity | 自己的 append/幂等边界；永不吸收到 coordination commit | 端到端观察：获准工作引用已接受的 coordination head，且 quota 只记一次 |
+| Delivery、inbox 与外部 effect | 独立 delivery/inbox/provider ledger；event cursor、effect identity 与 provider receipt | connector/effect ambiguity 在所属 ledger reconcile | 端到端观察：steering 改变后续决策，且 effect 不重复 |
+| Settlement 与 run history | 独立 settlement journal 与 run ledger；settlement/phase receipt 和 run identity | 有序 settlement checkpoint 与幂等 replay | 端到端观察：跨重启 settlement exactly-once；只从 coordination state 引用，不存入其中 |
 
-Only the first row qualifies an `AuthorityStore` implementation. The remaining
-rows qualify control-plane composition through typed references and receipts;
-passing them must not be reported as additional state owned or transacted by
-the coordination provider.
+只有第一行用于资格化 `AuthorityStore` 实现。其余行通过 typed reference 与 receipt
+资格化控制面组合；即使通过，也不得宣称这些状态由 coordination provider 额外持有或
+一起 transaction。
 
-The sequence is:
+实施顺序如下：
 
-1. **Stage 0 - merge the recoverable reference foundation.** Integrate #3669
-   with the native TypeScript task-lease acquire boundary, preserve TypeScript as
-   the acquire transaction owner, and close file store-identity publication.
-   #3806 completes the local lifecycle transaction cutover and makes renew,
-   transfer, and release consume one pure TypeScript decision in both the local
-   file executor and provider-neutral coordination; Python is a typed adapter,
-   not an alternate authority.
-2. **Stage 1 - define the provider-neutral transaction boundary.** Express the
-   service-grade contract in LoopX-owned TypeScript and make the file provider
-   its first conformance backend. Do not recreate a second Python semantic
-   authority.
-3. **Stage 2A/2B - implement providers in parallel.** The NoKV owner qualifies
-   the NoKV adapter and storage envelope; the PostgreSQL owner implements the
-   generic service/provider. Both reuse the same LoopX transition and receipt
-   semantics.
-4. **Stage 2C - qualify and promote the first canonical profile.** First shadow
-   the current Markdown/task-lease writers into `FileAuthorityStore` without
-   reading it for decisions. Prove parity, crash recovery, migration, and
-   one-command rollback; then, in a separately reviewed promotion, make that
-   profile the local coordination authority and fence the legacy writers.
-   Markdown and task-lease files become projections only after promotion. The
-   state machine, complete field manifest, receipts, and acceptance rows remain
-   provider-neutral so NoKV and PostgreSQL can qualify through the same route.
-   Projection shape or head-digest parity alone is insufficient: promotion
-   must prove complete consumer-visible Todo and lease semantics at the exact
-   qualified revision.
-5. **Stage 3 - one-way remote shadow parity.** The promoted local
-   `FileAuthorityStore` remains the only authority while committed observations
-   are projected to a NoKV or PostgreSQL candidate. Provider parity compares
-   Todo/claim, lease fence, operation
-   receipt, projection head, and cursor. Turn admission, quota, settlement,
-   inbox, and run history remain independent ledgers: the shadow records only
-   typed references needed to verify their end-to-end composition. Do not
-   perform bidirectional synchronization or provider-to-file writes.
-6. **Stage 4 - TEST ONLY canary.** One Goal and two Agents must show no duplicate
-   claim, correct expiry/fencing, restart resume, and fail-closed coordination
-   writes during network failure. The same canary separately observes that no
-   external effect is duplicated, inbox steering changes a later decision,
-   and settlement is idempotent and exactly-once; those are composition proofs
-   over their owning ledgers, not `AuthorityStore` conformance claims.
-7. **Stage 5 - flip one authority source.** Only after a reviewed promotion,
-   make the shared LoopX service the sole writer. Local `.loopx` state becomes
-   cache, offline projection, and diagnostic material. Never keep a long-lived
-   dual-write or dual-master mode.
+1. **Stage 0——合入可恢复执行参考基础。** 将 #3669 与原生 TypeScript task-lease
+   acquire boundary 集成，保持 TypeScript 是 acquire transaction owner，并关闭
+   file store-identity 发布问题。#3806 完成本地 lifecycle transaction cutover，并让
+   renew、transfer、release 在本地 file executor 与 provider-neutral coordination
+   中消费同一个纯 TypeScript decision；Python 只做 typed adapter，不形成另一套权威。
+2. **Stage 1——定义 provider-neutral transaction boundary。** 在 LoopX 持有的
+   TypeScript 中表达 service-grade contract，并让 file provider 成为第一个
+   conformance backend；不重建第二个 Python 语义权威。
+3. **Stage 2A/2B——并行实现 provider。** NoKV owner 验证 NoKV adapter 与存储
+   包络；PostgreSQL owner 实现通用 service/provider。两者复用同一套 LoopX
+   transition 与 receipt 语义。
+4. **Stage 2C——资格化并晋升第一个 canonical profile。** 先在不读取其决策结果的
+   前提下，把现有 Markdown/task-lease writer shadow 到 `FileAuthorityStore`；验证
+   parity、crash recovery、migration 与一键 rollback。随后通过单独评审的 promotion，
+   让该 profile 成为本地 coordination authority，并 fence legacy writer；只有晋升后
+   Markdown 与 task-lease 文件才退为 projection。state machine、完整 field manifest、
+   receipt 与 acceptance row 保持 provider-neutral，使 NoKV 与 PostgreSQL 可以复用
+   同一条 qualification 路线。仅证明 projection 结构或 head digest 相等仍然不够；
+   promotion 还必须在精确 qualified revision 上证明完整的 consumer-visible Todo 与
+   lease 语义。
+5. **Stage 3——远端单向 shadow parity。** 晋升后的本地 `FileAuthorityStore` 仍是
+   唯一 authority；将已提交观察投影到 NoKV 或 PostgreSQL 候选。Provider parity
+   只对比 Todo/claim、lease fence、
+   operation receipt、projection head 与 cursor。Turn admission、quota、settlement、
+   inbox 与 run history 仍是独立 ledger；shadow 只记录验证端到端组合所需的 typed
+   reference。不做双向同步，也不允许 provider 回写 file。
+6. **Stage 4——TEST ONLY canary。** 用一个 Goal、两个 Agent 验证：不重复 claim
+   、过期与 fencing 正确、重启后继续，以及网络失败时 coordination write
+   fail-closed。同一个 canary 还要分别观察：外部 effect 不重复、inbox steering
+   改变后续决策、settlement 幂等且 exactly-once；这些是跨所属 ledger 的 composition
+   proof，不是 `AuthorityStore` conformance claim。
+7. **Stage 5——切换唯一 authority source。** 只有经过评审的晋升，才能让 shared
+   LoopX service 成为唯一 writer。本地 `.loopx` 退为 cache、offline projection 与
+   诊断材料。绝不长期维持 dual-write 或 dual-master。
 
-### 11.2 Current implementation and evidence ledger (non-normative)
+### 11.2 当前实现与证据台账（非规范性）
 
-The dated entries below preserve shipped boundaries, experiments, and review
-findings. They are evidence for the stage plan, not additional specification.
-Later entries supersede earlier status claims only when they identify the
-relevant contract, exact implementation boundary, and validation evidence.
+下面带日期的条目保留已交付边界、实验与评审结论。它们是分阶段计划的证据，不是
+额外规范。后来的条目只有在点明相关合同、精确实现边界与验证证据时，才可取代更早的
+状态判断。
 
-| Ledger entry | What it records |
+| 台账条目 | 记录内容 |
 | --- | --- |
-| Stage 2C observation foundation | Default-off post-commit capture and its crash window |
-| Implementation prerequisite / Stage 1 Part 2 | Provider-neutral decision extraction and remaining Python/TypeScript ownership boundary |
-| Stage 2B PostgreSQL candidate | PostgreSQL store/RLS conformance, without runtime promotion |
-| Stage 2C runtime shadow | Parity, read-candidate, bootstrap, rollback, cutover kernel, and writer fence |
-| Stage 2 slice | Reference aggregate/provider implementation and initial NoKV evidence |
-| Stage 3 slice | Recoverable lifecycle, retention findings, and live provider limits |
-| Stage-ladder evidence | Executable stage claims, environment gates, and pending rows |
+| Stage 2C observation foundation | 默认关闭的提交后 capture 及其 crash window |
+| 实施前置 / Stage 1 Part 2 | provider-neutral decision 抽取与剩余 Python/TypeScript ownership 边界 |
+| Stage 2B PostgreSQL candidate | PostgreSQL store/RLS conformance，不代表 runtime promotion |
+| Stage 2C runtime shadow | parity、read-candidate、bootstrap、rollback、cutover kernel 与 writer fence |
+| Stage 2 slice | reference aggregate/provider 实现与初步 NoKV 证据 |
+| Stage 3 slice | 可恢复 lifecycle、retention 结论与 live provider 限制 |
+| Stage-ladder evidence | 可执行 stage claim、环境 gate 与 pending row |
 
-#### Stage 2C observation foundation: local post-commit capture
+#### Stage 2C 观察基础：本地提交后 capture
 
-The first half of Stage 2C is an explicit, default-off product path. Preview
-and enable it with:
+Stage 2C 的前半段是一个显式开启、默认关闭的产品路径。先预览，再开启：
 
 ```bash
 loopx configure-goal --goal-id GOAL --local-authority-shadow-file
 loopx configure-goal --goal-id GOAL --local-authority-shadow-file --execute
 ```
 
-Todo, handoff-mode, follow-up, and task-lease facades sample the full current
-local projection after their primary write returns committed, then ask
-`FileAuthorityStore` to retain that snapshot. `observation_trigger` records
-why sampling began; it is not the primary transaction identity. A concurrent
-primary commit may therefore appear in the sampled snapshot. A `captured` or
-`replayed` result proves only the candidate-side observation commit. It does
-not compare the source and candidate and carries `parity_verdict=not_evaluated`.
+Todo、handoff-mode、follow-up 与 task-lease facade 会在本地主写返回成功后，采样
+完整当前本地投影，再让 `FileAuthorityStore` 保存该 snapshot。
+`observation_trigger` 只记录为何开始采样，不是主写 transaction identity；并发主写
+因此可能出现在该次 snapshot 中。`captured` 或 `replayed` 只证明候选侧 observation
+commit，不表示已经对比 source 与 candidate；结果明确携带
+`parity_verdict=not_evaluated`。
 
-Candidate bytes live under
-`authority-shadow/file/` outside the legacy per-Goal runtime tree, so state
-migration never copies a store identity or revision; an executed migration
-seeds a new target lineage from the migrated local state. Candidate failure is
-reported as an observation result but never reverses the completed local write.
+候选数据位于 legacy 单 Goal runtime tree
+之外的 `authority-shadow/file/`，因此 state migration 不会复制 store identity 或
+revision；真正执行迁移时，会从迁移后的本地主状态为目标端建立一条新 lineage。
+候选失败只形成 observation result，不会推翻已经完成的本地写入。
 
-Disable the observer in one command with
-`loopx configure-goal --goal-id GOAL --clear-local-authority-shadow --execute`.
-This is rollback of observation only: the local Markdown and task-lease files
-remain canonical throughout. The slice does not read the candidate for a
-decision, fence a legacy writer, qualify a remote provider, or complete the
-second Stage 2C promotion. A process crash after the local commit but before
-the observer call may miss that individual observation; a later committed
-write or migration seed refreshes the full current projection, but no durable
-shadow outbox or transaction-correlated receipt is claimed here. This plumbing
-is not parity evidence and cannot by itself support Stage 2C promotion.
+用
+`loopx configure-goal --goal-id GOAL --clear-local-authority-shadow --execute`
+即可关闭 observer。这里回退的只是观察路径：Markdown 与 task-lease 文件始终是
+canonical。本切片不会读取候选来决策，不会 fence legacy writer，不会资格化远端
+provider，也没有完成 Stage 2C 后半段的本地 canonical promotion。若进程恰好在本地
+提交后、observer 调用前崩溃，该次 observation 可能丢失；后续成功写入或 migration
+seed 会刷新完整当前投影，但这里不宣称已有 durable shadow outbox 或与主写 transaction
+关联的 receipt。这套 plumbing 不是 parity evidence，不能单独支持 Stage 2C promotion。
 
-#### Implementation prerequisite: put local file mode behind the same coordination contract
+#### 实施前置条件：先让本地文件模式经过同一协调合同
 
-Before wiring a live NoKV or another remote provider, the runtime should first
-extract the domain decisions in the current todo/lease write paths into a
-provider-neutral coordination core and qualify a file-backed provider against
-the same commands, preconditions, receipts, and typed outcomes. That refactor
-must begin as a shadow of the current Markdown active state and task-lease
-files, proving read/write parity, idempotency, CAS conflicts, crash recovery,
-and one-command rollback. Only a separately reviewed promotion may make the
-file aggregate locally canonical and turn Markdown/lease files into
-projections. NoKV then reuses the same authority and contract while replacing
-only the `load` / `compare_and_put` provider. This prerequisite does not create
-a generic storage abstraction over registry, run history, quota, scheduler, or
-evidence; those ledgers retain the owners defined in Section 3.
+在接入 live NoKV 或其他远端 provider 之前，runtime 应先把当前 todo/lease 写路径中的
+领域判断抽成 provider-neutral coordination core，并让一个 file-backed provider 通过
+同一组 command、precondition、receipt 与 typed outcome 合同。这个重构应先以 shadow
+方式对照当前 Markdown active state 和 task-lease 文件，资格化读写 parity、幂等、CAS
+冲突、崩溃恢复与一键回退；只有经过单独 review 的 promotion 才能让 file aggregate
+成为本地 canonical，并把 Markdown/lease 退为 projection。NoKV 随后复用同一 authority
+与合同，只替换 `load` / `compare_and_put` provider。该前置条件不创建覆盖 registry、run
+history、quota、scheduler 或 evidence 的通用存储抽象，这些账继续遵守第 3 节的 owner
+边界。
 
-#### Stage 1 Part 2 boundary
+#### Stage 1 Part 2 边界
 
-The provider-neutral pure authority core is merged on `main` through #3410.
-This slice is a behavior-preserving extraction of a pure decision core for the
-todo lifecycle, task-lease lifecycle, and `handoff_mode` rules that the current
-writers already enforce. Markdown goal state and task-lease files remain
-canonical. The extraction does not synthesize todo, authorization, dependency,
-or gate revisions for domains that have no current revision publisher. It also
-does not replace today's separate claim and lease verbs with the atomic
-`claim_work` command described above; that command belongs to the future shared
-aggregate.
+Provider-neutral 的纯 authority core 已通过 #3410 合入 `main`。
+这一切片只做行为保持的抽取：把现有 writer 已经执行的 todo lifecycle、task-lease
+lifecycle 与 `handoff_mode` 规则收敛进纯决策 core。Markdown goal state 与
+task-lease 文件仍是 canonical。此次抽取不会为目前没有 revision publisher 的 todo、
+authorization、dependency 或 gate 域凭空制造 revision；也不会把今天相互分开的
+claim 与 lease verb 偷换成上文的 atomic `claim_work`。后者属于未来的 shared
+aggregate。
 
-After the task-lease TypeScript cutovers, acquire is owned by
-`task_lease_acquire.ts`, while renew, transfer, and release are owned by the
-pure seam in `task_lease_lifecycle_decision.ts`. Python `authority_core`
-projects normalized snapshots, invokes those decisions, and reconstructs the
-provider-neutral `TransitionPlan`. The local lease-file transaction and the
-coordination executor therefore consume the same lease decisions; locking,
-source revalidation, file persistence, provider CAS, and receipt construction
-remain in their respective execution layers. Todo, terminal-fence, and
-handoff-mode decisions stay in the Python core until their own reviewed
-TypeScript cutovers; local holder/fence-close lock mechanics remain execution
-effects rather than provider contracts.
+Task-lease TypeScript cutover 后，acquire 由 `task_lease_acquire.ts` 持有，renew、
+transfer、release 则由 `task_lease_lifecycle_decision.ts` 的纯 seam 持有。Python
+`authority_core` 只负责投影 normalized snapshot、调用这些 decision，再重建
+provider-neutral `TransitionPlan`。因此，本地 lease-file transaction 与 coordination
+executor 消费同一份 lease decision；加锁、source 重验、文件持久化、provider CAS 与
+receipt 构造仍分别属于各自 execution layer。Todo、terminal-fence 与 handoff-mode
+决策继续留在 Python core，直到各自经过 review 的 TypeScript cutover；本地 holder /
+fence-close 锁机制属于 execution effect，而不是 provider contract。
 
-Keep three layers distinct as the provider work proceeds:
+后续 provider 工作必须始终分开三层：
 
-1. `DomainDecision` is the pure apply/reject/no-change judgment over an explicit
-   coordination snapshot and command.
-2. Authority execution and its result own locking, revalidation, committing the
-   decision, and eventually the durable semantic receipt.
-3. The provider result reports storage observations such as
-   `loaded | missing | conflict | unavailable | failed` and an opaque provider
-   generation; it is not a domain decision or a semantic receipt.
+1. `DomainDecision` 只根据显式 coordination snapshot 与 command，纯函数式地给出
+   apply / reject / no-change 判断。
+2. Authority execution 及其 result 负责加锁、重验、提交该判断，并最终持有 durable
+   semantic receipt。
+3. Provider result 只报告 `loaded | missing | conflict | unavailable | failed` 等存储
+   observation 与 opaque provider generation；它既不是领域判断，也不是 semantic
+   receipt。
 
-Stage 1 Part 2 does not claim durable semantic receipts or A/B/A replay. Those
-require the Stage 2 aggregate and provider shadow. That aggregate must treat
-`handoff_mode` as a real, revision-covered decision input. Its provider
-contract must never collapse `missing` into `unavailable` or `failed`.
-`provider_generation`, `authority_revision`, and `lease_epoch` remain three
-independent version domains. Likewise, a restore may preserve frozen bytes and
-lineage without granting current authority: promoting restored state to the
-live authority head requires an explicit lineage and binding fence.
+Stage 1 Part 2 不声称已经提供 durable semantic receipt 或 A/B/A replay；它们需要
+Stage 2 的 aggregate 与 provider shadow。该 aggregate 必须把 `handoff_mode` 当作
+真实且由 revision 覆盖的决策输入。Provider 合同绝不能把 `missing` 折叠成
+`unavailable` 或 `failed`。`provider_generation`、`authority_revision` 与
+`lease_epoch` 始终是三个独立版本域。同样，restore 可以保存 frozen bytes 与
+lineage，却不会因此获得当前权威；把恢复状态晋升为 live authority head，必须经过
+显式的 lineage 与 binding fence。
 
-#### Stage 2B PostgreSQL candidate status (2026-09-02)
+#### Stage 2B PostgreSQL candidate 状态（2026-09-02）
 
-The first PostgreSQL candidate now implements the LoopX-owned TypeScript store
-contract instead of introducing a second semantic authority. A store handle is
-bound to `(tenant_id, goal_id)` and receives only a service-owned database
-pool. Its fixed `loopx_control_plane` schema separates the scoped head,
-committed operations, ordered events, and ordered receipts. One SQL transaction
-creates or locks the scoped head row, checks the opaque provider revision,
-fences `operation_id` with a unique constraint, allocates the per-goal cursor,
-inserts the commit/events/receipts, advances the projection head, and commits.
-An error before `COMMIT` is rolled back and typed `failed`; an error after the
-`COMMIT` attempt starts is typed `ambiguous` and can be reconciled only by
-receipt readback. Database-incarnation metadata is installed administratively
-and cannot be rebound implicitly.
+首个 PostgreSQL candidate 已实现由 LoopX 持有的 TypeScript store contract，而非
+引入第二个语义权威。Store handle 绑定 `(tenant_id, goal_id)`，只接收 service 持有的
+database pool。固定的 `loopx_control_plane` schema 将 scoped head、committed
+operation、有序 event 与有序 receipt 分开存放。一笔 SQL transaction 创建或锁住
+scoped head row，校验 opaque provider revision，以 unique constraint fence
+`operation_id`，分配 per-goal cursor，写入 commit/event/receipt，推进 projection head，
+最后提交。`COMMIT` 之前的错误会 rollback 并返回 typed `failed`；`COMMIT` 尝试开始后
+的错误返回 typed `ambiguous`，只能通过 receipt readback reconcile。Database
+incarnation metadata 由行政部署路径安装，不能被隐式重新绑定。
 
-The database trust-boundary slice now gives each provider operation a
-transaction-local `loopx.tenant_id` context and enables plus forces PostgreSQL
-row-level security on every tenant-scoped table. Reads use a read-only
-transaction and roll it back before returning, so a pooled session cannot
-retain a previous tenant context. A missing context sees no scoped rows;
-`WITH CHECK` rejects a row for any tenant other than the active context. The
-qualified restricted-role profile receives only schema usage, metadata read,
-and the minimum scoped table privileges, so it cannot rebind
-database-incarnation metadata or install schema policy.
+数据库 trust-boundary 切片现在会为每次 provider operation 设置 transaction-local
+`loopx.tenant_id` context，并在所有 tenant-scoped table 上同时 enable 与 force
+PostgreSQL row-level security。读操作使用 read-only transaction，并在返回前
+rollback，因此 pooled session 不会残留上一个 tenant context。缺少 context 时看不到
+任何 scoped row；`WITH CHECK` 会拒绝写入 active context 之外的 tenant。资格化所用的
+restricted-role profile 只获得 schema usage、metadata read 与 scoped table 所需的最小
+权限，因此不能重新绑定 database-incarnation metadata，也不能安装 schema policy。
 
-This is defense in depth inside the service, not tenant authentication. The
-service still owns the database role and chooses the transaction context after
-authenticating a principal and authorizing its tenant. An Agent never receives
-that role, and RLS does not make a caller-supplied tenant id trustworthy.
+这只是 service 内部的 defense in depth，不是 tenant authentication。Service 仍持有
+database role，并且必须先认证 principal、授权其 tenant，才能选择 transaction context。
+Agent 永远拿不到该 role；RLS 也不会让 caller 自报的 tenant id 自动变可信。
 
-This slice also moves strict JSON validation and commit normalization out of
-the file implementation into one TypeScript authority-store codec. File and
-PostgreSQL now run the same provider-neutral conformance suite for atomic
-projection-plus-receipt commit, CAS contention, historical receipt replay,
-operation fencing, ordered cursor scans, isolation of returned values, and
-pre-write rejection of malformed JSON.
+本切片还把 strict JSON validation 与 commit normalization 从 file 实现抽到统一的
+TypeScript authority-store codec。File 与 PostgreSQL 现在运行同一套 provider-neutral
+conformance suite，覆盖 projection-plus-receipt 原子提交、CAS contention、历史 receipt
+replay、operation fencing、有序 cursor scan、返回值隔离，以及 malformed JSON 在写前
+被拒绝。
 
-The PostgreSQL adapter also applies one provider-local resource guard before it
-opens a connection: a commit whose canonical envelope exceeds the configured
-`max_commit_bytes` is rejected as typed `store_capacity_exhausted`. The default
-is 16 MiB and a deployment may lower it. This is an admission ceiling for one
-atomic operation, not measured throughput evidence and not a retention or
-partitioning design; those promotion holds remain open.
+PostgreSQL adapter 还会在打开连接之前执行一项 provider-local 资源门禁：canonical commit
+envelope 超过配置的 `max_commit_bytes` 时，写入以 typed
+`store_capacity_exhausted` 被拒绝。默认值为 16 MiB，部署可以调低。它只是单笔原子操作的
+准入上限，不是实测 throughput 证据，也不是 retention/partitioning 设计；这些晋升 hold
+仍然开放。
 
-Real PostgreSQL qualification starts here, not at shadow or canary. A
-PostgreSQL 16 instance passed the shared conformance matrix, same-head
-concurrent CAS, tenant-scoped reuse of the same goal and operation ids,
-transaction rollback with no visible head or receipt, receipt recovery after a
-committed transaction loses its response, database-incarnation rebind refusal,
-and a restricted-role two-tenant RLS matrix. The latter proves that missing
-transaction context exposes no scoped row, cross-context writes fail, and the
-runtime role cannot mutate administrative metadata. A fake can still exercise
-adapter branches, but it cannot prove row locking, unique constraints,
-rollback, commit visibility, privileges, or RLS; every later PostgreSQL
-provider slice must therefore retain a real-database gate.
+真实 PostgreSQL qualification 从这里开始，而不是等到 shadow 或 canary。一个真实
+PostgreSQL 16 实例已通过共享 conformance matrix、同一 head 的并发 CAS、不同 tenant
+复用相同 goal 与 operation id、transaction rollback 后不暴露 head 或 receipt、已提交
+transaction 丢失响应后的 receipt 恢复、拒绝 database incarnation rebind，以及受限
+role 的双 tenant RLS matrix。最后一项证明：缺少 transaction context 时看不到 scoped
+row，跨 context 写入失败，runtime role 也不能修改行政 metadata。Fake 仍可覆盖 adapter
+分支，但不能证明 row lock、unique constraint、rollback、commit visibility、privilege
+或 RLS；因此后续每个 PostgreSQL provider 切片都必须保留真实数据库门禁。
 
-The candidate remains coverage-only. No production LoopX entry point constructs
-it, local mode remains unchanged, and Agents cannot receive the injected pool.
-The database runtime-role and RLS behavior within the service trust boundary is
-now implemented and qualified. Service API authentication,
-principal-to-tenant authorization, the production runtime caller,
-restore-incarnation rotation, pool
-exhaustion/cancellation/failover, retention/partitioning/measured capacity,
-one-way shadow parity, the TEST ONLY canary, and authority-source promotion
-remain explicit holds. The next PostgreSQL slice must qualify the authenticated
-service/deployment and failure boundary; it must not treat database RLS or the
-single-commit admission ceiling as those missing service and capacity layers.
+该 candidate 仍是 coverage-only。没有 production LoopX entry point 构造它，本地模式
+保持不变，Agent 也不能获得注入的 pool。Service trust boundary 内的数据库
+runtime-role/RLS 行为现已实现并完成资格化。Service API authentication、
+principal-to-tenant authorization、production runtime caller、restore
+incarnation rotation、pool exhaustion/cancellation/failover、retention/partitioning/实测
+capacity、单向 shadow parity、TEST ONLY canary 与 authority-source promotion 仍是显式
+hold。下一个 PostgreSQL 切片必须资格化 authenticated service/deployment 与 failure
+boundary，不能把 database RLS 或单笔 commit 准入上限当成仍缺失的 service 与 capacity
+层。
 
-The file-backed provider contract and executor are Stage 2; their first slice
-is merged on `main` through #3529, and the evidence behind it is recorded in
-the Stage 2 status subsection below. That slice proves the aggregate and
-provider boundary, but it is not the Stage 2C production runtime shadow: it
-does not hook the legacy Todo or task-lease writers.
+File-backed provider 合同与 executor 属于 Stage 2；其第一个切片已通过 #3529
+合入 `main`，证据记录在下方的 Stage 2 状态小节。该切片证明 aggregate 与 provider
+边界，但还不是 Stage 2C 的生产 runtime shadow：它没有接入 legacy Todo 或
+task-lease writer。
 
-#### Stage 2C post-commit runtime-shadow status (2026-09-03)
+#### Stage 2C 提交后 runtime shadow 状态（2026-09-03）
 
-The first production-path shadow slice is implemented behind this exact,
-default-off goal configuration:
+第一个接入真实写路径的 shadow 切片由以下精确配置显式启用，默认关闭：
 
 ```json
 {
@@ -1475,53 +1229,41 @@ default-off goal configuration:
 }
 ```
 
-Activation requires all three values. An absent, disabled, malformed, or
-unsupported configuration preserves the legacy result and returns typed
-disabled evidence. When enabled, the runtime obeys the following boundary:
+三个值缺一不可；配置缺失、关闭、格式错误或 provider 不受支持时，legacy 结果保持
+不变，并返回 typed disabled evidence。启用后，runtime 遵守以下边界：
 
-- the legacy Markdown Todo writer or task-lease writer commits first and
-  remains canonical; only a successful primary mutation dispatches the
-  shadow;
-- the Python adapter projects the committed Todo view through the same shared
-  canonical read-record contract used by `todo list`, retains every
-  consumer-visible identity, text, priority, filtering, continuation, resume,
-  scheduling, archival, completion, note, and evidence field, sorts records by
-  stable Todo identity, and sends that view plus compact leases through the
-  existing TypeScript effect runtime;
-- the TypeScript owner writes that projection and its operation receipt in one
-  `AuthorityStore` transaction. It checks an existing receipt before writing,
-  rejects reuse of an operation id with different normalized content, retries
-  provider-revision contention only within a fixed bound, and reconciles an
-  ambiguous commit only by reading the exact durable receipt;
-- an applied result reads the receipt back and verifies the current provider
-  head when it has not already been superseded. Every result states
-  `decision_read_from_shadow=false`; a disabled, failed, conflicting, or
-  ambiguous shadow result cannot reject, roll back, or rewrite the committed
-  primary result.
+- legacy Markdown Todo writer 或 task-lease writer 先成功提交且继续作为 canonical；
+  只有 primary mutation 成功后才派发 shadow；
+- Python adapter 通过 `todo list` 共用的 canonical read-record 合同投影已提交 Todo
+  view，完整保留消费方可见的 identity、文本、优先级、过滤、continuation、resume、
+  调度、归档、完成、note 与 evidence 字段；随后按稳定 Todo identity 排序，并把该
+  view 与紧凑 lease 一起通过既有 TypeScript effect runtime 发送；
+- TypeScript owner 在同一笔 `AuthorityStore` transaction 中写 projection 与 operation
+  receipt。写前先查询既有 receipt；同一 operation id 搭配不同 normalized content
+  会被拒绝；provider-revision contention 只做固定次数重试；ambiguous commit 只能
+  通过读取精确 durable receipt 恢复；
+- `applied` 会读回 receipt，并在 provider head 尚未被后续提交覆盖时验证当前
+  projection。所有结果都声明 `decision_read_from_shadow=false`；shadow 被关闭、失败、
+  冲突或 ambiguous，都不能拒绝、回滚或改写已经提交的 primary result。
 
-Cross-runtime tests exercise the real Python -> TypeScript ->
-`FileAuthorityStore` path from both Todo and task-lease hooks, including
-default-off behavior, stable replay, content-drift rejection, ambiguous-commit
-recovery, projection read-back, and shadow-failure isolation. This closes the
-first runtime-shadow slice. A follow-up typed inspection seam now compares the
-current compact legacy projection with the file head and reports `missing`,
-`matched`, or `drifted` plus both content digests. It is default-off,
-read-only, and always returns `decision_read_from_shadow=false`; this provides
-the reusable baseline/parity observation needed by migration without turning
-an observation into authority.
+跨 runtime 测试从 Todo 与 task-lease 两条 hook 验证真实的 Python -> TypeScript ->
+`FileAuthorityStore` 路径，覆盖 default-off、稳定 replay、内容漂移拒绝、ambiguous
+commit 恢复、projection read-back 与 shadow failure isolation。这里仅关闭第一个
+runtime-shadow 切片。后续 typed inspection seam 会把当前紧凑 legacy projection 与
+file head 对比，返回 `missing`、`matched` 或 `drifted` 以及两侧内容摘要。该 seam 默认
+关闭、只读，并始终返回 `decision_read_from_shadow=false`；它为 migration 提供可复用
+的 baseline/parity observation，但不会把 observation 升格为 authority。
 
-The next migration primitive is now also present behind the same explicit
-opt-in. `coordination.runtime_shadow.bootstrap` installs one normalized legacy
-projection only when the file shadow is uninitialized. Its first committed
-event durably binds the source version, source projection digest, and
-`legacy_canonical_shadow` mode declaration; it deliberately carries an empty
-receipt payload because no agent operation has run. Exact replay is recovered
-from that first transaction, including an ambiguous lost response, while a
-different existing lineage fails closed. This is the provider-owned bootstrap
-effect needed by a later administrative migration command; it still cannot
-promote the shadow or make a coordination decision.
+同一显式 opt-in 后面现在也有了下一个 migration primitive：
+`coordination.runtime_shadow.bootstrap` 只允许在 file shadow 尚未初始化时安装一份
+规范化 legacy projection。第一条已提交 event 持久绑定 source version、source
+projection digest 与 `legacy_canonical_shadow` mode declaration；由于尚未执行任何
+Agent operation，它刻意携带空 receipt payload。精确重放从第一条 transaction 恢复，
+包括提交成功但响应丢失的 ambiguous 情形；如果已有不同 lineage，则 fail closed。
+这是后续管理面 migration command 所需的 provider-owned bootstrap effect，但它仍不能
+promotion shadow，也不能参与协调决策。
 
-The administrative caller is explicit and preview-first:
+管理面 caller 是显式且 preview-first 的：
 
 ```bash
 loopx coordination-shadow inspect --goal-id <goal-id>
@@ -1535,53 +1277,40 @@ loopx coordination-shadow rollback --goal-id <goal-id> \
   --provider-revision <revision-from-inspect> --execute
 ```
 
-It derives the compact projection from the current canonical Todo and
-task-lease views, reports only counts and digests, and requires `--execute`
-before invoking bootstrap. A successful write is immediately read back through
-the typed parity inspection. The command remains unavailable unless the exact
-goal-level `file_v0` shadow opt-in is active.
+它从当前 canonical Todo 与 task-lease view 派生紧凑 projection，只报告计数与摘要，
+并要求 `--execute` 才调用 bootstrap。写入成功后会立即通过 typed parity inspection
+读回。除非目标开启精确的 goal-level `file_v0` shadow opt-in，否则该命令不可执行。
 
-Pre-promotion rollback is revision-fenced and non-destructive. TypeScript moves
-the exact active file-shadow lineage into a durable quarantine archive; exact
-retries replay that archive receipt, revision drift fails closed, and the
-legacy Todo/task-lease source remains canonical throughout. A later bootstrap
-may therefore reconstruct a fresh shadow without restoring or trusting the
-retired lineage.
+promotion 前 rollback 带精确 revision fence，且不删除数据。TypeScript 会把命中的
+file-shadow lineage 移入持久 quarantine archive；精确重试复用 archive receipt，revision
+漂移 fail closed，legacy Todo/task-lease source 全程保持 canonical。之后可以从 legacy
+source 重新 bootstrap 新 shadow，而无需恢复或信任退役 lineage。
 
-The read-only `qualify` action turns one-point inspection into a typed sustained
-parity report. Its coverage-based policy requires a caller-selected number of
-distinct committed operations and any explicitly named Todo/lease mutation
-kinds. TypeScript scans the complete bounded lineage, verifies the bootstrap,
-every event/receipt/projection identity, the current legacy/file head digest,
-and reports `qualified`, `insufficient_evidence`, or `drifted`. Replays do not
-increase the operation count, missing coverage fails the gate, and every result
-continues to declare `decision_read_from_shadow=false`.
+只读 `qualify` action 把单点 inspection 提升为 typed 持续 parity 报告。它采用覆盖式
+策略：调用方指定至少需要多少个不同的已提交 operation，以及必须覆盖哪些 Todo/lease
+mutation kind。TypeScript 会扫描完整且有界的 lineage，校验 bootstrap、每条
+event/receipt/projection identity，以及当前 legacy/file head digest，并返回
+`qualified`、`insufficient_evidence` 或 `drifted`。replay 不增加 operation 计数，缺少
+覆盖会让 gate 失败，所有结果仍明确声明 `decision_read_from_shadow=false`。
 
-Structural parity is not consumer semantic parity. A promotable projection
-therefore also carries a versioned Todo read-model receipt containing the exact
-field contract, record count, and canonical record digest. TypeScript validates
-that receipt against deterministic provider records during qualification,
-promotion, and every provider-first collection read; a missing schema, stale
-digest, truncated field contract, count mismatch, or unstable order fails
-closed. Provider-first mutations regenerate the receipt atomically with the
-head. Adding a Todo consumer field is a contract change and requires a new
-qualification rather than a permissive fallback.
+结构 parity 不等于消费语义 parity。因此，可 promotion 的 projection 还必须携带一个
+版本化 Todo read-model receipt，其中包含精确字段合同、记录数和 canonical record
+digest。TypeScript 会在 qualification、promotion 以及每次 provider-first collection
+read 时，对 deterministic provider records 校验该 receipt；schema 缺失、digest 过期、
+字段合同被截断、记录数不符或顺序不稳定都会 fail closed。provider-first mutation 必须
+在同一原子 head 更新中重算 receipt。新增 Todo 消费字段属于合同变更，必须重新
+qualification，不能宽松 fallback。
 
-Before any real Goal is promoted, qualification must additionally execute the
-existing consumer pipeline on both the legacy source and the provider
-round-trip at the same revision. The semantic matrix covers user and agent
-roles; open, done, blocked, and deferred status; priority and ordering; claim,
-exclusion, bound-agent, and global-gate filtering; resume conditions;
-successor/continuation behavior; continuous-monitor cadence, due time,
-watch-only and material-generation state; notes, evidence, completion, and
-archival; and provider-only reads after the Markdown file is unavailable. Any
-difference blocks promotion and leaves legacy authority in place. Synthetic
-stubs remain useful unit tests but cannot substitute for this real complex-Goal
-qualification. Real Goal content stays local; public evidence contains only
-redacted coverage, counts, exact revision identifiers, and digests.
+任何真实 Goal promotion 前，还必须在同一个 revision 上分别让 legacy source 与
+provider round-trip 经过既有消费 pipeline。语义矩阵至少覆盖：user/agent role；open、
+done、blocked、deferred；优先级与排序；claim、exclusion、bound-agent、global-gate
+过滤；resume condition；successor/continuation；continuous monitor 的 cadence、due、
+watch-only 与 material generation；note、evidence、completion、archival；以及 Markdown
+文件不可用后的 provider-only read。任一差异都阻止 promotion，并保持 legacy authority。
+synthetic stub 可作为单元测试，但不能替代真实复杂 Goal qualification。真实 Goal 内容
+只保留在本机；公开证据只包含脱敏 coverage、计数、精确 revision 标识与 digest。
 
-The next read-only seam exercises the provider shape needed by the future
-read flip without granting it authority:
+下一个只读 seam 会演练未来 read flip 所需的 provider 读取形态，但不授予它 authority：
 
 ```bash
 loopx coordination-shadow read-candidate \
@@ -1589,834 +1318,649 @@ loopx coordination-shadow read-candidate \
   --todo-id <todo-id>
 ```
 
-TypeScript loads the file head, requires its digest to match the complete
-current legacy coordination projection, validates unique Todo identities, and
-returns the exact compact Todo plus the provider revision and cursor. Missing,
-drifted, malformed, or duplicate state fails closed. The result deliberately
-keeps `decision_read_from_shadow=false`: it proves that a parity-matched
-provider can answer an exact Todo read, but no lifecycle or settlement caller
-uses that answer yet. Promotion still requires an atomic provider-first read
-flip together with legacy-writer fencing; a fallback to Markdown after that
-flip would recreate split authority and is forbidden.
+TypeScript 会读取 file head，要求其 digest 与当前完整 legacy coordination projection
+一致，校验 Todo identity 唯一，再返回精确的紧凑 Todo、provider revision 与 cursor。
+provider 缺失、漂移、结构非法或 Todo 重复都会 fail closed。结果刻意保持
+`decision_read_from_shadow=false`：它只证明 parity 匹配的 provider 能回答一次精确
+Todo 读取，尚无 lifecycle 或 settlement 调用方消费这个答案。正式 promotion 仍必须
+把 provider-first read flip 与 legacy-writer fencing 作为同一个受审原子边界；flip 后
+回退 Markdown 会重新制造双权威，因此禁止。
 
-The provider-first read flip and fencing every legacy coordination writer
-remain mandatory evidence for the separately reviewed local canonical
-promotion. Remote NoKV/PostgreSQL shadowing therefore remains Stage 3 and
-cannot use this default-off hook as authority.
+后续仍需完成 provider-first read flip，并 fence 全部 legacy coordination writer；这些
+仍是独立评审的本地 canonical promotion 的强制证据。因此 NoKV/PostgreSQL 远端 shadow
+仍属于 Stage 3，不能把这个默认关闭的 hook 当作 authority。
 
-The next Stage 2C implementation slice adds the TypeScript cutover kernel but
-does not yet change the default runtime. One pure reducer now derives the
-Todo/lease projection, event, and receipt from the same mutation. An explicit
-promotion operation requires a qualified shadow at one exact provider revision
-and digest, plus an independently persisted legacy-writer fence bound to that
-same revision. The fence has a shared fail-closed write-check hook; promotion
-is replayable through its operation receipt, and provider-first reads and
-mutations never fall back to Markdown. Until the Python Todo and task-lease
-entry points call that hook and select the promoted mode, these surfaces remain
-cutover machinery rather than a production authority flip. The follow-up must
-wire every legacy writer, make configuration and rollback explicit, and prove
-default legacy compatibility before the local promotion can be enabled.
+下一块 Stage 2C 实现加入了 TypeScript cutover kernel，但尚未改变默认 runtime。
+同一个纯 reducer 从一次 Todo/lease mutation 派生 projection、event 与 receipt；显式
+promotion 必须同时验证 qualified shadow 的精确 provider revision、projection digest，
+以及独立持久化、绑定到同一 revision 的 legacy-writer fence。该 fence 提供共享的
+fail-closed write-check hook；promotion 可按 operation receipt 重放，provider-first read
+与 mutation 也绝不回退到 Markdown。在 Python Todo/task-lease 入口真正调用这个 hook
+并选择 promoted mode 之前，这些仍只是切换机械结构，不代表生产权威源已经翻转。
+后续必须接齐所有 legacy writer、显式配置与 rollback，并证明默认 legacy 兼容性，
+才能启用本地 promotion。
 
-The first production fencing integration now closes the write side of that
-follow-up. Every Python Todo mutation checks the TypeScript-owned durable fence
-while holding the existing active-state mutation lock, and native TypeScript
-task-lease acquire/renew/transfer/release check the same fence while holding the
-lease lock. The absent-fence path remains a zero-runtime-call compatibility
-path; a present, unreadable, or invalid fence fails closed. The promotion
-orchestrator must acquire those same two legacy locks before engaging the fence,
-so no legacy write can pass its check and commit after cutover. Provider-first
-CLI routing and the lock-owning promotion operation remain the next slice; until
-they land, this integration deliberately blocks split-brain writes rather than
-silently falling back.
+第一块生产 fencing 集成现在已经收口了上述工作中的写入侧：所有 Python Todo mutation
+都会在持有现有 active-state mutation lock 时检查 TypeScript 权威拥有的 durable fence；
+原生 TypeScript task-lease 的 acquire / renew / transfer / release 也会在持有 lease lock
+时检查同一个 fence。fence 不存在时保持零 runtime 调用的默认兼容路径；fence 存在、
+不可读或不合法时一律 fail closed。后续 promotion orchestrator 必须先取得这两把 legacy
+lock，再 engage fence，从而保证不存在某次 legacy write 已通过检查、却在 cutover 后才
+提交。provider-first CLI 路由和持锁 promotion operation 仍是下一切片；在它们落地前，
+本集成选择阻断 split-brain 写入，而不会静默回退。
 
-The Todo collection-read slice routes `loopx todo list` to `FileAuthorityStore`
-only after the durable fence exists. It reuses the same filtering, ordering,
-resume, and summary pipeline as the legacy path, permits provider-only reads
-when Markdown is absent, and carries an authority receipt in the response.
-Provider missing, corruption, protocol drift, or Todo read-model semantic drift
-all fail closed; no post-cutover Markdown fallback is permitted.
+Todo collection-read 切片只在 durable fence 已存在时把 `loopx todo list` 路由到
+`FileAuthorityStore`。它与 legacy 路径复用同一套过滤、排序、resume 和 summary
+pipeline；Markdown 缺失时仍可执行 provider-only read，并在响应中携带 authority
+receipt。provider 缺失、损坏、协议漂移或 Todo read-model 语义漂移都会 fail closed；
+cutover 后禁止回退 Markdown。
 
-Durable completion continuation read-back
-(`durable_completion.py`: `read_persisted_todo_record` /
-`project_durable_completion_outcome`) is a provider read point: it re-reads
-the persisted lifecycle record (Markdown first, event projection fallback)
-after the completion write and before settlement. The persisted record
-carries an explicit `completion_continuation`; the seam fails closed when a
-done record omits it or when it contradicts the recorded successor or
-no-follow-up fields, so a provider that holds completion state must store
-that field byte for byte. Once a remote provider becomes canonical, this seam
-flips to provider-first without changing the typed outcome contract below.
+完成续接（continuation）的持久化读回
+（`durable_completion.py`：`read_persisted_todo_record` /
+`project_durable_completion_outcome`）是一个 provider read point：它在完成写入之后、
+settlement 之前重新读取已落盘的 lifecycle record（Markdown 优先，event projection
+兜底）。落盘记录带有显式的 `completion_continuation`；done 记录缺少该字段、或该字段
+与 successor / no-follow-up 字段矛盾时，seam 都 fail closed，因此持有完成状态的
+provider 必须逐字节保存这个字段。一旦远端 provider 成为 canonical，这个 seam 翻转为
+provider-first，且不改变下述 typed outcome 合同。
 
-#### Stage 2 slice status (2026-08-23)
+#### Stage 2 切片状态（2026-08-23）
 
-The first Stage 2 slice is merged on `main` through #3529, additively:
+第一个 Stage 2 切片已通过 #3529 以增量方式合入 `main`：
 
-- `loopx.control_plane.coordination.head`: the `loopx_coordination_head_v0`
-  aggregate codec. Validation is closed-set and fail-closed for every field
-  the executor later dereferences: todos, lease records, and each
-  receipt-index entry (entry shape, digest form, receipt schema, operation
-  identity, todo membership, revisions, epochs, and timezone-aware UTC
-  timestamps: a naive timestamp reads differently under each host's
-  local timezone, so it fails closed),
-  including bool-disguised integers; `handoff_mode` is a recorded head
-  field, pinned to `hard_lease` in v0 (a `soft_claim` goal fails bootstrap
-  closed instead of having its declared semantics silently inverted).
-  Canonical bytes are defined as sorted-key, minimal-separator UTF-8 JSON
-  with non-finite numbers rejected; digests and provider byte parity are
-  defined against exactly that encoding, so "deterministic serialization"
-  is a contract term here, not an implementation accident. The Markdown
-  shadow constructor lives in its own bridge module
-  (`goal_state_shadow`), keeping the codec's import closure inside the
-  repository's strict type gate.
-- `loopx.control_plane.coordination.file_provider`: one goal, one document.
-  Locking goes through `loopx.file_lock`, the repository's one
-  cross-platform lock owner, with its bounded deadline (a lock that cannot
-  be acquired in time is a typed `failed` because no write was attempted).
-  Durability is a fixed commit sequence: write-all of the canonical bytes
-  (short writes are continued, never ignored), file fsync, atomic rename,
-  then parent-directory fsync on POSIX; `applied` is returned only after
-  the whole sequence converges, and any storage fault inside it reports
-  `ambiguous`. A head with no faithful strict-JSON form reports typed
-  `failed` before any write reaches disk.
-- `loopx.control_plane.coordination.executor`: Section 5 steps 1-10 for
-  `claim_work`. Every domain decision is delegated to the Stage 1 core; lease
-  acquire reaches its canonical TypeScript decision through the typed Python
-  adapter, while the claim decision remains in the Python core. The
-  composition is lease acquire followed by the hard-lease-gated claim,
-  because a claim-first or legacy-mode composition silently bypasses the
-  Appendix B holder gate (the tests pin this). `lease_ttl_seconds` is
-  bounded by the local task-lease authority's own ceiling, so the shared
-  envelope cannot mint a lease the local contract would refuse and an
-  unbounded caller value cannot escape as timestamp-arithmetic overflow. A
-  provider `failed` verdict is verified against the reloaded receipt index
-  rather than trusted, so a provider that misreports a landed write cannot
-  manufacture a claim whose caller was told it failed.
+- `loopx.control_plane.coordination.head`：`loopx_coordination_head_v0`
+  aggregate 编解码。校验对 executor 后续无条件解引用的每个字段都是封闭
+  字段集且 fail-closed 的：todo、lease 记录、以及每条 receipt-index 条目
+  （条目形状、digest 形式、receipt schema、operation 身份、todo 归属、
+  revision/epoch、带时区的 UTC 时间戳（naive 值会随执行主机时区漂移，fail closed）），包括伪装成整数的 bool；`handoff_mode`
+  是 head 的记录字段，v0 钦定为 `hard_lease`（`soft_claim` goal 在
+  bootstrap 处 fail closed，而不是被静默反转其声明语义）。规范字节被定义
+  为按键排序、最小分隔符、UTF-8 的 JSON，且拒绝非有限浮点数；digest 与
+  provider 字节级 parity 都以这一编码为基准，"deterministic serialization"
+  因此是合同条款，而非实现巧合。Markdown shadow 构造器独立为桥接模块
+  （`goal_state_shadow`），使编解码模块的 import 闭包留在仓库的 strict
+  类型门之内。
+- `loopx.control_plane.coordination.file_provider`：一个 goal 一份文档。
+  锁经由 `loopx.file_lock`——仓库唯一的跨平台锁 owner——并带其有界等待
+  （超时未获锁是 typed `failed`，因为尚未尝试任何写入）。持久化是固定的
+  提交序列：规范字节 write-all（短写会被继续写完，绝不忽略）、文件
+  fsync、原子 rename、POSIX 上再对父目录 fsync；只有整个序列收敛后才返回
+  `applied`，序列内任何存储故障都报告 `ambiguous`。无法忠实序列化为严格
+  JSON 的 head 在任何字节落盘之前报告 typed `failed`。
+- `loopx.control_plane.coordination.executor`：`claim_work` 的第 5 节步骤
+  1-10。所有领域决策都委托给 Stage 1 core；其中 lease acquire 通过 typed Python
+  adapter 到达 canonical TypeScript decision，claim decision 仍留在 Python core。
+  组合顺序是先 lease acquire、再
+  过 hard-lease holder gate 的 claim——claim-first 或 legacy 模式的组合会
+  静默绕过附录 B 的 holder gate（测试钉住了这一点）。`lease_ttl_seconds`
+  受本地 task-lease authority 自身上限约束：共享 envelope 铸不出本地合同
+  会拒绝的 lease，无界的调用方数值也不可能以时间戳运算溢出的形式逃逸。
+  Provider 的 `failed` 判据经重载 receipt index 核查而非盲信，误报已落盘
+  写入的 provider 无法制造"调用方被告知失败"的幽灵 claim。
 
-Design selection was comparative: three executor candidates (core-delegating,
-inline-rules reference, journal-style receipt log inside the same document)
-ran one scenario battery. Only core-delegating candidates follow a flipped
-core rule without local edits, and the journal codec saves no meaningful
-bytes under `retain_all_v0`; the shipped executor is the core-delegating
-candidate.
+设计选型是对比出来的：三个 executor 候选（core 委托、内联规则参考实现、
+同文档内 journal 式回执日志）跑同一场景电池。只有 core 委托的候选能在不改
+本地代码的情况下跟随 core 规则翻转；journal 编码在 `retain_all_v0` 下也
+省不出有意义的字节。最终交付的是 core 委托候选。
 
-Live qualification ran against a single-node NoKV dev stack at the 0.11.0
-tag through its Python SDK: the eight-scenario invariant matrix in
-`examples/nokv-shadow-provider/live_e2e.py` passes identically for the file
-provider and the NoKV provider (same-todo race with one winner,
-independent-todo progress, exact replay, identity mismatch, stale-revision
-conflict, lost-response recovery through the receipt index, receipt
-retention, authority-revision advancement), and a SIGKILL of the serving
-owner followed by an operator-style reopen preserved the head byte for
-byte, replayed the original receipt exactly through a fresh executor, and
-resumed CAS across all three version domains. Renew/release/reclaim,
-retention policy, HA, and multi-node deployments remain unexercised, as the
-Later-qualification list already states.
+Live 资格验证在 0.11.0 标签的单节点 NoKV dev 栈上通过其 Python SDK 完成：
+`examples/nokv-shadow-provider/live_e2e.py` 的八场景不变量矩阵对 file
+provider 与 NoKV provider 逐行结果一致（同 todo 竞争恰一胜者、独立 todo
+推进、精确重放、identity 不匹配、陈旧 revision 冲突、丢失响应经 receipt
+index 恢复、回执保留、authority_revision 推进）；对 serving owner 的
+SIGKILL 加运维式重开保持了 head 字节级一致，经全新 executor 精确重放原始
+receipt，并在三个版本域上恢复 CAS 推进。renew/release/reclaim、retention
+策略、HA 与多节点部署仍未验证，与后续资格清单一致。
 
-Measured boundaries Stage 3 must respect rather than rediscover:
+Stage 3 必须尊重而非重新发现的实测边界：
 
-- `retain_all_v0` costs roughly 750 bytes per receipt inside the one CAS
-  document; on the dev stack, claim latency grew about sevenfold across the
-  first 120 receipts, and cumulative republish bytes grow quadratically
-  (about 84x the final head size after 120 claims). The Section 12 retention
-  decision is load-bearing before any production canary.
-- Under 12 concurrent independent-todo claims, the internal rebase budget
-  admitted 8 and the rest returned typed failures. The Section 1
-  independence promise holds at two endpoints and degrades beyond that; the
-  supported concurrency envelope and retry budget belong in the acceptance
-  checks once a multi-agent canary is scoped.
-- The NoKV document generation restarts after remove/recreate and after
-  restore into a new workbench lineage. A conditional replace carrying a
-  stale generation observation was observed to succeed on a recreated path,
-  and a restored line re-reaches generation numbers whose receipts differ
-  from the original line. This confirms the boundary sentence above:
-  `provider_generation` alone cannot carry restore or lifecycle identity;
-  the lineage/binding fence needs an explicit provider-contract field in the
-  next stage.
-- `provider_outcome_unproved` is a real terminal state in live runs, observed
-  without fault injection. Replay through the receipt index makes
-  re-submission idempotent, so a bounded re-attempt at the same generation
-  would be safe; whether v0 adopts that liveness amendment is an owner
-  decision recorded here, not silently implemented.
+- `retain_all_v0` 在单 CAS 文档内的成本约每 receipt 750 字节；dev 栈上
+  claim 延迟在前 120 个 receipt 内增长约 7 倍，累计重发布字节呈平方增长
+  （120 次 claim 后约为最终 head 体量的 84 倍）。第 12 节的 retention 决策
+  在任何生产 canary 之前都是承重项。
+- 12 个并发独立 todo claim 下，内部 rebase 预算放行 8 个，其余返回 typed
+  失败。第 1 节的独立性承诺在两个端点成立、超出即退化；受支持的并发包络
+  与重试预算应在多 agent canary 立项时进入验收检查。
+- NoKV 文档 generation 在 remove/recreate 之后、以及 restore 进新 workbench
+  lineage 之后会重新起算。携带陈旧 generation 观测的条件替换在重建路径上
+  被实测成功；恢复线会重新到达 generation 数值相同、receipt 却不同于原线
+  的状态。这坐实了上文边界句：仅靠 `provider_generation` 无法承载 restore
+  或生命周期身份；lineage/binding fence 需要在下一阶段成为显式的 provider
+  合同字段。
+- `provider_outcome_unproved` 是 live 运行中真实出现的终态（无故障注入即
+  观测到）。经 receipt index 的重放让重新提交幂等，因此同 generation 的
+  有界重试是安全的；v0 是否采纳该活性修正是 owner 决策，在此记录而非静默
+  实现。
 
-#### Stage 3 slice status (2026-08-26)
+#### Stage 3 切片状态（2026-08-26）
 
-The recoverable-execution horizon row exists on this branch, additively:
-the four verbs of Sections 5.2-5.5 with the stale-fence rule of 5.6, the
-expiry adjudication and store-lineage binding fence of 6.4, per-verb
-receipt schemas, conditional completion validation in the head codec
-(status vocabulary pinned to open|done, previously unvalidated), and the
-holder gate that refuses a correct fence in the wrong hands. Every domain
-decision remains delegated to the Stage 1 core; the reclaim composition
-was selected by a three-way battery against the real core (the naive
-acquire-first composition dies on owner_conflicts_with_claim; the chosen
-form does the minimal delegated unclaim and then the ordinary claim
-composition, so the new lease passes the true holder gate).
+可恢复执行 horizon 行已以增量方式存在于本分支：§5.2-5.5 的四个动词与 5.6 的
+stale-fence 规则、6.4 的过期裁决与 store-lineage 绑定围栏、按动词的 receipt
+schema、head 编解码的条件完成校验（status 词表钉为 open|done，此前未校验）、
+以及拒绝"正确栅栏落错人手"的 holder gate。所有领域决策仍委托 Stage 1 core；
+reclaim 组合经对真实 core 的三方案 battery 选出（朴素 acquire-first 组合死于
+owner_conflicts_with_claim；胜出形态先做最小特权的委托 unclaim、再走普通 claim
+组合，新 lease 因此通过真实 holder gate）。
 
-Live qualification (single-node NoKV dev stack, 0.11.0 release wheel):
-twelve shared scenario rows identical across the file and NoKV providers,
-including renew, grace-window reclaim with the superseded owner recorded,
-the superseded executor's writes terminally fenced, and completion
-creating a claimable successor atomically; one NoKV-specific row proves
-the binding fence against a REAL commit/snapshot/restore - the restored
-workbench refuses every command with store_lineage_mismatch while the
-original keeps serving. A SIGKILL of the serving owner mid-lifecycle
-recovered in ~61 s (60 s session lease drain): the head byte-identical,
-the renewal receipt replayed exactly through a fresh executor, and the
-post-crash reclaim/fence/completion chain completed on the reopened
-store. Clock-boundary tests pin the grace window edge for edge.
+Live 资格验证（单节点 NoKV dev 栈，0.11.0 release wheel）：十二个共享场景行在
+file 与 NoKV provider 上逐行一致，含 renew、带宽限窗的 reclaim（记录被替代
+owner）、被替代执行者写入被终态栅栏、以及 completion 原子创建可认领
+successor；一个 NoKV 专属行对**真实** commit/snapshot/restore 证明绑定围栏——
+恢复出的 workbench 以 store_lineage_mismatch 拒绝一切命令，原 workbench 照常服
+务。对 serving owner 的 SIGKILL 于生命周期中段注入后约 61 秒恢复（60 秒会话租
+约排空）：head 字节级一致、续约 receipt 经全新 executor 精确重放、崩溃后的
+reclaim/栅栏/completion 链在重开的存储上走完。时钟边界测试逐边钉住宽限窗。
 
-Measured gates, updated:
+实测门禁更新：
 
-- Concurrency envelope (grown from the Stage 2 numbers): K independent
-  claims all succeed through K=8 on this stack (p50 2.8 s / 10.2 s /
-  50.7 s at K=2/4/8); K=16 admits 8 and fails the rest typed on the
-  8-attempt budget with ~150 s tails. The supported envelope declaration
-  for a canary is K<=8 with the measured latency curve.
-- Retention: the Section 7.1 sealed-segment amendment is proposed with
-  live comparative evidence (19x smaller head, 7.5x less republish, flat
-  latency, +3% round trips, ~160 ms sealed-receipt recovery); the slice
-  itself ships on retain_all_v0 until the owner decides Q5.
-- Two NoKV storage-plane defects surfaced by the independent reruns and
-  are reported upstream rather than worked around silently: (a) reopen
-  thrash can wedge logical-shard recovery publication at a dead lease's
-  epoch, leaving every later takeover attempt rejected with "stale
-  lease" until operator intervention; (b) a SIGKILL landing inside the
-  metadata write window can corrupt the store manifest
-  (FileBlobStore duplicate slot) so no reopen ever succeeds - the
-  coordination layer above stays correct in both cases (no false
-  authority), but availability depends on these fixes before any
-  production canary.
+- 并发包络（较 Stage 2 数字增长）：本栈上 K 个独立 claim 到 K=8 全部成功
+  （K=2/4/8 的 p50 为 2.8 / 10.2 / 50.7 秒）；K=16 放行 8 个，其余在 8 次尝试
+  预算上 typed 失败，尾延迟约 150 秒。canary 的受支持包络声明为 K<=8 加上实测
+  延迟曲线。
+- 留存：§7.1 的封存段修正案已附 live 对比证据提出（head 缩小 19 倍、重发布少
+  7.5 倍、延迟平坦、+3% 往返、已封存回执恢复约 160 ms）；切片本身在 owner 决
+  定 Q5 之前运行于 retain_all_v0。
+- 独立复跑暴露两个 NoKV 存储面缺陷，均如实上报而非静默绕过：(a) 重开抖动可把
+  logical-shard recovery publication 楔死在死租约的 epoch 上，此后所有接管尝试
+  恒以 "stale lease" 被拒，需运维介入；(b) SIGKILL 落在元数据写窗口内可损坏存
+  储 manifest（FileBlobStore duplicate slot），重开永不成功——两种情况下上层协
+  调语义保持正确（无假权威），但可用性在任何生产 canary 前依赖这两处修复。
 
-Review-driven hardening (2026-08-27): the reclaim grace configuration
-boundary is fail-closed (Section 6.4; a NaN or negative grace could
-previously take an active lease), evidence uses a privacy-bound
-`artifact://` URI with a closed vocabulary
-(Section 5.5; a host path or privacy mismatch could previously persist into
-the shared head), and the head schema is versioned as
-`loopx_coordination_head_v1` with the explicit v0 migration path
-(Section 6.4; a Stage 2 head previously failed unclassified).
-That migration now reconstructs the Stage 2 single-command history from its
-retain-all receipts: a live claim must match the retained actor, todo revision,
-lease id, epoch, expiry, and contiguous authority revision sequence. A partial
-or edited v0 head therefore fails as corruption instead of gaining a new store
-binding, reusing an epoch, or authorizing an unproved holder.
+评审驱动的加固（2026-08-27）：reclaim 宽限配置边界 fail-closed（§6.4；此前
+NaN 或负宽限可夺走活跃 lease）、evidence pointer 收紧为带隐私 namespace 的
+`artifact://` URI 加闭合词表（§5.5；此前主机路径或隐私错配可持久进共享 head）、
+head schema 版本化
+为 `loopx_coordination_head_v1` 并附显式 v0 迁移路径（§6.4；此前 Stage 2 head
+以未分类方式失败）。
+该迁移现在会用 retain-all receipts 重建 Stage 2 的单命令历史：live claim 必须与
+保留的 actor、todo revision、lease id、epoch、expiry 及连续 authority revision
+序列逐项一致。部分损坏或被编辑的 v0 head 因此会按 corruption fail closed，而不会
+获得新 store binding、重用 epoch，或授权一个无 receipt 证明的 holder。
 
-Delivery boundary, stated explicitly and accepted by the owner on 2026-09-01:
-this slice is the RFC's reference implementation with deterministic and
-live-example evidence. No LoopX production entry point constructs the executor
-yet - the modules are coverage-only in the visible governance ledger. This
-acceptance allows the cohesive reference-contract slice to merge after its
-correctness, rebase, and review gates pass; it does not promote it to a shipped
-capability. A real caller requires the reviewed shared-mode migration,
-local-writer fence, authorization publisher, provider binding, projection
-flip, rollback, and retention decisions below - not a diagnostic CLI that
-creates a second writer. This status section claims proven contracts, not a
-shipped production capability.
+交付边界，明确声明且已于 2026-09-01 获 owner 接受：本切片是 RFC 的参考实现，
+附确定性与 live 示例证据。尚无 LoopX 生产入口构造该 executor——这些模块在
+visible governance 台账中属 coverage-only。该接受允许内聚的 reference-contract
+切片在正确性、rebase 与 review 门禁通过后合入；并不把它晋升为已 ship capability。
+真实 caller 依赖下文经评审的 shared-mode migration、本地 writer
+围栏、authorization publisher、provider binding、projection 翻转、rollback 与
+retention 决策，不能用一个会制造第二 writer 的诊断 CLI 代替。本状态节声明的是已
+证明的合同，不是已 ship 的生产能力。
 
-#### Stage-ladder end-to-end evidence (2026-09-03)
+#### Stage ladder 端到端证据（2026-09-03）
 
-What exists on this branch is one incremental end-to-end "stage ladder" that
-exercises every completed stage claim of this RFC through the real
-`python -m loopx.cli` and reports a machine-checkable verdict per row:
-`loopx/control_plane/testing/authority_e2e_ladder.py` (row registry, runners,
-the `loopx_shared_goal_authority_e2e_report_v0` JSON report, exit policy, and
-privacy scan), `loopx/control_plane/testing/authority_e2e_fixtures.py` (goal
-workspaces, CLI runners, the observation-lock window, candidate read-back), the
-read-only TypeScript probe
-`tests/control_plane_ts/authority_store_readback_probe.ts`, the pytest
-projection `tests/control_plane/test_shared_goal_authority_e2e.py`, and the
-entry point `examples/shared-goal-authority-e2e/ladder.py`.
+本分支上存在一条增量式端到端 "stage ladder"：它通过真实的
+`python -m loopx.cli` 逐行演练本 RFC 每个已完成阶段的声明，并按行给出可机器
+判定的结论：`loopx/control_plane/testing/authority_e2e_ladder.py`（行注册表、
+runner、`loopx_shared_goal_authority_e2e_report_v0` JSON 报告、退出策略与隐私
+扫描）、`loopx/control_plane/testing/authority_e2e_fixtures.py`（goal 工作区、
+CLI runner、observation-lock 窗口、候选回读）、只读 TypeScript 探针
+`tests/control_plane_ts/authority_store_readback_probe.ts`、pytest 投影
+`tests/control_plane/test_shared_goal_authority_e2e.py`，以及入口
+`examples/shared-goal-authority-e2e/ladder.py`。
 
-Per stage, this increment implements:
+按阶段，本增量实现：
 
-- Stage 0: `s0.file_matrix_twelve_rows` runs the retained live matrix script
-  and requires exactly the twelve shared scenario rows to be true on the file
-  provider; `s0.nokv_live_matrix` requires the same rows plus
-  `restored_lineage_fails_closed` and identical file/NoKV outcomes on a live
-  NoKV stack.
-- Stage 1: `s1.cli_document_decodes_through_ts_store` writes three
-  observations through the product CLI (`todo add`, `task-lease acquire`,
-  `todo update`) and reads them back through `FileAuthorityStore` with
-  `loadAuthority`, paged `scanCommitted`, and `readReceipt`: cursor `3`, the
-  three operation ids in order, and the first receipt found.
-- Stage 2A: `s2a.nokv_live_qualification` runs the merged live qualification
-  probe (`examples/nokv-authority-store/live-qualification.ts --execute-live`)
-  against an existing workbench with a fresh tenant/goal pair and requires
-  `ok=true`, the single-node store-conformance scope, every check passed, NoKV
-  SDK `0.11.0` / API `1`, and no promotion or availability claim.
-- Stage 2B: `s2b.postgresql_conformance_live` runs the PostgreSQL integration
-  test file under node's TAP reporter and requires at least nine passes, zero
-  failures, and zero skips.
-- Stage 2C observation foundation: seven `s2c1.*` rows port the local-shadow CLI
-  E2E and migration assertions and pin the single-lineage guarantee. The configure round trip previews, enables,
-  reads back, and disables the observer; every writer family (handoff-mode,
-  todo add/update/complete/supersede/capture-followups/archive-completed,
-  task-lease acquire/renew/transfer) captures with
-  `primary_writeback_preserved`, `provider_to_local_writes=false`, and
-  `candidate_read_for_decision=false`, while an idempotent re-acquire does not
-  observe; default-off goals stay isolated; candidate failure preserves the
-  primary commit; a POSIX SIGKILL in the crash gap loses only that
-  observation; a `--runtime-root` override that differs from
-  `common_runtime_root` keeps todo add, task-lease acquire, todo update,
-  follow-up capture, and a leased completion in one store identity while the
-  registry root gains neither a candidate lineage nor lease state; and
-  `migrate-state` seeds a fresh lineage without legacy bytes.
+- Stage 0：`s0.file_matrix_twelve_rows` 运行保留的 live matrix 脚本，要求 file
+  provider 上恰好十二个共享场景行全为 true；`s0.nokv_live_matrix` 要求 live
+  NoKV 栈上同样的行加 `restored_lineage_fails_closed` 全为 true，且 file/NoKV
+  逐行结果一致。
+- Stage 1：`s1.cli_document_decodes_through_ts_store` 通过产品 CLI 写入三次
+  observation（`todo add`、`task-lease acquire`、`todo update`），再经
+  `FileAuthorityStore` 的 `loadAuthority`、分页 `scanCommitted` 与
+  `readReceipt` 回读：cursor 为 `3`、三个 operation id 按序一致、首条 receipt
+  可找到。
+- Stage 2A：`s2a.nokv_live_qualification` 对一个已存在的 workbench 以新铸的
+  tenant/goal 运行已合并的 live 资格探针
+  （`examples/nokv-authority-store/live-qualification.ts --execute-live`），要求
+  `ok=true`、单节点 store conformance 范围、每项 check 通过、NoKV SDK `0.11.0`
+  / API `1`，且不宣称晋升或可用性。
+- Stage 2B：`s2b.postgresql_conformance_live` 在 node TAP reporter 下运行
+  PostgreSQL 集成测试文件，要求至少九个 pass、零 fail、零 skip。
+- Stage 2C 观察基础：七个 `s2c1.*` 行移植本地 shadow CLI E2E 与迁移断言，并钉住单一
+  lineage 保证。
+  configure 往返先预览、再开启、回读、最后关闭 observer；每个 writer family
+  （handoff-mode、todo add/update/complete/supersede/capture-followups/
+  archive-completed、task-lease acquire/renew/transfer）都以
+  `primary_writeback_preserved`、`provider_to_local_writes=false`、
+  `candidate_read_for_decision=false` 完成 capture，而幂等 re-acquire 不产生
+  observation；default-off goal 保持隔离；候选失败不推翻主写；POSIX SIGKILL
+  落在崩溃间隙时只丢失该次 observation；`--runtime-root` 与 `common_runtime_root`
+  不同时，todo add、task-lease acquire、todo update、follow-up 捕获与带 lease 的
+  complete 仍落入同一个 store identity，registry root 既不产生候选 lineage 也不
+  产生 lease 状态；`migrate-state` 在不携带 legacy 字节的前提下建立新 lineage。
 
-Live rows are environment-gated (`LOOPX_TEST_POSTGRES_URL`;
-`NOKV_COORDINATION_LIVE=1` plus the `NOKV_*` stack variables;
-`LOOPX_NOKV_AUTHORITY_LIVE=1` plus the `LOOPX_NOKV_AUTHORITY_*` inputs).
-Without a stack they report `unverified`, and the ladder exits non-zero unless
-`--allow-unverified` is passed; an unverified row is never counted as green.
-A pending row is an unmet obligation as well: selecting one exits non-zero
-unless `--allow-pending` is passed, so a report cannot read as green while it
-executed nothing.
-The report binds the LoopX commit, tree dirtiness, probe digests, and hashed
-connection facts, and its privacy scan turns any leak of a temporary root,
-home directory, connection URL, or configuration path into
-`fail/privacy_violation`; a leak confined to the bindings block is redacted
-and still fails the run through `summary.privacy_violations`, which no flag
-relaxes.
+Live 行按环境门控（`LOOPX_TEST_POSTGRES_URL`；`NOKV_COORDINATION_LIVE=1` 加
+`NOKV_*` 栈变量；`LOOPX_NOKV_AUTHORITY_LIVE=1` 加 `LOOPX_NOKV_AUTHORITY_*` 输入）。
+没有栈时它们报告 `unverified`，除非传入 `--allow-unverified`，否则 ladder 以非零
+退出；unverified 行永不计为 green。pending 行同样是未兑现的义务：选中它而不传
+`--allow-pending` 就非零退出，所以一份零执行的报告不可能显示为 green。
+报告绑定 LoopX commit、工作树是否 dirty、探针 digest 与经哈希的连接事实；其隐私
+扫描会把任何临时根目录、home 目录、连接 URL 或配置路径的泄露改写为
+`fail/privacy_violation`；仅出现在 bindings 块的泄露会被抹除并同样判定为失败，
+`summary.privacy_violations` 阻止 green 退出，任何开关都不能放宽。
 
-Delivery boundary: test-only. No production entry point constructs any store;
-the ladder adds no product path and reads the candidate only through the
-retained TypeScript store. The Stage 2C parity half
-(`s2c2.*`: outbox entries, idempotent drain, SIGKILL before and during drain,
-rollback with pending entries, parity equal and divergent,
-migration seed-and-drain, growth measurement) are declared as pending rows,
-not claimed. This subsection records executable evidence for the stages above;
-it does not promote any provider or complete the Stage 2C promotion.
+交付边界：test-only。没有任何生产入口构造任何 store；ladder 不新增产品路径，
+只经保留的 TypeScript store 读取候选。Stage 2C parity 后半段
+（`s2c2.*`：outbox 条目、幂等 drain、drain 前与 drain 中的 SIGKILL、带 pending
+条目的 rollback、parity 相等与分歧、迁移 seed-and-drain、增长
+度量）以 pending 行声明，而非宣称已完成。本小节记录的是上述阶段的可执行证据；
+它不晋升任何 provider，也不完成 Stage 2C promotion。
 
-### 11.3 Remaining qualification and promotion plan
+### 11.3 剩余验证与晋升计划
 
-#### P0: contract and deterministic proof
+#### P0：合同与 deterministic proof
 
-- this ownership matrix and explicit shared-mode boundary;
-- deterministic `loopx_command_v0` normalization and request digest;
-- the `claim_work` authority transition over explicitly bootstrapped todos;
-- one-head state-plus-receipt CAS;
-- target/precondition-scoped conflicts and internal CAS rebase after unrelated
-  head advances;
-- deterministic and NoKV provider candidates behind the same seam;
-- A/B/A, identity-mismatch, crash-window, eligibility, privacy, and no-GC
-  checks within the stated evidence boundary.
+- 本 ownership matrix 与显式 shared-mode boundary；
+- 确定性的 `loopx_command_v0` normalization 与 request digest；
+- 显式 bootstrapped todo 上的 `claim_work` authority transition；
+- 单 head、state-plus-receipt CAS；
+- target/precondition-scoped conflict 与无关 head 前进后的内部 CAS rebase；
+- 同一 seam 后的 deterministic 与 NoKV provider candidate；
+- 在所声明证据边界内的 A/B/A、identity mismatch、crash window、eligibility、
+  privacy 与 no-GC 检查。
 
-#### Later runtime promotion and reviewed slices
+#### 后续 runtime promotion 与需 review 的切片
 
-- the LoopX-owned TypeScript transaction/store boundary and file-provider
-  conformance described in Section 6.2;
-- NoKV qualification and the remaining PostgreSQL service, failure, and
-  promotion holds behind that boundary;
-- one-way shadow parity, the one-Goal/two-Agent TEST ONLY canary, and a
-  single-source authority flip with no long-lived dual-write or dual-master;
-- an explicit shared-mode migration and rollback/export operation, local
-  writer fencing, provider binding, a production authorization-projection
-  publisher, and provider-first status/completion projections;
-- transfer and restricted delegated assignment;
-- delivery/wake integration through Agent IM;
-- independent run-history synchronization and artifact storage;
-- distributed quota reservation/accounting;
-- provider promotion, authentication, service recovery, HA, and multi-tenancy;
-- receipt retention or segmentation beyond `retain_all_v0`.
+- §6.2 所述由 LoopX 持有的 TypeScript transaction/store boundary 与 file-provider
+  conformance；
+- 在同一 boundary 后继续完成 NoKV qualification，以及 PostgreSQL 剩余的 service、
+  failure 与 promotion hold；
+- 单向 shadow parity、一个 Goal/两个 Agent 的 TEST ONLY canary，以及不保留长期
+  dual-write/dual-master 的单一权威源切换；
+- 显式 shared-mode migration 与 rollback/export、本地 writer 围栏、provider
+  binding、production authorization-projection publisher，以及 provider-first 的
+  status/completion projection；
+- transfer 与受限 delegated assignment；
+- 经 Agent IM 的 delivery/wake integration；
+- 独立 run-history synchronization 与 artifact storage；
+- distributed quota reservation/accounting；
+- provider promotion、authentication、service recovery、HA 与 multi-tenancy；
+- `retain_all_v0` 之后的 receipt retention 或 segmentation。
 
-## 12. What the Owner Still Needs to Decide
+## 12. 还需要 Owner 决定什么
 
-1. Should the next runtime slice first close renew/release/reclaim and stale
-   fencing, or qualify that lifecycle together with atomic
-   complete-with-successor? *Proposed answer (Stage 3 slice): together,
-   sequenced internally - the lifecycle verbs land first in the command
-   surface and completion reuses their fence machinery unchanged; the
-   completed record must satisfy the local durable-completion projection
-   seam, which is already the reviewed contract on the local side.*
-2. Which compact project-registry authorization fields form the versioned
-   authority input, and who may publish a new authorization projection?
-3. What is the reviewed rollback/export procedure after the first shared-mode
-   write?
-4. Which provider and deployment qualify for the first bounded shared-mode
-   canary? Provider selection does not change the authority contract.
-5. Before production use, what retention and capacity policy replaces or
-   operationalizes `retain_all_v0` without losing historical proof?
-6. Does the Stage 4 canary require Host lease liveness before admission, or
-   is that a Stage 5 promotion hold? Section 11 asks the canary to observe
-   that no external effect is duplicated, but a Host whose runtime exceeds the
-   lease TTL can keep producing effects after another Agent reclaims the Todo,
-   and a settlement rejected afterwards cannot undo them. The review of #3820
-   treated this as a Stage 4 precondition; the RFC must say which mechanism
-   is required and where: renewing the lease while the Host runs plus
-   cancelling the Host when the fence is lost, an effect-owning fenced commit
-   inside the recoverable protocol, or a hard Host duration bound below the
-   TTL. *Proposed answer: any canary that runs a real Host must renew during
-   Host execution and cancel on fence loss, and its acceptance must include
-   the long-Host expiry/reclaim negative test; a bounded fake Host is not
-   evidence for this row.*
-7. How is the canary's authority provider bound to a Goal? A CLI argument
-   that names an arbitrary guard command is a test-harness convenience, not a
-   product authority selector. *Proposed answer: the binding is a
-   goal-level registry record published by the same owner as the
-   authorization projection in question 2, naming the provider kind, the
-   store identity or lineage, and an explicit TEST ONLY canary marker; a Goal
-   without that marker cannot be admitted by a shared-authority guard, and
-   the runtime resolves the provider from the record rather than from argv.*
-8. Which head shape does promotion commit, and which fields does the aggregate
-   own? `main` now defines `loopx_todo_canonical_read_record_v0` as a versioned,
-   complete Todo read-record manifest and makes the TypeScript projection
-   reject an upsert that omits fields already present on the stored record.
-   *Proposed answer: the promoted head stores the complete normalized Todo and
-   lease records, flattened enough for a provider-independent readback. Every
-   field that has legally entered a canonical record remains present, including
-   `updated_at`, routing, capability, decision, dependency, resume, monitor,
-   completion, note/evidence, and archival fields. Omission is never a delete;
-   mutation must clear a field explicitly under its schema rule. A new field
-   must enter the versioned manifest before qualification, otherwise promotion
-   fails closed. "Complete" does not mean copying raw Markdown, host-local
-   paths, credentials, the whole registry, or data owned by another ledger.*
+1. 下一个 runtime slice 是否先闭合 renew/release/reclaim 与 stale fencing，还是与
+   atomic complete-with-successor 一起 qualification？*拟议答案（Stage 3 切片）：
+   一起交付、内部有序——lifecycle 动词先落进命令面，completion 原样复用其栅栏机
+   制；完成记录必须满足本地 durable-completion 投影 seam，而后者在本地侧已是经
+   评审的合同。*
+2. 哪些紧凑的 project-registry authorization field 构成 versioned authority input，
+   谁可以发布新的 authorization projection？
+3. 第一次 shared-mode write 后，reviewed rollback/export procedure 是什么？
+4. 哪个 provider 与 deployment 为第一次 bounded shared-mode canary 提供资格？
+   Provider 选择不改变 authority contract。
+5. Production 使用前，什么 retention 与 capacity policy 可以替代或落实
+   `retain_all_v0`，且不丢失历史凭证？
+6. Stage 4 canary 在准入前是否要求 Host lease liveness，还是把它留作 Stage 5
+   promotion hold？第 11 节要求 canary 观察"外部 effect 不重复"，但运行时间超过
+   lease TTL 的 Host 会在另一个 Agent reclaim 该 Todo 之后继续产生 effect，事后
+   拒绝 settlement 也无法撤销它们。#3820 的评审把这一点当作 Stage 4 前置条件；
+   RFC 必须写明要求哪种机制以及落在哪一层：Host 运行期间续约并在 fence 丢失时取
+   消 Host、可恢复协议内的 effect-owning fenced commit，或把 Host 时长硬性限制在
+   TTL 之下。*拟议答案：任何运行真实 Host 的 canary 都必须在 Host 执行期间续约并
+   在 fence 丢失时取消，其验收必须包含长 Host 过期/reclaim 负例；有界的 fake Host
+   不能作为这一行的证据。*
+7. canary 的 authority provider 如何绑定到 Goal？用 CLI 参数指定任意 guard 命令只
+   是测试 harness 的便利，不是产品级 authority selector。*拟议答案：绑定是一条
+   goal 级 registry 记录，由问题 2 中发布 authorization projection 的同一 owner 发
+   布，记录 provider 种类、store identity 或 lineage，以及显式的 TEST ONLY canary
+   标记；没有该标记的 Goal 不得被 shared-authority guard 准入，runtime 从该记录而
+   非 argv 解析 provider。*
+8. promotion 提交哪种 head 形状，aggregate 拥有哪些字段？`main` 已将
+   `loopx_todo_canonical_read_record_v0` 定义为带版本的完整 Todo read-record manifest，
+   TypeScript projection 也会拒绝通过 upsert omission 丢掉既有字段。*拟议答案：晋升
+   head 保存完整、规范化的 Todo 与 lease record，并打平到 provider 无关的 readback
+   形状。任何已合法进入 canonical record 的字段都继续保留，包括 `updated_at`，以及
+   routing、capability、decision、dependency、resume、monitor、completion、
+   note/evidence 与 archival 字段。遗漏字段不等于删除；mutation 必须按 schema 规则
+   显式 clear。新字段必须先进入带版本 manifest，未进入则 qualification/promotion
+   fail closed。“完整”不等于复制 raw Markdown、host-local path、credential、整个
+   registry，或其他 ledger 持有的数据。*
 
-   *A later field reduction is a governed schema change even when the field is
-   stored but has no known runtime reader. Its PR must include a field inventory,
-   producer/reader/writer and static-reference research, historical and external
-   compatibility findings, migration and rollback, and proof that behavior is
-   preserved. The maintainer must approve the named removal explicitly in the
-   RFC decision log or PR review; absence of a discovered consumer is not
-   approval.*
-9. Does v0 promotion cover only `hard_lease` goals? *Proposed answer: yes. A
-   `legacy` or `soft_claim` goal first switches mode under the Appendix B
-   quiescence rule; promotion never changes the mode implicitly.*
-10. After the provider-first read flip, Markdown and lease files are
-    projections and the kernel forbids fallback to them. Which data belongs in
-    the head, and how are compatibility views rendered? *Proposed answer:
-    every field in the canonical Todo/lease manifests, including monitor,
-    dependency, resume, decision, completion, text, note, evidence references,
-    and any feedback field admitted by the manifest, persists in the head. A
-    transaction-bound projection
-    outbox only renders Markdown and lease-file compatibility views; it is not
-    a second persistence path for omitted authority fields. Readers compare the
-    projection watermark with the head revision and replay the outbox when
-    behind. Rendering lag may make a view stale, but must not change a decision.*
-11. What declares a promoted goal, and who may write that declaration? The
-    merged TypeScript-owned file fence is the first local implementation,
-    bound to a fence id, source version, and qualified shadow revision; current
-    Todo and task-lease writers check it under their mutation locks. *Proposed
-    answer: define one provider-neutral authority binding containing provider
-    profile, store identity and lineage, schema manifest, `promoted_at`,
-    promotion operation id, source digest, and optional `rolled_back_from`.
-    Only the promotion orchestrator and rollback operation may change it. The
-    file profile realizes the binding with the durable local fence and registry
-    discovery copy; NoKV and PostgreSQL must realize the same logical fence,
-    CAS/transaction precondition, and readback receipt in their qualified store
-    contract. A provider-specific path or table name is not part of the
-    authority protocol. `configure-goal` refuses to edit the binding and
-    bootstrap refuses a promoted goal. An endpoint that cannot validate the
-    active binding fails closed rather than writing a legacy projection.*
-12. Which retention, fast-path, and capacity rules gate promotion, and may a
-    retained transaction replace its projection with a digest? *Proposed
-    answer: the logical contract is common to file, NoKV, and PostgreSQL: the
-    latest complete head, ordered cursor, original operation receipt, segment
-    or row-chain integrity, deterministic scan, and recovery readback remain
-    available under a declared retention version. A digest may replace an old
-    transaction's duplicated projection only when the complete canonical head
-    and every field required by replay, audit, parity, and migration remain
-    reconstructable and the conformance matrix proves equivalence. Physical
-    policy is provider-specific: Section 7.2 prefers an embedded transactional
-    local store with segmented files as a comparison candidate; NoKV needs a
-    qualified document/segment strategy, and PostgreSQL needs append rows with
-    reviewed indexing/partitioning. Section 7.2 also owns the minimum ten-day
-    qualification gate; the earlier file-v0 proof is insufficient. Each profile declares measured limits
-    and fails closed with `store_capacity_exhausted`; one file-size constant is
-    not a cross-provider contract. Host renewals remain authority transactions
-    because their rate drives every profile's retention envelope.*
-13. What happens to the Python reference executor (`executor.py`,
-    `file_provider.py`, `head.py`, `goal_state_shadow.py`)? *Proposed answer:
-    keep it coverage-only until the kernel's mutation path is routed from the
-    CLI, port its scenario batteries to TypeScript tests, then delete it in
-    the promotion PR; two local aggregate formats cannot both be canonical.
-    Flipping the file profile's `qualification_holds` to `[]` and its `stage`
-    literal happens only inside that PR.*
-14. `main` now carries two default-off shadow lineages for the same writers:
-    the observation capture of #3818 (`coordination.authority_shadow`,
-    `authority-shadow/file/<goal>`, projection v0) and the runtime shadow
-    (`coordination.runtime_shadow`, `authority-shadow/file-v0`, projection v0
-    with `inspect`, `qualify`, `bootstrap`, `rollback`, and `read-candidate`).
-    Both re-sample the source after the primary commit, so both share the
-    concurrent-writer and commit-to-dispatch loss windows that the review of
-    #3818 named. Which lineage is Stage 2C's, and what closes those windows?
-    *Proposed answer: the runtime shadow is the lineage, because the parity
-    report, bootstrap, quarantine rollback, read shape, and promotion kernel
-    already bind to it. The transaction-bound outbox of the parity half
-    (prepared entry inside the writer's own lock, committed marker after the
-    primary write, bounded drain with `operation_id = entry id`) becomes the
-    durable capture that feeds `coordination.runtime_shadow.commit`, and the
-    #3818 observation path retires once that capture is wired. The RFC must
-    not keep two shadow record formats.*
+   *后续任何字段删减都是受治理的 schema change，即使该字段已经存储但暂未发现 runtime
+   reader。对应 PR 必须提供字段 inventory、producer/reader/writer 与静态引用调研、
+   历史和外部兼容性结论、migration/rollback，以及行为等价证明；maintainer 必须在 RFC
+   decision log 或 PR review 中对点名字段显式批准。没有发现 consumer 不等于批准删除。*
+9. v0 promotion 是否只覆盖 `hard_lease` goal？*拟议答案：是。`legacy` 或
+   `soft_claim` goal 先按附录 B 的静止规则切换模式；promotion 从不隐式改变模式。*
+10. provider-first read flip 后，Markdown 与 lease 文件成为投影，kernel 禁止回退。
+    哪些数据进入 head，兼容视图如何渲染？*拟议答案：canonical Todo/lease manifest
+    中的每个字段都持久化在 head，包括 monitor、dependency、resume、decision、
+    completion、text、note、evidence reference，以及 manifest 已准入的 feedback 字段。
+    事务绑定的 projection outbox 只负责渲染 Markdown 与 lease-file 兼容视图，不是
+    遗漏 authority 字段的第二持久化路径。reader 用 projection watermark 对比 head
+    revision，落后则回放
+    outbox。渲染延迟可以让视图暂时陈旧，但不得改变决策。*
+11. 什么声明一个 goal 已晋升，谁可以写这条声明？已合并的 TypeScript-owned file
+    fence 是第一个本地实现，绑定 fence id、源版本与已资格化的 shadow revision；当前
+    Todo 与 task-lease writer 在各自 mutation lock 内检查它。*拟议答案：定义一份
+    provider-neutral authority binding，包含 provider profile、store identity 与
+    lineage、schema manifest、`promoted_at`、promotion operation id、源 digest 和可选
+    `rolled_back_from`。只有 promotion orchestrator 与 rollback operation 可以修改。
+    file profile 用持久本地 fence 和 registry discovery copy 实现；NoKV 与 PostgreSQL
+    必须在各自通过资格验证的 store contract 中实现相同的逻辑 fence、CAS/transaction
+    precondition 与 readback receipt。provider-specific path 或 table name 不属于
+    authority protocol。`configure-goal` 拒绝编辑 binding，bootstrap 拒绝已晋升 goal。
+    无法验证 active binding 的端点 fail closed，不得写 legacy projection。*
+12. 哪些 retention、fast-path 与 capacity 规则是 promotion 前置？已保留 transaction
+    能否把 projection 替换为 digest？*拟议答案：file、NoKV、PostgreSQL 共用逻辑合同：
+    在声明的 retention version 下，最新完整 head、ordered cursor、原始 operation
+    receipt、segment 或 row-chain integrity、确定性 scan 与 recovery readback 始终可用。
+    只有在完整 canonical head 仍可读取，且 replay、audit、parity、migration 所需字段
+    全部可重建，并由 conformance matrix 证明等价时，旧 transaction 的重复 projection
+    才可替换为 digest。物理策略按 provider 实现：第 7.2 节优先嵌入式事务本地存储，
+    分段文件作为比较候选；NoKV 使用经过验证的 document/segment 策略；PostgreSQL
+    使用 append row 和经评审的 index/partition。最低十天资格门也由第 7.2 节维护，
+    先前 file-v0 证明不足以满足。每个 profile 都声明实测上限，并以 `store_capacity_exhausted` fail
+    closed；单一 file size 常量不是跨 provider 合同。Host renewal 仍必须是 authority
+    transaction，因为它的频率决定所有 profile 的 retention envelope。*
+13. Python 参考执行器（`executor.py`、`file_provider.py`、`head.py`、
+    `goal_state_shadow.py`）如何处置？*拟议答案：在 kernel 的 mutation 路径接到
+    CLI 之前保持 coverage-only，先把它们的场景电池移植为 TypeScript 测试，再在
+    promotion PR 中删除；两种本地 aggregate 格式不能同时为准。file profile 的
+    `qualification_holds` 翻为 `[]` 与 `stage` 字面量的改变只在该 PR 内发生。*
+14. `main` 上现在有两条针对同一批写者的默认关闭 shadow lineage：#3818 的观察捕获
+    （`coordination.authority_shadow`，`authority-shadow/file/<goal>`，投影 v0）与
+    runtime shadow（`coordination.runtime_shadow`，`authority-shadow/file-v0`，
+    投影 v0，带 `inspect`、`qualify`、`bootstrap`、`rollback`、`read-candidate`）。
+    两者都在主写提交之后重新采样源，因此都带着 #3818 评审点名的并发写者混入与
+    commit 到 dispatch 之间的丢失窗口。哪条是 Stage 2C 的 lineage，什么来关闭这两
+    个窗口？*拟议答案：runtime shadow 是 lineage，因为 parity 报告、bootstrap、隔离
+    式 rollback、读形状与 promotion kernel 已经绑定在它上面。parity 半段的事务绑
+    定 outbox（写者在自己已持有的锁内写 prepared entry，主写返回后写 committed
+    标记，有界 drain 以 `operation_id = entry id` 提交）成为喂给
+    `coordination.runtime_shadow.commit` 的持久捕获；该捕获接线后 #3818 的观察路径
+    退役。RFC 不得保留两种 shadow 记录格式。*
 
 ---
 
-## Appendix A: What This Evidence Proves
+## 附录 A：这版证据能证明什么
 
-The reference provider and probes live in
-`examples/nokv-shadow-provider/`,
-with a companion
-[`evidence document`](./shared-goal-authority-state-provider-v0-evidence.zh-CN.md).
-The deterministic candidate in this PR proves the claim/receipt core plus the
-Stage 3 reference lifecycle: same-CAS state plus receipt, competing claims,
-A/B/A original-receipt replay, renew/release/expired reclaim, stale-fence
-writeback rejection, atomic completion/continuation, request-digest mismatch,
-clock boundaries, lineage binding, and distinct version domains. The stated
-single-node live scope additionally qualifies file/NoKV parity, restart receipt
-replay, and a real restore-lineage fence. It does not implement or qualify a
-production authorization-projection publisher, receipt-preserving compaction,
-default-mode parity, product shared-mode migration/promotion, service recovery,
-or HA. Passing
-`python3 examples/nokv-shadow-provider/probes.py contract` is therefore not a
-claim that the complete P0 acceptance gate above passes. Historical latency or
-fault results are informative only; they are not a durability, recovery, HA,
-or production qualification claim.
+Reference provider 与 probe 位于
+`examples/nokv-shadow-provider/`，并有
+[配套证据文档](./shared-goal-authority-state-provider-v0-evidence.zh-CN.md)。本 PR 的
+deterministic candidate 证明 claim/receipt core 与 Stage 3 reference lifecycle：
+state 与 receipt 的 same-CAS、并发 claim、A/B/A 原始 receipt 重放、
+renew/release/过期 reclaim、stale-fence writeback rejection、原子
+completion/continuation、request-digest mismatch、时钟边界、血统绑定，以及版本域
+相互独立。声明的单节点 live 范围还资格化 file/NoKV parity、restart receipt replay
+与真实 restore-lineage fence。它不实现或认证 production authorization-projection
+publisher、保留 receipt 的 compaction、默认模式 parity、产品 shared-mode
+migration/promotion、service recovery 或 HA。
+因此，
+`python3 examples/nokv-shadow-provider/probes.py contract` 通过并不表示上面的完整 P0
+验收门通过。历史 latency 或 fault 结果只具有参考意义，不构成 durability、recovery、
+HA 或 production qualification 声明。
 
-The additional TEST ONLY Stage 2A probe in
-`examples/nokv-authority-store/` opens three independent SDK helper processes
-and checks fresh create, exact generation update, reconciliation after an
-applied CAS response is deliberately lost, a one-winner/two-contender CAS,
-winner/loser receipt behavior, and fresh-process receipt/history readback. Its
-executable fixes argv to one absolute Python executable, the interpreter
-isolation flag `-I`, and this checkout's reviewed helper, so `PYTHONPATH`
-cannot substitute the `nokv` module; the helper fails closed unless the SDK
-reports NoKV 0.11.0 and Python API 1, and the report repeats those two
-admission constants rather than server-observed values. It validates read metadata against the current workbench
-incarnation and validates publish responses against the requested workbench,
-path, operation, revision, and generation. The AuthorityStore accepts even a
-successful publish response only after a fresh read proves the exact persisted
-transaction under the current workbench incarnation. This closes false success
-at the LoopX boundary, but NoKV's current Python API does not atomically bind an
-expected workspace incarnation into `publish_bytes`; preventing a write after a
-concurrent remove/recreate remains an explicit provider-contract hold.
-Only a successful live JSON report is evidence for that single-node Stage 2A
-store-conformance run; deterministic tests are sequence tests only. This
-LoopX-only candidate changes neither NoKV source nor its workbench/artifact data
-model, and it does not prove runtime shadow parity, a multi-Agent canary,
-authority-source promotion, HA, restart recovery, capacity, or production
-routing.
+`examples/nokv-authority-store/` 还包含一个 TEST ONLY 的 Stage 2A probe：它会
+打开三个相互独立的 SDK helper 进程，验证 fresh create、精确 generation update、
+一次 CAS 已落盘但响应被刻意丢弃后的回读 reconciliation、两个竞争者恰一胜出的
+CAS、胜负双方的 receipt 行为，以及新进程对 receipt 与完整 history 的回读。该可
+执行入口把 argv 固定为一个绝对 Python executable、解释器隔离标志 `-I`，加本
+checkout 中经过评审的 helper，因此 `PYTHONPATH` 无法替换 `nokv` 模块；helper 只
+接受 NoKV 0.11.0 / Python API 1，report 中重复的是这两个准入常量，而非从服务端读
+回的值。它把 read metadata 与当前
+workbench incarnation 对照，并针对请求的 workbench、path、operation、revision、
+generation 校验 publish 回包。即使 publish 回包报告成功，AuthorityStore 也必须
+重新读取并证明当前 workbench incarnation 下持久化了完全相同的 transaction，才会
+接受成功。这在 LoopX 边界消除了错误成功，但 NoKV 当前 Python API 尚不能把
+expected workspace incarnation 原子绑定到 `publish_bytes`；阻止 concurrent
+remove/recreate 后的写入仍是明确的 provider-contract hold。只有成功的 live JSON report 才是该次单节点 Stage 2A store-conformance
+运行的证据；确定性测试只证明场景序列。这个纯 LoopX 候选既不修改 NoKV 源码，也
+不改变其 workbench/artifact 数据模型；它不证明 runtime shadow parity、multi-Agent
+canary、authority-source promotion、HA、重启恢复、容量或生产路由。
 
-## Appendix B: Handoff-Mode Decision Record (2026-08-10)
+## 附录 B：交接模式决策记录（2026-08-10）
 
-This appendix writes down a direction already agreed during the PR #2787
-review, as part of the implementation prerequisite. It changes documentation
-only; no runtime behavior changes.
+本附录把 PR #2787 评审中已同意的方向落成文字，作为实施前置条件的一部分。
+只改文档，不改任何运行时行为。
 
-### Why
+### 起因
 
-Live CLI verification reproduced a fact: the two claim records can disagree.
-One agent acquires a hard lease on a todo; another agent can still soft-claim
-the same todo afterwards, and both succeed. What happens after the divergence
-matters more:
+用真实 CLI 验证时复现了一个事实：领任务的两本账可以各说各话。一个 agent 先拿到
+某个 todo 的硬租约，另一个 agent 之后仍能软认领同一个 todo，两边都成功。分叉之后
+的实际行为更关键：
 
-- The later soft claim invalidates the earlier active lease outright: the
-  holder's renew and re-acquire are rejected;
-- The completion fence disarms itself in exactly this conflicted state: the
-  soft claimant completes without any key;
-- The lease holder cannot complete at all: authorization checks the soft
-  claim first, so the lease credentials are never even evaluated.
+- 后来的软认领会让先前的活租约直接失效：持约人续租、重新领取都被拒绝；
+- 完成栅栏恰好在这种矛盾状态下自动失效：软认领方不带钥匙就能完成；
+- 持约人反而完不成：授权检查先看软认领，租约凭证根本轮不到被检查。
 
-In short, once the two records diverge today, the soft claimant wins
-everywhere; the lease does not carry execution authority on its own. The
-sentence in section 4 ("the lease/fence carries execution authority")
-describes the target contract; the body text has been corrected in this
-revision.
+也就是说，今天两本账一旦分叉，软认领方全胜，租约不单独构成执行权。第 4 节中
+"执行权由 lease/fence 表示"描述的是目标合同，正文已随本修订改口。
 
-### Decision
+### 决定
 
-Do not synchronize the two records against each other. Instead, each goal
-declares a handoff mode (`handoff_mode`) that separates the two ways of
-taking work. The field lives in the goal state file's front matter for now,
-traveling with the file across endpoints; once shared mode ships, the shared
-authority owns it. Three values:
+不做两本账之间的互相同步，改为每个 goal 声明一种交接模式（`handoff_mode`），
+用模式把两种领法隔开。字段暂放在 goal 状态文件头部（front-matter），跟着文件
+跨端走；共享模式上线后由共享权威托管。三个取值：
 
-- absent or `legacy`: exactly today's behavior, both paths open. The
-  divergence hole remains in this mode; that is a deliberate default, not an
-  oversight.
-- `soft_claim`: this goal uses soft claims only. acquire/renew/transfer are
-  rejected; release and inspect remain available to clean up and view
-  leftover leases.
-- `hard_lease`: changing the claim on an existing todo requires holding its
-  active lease; every transition that retires an existing todo as done
-  (`complete` and `supersede`) requires the key; the self-disarm-on-conflict
-  behavior becomes a loud error. Assigning a claimant at todo creation stays
-  allowed: a fresh todo cannot have a lease yet. One harness-owned case keeps
-  the keyed invariant without making the presenter hold the lease across a
-  human wait: completing a user-role `user_gate` todo without explicit lease
-  credentials lets the completion fence mint the key itself under the same
-  per-goal lease lock, verify it, and release it on commit; an existing
-  time-active lease is never displaced.
+- 不填或 `legacy`：与今天完全一样，两种领法都开放。分叉的口子在此模式下仍然
+  存在；这是有意保留的默认值，不是疏漏。
+- `soft_claim`：该 goal 只用软认领。acquire/renew/transfer 被拒绝；release 与
+  inspect 保留，用于清理和查看遗留租约。
+- `hard_lease`：改动已有 todo 的认领关系必须持有它的活租约；所有把已有 todo
+  置为 done 的转移（`complete` 与 `supersede`）都必须带钥匙；"矛盾态自动失效"
+  改为响亮报错。新建 todo 时顺手指定认领人仍然允许——新 todo 不可能已有租约。
+  有一个由 harness 自己持有的例外保住"带钥匙"这个不变量、又不逼 presenter 在
+  人工等待期间一直持约：完成 user 角色的 `user_gate` todo 且没有显式租约凭证时，
+  完成栅栏会在同一把 per-goal 租约锁下自己铸出钥匙、验证、并在提交后释放；
+  已存在的时间有效租约永远不会被顶掉。
 
-Companion rules:
+配套约定：
 
-1. Default is `legacy`; existing goals see zero behavior change. The hole
-   stays open there, and the implementation PR must say so plainly.
-2. Field placement as above; the registry and lease files are per-host, only
-   the goal state file travels across endpoints.
-3. Cross-endpoint window: the mode propagates by file sync, so two endpoints
-   can briefly see different values. Today this can only converge, not be
-   eliminated; state it honestly. Shared mode closes it.
-4. `hard_lease` keeps one door: the existing delegated authority
-   (todo_lifecycle_authority, with a stated reason) may change claims
-   without holding the lease, with an explicit, auditable override marker in
-   the result. No new bypass switches.
-5. Switching modes requires quiescence: refuse while the goal still has open
-   claims or active leases, and list what blocks it. No forced switch in v0.
+1. 默认 `legacy`，存量 goal 行为零变化；洞还在，实现 PR 必须明说。
+2. 字段落点如上；registry 与租约文件都是单机的，只有 goal 状态文件跨端。
+3. 跨端窗口：模式靠文件同步传播，两端可能短暂看到不同的值。现在只能收敛、
+   不能消灭，如实声明；共享模式才能关死。
+4. `hard_lease` 留一扇门：既有的委托授权（todo_lifecycle_authority，附说明
+   理由）可以不持租约改认领，结果里带明确的越门标记，可审计。不新增任何
+   绕过开关。
+5. 切换模式要求静止：goal 内仍有未完成的认领或活租约时拒绝切换，并列出
+   阻挡者。v0 不提供强制切换。
 
-### Status (2026-08-18)
+### 现状（2026-08-18）
 
-The gate shipped as the `handoff_mode` front-matter field with the
-`legacy | soft_claim | hard_lease` semantics above, the quiescence-only
-`loopx handoff-mode show|set` switch, and the delegated-authority door with
-its `handoff_gate_overridden` marker; the user-gate key minting above landed
-as a follow-up. `legacy` remains the default and keeps the divergence hole by
-design. Two side doors found after the gate landed are closed alongside this
-revision: `supersede` crosses the same lease fence as `complete`, and a forced
-state rebuild (`bootstrap --force`) carries the declared mode instead of
-resetting it to `legacy`. The Stage 2 provider contract and file backend have
-since landed, and the first Stage 2C post-commit runtime shadow now exists
-behind an explicit default-off configuration. Local canonical promotion has
-not started: the runtime still never reads the shadow for decisions, and the
-migration, rollback, parity, read-flip, and legacy-writer fencing gates above
-remain open.
+门禁已经落地：状态文件前置的 `handoff_mode` 字段与上述 `legacy | soft_claim |
+hard_lease` 语义、只允许静止态切换的 `loopx handoff-mode show|set`、以及带
+`handoff_gate_overridden` 标记的委托授权门；上面的 user gate 自动铸钥匙作为后续
+补充落地。`legacy` 仍是默认值，分叉洞按设计保留。门禁落地后发现的两扇侧门随本次
+修订一并关上：`supersede` 与 `complete` 过同一道租约栅栏；强制重建状态
+（`bootstrap --force`）保留已声明的模式而不是把它重置回 `legacy`。此后 Stage 2
+provider 合同与 file backend 已落地，第一个 Stage 2C 提交后 runtime shadow 也已在
+显式、默认关闭的配置后实现。本地 canonical promotion 尚未开始：runtime 仍不从
+shadow 读取决策，上述 migration、rollback、parity、read flip 与 legacy-writer fencing
+门禁仍然开放。
 
-### Relation to Staged Delivery
+### 与分阶段交付的关系
 
-Mapped to the five-stage plan from the #2787 review: the characterization
-stage first records today's actual behavior (including the three divergence
-facts above) as fixtures; the gate itself is an explicitly declared behavior
-change, landing as its own PR before the file provider shadow so divergent
-data does not pollute the shadow parity baseline; once local canonical
-promotion folds claim and lease into one ledger, this class of divergence
-becomes structurally impossible and the gate is absorbed. The read-surface
-and hygiene fixes (status showing real leases; releasing the verified lease
-on completion) touch no decision semantics and were submitted ahead of this
-record.
+对应 #2787 评审结论中的五阶段计划：先在 characterization 阶段把今天的真实行为
+（含上面三条分叉事实）做成用例入册；门禁本身是一次显式声明的行为变更，作为
+独立 PR 在 file provider shadow 之前落地，避免分叉数据污染 shadow 对账基线；
+本地 canonical promotion 把 claim 与 lease 收进同一本账后，这类分叉从结构上
+不再可能，门禁自然被吸收。读侧与卫生修复（status 显示真实租约、完成后销掉已
+验证的租约）不涉及判断语义，已先行提交。
 
-The characterization stage's negative cases extend the original list: a soft
-claim overriding an active lease; the completion fence disarming in the
-conflicted state; authorization running before the lease fence; claim-change
-entry points not yet gated; the window between the lease acquire's projection
-read and the state-file lock.
+characterization 阶段的负向用例在原清单上补充：软认领盖掉活租约、完成栅栏在
+矛盾态失效、授权检查先于租约栅栏、尚未设防的认领变更入口、租约获取读取投影
+与状态文件锁之间的窗口。
 
 
-## Appendix C: Stage 2C Promotion Design (proposal, 2026-09-04)
+## 附录 C：Stage 2C promotion 设计（提案，2026-09-04）
 
-This appendix resolves questions 8 to 14 as a provider-neutral promotion
-contract. It distinguishes logical authority semantics from each provider's
-physical retention strategy. Nothing below is implemented by this document;
-the unresolved gates remain prerequisites for a real promotion.
+本附录将第 12 节问题 8 到 14 收敛为 provider-neutral promotion contract，并分开逻辑
+authority 语义与各 provider 的物理 retention 策略。本文档不实现以下内容；未关闭的门禁
+仍是任何真实 promotion 的前置。
 
-### Decision summary
+### 决策摘要
 
-1. Stage 2C promotes one canonical coordination head, not a file format.
-   File, NoKV, and PostgreSQL implement the same `AuthorityStore` semantics.
-2. Canonical Todo and lease state is complete by default. Promotion may not
-   reduce it to the fields currently used by a known consumer.
-3. Any later field removal requires field-level compatibility research,
-   migration and rollback evidence, and explicit maintainer approval.
-4. Markdown and lease files become rendered projections after read flip. They
-   never supply missing decision state.
-5. Retention is logically common and physically provider-specific. A provider
-   may segment or normalize history without changing head/readback semantics.
+1. Stage 2C 晋升的是一份 canonical coordination head，不是某种文件格式。file、NoKV、
+   PostgreSQL 实现同一套 `AuthorityStore` 语义。
+2. Canonical Todo 与 lease state 默认完整。不得按“当前已知 consumer 使用的字段”缩减。
+3. 后续任何字段删除都需要字段级兼容性调研、migration/rollback 证据与 maintainer
+   显式批准。
+4. read flip 后 Markdown 与 lease 文件是渲染投影，绝不补充缺失的 decision state。
+5. retention 的逻辑合同一致，物理实现按 provider 区分；分段或规范化历史不得改变
+   head/readback 语义。
 
-### Shipped on `main` (2026-09-03)
+### `main` 已交付（2026-09-03）
 
-- The default-off runtime shadow: one `AuthorityStore` transaction per
-  committed Todo or task-lease mutation, keyed by the mutation's rollout event
-  id and `updated_at`, with receipt replay, content-drift rejection,
-  ambiguous-commit reconciliation, and read-back.
+- 默认关闭的 runtime shadow：每次已提交的 Todo 或 task-lease mutation 对应一笔
+  `AuthorityStore` 事务，以该 mutation 的 rollout event id 与 `updated_at` 为键，带
+  receipt 重放、内容漂移拒绝、ambiguous commit 调和与回读。
 - `loopx coordination-shadow inspect | qualify | read-candidate | bootstrap |
-  rollback`: typed one-point parity (`missing | matched | drifted` with both
-  digests), a coverage-based sustained parity report, the provider-first read
-  shape (still `decision_read_from_shadow=false`), the bootstrap of an empty
-  shadow from the legacy projection, and a revision-fenced quarantine rollback
-  of a pre-promotion lineage.
-- The cutover kernel: a pure reducer from mutation to projection, event, and
-  receipt; `coordination.local_authority.promote` requiring a qualified shadow
-  at one exact revision and digest plus an independently persisted legacy
-  writer fence bound to that revision; provider-first `mutate` and
-  `todo_read` that never fall back to Markdown.
-- The fence integration: every Python Todo mutation and every native task-lease
-  acquire, renew, transfer, and release checks the durable fence while holding
-  its own lock; an absent fence costs no runtime call; a present, unreadable,
-  or invalid fence fails closed.
-- The complete Todo read model: `loopx_todo_canonical_read_record_v0` publishes
-  a versioned field manifest, and the TypeScript projection rejects a
-  replacement that drops fields already present on a stored record.
+  rollback`：带双 digest 的单点 parity（`missing | matched | drifted`）、基于覆盖
+  的持续 parity 报告、provider-first 读形状（仍 `decision_read_from_shadow=false`）、
+  从 legacy 投影引导空 shadow、以及按 revision 围栏的晋升前 lineage 隔离式 rollback。
+- cutover kernel：从 mutation 到投影、事件与 receipt 的纯 reducer；要求 shadow 在
+  一个精确 revision 与 digest 上已资格化、并带独立持久化且绑定该 revision 的 legacy
+  writer fence 的 `coordination.local_authority.promote`；永不回退到 Markdown 的
+  provider-first `mutate` 与 `todo_read`。
+- fence 集成：每个 Python Todo mutation 与每个 native task-lease
+  acquire/renew/transfer/release 都在自己的锁内检查持久 fence；fence 不存在时零运行时
+  调用；fence 存在但不可读或无效时 fail closed。
+- 完整 Todo read model：`loopx_todo_canonical_read_record_v0` 发布带版本字段 manifest；
+  TypeScript projection 拒绝 replacement 丢弃既有记录中已经存在的字段。
 
-### Normative promotion contract
+### 规范性 promotion contract
 
-The promotion state machine is independent of provider kind:
+promotion state machine 与 provider kind 无关：
 
-1. Resolve a reviewed goal-level authority binding to a qualified
-   `AuthorityStore` profile and exact store lineage.
-2. Under the legacy Todo and lease locks, verify sustained parity at one source
-   revision, projection digest, field-manifest version, and provider cursor.
-3. Engage the provider profile's durable writer fence, then commit the complete
-   canonical head and promotion receipt with a compare-and-set or transaction
-   precondition. A file marker, NoKV document identity, or PostgreSQL row/table
-   layout is an implementation detail.
-4. Read back the binding, head, receipt, cursor, manifest, and digest before
-   allowing provider-first decisions. Any mismatch fails closed.
-5. Render compatibility projections through the transaction-bound outbox. A
-   stale projection is repaired from the head; it is never consulted to fill a
-   missing canonical field.
+1. 从经过评审的 goal-level authority binding 解析已资格化的 `AuthorityStore` profile
+   与精确 store lineage。
+2. 在 legacy Todo 与 lease lock 内，验证同一个 source revision、projection digest、
+   field-manifest version 与 provider cursor 上的持续 parity。
+3. engage 该 provider profile 的持久 writer fence，再以 compare-and-set 或 transaction
+   precondition 提交完整 canonical head 与 promotion receipt。file marker、NoKV document
+   identity、PostgreSQL row/table layout 都只是实现细节。
+4. 允许 provider-first 决策前，回读 binding、head、receipt、cursor、manifest 与 digest；
+   任一不一致都 fail closed。
+5. 通过 transaction-bound outbox 渲染兼容投影。陈旧投影从 head 修复，绝不用于填补
+   canonical field。
 
-The canonical head preserves every field legally present in the normalized
-Todo and lease records. The field manifest is part of qualification and parity.
-An upsert carries a complete replacement or uses a typed patch whose clear
-operations are explicit. Unknown additions fail closed until the manifest is
-versioned. A removal proposal must enumerate the field and all producers,
-readers, writers, persisted fixtures, static references, historical versions,
-and known external consumers; state the migration, downgrade, rollback, and
-semantic-equivalence argument; and receive explicit maintainer approval. A
-field is not removable merely because code search found no current reader.
+canonical head 保留 normalized Todo 与 lease record 中每个已经合法存在的字段；field
+manifest 属于 qualification 与 parity 合同。upsert 要么提交完整 replacement，要么使用
+clear operation 显式的 typed patch。未知新增字段在 manifest 升版前 fail closed。删除
+提案必须逐字段枚举 producer、reader、writer、persisted fixture、静态引用、历史版本与
+已知外部 consumer；写清 migration、downgrade、rollback 与 semantic-equivalence 论证；
+并获得 maintainer 显式批准。code search 没有发现当前 reader，不构成删除理由。
 
-This completeness boundary excludes raw Markdown formatting, credentials,
-host-local paths, whole registry documents, raw evidence bodies, and state
-owned by quota, run-history, settlement, inbox, scheduler, or another ledger.
-Those remain references governed by their own contracts.
+完整性边界不包含 raw Markdown formatting、credential、host-local path、整个 registry、
+raw evidence body，也不包含 quota、run history、settlement、inbox、scheduler 或其他
+ledger 拥有的 state；这里只保存受各自合同治理的 reference。
 
-The common retention contract keeps the latest complete head, ordered cursor,
-original operation receipt, integrity chain, deterministic scan, and recovery
-readback. Physical profiles may differ:
+共同 retention contract 保留最新完整 head、ordered cursor、原始 operation receipt、
+integrity chain、确定性 scan 与 recovery readback。物理 profile 可以不同：
 
-- **file:** create-only sealed history segments plus a bounded head document;
-- **NoKV:** a qualified document/segment layout with lineage-bound conditional
-  publication and recovery readback;
-- **PostgreSQL:** transactionally appended history/receipt rows plus a current
-  head, with reviewed indexes, partitioning, RLS, and tenant context.
+- **file：**create-only sealed history segment 加有界 head document；
+- **NoKV：**经过资格验证、绑定 lineage 的 document/segment conditional publication
+  与 recovery readback；
+- **PostgreSQL：**事务追加的 history/receipt row 加 current head，并配套经过评审的
+  index、partition、RLS 与 tenant context。
 
-All profiles expose the same logical result and field manifest. Each publishes
-measured capacity limits and returns typed `store_capacity_exhausted` before a
-write that cannot preserve the contract.
+所有 profile 暴露相同逻辑结果与 field manifest。每个 profile 发布实测容量限制，并在
+无法保持合同的写入发生前返回 typed `store_capacity_exhausted`。
 
-### Still missing before promotion
+### 晋升前仍缺
 
-- Provider-first CLI routing and the lock-owning promotion orchestrator (the
-  kernel's own next slice): take the Todo and lease legacy locks, require
-  `qualify` to be `qualified` at the current revision and digest, engage the
-  fence, run `promote`, render the projections, and record the declaration of
-  question 11; refuse a rerun whose source digest changed unless the abandoned
-  store is explicitly discarded.
-- Full transaction-capture qualification (question 14): Todo add, update,
-  complete, supersede, and archive plus native lease acquire, renew, transfer,
-  release, auto-acquire, and fence-close now emit prepared/committed outbox
-  entries around their primary write. The bounded drain commits complete
-  versioned records into the existing `coordination.runtime_shadow` file-v0
-  lineage; it does not create the former second local-shadow candidate. Before
-  promotion, add sustained mixed-writer parity runs, event-only Todo coverage,
-  and the selected provider profile's recovery/capacity evidence.
-- The provider-neutral authority binding, compatibility projection outbox,
-  and conformance rows for file, NoKV, and PostgreSQL. This does not require all
-  providers to promote together; each profile must pass the same contract
-  before it is eligible.
-- Retention, fast path, and measured capacity for the selected first-promotion
-  profile; the reference executor's removal and status flips (question 13).
-- Post-promotion rollback: the shipped rollback quarantines a pre-promotion
-  lineage. After the first authority write (`authority_revision > 0`) the
-  return path is question 3's reviewed fenced export: quiescence, an empty
-  projection outbox, export of the head into the Markdown coordination fields
-  and the final lease records, an `equal` verify, removal of the watermark and
-  fence, and retirement of the lineage; never automatic, never during an
-  active lease.
+- provider-first CLI 路由与持锁的 promotion orchestrator（kernel 自己声明的下一切
+  片）：取 Todo 与 lease 两把 legacy 锁，要求 `qualify` 在当前 revision 与 digest 上
+  为 `qualified`，engage fence，执行 `promote`，渲染投影，写入问题 11 的声明；源
+  digest 已变时拒绝重跑，除非显式丢弃被放弃的 store。
+- 完成事务捕获资格验证（问题 14）：Todo add、update、complete、supersede、archive，
+  以及 native lease acquire、renew、transfer、release、auto-acquire、fence-close，现已在
+  主写前后生成 prepared/committed outbox entry。有界 drain 把完整、带版本的 record
+  提交到既有 `coordination.runtime_shadow` file-v0 lineage，不再创建第二套 local-shadow
+  candidate。晋升前仍需补持续 mixed-writer parity、event-only Todo 覆盖和所选 provider
+  profile 的 recovery/capacity 证据。
+- provider-neutral authority binding、兼容投影 outbox，以及 file、NoKV、PostgreSQL
+  的 conformance row。三个 provider 不必同时晋升，但每个 profile 都必须先通过同一
+  合同才具备资格。
+- 首个晋升 profile 的 retention、fast path 与实测 capacity；参考执行器的删除与
+  status flip（问题 13）。
+- 晋升后的 rollback：已交付的 rollback 隔离的是晋升前 lineage。首次权威写
+  （`authority_revision > 0`）之后的返回路径是问题 3 要求的经评审的 fenced export：
+  静止、空 projection outbox、把 head 导出到 Markdown 协调字段与 lease 终态记录、
+  `equal` 校验、去水印与 fence、退役 lineage；永不自动，永不在活跃 lease 期间。
 
-### Growth is a promotion prerequisite
+### 增长是晋升前置
 
-The minimum supported horizon is ten elapsed days. The workload, corrected
-whole-history cost model, local storage direction and qualification budgets are
-owned by [Section 7.2](#72-ten-day-goals-local-storage-qualification-target-proposal).
-File-v0 remains a bounded conformance/bootstrap profile; neither successful
-bootstrap nor a short microbenchmark proves long-goal capacity. First local
-promotion requires a qualified bounded-history hot path and elapsed-time soak,
-without waiting for PostgreSQL service readiness.
+最低支持周期是十个自然日。负载、修正后的全历史成本模型、本地存储方向和资格化预算
+统一由[第 7.2 节](#72-ten-day-goals-local-storage-qualification-target-proposal)维护。file-v0 仍是有界
+conformance/bootstrap profile；bootstrap 成功或短时微实验都不证明长程容量。本地首次
+晋升必须具备已资格化的历史有界热路径和自然时间 soak，不等待 PostgreSQL service 就绪。
 
-### Todo domain / projection decision (2026-09-05)
+### Todo domain / projection 决策（2026-09-05）
 
-The long-term boundary is semantic, not based on where a field was first
-parsed. `TodoDomainRecord` owns identity, role, status, text, task semantics,
-and **`archive_state: active | archive`**. Archival is independent of completion:
-the handoff gate and succession-tracked completion checks exclude archived
-records. `deferred` is a status, not an archive state. A renderer must not invent
-or change that decision by moving a heading.
+长期分层依据字段语义，而不是它最早从哪里解析。`TodoDomainRecord` 持有 identity、
+role、status、text、task semantics，以及 **`archive_state: active | archive`**。
+归档独立于完成：handoff gate 与 succession-tracked completion 检查会排除已归档
+记录。`deferred` 是 status，不是 archive state。renderer 不得通过移动标题来制造
+或改变这一决策。
 
-`TodoProjectionMetadata` owns `source_section` and optional `index`. The Markdown
-adapter derives them when rendering native records. An imported section name
-may be retained as compatibility provenance, but cannot become required input
-to provider-origin creation. One caveat is load-bearing: legacy `index` also
-breaks priority ties in the consumer pipeline. A migration must preserve that
-ordering through an explicit domain ordering policy or qualified compatibility
-provenance; deleting it and silently switching to identity order is not parity.
-Fresh native collections use deterministic Todo-id order before the existing
-priority projection; their display indexes are allocated by the adapter.
+`TodoProjectionMetadata` 持有 `source_section` 和可选 `index`；Markdown adapter
+渲染原生记录时生成这些字段。导入的 section 名称可保留为 compatibility provenance，
+但不得成为 provider-origin creation 的必填输入。一个重要约束是：旧 `index` 还在
+consumer pipeline 中作为相同 priority 的排序依据。迁移必须通过显式 domain 排序
+规则或已资格化的 compatibility provenance 保持顺序；删除它并静默改为 identity
+排序不算 parity。全新原生 collection 先按 Todo id 确定顺序，再走既有 priority
+projection；展示 index 由 adapter 分配。
 
-The implementation checkpoint introduces the separate
-`loopx_todo_domain_read_record_v0` manifest and `todo_domain_record_v0` items.
-The existing reducer, file-store mutation path, and collection reader validate
-this shape without Markdown fields. Tests cover native insertion, archival,
-exact replay, reopen, and rejection of renderer metadata and incomplete
-replacement. This proves the storage/read boundary, not an authorized CLI
-creation or complete lifecycle transaction.
+当前实现检查点新增独立的 `loopx_todo_domain_read_record_v0` manifest 与
+`todo_domain_record_v0` item。现有 reducer、file-store mutation path 和 collection
+reader 可以验证不含 Markdown 字段的该形状。测试覆盖原生插入、归档、exact replay、
+reopen，以及拒绝 renderer metadata 和不完整 replacement。这证明 storage/read
+边界，不等于已经完成有授权检查的 CLI creation 或完整 lifecycle transaction。
 
-Compatibility is explicit: `loopx_todo_canonical_read_record_v0` and its
-`todo_item_v0` records are unchanged. Existing heads, receipts, field manifests,
-and default Markdown capture retain every legal v0 field. No implicit conversion
-occurs in reads, mutations, or startup. Mixed native/legacy records under one
-manifest fail closed. Downgrading a native head to an older binary fails closed
-on its unknown manifest; rollback requires the reviewed export below, not
-merely installing the old binary. Historical operation receipts are never
-rewritten by a schema upgrade.
+兼容性是显式的：`loopx_todo_canonical_read_record_v0` 及其 `todo_item_v0` 记录保持
+不变。已有 head、receipt、field manifest 与默认 Markdown capture 保留全部合法
+v0 字段。read、mutation 和 startup 不隐式转换。同一 manifest 混入 native/legacy
+记录会 fail closed。原生 head 降级到旧 binary 时因未知 manifest 而 fail closed；
+rollback 必须经过下述已评审 export，不能只安装旧 binary。schema upgrade 不得重写
+历史 operation receipt。
 
-Field inventory for this split: `active_state_todo_parser.py` produces section
-and index metadata and maps section membership into archival state;
-`todo_summary.py`, `handoff_gate.py`, and resume/continuation projections consume
-archival state; `todos/projection.py` consumes index for ordering. Existing
-runtime-shadow fixtures and the legacy TS insert fixture retain v0 provenance.
-The native contract adds an alternative; it removes no persisted v0 field and
-makes no claim that unknown external consumers have migrated. A future v0 import
-must inventory those consumers and prove render/export/rollback and selection
-parity at the same revision before changing a binding or manifest. Questions 8
-and 10's completeness rule applies to domain facts and retained compatibility
-provenance; it does not require native callers to manufacture Markdown addresses.
+本次分层的字段 inventory：`active_state_todo_parser.py` 产生 section/index metadata，
+并将 section membership 映射成 archival state；`todo_summary.py`、`handoff_gate.py`
+及 resume/continuation projection 消费 archival state；`todos/projection.py` 使用
+index 排序。现有 runtime-shadow fixture 和旧 TS insert fixture 保留 v0 provenance。
+原生 contract 是新增选项，不删除已持久化 v0 字段，也不声称未知 external consumer
+已经迁移。后续 v0 import 必须盘点这些 consumer，并在同一 revision 证明
+render/export/rollback 与 selection parity，再改变 binding 或 manifest。问题 8、10
+的完整性要求覆盖 domain fact 与保留的 compatibility provenance，但不要求原生
+caller 伪造 Markdown 地址。
 
-### Next delivery and parallel provider work
+### 下一步交付与并行 provider 工作
 
-The immediate kernel sequence is: (1) a real provider-first Todo lifecycle caller
-with the replaced Python decisions removed; (2) explicit v0 import plus sustained
-consumer/capture/recovery qualification; (3) reviewed promotion with fenced
-export and cleanup. Each slice must prove an end-to-end transaction, not merely
-another schema identifier consolidation. Native contract acceptance alone is
-not permission to bypass any promotion hold.
+kernel 的近期顺序是：（1）真实 provider-first Todo lifecycle caller，并删除被替代
+的 Python decision；（2）显式 v0 import 加持续 consumer/capture/recovery 资格化；
+（3）具备 fenced export 和 cleanup 的已评审 promotion。每个切片必须证明端到端
+transaction，不能只做另一轮 schema identifier 统一。接受 native contract 不等于
+可以绕过任何 promotion hold。
 
-The first replacement-first `claim` slice routes both the default Markdown
-writer and the promoted provider transaction through one TypeScript decision.
-Python's default path retains only locked commit and existing projection-
-compatibility duties. This closes duplicate claim policy; it neither promotes
-Markdown to authority nor replaces the remaining unified
-create/update/complete/archive transactions and projection outbox.
+`claim` 的第一个 replacement-first 切片把默认 Markdown writer 与 promotion 后的
+provider transaction 接到同一个 TS decision；Python 默认路径只保留持锁提交和既有
+投影兼容职责。它关闭 claim policy 的双实现，但不把 Markdown 提升为 authority，
+也不替代剩余 create/update/complete/archive 的统一 transaction 与 projection outbox。
 
-The following `create` slice routes promoted `todo add` through a native
-provider transaction. The legacy CLI surface remains, but after argument
-validation it performs one typed crossing; TypeScript owns semantic duplicate
-resolution, actor/owner eligibility, CAS, replay receipts, and the projection
-outbox mutation. A deleted Markdown state file stays absent in real subprocess
-CLI preview and apply tests. This removes Markdown commit authority for create
-on promoted goals without claiming that update/complete/archive are ready for
-live promotion; those commands remain fenced until their own transaction
-types land behind the same runtime boundary.
+随后的 `create` 切片让 promotion 后的 `todo add` 进入原生 provider transaction。
+旧 CLI 表面仍保留，但参数验证之后只跨一次 typed boundary；语义重复判断、actor/owner
+资格、CAS、replay receipt 与 projection outbox mutation 都由 TypeScript 持有。真实
+subprocess CLI 的 preview/apply 测试会先删除 Markdown state file，并证明它不会被重新
+创建。这消除了 promoted goal 上 create 的 Markdown 提交权威，但不宣称
+update/complete/archive 已可用于活跃 goal promote；这些命令要等各自 transaction
+类型进入同一 runtime boundary 前继续被 fence。
 
-Use file-v0 for bounded conformance and import rehearsal only. Start the
-Section 7.2 embedded-store slice alongside the provider-first Todo caller; both
-converge before long-goal local qualification and promotion. PostgreSQL
-service/deployment work remains parallel; it is not a local-promotion dependency. NoKV remains independently gated by its own lineage and recovery
-qualification. The shared authority owns decisions and receipts; providers own
-durable CAS/transactions, never a second Todo state machine.
+file-v0 只用于有界 conformance 与 import 演练。第 7.2 节嵌入式存储切片与 provider-first
+Todo caller 同时推进，在长程本地资格化与晋升前汇合。PostgreSQL service/deployment
+继续并行，不成为本地晋升的依赖；NoKV 独立通过自己的 lineage/recovery 资格门禁。
+shared authority 持有 decision 与 receipt；provider 只持有 durable CAS/transaction，
+不再实现第二份 Todo 状态机。
 
-### Parallel delivery plan
+### 并行交付计划
 
-| Lane | May start | Scope and exit condition | Dependency |
+| Lane | 何时开始 | 范围与退出条件 | 依赖 |
 | --- | --- | --- | --- |
-| L. Long-goal local persistence | Now, alongside the Todo caller | Section 7.2: embedded-store candidate, bounded live head and receipt index, historical scan compatibility, crash-safe checkpoints, real CLI readback, accelerated capacity and >=10-day soak. | Reuses the TS authority owner; required for local long-goal promotion, independent of P. |
-| P. PostgreSQL provider plane | Now, from current `main` | Keep the existing `AuthorityStore` contract; finish schema migration/install ownership, authenticated service and tenant authorization, restore-incarnation rotation, pool/cancellation/failover behavior, and reviewed indexes, partitioning, retention, and measured capacity. Live PostgreSQL conformance remains mandatory. | Does not depend on #3870 and must not stack on its branch. This lane alone creates no runtime caller or promotion claim. |
-| C. Canonical transaction capture | In implementation, based on #3870 | Transaction-bound outbox capture now targets the one `coordination.runtime_shadow` lineage and retains complete versioned Todo/lease records. Finish sustained mixed-writer parity, explicit-clear/omission coverage, and event-only Todo recovery evidence. | Can run in parallel with P, but both C and the selected provider profile must finish before parity or promotion integration. |
-| I. Binding and qualification integration | After C and the selected profile's qualification | Bind one exact provider lineage, field manifest, source revision, digest, and cursor; qualify explicit v0 import, ordering/archival/consumer parity, and recovery/capacity without consulting legacy state for missing fields. | Long-goal local integration requires L and does not wait for P. PostgreSQL joins only when its own P holds pass. |
-| F. Promotion and cleanup | After I and explicit maintainer approval | Complete provider-first CLI routing, the lock-owning promotion orchestrator, compatibility projection outbox, post-promotion fenced export/rollback, then delete duplicate reference aggregates and flip the reviewed stage/hold declarations. | Each profile must pass C, I, and its own provider qualification; long-goal local promotion additionally requires L, and PostgreSQL requires P. |
+| L. 长程本地持久化 | 现在，与 Todo caller 同期 | 第 7.2 节：嵌入式候选、有界 live head/receipt index、历史 scan 兼容、crash-safe checkpoint、真实 CLI readback、加速容量与 >=10 天 soak。 | 复用 TS authority owner；本地长程晋升必需，不依赖 P。 |
+| P. PostgreSQL provider plane | 现在，从当前 `main` 开始 | 保持既有 `AuthorityStore` 合同；完成 schema migration/install ownership、authenticated service 与 tenant authorization、restore-incarnation rotation、pool/cancellation/failover 行为，以及经评审的 index、partition、retention 与实测 capacity。真实 PostgreSQL conformance 始终是强制门禁。 | 不依赖 #3870，也不得叠在其分支上。仅完成本 lane 不产生 runtime caller 或 promotion 声明。 |
+| C. Canonical transaction capture | 实现中，基于 #3870 | transaction-bound outbox 已指向唯一 `coordination.runtime_shadow` lineage，并保留完整带版本的 Todo/lease record；继续完成 sustained mixed-writer parity、explicit-clear/omission 与 event-only Todo recovery 证据。 | 可与 P 并行；但 C 与选定 provider profile 都完成后，才能进入 parity 或 promotion 集成。 |
+| I. Binding 与资格集成 | C 与选定 profile 的资格化完成后 | 绑定一个精确 provider lineage、field manifest、source revision、digest 与 cursor；资格化显式 v0 import、排序/归档/consumer parity 与 recovery/capacity；缺字段时不得查询 legacy state 补齐。 | 长程本地集成需要 L，不等待 P；PostgreSQL 仅在自己的 P hold 全通过后汇合。 |
+| F. Promotion 与清理 | I 完成且 maintainer 显式批准后 | 完成 provider-first CLI routing、持锁 promotion orchestrator、兼容投影 outbox、晋升后 fenced export/rollback；随后删除重复 reference aggregate，并翻转经评审的 stage/hold 声明。 | 每个 profile 必须通过 C、I 与自身 provider 资格化；长程本地晋升还需 L，PostgreSQL 还需 P。 |

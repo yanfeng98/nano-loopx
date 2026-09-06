@@ -1,43 +1,27 @@
-# LoopX Authors And Contributors
+# LoopX 作者与贡献者
 
-## Creator
+> [English](authors.md)
 
-LoopX was created by [`@huangruiteng`](https://github.com/huangruiteng). Its
-public repository history begins with the [initial public goal-harness
-scaffold](https://github.com/huangruiteng/loopx/commit/7dcdc9dc79226d157ba57d3e8ff4bae664f020c1)
-on 2026-05-31. The public product surface adopted the LoopX name on
-[2026-06-21](https://github.com/huangruiteng/loopx/commit/320fbedaa4d90bd02e5149a8fd9a46c9a498c650).
+## 创建者
 
-## Contributors
+LoopX 由 [`@huangruiteng`](https://github.com/huangruiteng) 创建。其公开仓库历史始于 2026-05-31 的[初始公开 goal-harness 脚手架](https://github.com/huangruiteng/loopx/commit/7dcdc9dc79226d157ba57d3e8ff4bae664f020c1)。公开产品 surface 于 [2026-06-21](https://github.com/huangruiteng/loopx/commit/320fbedaa4d90bd02e5149a8fd9a46c9a498c650) 采用 LoopX 名称。
 
-LoopX recognizes all accepted commit authors, co-authors, reviewers, issue
-reporters, and documentation contributors. The living contributor record is:
+## 贡献者
 
-- the repository's [Git history](https://github.com/huangruiteng/loopx/commits/main/);
-- GitHub's [Contributors view](https://github.com/huangruiteng/loopx/graphs/contributors);
-- merged pull requests and their review history.
+LoopX 认可所有被接受的提交作者、合著者、评审者、issue 报告者与文档贡献者。活贡献记录是：
 
-This file intentionally does not maintain a ranked or hand-copied contributor
-list. One person may have multiple Git identities, co-authors may not be visible
-in a simple commit count, and the repository history is more accurate than a
-periodic snapshot.
+- 仓库的 [Git 历史](https://github.com/huangruiteng/loopx/commits/main/)；
+- GitHub 的 [Contributors 视图](https://github.com/huangruiteng/loopx/graphs/contributors)；
+- 已合并 pull requests 及其评审历史。
 
-Automation or agent identities may appear in commit provenance. They should not
-be interpreted as human contributors or maintainers unless a human is also
-identified by the public contribution record. Maintainer authority is defined
-in [Governance](../../.github/GOVERNANCE.md), not by authorship volume.
+本文件有意不维护排名或手工抄录的贡献者名单。一个人可能有多个 Git 身份，合著者在简单提交计数中可能不可见，而且仓库历史比周期性快照更准确。
 
-## Attribution And License
+自动化或 agent 身份可能出现在提交来源（provenance）中。除非公开贡献记录同时标识出人类，否则它们不应被解读为人类贡献者或 maintainer。Maintainer authority 定义在 [Governance](../../.github/GOVERNANCE.md)，而不是由作者数量决定。
 
-LoopX's unified open source core is distributed under the
-[Apache License 2.0](../../LICENSE) beginning with `v0.4.8`, with copyright held by
-LoopX contributors for their respective contributions. Releases through
-`v0.4.7` retain their original MIT terms, whose license text and copyright
-notice are preserved in [LICENSE-MIT](../../LICENSE-MIT). See the
-[licensing policy](licensing.md) for the transition boundary.
+## 归属与许可
 
-This attribution file does not transfer copyright, require copyright
-assignment, or alter either license.
+LoopX 的统一开源核心自 `v0.4.8` 起以 [Apache License 2.0](../../LICENSE) 分发，版权由 LoopX 贡献者就其各自贡献持有。`v0.4.7` 及之前的发布保留其原始 MIT 条款，其许可证文本与版权声明在 [LICENSE-MIT](../../LICENSE-MIT) 中保留。转变边界见 [licensing policy](licensing.md)（许可政策）。
 
-Corrections to creator or contributor attribution are welcome as a pull
-request with public evidence.
+本归属文件不转让版权、不要求版权转让，也不改变任一许可证。
+
+创建者或贡献者归属的更正，欢迎以带公开 evidence 的 pull request 提出。

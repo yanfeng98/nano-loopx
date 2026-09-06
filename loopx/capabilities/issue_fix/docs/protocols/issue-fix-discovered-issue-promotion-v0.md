@@ -1,66 +1,56 @@
 # issue_fix_discovered_issue_promotion_v0
 
-`issue_fix_discovered_issue_promotion_v0` turns a reproducible defect found by
-an issue-fix agent during real work into one canonical public issue without
-creating a duplicate operator row. It is a composition contract over existing
-GitHub and issue-fix state, not another workflow engine.
+> [English](issue-fix-discovered-issue-promotion-v0.md)
 
-## Input
+`issue_fix_discovered_issue_promotion_v0` 把 issue-fix agent 在真实工作中发现的
+可复现缺陷,转成唯一的 canonical 公开 issue,而不创建重复的运维行。它是基于
+现有 GitHub 与 issue-fix 状态的组合契约,不是另一个 workflow engine。
 
-`issue_fix_discovered_issue_promotion_input_v0` contains only structured,
-public-safe facts:
+## 输入
 
-- repository and local `discovered-*` placeholder reference;
-- issue title plus compact problem, reproduction, expected-behavior, and
-  validation summaries;
-- the current repository revision and repo-relative/public evidence refs;
-- `issue_fix_duplicate_search_evidence_v0`, proving that both open and closed
-  issues were checked and recording either `reuse_existing` or
-  `no_equivalent_found`, plus a compact decision rationale;
-- an optional focused PR URL.
+`issue_fix_discovered_issue_promotion_input_v0` 只包含结构化的、public-safe
+事实:
 
-The duplicate decision remains an evidence-backed agent judgment. LoopX does
-not guess semantic equivalence from title similarity. `reuse_existing` must
-name a canonical issue that also appears in the bounded candidate list.
+- 仓库与本地 `discovered-*` 占位引用;
+- issue 标题,外加紧凑的问题、复现、预期行为与校验摘要;
+- 当前仓库 revision 与 repo-relative/public 证据 refs;
+- `issue_fix_duplicate_search_evidence_v0`,证明 open 与 closed issues 都被
+  检查过,并记录 `reuse_existing` 或 `no_equivalent_found`,外加紧凑决策理由;
+- 一个可选的聚焦 PR URL。
 
-## Execution
+重复决策仍是有证据支撑的 agent 判断。LoopX 不从标题相似性猜测语义等价。
+`reuse_existing` 必须指名一个有界候选列表中也出现的 canonical issue。
 
-Without `--execute`, the command is read/write-free. With `--execute`, it
-requires active `publish` authority and performs this ordered transaction:
+## 执行
 
-1. verify the selected existing issue, or create a structured public issue and
-   verify the returned URL;
-2. if a PR exists, add `Fixes #N` only when needed and use a bounded readback
-   retry to require the PR to expose the canonical closing issue;
-3. atomically replace the local placeholder feasibility row with the canonical
-   issue row while preserving revision-pinned context and compact delivery
-   evidence;
-4. update an existing PR lifecycle row with the same explicit `issue_ref`; if
-   lifecycle projection has not run yet, return `not_projected` and let the
-   existing lifecycle wrapper fill it instead of failing promotion.
+不加 `--execute` 时,该命令无读写。加 `--execute` 时,它要求活跃 `publish`
+authority,并执行这个有序事务:
 
-Retries are idempotent. Closing-reference verification retries at most three
-reads with a short delay, covering GitHub's write-after-read lag without
-creating a background monitor. An already verified issue/PR association with
-one canonical feasibility row produces zero external writes and no duplicate
-Kanban or metrics row.
+1. 验证选中的现有 issue,或创建结构化公开 issue 并验证返回的 URL;
+2. 如果存在 PR,只在需要时添加 `Fixes #N`,用有界回读重试要求 PR 暴露 canonical
+   closing issue;
+3. 原子替换本地占位 feasibility 行为 canonical issue 行,同时保留 revision-pinned
+   上下文与紧凑交付证据;
+4. 用同一个显式 `issue_ref` 更新现有 PR lifecycle 行;如果 lifecycle 投影尚未
+   运行,返回 `not_projected`,让现有 lifecycle wrapper 填充,而不是让提升失败。
 
-GitHub cannot provide a cross-issue/PR transaction. If issue creation succeeds
-but the PR closing-reference update cannot be verified, LoopX still retains the
-canonical issue row and returns a concrete
-`retry_pr_closing_reference_then_refresh_lifecycle` blocker. The created issue
-URL therefore remains auditable instead of being lost behind a generic error.
+重试是幂等的。Closing-reference 验证最多重试三次读取,短延迟覆盖 GitHub 的
+write-after-read 滞后,而不创建后台 monitor。一个 canonical feasibility 行上
+已验证的 issue/PR 关联,产生零外部写,也没有重复的 Kanban 或指标行。
 
-## Boundary
+GitHub 无法提供跨 issue/PR 事务。如果 issue 创建成功但 PR closing-reference
+更新无法验证,LoopX 仍保留 canonical issue 行,并返回具体 blocker
+`retry_pr_closing_reference_then_refresh_lifecycle`。因此创建的 issue URL 保持
+可审计,而不是丢失在通用错误后面。
 
-- raw issue search results, existing PR bodies, provider responses, and logs
-  are transient and never retained;
-- issue text is composed from the bounded structured input, not a transcript;
-- local paths, credentials, private material, and repository-specific branches
-  are rejected;
-- creating the issue does not authorize merge or production actions.
+## 边界
 
-## Command
+- raw issue 搜索结果、现有 PR 正文、provider 响应与日志都是瞬态的,从不保留;
+- issue 文本由有界结构化输入组成,不是 transcript;
+- 本地路径、凭据、私有材料与仓库特定分支都被拒绝;
+- 创建 issue 不授权 merge 或生产动作。
+
+## 命令
 
 ```bash
 loopx issue-fix promote-discovered-issue \
@@ -71,7 +61,7 @@ loopx issue-fix promote-discovered-issue \
   --format json
 ```
 
-## Validation
+## 验证
 
 ```bash
 python3 examples/issue-fix-discovered-issue-promotion-smoke.py

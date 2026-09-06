@@ -1,7 +1,9 @@
-# Lark event inbox
+# Lark 事件收件箱
 
-LoopX can consume Lark feedback without keeping an agent process alive. The
-integration deliberately separates collection from interpretation:
+> [English](lark-event-inbox.md)
+
+LoopX 可以在不保持 agent 进程存活的情况下消费 Lark 反馈。该集成刻意把采集与
+解读分开：
 
 ```text
 Lark event stream
@@ -15,68 +17,55 @@ Lark event stream
   -> loopx lark-inbox ack --message-id ... --execute
 ```
 
-The collector is host infrastructure. LoopX can validate a local-private
-collector config, preview or explicitly install a macOS `launchd` / Linux
-`systemd` user service, and report supervisor plus event-bus health. The
-installed service runs a small LoopX collector runtime around
-`lark-cli --profile <configured-profile> event consume` with a bounded timeout,
-so stdin EOF under a supervisor cannot terminate an otherwise unbounded
-consumer. When the official npm package exposes a Node wrapper, LoopX records
-absolute paths for both Node and the wrapper so launchd does not depend on an
-interactive-shell PATH. It filters before persistence and writes one compact
-event per Lark `event_id`/`message_id`. Direct mentions are persisted
-immediately. For a message without a direct mention, the runtime reads back the
-current message and its direct parent, then marks it actionable only when the
-parent sender is the app id of the configured profile. A reply to a person,
-another app, or an unverifiable parent remains captured but does not wake the
-agent. The agent does not need to keep a websocket open.
+collector 是宿主基础设施。LoopX 可以校验本地私有 collector 配置、预览或显式安装
+macOS `launchd` / Linux `systemd` 用户服务，并报告 supervisor 与事件总线健康。
+安装的服务围绕 `lark-cli --profile <configured-profile> event consume` 运行一个
+小型 LoopX collector 运行时，带上有界超时，因此 supervisor 下的 stdin EOF 无法
+终止一个本应无界的消费者。当官方 npm 包暴露 Node 包装器时，LoopX 记录 Node 与
+包装器的绝对路径，使 launchd 不依赖交互 shell 的 PATH。它在持久化前过滤，并按
+Lark `event_id`/`message_id` 各写一条紧凑事件。直接提及（direct mentions）立即
+持久化。对于没有直接提及的消息，运行时会回读当前消息及其直接父消息，且仅当父
+消息发送者是配置 profile 的应用 id 时才标记为可行动。对他人、另一个应用或无法
+校验的父消息的回复仍然被捕获，但不唤醒 agent。Agent 无需保持 websocket 打开。
 
-### Optional turn-start Agent reading hook
+### 可选的 Turn 起始 Agent 读取 hook
 
-Realtime collection is the preferred ingress, but a long-running Agent may also
-need a bounded provider-history tail at the beginning of every LoopX turn. The
-collector config can opt into `turn_start_sync`. This is not a background-only
-sync: it is a pre-decision capability hook with the following ordering:
+实时采集是首选入口，但长程 Agent 也可能需要在每个 LoopX Turn 开始时拉取有界的
+provider 历史尾部。collector 配置可以 opt in 到 `turn_start_sync`。这不是仅后台
+的同步：它是一个 pre-decision 能力 hook，顺序如下：
 
 ```text
 turn-start hook
-  -> read one bounded provider page per route
-  -> commit and read back owner-private inbox events and cursor
-  -> ACK each newly read pending human message with one idempotent reaction
-  -> recompute quota inbox urgency in the same CLI invocation
-  -> agent_read_required=true when pending messages were newly read by the hook
-  -> selected inbox lane drains private message content before ordinary work
-  -> Agent chooses steering / Goal replan / context capture /
+  -> 每条路由读取一页有界 provider 页
+  -> commit 并回读 owner 私有 inbox 事件与游标
+  -> 以一次幂等回应 ACK 每条新读取的待处理人类消息
+  -> 在同一 CLI 调用中重算 quota inbox 紧迫性
+  -> 当 hook 新读取到待处理消息时 agent_read_required=true
+  -> 选定的 inbox 通道在普通工作前排空私有消息内容
+  -> Agent 选择 steering / Goal replan / context capture /
      continue-current-work / no-follow-up
-  -> durable effect or no-follow-up receipt -> ACK
+  -> 持久效果或 no-follow-up 回执 -> ACK
 ```
 
-Core owns the provider-neutral hook registration, output budget, allowed
-owner-private write scopes, the narrow `provider_message_reaction` external
-write scope, failure isolation, and `agent_read_required` contract. A hook that
-can require Agent reading must also register one bounded public-safe
-`required_read`; the generic kernel validates and deduplicates it, then the live
-decision mirrors it into both interaction channels with `ordering=before_work`.
-Fresh ordinary material notifies without replacing the selected work lane;
-durable material left unsettled preempts on the following turn, while direct
-questions and verified replies retain immediate reply-lane precedence.
-The Lark extension owns that drain descriptor, history pagination,
-provider-envelope validation, private cursors, and inbox readback. The CLI
-composition root runs the hook before status/quota projection. Raw content
-remains only in the local inbox and appears to the Agent only through the
-registered drain command; it never enters the public Goal registry, hook
-receipt, or quota packet.
+Core 拥有 provider-neutral hook 注册、输出预算、允许的 owner 私有写作用域、狭窄的
+`provider_message_reaction` 外部写作用域、失败隔离与 `agent_read_required` 契约。
+一个可能要求 Agent 阅读的 hook 还必须注册一个有界公开安全 `required_read`；通用
+kernel 校验并去重它，随后实时决策把它镜像到两个交互通道，带
+`ordering=before_work`。新的普通素材只通知，不替换选定的工作通道；未结算的持久
+素材在下一 Turn 抢占时保留直接问题与已验证回复的即时回复通道优先级。
+Lark extension 拥有该 drain 描述符、历史分页、provider 信封校验、私有游标与
+inbox 回读。CLI 组合根在状态/quota 投影之前运行该 hook。原始内容只留存在本地
+inbox 中，并通过注册的 drain 命令对 Agent 可见；它绝不进入公开 Goal 注册表、
+hook 回执或 quota packet。
 
-The distinction between `empty`, `provider_contract_error`, permission failure,
-and provider unavailability is mandatory. A success envelope whose message list
-does not match the declared provider schema fails closed and cannot be treated
-as an empty inbox. Hook failure is isolated from ordinary Goal state, but it is
-visible in `turn_start_capability_hook_dispatch` and does not claim that Agent
-reading occurred.
+`empty`、`provider_contract_error`、权限失败与 provider 不可用之间的区分是强制
+的。消息列表不匹配声明 provider schema 的成功信封会 fail closed，不能被当作空
+inbox。Hook 失败与普通 Goal 状态隔离，但它在 `turn_start_capability_hook_dispatch`
+中可见，且不声称已发生 Agent 阅读。
 
-The feature is default-off. Enable it only with `configured_chat_all` and
-`material_review.enabled=true` on every route, so every newly accepted message
-enters an Agent semantic-triage lane rather than being synchronized and ignored:
+该 feature 默认关闭。仅在每条路由上以 `configured_chat_all` 与
+`material_review.enabled=true` 启用它，使每条新接受消息进入 Agent 语义分流通道，
+而不是被同步后忽略：
 
 ```json
 {
@@ -103,57 +92,46 @@ enters an Agent semantic-triage lane rather than being synchronized and ignored:
 }
 ```
 
-Each completed poll opens a new forward window from the previous end with a
-small overlap. Inbox `message_id` deduplication makes the overlap replay-safe.
-When a page reports `has_more`, later turns resume the same private page token
-before opening a new window. The initial lookback is bounded to seven days,
-the overlap to five minutes, and each route reads at most one 50-message page
-per turn. Cursor and single-flight lock identity combine the public-safe route
-key with a digest of the configured profile, chat, inbox config, inbox path,
-and capture scope. Two Agent-scoped collectors may therefore reuse a semantic
-route key without sharing progress or permanently rejecting each other's
-source binding, while duplicate registrations for the same source still share
-one single-flight boundary.
+每次完成的轮询从上次终点打开新前向窗口，带少量重叠。Inbox `message_id` 去重让
+重叠重放安全。当一页报告 `has_more` 时，后续 Turn 在打开新窗口前先续用同一私有
+页 token。初始回看限七天，重叠限五分钟，每条路由每个 Turn 至多读一页 50 条
+消息。游标与 single-flight 锁身份组合公开安全 route key 与配置 profile、chat、
+inbox 配置、inbox 路径与采集作用域的摘要。因此两个 Agent 作用域的 collector 可以
+复用语义 route key，而不共享进度或永久拒绝对方的信源绑定；同一信源的重复注册
+仍共享同一个 single-flight 边界。
 
-Use `addressed_only` only when direct bot mentions are the entire feedback
-contract. A review or collaboration inbox that accepts non-mention replies to
-bot messages should use `configured_chat_all`: the host collector filters by
-its local-private chat id, persists every message from that chat, and verifies
-the reply relation through message readback before scheduling a reply. Full-chat
-capture is not full-chat activation; unrelated conversation remains available
-to domain interpretation without being treated as addressed to the bot.
+只有直接 bot 提及是全部反馈契约时才使用 `addressed_only`。接受对 bot 消息的非
+提及回复的评审或协作收件箱应使用 `configured_chat_all`：宿主 collector 按本地
+私有 chat id 过滤、持久化该 chat 的每条消息，并在安排回复前通过消息回读校验
+回复关系。整 chat 采集不是整 chat 激活；无关对话仍可供领域解读，但不被视为
+面向 bot。
 
-## Activate the provider
+## 激活 provider
 
-Install and explicitly activate the bundled provider once in the LoopX runtime
-used by the project:
+在为项目使用的 LoopX 运行时中一次性安装并显式激活捆绑 provider：
 
 ```bash
 loopx extension install --bundled loopx-lark --execute --format json
 ```
 
-Configured `lark-inbox` commands fail closed when `loopx-lark` is absent,
-disabled, or no longer matches its doctor-verified revision. Each operation
-also requires its manifest permission: inbox read/write, reply send, or
-collector management. `extension upgrade` and `extension rollback` probe the
-candidate revision before switching it. A goal with no Lark inbox pointer still
-returns the existing quiet disabled drain projection and does not require the
-extension, so projects that do not use Lark remain unaffected.
+配置的 `lark-inbox` 命令在 `loopx-lark` 缺失、禁用或不再匹配其 doctor 校验的
+revision 时 fail closed。每个操作还要求其 manifest 权限：inbox 读/写、回复发送
+或 collector 管理。`extension upgrade` 与 `extension rollback` 在切换前探测候选
+revision。没有 Lark inbox 指针的 Goal 仍返回既有静默禁用 drain 投影，不需要该
+extension，因此不使用 Lark 的项目不受影响。
 
-Quota and Turn planning also resolve `lark.inbox.read` before the extension
-opens the local-private profile/chat config. A missing, disabled, or stale
-extension yields an unavailable urgency projection, does not read that config,
-and cannot schedule a Lark reply lane. The compatibility CLI performs this
-composition internally; agents do not pass a provider, profile, or alias.
+Quota 与 Turn 规划也会在 extension 打开本地私有 profile/chat 配置之前解析
+`lark.inbox.read`。缺失、禁用或过期的 extension 产生不可用的紧迫性投影，不读取
+该配置，也不能安排 Lark 回复通道。兼容 CLI 在内部执行该组合；Agent 不传
+provider、profile 或别名。
 
-The collector service is a separate host lifecycle. Disabling or switching the
-extension blocks its next `collector-run` start but does not signal a process
-that is already consuming events. Stop or restart the configured launchd or
-systemd user service when disabling, upgrading, or rolling back the provider.
+collector 服务是独立的宿主生命周期。禁用或切换 extension 会阻止其下一次
+`collector-run` 启动，但不向已消费事件的进程发信号。禁用、升级或回滚 provider
+时，停止或重启配置的 launchd 或 systemd 用户服务。
 
-## Local-private configuration
+## 本地私有配置
 
-The inbox is opt-in. Create a local-private generic Lark inbox config:
+收件箱是 opt-in。创建本地私有通用 Lark inbox 配置：
 
 ```json
 {
@@ -168,32 +146,26 @@ The inbox is opt-in. Create a local-private generic Lark inbox config:
 }
 ```
 
-`inbox_dir` must stay under `.loopx/inbox`. Destination ids, member ids,
-profile names, raw provider payloads, and credentials stay in local-private
-configuration or host state and must not enter public LoopX packets.
+`inbox_dir` 必须保持在 `.loopx/inbox` 之下。目标 ids、成员 ids、profile 名称、
+原始 provider 载荷与凭据留在本地私有配置或宿主状态中，不得进入公开 LoopX
+packet。
 
-`capture_scope` defaults to `addressed_only` for compatibility. Drain output
-reports `thread_complete=false` and a coverage warning for that mode. For
-`configured_chat_all`, the collector's jq filter should select the configured
-chat only; do not add a content-level `@bot` predicate. A Goal Topic root is
-presentation and reply context, not an additional ingress filter for
-`configured_chat_all`: new topics and replies in the same configured chat must
-remain visible to the bound Agent. When more than one chat-wide Goal route is
-eligible for the same Bot target, routing fails closed instead of choosing one
-by iteration order.
+`capture_scope` 为兼容默认 `addressed_only`。该模式下 drain 输出报告
+`thread_complete=false` 与一个覆盖警告。对于 `configured_chat_all`，collector 的
+jq filter 应只选择配置的 chat；不要添加内容级 `@bot` 谓词。Goal Topic 根是展示与
+回复上下文，不是 `configured_chat_all` 的额外入口过滤器：同一配置 chat 中的新
+话题与回复必须保持对绑定 Agent 可见。当多于一个整 chat Goal 路由对同一 Bot
+目标可选时，路由 fail closed，而不是按迭代顺序选一个。
 
-`material_review` is an independent, default-off scheduling boundary. It
-requires `configured_chat_all`; when enabled, captured messages and normalized
-attachments that do not require a Bot reply produce `material_review_due`.
-`drain_limit` is bounded to 1–100 and defaults to 20. Direct questions,
-mentions, and verified Bot replies continue to use `reply_due` and take
-precedence, so material review never grants outbound reply authority.
+`material_review` 是一个独立、默认关闭的调度边界。它要求 `configured_chat_all`；
+启用后，不需要 Bot 回复的捕获消息与规范化附件产生 `material_review_due`。
+`drain_limit` 限 1–100，默认 20。直接问题、提及与已验证的 Bot 回复继续使用
+`reply_due` 并优先，因此 material review 绝不授予出站回复权威。
 
-Optional source-thread replies are a separate, default-off boundary. Bind an
-explicit non-default bot profile to the same local-private chat. An
-`addressed_only` inbox may reply to the exact captured source message, but it
-remains `thread_complete=false` and cannot discover unmentioned follow-up
-messages; use `configured_chat_all` for complete collaboration threads:
+可选信源线程回复是另一个独立、默认关闭的边界。把显式非默认 bot profile 绑定到
+同一本地私有 chat。`addressed_only` 收件箱可以回复精确捕获的信源消息，但仍保持
+`thread_complete=false`，无法发现未提及的后续消息；完整协作线程请使用
+`configured_chat_all`：
 
 ```json
 {
@@ -212,68 +184,48 @@ messages; use `configured_chat_all` for complete collaboration threads:
 }
 ```
 
-For every reply-enabled Inbox, a missing `reply.received_reaction_emoji`
-defaults to `Get`. Set it explicitly to the empty string to disable this
-provider write. The reaction belongs to the same explicit sender boundary as
-source-thread replies, but only the Agent's turn-start hook may create it:
-realtime collection persists events without reacting, and the hook writes the
-reaction only after it has read and confirmed a still-pending human message.
-The receipt therefore means "read into the Agent processing chain"; it does not
-mean "collector stored the event", "the Bot was mentioned", "a reply is due",
-or "processing completed". Mention, reply, question, and material-review
-classification remain independent scheduling and response decisions.
+对每个启用回复的 Inbox，缺失 `reply.received_reaction_emoji` 默认值为 `Get`。把它
+显式设为空字符串即禁用该 provider 写入。该回应与信源线程回复属于同一显式发送者
+边界，但只有 Agent 的 Turn 起始 hook 可以创建它：实时采集持久化事件而不回应，
+hook 在读取并确认仍待处理的人类消息后才写入回应。因此该回执表示"已读入 Agent
+处理链"，而不是"collector 已存储事件"、"Bot 被提及"、"应回复"或"处理完成"。
+提及、回复、问题与 material-review 分类仍是独立的调度与响应决策。
 
-The hook records its first read in owner-private state independently of this
-optional provider write. Thus a message captured earlier by the realtime
-collector still requires Agent reading even when reactions are explicitly
-disabled. Failed reactions are retried from this durable pending-read set while
-the message remains unsettled, including after the bounded history cursor has
-moved beyond the message timestamp. Provider failure increments compact
-failure accounting but does not discard the Inbox event or grant execution
-authority. Replay uses one aggregate bounded attempt budget per turn-start
-dispatch. A collector-scoped private cursor rotates route priority across
-dispatches, while each route keeps its own private round-robin message cursor.
-The public receipt exposes only attempt and deferred counts, never cursor or
-message identities. Messages with a durable received/processing receipt are
-skipped without another provider call. A new reply in an old topic has a new
-provider message identity, so the forward history tail captures it independently
-of topic age and acknowledgement backlog.
+该 hook 独立于此可选 provider 写入，把首次读取记录在 owner 私有状态中。因此由
+实时 collector 更早捕获的消息，即使回应被显式禁用，仍要求 Agent 阅读。失败的
+回应从该持久待读集合重试，只要消息仍未结算，包括在有界历史游标已越过消息时间戳
+之后。Provider 失败递增紧凑失败计数，但不丢弃 Inbox 事件，也不授予执行权威。
+重放使用每次 Turn 起始分发一个聚合有界尝试预算。Collector 作用域的私有游标在
+分发之间轮转路由优先级，而每条路由保留自己的私有轮转消息游标。公开回执只暴露
+尝试与延迟计数，绝不暴露游标或消息身份。有持久 received/processing 回执的消息
+无额外 provider 调用即被跳过。旧话题中的新回复有新的 provider 消息身份，因此
+前向历史尾部独立于话题年龄与确认积压地捕获它。
 
-`reply.processing_reaction_emoji` is optional and requires a distinct
-received reaction. The default `Get` satisfies that requirement; when the read
-acknowledgement is explicitly disabled, processing reaction must also be
-disabled. When both are configured, the host should run
-`lark-inbox processing` immediately before interpreting an actionable item.
-LoopX first adds the processing reaction and then removes the received
-reaction. A verified source-thread reply removes any remaining lifecycle
-reaction. If the provider cannot delete a reaction, the operation fails with a
-retryable cleanup status instead of claiming completion.
+`reply.processing_reaction_emoji` 可选，且要求一个不同的 received 回应。默认
+`Get` 满足该要求；当读取确认被显式禁用时，processing 回应也必须禁用。两者都
+配置时，宿主应在解读可行动条目之前立即运行 `lark-inbox processing`。LoopX 先加
+processing 回应，再移除 received 回应。已验证的信源线程回复移除任何剩余生命周期
+回应。如果 provider 无法删除回应，操作以可重试的清理状态失败，而不是声称完成。
 
-Reaction ids are stored only in an owner-private receipt ledger under the
-configured inbox. Each message transition is serialized with a private
-per-message lock. A prepared/created operation receipt fences provider creation
-before and after the external effect: a reaction whose normal receipt could not
-be persisted is recovered from the known reaction id without another create;
-an outcome that became uncertain before its id was durably recorded blocks
-replay instead of risking a duplicate. LoopX deletes only reaction ids returned
-by writes made through the configured bot profile; it never deletes another
-participant's reaction by emoji type. Malformed private state fails closed.
+回应 ids 只存储在配置 inbox 下的 owner 私有回执台账中。每次消息迁移以私有逐消息
+锁序列化。prepared/created 操作回执在外部效果前后围住 provider 创建：常规回执
+无法持久化的回应从已知回应 id 恢复而不再创建；id 被持久记录前结果变得不确定的
+输出阻塞重放，而不是冒重复风险。LoopX 只删除通过配置 bot profile 写入所产生的
+回应 ids；它绝不按 emoji 类型删除其他参与者的回应。格式错误的私有状态 fail
+closed。
 
-The reply path never uses the machine default profile. Before any send it
-verifies that the named profile resolves to the expected bot and that the bot
-can read the configured chat. A profile/app mismatch fails with
-`lark_inbox_reply_sender_identity_mismatch`; a profile that cannot access the
-configured chat fails with
-`lark_inbox_reply_sender_not_in_configured_chat`. Neither failure falls back
-to another app. Public results contain only compact status/receipt fields, not
-the profile, chat id, message id, reply text, or provider payload.
+回复路径绝不使用机器默认 profile。任何发送前，它校验命名 profile 解析到预期 bot，
+且该 bot 可以读取配置 chat。Profile/应用不匹配报
+`lark_inbox_reply_sender_identity_mismatch`；无法访问配置 chat 的 profile 报
+`lark_inbox_reply_sender_not_in_configured_chat`。两种失败都不回退到另一应用。
+公开结果只含紧凑状态/回执字段，不含 profile、chat id、消息 id、回复文本或
+provider 载荷。
 
-## Host collector lifecycle
+## 宿主 collector 生命周期
 
-In Git projects, keep the collector config ignored and untracked. A non-Git
-project may keep it only below `.loopx/config`; parent Git boundaries and paths
-outside that private root remain rejected. The config references the generic
-inbox config but owns host-only details such as the chat id and supervisor:
+在 Git 项目中，保持 collector 配置被忽略且未跟踪。非 Git 项目只能把它放在
+`.loopx/config` 之下；父 Git 边界与该私有根之外的路径仍被拒绝。配置引用通用
+inbox 配置，但拥有仅宿主的信息，如 chat id 与 supervisor：
 
 ```json
 {
@@ -301,85 +253,68 @@ inbox config but owns host-only details such as the chat id and supervisor:
 }
 ```
 
-The packaged lifecycle accepts only `im.message.receive_v1`, bot identity, an
-isolated `loopx-` service name, and `configured_chat_all`. Config v1 requires a
-unique lowercase public-safe `route_key` for each route, consumes one
-profile-bound event stream, and routes each configured chat into a distinct
-inbox config and inbox path. Missing, unsafe, or duplicate route keys, duplicate
-chat routes, shared inbox paths, reply chat mismatches, and route profile
-divergence fail closed. Each accepted event persists the configured route key,
-so aggregate drain gives the Agent a stable requirement-context identity without
-exposing a private chat id. A missing or mismatched persisted route key also
-fails closed instead of silently reclassifying an older message. Each inbox therefore
-retains independent pending/processed state and source-context reply placement
-while one Bot can serve several chats without competing consumers. The v0
-single-chat shape remains accepted and is normalized to one route. Plan,
-install, run, and status output expose only route and health counts; they never
-return profile values, chat ids, local paths, generated jq, or credentials.
+打包的生命周期只接受 `im.message.receive_v1`、bot 身份、隔离的 `loopx-` 服务名与
+`configured_chat_all`。Config v1 要求每条路由唯一的小写公开安全 `route_key`，消费
+一个 profile 绑定事件流，并把每个配置 chat 路由到独立的 inbox 配置与 inbox 路径。
+缺失、不安全或重复的 route keys、重复 chat 路由、共享 inbox 路径、回复 chat
+不匹配与路由 profile 分歧都会 fail closed。每个接受的事件持久化配置的 route key，
+因此聚合 drain 给 Agent 稳定的需求上下文身份，而不暴露私有 chat id。缺失或不匹配
+的持久化 route key 也 fail closed，而不是静默重分类旧消息。因此每个 inbox 保留
+独立的 pending/processed 状态与信源上下文回复放置，而一个 Bot 可以服务于多个
+chat 而无竞争消费者。v0 单 chat 形态仍被接受并规范化为一条路由。Plan、install、
+run 与 status 输出只暴露路由与健康计数；它们绝不返回 profile 值、chat ids、本地
+路径、生成的 jq 或凭据。
 
-An enabled collector must bind an explicit non-default Lark CLI profile. When
-`profile` is omitted, LoopX may reuse the shared enabled inbox reply
-`sender_profile`; every routed reply profile must resolve to that same value.
-When both are present they must match. The generated service
-passes the profile-bound collector config to the LoopX runtime, which places
-`--profile` before both `event consume` and message readback calls. Collection,
-reply-target verification, and optional replies therefore cannot silently use
-different app identities. Public plan/status packets expose only whether a
-profile is bound and where the binding came from, never its value.
-When the CLI uses a custom `--runtime-root`, the generated service records that
-same root before `lark-inbox collector-run`; a supervisor restart therefore
-resolves the same extension activation state that was validated at install.
+启用 collector 必须绑定显式非默认 Lark CLI profile。`profile` 省略时，LoopX 可
+复用共享启用 inbox 回复 `sender_profile`；每条路由回复 profile 必须解析为同一
+值。两者都出现时必须匹配。生成的服务把 profile 绑定 collector 配置传给 LoopX
+运行时，运行时把 `--profile` 放在`event consume` 与消息回读调用之前。因此采集、
+回复目标校验与可选回复不能静默使用不同应用身份。公开 plan/status packets 只暴露
+是否绑定 profile 及绑定来源，绝不暴露其值。
+当 CLI 使用自定义 `--runtime-root` 时，生成的服务在 `lark-inbox collector-run`
+之前记录同一 root；因此 supervisor 重启解析到与安装时校验相同的 extension 激活
+状态。
 
 ```bash
 loopx lark-inbox collector-plan \
   --project . \
   --config .loopx/config/lark/collector.json
 
-# Preview first; this writes nothing and starts no process.
+# 先预览；这不会写入任何内容，也不启动任何进程。
 loopx lark-inbox collector-install \
   --project . \
   --config .loopx/config/lark/collector.json
 
-# Explicitly write the user service and start/restart it.
+# 显式写入用户服务并启动/重启它。
 loopx lark-inbox collector-install \
   --project . \
   --config .loopx/config/lark/collector.json \
   --execute
 
-# Read-only supervisor, event-bus, and real-event evidence check.
+# 只读的 supervisor、事件总线与真实事件证据检查。
 loopx lark-inbox collector-status \
   --project . \
   --config .loopx/config/lark/collector.json \
   --probe-event-bus
 ```
 
-Missing `lark-cli` produces a non-blocking install hint. Reply-target
-verification also requires the configured bot to read messages in the selected
-chat. Bot-identity group-history catch-up requires the application scopes
-`im:message.group_msg` and `im:message.group_msg.include_bot:read`; the latter
-keeps Bot-authored messages in the provider result. Before inbox ingestion,
-realtime collection and bounded history sync both compare a provider-typed
-`app` sender with the exact app identity verified for the configured profile.
-An exact self match is counted and skipped; other apps and unresolved
-identities remain visible so an identity lookup failure cannot silently lose a
-message. When the Bot list-messages history path reports provider error `230027`,
-LoopX must surface both scopes
-and an official API page bound to the selected App id. The operator enables
-the application scopes and publishes a new App
-version; this is not a user OAuth login. These requirements belong to the
-list-messages history capability. Exact message-by-id hydration and realtime
-event delivery remain separate capabilities and must keep their own failure
-status and permission evidence. LoopX does not authenticate a bot,
-copy app credentials, silently grant provider permissions, or silently install
-packages. Service installation is a
-local host write and therefore requires explicit `--execute`. Status separates
-`healthy` from `real_event_evidence_present`: a running subscriber can be
-healthy before the first message, while acceptance of a real integration still
-requires one post-install event to appear in the inbox.
+缺失 `lark-cli` 产生非阻塞安装提示。回复目标校验还要求配置 bot 能读取所选 chat
+中的消息。Bot 身份群历史补追要求应用 scopes `im:message.group_msg` 与
+`im:message.group_msg.include_bot:read`；后者让 Bot 自己写的消息保留在 provider
+结果中。在 inbox 摄取之前，实时采集与有界历史同步都把 provider 类型化的 `app`
+发送者与配置 profile 校验得到的精确应用身份比较。精确自匹配计数后被跳过；其他
+应用与未解析身份保持可见，因此身份查找失败不会静默丢失消息。当 Bot list-messages
+历史路径报告 provider 错误 `230027` 时，LoopX 必须同时呈示两个 scopes 与一个绑定
+所选 App id 的官方 API 页面。Operator 启用应用 scopes 并发布新 App 版本；这不是
+用户 OAuth 登录。这些要求属于 list-messages 历史能力。精确按 id 的水合
+（hydration）与实时事件投递是独立能力，必须保持各自的失败状态与权限证据。LoopX
+不认证 bot、不复制应用凭据、不静默授予 provider 权限、也不静默安装包。服务安装
+是本地宿主写入，因此要求显式 `--execute`。Status 区分 `healthy` 与
+`real_event_evidence_present`：运行中的订阅者可以在第一条消息之前即 healthy，
+而真实集成的验收仍要求一条安装后事件出现在 inbox 中。
 
-Register one inbox or the v1 routed collector as the Agent-owned goal boundary.
-The latter keeps one authority and one Agent lane while exposing aggregate,
-content-free urgency across all configured chats:
+注册一个收件箱或 v1 路由 collector 作为 Agent 拥有的 Goal 边界。后者在跨全部
+配置 chat 暴露聚合、无内容的紧迫性的同时，保持一个权威与一个 Agent 通道：
 
 ```bash
 loopx configure-goal \
@@ -387,38 +322,32 @@ loopx configure-goal \
   --lark-event-inbox-agent-id <context-assistant-agent-id> \
   --lark-event-inbox-config .loopx/config/lark/collector.json
 
-# Review the preview, then apply explicitly.
+# 检查预览后显式应用。
 loopx configure-goal \
   --goal-id <goal-id> \
   --lark-event-inbox-agent-id <context-assistant-agent-id> \
   --lark-event-inbox-config .loopx/config/lark/collector.json \
   --execute
 
-# Drain all configured chats through the same Agent lane. Each item retains
-# route-specific source-context reply guidance; message-scoped follow-up
-# commands resolve exactly one isolated inbox or fail closed.
+# 通过同一 Agent 通道排空所有配置 chat。每条条目保留路由特定的
+# 信源上下文回复指引；消息作用域的后续命令精确解析一个隔离收件箱，否则 fail closed。
 loopx lark-inbox drain \
   --goal-id <goal-id> \
   --agent-id <context-assistant-agent-id>
 ```
 
-The configuration catalog exposes this optional capability on demand. Quota
-projects `enabled`, `config_pointer_registered`, a local control command, and a
-content-free urgency summary; it never projects the private path, message ids,
-senders, or message bodies. The summary includes
-pending/direct-question/direct-mention/verified-bot-reply counts, routed inbox
-counts, and the oldest pending age. It does not expose route chat ids or profile
-names. A configured direct mention or verified reply to a message authored by
-the configured bot becomes a high-priority `lark_event_inbox` work lane
-before ordinary monitor or advancement work. Generated heartbeat bodies run the
-actual goal-boundary `drain_command`;
-`loopx --registry <invoked-registry> lark-inbox drain --goal-id <goal-id>`
-follows a shared registry's `source_registry` to the canonical project before
-resolving the ignored config. It therefore remains correct from linked or
-independent worktrees without binding control state to `--project .`. A disabled or empty inbox
-is a quiet zero-spend path, so projects without Lark keep the default behavior.
+配置目录按需暴露该可选能力。Quota 投影 `enabled`、`config_pointer_registered`、
+一个本地控制命令与无内容的紧迫性摘要；它绝不投影私有路径、消息 ids、发送者或
+消息正文。摘要包含 pending/direct-question/direct-mention/verified-bot-reply
+计数、路由 inbox 计数与最老待处理年龄。它不暴露路由 chat ids 或 profile 名称。
+对配置 bot 所写消息的配置直接提及或已验证回复，在普通监控或推进工作之前成为高
+优先级 `lark_event_inbox` 工作通道。生成的心跳体力行实际 Goal 边界
+`drain_command`；`loopx --registry <invoked-registry> lark-inbox drain --goal-id
+<goal-id>` 沿共享注册表的 `source_registry` 走到规范项目，再解析被忽略配置。因此
+它从链接或独立 worktrees 中保持正确，而不把控制状态绑定到 `--project .`。禁用或
+空 inbox 是安静零花费路径，所以不用 Lark 的项目保持默认行为。
 
-## Drain and acknowledge
+## Drain 与确认
 
 ```bash
 loopx lark-inbox drain \
@@ -430,7 +359,7 @@ loopx lark-inbox processing \
   --config .loopx/config/lark/event-inbox.json \
   --message-id om_xxx
 
-# Execute only after reviewing the preview.
+# 仅在检查预览后执行。
 loopx lark-inbox processing \
   --project . \
   --config .loopx/config/lark/event-inbox.json \
@@ -444,21 +373,16 @@ loopx lark-inbox ack \
   --execute
 ```
 
-Drain is read-only and returns bounded local-private message content. A message
-must be acknowledged only after its effect is written back. Duplicate event
-files collapse by `message_id`; repeated acknowledgement is idempotent.
-`processing` is also idempotent: retries reuse the recorded processing
-reaction and finish any pending received-reaction cleanup without creating
-another processing reaction.
+Drain 只读，返回有界本地私有消息内容。一条消息必须在其效果写回后才确认。重复
+事件文件按 `message_id` 合并；重复确认幂等。`processing` 同样幂等：重试复用已
+记录的 processing 回应，并完成任何未决 received 回应清理，而不创建另一个
+processing 回应。
 
-For unaddressed material, use the dedicated settlement command rather than a
-reply. It accepts either an event-bound committed external effect receipt or an
-explicit no-follow-up rationale. The latter becomes a deterministic
-`no_follow_up` effect receipt; repeated execution returns `already_settled`
-without duplicating the ACK. Receipt replay/conflict checks, the ledger commit,
-and the processed-message ACK share one per-inbox lock. The ledger remains
-ledger-first, so a retry after interruption repairs an ACK that was not yet
-written without losing a concurrent receipt or processed-message update.
+对于未点名素材，请使用专用结算命令而非回复。它接受事件绑定的已提交外部效果
+回执，或显式 no-follow-up 理由。后者变成确定性 `no_follow_up` 效果回执；重复
+执行返回 `already_settled` 而不重复 ACK。回执重放/冲突检查、台账提交与已处理
+消息 ACK 共享每收件箱锁。台账保持台账优先，因此中断后的重试修复尚未写入的 ACK，
+而不丢失并发回执或已处理消息更新。
 
 ```bash
 loopx lark-inbox material-review \
@@ -475,25 +399,20 @@ loopx lark-inbox material-review \
   --execute
 ```
 
-Urgency classification stays local. Under `configured_chat_all`, provider-native
-mention evidence is normalized into a compact `addressed_to_bot` flag before the
-event is persisted. Only that typed flag or a provider-verified direct reply can
-produce Bot reply urgency; bounded question signals distinguish a direct question
-only after addressing is proven. A question elsewhere in the group, an `@` mention
-of another member, Bot-name prose, or a reply to a human remains material review and
-does not become `reply_due`. Legacy persisted events without typed addressing also
-fail closed to material review. The agent still drains and interprets the source
-event before deciding the durable effect or reply; the summary is a scheduling
-signal, not semantic authority.
+紧迫性分类保持本地。在 `configured_chat_all` 下，provider 原生提及证据在事件
+持久化前规范化为紧凑 `addressed_to_bot` 标志。只有该类型化标志或 provider 校验的
+直接回复可以产生 Bot 回复紧迫性；有界问题信号只在点名（addressing）被证实后才
+区分直接问题。群中其他地方的问题、对另一成员的 `@` 提及、Bot 名称散文或对人类
+的回复仍是 material review，不变成 `reply_due`。没有类型化点名的旧持久事件也
+fail closed 到 material review。Agent 在决定持久效果或回复前仍先 drain 并解读
+信源事件；摘要是调度信号，不是语义权威。
 
-For a direct question, explicit bot mention, or verified reply to the configured
-bot, write the requested durable effect first, preview one concise reply,
-execute it, require readback, and only then ACK. New Goal Topic inbox configs use
-`reply.placement_policy=source_context`: a top-level chat request receives a new
-top-level chat response, while an event already inside a topic receives a reply
-inside that source topic. Existing configs without the field retain the legacy
-`source_thread` policy. `reply.editorial_style=bullet_points_preferred` projects
-an operator hint for structured replies; the command preserves line breaks.
+对于直接问题、显式 bot 提及或对配置 bot 的已验证回复，先写入请求的持久效果，
+预览一条简洁回复，执行它，要求回读，然后才 ACK。新 Goal Topic inbox 配置使用
+`reply.placement_policy=source_context`：顶层 chat 请求收到新的顶层 chat 回复，而
+已处于话题内的事件收到该信源话题内的回复。没有该字段的既有配置保留旧式
+`source_thread` 策略。`reply.editorial_style=bullet_points_preferred` 为结构化
+回复投影 operator 提示；命令保留换行。
 
 ```bash
 loopx lark-inbox reply \
@@ -510,12 +429,9 @@ loopx lark-inbox reply \
   --execute
 ```
 
-The command uses an idempotency key derived from the source message, resolved
-placement, and reply text, then reads the created message back through the same
-configured profile. Lifecycle reactions are removed only after that readback
-succeeds. A sent reply whose reaction cleanup fails returns
-`sent_verified_cleanup_pending`; retry `lark-inbox reaction-complete` before
-acknowledging the source:
+该命令使用由信源消息、解析放置与回复文本派生的幂等键，然后通过同一配置 profile
+回读创建的消息。生命周期回应只在回读成功后移除。已发送但回应清理失败的回复返回
+`sent_verified_cleanup_pending`；确认信源之前重试 `lark-inbox reaction-complete`：
 
 ```bash
 loopx lark-inbox reaction-complete \
@@ -525,25 +441,18 @@ loopx lark-inbox reaction-complete \
   --execute
 ```
 
-Ordinary chatter remains a no-reply path;
-enabling this capability does not grant reviewer-notification or other
-outbound authority.
+普通闲聊保持不回复路径；启用该能力不授予评审者通知或其他出站权威。
 
-For text replies containing Lark `<at user_id="...">...</at>` mentions, provider
-readback may replace the markup with tokens such as `@_user_1` or render the
-visible body as `@Display Name` while retaining the token in structured mention
-metadata. Verification therefore compares the normalized visible-text template
-and requires every mention to resolve to the identity requested at send time.
-A missing, extra, ambiguous, or differently resolved mention remains
-`sent_unverified`; display-name or raw-markup similarity alone is not accepted.
-Notification-style literal `@Name` text is rejected before any provider call;
-resolve the exact chat member and supply a structured `<at ...>` node. The same
-outbound verifier is used by top-level reviewer notifications, so reply and
-proactive-send paths cannot disagree about what constitutes a delivered
-mention. Both paths perform a provider dry-run before sending and verify the
-created message rather than treating its message id as delivery proof.
+对于包含 Lark `<at user_id="...">...</at>` 提及的文本回复，provider 回读可能以
+`@_user_1` 之类的 token 替换标记，或在结构化提及元数据中保留 token 的同时把可见
+正文呈现为 `@Display Name`。因此校验比较规范化可见文本模板，并要求每个提及解析
+为发送时请求的身份。缺失、多余、歧义或不同解析的提及保持 `sent_unverified`；
+仅显示名或原始标记相似不被接受。通知风格的字面 `@Name` 文本在任何 provider 调用
+前被拒绝；请解析精确 chat 成员并提供结构化 `<at ...>` 节点。同一出站校验器用于
+顶层评审者通知，因此回复与主动发送路径不能对"已投递提及"的定义不一致。两条路径
+在发送前都做 provider dry-run，并校验创建的消息，而不是把消息 id 当作投递证明。
 
-Use the configured proactive-send surface instead of a raw provider command:
+使用配置的主动发送表面，而不是原始 provider 命令：
 
 ```bash
 loopx lark-inbox send \
@@ -561,19 +470,15 @@ loopx lark-inbox send \
   --execute
 ```
 
-`route_key` selects one isolated requirement/chat binding under a multi-chat
-collector and fails closed when missing or unknown. The top-level send neither
-requires nor fabricates a source message, so its verified placement is always
-`chat_root`; source-message replies continue to preserve source-context
-placement and reaction cleanup.
+`route_key` 在多 chat collector 下选择一条隔离的需求/chat 绑定，缺失或未知时
+fail closed。顶层发送既不要求也不虚构信源消息，因此其校验放置始终为
+`chat_root`；信源消息回复继续保留信源上下文放置与回应清理。
 
-## Bounded history reconciliation
+## 有界历史对账
 
-Real-time event subscriptions do not backfill messages sent before a collector
-started, and an earlier `addressed_only` collector will already have omitted
-unaddressed replies. Fetch the bounded source conversation with the Lark CLI,
-project each message into `lark_event_inbox_event_v0`, then pipe the JSON array
-or NDJSON into the generic importer:
+实时事件订阅不回填 collector 启动前发送的消息，更早的 `addressed_only` collector
+也已省略未点名回复。用 Lark CLI 抓取有界信源对话，把每条消息投影为
+`lark_event_inbox_event_v0`，然后把 JSON 数组或 NDJSON 管道给通用导入器：
 
 ```bash
 <bounded-lark-message-export> \
@@ -583,29 +488,22 @@ or NDJSON into the generic importer:
       --execute
 ```
 
-Ingest validates ids and schema, deduplicates by `message_id`, writes only to
-the configured local-private inbox, and returns counts rather than message
-content. It does not acknowledge imported messages; the domain agent must still
-write each actionable effect before ACK. Provider-backed realtime and history
-ingress also report `self_message_skipped_count`; raw generic imports cannot
-claim this verification because they do not own the configured Bot identity.
+Ingest 校验 ids 与 schema、按 `message_id` 去重、只写入配置的本地私有 inbox，并
+返回计数而非消息内容。它不确认导入的消息；领域 agent 必须在 ACK 前写入每个可
+行动效果。Provider 支撑的实时与历史入口也上报 `self_message_skipped_count`；
+原始通用导入不能声称该校验，因为它们不拥有配置 Bot 身份。
 
-Reviewer notification dedupe uses durable lifecycle receipts first, then exact
-PR-link evidence in the persisted `configured_chat_all` inbox, and finally a
-bounded user-identity search of the configured chat. Missing `search:message`
-permission degrades to the two persisted sources and does not create a user
-gate; other provider read failures remain blockers because absence cannot be
-established safely.
+评审者通知去重先使用持久生命周期回执，再使用持久化 `configured_chat_all` inbox
+中的精确 PR 链接证据，最后对配置 chat 做有界用户身份搜索。缺失
+`search:message` 权限降级到两个持久信源，不创建 user gate；其他 provider 读取
+失败仍是阻塞项，因为无法安全确立"不存在"。
 
-## Domain bindings
+## 领域绑定
 
-The inbox itself does not know why a message matters. A domain capability binds
-the generic event stream to its own interpretation and writeback rules. For
-example, issue-fix can turn reviewer-group messages into PR-description
-updates, Kanban context, vision corrections, or explicit no-follow-up
-rationale. Other domains can consume the same inbox without adopting any
-issue-fix schema or lifecycle.
+收件箱本身不知道消息为何重要。一个领域 capability 把通用事件流绑定到自己的解读
+与写回规则。例如，issue-fix 可以把评审者群消息变成 PR 描述更新、Kanban 上下文、
+视觉修正或显式 no-follow-up 理由。其他领域可以消费同一收件箱，而不采用任何
+issue-fix schema 或生命周期。
 
-For issue-fix, outbound GitHub reviewer requests and outbound Lark
-notifications remain independent obligations. The Lark inbox is only the
-inbound feedback path.
+对于 issue-fix，出站 GitHub 评审者请求与出站 Lark 通知仍是独立义务。Lark
+inbox 只是入站反馈路径。

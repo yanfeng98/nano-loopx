@@ -1,19 +1,13 @@
 # todo_detail_cold_path_v0
+> [English](todo-detail-cold-path-v0.md)
 
-`todo_detail_cold_path_v0` is the cold-path detail contract for LoopX todos.
-It lets dashboards, review tools, and agents inspect a complete todo without
-expanding `status`, `quota should-run`, heartbeat prompts, or handoff packets
-past their hot-path budgets.
+`todo_detail_cold_path_v0` 是 LoopX todo 的冷路径详情契约。它让 dashboard、评审工具与 agent 在不让 `status`、`quota should-run`、heartbeat prompt 或交接包超出热路径预算的情况下检查完整 todo。
 
-The hot path remains `todo_summary_v0` plus bounded lanes such as
-`first_open_items`, `executable_backlog_items`, and claim-aware lanes. Those
-lanes answer the dispatch question: "which todo should the current actor look
-at now?" They are not an archival todo store.
+热路径仍是 `todo_summary_v0` 加持界 lane，例如 `first_open_items`、`executable_backlog_items` 与 claim 感知 lane。这些 lane 回答分发问题：「当前执行者现在应该看哪个 todo？」它们不是归档 todo 存储。
 
-## Hot-Path Reference
+## 热路径引用
 
-Hot-path producers may attach only a compact reference when a consumer needs a
-drill-down target:
+当消费者需要下钻目标时，热路径生产者只可附加一个紧凑引用：
 
 ```json
 {
@@ -26,13 +20,11 @@ drill-down target:
 }
 ```
 
-The reference is optional. It must not copy notes, evidence bodies, raw logs,
-private paths, verifier output, or full sibling todo lists. A missing reference
-means the consumer can still route from the compact summary.
+该引用是可选的。它不得复制 notes、evidence 正文、原始日志、私有路径、verifier 输出或完整同级 todo 列表。引用缺失时消费者仍可从紧凑摘要路由。
 
-## Cold-Path Shape
+## 冷路径形状
 
-A paged detail response should use this shape:
+分页详情响应应使用如下形状：
 
 ```json
 {
@@ -78,41 +70,27 @@ A paged detail response should use this shape:
 }
 ```
 
-## Paging Rules
+## 分页规则
 
-- `todo` carries the canonical parsed todo item, not a markdown excerpt.
-- `pages.current.items` may include compact public-safe detail records such as
-  notes, evidence summaries, closeout summaries, and related lifecycle event
-  references.
-- Large note/evidence bodies must be summarized. Raw task text, transcripts,
-  local file paths, credentials, private links, raw verifier output, and raw
-  benchmark trajectories are not valid page items.
-- `next_page_token` is opaque. Consumers must not parse it or infer ordering
-  from it.
-- Producers should make the first page sufficient for human inspection of one
-  todo. Cross-todo list browsing belongs in filtered list endpoints or a
-  dashboard view, not in one todo detail response.
+- `todo` 携带规范解析后的 todo item，而不是 markdown 摘录。
+- `pages.current.items` 可包含紧凑公开安全详情记录，例如 notes、证据摘要、收尾摘要与相关生命周期事件引用。
+- 大型 note/evidence 正文必须摘要化。原始任务文本、transcript、本地文件路径、凭据、私有链接、原始 verifier 输出与原始 benchmark 轨迹都不是合法 page item。
+- `next_page_token` 是不透明的。消费者不得解析它或从中推断排序。
+- 生产者应使第一页足以供人类检查一个 todo。跨 todo 列表浏览应放在带过滤的列表端点或 dashboard 视图中，而不是单个 todo 详情响应中。
 
-## Ordering And Freshness
+## 排序与新鲜度
 
-The detail response is a projection. It should preserve the active-state todo
-ordering metadata (`index`, `source_section`, `priority`, and `role`) when
-known, but it must not become a second writable ordering store. Consumers must
-treat the detail as stale after any lifecycle event and requery before making a
-new dispatch or merge decision.
+详情响应是投影。它应在已知时保留 active-state todo 排序元数据（`index`、`source_section`、`priority` 与 `role`），但不得成为第二个可写排序存储。消费者必须在任何生命周期事件之后把详情视为过期，并在做出新的分发或合并决策之前重新查询。
 
-## Acceptance Checks
+## 验收检查
 
-A valid public fixture or implementation must prove:
+一个有效的公开 fixture 或实现必须证明：
 
-- `schema_version` is exactly `todo_detail_cold_path_v0`;
-- hot-path surfaces include at most `todo_detail_ref_v0`, never the full
-  detail response;
-- `truth_contract.projection_is_writable=false`;
-- `truth_contract.write_api=false`;
-- the response references exactly one `goal_id`, `role`, and `todo_id`;
-- page tokens are opaque and optional;
-- no local absolute paths, credentials, raw logs, raw transcripts, raw
-  benchmark trajectories, or raw verifier output are projected;
-- consumers can safely ignore both `todo_detail_ref_v0` and
-  `todo_detail_cold_path_v0` when absent.
+- `schema_version` 恰好是 `todo_detail_cold_path_v0`；
+- 热路径界面至多携带 `todo_detail_ref_v0`，绝不携带完整详情响应；
+- `truth_contract.projection_is_writable=false`；
+- `truth_contract.write_api=false`；
+- 响应恰好引用一个 `goal_id`、`role` 与 `todo_id`；
+- page token 不透明且可选；
+- 不投影本地绝对路径、凭据、原始日志、原始 transcript、原始 benchmark 轨迹或原始 verifier 输出；
+- 缺失时消费者可以安全忽略 `todo_detail_ref_v0` 与 `todo_detail_cold_path_v0`。

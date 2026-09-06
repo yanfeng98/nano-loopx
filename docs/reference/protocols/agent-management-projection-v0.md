@@ -1,66 +1,51 @@
 # agent_management_projection_v0
+> [English](agent-management-projection-v0.md)
 
-`agent_management_projection_v0` is a read-only operator view over existing
-LoopX agent, todo, quota, history, and evidence state. It exists so dashboard
-and review-packet surfaces can show which agents are active, what each agent is
-claimed on, and what evidence makes the next turn safe.
+`agent_management_projection_v0` 是既有 LoopX agent、todo、quota、历史与证据状态之上的只读操作员视图。它存在的目的是让 dashboard 与评审包界面能显示哪些 agent 活动、每个 agent 认领了什么、以及什么证据使下一 Turn 安全。
 
-It does not introduce a runtime `task` object. In LoopX, `todo_id` remains the
-only durable work-item identity inside a `goal_id`.
+它不引入运行时 `task` 对象。在 LoopX 中，`todo_id` 保持 `goal_id` 内唯一的持久化工作项身份。
 
-## Purpose
+## 目的
 
-The projection helps operators answer:
+投影帮助操作员回答：
 
-- which registered agents exist for this goal;
-- which todo each agent should see as its current work item;
-- whether the agent is running, waiting, blocked, monitoring, or possibly
-  stale;
-- what evidence, handoff note, workspace, quota, and next action explain that
-  state.
+- 此 goal 存在哪些已注册 agent；
+- 每个 agent 应把哪个 todo 视为当前工作项；
+- agent 是运行中、等待、阻塞、监控，还是可能过期；
+- 哪些证据、交接笔记、工作区、配额与下一动作解释该状态。
 
-The first dashboard implementation should be an observability surface. It may
-render a mature agent-console layout or reuse compatible public UI code, but it
-must not become a dispatcher, lease manager, workspace manager, or write queue.
+首个 dashboard 实现应是可观测性界面。它可以渲染成熟 agent 控制台布局或复用兼容公开 UI 代码，但不得成为分发器、lease 管理器、工作区管理器或写入队列。
 
-## Sources Of Truth
+## 事实来源
 
-The projection is derived from:
+投影由以下内容派生：
 
-- `loopx status --format json`;
-- active-state `Agent Todo` and `User Todo` sections;
-- registered-agent and claim metadata;
-- quota `agent_lane_next_action`, `interaction_contract`, and scheduler hints;
-- compact run history and the agent-scoped evidence ledger;
-- task graph, handoff, and review-packet projections when present.
-- optional prebuilt `agent_material_frontier_v0` packets on the cold-path
-  `agent_material_frontiers` input, consumed only when the current execution
-  envelope declares the goal-scoped `material_lifecycle` capability.
+- `loopx status --format json`；
+- active-state 的 `Agent Todo` 与 `User Todo` 小节；
+- 已注册 agent 与 claim 元数据；
+- quota 的 `agent_lane_next_action`、`interaction_contract` 与 scheduler 提示；
+- 紧凑 run 历史与 agent 作用域证据 ledger；
+- 存在时的任务图、交接与评审包投影；
+- 冷路径 `agent_material_frontiers` 输入上的可选预构建 `agent_material_frontier_v0` 包，仅当当前执行信封声明 goal 作用域 `material_lifecycle` capability 时消费。
 
-The projection is stale after any lifecycle event until recomputed. Consumers
-must tolerate missing fields and fall back to existing status/review-packet
-payloads.
+投影在任何生命周期事件后过期，直到重算。消费者必须容忍缺失字段，并回退到既有 status/review-packet 载荷。
 
-When available, `loopx status --format json` exposes this view at the top-level
-`agent_management_projection` key. Consumers should still treat the key as
-optional so older status producers and cached snapshots remain readable.
+可用时，`loopx status --format json` 在顶层 `agent_management_projection` 键暴露该视图。消费者仍应把该键视为可选，使旧 status 生产者与缓存快照保持可读。
 
-## Non-Goals
+## 非目标
 
-This contract intentionally does not add:
+本契约有意不增加：
 
-- a new `task_id`;
-- a writable Kanban/task table;
-- automatic dispatch, cancel, or reclaim behavior;
-- a separate comment system;
-- a workspace allocation runtime;
-- a tool gateway or agent profile runtime.
+- 新 `task_id`；
+- 可写 Kanban/任务表；
+- 自动分发、取消或回收行为；
+- 独立评论系统；
+- 工作区分配运行时；
+- 工具网关或 agent profile 运行时。
 
-State changes still go through existing LoopX lifecycle commands such as
-`loopx todo ...`, `loopx refresh-state ...`, `loopx quota ...`, evidence-log
-writeback, and future APIs that preserve the same event-ledger semantics.
+状态变更仍经既有 LoopX 生命周期命令，如 `loopx todo ...`、`loopx refresh-state ...`、`loopx quota ...`、evidence-log writeback，以及保留相同 event-ledger 语义的未来 API。
 
-## Shape
+## 形状
 
 ```json
 {
@@ -82,86 +67,72 @@ writeback, and future APIs that preserve the same event-ledger semantics.
 }
 ```
 
-## Agent Row
+## Agent 行
 
-Each agent row is a compact card or table row for one registered agent.
+每个 agent 行是一个已注册 agent 的紧凑卡片或表行。
 
-Required fields:
+必需字段：
 
-- `agent_id`;
-- `agent_model`: `peer_v1`;
-- `state`: one of `running`, `waiting`, `blocked`, `monitoring`,
-  `scope_wait`, `stale`, or `unknown`;
-- `current_todo`: a `todo_row_v0` object or `null`;
-- `next_action`: compact local-control next action text. Private project refs
-  are allowed; inline credentials are not. Shareable sinks must redact private
-  refs before export;
-- `last_activity_at`: best known status, quota, todo, or run timestamp;
-- `evidence_refs`: compact evidence ids, doc paths, run ids, or review packet
-  refs.
+- `agent_id`；
+- `agent_model`：`peer_v1`；
+- `state`：`running`、`waiting`、`blocked`、`monitoring`、`scope_wait`、`stale` 或 `unknown` 之一；
+- `current_todo`：`todo_row_v0` 对象或 `null`；
+- `next_action`：紧凑本地控制下一动作文本。允许私有项目引用；不允许内联凭据。可共享 sink 在导出前必须脱敏私有引用；
+- `last_activity_at`：已知最佳 status、quota、todo 或 run 时间戳；
+- `evidence_refs`：紧凑证据 id、文档路径、run id 或评审包引用。
 
-Optional fields:
+可选字段：
 
-- `profile_role`: an advisory functional label such as `reviewer`, `monitor`,
-  or `runtime-validation`; it is not rank or authority;
-- `scope_summary`;
-- `quota_state`;
-- `scheduler_state`;
-- `workspace_ref`;
-- `handoff_refs`;
-- `handoff_note`;
-- `material_frontier`;
-- `stale_claim_hint`;
-- `blocked_on`;
-- `recent_events`;
-- `display_tone`.
+- `profile_role`：咨询性功能标签，如 `reviewer`、`monitor` 或 `runtime-validation`；它不是等级或权限；
+- `scope_summary`；
+- `quota_state`；
+- `scheduler_state`；
+- `workspace_ref`；
+- `handoff_refs`；
+- `handoff_note`；
+- `material_frontier`；
+- `stale_claim_hint`；
+- `blocked_on`；
+- `recent_events`；
+- `display_tone`。
 
-When runnable advancement work exists alongside blocked maintenance, the
-projection keeps the runnable todo in `current_todo` and may expose the
-highest-priority blocked maintenance todo as a separate `blocked_on`
-`todo_row_v0`. The blocker remains visible without changing todo ownership or
-making the whole peer appear blocked.
+当可运行推进工作与阻塞维护并存时，投影把可运行 todo 保持在 `current_todo`，可以最高优先级阻塞维护 todo 作为单独 `blocked_on` `todo_row_v0` 暴露。Blocker 保持可见，而无需改变 todo 所有权或使整个对等方看起来阻塞。
 
-## Todo Row
+## Todo 行
 
-`todo_row_v0` is the dashboard/review-packet representation of an existing
-LoopX todo. It is not a runtime task object.
+`todo_row_v0` 是既有 LoopX todo 的 dashboard/评审包表示。它不是运行时任务对象。
 
-Required fields:
+必需字段：
 
-- `todo_id`;
-- `goal_id`;
-- `role`;
-- `status`;
-- `priority`;
-- `title`;
-- `task_class`;
-- `action_kind`;
-- `claimed_by`.
+- `todo_id`；
+- `goal_id`；
+- `role`；
+- `status`；
+- `priority`；
+- `title`；
+- `task_class`；
+- `action_kind`；
+- `claimed_by`。
 
-Optional fields:
+可选字段：
 
-- `required_write_scopes`;
-- `required_capabilities`;
-- `target_capabilities`;
-- `blocks_agent`;
-- `unblocks_todo_id`;
-- `successor_todo_ids`;
-- `resume_when`;
-- `evidence_refs`;
-- `handoff_refs`;
-- `workspace_ref`;
-- `updated_at`.
+- `required_write_scopes`；
+- `required_capabilities`；
+- `target_capabilities`；
+- `blocks_agent`；
+- `unblocks_todo_id`；
+- `successor_todo_ids`；
+- `resume_when`；
+- `evidence_refs`；
+- `handoff_refs`；
+- `workspace_ref`；
+- `updated_at`。
 
-The row may be rendered as a "task" card for operator familiarity, but API and
-state names should keep `todo` terminology to avoid implying a second runtime
-model.
+为操作员熟悉起见，行可以渲染为「task」卡片，但 API 与状态名应保持 `todo` 术语，避免暗示第二运行时模型。
 
-## Handoff Notes
+## 交接笔记
 
-Inter-agent handoff should appear as a typed note attached to existing todo,
-history, and evidence refs. Rows without material context retain the existing
-`handoff_note_v0` shape:
+Agent 间交接应作为附加到既有 todo、历史与证据引用的类型化笔记出现。无物料上下文的行保留既有 `handoff_note_v0` 形状：
 
 ```json
 {
@@ -179,21 +150,11 @@ history, and evidence refs. Rows without material context retain the existing
 }
 ```
 
-LoopX derives this note from existing todo, history, and evidence rows. Current
-signals include `blocks_agent`, `claimed_by`, `unblocks_todo_id`,
-`successor_todo_ids`, `resume_when`, `note`, `evidence`, and compact rollout
-event refs. The same `handoff_note_v0` object can therefore appear inside
-`agent_todo_summary` items, `todo_index` rows, or future dashboard rows without
-introducing a second task model.
+LoopX 从既有 todo、历史与证据行派生该笔记。当前信号包括 `blocks_agent`、`claimed_by`、`unblocks_todo_id`、`successor_todo_ids`、`resume_when`、`note`、`evidence` 与紧凑 rollout 事件引用。同一 `handoff_note_v0` 对象因此可以出现在 `agent_todo_summary` 项、`todo_index` 行或未来 dashboard 行中，而不引入第二任务模型。
 
-The projection may show the latest handoff note in the agent row, but the note
-does not create a chat stream, dispatcher queue, approval mechanism, or runtime
-task separate from the source todo.
+投影可以在 agent 行中显示最新交接笔记，但该笔记不创建聊天流、分发器队列、批准机制或独立于源 todo 的运行时任务。
 
-When the cold path also receives a full `agent_material_frontier_v0` for the
-same agent and the caller passes `material_lifecycle` in
-`available_capabilities`, the management projection may enrich the typed note
-as `handoff_note_v1`:
+当冷路径还为同一 agent 收到完整 `agent_material_frontier_v0`，且调用方在 `available_capabilities` 中传 `material_lifecycle` 时，管理投影可以把类型化笔记富化为 `handoff_note_v1`：
 
 ```json
 {
@@ -222,40 +183,17 @@ as `handoff_note_v1`:
 }
 ```
 
-`material_frontier` on the agent row uses the same bounded summary/ref shape
-with `schema_version=agent_material_handoff_projection_v0`. At most four refs
-are exposed. The projection never forwards receipts,
-observed or required revisions, boundary availability, gate state, permissions,
-authority ownership, or source bodies. A successor rebuilds its own frontier
-from current goal authority and its own agent-scoped requirements and receipts.
-The optional cold-path input does not create an agent row, claim, or task by
-itself.
+Agent 行上的 `material_frontier` 使用相同的有界摘要/引用形状，`schema_version=agent_material_handoff_projection_v0`。至多暴露四个引用。投影从不转发回执、观察或必需修订、边界可用性、gate 状态、权限、权限所有权或源正文。Successor 从当前 goal 权限与其自身 agent 作用域需求与回执重建自己的前沿。可选冷路径输入本身不创建 agent 行、claim 或任务。
 
-Material projection is default-off. Without `material_lifecycle`, LoopX
-ignores `agent_material_frontiers` and omits `material_frontier`,
-`handoff_note_v1`, and `source_summary.material_frontier_count`. Capability
-absence is an observed runtime condition, not a user gate: it does not create
-a todo, notification, or authority request.
+物料投影默认关闭。没有 `material_lifecycle` 时，LoopX 忽略 `agent_material_frontiers`，并省略 `material_frontier`、`handoff_note_v1` 与 `source_summary.material_frontier_count`。能力缺失是观察到的运行时条件，不是用户 gate：它不创建 todo、通知或权限请求。
 
-Status-backed CLI entry points preserve that same execution envelope:
-`status`, `quota`, and `review-packet` accept repeatable
-`--available-capability` values and pass them through status collection.
-Projection-cache identity includes the normalized capability set, so a
-default-off snapshot cannot satisfy an enabled request and an enabled snapshot
-cannot leak material fields into a default request.
+Status 支撑的 CLI 入口点保留相同执行信封：`status`、`quota` 与 `review-packet` 接受可重复 `--available-capability` 值并通过 status 集合透传。投影缓存身份包括规范化能力集，因此默认关闭快照不能满足启用请求，启用快照也不把物料字段泄漏进默认请求。
 
-The cold-path join is scoped by `(goal_id, agent_id)`, not agent identity alone.
-An explicit status goal filter takes precedence, followed by the current todo's
-goal and then a single unambiguous row goal. When a multi-goal agent row has no
-unique goal context, LoopX omits the material enrichment instead of selecting a
-frontier by input order.
+冷路径关联按 `(goal_id, agent_id)` 作用域，而非仅 agent 身份。显式 status goal 过滤器优先，其次当前 todo 的 goal，然后单一无歧义行的 goal。当多 goal agent 行没有唯一 goal 上下文时，LoopX 省略物料富化，而非按输入顺序选择前沿。
 
-## Stale Claim Hint
+## 过期 Claim 提示
 
-`stale_claim_hint` is an observability warning, not an automatic reclaim rule.
-It means a claimed todo has not received recent activity relative to the
-expected cadence, or the projection cannot find fresh evidence for a running
-claim.
+`stale_claim_hint` 是可观测性警告，不是自动回收规则。它表示某已认领 todo 相对预期节奏没有近期活动，或投影无法为运行中 claim 找到新鲜证据。
 
 ```json
 {
@@ -267,12 +205,11 @@ claim.
 }
 ```
 
-The dashboard may display this as a warning badge. LoopX should not automatically
-clear the claim, reassign work, or discard evidence from this projection alone.
+Dashboard 可以把它显示为警告徽章。LoopX 不应仅凭该投影自动清除 claim、重新分配工作或丢弃证据。
 
-## Workspace Ref
+## 工作区引用
 
-`workspace_ref` is a display hint for where work is expected to happen:
+`workspace_ref` 是预期工作发生位置的显示提示：
 
 ```json
 {
@@ -284,49 +221,37 @@ clear the claim, reassign work, or discard evidence from this projection alone.
 }
 ```
 
-Public or hosted dashboards should avoid local absolute paths. Local loopback
-dashboards may show paths when the source payload already exposes them and the
-surface is explicitly local/operator-only.
+公开或托管 dashboard 应避免本地绝对路径。本地回环 dashboard 在源载荷已公开路径且界面显式本地/仅操作员时，可以显示路径。
 
-## Frontend Style And Code Reuse
+## 前端样式与代码复用
 
-The product surface may borrow from two visual directions:
+产品界面可以从两个视觉方向借鉴：
 
-- a mature agent console style: dense rows, clear owner/state/timestamp
-  columns, subdued badges, and fast scanning;
-- the LoopX dark showcase style: dark rail, motion-light accents, evidence
-  trail, and high-contrast agent lanes.
+- 成熟 agent 控制台风格：密集行、清晰的 owner/state/timestamp 列、克制徽章与快速扫描；
+- LoopX 暗色展示风格：暗色导轨、轻动效点缀、证据轨迹与高对比 agent lane。
 
-Before copying implementation code from Hermes or another project, the agent
-must verify:
+从 Hermes 或另一项目复制实现代码前，agent 必须验证：
 
-- the source is public or explicitly approved for this repository;
-- the license is compatible with LoopX distribution;
-- copied code keeps required attribution or notice text;
-- private/internal identifiers, comments, screenshots, URLs, and test data are
-  removed or generalized;
-- the copied code does not import a runtime dispatcher, profile system, tool
-  gateway, or task database that violates this projection contract.
+- 来源公开或对此仓库显式批准；
+- 许可证与 LoopX 发行兼容；
+- 复制代码保留所需署名或声明文本；
+- 私有/内部标识符、注释、截图、URL 与测试数据被移除或泛化；
+- 复制代码不导入违反本投影契约的运行时分发器、profile 系统、工具网关或任务数据库。
 
-If those checks are not satisfied, borrow only the interaction pattern and
-write a native LoopX implementation.
+这些检查不满足时，只借用交互模式并编写原生 LoopX 实现。
 
-## Acceptance Checks
+## 验收检查
 
-A valid implementation or fixture should prove:
+一个有效实现或 fixture 应证明：
 
-- `schema_version` is exactly `agent_management_projection_v0`;
-- `mode` is `read_only`;
-- `truth_contract.projection_is_writable=false`;
-- `truth_contract.introduces_task_runtime=false`;
-- every `current_todo.todo_id` references an existing LoopX todo;
-- no writable task, dispatcher, cancel, reclaim, or workspace action is exposed
-  by this projection;
-- stale claim is rendered as a warning only;
-- handoff notes reference existing todo/history/evidence ids;
-- material frontier fields are absent without the observed
-  `material_lifecycle` capability and retain their bounded shape when it is
-  present;
-- public fixtures do not include credentials, raw logs, private docs, raw
-  trajectories, local absolute paths, or internal-only source material;
-- dashboard consumers remain functional when the projection is absent.
+- `schema_version` 恰好是 `agent_management_projection_v0`；
+- `mode` 是 `read_only`；
+- `truth_contract.projection_is_writable=false`；
+- `truth_contract.introduces_task_runtime=false`；
+- 每个 `current_todo.todo_id` 引用既有 LoopX todo；
+- 本投影不暴露任何可写任务、分发器、取消、回收或工作区动作；
+- 过期 claim 仅渲染为警告；
+- 交接笔记引用既有 todo/历史/证据 id；
+- 无观察到的 `material_lifecycle` capability 时物料前沿字段缺席，存在时保留其有界形状；
+- 公开 fixture 不包含凭据、原始日志、私有文档、原始轨迹、本地绝对路径或仅内部源物料；
+- 投影缺席时 dashboard 消费者仍可用。

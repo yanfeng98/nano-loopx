@@ -1,52 +1,49 @@
-# Documentation Layout And Migration Policy
+# 文档布局与迁移策略
 
-LoopX documentation serves several audiences: people trying the product,
-operators running long-lived goals, contributors changing the control plane,
-and maintainers inspecting protocols or research evidence. This policy keeps
-those paths distinct without hiding useful material or breaking stable links
-for cosmetic reasons.
+> [English](documentation-layout.md)
 
-## Target Information Architecture
+LoopX 文档服务多类读者：试用产品的人、运行长程 goal 的操作者、修改控制面的贡献者，
+以及检查协议或研究证据的 maintainer。本策略在把这些路径区分开来的同时，不隐藏有用材料，
+也不为美观原因破坏稳定链接。
 
-| Path | Owns | Does not own |
+## 目标信息架构
+
+| 路径 | 拥有 | 不拥有 |
 | --- | --- | --- |
-| `docs/guides/` | Task-oriented onboarding and operator walkthroughs | Product strategy or machine contracts |
-| `docs/concepts/` | Explanations of durable LoopX concepts and mental models | Step-by-step operations |
-| `docs/operations/` | Goal, todo, cadence, attention, and authority workflows | Provider-specific implementation details |
-| `docs/architecture/` | System boundaries, design decisions, and RFCs | Current CLI reference |
-| `docs/product/` | Product direction, runtime experiences, surfaces, and use cases | Protocol definitions |
-| `docs/integrations/` | Runtime, host, collaboration, and external-system adapters | Core control-plane semantics |
-| `docs/reference/contracts/` | Stable human-readable contracts | Exploratory proposals |
-| `docs/reference/protocols/` | Versioned, implementation-oriented protocols | Narrative product direction |
-| `docs/development/` | Contributor workflows, testing, and repository policy | End-user onboarding |
-| `docs/showcases/` | Public-safe cases and reproducible demonstrations | Raw private evidence |
-| `docs/research/` | Public research, benchmark evidence, and route packets | Stable first-line documentation |
-| `docs/archive/` | Superseded or dated records kept for historical value | Active guidance |
+| `docs/guides/` | 任务导向的接入与操作者 walkthrough | 产品策略或机器合同 |
+| `docs/concepts/` | 持久 LoopX 概念与心智模型的解释 | 分步操作 |
+| `docs/operations/` | goal、todo、cadence、attention 与 authority 工作流 | provider 专属实现细节 |
+| `docs/architecture/` | 系统边界、设计决策与 RFC | 当前 CLI 参考 |
+| `docs/product/` | 产品方向、runtime 体验、表面与使用案例 | 协议定义 |
+| `docs/integrations/` | runtime、host、协作与外部系统 adapter | 核心控制面语义 |
+| `docs/reference/contracts/` | 稳定的人类可读合同 | 探索性提案 |
+| `docs/reference/protocols/` | 版本化、面向实现的协议 | 叙事式产品方向 |
+| `docs/development/` | 贡献者工作流、测试与仓库策略 | 终端用户接入 |
+| `docs/showcases/` | 公开安全案例与可复现演示 | 原始私有证据 |
+| `docs/research/` | 公开研究、benchmark 证据与 route packet | 稳定的第一线文档 |
+| `docs/archive/` | 为历史价值保留的过时或陈旧记录 | 现行指南 |
 
-The `docs/` root is a compatibility surface, not the default destination for
-new files. It should contain the documentation home and a small set of stable,
-high-traffic anchors. New material belongs in the narrowest owning directory.
+`docs/` 根是兼容表面，不是新文件的默认去向。它应当承载文档首页和少量稳定、
+高流量的锚点。新材料归入最窄的拥有目录。
 
-## Coverage Map
+## 覆盖地图
 
-The repository currently has useful material in every target category, but
-three areas are overloaded:
+仓库目前在每个目标类别都有可用材料，但三个区域过载：
 
-| Current surface | Current problem | Migration treatment |
+| 当前表面 | 当前问题 | 迁移处置 |
 | --- | --- | --- |
-| `docs/README.md` | Mixes onboarding, reference, product direction, research, and governance in one long list | Replace with a short audience-and-task router; preserve links through category indexes |
-| `docs/*.md` | Concepts, contracts, integrations, operations, and roadmaps share one flat namespace | Keep only proven stable anchors; move lower-traffic files by owner and repair inbound links |
-| `docs/product/*.md` | Runtime experiments, product foundations, surfaces, and use cases are interleaved | Group under `foundations/`, `runtimes/`, `surfaces/`, and `use-cases/` |
-| `docs/reference/protocols/*.md` | Versioned contracts are flat and hard to scan | First group the index by domain; move files only with a separate protocol-path compatibility review |
-| `benchmark/` | Current benchmark research needs a small RFC-linked home outside product packages | Keep protocols and public-safe practice here; archive superseded runners under `deprecate/benchmark-legacy/` |
+| `docs/README.md` | 在一个长列表中混排接入、参考、产品方向、研究与治理 | 替换为简短的读者与任务路由；通过类目索引保留链接 |
+| `docs/*.md` | 概念、合同、集成、操作与 roadmap 共享一个扁平命名空间 | 只保留已验证的稳定锚点；把低流量文件按属主迁移并修复入站链接 |
+| `docs/product/*.md` | runtime 实验、产品基础、表面与使用案例相互穿插 | 归组到 `foundations/`、`runtimes/`、`surfaces/` 与 `use-cases/` |
+| `docs/reference/protocols/*.md` | 版本化合同扁平且难以扫读 | 先按领域归组索引；迁移文件必须单独做协议路径兼容性评审 |
+| `benchmark/` | 当前 benchmark 研究需要产品包之外的小型 RFC 关联家园 | 协议与公开安全实践留在此处；把过时 runner 归档到 `deprecate/benchmark-legacy/` |
 
-This is a coverage-preserving migration. Unique claims, public evidence, and
-useful links must either remain at their current path or appear in a new
-canonical index. A shorter landing page is not permission to delete material.
+这是一次保持覆盖的迁移。独特声明、公开证据与可用链接必须要么留在当前路径，
+要么出现在新的 canonical 索引中。更短的落地页不是删除材料的许可。
 
-## Stable Root Anchors
+## 稳定根锚点
 
-The first migration keeps these high-traffic paths stable:
+第一步迁移保持这些高流量路径稳定：
 
 - `docs/architecture.md`
 - `docs/integration.md`
@@ -57,70 +54,59 @@ The first migration keeps these high-traffic paths stable:
 - `docs/project-agent-todo-contract.md`
 - `docs/public-private-boundary.md`
 
-Their location can be reconsidered only when there is concrete evidence that
-callers have migrated or a real compatibility mechanism exists. GitHub does
-not provide transparent Markdown redirects, so creating a prettier tree is not
-enough reason to break a widely linked path.
+只有存在调用方已迁移的实证，或存在真实兼容机制时，才可重新考虑它们的位置。
+GitHub 不提供透明的 Markdown 重定向，所以“更漂亮的目录树”不足以成为打破广链路径的理由。
 
-## Migration Rules
+## 迁移规则
 
-1. **Move by ownership, not by filename similarity.** A document belongs where
-   its future changes will be reviewed, not where its title happens to fit.
-2. **Preserve unique information.** Build a before/after coverage map for each
-   index and keep every still-valid claim and public link reachable.
-3. **Repair every repository caller.** Update Markdown links, examples, smokes,
-   source comments, and generated navigation in the same change as a move.
-4. **Treat external compatibility explicitly.** Keep a stable path when it is
-   part of public onboarding, release notes, protocol documentation, or common
-   contributor links. Do not leave dozens of placeholder files merely to make
-   a directory look empty.
-5. **Keep indexes selective.** A category index explains what belongs there
-   and highlights canonical entry points. It is not required to repeat every
-   historical filename.
-6. **Separate current truth from evidence.** Stable guidance links to evidence;
-   research packets do not become first-line operational instructions.
-7. **Fail closed on private material.** Internal conversations, personal
-   attribution, private URLs, local paths, credentials, raw transcripts, and
-   permission diagnostics do not enter public docs.
-8. **Validate the rendered path.** Check relative links, anchors, Mermaid, and
-   the first visible section of changed landing pages before delivery.
+1. **按属主迁移，而不是按文件名相似度。** 文档归属的未来变更评审地，而不是标题
+   恰好配得上的地方。
+2. **保留独特信息。** 为每个索引建立迁移前后覆盖图，让每一条仍然有效的声明与公开
+   链接都可达。
+3. **修复每个仓库调用方。** 在同一个变更中更新 Markdown 链接、示例、smoke、源码注释
+   与生成的导航。
+4. **显式对待外部兼容性。** 当一条路径属于公开接入、release note、协议文档或常见
+   贡献者链接时，保持它稳定。不要为了让目录看起来空而留下几十个占位文件。
+5. **索引保持精选。** 类目索引说明什么属于该处，并突出 canonical 入口。它不必重复
+   每个历史文件名。
+6. **把当前真相与证据分离。** 稳定指南链到证据；research packet 不会成为第一线
+   操作指令。
+7. **私有材料 fail closed。** 内部对话、个人署名、私有 URL、本地路径、凭据、原始
+   转写与权限诊断不得进入公开文档。
+8. **验证渲染后的路径。** 交付前检查相对链接、锚点、Mermaid 与变更落地页的首个
+   可见章节。
 
-## Staged Migration
+## 分阶段迁移
 
-### Stage 1: Navigation And Obvious Ownership
+### 阶段 1：导航与明显属主
 
-- add short indexes for architecture, concepts, operations, integrations, and
-  product subdomains;
-- publish public-safe RFCs below `docs/architecture/rfcs/`;
-- move low-traffic root files whose owner is unambiguous;
-- group product documents by foundations, runtime, surface, and use case;
-- keep stable root anchors in place;
-- add focused relative-link validation.
+- 为 architecture、concepts、operations、integrations 与 product 子域添加简短索引；
+- 在 `docs/architecture/rfcs/` 下发布公开安全 RFC；
+- 迁移属主明确、低流量的根文件；
+- 按 foundation、runtime、surface 与 use case 归组产品文档；
+- 保留稳定根锚点；
+- 添加聚焦的相对链接校验。
 
-### Stage 2: Protocol Discovery
+### 阶段 2：协议发现
 
-- group the protocol index by control plane, runtime integration, domain
-  capability, evidence, and release/quality;
-- inventory code and external references before moving any versioned protocol;
-- keep protocol filenames and version suffixes stable.
+- 把协议索引按控制面、runtime 集成、领域能力、证据与发布/质量归组；
+- 迁移任何版本化协议前，盘点代码与外部引用；
+- 保持协议文件名与版本后缀稳定。
 
-### Stage 3: Research Lifecycle
+### 阶段 3：研究生命周期
 
-- provide topic indexes for active findings, reusable evidence, dated packets,
-  and archived decisions;
-- keep source-backed artifacts inspectable;
-- archive superseded packets without rewriting history.
+- 为活动发现、可复用证据、带日期 packet 与归档决策提供主题索引；
+- 保持带来源的 artifact 可检查；
+- 归档过时 packet 但不重写历史。
 
-## Placement Checklist
+## 放置清单
 
-Before adding a public document, answer:
+新增公开文档前，回答：
 
-1. Who is expected to act after reading it?
-2. Is it guidance, a concept, a product decision, a protocol, evidence, or a
-   historical record?
-3. Which existing index owns that reader and change reason?
-4. Does the document contain only public-safe sources and examples?
-5. What focused validation proves its links and presentation remain usable?
+1. 谁期望在阅读后采取行动？
+2. 它是指南、概念、产品决策、协议、证据，还是历史记录？
+3. 哪个已有索引用作该读者与变更理由的属主？
+4. 文档是否只包含公开安全的来源与示例？
+5. 什么聚焦验证能证明链接与呈现仍然可用？
 
-If no category owns the document, refine its purpose before creating another
-top-level file.
+如果没有类目拥有该文档，在创建又一个顶层文件前先明确其目的。

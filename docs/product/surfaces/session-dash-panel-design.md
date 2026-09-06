@@ -1,127 +1,77 @@
-# Session Dash Panel Design
+# Session Dash 面板设计
 
-Auto-generated single-page control panel that tracks agent session task
-progress and result statistics from LoopX public-safe projections.
+> [English](session-dash-panel-design.md)
 
-## Problem
+自动生成的单页控制面板，从 LoopX public-safe 投影跟踪 agent session 任务进展与结果统计。
 
-Operators want a compact, copyable web view of **what the fleet is doing
-right now**: which sessions (agent runtimes) exist, how many goals each owns,
-and what state each goal is in. The existing React dashboard covers this
-interactively, but it requires a Node build, a dev server, and browser
-tooling. A loopback single-page panel is a lighter surface for quick local
-inspection: run one command from the project directory and keep the tab open
-while the agents work.
+## 问题
 
-The panel is intentionally **human-focused**. LoopX's internal control
-machinery (decision frames, work-lane contracts, quota slot math, truth
-contracts, source-warning diagnostics, lease/write-scope bookkeeping) is not
-rendered: it is noise to an operator and belongs to the control plane, not the
-watch surface. The page shows only the signal that answers "how is the work
-going?":
+Operator 想要一个紧凑、可复制的 "fleet 现在在做什么" 网页视图：哪些 session（agent runtime）存在、每个拥有多少 goal、每个 goal 处于什么状态。现有 React dashboard 以交互方式覆盖了这一点，但它需要 Node 构建、dev server 与浏览器工具。Loopback 单页面板是快速本地检查的更轻 surface：从项目目录运行一条命令，在 agent 工作期间保持标签页打开。
 
-1. **Overview** — sessions, goals, active / needs-you / blocked / done
-   buckets, open todos, and run counts (the result statistics).
-2. **Sessions** — one card per session, with its state, role, goal count, and
-   the goals it owns.
-3. **Per goal** — status badge, todo progress bar (done vs open agent/user),
-   what it is waiting on, latest run time/classification, and next action.
+该面板刻意**面向人类**。LoopX 的内部控制机制（decision frames、work-lane 契约、quota slot 数学、truth 契约、source-warning 诊断、lease/write-scope 记账）不被渲染：它们对 operator 是噪音，属于控制面而不是观察 surface。页面只显示回答"工作进展如何？"的信号：
 
-## Decision
+1. **概览** — session、goal、active / needs-you / blocked / done 桶、打开 todos 与 run 计数（结果统计）。
+2. **Sessions** — 每个 session 一张卡，含其状态、角色、goal 数量与其拥有的 goals。
+3. **每 goal** — 状态徽章、todo 进度条（完成 vs 打开的 agent/user）、它在等什么、最新 run 时间/分类与下一动作。
 
-Add a **live single-page panel** (`loopx dash`) that serves the fleet snapshot
-from existing public-safe projections:
+## 决策
 
-1. Collect the same inputs the dashboard already consumes: the status contract
-   (`attention_queue.items[]`), `run_history.goals[]`, the todo index, the
-   agent-management projection (sessions + their `goal_ids`), and the usage
-   summary.
-2. Fold them through a read-only fleet projection
-   (`build_session_dash_projection`, schema `session_dash_projection_v1`) that
-   groups goals under sessions and computes the overview buckets.
-3. Render a single HTML page with a small no-dependency renderer, reusing the
-   patterns in `loopx/presentation/renderers/goal_channel_html.py`.
-4. Serve it from a loopback HTTP server (`loopx/dash_server.py`) that also
-   exposes a `/panel` fragment and `/status.json` projection; the page
-   auto-refreshes in place by polling `/panel`.
-5. Keep `loopx dash generate` for a one-shot static HTML snapshot, with the
-   existing public/private boundary scan enforced before success.
+添加一个**实时单页面板**（`loopx dash`），从既有 public-safe 投影提供 fleet 快照：
 
-The React dashboard stays the interactive surface; the loopback panel is the
-fast watch surface. They share the same projections and data contract, so the
-panel cannot drift into a second source of truth.
+1. 收集 dashboard 已经消费的相同输入：status 契约（`attention_queue.items[]`）、`run_history.goals[]`、todo 索引、agent-management 投影（sessions + 其 `goal_ids`）与 usage 摘要。
+2. 通过只读 fleet 投影（`build_session_dash_projection`，schema `session_dash_projection_v1`）折叠它们，把 goals 分组到 sessions 下并计算概览桶。
+3. 用一个小的无依赖渲染器渲染单个 HTML 页，复用 `loopx/presentation/renderers/goal_channel_html.py` 中的模式。
+4. 由 loopback HTTP server（`loopx/dash_server.py`）提供，该 server 还暴露 `/panel` 片段与 `/status.json` 投影；页面通过轮询 `/panel` 原地自动刷新。
+5. 为一次性静态 HTML 快照保留 `loopx dash generate`，成功前执行既有 public/private 边界扫描。
 
-## Repository Placement
+React dashboard 保持交互 surface；loopback 面板是快速观察 surface。它们共享同一投影与数据契约，所以面板不会漂移成第二套事实源。
 
-| Concern | Location | Reason |
+## 仓库位置
+
+| 关注点 | 位置 | 理由 |
 | --- | --- | --- |
-| Renderer | `loopx/presentation/renderers/session_dash_html.py` | Pure renderer over already-built payloads, per the presentation surface layout. |
-| Projection assembly | `loopx/presentation/projections/session_dash.py` | Intermediate public-safe read model (fleet snapshot). Reuse existing builders when possible; do not duplicate contract parsing. |
-| Generation command | `loopx/cli_commands/dash.py` + `loopx/dash_server.py` | Operator-facing CLI entry (`loopx dash` serves, `dash generate` exports); reads status/quota/todos exactly like `serve-status` does. |
-| Static export | Reuse the boundary scan + `loopx dash generate` | Existing public/private scanner; manifest/revision receipt stays with the static-site pipeline when needed. |
-| Docs | `docs/product/surfaces/` + dashboard README | Same documentation home as other presentation surfaces. |
-| Validation | `examples/session-dash-panel-smoke.py` | Public-safe fixture smoke, no live state required. |
+| 渲染器 | `loopx/presentation/renderers/session_dash_html.py` | 针对已构建载荷的纯渲染器，符合呈现 surface 布局。 |
+| 投影组装 | `loopx/presentation/projections/session_dash.py` | 中间 public-safe 读模型（fleet 快照）。尽可能复用既有构建器；不重复契约解析。 |
+| 生成命令 | `loopx/cli_commands/dash.py` + `loopx/dash_server.py` | Operator 面向 CLI 入口（`loopx dash` 提供、`dash generate` 导出）；与 `serve-status` 完全一样读取 status/quota/todos。 |
+| 静态导出 | 复用边界扫描 + `loopx dash generate` | 既有 public/private 扫描器；需要时 manifest/revision receipt 留在静态站点管线。 |
+| 文档 | `docs/product/surfaces/` + dashboard README | 与其他呈现 surface 同属一个文档家。 |
+| 验证 | `examples/session-dash-panel-smoke.py` | Public-safe fixture smoke，无需实时状态。 |
 
-This is a presentation surface, not a new capability: it does not own state,
-quota, gates, or authority. Per the capability placement guide, it stays in the
-presentation layer and reuses existing control-plane contracts.
+这是呈现 surface，不是新 capability：它不拥有状态、quota、gates 或 authority。按 capability 放置指南，它留在呈现层并复用既有控制面契约。
 
-## Data Contract (Inputs)
+## 数据契约（输入）
 
-The projection consumes only public-safe projections:
+投影只消费 public-safe 投影：
 
-- `loopx status` JSON, schema_version 2: `attention_queue.items[]` (per-goal
-  waiting_on / recommended_action), `run_history.goals[]` (goal status,
-  lifecycle phase, latest runs), `todo_index.items[]` (per-goal role/status),
-  `agent_management_projection.agents[]` (sessions: state, role, `goal_ids`,
-  next action, last activity), and `usage_summary.totals` (runs 24h/7d).
-- Public-safe evidence pointers only; never raw transcripts, logs, credentials,
-  or local paths.
+- `loopx status` JSON，schema_version 2：`attention_queue.items[]`（每 goal waiting_on / recommended_action）、`run_history.goals[]`（goal 状态、生命周期阶段、最新 runs）、`todo_index.items[]`（每 goal role/status）、`agent_management_projection.agents[]`（sessions：state、role、`goal_ids`、下一动作、最后活动）与 `usage_summary.totals`（runs 24h/7d）。
+- 仅 public-safe evidence 指针；绝不使用原始 transcripts、日志、凭据或本地路径。
 
-Raw-looking keys found in inputs are recorded as boundary warnings without
-copying values, matching `goal_channel_projection` behavior.
+输入中发现的疑似原始键被记录为边界警告而不复制值，与 `goal_channel_projection` 行为一致。
 
-## Projection Shape
+## 投影形态
 
-`schema_version: session_dash_projection_v1`, `mode: read_only`:
+`schema_version: session_dash_projection_v1`，`mode: read_only`：
 
-- `overview` — session/goal/run counts, `goals_by_status` buckets
-  (active / needs_user / blocked / done / other), open agent/user todos, done
-  todos, runs 24h/7d.
-- `sessions[]` — one entry per agent runtime: `session_id`, `role`, `state`,
-  `next_action`, `last_activity_at`, `goal_count`, and `goals[]`.
-- `goals[]` — `goal_id`, `display_name`, `domain`, `status`, `status_bucket`,
-  `waiting_on`, open/done todo counts, latest run time + classification, and
-  `next_action`.
-- `unassigned_goals[]` — goals no session declares, so nothing silently
-  disappears from the operator's view.
-- `focus_goal_id` — when `--goal-id` is passed, the snapshot narrows to
-  sessions containing that goal.
+- `overview` — session/goal/run 计数、`goals_by_status` 桶（active / needs_user / blocked / done / other）、打开的 agent/user todos、完成的 todos、runs 24h/7d。
+- `sessions[]` — 每个 agent runtime 一条：`session_id`、`role`、`state`、`next_action`、`last_activity_at`、`goal_count` 与 `goals[]`。
+- `goals[]` — `goal_id`、`display_name`、`domain`、`status`、`status_bucket`、`waiting_on`、打开/完成 todo 计数、最新 run 时间 + 分类与 `next_action`。
+- `unassigned_goals[]` — 未被任何 session 声明的 goals，避免有东西从 operator 视野默默消失。
+- `focus_goal_id` — 传入 `--goal-id` 时，快照收窄到包含该 goal 的 sessions。
 
-## Page Layout (Single Page)
+## 页面布局（单页）
 
-The single page renders these sections in order:
+单页按顺序渲染这些区块：
 
-1. **Header**: panel title, generated-at time, read-only marker; a focus pill
-   when `--goal-id` is set.
-2. **Overview strip**: sessions, goals, active, needs-you, blocked, done, open
-   todos, runs (24h).
-3. **Session cards**: per session, its state badge, role, goal count, last
-   activity, and next action; below it, a goal table with status badges,
-   todo progress bars, waiting reason, latest run, and next action.
-4. **Goals without a session** (when present): same goal table for goals no
-   session claims.
+1. **Header**：面板标题、generated-at 时间、只读标记；设置 `--goal-id` 时的 focus 胶囊。
+2. **概览条**：sessions、goals、active、needs-you、blocked、done、打开 todos、runs（24h）。
+3. **Session 卡**：每 session 含其状态徽章、角色、goal 数量、最后活动与下一动作；下方是 goal 表，带状态徽章、todo 进度条、等待理由、最新 run 与下一动作。
+4. **无 session 的 goals**（存在时）：为未被任何 session 声明的 goals 显示同样的 goal 表。
 
-All data is rendered from the projections above; the page contains no write
-controls and no browser write authority.
+所有数据从上述投影渲染；页面不含写控件，也没有浏览器写权限。
 
-## Command Surface
+## 命令 Surface
 
-The primary entry point is a live server: run `loopx dash` inside a project
-checkout and open the printed loopback URL in a browser. The single page
-tracks the fleet's session task progress/status and refreshes itself in place
-(default every 10s) by re-fetching the `/panel` fragment, so the operator can
-keep the tab open while the agents work.
+主要入口是实时 server：在项目 checkout 内运行 `loopx dash`，在浏览器打开打印的 loopback URL。单页跟踪 fleet 的 session 任务进展/状态，并通过重新获取 `/panel` 片段原地自刷新（默认每 10 秒），所以 operator 可以在 agent 工作期间保持标签页打开。
 
 ```bash
 loopx dash                # serve the fleet panel at http://127.0.0.1:8767/
@@ -129,56 +79,42 @@ loopx dash --goal-id <id> # narrow the panel to one goal
 loopx dash --port 9000 --refresh-seconds 5
 ```
 
-Routes:
+路由：
 
-- `GET /` — full single-page panel with the in-place auto-refresh script.
-- `GET /panel` — fresh `<main>` fragment for the refresh script.
-- `GET /status.json` — the compact session dash projection as JSON.
-- `GET /healthz` — health probe.
+- `GET /` — 带原地自刷新脚本的完整单页面板。
+- `GET /panel` — 供刷新脚本使用的新鲜 `<main>` 片段。
+- `GET /status.json` — 紧凑 session dash 投影 JSON。
+- `GET /healthz` — 健康探针。
 
-A one-shot static snapshot remains available:
+一次性静态快照仍可用：
 
 ```bash
 loopx dash generate [--goal-id <id>] [--out dash.html]
 ```
 
-- Without `--out`, print the HTML to stdout (or use `--format json` for the
-  projection + html payload).
-- With `--out`, write the file and run the public boundary scan before
-  reporting success.
-- The command is read-only: it never mutates todos, quota, gates, or registry.
-- The server binds loopback only (`127.0.0.1`); it exposes no write routes.
+- 不带 `--out`：把 HTML 打印到 stdout（或用 `--format json` 输出投影 + html 载荷）。
+- 带 `--out`：写文件，并在报告成功前运行公开边界扫描。
+- 该命令只读：从不变更 todos、quota、gates 或 registry。
+- Server 只绑定 loopback（`127.0.0.1`）；它不暴露任何写路由。
 
-## Public/Private Boundary
+## Public/Private 边界
 
-- Inputs are restricted to the status contract and public-safe projections.
-- The renderer escapes all text and never inlines raw payload values.
-- Static export reuses the existing boundary scanner (absolute local paths,
-  private keys, credentials, tokens) before success.
-- A negative fixture proves the generated page rejects private material; the
-  smoke asserts the boundary, not the exact prose.
+- 输入只限于 status 契约与 public-safe 投影。
+- 渲染器转义所有文本，绝不内联原始载荷值。
+- 静态导出在成功前复用既有边界扫描器（绝对本地路径、私钥、凭据、token）。
+- 负向夹具证明生成的页面拒绝私有资料；smoke 断言边界，而不是确切散文。
 
-## Validation
+## 验证
 
-`examples/session-dash-panel-smoke.py` (Python, no browser required):
+`examples/session-dash-panel-smoke.py`（Python，无需浏览器）：
 
-1. Builds a public-safe fleet fixture (two goals, one session owning a second
-   goal with finished todos).
-2. Renders the page and asserts read-only markers, the overview + session
-   panels, session -> goal grouping, progress bars, escaped output, the live
-   refresh script, and the `/panel` fragment shape.
-3. Asserts internal machinery (decision frame, work lane, truth contract,
-   source warnings, leases) is absent from the page.
-4. Injects synthetic private markers (`GH_FAKE_*` style) and asserts they stay
-   out of the rendered page / static export.
+1. 构建 public-safe fleet 夹具（两个 goal，一个拥有第二个带完成 todos 的 goal 的 session）。
+2. 渲染页面并断言只读标记、概览 + session 面板、session -> goal 分组、进度条、转义输出、实时刷新脚本与 `/panel` 片段形态。
+3. 断言内部机制（decision frame、work lane、truth 契约、source warnings、leases）不在页面中。
+4. 注入合成私有标记（`GH_FAKE_*` 风格），并断言它们不进入渲染页面 / 静态导出。
 
-## Out Of Scope (For Now)
+## 暂不覆盖
 
-- Browser write controls: the dashboard remains the only surface that may
-  submit reward/control-plane drafts, and only through explicit loopback
-  capability gates.
-- New capability or provider: none. This is a renderer + CLI presentation
-  surface over existing contracts.
-- Goal-level drill-down inside the fleet panel: the per-goal channel details
-  remain on the React dashboard; the loopback panel is the at-a-glance watch
-  surface.
+- 浏览器写控件：dashboard 仍是唯一可以提交 reward/控制面草稿的 surface，且只能通过显式 loopback capability gates。
+- 新 capability 或 provider：没有。这是既有契约之上的渲染器 + CLI 呈现 surface。
+- Fleet 面板内的 goal 级下钻：每 goal 的 channel 详情留在 React dashboard；loopback 面板是一瞥观察 surface。

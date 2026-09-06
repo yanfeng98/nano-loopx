@@ -1,15 +1,16 @@
-# Reference Contracts
+# 参考合同
 
-These human-readable contracts govern stable behavior across several
-implementation modules.
+> [English](README.md)
 
-- [Interface budget contract](interface-budget-contract.md)
-- [Dashboard budget governance](dashboard-budget-governance-contract.md)
-- [Dashboard reward write boundary](dashboard-reward-write-boundary.md)
-- [Reward gate direct-write contract](reward-gate-direct-write-contract.md)
-- [Status data contract](../../status-data-contract.md)
-- [Quota allocation](../../quota-allocation.md)
-- [Project agent todo contract](../../project-agent-todo-contract.md)
+这些是人类可读的合同,约束多个实现模块之间的稳定行为。
 
-Versioned machine-facing contracts belong under
-[`docs/reference/protocols/`](../protocols/README.md).
+- [接口预算合同](interface-budget-contract.md)
+- [Dashboard 预算治理](dashboard-budget-governance-contract.md)
+- [Dashboard 奖励写入边界](dashboard-reward-write-boundary.md)
+- [奖励 gate 直接写入合同](reward-gate-direct-write-contract.md)
+- [状态数据合同](../../status-data-contract.md)
+- [配额分配](../../quota-allocation.md)
+- [项目 Agent todo 合同](../../project-agent-todo-contract.md)
+
+带版本号的面向机器的合同归入
+[`docs/reference/protocols/`](../protocols/README.md)。

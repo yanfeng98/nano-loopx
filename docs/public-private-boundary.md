@@ -1,46 +1,46 @@
-# Public / Private Boundary
+# 公共 / 私有边界
 
-LoopX is designed to be public, but most useful goal evidence is not.
+> [English](public-private-boundary.md)
 
-## Public
+LoopX 设计为公开的，但大多数有用的目标证据不是。
 
-These are safe to keep in the public repository:
+## 公共
 
-- schemas,
-- runtime directory conventions,
-- generic CLI code,
-- adapter lifecycle rules,
-- peer task and ephemeral worker lifecycle states,
-- generic coordination rules,
-- validation commands,
-- sanitized examples,
-- high-level design notes.
+以下内容可安全放在公共仓库：
 
-## Private
+- schemas，
+- 运行时目录约定，
+- 通用 CLI 代码，
+- adapter 生命周期规则，
+- peer 任务与临时 worker 生命周期状态，
+- 通用协调规则，
+- 验证命令，
+- 脱敏示例，
+- 高层设计说明。
 
-These should stay in project-local ignored files:
+## 私有
 
-- local absolute paths,
-- internal repository names,
-- raw logs and metrics,
-- task ids,
-- document links,
-- credentials and tokens,
-- person or team names from private work,
-- active goal state that reveals current user context,
-- raw sub-agent prompts and traces,
-- child run evidence that contains local paths or private artifacts.
+以下内容应留在项目本地的被忽略文件里：
 
-## Example Boundaries
+- 本地绝对路径，
+- 内部仓库名称，
+- 原始日志与指标，
+- 任务 id，
+- 文档链接，
+- 凭据与令牌，
+- 来自私有工作的人名或团队名，
+- 暴露当前用户上下文的活跃目标状态，
+- 原始 sub-agent 提示与轨迹，
+- 包含本地路径或私有产物的子 run 证据。
 
-Use examples that describe the shape of private material without copying the
-material itself. A good public fixture should let a contributor understand the
-contract, rerun the validation, and inspect the failure mode without learning
-anything about the original private run.
+## 示例边界
 
-### Benchmark Traces
+使用描述私有材料形状的示例，而不复制材料本身。一个好的公共 fixture 应让贡献者
+在了解契约、重跑验证、检查失败模式的同时，对原始私有 run 一无所知。
 
-Safe public summary:
+### Benchmark 轨迹
+
+安全的公共摘要：
 
 ```json
 {
@@ -53,7 +53,7 @@ Safe public summary:
 }
 ```
 
-Unsafe public trace:
+不安全的公共轨迹：
 
 ```text
 task text copied from a private benchmark, verifier tail, raw model transcript,
@@ -62,7 +62,7 @@ upload URL, host log path, or unreleased scoring artifact
 
 ### Active State
 
-Safe public fixture:
+安全的公共 fixture：
 
 ```markdown
 # ACTIVE_GOAL_STATE example
@@ -73,7 +73,7 @@ Safe public fixture:
 - Evidence: `examples/example-smoke.py` passed.
 ```
 
-Unsafe public state:
+不安全的公共状态：
 
 ```markdown
 - Goal: Finish the user's current private project.
@@ -81,25 +81,25 @@ Unsafe public state:
   child-agent prompt, or private repository branch.
 ```
 
-### Local Paths
+### 本地路径
 
-Safe path shape:
+安全的路径形状：
 
 ```text
 <project-root>/examples/example-smoke.py
 <runtime-root>/archived-goals/<goal-id>/
 ```
 
-Unsafe path:
+不安全的路径：
 
 ```text
 a real workstation home directory, private mounted volume, local registry
 database, or host-specific benchmark output directory
 ```
 
-### Credentials
+### 凭据
 
-Safe credential boundary:
+安全的凭据边界：
 
 ```json
 {
@@ -110,16 +110,16 @@ Safe credential boundary:
 }
 ```
 
-Unsafe credential material:
+不安全的凭据材料：
 
 ```text
 token value, cookie, authorization header, private SSH key, session dump, or
 redaction that still preserves enough characters to reconstruct the secret
 ```
 
-### Compact Artifacts
+### 紧凑产物
 
-Safe compact artifact:
+安全的紧凑产物：
 
 ```json
 {
@@ -130,56 +130,52 @@ Safe compact artifact:
 }
 ```
 
-Unsafe artifact:
+不安全的产物：
 
 ```text
 raw uploaded files, screenshots with private data, unredacted logs, hidden
 provider payloads, or a public artifact that points back to private storage
 ```
 
-## Sub-Agent Data
+## Sub-Agent 数据
 
-Sub-agent orchestration increases leakage risk because child prompts often
-contain more context than the final report needs. Public artifacts should keep:
+Sub-agent 编排增加泄漏风险，因为子提示往往包含比最终报告需要的更多上下文。
+公共产物应保留：
 
-- schema names,
-- role names,
-- sanitized work-scope examples,
-- lifecycle states,
-- generic merge rules.
+- schema 名称，
+- 角色名称，
+- 脱敏的工作作用域示例，
+- 生命周期状态，
+- 通用 merge 规则。
 
-Private project state should keep:
+项目私有状态应保留：
 
-- raw child prompts,
-- raw trajectories,
-- local task evidence,
-- non-public repo names,
-- exact command output when it contains project-specific context.
+- 原始子提示，
+- 原始轨迹，
+- 本地任务证据，
+- 非公开仓库名，
+- 包含项目特定上下文时的确切命令输出。
 
-Run summaries are publishable only after sanitization.
+Run 摘要只有在脱敏后才可发布。
 
-## Practical Rule
+## 实用规则
 
-The public repo should answer: "How does a loopx work?"
+公共仓库应回答："loopx 如何工作？"
 
-The project repo should answer: "What is this specific goal currently doing?"
+项目仓库应回答："这个具体目标现在在做什么？"
 
-The runtime root should answer: "What happened in recent goal ticks?"
+运行时根应回答："最近的 goal tick 发生了什么？"
 
-Real controller state belongs in ignored local files such as
-`.codex/goals/<goal-id>/ACTIVE_GOAL_STATE.md`,
-`.local/goals/<goal-id>/ACTIVE_GOAL_STATE.md`, or the shared runtime root. A
-public repository may track sanitized templates, fixtures, and compact
-projections, but not the live file that a controller updates on every turn.
+真实 controller 状态属于被忽略的本地文件，如
+`.codex/goals/<goal-id>/ACTIVE_GOAL_STATE.md`、
+`.local/goals/<goal-id>/ACTIVE_GOAL_STATE.md` 或共享运行时根。公共仓库可以跟踪
+脱敏模板、fixture 与紧凑投影，但不能跟踪 controller 每轮更新的活动文件。
 
-`loopx check` treats that as a file-state boundary, not just a path-name
-boundary. Local private state that is not tracked by git may contain private
-document links because it is not a publishable artifact. If that same file is
-tracked by git, it enters the public boundary and is scanned like any other
-publishable file.
+`loopx check` 把它当作文件状态边界，而不只是路径名边界。未被 git 跟踪的本地
+私有状态可以包含私有文档链接，因为它不是可发布产物。如果同一文件被 git 跟踪，
+它就进入公共边界，像任何其他可发布文件一样被扫描。
 
-Projects that intentionally publish tracked files with private document links
-can opt in through the project registry:
+刻意发布带私有文档链接的跟踪文件的项目，可以通过项目注册表 opt in：
 
 ```json
 {
@@ -189,54 +185,43 @@ can opt in through the project registry:
 }
 ```
 
-This policy only allows `private_doc_url` findings in tracked files. It does
-not allow credentials, tokens, passwords, private IPs, internal task ids, or
-local private paths.
+该策略只允许跟踪文件中的 `private_doc_url` 发现项。它不允许凭据、令牌、密码、
+私有 IP、内部任务 id 或本地私有路径。
 
-If a runtime-only goal is obsolete, archive its directory rather than copying
-private run payloads into public notes:
+如果一个纯运行时目标已过期，归档其目录，而不是把私有 run payload 拷贝进公共笔记：
 
 ```bash
 loopx archive-runtime --goal-id old-experiment-goal
 loopx archive-runtime --goal-id old-experiment-goal --execute
 ```
 
-The first command is a dry-run. The second moves the local runtime directory
-under `<runtime-root>/archived-goals/`; it does not sanitize or publish the
-payload.
+第一个命令是 dry-run。第二个把本地运行时目录移到
+`<runtime-root>/archived-goals/` 下；它不脱敏也不发布 payload。
 
-## Private-Safe Pilot Checklist
+## 私有安全试点清单
 
-Before a private project becomes a LoopX pilot, define this boundary in
-the project-local active state or registry. Do this before reading private
-evidence, launching adapters, or publishing a public fixture.
+在私有项目成为 LoopX 试点前，在项目本地 active state 或 registry 里定义这个边界。
+在读取私有证据、启动 adapter 或发布公共 fixture 之前先做这件事。
 
-- Goal identity: stable `goal_id`, public-safe objective, owner mode, and the
-  exact question the pilot should answer.
-- Evidence classes: list source roles such as design authority, owner review,
-  source repository, target repository, validation dashboard, and historical
-  notes without naming private URLs, repos, people, teams, or product configs.
-- Public projection: decide which fields may leave the project, such as role,
-  freshness, missing gate, next action, validation surface, quota state, and
-  stop condition.
-- Private retention: keep raw links, paths, metrics, logs, task ids, review
-  text, generated config, and implementation diffs in project-local ignored
-  state or the runtime root.
-- Write scope: state whether the first pilot pass is read-only, local-state
-  only, public fixture only, or allowed to edit project files.
-- Gate order: require health and boundary scan, then owner or controller gate,
-  then evidence readiness, then compute quota, then Codex execution.
-- Validation surface: name the smallest public-safe check that proves the
-  pilot's projection is useful, such as `read-only-map`, `status`, review
-  packet, dashboard render, or a fixture smoke.
-- Handoff rule: if a missing owner action appears, write it as a user todo; if
-  a safe project-agent follow-up appears, write it as an agent todo. Do not
-  hide either in `Next Action`.
-- Publication stop: do not commit or push a pilot artifact unless the artifact
-  itself passes the public/private scan and the private evidence remains in
-  project-local state.
+- Goal 身份：稳定 `goal_id`、public-safe objective、owner 模式，
+  以及试点应回答的确切问题。
+- 证据类别：列出来源角色，如设计权威、owner 评审、来源仓库、目标仓库、
+  验证 dashboard 与历史笔记，而不点名私有 URL、仓库、人、团队或产品配置。
+- 公共投影：决定哪些字段可以离开项目，如 role、freshness、缺失 gate、
+  下一个动作、验证面、quota 状态与停止条件。
+- 私有保留：把原始链接、路径、指标、日志、任务 id、评审文本、生成的配置
+  与实现 diff 留在项目本地的被忽略状态或运行时根。
+- 写作用域：说明首轮试点是只读、仅本地状态、仅公共 fixture，
+  还是允许编辑项目文件。
+- Gate 顺序：要求健康与边界扫描，然后 owner 或 controller 关卡，然后证据就绪，
+  然后计算配额，然后 Codex 执行。
+- 验证面：点名能证明试点投影有用的最小 public-safe 检查，如 `read-only-map`、
+  `status`、review packet、dashboard 渲染或 fixture smoke。
+- Handoff 规则：如果出现缺失 owner 行动，把它写成 user todo；
+  如果出现安全的项目 Agent 后续，把它写成 agent todo。二者都不藏在 `Next Action` 里。
+- 发布停止：除非产物本身通过公共/私有扫描且私有证据仍留在项目本地状态，
+  否则不要提交或 push 试点产物。
 
-The first public artifact from a private pilot should usually be a sanitized
-fixture or status schema. The first private artifact should be a compact
-project-local state update that says which private sources were considered and
-why they were or were not safe to project.
+来自私有试点的第一个公共产物通常应是脱敏 fixture 或 status schema。
+第一个私有产物应是紧凑的项目本地状态更新，说明考虑了哪些私有来源，
+以及它们为何适合或不适合投影。

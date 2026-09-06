@@ -1,38 +1,38 @@
-# DeepSeek Harness Native Control-Plane Integration
+# DeepSeek Harness 原生控制面集成
 
-Status: implemented in this repository as the optional
-[`dsh-loopx-plugin`](../../packages/dsh-loopx-plugin/README.md) package.
+> [English](deepseek-harness-control-plane-adapter.md)
 
-The package embeds LoopX into a visible DeepSeek Harness (DSH) Session without
-moving execution authority out of DSH or durable control-plane authority out of
-LoopX. It ships three cooperating surfaces:
+状态:已在本仓库中以可选
+[`dsh-loopx-plugin`](../../packages/dsh-loopx-plugin/README.md) 包实现。
 
-- `/loopx-init`, which installs or repairs the LoopX CLI and DSH workflow
-  skills;
-- a passive same-session Driver, which may queue one LoopX continuation only
-  after the exact Session invokes the installed `loopx` skill;
-- a loopback-only GoalBar Host and web Client, which show one exact bound
-  Goal/Agent lane and expose guarded Start and Pause actions.
+该包把 LoopX 嵌入一个可见的 DeepSeek Harness(DSH)会话,既不把执行权威移出
+DSH,也不把持久控制面权威移出 LoopX。它附带三个协作界面:
 
-The older [`deepseek-harness` connector](deepseek-harness-connector.md) remains
-a separate headless Turn adapter. The native plugin uses the
-`deepseek-harness-native` host surface and does not replace that connector.
+- `/loopx-init`:安装或修复 LoopX CLI 与 DSH 工作流 skill;
+- 一个被动的同会话 Driver:只有在确切会话调用了已安装的 `loopx` skill 之后,
+  它才可以排队一个 LoopX 续接;
+- 一个仅限 loopback 的 GoalBar Host 与 Web Client:显示一个确切绑定的
+  Goal/Agent lane,并暴露受保护的 Start 与 Pause 动作。
 
-## Authority Boundary
+旧的 [`deepseek-harness` 连接器](deepseek-harness-connector.md) 仍是独立的
+headless Turn 适配器。原生插件使用 `deepseek-harness-native` 宿主界面,且不
+替代该连接器。
 
-| Owner | Responsibilities |
+## 权威边界
+
+| 责任方 | 职责 |
 | --- | --- |
-| DSH | Agent and Session lifecycle, model and tool execution, inbox ordering, session events, UI transport, sandbox, provider credentials, billing, and trace |
-| LoopX | Goal, Agent, Todo, binding, quota, lifecycle, progress, scheduler, evidence, and settlement authority |
-| `dsh-loopx-plugin` | Fixed-argv CLI adaptation, exact-Session activation state, one pending continuation reservation, loopback GoalBar transport, and compact UI state |
+| DSH | Agent 与会话生命周期、模型与工具执行、收件箱排序、会话事件、UI 传输、沙箱、provider 凭证、计费与 trace |
+| LoopX | Goal、Agent、Todo、绑定、配额、生命周期、进度、scheduler、证据与结算权威 |
+| `dsh-loopx-plugin` | 固定 argv 的 CLI 适配、确切会话激活状态、一个待定续接保留、loopback GoalBar 传输与紧凑 UI 状态 |
 
-The plugin has no model-facing LoopX tools, no binding sidecar, and no durable
-Goal or Todo store. Installing it does not create a Goal, bind a Session, spend
-quota, activate the Driver, or grant model/tool authority.
+该插件没有面向模型的 LoopX 工具、没有绑定 sidecar,也没有持久的 Goal 或 Todo
+存储。安装它不会创建 Goal、绑定会话、消耗配额、激活 Driver,也不会授予模型/
+工具权威。
 
-## Install And Activate
+## 安装与激活
 
-Install the co-located package and run its no-argument initialization command:
+安装同地点(co-located)包并运行其无参数初始化命令:
 
 ```bash
 cd packages/dsh-loopx-plugin
@@ -43,16 +43,14 @@ cd packages/dsh-loopx-plugin
 /loopx-init
 ```
 
-`/loopx-init` probes the existing CLI, performs at most one
-`python3 -m pip install --upgrade loopx` when the CLI is missing or
-incompatible, installs the packaged workflow skills, and verifies the
-readback. It does not install the plugin that defines the command. Restart DSH
-only when the returned result says the installed skills changed.
+`/loopx-init` 探测现有 CLI,在 CLI 缺失或不兼容时最多执行一次
+`python3 -m pip install --upgrade loopx`,安装打包的工作流 skill 并验证读回。它
+不安装定义该命令的插件。只有当返回结果说明已安装的 skill 发生变化时,才重启
+DSH。
 
-Then invoke the installed `loopx` skill with the task in the DSH Session that
-should continue automatically. The skill uses DSH's exact session id and the
-`deepseek-harness-native` host surface. Verify the resulting binding from that
-Session's project:
+然后,在应该自动续接的 DSH 会话中,用任务调用已安装的 `loopx` skill。该 skill
+使用 DSH 的确切会话 id 与 `deepseek-harness-native` 宿主界面。从该会话的项目
+验证得到的绑定:
 
 ```bash
 loopx --registry .loopx/registry.json --format json \
@@ -61,82 +59,68 @@ loopx --registry .loopx/registry.json --format json \
   --thread-id "$DSH_SESSION_ID"
 ```
 
-Only `status=bound` with one exact Goal/Agent pair admits the GoalBar and
-Driver. Missing or ambiguous bindings fail closed.
+只有 `status=bound` 且携带一个确切 Goal/Agent 配对,才允许 GoalBar 与 Driver。
+缺失或有歧义的绑定按失败即关闭(fail-closed)处理。
 
-## Same-Session Driver
+## 同会话 Driver
 
-Loading the plugin is passive. The Driver becomes eligible only after the exact
-current Session contains one of these typed activation facts:
+加载插件是被动的。只有当确切当前会话包含以下类型化激活事实之一时,Driver 才
+具备资格:
 
-- a `user/message` from the `loopx` skill invocation; or
-- a `tool/call` for that skill paired by call id with a successful
-  `tool/result`.
+- 来自 `loopx` skill 调用的 `user/message`;或
+- 针对该 skill 的 `tool/call`,且按 call id 与成功的 `tool/result` 配对。
 
-Ordinary prose, shell text, `/loopx-init`, a skill catalog, a failed or
-unmatched tool call, an existing registry, or a binding does not activate the
-Driver. Activation is in-memory and session-scoped; replacing or clearing the
-Session recomputes it from that Session's typed event history.
+普通散文、shell 文本、`/loopx-init`、skill 目录、失败或未匹配的工具调用、现有
+注册表或绑定都不会激活 Driver。激活只存在于内存且限于会话范围;替换或清空会话
+后,会从该会话的类型化事件历史重新计算。
 
-At an eligible idle boundary, the Driver:
+在合格的空闲边界,Driver:
 
-1. yields to existing human or plugin input;
-2. resolves the exact Session binding with `resolve-agent-thread`;
-3. calls `quota should-run` for the bound Goal and Agent with one stable
-   `turn_instance_id`;
-4. reads the canonical thin `heartbeat-prompt` only when quota admits work;
-5. queues at most one typed `loopx-continuation` message into the same Agent;
-6. revalidates the Agent, Session, reservation, binding, and quota before the
-   message enters a model step.
+1. 让位于现有的人类或插件输入;
+2. 用 `resolve-agent-thread` 解析确切会话绑定;
+3. 用稳定的 `turn_instance_id` 为绑定的 Goal 与 Agent 调用 `quota should-run`;
+4. 仅当配额允许工作时才读取规范的瘦 `heartbeat-prompt`;
+5. 最多向同一 Agent 排队一条类型化 `loopx-continuation` 消息;
+6. 在消息进入模型步骤之前重新验证 Agent、会话、保留、绑定与配额。
 
-DSH owns provider retries. The Driver retries only safe fixed-argv LoopX reads
-and an idempotent quota receipt, with a finite retry budget. Human input wins
-over an unclaimed automatic reservation, and cancellation or an invalidated
-Session retires pending work.
+DSH 拥有 provider 重试。Driver 只重试安全的固定 argv LoopX 读取与一次幂等配额
+回执,且带有限重试预算。人类输入优先于无人 claim 的自动保留;取消或会话失效会使
+待处理工作退役。
 
 ## GoalBar
 
-The package-root Host registers one `/loopx` Connection channel with
-`loopback` authority. Its Client renders a compact GoalBar only for the exact
-live Session binding. The wire protocol is
-`loopx_goalbar_request_v2` / `loopx_goalbar_response_v2` and supports:
+包根 Host 注册一个具有 `loopback` 权威的 `/loopx` Connection 通道。其 Client
+只对确切活跃会话绑定渲染一个紧凑 GoalBar。线缆协议是
+`loopx_goalbar_request_v2` / `loopx_goalbar_response_v2`,支持:
 
 - `goalbar/read`;
 - `goalbar/watch`;
 - `goalbar/start`;
-- `goalbar/pause`.
+- `goalbar/pause`。
 
-The Host derives cwd and Session identity from the live DSH Agent. It reads
-binding, lifecycle, and agent-lane Todo progress through fixed LoopX CLI argv,
-then computes an opaque source revision from the project registry and active
-Goal state. The browser receives ids, activation, Agent status, counts,
-cursors, source revisions, and fixed error codes—not Todo text, Goal
-objectives, evidence, CLI output, exception details, registry paths, or
-credentials.
+Host 从活跃 DSH Agent 派生 cwd 与会话身份。它通过固定 LoopX CLI argv 读取绑定、
+生命周期与 agent lane Todo 进度,然后根据项目注册表与活动 Goal 状态计算不透明的
+来源修订。浏览器只收到 id、激活状态、Agent 状态、计数、光标、来源修订与固定
+错误码——不接收 todo 文本、Goal 目标、证据、CLI 输出、异常详情、注册表路径或
+凭证。
 
-`Start` is admitted only for a stopped Goal and idle exact Session. `Pause`
-stops the Goal and retires future queued continuation; it does not abort a
-claimed or running turn. Every action revalidates the binding and returns typed
-success, rejection, unknown-result, or applied-with-warning state.
+`Start` 只对停止的 Goal 与空闲的确切会话允许。`Pause` 停止 Goal 并让未来排队的
+续接退役;它不会中止一个已 claim 或运行中的 Turn。每个动作都会重新验证绑定,
+并返回类型化的成功、拒绝、结果未知或带警告应用状态。
 
-## Failure And Privacy Boundaries
+## 失败与隐私边界
 
-- LoopX CLI output is decoded against exact schemas; malformed or mismatched
-  output fails closed.
-- The loopback transport is a network reachability fence, not user
-  authentication. The current package does not support remote or LAN GoalBar
-  access.
-- Source revisions are change tokens, not authorization or compare-and-swap
-  grants.
-- Raw transcripts, raw tool output, private traces, credentials, local paths,
-  and full Goal/Todo text do not cross the GoalBar wire boundary.
-- The native plugin never takes over DSH model, tool, sandbox, provider, or
-  retry ownership.
+- LoopX CLI 输出按精确 schema 解码;格式错误或不匹配的输出按失败即关闭处理。
+- loopback 传输是网络可达性围栏,不是用户认证。当前包不支持远程或局域网
+  GoalBar 访问。
+- 来源修订是变更令牌,不是授权或 compare-and-swap 授权。
+- 原始转录、原始工具输出、私有 trace、凭证、本地路径与完整 Goal/Todo 文本
+  不会跨越 GoalBar 线缆边界。
+- 原生插件从不接管 DSH 的模型、工具、沙箱、provider 或重试所有权。
 
-## Validation And Removal
+## 验证与移除
 
-From the package directory, maintainers can validate the actual shipped
-surfaces:
+从包目录中,维护者可以验证实际交付的界面:
 
 ```bash
 pnpm build
@@ -145,21 +129,19 @@ pnpm smoke:profile
 pnpm smoke:runtime
 ```
 
-To disable all native plugin surfaces, remove the package from the web profile
-and restart DSH:
+要禁用全部原生插件界面,请从 web profile 移除该包并重启 DSH:
 
 ```bash
 dsh plugin --profile web remove dsh-loopx-plugin
 ```
 
-This removes `/loopx-init`, the Driver, and the GoalBar. It does not remove the
-LoopX CLI, project state, bindings, or installed skills. See the
-[package README](../../packages/dsh-loopx-plugin/README.md) for skill-only
-uninstall and package rollback procedures.
+这会移除 `/loopx-init`、Driver 与 GoalBar。它不会移除 LoopX CLI、项目状态、
+绑定或已安装的 skill。关于仅卸载 skill 与包回滚流程,请参阅
+[包 README](../../packages/dsh-loopx-plugin/README.md)。
 
-## Related Documents
+## 相关文档
 
-- [DeepSeek Harness connector](deepseek-harness-connector.md)
-- [DSH native LoopX design](../plans/2026-08-20-dsh-native-skill-driver.md)
-- [Runtime connector catalog](runtime-connector-catalog.md)
-- [Host integration surface v0](../reference/protocols/host-integration-surface-v0.md)
+- [DeepSeek Harness 连接器](deepseek-harness-connector.md)
+- [DSH 原生 LoopX 设计](../plans/2026-08-20-dsh-native-skill-driver.md)
+- [Runtime 连接器目录](runtime-connector-catalog.md)
+- [宿主集成面 v0](../reference/protocols/host-integration-surface-v0.md)

@@ -1,40 +1,22 @@
 # task_graph_projection_v0
+> [English](task-graph-projection-v0.md)
 
-`task_graph_projection_v0` is an optional read-only graph view over existing
-LoopX state. It helps agents and operators see dependency, gate,
-validation, repair, and handoff relationships without creating a second task
-store.
+`task_graph_projection_v0` 是既有 LoopX 状态之上的可选只读图视图。它帮助 agent 与操作员看到依赖、gate、验证、修复与交接关系，而无需创建第二个任务存储。
 
-The source of truth remains:
+事实来源仍为：
 
-- the append-only event ledger and compact run indexes;
-- the active goal state and its todos;
-- operator gates and user todos;
-- leases or todo claims;
-- quota and status projections;
-- run-history evidence and blocker writebacks.
+- 追加式事件 ledger 与紧凑 run index；
+- 活动 goal 状态及其 todos；
+- 操作员 gate 与用户 todos；
+- lease 或 todo claim；
+- quota 与状态投影；
+- run 历史证据与 blocker writeback。
 
-The graph's Todo nodes are selected from the same canonical domain-state rows
-used to build `todo_planning_inventory_v0`: `items`, `deferred_items`,
-`blocker_items`, and `monitor_open_items`. The graph enables the selector's
-terminal-row extension so completed predecessors and evidence remain visible;
-the planning inventory excludes those rows. This prevents graph, horizon, and
-portfolio consumers from inventing separate visibility-lane unions without
-pretending that every lens has identical scope. It does not make the graph
-agent-scoped: the graph may add gates, evidence, validation, and handoff
-context, but it never assigns `current_agent` claim meaning or owns action
-selection.
+图的 Todo 节点从构建 `todo_planning_inventory_v0` 时使用的同一权威域状态行中选择：`items`、`deferred_items`、`blocker_items` 与 `monitor_open_items`。图启用了选择器的终态行扩展，使已完成的前置项与证据保持可见；规划库存排除这些行。这防止图、horizon 与组合消费者在假装每个 lens 具有相同 scope 的前提下发明各自的可见性 lane 并集。它不使图变成 agent 作用域：图可以增加 gate、证据、验证与交接上下文，但从不分配 `current_agent` claim 含义，也不拥有动作选择。
 
-The projection may appear under `attention_queue.items[].task_graph_projection`
-in `loopx --format json status --include-task-graph`. Default status output
-keeps this object on the cold path so the dashboard hot path remains within its
-interface budget. Full
-`loopx --format json review-packet --goal-id <goal-id>` output may
-include the same object for operator review. The handoff-only review-packet
-surface should stay compact and omit the graph unless a future interface budget
-explicitly allows it.
+该投影可以出现在 `loopx --format json status --include-task-graph` 的 `attention_queue.items[].task_graph_projection` 下。默认 status 输出把这个对象保持在冷路径上，使 dashboard 热路径保持在其接口预算内。完整 `loopx --format json review-packet --goal-id <goal-id>` 输出可以为操作员评审包含同一对象。仅交接的 review-packet 界面应保持紧凑，除非未来接口预算明确允许，否则省略该图。
 
-## Shape
+## 形状
 
 ```json
 {
@@ -71,106 +53,81 @@ explicitly allows it.
 }
 ```
 
-`limits` explains hot-path truncation. The task graph may expand only the first
-`user_gate_node_limit` open user gate nodes. When more user gates are open,
-`user_gate_open_count` and `user_gate_truncated_count` must say so. Consumers
-that need the complete gate list should use the user todo detail path or full
-review packet fields instead of treating the graph as an exhaustive store.
+`limits` 说明热路径截断。任务图只能展开前 `user_gate_node_limit` 个开放用户 gate 节点。当更多用户 gate 开放时，`user_gate_open_count` 与 `user_gate_truncated_count` 必须如实说明。需要完整 gate 列表的消费者应使用用户 todo 详情路径或完整 review-packet 字段，而不是把图当作穷举存储。
 
-## Nodes
+## 节点
 
-Each node must be compact and must point back to durable LoopX ids.
-Allowed `kind` values are:
+每个节点必须紧凑且必须指回持久化 LoopX id。允许的 `kind` 值有：
 
-- `deliverable`: a todo-backed artifact or implementation step;
-- `gate`: a user, owner, or operator decision point;
-- `gate_summary`: a compact "more gates exist" node used when user gates are
-  truncated from the graph hot path;
-- `lease`: an active claim or worker ownership signal;
-- `validation`: a smoke, check, CI result, or review proof;
-- `repair`: a self-repair or blocker-recovery step;
-- `handoff`: a transition from one agent or surface to another;
-- `evidence`: a compact run-history evidence item.
+- `deliverable`：有 todo 背书的工件或实现步骤；
+- `gate`：用户、owner 或操作员决策点；
+- `gate_summary`：用于用户 gate 被图热路径截断时的紧凑「还有更多 gate」节点；
+- `lease`：活动 claim 或 worker 所有权信号；
+- `validation`：smoke、检查、CI 结果或评审证明；
+- `repair`：自修复或 blocker 恢复步骤；
+- `handoff`：从一个 agent 或界面到另一个的转换；
+- `evidence`：紧凑 run 历史证据项。
 
-Required node fields:
+必需节点字段：
 
-- `node_id`: stable inside this projection;
-- `kind`;
-- `title`;
-- `state`: one of `open`, `ready`, `blocked`, `done`, `waiting`, or `unknown`;
-- `refs`: compact references such as `todo_ids`, `gate_ids`, `lease_ids`,
-  `goal_ids`, `run_ids`, or `review_packet_ids`.
+- `node_id`：本投影内稳定；
+- `kind`；
+- `title`；
+- `state`：`open`、`ready`、`blocked`、`done`、`waiting` 或 `unknown` 之一；
+- `refs`：紧凑引用，如 `todo_ids`、`gate_ids`、`lease_ids`、`goal_ids`、`run_ids` 或 `review_packet_ids`。
 
-Nodes must not copy raw task text, transcripts, logs, credentials, private file
-paths, or large run artifacts. They should summarize only the relationship
-needed for dispatch or review.
+节点不得复制原始任务文本、transcript、日志、凭据、私有文件路径或大型 run 工件。它们应只总结分发或评审所需的关系。
 
-## Edges
+## 边
 
-Edges describe why one node affects another. Allowed `relation` values are:
+边描述一个节点为何影响另一个。允许的 `relation` 值有：
 
-- `depends_on`;
-- `blocks`;
-- `validates`;
-- `repairs`;
-- `audits`;
-- `continues`;
-- `hands_off_to`;
-- `supersedes`.
+- `depends_on`；
+- `blocks`；
+- `validates`；
+- `repairs`；
+- `audits`；
+- `continues`；
+- `hands_off_to`；
+- `supersedes`。
 
-Each edge must name `from_node_id`, `to_node_id`, `relation`, and a compact
-public-safe `reason`. Edges may carry the same compact `refs` object as nodes.
-An edge does not grant permission to run a command or mutate state.
+每条边必须指明 `from_node_id`、`to_node_id`、`relation` 与紧凑公开安全 `reason`。边可以携带与节点相同的紧凑 `refs` 对象。边不授予运行命令或修改状态的权限。
 
-`repairs`, `audits`, and `continues` are lineage relations, not lifecycle
-commands. They are derived from existing run history, todo/gate metadata, and
-compact blocker or validation writebacks:
+`repairs`、`audits` 与 `continues` 是血统关系，不是生命周期命令。它们从既有 run 历史、todo/gate 元数据与紧凑 blocker 或验证 writeback 推导：
 
-- `repairs` says a repair or replan node is intended to recover a selected
-  work lane.
-- `audits` says compact run-history evidence reviews, checks, or bounds a
-  selected work lane.
-- `continues` says compact run-history evidence is a continuation of a selected
-  work lane.
+- `repairs` 表示一个修复或 replan 节点旨在恢复某个所选工作 lane。
+- `audits` 表示紧凑 run 历史证据评审、检查或界定某个所选工作 lane。
+- `continues` 表示紧凑 run 历史证据是某个所选工作 lane 的延续。
 
-These relations may help a dashboard or reviewer explain why a work item is
-still active, stale, repaired, or safe to hand off. They must not create a graph
-resume command, mutate todo status, or replace freshness checks against current
-quota, gates, claims, and run history.
+这些关系可以帮助 dashboard 或评审者解释某个工作项为何仍活动、过期、已修复或可安全交接。它们不得创建图恢复命令、修改 todo 状态，或取代针对当前 quota、gates、claims 与 run 历史的新鲜度检查。
 
-## Write Boundary
+## 写入边界
 
-`task_graph_projection_v0` has no write authority. It must never expose a graph
-write command, browser write affordance, hidden scheduler, or alternate lease
-store. State changes continue through existing LoopX lifecycle commands:
+`task_graph_projection_v0` 没有写权限。它绝不暴露图写入命令、浏览器写入控件、隐藏 scheduler 或替代 lease 存储。状态变更继续通过既有 LoopX 生命周期命令：
 
-- `loopx todo ...`;
-- `loopx operator-gate ...`;
-- `loopx reward ...`;
-- `loopx refresh-state ...`;
-- `loopx quota spend-slot ...`;
-- future server/MCP write APIs that preserve the same event-ledger semantics.
+- `loopx todo ...`；
+- `loopx operator-gate ...`；
+- `loopx reward ...`；
+- `loopx refresh-state ...`；
+- `loopx quota spend-slot ...`；
+- 保留相同 event-ledger 语义的未来 server/MCP 写 API。
 
-Consumers should treat the graph as stale after any lifecycle event until it is
-recomputed from the current status and run-history window.
+消费者应在任何生命周期事件后把图视为过期，直到它从当前状态与 run 历史窗口重算。
 
-## Acceptance Checks
+## 验收检查
 
-A valid public fixture or implementation must prove:
+一个有效的公开 fixture 或实现必须证明：
 
-- `schema_version` is exactly `task_graph_projection_v0`;
-- `mode` is `read_only`;
-- `truth_contract.projection_is_writable=false`;
-- `truth_contract.write_api=false`;
-- `limits.user_gate_node_limit` is present;
-- `limits.user_gate_open_count` is present;
-- `limits.user_gate_truncated_count` is present;
-- every node id is unique;
-- every edge endpoint references an existing node;
-- every node and edge references existing LoopX ids rather than raw
-  private material;
-- repair, audit, and continuation relations are rendered only as derived
-  read-only lineage over existing todos, gates, leases, and compact run ids;
-- no local absolute paths, credentials, raw transcripts, or raw logs are
-  projected;
-- status/review-packet consumers can safely ignore the field when absent.
+- `schema_version` 恰好是 `task_graph_projection_v0`；
+- `mode` 是 `read_only`；
+- `truth_contract.projection_is_writable=false`；
+- `truth_contract.write_api=false`；
+- `limits.user_gate_node_limit` 存在；
+- `limits.user_gate_open_count` 存在；
+- `limits.user_gate_truncated_count` 存在；
+- 每个节点 id 唯一；
+- 每条边的端点引用既有节点；
+- 每个节点与边引用既有 LoopX id，而非原始私有物料；
+- repair、audit 与继续关系只渲染为既有 todos、gates、leases 与紧凑 run id 之上的派生只读血统；
+- 不投影本地绝对路径、凭据、原始 transcript 或原始日志；
+- 缺失时 status/review-packet 消费者可以安全忽略该字段。

@@ -1,189 +1,177 @@
-# RFC: <Decision or Capability Name> (v0)
+# RFC：<决策或能力名称>（v0）
 
-- **RFC status:** Draft | Under review | Accepted | Rejected | Superseded
-- **Delivery maturity:** Proposal | Experiment | Partial | Implemented | Promoted
-- **Authors / owners:** <public identities or roles>
-- **Created:** YYYY-MM-DD
-- **Last normative revision:** YYYY-MM-DD
-- **Implementation baseline:** `<commit>` or not applicable
-- **Related contracts:** <links>
-- **Language mirror:** <link, if maintained>
+> [English](TEMPLATE.md)
 
-## Document map and maintenance contract
+- **RFC 状态：** Draft | Under review | Accepted | Rejected | Superseded
+- **交付成熟度：** Proposal | Experiment | Partial | Implemented | Promoted
+- **作者 / owner：** <公开身份或角色>
+- **创建日期：** YYYY-MM-DD
+- **最近一次规范修订：** YYYY-MM-DD
+- **实现基线：** `<commit>` 或不适用
+- **相关契约：** <链接>
+- **语言镜像：** <链接，若维护>
 
-State which sections are normative, which are current implementation facts,
-and which are historical evidence. Use this default:
+## 文档地图与维护契约
 
-- Sections 1-10 are the durable design and acceptance contract.
-- Section 11 is the normative delivery plan.
-- Section 12 contains unresolved decisions; proposed answers are not approval.
-- Appendices contain the non-normative execution ledger, decision log, evidence
-  registry, rejected alternatives, and incident lessons.
+说明哪些小节是规范的、哪些是当前实现事实、哪些是历史证据。使用以下默认约定：
 
-RFC maturity and delivery maturity are independent. Dated progress entries do
-not amend normative sections. If an appendix becomes hard to review, move it
-without loss into a companion `<rfc-name>-execution.md` and link it here.
+- 第 1-10 节是持久的设计与验收契约。
+- 第 11 节是规范性交付计划。
+- 第 12 节包含未决决策；提议的答案不等于批准。
+- 附录包含非规范性的执行流水账、决策日志、证据登记、被否决的备选方案与
+  事故教训。
+
+RFC 成熟度与交付成熟度相互独立。带日期的进度条目不修改规范小节。如果某个附录
+难以评审，就无损地把它移到 companion 文件 `<rfc-name>-execution.md` 并在本文链接。
 
 ---
 
-## 1. Decision summary
+## 1. 决策摘要
 
-Lead with the smallest set of decisions a maintainer must understand. State:
+优先展开 maintainer 必须理解的最小决策集合。说明：
 
-1. what becomes authoritative or changes behavior;
-2. what remains unchanged;
-3. the default and opt-in boundary;
-4. the principal safety or compatibility constraint;
-5. what this RFC still does not approve.
+1. 什么将成为权威或改变行为；
+2. 什么保持不变；
+3. 默认与 opt-in 边界；
+4. 主要安全或兼容性约束；
+5. 本 RFC 仍然不批准什么。
 
-## 2. Problem and motivation
+## 2. 问题与动机
 
-Describe the user/operator failure, not only the implementation gap. Include a
-concrete example and explain why the current owner cannot solve it locally.
+描述用户/操作者的失败，而不只是实现缺口。给出具体例子，并解释当前 owner 为什么
+无法在本地解决。
 
-### Invariants
+### 不变式
 
-List properties that every implementation must preserve. Prefer observable
-semantics over mechanism names.
+列出每个实现都必须保留的性质。优先用可观察语义而非机制名称。
 
-## 3. Scope and non-goals
+## 3. 范围与非目标
 
-### In scope
+### 范围内
 
-- <behavior, owner, or contract>
+- <行为、owner 或契约>
 
-### Non-goals
+### 非目标
 
-- <nearby system intentionally unchanged>
+- <有意保持不动的邻近系统>
 
-## 4. Current-system contract
+## 4. 当前系统契约
 
-Record the audited current behavior and its owners. Distinguish facts on the
-named implementation baseline from proposed behavior. Link stable protocol or
-code ownership surfaces; do not paste execution logs into this section.
+记录已审计的当前行为及其 owner。区分命名实现基线上的事实与提议的行为。链接稳定的
+协议或代码所有权界面；不要在本节粘贴执行日志。
 
-## 5. Proposed architecture
+## 5. 提议的架构
 
-### Ownership and authority
+### 所有权与权威
 
-Name the single decision owner, storage/provider boundary, identities,
-transactions, and forbidden alternate authorities.
+点名唯一的决策 owner、存储/provider 边界、身份、事务与禁止使用的替代权威。
 
-### State model and schema
+### 状态模型与 schema
 
-Define canonical records, version manifests, required/optional fields, explicit
-clear/delete semantics, ordering, and serialization. Default to preserving
-legally stored fields. Any reduction must enumerate affected fields, producer /
-reader / writer research, historical and external compatibility, migration,
-rollback, and semantic-equivalence evidence, with explicit maintainer approval.
+定义规范记录、版本 manifest、必填/可选字段、显式的清除/删除语义、排序与序列化。
+默认保留合法存储的字段。任何缩减都必须列举受影响字段、producer/reader/writer
+研究、历史与外部兼容性、迁移、回滚与语义等价证据，并取得显式 maintainer 批准。
 
-### Command or event lifecycle
+### 命令或事件生命周期
 
-Describe legal transitions, idempotency identity, preconditions, receipts,
-replay, ambiguity reconciliation, and fail-closed behavior.
+描述合法状态迁移、幂等身份、前置条件、receipt、重放、歧义消解与 fail-closed
+行为。
 
-### Provider or extension contract
+### Provider 或扩展契约
 
-Keep logical semantics provider-neutral. Put provider-specific storage layouts,
-limits, authentication, and operational details in named profiles.
+保持逻辑语义 provider-neutral。provider 专属的存储布局、限额、认证与运维细节
+放在命名 profile 中。
 
-## 6. Alternatives and design choices
+## 6. 备选方案与设计取舍
 
-Compare viable alternatives against the invariants. Keep the final choice and
-its trade-off in the normative body; retain superseded detail in Appendix D.
+对照不变式比较可行的备选方案。把最终选择及其取舍留在规范正文中；已被取代的细节
+放在附录 D。
 
-## 7. Safety, privacy, and compatibility
+## 7. 安全、隐私与兼容性
 
-Cover as applicable:
+按适用情况覆盖：
 
-- default-off and feature-off parity;
-- authorization, tenancy, and credential boundaries;
-- public/private data boundaries;
-- legacy readers/writers and downgrade behavior;
-- partial rollout, mixed versions, and split-brain prevention;
-- capacity, availability, and fail-closed/fail-open choices.
+- 默认关闭与功能关闭的 parity；
+- 授权、租户与凭证边界；
+- 公开/私有数据边界；
+- 遗留 reader/writer 与降级行为；
+- 部分发布、混合版本与 split-brain 预防；
+- 容量、可用性与 fail-closed/fail-open 选择。
 
-## 8. Migration and rollback
+## 8. 迁移与回滚
 
-Define admission, preflight, quiescence, cutover, readback, rollback, and the
-point after which rollback requires export or migration. Every destructive or
-irreversible step needs an explicit gate and recovery path.
+定义准入、preflight、静默、cutover、readback、回滚，以及回滚需要导出或迁移的
+时间点。每个破坏性或不可逆步骤都需要显式 gate 与恢复路径。
 
-## 9. Validation and acceptance
+## 9. 验证与验收
 
-Express each claim as a reproducible acceptance row:
+把每个主张表达为可复现的验收行：
 
-| Claim | Test or evidence | Required result | Boundary / exclusions |
+| 主张 | 测试或证据 | 必需结果 | 边界 / 排除项 |
 | --- | --- | --- | --- |
-| <claim> | <command, test, or artifact> | <typed verdict> | <what it does not prove> |
+| <主张> | <命令、测试或产物> | <typed 判定> | <它不能证明什么> |
 
-Separate deterministic conformance, live qualification, performance evidence,
-and production promotion. An unverified or skipped row is not green.
+区分确定性一致性验证、在线资格、性能证据与生产晋升。未验证或被跳过的行不算通过。
 
-## 10. Operational contract
+## 10. 运维契约
 
-Describe observability, typed failures, capacity limits, backup/recovery,
-upgrade/downgrade, on-call or operator actions, and user-visible status. Omit
-this section only when the RFC cannot affect a running system, and say why.
+描述可观测性、typed 失败、容量限额、备份/恢复、升级/降级、值班或操作者行动，
+以及用户可见状态。仅当 RFC 不可能影响运行中的系统时才可省略本节，并说明原因。
 
-## 11. Normative delivery plan
+## 11. 规范性交付计划
 
-Use cohesive milestones with explicit entry and exit gates. A milestone may
-ship while the RFC remains Draft.
+使用连贯的 milestone，并带显式的进入与退出 gate。RFC 仍为 Draft 时，milestone
+也可以交付。
 
-| Milestone | Shipped behavior | Entry gate | Exit evidence | Rollback |
+| 里程碑 | 已交付行为 | 进入 gate | 退出证据 | 回滚 |
 | --- | --- | --- | --- | --- |
-| M0 | <smallest useful slice> | <precondition> | <acceptance rows> | <path> |
+| M0 | <最小有用切片> | <前置条件> | <验收行> | <路径> |
 
-Keep progress percentages and dated status reports out of this section.
+不要在本节保留进度百分比与带日期的状态报告。
 
-## 12. Open decisions
+## 12. 未决决策
 
-Number each unresolved decision. For each, name the decision owner, options,
-recommendation, evidence needed, and deadline or dependent milestone. A
-recommendation remains non-authoritative until the decision log records
-approval.
+为每个未决决策编号。对每个决策点名 owner、选项、推荐意见、所需证据与截止时间或
+依赖的 milestone。在决策日志记录批准之前，推荐意见不具有权威性。
 
 ---
 
-## Appendix A: Execution ledger (non-normative)
+## 附录 A：执行流水账（非规范性）
 
-Append dated entries; do not rewrite history to resemble the current plan.
-Each entry states the exact implementation baseline and claim boundary.
+追加带日期的条目；不要重写历史使其看起来像当前计划。每个条目说明确切的实现
+基线与主张边界。
 
-### YYYY-MM-DD — <milestone or finding>
+### YYYY-MM-DD — <里程碑或发现>
 
-- **Baseline:** `<commit>` / PR
-- **Delivered:** <observable behavior>
-- **Evidence:** <tests or artifacts>
-- **Known gaps:** <unmet rows>
-- **Effect on normative design:** none | <linked decision/change>
+- **基线：** `<commit>` / PR
+- **交付：** <可观察行为>
+- **证据：** <测试或产物>
+- **已知缺口：** <未满足的行>
+- **对规范设计的影响：** 无 | <关联的决策/变更>
 
-## Appendix B: Decision log
+## 附录 B：决策日志
 
-| Date | Decision | Owner / approval | Alternatives | Normative sections changed |
+| 日期 | 决策 | Owner / 批准 | 备选方案 | 被修改的规范小节 |
 | --- | --- | --- | --- | --- |
-| YYYY-MM-DD | <decision> | <public approval link or role> | <summary> | <sections> |
+| YYYY-MM-DD | <决策> | <公开批准链接或角色> | <摘要> | <小节> |
 
-Do not infer approval from implementation progress, silence, or a proposed
-answer. Schema/field removal entries name every removed field explicitly.
+不要从实现进度、沉默或提议的答案推断批准。schema/字段移除条目必须显式列名每个
+被移除的字段。
 
-## Appendix C: Evidence registry
+## 附录 C：证据登记表
 
-| Evidence id | Claim | Baseline / environment | Artifact or command | Result | Privacy / validity boundary |
+| 证据 id | 主张 | 基线 / 环境 | 产物或命令 | 结果 | 隐私 / 有效性边界 |
 | --- | --- | --- | --- | --- | --- |
-| E1 | <claim> | <versioned facts> | <public-safe locator> | pass/fail/unverified | <boundary> |
+| E1 | <主张> | <版本化事实> | <公开安全的位置> | pass/fail/unverified | <边界> |
 
-Never commit credentials, private links, raw transcripts, local paths, or
-unredacted production evidence.
+绝不提交凭证、私有链接、原始记录、本地路径或未脱敏的生产证据。
 
-## Appendix D: Rejected or superseded alternatives
+## 附录 D：被否决或已被取代的备选方案
 
-Preserve enough detail to prevent the same dead end from being rediscovered.
-State why it failed an invariant and what evidence could reopen the decision.
+保留足够细节，以免同样的死路被再次发现。说明它违反了哪条不变式，以及什么证据
+可能重新打开该决策。
 
-## Appendix E: Incident and review lessons
+## 附录 E：事件与评审教训
 
-Record generalized, public-safe lessons that changed an invariant, acceptance
-row, or migration rule. Operational timelines and private incident material
-belong outside the public RFC.
+记录泛化的、公开安全的教训——那些改变了不变式、验收行或迁移规则的教训。运维
+时间线与私有事件材料应留在公开 RFC 之外。

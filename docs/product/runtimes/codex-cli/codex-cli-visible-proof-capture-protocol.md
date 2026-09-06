@@ -1,37 +1,29 @@
-# Codex CLI Visible Proof Capture Protocol
+# Codex CLI 可见证明捕获协议
 
-Status: public-safe protocol for opt-in proof capture.
-Primary path: one-message Codex CLI TUI bootstrap.
+> [English](codex-cli-visible-proof-capture-protocol.md)
 
-This protocol turns a promising Codex CLI `resume` / `remote-control` surface
-into evidence, not authority. LoopX may only promote later visible
-automation after a public-safe proof shows the turn is visible, interruptible,
-freshly idle-guarded, and independent of transcripts, session files, stdout,
-stderr, credentials, or hidden session mutation.
+状态：opt-in 证明捕获的 public-safe 协议。
+主要路径：一条消息的 Codex CLI TUI bootstrap。
 
-## When To Use It
+本协议把有希望的 Codex CLI `resume` / `remote-control` surface 变成 evidence，而不是 authority。只有 public-safe 证明显示该 Turn 可见、可中断、紧前有 idle guard，且独立于 transcripts、session 文件、stdout、stderr、凭据或隐藏 session 变更时，LoopX 才能晋升后续可见自动化。
 
-Use this protocol only when all of these are true:
+## 何时使用
 
-- the user has already started from a normal Codex CLI TUI flow or explicitly
-  opted into a proof run;
-- `quota should-run` allows this LoopX turn;
-- the test prompt is public-safe and does not depend on private repo state;
-- the candidate surface is one of `visible_resume_prompt`,
-  `remote_control_visible_prompt`, or `same_tui_visible_attach`;
-- the goal is to prove visibility, not to deliver production work.
+仅在以下全部为真时使用本协议：
 
-If any condition is missing, keep the one-message TUI bootstrap as the product
-path and record a blocker instead of attempting a later visible turn.
+- 用户已经从正常 Codex CLI TUI 流程开始，或显式 opt-in 了一次证明运行；
+- `quota should-run` 允许这次 LoopX Turn；
+- 测试 prompt public-safe，且不依赖私有仓库状态；
+- 候选 surface 是 `visible_resume_prompt`、`remote_control_visible_prompt` 或 `same_tui_visible_attach` 之一；
+- 目标是证明可见性，而不是交付生产工作。
 
-## Capture Packet
+如果任何条件缺失，保持一条消息的 TUI bootstrap 作为产品路径并记录 blocker，而不是尝试后续可见 Turn。
 
-The durable packet is two public-safe fixtures plus the acceptance result.
-The public demo bundle in
-[Codex CLI Proof-Capture Demo](codex-cli-proof-capture-demo.md) provides sample
-fixtures for both a visible `resume` spike and a future same-TUI attach proof.
+## 捕获 Packet
 
-### Visible-Session Proof Fixture
+持久 packet 是两个 public-safe 夹具加验收结果。[Codex CLI Proof-Capture 演示](codex-cli-proof-capture-demo.md)中的公开演示 bundle 为可见 `resume` spike 与未来 same-TUI attach 证明都提供示例夹具。
+
+### Visible-Session 证明夹具
 
 ```json
 {
@@ -62,7 +54,7 @@ fixtures for both a visible `resume` spike and a future same-TUI attach proof.
 }
 ```
 
-### Runtime-Idle Fixture
+### Runtime-Idle 夹具
 
 ```json
 {
@@ -87,27 +79,17 @@ fixtures for both a visible `resume` spike and a future same-TUI attach proof.
 }
 ```
 
-Fixtures may include compact public labels such as `operator_initials`,
-`proof_started_at`, `proof_result`, or `blocker`, but they must not include
-screenshots, raw prompts from private work, raw model output, local session ids,
-absolute local paths, credentials, internal document links, or command output
-bodies.
+夹具可以包含紧凑公开标签，如 `operator_initials`、`proof_started_at`、`proof_result` 或 `blocker`，但不得包含截图、来自私有工作的原始 prompt、原始模型输出、本地 session id、绝对本地路径、凭据、内部文档链接或命令输出正文。
 
-## Procedure
+## 流程
 
-1. Pick a public-safe fixture repo or demo goal.
-2. Run `quota should-run` with the registered `agent_id`; stop if the user
-   channel requires action.
-3. Confirm explicit user opt-in for the proof. The user must know the proof is
-   testing visibility, not doing production work.
-4. Capture or generate fresh runtime-idle evidence immediately before the
-   candidate prompt. Unknown turn state, recent typing, or a running turn fails
-   closed.
-5. Attempt only a visible proof prompt with an allowed command prefix. The
-   prompt should say that LoopX is testing visible steering and should
-   be safe to interrupt.
-6. Record only the compact fixture booleans and public-safe labels above.
-7. Validate the fixtures:
+1. 选一个 public-safe 夹具仓库或演示 goal。
+2. 用注册的 `agent_id` 运行 `quota should-run`；如果用户 channel 要求动作就停止。
+3. 确认证明的显式用户 opt-in。用户必须知道该证明在测试可见性，而不是做生产工作。
+4. 在候选 prompt 紧前捕获或生成新鲜 runtime-idle evidence。未知 turn state、近期输入或运行中的 Turn 都会 fail closed。
+5. 只尝试带允许命令前缀的可见证明 prompt。Prompt 应说明 LoopX 在测试可见转向，且可以安全中断。
+6. 只记录上述紧凑夹具布尔值与 public-safe 标签。
+7. 校验夹具：
 
 ```bash
 loopx codex-cli-visible-session-proof \
@@ -130,34 +112,25 @@ loopx codex-cli-visible-attach-acceptance \
   --idle-fixture runtime-idle.public.json
 ```
 
-8. Write back the acceptance result. Spend quota only after the blocker or
-   evidence is written back and validation has passed.
+8. 写回验收结果。只有在 blocker 或 evidence 写回且验证通过后才 spend quota。
 
-## Promotion Rules
+## 晋升规则
 
-`visible_resume_prompt` and `remote_control_visible_prompt` can prove a useful
-visible spike, but they do not prove same-open-TUI automation. They remain
-experimental until a later proof captures `same_tui_visible_attach`.
+`visible_resume_prompt` 与 `remote_control_visible_prompt` 可以证明有用的可见 spike，但它们不证明 same-open-TUI 自动化。它们保持实验状态，直到后续证明捕获 `same_tui_visible_attach`。
 
-Only `same_tui_visible_attach` plus a passing runtime-idle detector may promote
-the route toward a same-TUI automation driver. Even then, the next step is a
-separate wiring task behind fresh quota guard, fresh idle guard, explicit
-command boundary, and compact writeback.
+只有 `same_tui_visible_attach` 加通过的 runtime-idle 检测器才能把该路由晋升向 same-TUI 自动化驱动。即使如此，下一步也是单独接线任务：新鲜 quota guard、新鲜 idle guard、显式命令边界与紧凑写回。
 
-## Stop Conditions
+## 停止条件
 
-Stop and record a blocker when any of these happen:
+以下任一情况发生时停止并记录 blocker：
 
-- no explicit proof opt-in;
-- `interaction_contract.user_channel.action_required=true`;
-- runtime-idle state is unknown, recently active, or already running;
-- the candidate needs transcript, session-file, stdout/stderr, credential, or
-  hidden runtime reads;
-- the route writes hidden Codex session state;
-- the prompt is not visible, not interruptible, or not manually recoverable;
-- the command prefix is not explicitly allowed;
-- the proof would expose private repo names, task ids, internal links, local
-  paths, screenshots, or raw session material.
+- 没有显式证明 opt-in；
+- `interaction_contract.user_channel.action_required=true`；
+- runtime-idle 状态未知、近期活跃或已在运行；
+- 候选需要 transcript、session-file、stdout/stderr、凭据或隐藏 runtime 读取；
+- 该路由写隐藏 Codex session 状态；
+- prompt 不可见、不可中断或无法手动恢复；
+- 命令前缀未被显式允许；
+- 证明会暴露私有仓库名、task id、内部链接、本地路径、截图或原始 session 资料。
 
-The safe fallback is always to keep the one-message TUI bootstrap visible and
-write the precise blocker into LoopX.
+安全回退始终是保持一条消息的 TUI bootstrap 可见，并把精确 blocker 写入 LoopX。

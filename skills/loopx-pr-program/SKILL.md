@@ -3,32 +3,30 @@ name: loopx-pr-program
 description: "Use when LoopX must manage a multi-PR or multi-MR delivery program across one or more repositories: inventory current change requests, reconcile new/merged/closed or retargeted work, preserve requirement and dependency priorities, maintain a roadmap document, or monitor material lifecycle/check/review changes over time. Use provider-neutral snapshots and one grouped continuous monitor; do not use for deep per-PR code review, approval, commenting, or merge actions."
 ---
 
-# LoopX PR Program
+# LoopX PR 项目
 
-Manage a delivery program as durable LoopX state instead of rebuilding a queue
-from chat memory. Keep source acquisition provider-local, normalize observations
-into one public contract, and write back only material transitions.
+> [English](SKILL.md)
 
-## Route The Request
+把交付项目作为持久 LoopX 状态管理，而不是从聊天记忆重建队列。保持源获取为
+provider 本地化，把观察规范化到一个公开契约，只写回材料性迁移。
 
-Use this workflow when the user asks to manage, prioritize, reconcile, document,
-or monitor several pull requests or merge requests. Route a deep review of each
-selected PR to `loopx-pr-review`. Route approval, comments, reruns, branch
-retargeting, closing, or merging to the normal provider-specific workflow and
-require the corresponding authority.
+## 路由请求
 
-Treat document maintenance and monitor creation as writes. A request to update
-the roadmap or keep monitoring the program authorizes those scoped writes; an
-ordinary status question remains read-only.
+当用户要求管理、排优先级、协调、记录或监控多个 pull request 或 merge request
+时，使用本工作流。把每个所选 PR 的深度评审路由到 `loopx-pr-review`。把批准、
+评论、重跑、分支重定向、关闭或合并路由到正常 provider 特定工作流，并要求
+相应权限。
 
-## Start From LoopX State
+把文档维护与 monitor 创建视为写入。更新路线图或持续监控项目的请求授权这些
+限定范围写入；普通状态问题保持只读。
 
-Start or join the project goal before material work. Represent the program with
-one advancement todo for the current reconciliation and one
-`continuous_monitor` todo for recurring observation. Do not create one monitor
-todo per change request.
+## 从 LoopX 状态开始
 
-Use a stable monitor identity:
+在材料工作前启动或加入项目 goal。用当前协调的一个 advancement todo 与重复
+观察的一个 `continuous_monitor` todo 表示该项目。不要为每个 change request
+创建一个 monitor todo。
+
+使用稳定的 monitor 身份：
 
 ```text
 task_class=continuous_monitor
@@ -37,38 +35,32 @@ target_key=pr-program-<stable-program-id>
 cadence=<user cadence or 30m>
 ```
 
-Preserve `claimed_by`, `last_checked_at`, `next_due_at`, `result_hash`,
-`consecutive_no_change`, and `material_change`. Quiet monitor polls keep
-liveness but do not count as delivery progress, rewrite roadmap documents, or
-spend progress quota.
+保留 `claimed_by`、`last_checked_at`、`next_due_at`、`result_hash`、
+`consecutive_no_change` 与 `material_change`。安静的 monitor 轮询保持活性，
+但不计为交付进展、不重写路线图文档、不消耗进展 quota。
 
-## Acquire A Complete Snapshot
+## 获取完整快照
 
-Use any authorized source-control read interface available in the current
-environment. Prefer one batch query for inventory and targeted reads for the
-items that changed. Never encode a private transport command, executable name,
-credential, internal hostname, or document token in this skill, repository
-examples, committed fixtures, or public evidence.
+使用当前环境中任何经授权的源码控制读接口。优先一批查询做库存，对变化的项
+做定向读取。绝不在本技能、仓库示例、已提交 fixture 或公开证据中编码私有
+传输命令、可执行名、凭据、内部主机名或文档 token。
 
-Normalize observations using
-[`references/snapshot-contract.md`](references/snapshot-contract.md). Mark
-`result_completeness.complete=true` only after proving the requested repository,
-author, state, and time-window inventory is exhaustive. An incomplete current
-snapshot must not make absent rows look closed or removed.
-Persist the structured scope fingerprint with the baseline. Do not advance the
-durable baseline or grouped-monitor `result_hash` from an incomplete snapshot
-or when the previous and current scope fingerprints differ; otherwise a partial
-page or narrowed query can create false remove/re-add transitions on the next
-poll.
+用 [`references/snapshot-contract.md`](references/snapshot-contract.md)
+规范化观察。仅在证明所请求的仓库、作者、状态与时间窗口库存穷尽后，才标记
+`result_completeness.complete=true`。不完整的当前快照不得让缺席的行看起来
+已关闭或已移除。持久化结构化范围 fingerprint 与基线绑定。不要从
+不完整快照、或先前与当前范围 fingerprint 不同时推进持久基线或分组 monitor
+的 `result_hash`；否则部分页或收窄的查询可能在下次轮询制造虚假的移除/重加
+迁移。
 
-Store raw and normalized snapshots under an ignored owner-local directory such
-as `.local/loopx/pr-program/<program-id>/`. Verify the path with
-`git check-ignore` before writing. If no ignored path is available, use a
-temporary directory and keep only a redacted evidence summary in LoopX state.
+把原始与规范化快照存放在被忽略的所有者本地目录（如
+`.local/loopx/pr-program/<program-id>/`）。写入前用 `git check-ignore` 验证
+路径。如果没有可用被忽略路径，使用临时目录并只在 LoopX 状态中保留脱敏证据
+摘要。
 
-## Reconcile Material Changes
+## 协调材料变化
 
-Run the bundled delta helper before manually comparing rows:
+在手动比较行之前运行捆绑 delta helper：
 
 ```bash
 python skills/loopx-pr-program/scripts/diff_snapshot.py \
@@ -77,87 +69,70 @@ python skills/loopx-pr-program/scripts/diff_snapshot.py \
   --output <delta.json>
 ```
 
-Omit `--previous` for the first baseline. The helper treats lifecycle, draft,
-target branch, head revision, checks, review, work item, requirement, theme,
-priority, and dependency changes as material. Timestamp-only movement is
-observation noise. Read the actual description, latest review context, checks,
-and changed-file evidence for every added or materially changed row before
-updating the program judgment.
+首次基线省略 `--previous`。helper 把 lifecycle、draft、target branch、
+head revision、checks、review、work item、requirement、theme、priority 与
+dependency 变化视为材料性。仅时间戳移动是观察噪声。更新项目判断前，为每个
+新增或材料性变化的行读取实际描述、最新评审上下文、checks 与变更文件证据。
 
-Do not infer motivation or priority from title, number, author, age, or green CI
-alone. Product requirements set priority. Correctness dependencies and real
-merge gates determine order within a priority. Record a requirement gap
-explicitly when no change request implements part of the requested behavior;
-do not call the requirement complete because a neighboring parameter or feature
-landed.
+不要仅凭标题、编号、作者、年龄或绿的 CI 推断动机或优先级。产品需求设定
+优先级。正确性依赖与真实合并 gate 决定优先级内的顺序。当没有 change request
+实现请求行为的一部分时，显式记录 requirement 缺口；不要因相邻参数或功能落地
+就称 requirement 完成。
 
-## Compose With An Integration Branch
+## 与集成分支组合
 
-When several selected change requests belong to one repository, compose this
-program view with LoopX's `integration-branch-reconcile` capability. Keep the
-ownership split explicit:
+当几个所选 change request 属于同一仓库时，把此项目视图与 LoopX 的
+`integration-branch-reconcile` capability 组合。保持所有权切分显式：
 
-- this skill decides which changes belong in the candidate and why;
-- the integration-branch plan records their ordered local source refs and
-  proves what exact code is composed.
+- 本技能决定哪些变更属于候选及原因；
+- integration-branch 计划记录其有序本地源 refs，并证明组合的确切代码。
 
-Do not populate the plan from every open or P0 change request automatically.
-Select sources from explicit program scope, dependency order, and current
-review intent. Refresh the local refs through the authorized host workflow,
-then verify that each selected ref resolves to the observed `head_sha` before
-configuring or syncing the integration branch. A mismatch is source evidence
-drift, not permission to merge a stale local ref.
+不要从每个打开或 P0 change request 自动填充计划。从显式项目范围、依赖顺序与
+当前评审意图选择源。通过经授权的宿主工作流刷新本地 refs，然后在配置或同步
+integration 分支前验证每个所选 ref 解析到观察到的 `head_sha`。不匹配是源证据
+漂移，不是合并陈旧本地 ref 的许可。
 
-Use the same grouped program monitor to read both the normalized change-request
-delta and `loopx integration-branch status --format json`. Treat base/source
-movement, an unexpected integration head, and merge conflict as material
-program evidence. A monitor poll remains read-only: it may report that the
-candidate needs reconciliation, but it must not run `sync --execute` by itself.
-That command is a separate, explicit local write and never grants authority to
-push, retarget, approve, or merge a remote change request.
+用同一分组项目 monitor 读取规范化 change-request delta 与
+`loopx integration-branch status --format json`。把 base/source 移动、意外
+integration head 与合并冲突视为材料性项目证据。Monitor 轮询保持只读：它可以
+报告候选需要协调，但不得自行运行 `sync --execute`。该命令是单独的显式本地
+写入，绝不授予推送、重定向、批准或合并远端 change request 的权限。
 
-## Project The Program
+## 投影项目
 
-Keep one canonical program projection with three sections:
+保持一个带三部分的规范项目投影：
 
-1. completed work, grouped by product theme;
-2. pending work, grouped by product theme, with archived or superseded
-   development stacks nested under the surviving change request;
-3. merge priority, ordered first by explicit product priority, then dependency,
-   correctness risk, and current merge gate.
+1. 已完成工作，按产品主题分组；
+2. 进行中工作，按产品主题分组，被归档或取代的开发栈嵌套在存续的
+   change request 下；
+3. 合并优先级，先按显式产品优先级，再按依赖、正确性风险与当前合并 gate。
 
-Keep links at the end of each compact row. Preserve the target document's
-existing heading, color, callout, and strike-through conventions. Update only
-the affected blocks, refetch them after writing, and verify that unrelated
-content and resource blocks remain unchanged.
+保持链接在每个紧凑行的末尾。保留目标文档现有的标题、颜色、标注与删除线惯例。
+只更新受影响的块，写入后重新获取它们，并验证无关内容与资源块保持不变。
 
-For every priority row, distinguish these facts:
+对每个优先级行，区分以下事实：
 
-- shipped behavior and requirement coverage;
-- dependency or recommended merge order;
-- current checks, review, and external work-item gates;
-- missing implementation or validation that no existing change request covers.
+- 已交付行为与 requirement 覆盖；
+- 依赖或建议合并顺序；
+- 当前 checks、评审与外部 work-item gate；
+- 没有现有 change request 覆盖的缺失实现或验证。
 
-## Write Back And Continue
+## 写回并继续
 
-After a validated material change:
+在验证过的材料变化之后：
 
-1. update the grouped monitor `result_hash` and reset
-   `consecutive_no_change=0`;
-2. update the roadmap and refetch the changed sections;
-3. complete the reconciliation todo with compact evidence and create a
-   successor only when concrete follow-up remains;
-4. refresh LoopX state with the actual delivery classification and outcome;
-5. spend quota only after the state and document writeback are validated.
+1. 更新分组 monitor `result_hash` 并重置 `consecutive_no_change=0`；
+2. 更新路线图并重新获取变更的段落；
+3. 用紧凑证据完成协调 todo，仅在存在具体跟进时创建继任者；
+4. 用实际交付分类与结果刷新 LoopX 状态；
+5. 只在状态与文档写回验证后消耗配额。
 
-After a quiet poll, update monitor scheduling metadata and increment
-`consecutive_no_change`; do not produce a synthetic progress event.
+安静轮询后，更新 monitor 调度元数据并递增 `consecutive_no_change`；不产生
+合成进展事件。
 
-## Public And Private Boundary
+## 公共与私有边界
 
-Commit only the provider-neutral contract, algorithm, and redacted fixtures.
-Keep private provider adapters, source commands, raw comments, internal URLs,
-document ids, snapshots, and organization-specific prioritization outside the
-public repository. Before staging changes to this skill or its resources, scan
-the exact paths for private hostnames, executable names, credentials, local
-absolute paths, and raw operating context.
+只提交 provider-neutral 契约、算法与脱敏 fixture。把私有 provider 适配器、
+源命令、原始评论、内部 URL、文档 id、快照与组织特定优先级排除在公开仓库外。
+在暂存本技能或其资源的变更前，扫描精确路径中的私有主机名、可执行名、凭据、
+本地绝对路径与原始运营上下文。

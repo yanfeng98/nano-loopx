@@ -1,269 +1,254 @@
-# LoopX Design System
+# LoopX 设计系统
 
-This file is the canonical visual design contract for LoopX user interfaces.
-Read it before changing the public website, dashboard, desktop application,
-documentation chrome, prototypes, screenshots, or any UI reproduction task.
+> [English](design.md)
 
-The visual direction adapts the black-and-white precision, Geist typography,
-hairline surfaces, and restrained accent system documented in the
-[Vercel docs/development/design.md reference](https://getdesign.md/vercel/design-md). LoopX is
-not affiliated with Vercel. The reference is an inspiration and token source;
-this document owns the LoopX-specific decisions.
+本文件是 LoopX 用户界面的权威视觉设计契约。修改公开网站、dashboard、桌面应用、
+文档外壳、原型、截图或任何 UI 复刻任务之前，请先阅读本文件。
 
-## Product Character
+视觉方向借鉴 [Vercel docs/development/design.md reference](https://getdesign.md/vercel/design-md) 中记载的
+黑白严谨风格、Geist 字体、发丝线表面与克制的强调色体系。LoopX 与 Vercel 没有关联。
+该参考只是灵感来源与 token 提供方；LoopX 的具体决策以本文件为准。
 
-LoopX should feel:
+## 产品性格
 
-- precise, calm, and engineered;
-- readable before decorative;
-- monochrome by default, with color reserved for state and one controlled hero
-  accent;
-- dense enough for operators without becoming visually noisy;
-- consistent across marketing, dashboard, and future desktop surfaces.
+LoopX 应该给人的感觉是：
 
-The interface should read like excellent technical documentation that also
-communicates a confident product.
+- 精确、冷静、工程化；
+- 可读性优先于装饰性；
+- 默认单色，颜色只用于状态和一个受控的主强调色；
+- 对操作者足够密实，但不显得视觉嘈杂；
+- 在营销、dashboard 与未来的桌面界面上保持一致。
 
-## Source Of Truth
+界面应该读起来像优秀的技术文档，同时传达出自信的产品形象。
 
-- Use this file as the default visual contract for all new LoopX UI work.
-- Preserve existing product behavior, accessibility, information hierarchy,
-  and public/private boundaries.
-- When a task provides an explicit approved design source, screenshot, or
-  Figma file, match that source while using these tokens for unspecified
-  details.
-- Do not introduce a second design language for one page or framework.
-- Keep reusable tokens and primitives framework-neutral. React, static HTML,
-  and future desktop applications should express the same system.
+## 权威来源
 
-## Color
+- 所有新的 LoopX UI 工作默认以本文件为视觉契约。
+- 保留已有产品行为、可访问性、信息层级和公开/私有边界。
+- 当任务提供了明确的已批准设计源、截图或 Figma 文件时，在不明确的细节上参照该来源，
+  并使用这些 token 补齐。
+- 不要为单个页面或框架引入第二套设计语言。
+- 保持可复用 token 与基础组件框架无关。React、静态 HTML 与未来的桌面应用应表达
+  同一套体系。
 
-### Core Palette
+## 颜色
 
-| Token | Value | Role |
+### 核心色板
+
+| Token | Value | 用途 |
 | --- | --- | --- |
-| `--color-ink` | `#171717` | Primary text, primary CTA, darkest chrome |
-| `--color-body` | `#4d4d4d` | Body copy and secondary navigation |
-| `--color-muted` | `#8f8f8f` | Metadata, captions, low-emphasis copy |
-| `--color-faint` | `#a1a1a1` | Placeholder and disabled text |
-| `--color-canvas` | `#fafafa` | Default application and page background |
-| `--color-surface` | `#ffffff` | Cards, inputs, menus, elevated panels |
-| `--color-surface-soft` | `#f2f2f2` | Inset wells and subtle alternate bands |
-| `--color-border` | `#ebebeb` | Default 1px structural hairline |
-| `--color-link` | `#0070f3` | Links, focus, selected informational state |
-| `--color-danger` | `#ee0000` | Destructive or invalid state |
-| `--color-warning` | `#f5a623` | Caution state |
+| `--color-ink` | `#171717` | 主文本、主 CTA、最深色 chrome |
+| `--color-body` | `#4d4d4d` | 正文与次级导航 |
+| `--color-muted` | `#8f8f8f` | 元数据、说明文字、低强调文案 |
+| `--color-faint` | `#a1a1a1` | placeholder 与禁用文本 |
+| `--color-canvas` | `#fafafa` | 默认应用与页面背景 |
+| `--color-surface` | `#ffffff` | 卡片、输入框、菜单、抬升面板 |
+| `--color-surface-soft` | `#f2f2f2` | 内凹井与细微交替条纹 |
+| `--color-border` | `#ebebeb` | 默认 1px 结构发丝线 |
+| `--color-link` | `#0070f3` | 链接、焦点、选中的信息状态 |
+| `--color-danger` | `#ee0000` | 破坏性或无效状态 |
+| `--color-warning` | `#f5a623` | 警示状态 |
 
-Use near-black rather than pure black for standard text. Use pure black only
-inside code or media surfaces where the stronger contrast is intentional.
+标准文本使用近黑色而非纯黑。纯黑只在代码或媒体表面中使用，那里更强的对比是有意为之。
 
-### Accent Gradients
+### 强调渐变
 
-Color is a controlled accent, not general chrome:
+颜色是受控的强调，不是通用 chrome：
 
-- Develop: `#007cf0` to `#00dfd8`
-- Preview: `#7928ca` to `#ff0080`
-- Ship: `#ff4d4d` to `#f9cb28`
+- Develop：`#007cf0` 到 `#00dfd8`
+- Preview：`#7928ca` 到 `#ff0080`
+- Ship：`#ff4d4d` 到 `#f9cb28`
 
-Marketing pages may blend these stops into one soft hero mesh. Do not repeat
-the mesh in every section. Product and operator surfaces should prefer solid
-semantic colors and monochrome structure.
+营销页面可以把这些色阶混合成一块柔和的 hero mesh。不要在每一节重复同样的 mesh。
+产品与操作者表面应优先使用实心语义色和单色结构。
 
-### Dark Surfaces
+### 深色表面
 
-Dark mode is an inverse of the same system, not a separate visual identity:
+深色模式是同一体系的“反色”，而不是另一套视觉身份：
 
-- use near-black canvas and slightly lifted neutral surfaces;
-- retain the same spacing, radius, typography, and hierarchy;
-- keep borders subtle and neutral;
-- preserve semantic meaning and contrast;
-- do not add neon glows, glossy gradients, or decorative shadows.
+- 使用近黑色画布与略微抬升的中性表面；
+- 保留相同的间距、圆角、字体和层级；
+- 边框保持细微与中性；
+- 保留语义含义与对比度；
+- 不要添加霓虹光晕、光泽渐变或装饰阴影。
 
-## Typography
+## 字体
 
-Use **Geist Sans** for UI and prose and **Geist Mono** for code, data, compact
-technical labels, and section eyebrows.
+UI 与正文使用 **Geist Sans**，代码、数据、紧凑技术标签和章节 eyebrow 使用
+**Geist Mono**。
 
-Fallbacks:
+回退字体：
 
 ```css
 --font-sans: "Geist", "Inter", "Helvetica Neue", Arial, sans-serif;
 --font-mono: "Geist Mono", "JetBrains Mono", "SFMono-Regular", monospace;
 ```
 
-### Type Scale
+### 字号层级
 
-| Token | Size / line height | Weight | Tracking | Use |
+| Token | 字号 / 行高 | 字重 | 字距 | 用途 |
 | --- | --- | --- | --- | --- |
-| Display | `48px / 48px` | 600 | `-0.05em` | Marketing hero |
-| Heading L | `32px / 40px` | 600 | `-0.04em` | Major section |
-| Heading M | `20px / 28px` | 600 | `-0.02em` | Card or panel |
-| Body L | `16px / 24px` | 400 | normal | Lead copy |
-| Body M | `14px / 20px` | 400 | normal | Default UI copy |
-| Body S | `12px / 16px` | 400 | normal | Metadata |
-| Mono eyebrow | `12px / 16px` | 500 | `0.06em` | Uppercase technical label |
-| Code | `14px / 20px` | 400 | normal | Code and CLI output |
+| Display | `48px / 48px` | 600 | `-0.05em` | 营销 hero |
+| Heading L | `32px / 40px` | 600 | `-0.04em` | 主要章节 |
+| Heading M | `20px / 28px` | 600 | `-0.02em` | 卡片或面板 |
+| Body L | `16px / 24px` | 400 | normal | 引导文案 |
+| Body M | `14px / 20px` | 400 | normal | 默认 UI 文案 |
+| Body S | `12px / 16px` | 400 | normal | 元数据 |
+| Mono eyebrow | `12px / 16px` | 500 | `0.06em` | 大写技术标签 |
+| Code | `14px / 20px` | 400 | normal | 代码与 CLI 输出 |
 
-Use 600 for headings, 500 for controls and labels, and 400 for body copy.
-Avoid decorative italics, ultra-light text, and black weights.
+标题使用 600，控件与标签使用 500，正文使用 400。避免装饰性斜体、超细文本和黑色字重。
 
-## Spacing And Layout
+## 间距与布局
 
-Use a 4px base:
+使用 4px 基准：
 
 ```text
 4, 8, 12, 16, 24, 32, 40, 64, 96, 128
 ```
 
-- Page container: approximately `1200px` max width.
-- Desktop gutters: `24px` to `32px`.
-- Mobile gutters: `20px`.
-- Card padding: `24px`; larger panels may use `32px`.
-- Section rhythm: `96px` to `128px` on marketing pages.
-- Operator surfaces may use tighter `24px` to `40px` section rhythm.
-- Grids should collapse predictably from 3-4 columns to 2 and then 1.
+- 页面容器：最大宽度约 `1200px`。
+- 桌面端 gutter：`24px` 到 `32px`。
+- 移动端 gutter：`20px`。
+- 卡片内边距：`24px`；更大的面板可以使用 `32px`。
+- 章节节奏：营销页面 `96px` 到 `128px`。
+- 操作者表面可以使用更紧凑的 `24px` 到 `40px` 章节节奏。
+- 网格应从 3-4 列可预测地折叠为 2 列，再为 1 列。
 
-Whitespace is structural. Prefer space and hairlines over alternating saturated
-background blocks.
+留白是结构性的。优先使用留白和发丝线，而不是交替的饱和背景块。
 
-## Shape And Depth
+## 形状与深度
 
-| Token | Value | Use |
+| Token | Value | 用途 |
 | --- | --- | --- |
-| Tight | `6px` | Inputs, app buttons, navigation controls |
-| Card | `12px` | Standard cards and code blocks |
-| Panel | `16px` | Large feature or pricing panels |
-| Pill | `9999px` | Marketing CTAs, tags, avatars |
+| Tight | `6px` | 输入框、应用按钮、导航控件 |
+| Card | `12px` | 标准卡片与代码块 |
+| Panel | `16px` | 大型功能或定价面板 |
+| Pill | `9999px` | 营销 CTA、标签、头像 |
 
-Use shapes by context:
+按上下文选择形状：
 
-- marketing CTAs use full pills;
-- application and desktop controls use tight 6px corners;
-- content cards use 12-16px corners.
+- 营销 CTA 使用完整 pill；
+- 应用与桌面控件使用紧致的 6px 圆角；
+- 内容卡片使用 12-16px 圆角。
 
-Default elevation is a 1px hairline and no shadow. Floating menus and modals may
-use a low-alpha layered shadow. Do not use heavy drop shadows.
+默认抬升是 1px 发丝线且无阴影。浮动菜单与 modal 可以使用低透明度分层阴影。不要使用
+厚重投影。
 
-## Components
+## 组件
 
-### Navigation
+### 导航
 
-- White or near-white surface with a bottom hairline.
-- Compact wordmark, restrained links, and one clear primary action.
-- Desktop navigation collapses behind an accessible menu trigger.
-- Sticky headers may use a subtle backdrop blur; content must remain readable
-  without it.
+- 白色或近白色表面，底部一条发丝线。
+- 紧凑 wordmark、克制的链接和一个清晰的主操作。
+- 桌面导航在可访问的菜单触发器后面折叠。
+- 吸顶 header 可以使用细微背景模糊；没有它内容也必须保持可读。
 
-### Buttons
+### 按钮
 
-- Primary marketing: ink fill, white label, pill shape, minimum 44px target.
-- Secondary marketing: white surface, ink label, hairline, pill shape.
-- Application primary: ink fill, white label, 6px radius.
-- Application secondary: white surface, ink label, hairline, 6px radius.
-- Icon controls: circular or 6px square, with visible focus state.
+- 营销主按钮：ink 填充、白色标签、pill 形状，最小 44px 点击目标。
+- 营销次按钮：白色表面、ink 标签、发丝线、pill 形状。
+- 应用主按钮：ink 填充、白色标签、6px 圆角。
+- 应用次按钮：白色表面、ink 标签、发丝线、6px 圆角。
+- 图标控件：圆形或 6px 方形，带可见焦点状态。
 
-Do not mix marketing pills and application squares in the same control group.
+不要在同一控件组里混用营销 pill 与应用方形。
 
-### Cards And Panels
+### 卡片与面板
 
-- White surface on near-white canvas.
-- 1px hairline before any shadow.
-- Clear heading, concise body, and optional mono metadata.
-- Use precise grids rather than masonry.
-- Avoid decorative cards with no information or action.
+- 近白画布上的白色表面。
+- 先 1px 发丝线，再考虑阴影。
+- 清晰的标题、简洁的正文、可选的 mono 元数据。
+- 使用精确网格，不用 masonry。
+- 避免没有信息或动作的装饰卡片。
 
-### Forms
+### 表单
 
-- White surface, ink text, hairline border, 6px radius.
-- Labels remain visible; placeholders do not replace labels.
-- Focus uses the blue link/focus token with sufficient contrast.
-- Errors use text and iconography in addition to color.
+- 白色表面、ink 文本、发丝线边框、6px 圆角。
+- 标签保持可见；placeholder 不能替代标签。
+- 焦点使用蓝色 link/focus token，并保证足够对比度。
+- 错误除颜色外还要使用文本与图标。
 
-### Code And Terminal Surfaces
+### 代码与终端表面
 
-- Geist Mono or the approved mono fallback.
-- Use either a white hairline code panel or a deliberate near-black terminal.
-- Preserve selectable text and horizontal scrolling.
-- Avoid fake terminal decoration when the content is not technical evidence.
+- Geist Mono 或批准的 mono 回退字体。
+- 使用白色发丝线代码面板，或刻意设计的近黑终端。
+- 保留文本可选中与横向滚动。
+- 内容不是技术证据时，避免假的终端装饰。
 
-### Status And Control-Plane States
+### 状态与控制面状态
 
-- Use color as a secondary signal; always include text or an icon.
-- Prefer compact badges and hairline panels.
-- Keep goal, gate, owner, evidence, risk, budget, and next action visually
-  distinguishable.
-- Never render raw private state, credentials, provider IDs, or machine paths.
+- 颜色只作为次级信号；始终附带文本或图标。
+- 优先使用紧凑 badge 与发丝线面板。
+- 让 goal、gate、owner、evidence、risk、budget 与 next action 视觉可区分。
+- 绝不渲染原始私有状态、凭据、provider ID 或机器路径。
 
-## Motion
+## 动效
 
-- Motion explains state transitions; it does not decorate idle content.
-- Use 120-200ms control transitions and 200-350ms section transitions.
-- Prefer opacity and small transforms.
-- Respect `prefers-reduced-motion`.
-- Do not animate layout continuously, pulse large surfaces, or create
-  background motion that competes with reading.
+- 动效用来解释状态转换，而不是装饰静止内容。
+- 控件转换使用 120-200ms，章节转换使用 200-350ms。
+- 优先使用透明度与小幅度 transform。
+- 尊重 `prefers-reduced-motion`。
+- 不要持续动画布局、让大面积表面脉动，或制造与阅读竞争的背景动效。
 
-## Accessibility
+## 可访问性
 
-- Maintain WCAG AA contrast.
-- Use semantic HTML and visible keyboard focus.
-- Interactive targets should be at least 44px where practical.
-- Do not encode status using color alone.
-- Support keyboard navigation, reduced motion, zoom, and narrow viewports.
-- Keep English and Chinese layouts equally readable.
+- 保持 WCAG AA 对比度。
+- 使用语义化 HTML 与可见的键盘焦点。
+- 交互目标在可行时至少 44px。
+- 不要只用颜色表达状态。
+- 支持键盘导航、减少动效、缩放与窄视口。
+- 英文与中文排版应保持同样可读。
 
-## Responsive Behavior
+## 响应式行为
 
-- `<= 640px`: one-column layout, collapsed navigation, full-width primary CTA.
-- `768px`: two-column content grids where useful.
-- `1024px`: full navigation and 3-column product grids.
-- `>= 1200px`: centered max-width composition.
+- `<= 640px`：单列布局、折叠导航、全宽主 CTA。
+- `768px`：有用的地方使用两列内容网格。
+- `1024px`：完整导航与 3 列产品网格。
+- `>= 1200px`：居中最大宽度构图。
 
-Do not shrink diagrams or code until they become illegible. Reflow or enable
-bounded horizontal scrolling.
+不要把图表或代码缩到不可读。改为重排或启用有界横向滚动。
 
-## UI Reproduction Workflow
+## UI 复刻工作流
 
-For UI implementation, migration, or reproduction:
+对于 UI 实现、迁移或复刻：
 
-1. Read this file before editing.
-2. Inspect the real target surface, source code, screenshot, or Figma file.
-3. Inventory behavior, states, breakpoints, assets, and copy.
-4. Map unspecified visual details to these tokens.
-5. Reuse existing LoopX primitives before creating new ones.
-6. Validate desktop and mobile layouts in a real browser.
-7. Capture screenshots for first-screen or high-fidelity changes.
-8. Compare spacing, typography, borders, color, and interaction states—not
-   only component presence.
+1. 编辑前先读本文件。
+2. 检查真实目标表面、源码、截图或 Figma 文件。
+3. 盘点行为、状态、断点、素材与文案。
+4. 把未指明的视觉细节映射到这些 token。
+5. 在创建新基础组件之前先复用已有的 LoopX 基础组件。
+6. 在真实浏览器中验证桌面与移动布局。
+7. 对首屏或高保真变更截图。
+8. 比对间距、字体、边框、颜色与交互状态——而不只是组件是否存在。
 
-When reproducing an existing approved LoopX surface, visual and behavioral
-parity is required. Framework migration alone must not alter the UI.
+复刻一个已批准 LoopX 表面时，视觉与行为对等是必须的。仅做框架迁移不得改变 UI。
 
-## Do
+## 应该做
 
-- Use black-and-white precision with deliberate hierarchy.
-- Let typography, whitespace, grids, and hairlines do most of the visual work.
-- Reserve gradients for a single meaningful accent area.
-- Keep operator interfaces calm, compact, and scannable.
-- Use tokens rather than one-off color, radius, or spacing values.
-- Preserve exact behavior during framework migrations.
+- 使用黑白严谨风格，层级刻意设计。
+- 让字体、留白、网格与发丝线承担大部分视觉工作。
+- 渐变只保留给一个有意义的主强调区域。
+- 保持操作者界面平静、紧凑、可扫读。
+- 使用 token，而不是一次性颜色、圆角或间距值。
+- 框架迁移时保留精确行为。
 
-## Do Not
+## 不应该做
 
-- Do not add a second decorative system.
-- Do not fill large surfaces with accent colors.
-- Do not use glassmorphism, neon glows, heavy shadows, or excessive blur.
-- Do not mix unrelated radius and button styles.
-- Do not use generic component-library defaults without adapting them.
-- Do not claim fidelity without browser validation and screenshot evidence.
+- 不要增加第二套装饰体系。
+- 不要用强调色填充大面积表面。
+- 不要使用 glassmorphism、霓虹光晕、厚重阴影或过度模糊。
+- 不要混用无关的圆角与按钮风格。
+- 不要不加适配就使用通用组件库默认值。
+- 没有浏览器验证与截图证据，不要说达到保真。
 
-## Review Checklist
+## 审阅清单
 
-- [ ] The task read and followed `docs/development/design.md`.
-- [ ] Core tokens are reused rather than duplicated.
-- [ ] Marketing and application controls use the correct shape language.
-- [ ] Desktop and mobile layouts are validated.
-- [ ] Keyboard, focus, contrast, and reduced-motion behavior are preserved.
-- [ ] English and Chinese content remain usable.
-- [ ] Screenshots are provided for first-screen or fidelity-sensitive changes.
-- [ ] No private data or local paths enter the UI or screenshots.
+- [ ] 任务已阅读并遵循 `docs/development/design.md`。
+- [ ] 复用核心 token 而非重复定义。
+- [ ] 营销与应用控件使用正确的形状语言。
+- [ ] 桌面与移动布局已验证。
+- [ ] 键盘、焦点、对比度与减少动效行为已保留。
+- [ ] 英文与中文内容均可用。
+- [ ] 首屏或高保真敏感变更提供了截图。
+- [ ] 没有私有数据或本地路径进入 UI 或截图。

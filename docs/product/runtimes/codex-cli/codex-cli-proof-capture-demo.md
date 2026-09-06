@@ -1,27 +1,25 @@
-# Codex CLI Proof-Capture Demo
+# Codex CLI Proof-Capture 演示
 
-This demo bundle lets a user or contributor rehearse the visible proof protocol
-without running Codex, reading session material, or touching local LoopX
-state. It is deliberately fixture-first: the commands validate public-safe
-evidence shape and show the acceptance decision that a real opt-in proof would
-need to produce.
+> [English](codex-cli-proof-capture-demo.md)
 
-## Files
+该演示 bundle 让用户或贡献者在不运行 Codex、不读 session 资料、不动本地 LoopX 状态的情况下彩排可见证明协议。它刻意 fixture-first：命令校验 public-safe evidence 形态，并展示真实 opt-in 证明需要产生的验收决策。
+
+## 文件
 
 - `examples/fixtures/codex-cli-visible-proof/codex-visible-resume-help.public.json`
-  models a Codex CLI surface with `resume [PROMPT]` / `remote-control`.
+  建模一个带 `resume [PROMPT]` / `remote-control` 的 Codex CLI surface。
 - `examples/fixtures/codex-cli-visible-proof/visible-resume-proof.public.json`
-  records the visible, interruptible proof for that surface.
+  记录该 surface 的可见、可中断证明。
 - `examples/fixtures/codex-cli-visible-proof/runtime-idle-visible-resume.public.json`
-  records the fresh idle guard for that surface.
+  记录该 surface 的新鲜 idle guard。
 - `examples/fixtures/codex-cli-visible-proof/codex-same-tui-help.public.json`
-  models a future explicit same-TUI attach primitive.
+  建模一个未来的显式 same-TUI attach 原语。
 - `examples/fixtures/codex-cli-visible-proof/same-tui-proof.public.json`
-  records the proof shape that can promote same-TUI automation.
+  记录可以晋升 same-TUI 自动化的证明形态。
 - `examples/fixtures/codex-cli-visible-proof/runtime-idle-same-tui.public.json`
-  records the matching idle guard.
+  记录匹配的 idle guard。
 
-## Rehearse The Current Likely Path
+## 彩排当前可能路径
 
 ```bash
 loopx --format json codex-cli-visible-attach-acceptance \
@@ -33,7 +31,7 @@ loopx --format json codex-cli-visible-attach-acceptance \
   --idle-fixture examples/fixtures/codex-cli-visible-proof/runtime-idle-visible-resume.public.json
 ```
 
-Expected decision:
+预期决策：
 
 ```text
 decision: visible_surface_spike_passed_not_same_tui
@@ -42,11 +40,9 @@ accepted_for_same_tui_automation: false
 blocker: same_tui_visible_attach_not_proven
 ```
 
-This is the important product distinction. A visible `resume` or
-`remote-control` path can become a useful proof spike, but it still does not
-prove LoopX can safely add a turn to the same open TUI.
+这是重要的产品区分。可见的 `resume` 或 `remote-control` 路径可以成为有用的证明 spike，但它仍不证明 LoopX 能安全地往同一个打开的 TUI 里加 Turn。
 
-## Rehearse The Future Promotion Path
+## 彩排未来晋升路径
 
 ```bash
 loopx --format json codex-cli-visible-attach-acceptance \
@@ -58,7 +54,7 @@ loopx --format json codex-cli-visible-attach-acceptance \
   --idle-fixture examples/fixtures/codex-cli-visible-proof/runtime-idle-same-tui.public.json
 ```
 
-Expected decision:
+预期决策：
 
 ```text
 decision: same_tui_visible_attach_accepted
@@ -67,6 +63,4 @@ accepted_for_same_tui_automation: true
 blockers: []
 ```
 
-That result is still an acceptance packet, not an executor. A later driver must
-rerun quota, rerun a fresh idle guard, obey the command boundary, write compact
-evidence or a blocker, and spend quota only after validation.
+该结果仍是验收 packet，不是执行器。之后的驱动必须重跑 quota、重跑新鲜 idle guard、遵守命令边界、写紧凑 evidence 或 blocker，并且只在验证后 spend quota。

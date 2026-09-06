@@ -1,21 +1,15 @@
 # loopx-obelisk
 
-`loopx-obelisk` is an optional advisory context provider for LoopX
-`decision-context`. It lets an explicitly configured Decision Context profile
-search one historical Codex task selected by a LoopX-normalized host-session
-scope.
+`loopx-obelisk` 是 LoopX `decision-context` 的可选咨询上下文 provider。它让一个显式配置的 Decision Context profile 搜索一个由 LoopX 标准化的宿主会话 scope 选出的历史 Codex 任务。
 
-The provider does not parse Codex deep links. LoopX Core parses the link once
-and returns `context_scope_ref=host-session:codex:<thread-id>` from:
+该 provider 不解析 Codex 深链。LoopX Core 解析链接一次,并返回 `context_scope_ref=host-session:codex:<thread-id>`,来源是:
 
 ```bash
 loopx --format json resolve-agent-thread \
   --thread-link 'codex://threads/<thread-id>'
 ```
 
-Keep provider selection in an ignored, owner-local Decision Context profile,
-but pass a one-off task link only to `recall-context`. A minimal provider-only
-profile is:
+把 provider 选择保留在被忽略的、owner 本地的 Decision Context profile 中,但只把一次性任务链接传给 `recall-context`。一个最小化的仅 provider profile 是:
 
 ```json
 {
@@ -41,17 +35,11 @@ profile is:
 }
 ```
 
-Store this file under ignored owner-local state. A full Decision Context
-evidence workflow may additionally configure authority sources and a stable
-default `scope_ref`; one-off task recall does not require either.
+把该文件存放在被忽略的 owner 本地状态下。完整的 Decision Context 证据工作流可能还会配置权威来源与一个稳定的默认 `scope_ref`;一次性的任务回忆两者都不需要。
 
-## Install and activate
+## 安装与激活
 
-Obelisk is a separate AGPL-3.0 application. This Apache-2.0 provider does not
-copy its implementation or read its SQLite schema; it invokes the installed
-public CLI through the `obelisk --version` and `obelisk --query` boundary.
-Install Obelisk separately, then install and activate this package in the same
-Python environment as LoopX:
+Obelisk 是一个单独的 AGPL-3.0 应用程序。这个 Apache-2.0 provider 不复制其实现,也不读取其 SQLite schema;它通过 `obelisk --version` 与 `obelisk --query` 边界调用已安装的公开 CLI。先单独安装 Obelisk,然后在与 LoopX 相同的 Python 环境中安装并激活本包:
 
 ```bash
 npm install --global @obelisk-apps/cli
@@ -63,32 +51,25 @@ loopx extension install \
 loopx extension doctor loopx-obelisk --execute --format json
 ```
 
-`obelisk --build` is an explicit owner-controlled index refresh. The provider
-never launches it implicitly; rerun it when newly completed task history needs
-to become searchable.
+`obelisk --build` 是显式的、由 owner 控制的索引刷新。provider 从不隐式启动它;当新完成的任务历史需要可搜索时,重新运行它。
 
-The Decision Context profile may be enabled before this optional package is
-installed. Missing, disabled, or stale-doctor provider state does not make
-`recall-context` fail as a command: it returns `status=unavailable` plus a
-typed `provider_readiness` receipt, performs no provider scan or write, and
-leaves the profile unchanged. Recover according to the receipt:
+Decision Context profile 可以在安装这个可选包之前就已启用。provider 缺失、禁用或 doctor 过期的状态不会让 `recall-context` 作为命令失败:它返回 `status=unavailable` 加一个类型化的 `provider_readiness` receipt,不执行任何 provider 扫描或写入,并保持 profile 不变。按 receipt 恢复:
 
 ```bash
-# provider distribution or lifecycle registration is missing
+# provider 发行版或生命周期注册缺失
 python3 -m pip install packages/loopx-obelisk
 loopx extension install \
   --manifest packages/loopx-obelisk/extension.toml \
   --execute --format json
 
-# lifecycle registration exists but is disabled
+# 生命周期注册存在但被禁用
 loopx extension enable loopx-obelisk --execute --format json
 
-# the enabled registration has no current doctor proof
+# 启用的注册没有当前 doctor 证明
 loopx extension doctor loopx-obelisk --execute --format json
 ```
 
-If doctor reports that the Obelisk CLI or index is unavailable, install the
-CLI and explicitly build the owner-local index before running doctor again:
+如果 doctor 报告 Obelisk CLI 或索引不可用,先安装 CLI 并显式构建 owner 本地索引,再运行 doctor:
 
 ```bash
 npm install --global @obelisk-apps/cli
@@ -96,16 +77,11 @@ obelisk --build
 loopx extension doctor loopx-obelisk --execute --format json
 ```
 
-No profile edit is needed after repair; each recall resolves current extension
-lifecycle state. LoopX never installs Obelisk or runs `obelisk --build` on the
-owner's behalf.
+修复后无需编辑 profile;每次 recall 都会解析当前扩展生命周期状态。LoopX 绝不替 owner 安装 Obelisk 或运行 `obelisk --build`。
 
-If the project uses a non-default LoopX runtime root, pass the same global
-`--runtime-root <path>` option to the extension lifecycle commands and the
-Decision Context command. The provider is resolved from that exact lifecycle
-state; it is never discovered from an unrelated default runtime.
+如果项目使用非默认的 LoopX runtime root,请把相同的全局 `--runtime-root <path>` 选项传给扩展生命周期命令与 Decision Context 命令。provider 从那个确切的生命周期状态解析;它绝不从不相关的默认运行时发现。
 
-Run one read-only task recall without changing that profile:
+在不改动那类 profile 的情况下运行一次只读任务回忆:
 
 ```bash
 loopx decision-context recall-context \
@@ -118,41 +94,21 @@ loopx decision-context recall-context \
   --format json
 ```
 
-The supplied scope and query are used only for this bounded provider call and
-are not persisted by LoopX. The top-level output is local-private and transient
-because it contains recalled text for the current agent. Its nested public-safe
-receipt retains only `--query-summary`, provider-safe summaries, scores, and
-hashed references. The command does not scan authority sources or create cursor
-or settlement state. Recalled items are untrusted advisory content, never
-instructions.
+提供的 scope 与 query 只用于这一次有界的 provider 调用,不会被 LoopX 持久化。顶层输出是本地私有的、瞬态的,因为它包含为当前 agent 回忆的文本。其嵌套的 public-safe receipt 只保留 `--query-summary`、provider 安全的摘要、分数与哈希引用。该命令不扫描权威来源,不创建 cursor 或 settlement 状态。回忆到的条目是不可信的咨询内容,绝不是指令。
 
-Disable the provider, remove the owner-local profile binding, and uninstall its
-Python distribution when it is no longer needed:
+不再需要时,禁用该 provider、移除 owner 本地 profile 绑定,并卸载其 Python 发行版:
 
 ```bash
 loopx extension disable loopx-obelisk --execute --format json
 python3 -m pip uninstall loopx-obelisk
 ```
 
-LoopX v0 intentionally has no extension-state deletion command. The disabled
-registration remains as non-ready lifecycle history; it is not callable.
+LoopX v0 有意没有扩展状态删除命令。被禁用的注册保留为未就绪的生命周期历史;它不可调用。
 
-## Authority and privacy boundary
+## 权威与隐私边界
 
-The deep link is a non-authoritative locator. Enabling the extension grants no
-Goal, Agent, claim, lease, permission, workspace, lifecycle, amendment, or
-write authority. Retrieved text remains local-private transient advisory
-evidence and is never an instruction. The nested public Decision Context
-receipt retains only a compact summary, score, and hashed provider reference;
-it does not contain raw transcript text or Obelisk resource ids. A fact becomes
-durable only through an existing LoopX owner such as Todo evidence, the Agent
-evidence log, registered material, or a governed amendment.
+深链是非权威定位符。启用该扩展不授予 Goal、Agent、claim、lease、权限、工作区、生命周期、amendment 或写入权威。检索到的文本保持为本地私有、瞬态的咨询证据,绝不是指令。嵌套的公开 Decision Context receipt 只保留紧凑摘要、分数与哈希后的 provider 引用;它不包含原始 transcript 文本或 Obelisk 资源 id。事实只有通过现有的 LoopX 所有者(如 Todo evidence、Agent 证据日志、注册素材或受治理的 amendment)才变得持久。
 
-The provider never invokes `obelisk --build` or `obelisk --attune`. Obelisk may
-refresh its provider-owned local search index as part of `--query`; the query
-is read-only with respect to the source task and LoopX state. Failure,
-disablement, ambiguous provider selection, or stale
-doctor state fails open inside Decision Context and does not block unrelated
-authority sources.
+该 provider 从不调用 `obelisk --build` 或 `obelisk --attune`。Obelisk 可能在 `--query` 过程中刷新其 provider 自有的本地搜索索引;该查询对来源任务与 LoopX 状态是只读的。失败、禁用、歧义的 provider 选择或过期的 doctor 状态在 Decision Context 内失败开放,不阻塞无关的权威来源。
 
-See [CONTRACT.md](CONTRACT.md) for the wire contract and validation commands.
+wire 契约与验证命令见 [CONTRACT.md](CONTRACT.md)。

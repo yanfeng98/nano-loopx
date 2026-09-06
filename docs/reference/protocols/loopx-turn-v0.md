@@ -1,60 +1,41 @@
-# LoopX Governed Turn v0
+# LoopX 受治理 Turn v0
+> [English](loopx-turn-v0.md)
 
-Status: experimental protocol and implementation target.
+状态：实验性协议与实现目标。
 
-Integrators using the built-in Codex CLI host should start with the
-[one-Turn quickstart](../../product/runtimes/codex-cli/loopx-turn-codex-cli-quickstart.md). This
-document is the protocol and maintainer reference, not required onboarding.
+使用内置 Codex CLI host 的集成方应从 [单 Turn 快速上手](../../product/runtimes/codex-cli/loopx-turn-codex-cli-quickstart.md) 开始。本文档是协议与维护者参考，不是必需 onboarding。
 
-`loopx_turn_v0` defines how LoopX can govern one bounded turn executed by an
-external agent-loop host, such as Codex CLI, without turning that host into a
-second control plane. LoopX remains authoritative for goal state, todos,
-claims, gates, quota, scheduler hints, and compact evidence. The host owns
-model execution, tools, and an opaque resumable session handle.
+`loopx_turn_v0` 定义 LoopX 如何治理一个由外部 agent-loop host（如 Codex CLI）执行的有界 Turn，而不把该 host 变成第二控制面。LoopX 对 goal 状态、todos、claims、gates、quota、scheduler 提示与紧凑证据保持权威。Host 拥有模型执行、工具与不透明的可恢复会话句柄。
 
-The protocol is host-neutral. A Codex CLI adapter is the first target, but the
-driver lifecycle must not depend on Codex-specific session files, transcript
-formats, or benchmark task schemas.
+协议是 host 中立的。Codex CLI 适配器是首个目标，但驱动器生命周期不得依赖 Codex 特定会话文件、transcript 格式或 benchmark 任务 schema。
 
-## Mental Model
+## 心智模型
 
-LoopX Turn is a four-stage control loop, not another agent runtime:
+LoopX Turn 是四阶段控制环，而非另一个 agent 运行时：
 
 ```text
-LoopX decides -> agent CLI executes -> validator proves -> LoopX commits
+LoopX 决策 -> agent CLI 执行 -> 验证器证明 -> LoopX 提交
 ```
 
-| Stage | Owner | Contract |
+| 阶段 | Owner | 契约 |
 | --- | --- | --- |
-| Decide | LoopX CLI | Select one allowed action from live goal, todo, gate, capability, quota, and cadence state. |
-| Execute | Host adapter plus an agent CLI such as Trae CLI or Codex CLI | Consume one typed request, run one bounded segment, and emit one typed candidate result. |
-| Validate | Independent task-specific command or callback | Check the real artifact, test, remote state, or declared read-only postcondition. |
-| Commit | LoopX CLI | Write durable state and spend one quota slot only after validation passes. |
+| 决策 | LoopX CLI | 从实时 goal、todo、gate、capability、quota 与节奏状态中选一个允许动作。 |
+| 执行 | Host 适配器加 Trae CLI 或 Codex CLI 等 agent CLI | 消费一个类型化请求、运行一个有界段落、发出一个类型化候选结果。 |
+| 验证 | 独立任务特定命令或回调 | 检查真实工件、测试、远程状态或声明的只读后置条件。 |
+| 提交 | LoopX CLI | 只在验证通过后写持久化状态并花费一个配额槽。 |
 
-This separation lets the same Turn contract govern coding, operations, data,
-document, knowledge-maintenance, and other long-running workflows. The agent
-CLI remains responsible for model and tool execution; it does not become the
-authority for goal state or completion.
+该分离让同一 Turn 契约治理编码、运维、数据、文档、知识维护与其他长程工作流。Agent CLI 仍负责模型与工具执行；它不成为 goal 状态或完成的权威。
 
-## Generic Agent CLI Quick Start
+## 通用 Agent CLI 快速上手
 
-An agent CLI does not need native LoopX support. It needs a thin host adapter
-and an independent validator:
+Agent CLI 不需要原生 LoopX 支持。它需要一个薄 host 适配器与一个独立验证器：
 
-1. Run `loopx turn plan` to inspect the live typed decision without launching
-   the host or changing state.
-2. The host adapter reads one `loopx_turn_host_request_v0` JSON object from
-   stdin, invokes the selected agent CLI in the governed workspace, and writes
-   exactly one `loopx_turn_host_result_v0` JSON object to stdout.
-3. The validator reads the normalized host result from stdin and independently
-   checks the claimed postcondition. Exit zero means passed; non-zero means the
-   result is rejected. A timeout or unavailable validator is inconclusive.
-4. `loopx turn run-once --execute` performs writeback and quota spend only when
-   the typed result and independent validation both pass.
+1. 运行 `loopx turn plan` 检查实时类型化决策，而不启动 host 或改变状态。
+2. Host 适配器从 stdin 读取一个 `loopx_turn_host_request_v0` JSON 对象，在受治理工作区调用所选 agent CLI，并向 stdout 写恰好一个 `loopx_turn_host_result_v0` JSON 对象。
+3. 验证器从 stdin 读取规范化 host 结果，并独立检查声称的后置条件。退出零意为通过；非零意为结果被拒绝。超时或验证器不可用为无定论。
+4. `loopx turn run-once --execute` 只在类型化结果与独立验证都通过时执行 writeback 与配额花费。
 
-The adapter and validator executable names below are placeholders supplied by
-the integration. They are separate programs because the executor must not
-validate its own completion claim.
+下面适配器与验证器的可执行名是集成提供的占位符。它们是独立程序，因为执行器不得验证自己的完成主张。
 
 ```bash
 loopx turn plan \
@@ -74,51 +55,23 @@ loopx turn run-once \
   --execute
 ```
 
-Do not pass a free-form interactive command directly as
-`--host-adapter-command-json` unless it already implements the typed
-stdin/stdout contract. For Trae CLI,
-Codex CLI, or another conversational CLI, the adapter translates between the
-Turn request/result objects and that CLI's prompt, session, and output model.
-Raw transcript text, process exit zero, and the host's own completion claim are
-never sufficient validation.
+除非它已经实现类型化 stdin/stdout 契约，否则不要直接把自由格式交互命令作为 `--host-adapter-command-json` 传入。对于 Trae CLI、Codex CLI 或另一会话式 CLI，适配器在 Turn 请求/结果对象与该 CLI 的 prompt、会话与输出模型之间翻译。原始 transcript 文本、进程退出零与 host 自己的完成主张绝不构成足够验证。
 
-A reference headless adapter for TraeX (`traex exec`) lives at
-`scripts/traex_turn_host_adapter.py`; it reads the bounded action text from the
-Turn envelope and writes one typed result, leaving goal/todo authority and
-validation to LoopX.
+TraeX（`traex exec`）的参考无头适配器位于 `scripts/traex_turn_host_adapter.py`；它从 Turn 信封读取有界动作文本并写一个类型化结果，把 goal/todo 权限与验证留给 LoopX。
 
-A DeepSeek Harness adapter lives in the `loopx.dsh_goal_mode` subpackage
-(run with `python -m loopx.dsh_goal_mode`; the legacy
-`scripts/dsh_turn_host_adapter.py` launcher still works); it uses
-the optional `deepseek-harness-sdk` Python client to run one bounded dsh session
-and parses the final assistant JSON message into the same typed Turn result.
-Prefer the built-in `loopx turn run-once --host dsh` surface so structured SDK
-terminal failures reach the Turn Journal. The module/subprocess invocation with
-`--host generic-cli` remains the compatibility and rollback path.
-See [DeepSeek Harness connector](../../integrations/deepseek-harness-connector.md).
+一个 DeepSeek Harness 适配器位于 `loopx.dsh_goal_mode` 子包中（用 `python -m loopx.dsh_goal_mode` 运行；遗留 `scripts/dsh_turn_host_adapter.py` 启动器仍可用）；它使用可选的 `deepseek-harness-sdk` Python 客户端运行一个有界 dsh 会话，并把最终 assistant JSON 消息解析为同一类型化 Turn 结果。优先使用内置 `loopx turn run-once --host dsh` 界面，使结构化 SDK 终态失败到达 Turn Journal。用 `--host generic-cli` 的模块/子进程调用保持为兼容与回滚路径。参见 [DeepSeek Harness connector](../../integrations/deepseek-harness-connector.md)。
 
-### Five Questions For Any Agent CLI
+### 任何 Agent CLI 的五个问题
 
-Before wiring Trae CLI, Codex CLI, or another host, answer these five questions:
+接入 Trae CLI、Codex CLI 或另一 host 前，回答这五个问题：
 
-1. **How does it run unattended?** Choose an explicit non-interactive command
-   and workspace. If the CLI is interactive-only, it is not an
-   `isolated-headless` adapter yet.
-2. **How does it return one typed result?** Prefer a native output schema or a
-   dedicated result file. Do not scrape arbitrary conversation text as the
-   completion contract.
-3. **What is its resume handle?** Keep the opaque handle in local adapter
-   state, keyed by `(goal_id, agent_id, todo_id)`. Never put it in LoopX state
-   or public evidence.
-4. **Which failures may resume?** A bounded timeout or lost transport may
-   preserve an observed session. A rejected startup contract, incompatible
-   host version, or missing session invalidates it so the next Turn starts
-   cleanly.
-5. **What proves the work independently?** Name a command that checks the real
-   repository, artifact, service readback, document revision, or other
-   postcondition without trusting the agent CLI's own claim.
+1. **如何无人值守运行？** 选择显式非交互命令与工作区。若 CLI 仅交互，它还不是 `isolated-headless` 适配器。
+2. **如何返回一个类型化结果？** 优先原生输出 schema 或专用结果文件。不要把任意会话文本当作完成契约抓取。
+3. **其恢复句柄是什么？** 把不透明句柄保存在本地适配器状态，按 `(goal_id, agent_id, todo_id)` 键控。绝不放入 LoopX 状态或公开证据。
+4. **哪些失败可恢复？** 有界超时或传输丢失可以保留已观察会话。被拒绝的启动契约、不兼容 host 版本或缺会话使其失效，使下一 Turn 干净开始。
+5. **什么独立证明工作？** 指名一个检查真实仓库、工件、服务回读、文档修订或其他后置条件、而不信任 agent CLI 自身主张的命令。
 
-This yields one reusable integration shape:
+这产生一个可复用集成形状：
 
 ```text
 TurnEnvelope
@@ -127,7 +80,7 @@ TurnEnvelope
     -> LoopX writeback -> one durable transition and one quota spend
 ```
 
-A thin adapter can be implemented with this host-neutral algorithm:
+薄适配器可以用该 host 中立算法实现：
 
 ```text
 request = read_one_json(stdin)
@@ -139,33 +92,19 @@ candidate = read_and_shape_temporary_result(temporary_result_path)
 write_one_json(stdout, candidate with request.turn_key)
 ```
 
-`render_bounded_prompt` should tell the agent CLI to work only on the selected
-todo and write its candidate result to a dedicated temporary path. The adapter
-must reject a missing or malformed result instead of guessing from prose. It may
-discard raw conversation output after extracting the host's opaque session
-handle. LoopX then passes the candidate to a separate validator; the adapter
-does not call the work complete itself.
+`render_bounded_prompt` 应告诉 agent CLI 只处理所选 todo，并把候选结果写到专用临时路径。适配器必须拒绝缺失或畸形结果，而非从散文猜测。提取 host 的不透明会话句柄后，它可以丢弃原始会话输出。LoopX 随后把候选交给独立验证器；适配器不自行宣布工作完成。
 
-For a CLI with native structured output and resume support, the adapter is
-mostly field mapping. For a CLI such as a Trae installation whose selected
-command only returns conversational text, the wrapper must first establish a
-dedicated typed result channel; passing `trae chat` directly as the adapter is
-not sufficient. Check the installed CLI's help and pin the qualified command
-shape because flags and headless behavior may vary by version.
+对于带原生结构化输出与恢复支持的 CLI，适配器主要是字段映射。对于所选命令只返回会话文本的 Trae 安装之类 CLI，包装器必须先建立专用类型化结果 channel；直接把 `trae chat` 作为适配器不够。检查已安装 CLI 的帮助并钉住合格命令形状，因为标志与无头行为可能随版本变化。
 
-### Repeatable Codex CLI Qualification
+### 可重复 Codex CLI 资格
 
-The repository includes an opt-in end-to-end qualification that creates an
-ephemeral LoopX project and workspace. Its default mode uses a no-model Codex
-fixture while exercising the built-in host adapter, independent validator,
-state writeback, one quota spend, and idempotent transaction replay:
+仓库包含一个可选端到端资格，创建临时 LoopX 项目与工作区。其默认模式使用无模型 Codex fixture，同时演练内置 host 适配器、独立验证器、状态 writeback、一次配额花费与幂等事务重放：
 
 ```bash
 python3 examples/loopx-turn-codex-cli-e2e-smoke.py
 ```
 
-Use the real mode only when a local Codex login is available and one isolated
-model call is intended:
+只有本地 Codex 登录可用且意图做一次隔离模型调用时才使用真实模式：
 
 ```bash
 python3 examples/loopx-turn-codex-cli-e2e-smoke.py \
@@ -173,73 +112,40 @@ python3 examples/loopx-turn-codex-cli-e2e-smoke.py \
   --codex-model <compatible-model>
 ```
 
-The real mode emits only a compact LoopX qualification summary. LoopX does not
-copy the prompt, transcript, stdout, or stderr into fixture state, the temporary
-workspace and LoopX session binding are removed, and the disposable goal never
-syncs into the global registry. Codex CLI may retain its opaque host session
-according to local Codex policy so a later adapter turn can resume it. A compact
-`codex_cli_model_requires_newer_codex` failure is a host-compatibility result:
-the transaction must show zero state writes and zero quota spend; select a
-compatible model or update Codex before retrying.
+真实模式只发出紧凑 LoopX 资格摘要。LoopX 不把 prompt、transcript、stdout 或 stderr 复制进 fixture 状态，临时工作区与 LoopX 会话绑定被移除，一次性 goal 绝不同步进全局 registry。Codex CLI 可以按本地 Codex 策略保留其不透明 host 会话，使后续适配器 Turn 可以恢复它。紧凑 `codex_cli_model_requires_newer_codex` 失败是 host 兼容结果：事务必须显示零状态写入与零配额花费；重试前选择兼容模型或更新 Codex。
 
-For a coding collaboration, the validator may run focused tests and inspect the
-expected git diff. For operations, it may read back the declared resource
-state. For data work, it may check a schema and bounded quality assertions. For
-documents or knowledge maintenance, it may verify the target revision and
-required sections. These are different validators over the same Turn
-orchestration contract; they do not require different control loops.
+对于编码协作，验证器可以运行聚焦测试并检查预期 git diff。对于运维，它可以回读声明的资源状态。对于数据工作，它可以检查 schema 与有界质量断言。对于文档或知识维护，它可以验证目标修订与必需小节。这些是同一 Turn 编排契约上的不同验证器；它们不需要不同控制环。
 
-## Authority Boundary
+## 权限边界
 
-| Concern | Authority |
+| 关注点 | 权限 |
 | --- | --- |
-| Goal, todo, claim, gate, quota, and cadence | LoopX CLI and registry-backed state |
-| Session creation, resume, cancellation, and tool execution | External host adapter |
-| Repository write isolation | LoopX workspace guard plus repository policy |
-| Validation | Task-specific validator selected by the agent or adapter |
-| Durable outcome and quota spend | LoopX writeback after validation |
+| Goal、todo、claim、gate、quota 与节奏 | LoopX CLI 与 registry 支撑状态 |
+| 会话创建、恢复、取消与工具执行 | 外部 host 适配器 |
+| 仓库写隔离 | LoopX 工作区 guard 加仓库策略 |
+| 验证 | 由 agent 或适配器选择的任务特定验证器 |
+| 持久化结局与配额花费 | 验证后的 LoopX writeback |
 
-The host must not infer a different action from status prose. It consumes a
-fresh `loopx_turn_envelope_v0` decision and preserves its action signature.
-Full quota/status detail remains available through the envelope cold-path
-references.
+Host 不得从状态散文推断不同动作。它消费一份新鲜 `loopx_turn_envelope_v0` 决策并保留其动作签名。完整 quota/status 详情仍可通过信封冷路径引用获得。
 
-## Turn Lifecycle
+## Turn 生命周期
 
-One driver tick has exactly these ordered phases:
+一个驱动器 tick 恰好有这些有序相位：
 
-1. **Wake**: resolve `goal_id`, registered `agent_id`, host kind, explicit
-   execution mode, available capabilities, and an optional opaque session
-   handle.
-2. **Decide**: run live `quota should-run --turn-envelope` with the observed
-   capabilities. A fixture is valid only in tests and shadow replay.
-3. **Route**: obey the envelope without invoking the host when the user channel
-   requires action, work is throttled, a monitor is unchanged, or delivery is
-   otherwise disallowed. Apply and acknowledge scheduler-only changes without
-   spending quota.
-4. **Prepare**: preserve the selected todo identity, claim or lease when the
-   contract requires it, and satisfy the workspace guard before any repository
-   write.
-5. **Execute**: resume the declared host session only when the adapter marked
-   it eligible, or create a new session when the execution mode permits it.
-   Give the host the thin task body plus the current envelope, and request one
-   bounded work segment.
-6. **Validate**: classify the host result and validate the claimed artifact or
-   state transition. Host process exit zero is not validation.
-7. **Write back**: update or complete the current todo, create a repair or
-   successor todo when required, and refresh state with compact public-safe
-   evidence.
-8. **Spend and schedule**: spend one quota slot only after validated writeback,
-   then apply and acknowledge the latest scheduler hint. Cadence-only work does
-   not spend quota.
+1. **唤醒**：解析 `goal_id`、已注册 `agent_id`、host 种类、显式执行模式、可用能力与可选不透明会话句柄。
+2. **决策**：带观察到的能力运行实时 `quota should-run --turn-envelope`。Fixture 只在测试与影子重放中有效。
+3. **路由**：用户 channel 需要动作、工作被限流、monitor 未变化或投递被禁止时，遵循信封而不调用 host。无配额花费地应用并确认仅 scheduler 变更。
+4. **准备**：保留所选 todo 身份、契约要求时的 claim 或 lease，并在任何仓库写入前满足工作区 guard。
+5. **执行**：只在适配器将声明 host 会话标记为合格时恢复它，或执行模式允许且创建新会话。给 host 薄任务正文加当前信封，并请求一个有界工作段落。
+6. **验证**：分类 host 结果，并验证声称的工件或状态迁移。Host 进程退出零不是验证。
+7. **写回**：更新或完成当前 todo，需要时创建 repair 或 successor todo，并用紧凑公开安全证据刷新状态。
+8. **花费与调度**：只在验证 writeback 后花费一个配额槽，然后应用并确认最新 scheduler 提示。仅节奏工作不花费配额。
 
-The driver may stop after any phase. A stop must return a typed result and must
-not silently continue with a different execution mode.
+驱动器可以在任何相位后停止。停止必须返回类型化结果，且不得静默以不同执行模式继续。
 
-### Read-Only Journal Inspection
+### 只读 Journal 检查
 
-Maintainers can inspect one existing fenced journal without entering the live
-Turn lifecycle:
+维护者可以在不进入实时 Turn 生命周期的情况下检查一个既有围栏 journal：
 
 ```bash
 loopx turn inspect-journal \
@@ -249,116 +155,42 @@ loopx turn inspect-journal \
   --format markdown
 ```
 
-The command resolves the canonical runtime journal path, reads it under the
-existing journal lock, and projects `interpret_turn_journal` into
-`loopx_turn_journal_inspection_v1`. It branches before status collection,
-quota construction, scheduler context, planning, host invocation, settlement,
-spend, or state writeback. Its `effects` field is therefore always an empty
-list.
+命令解析规范运行时 journal 路径，在既有 journal 锁下读取它，并把 `interpret_turn_journal` 投影为 `loopx_turn_journal_inspection_v1`。它在 status 收集、quota 构建、scheduler 上下文、规划、host 调用、结算、花费或状态 writeback 之前分支。其 `effects` 字段因此始终为空列表。
 
-Exit zero means that inspection completed, including when `decision` is
-`replay_blocked`. A non-zero exit means the command could not inspect the
-requested journal because a selector, file, JSON document, or schema was
-invalid. This surface is diagnostic evidence only: it grants no authority to
-resume, retry, settle, schedule, spend, or write, and it is never an execution
-gate. Settlement replay enforcement remains owned by the Turn executor.
+退出零意为检查完成，包括 `decision` 为 `replay_blocked` 时。非零退出意为命令因选择器、文件、JSON 文档或 schema 无效而无法检查请求的 journal。该界面只作诊断证据：它不授予恢复、重试、结算、调度、花费或写入权限，也绝不是执行关卡。结算重放强制仍归 Turn 执行器所有。
 
-Version 1 separates two questions that version 0 exposed through replay fields
-alone:
+版本 1 分离了版本 0 仅通过重放字段暴露的两个问题：
 
-- `replay_legal` says whether a terminal Journal can be reinterpreted without
-  effects; it is not recovery permission.
-- `recovery_decision` is the plan the real executor consumes for an existing
-  Journal: `action`, `can_continue`, `resume_from`, `reinvoke_host`, a typed
-  `reason`, and the checks that actually participated.
+- `replay_legal` 说明终态 Journal 是否可以在无效果的情况下重新解释；它不是恢复许可。
+- `recovery_decision` 是真实执行器对既有 Journal 消费的计划：`action`、`can_continue`、`resume_from`、`reinvoke_host`、类型化 `reason` 与实际参与的检查。
 
-`journal_consistent` also requires a complete canonical typed settlement
-identity. Its goal and agent must match the Journal, envelope, and requested
-owner; its Turn instance must match the transaction; and its binding and effect
-id must validate under the settlement schema. A Todo binding must also match
-the envelope's authoritative selected Todo, including the adaptive primary Todo
-override. A mismatch therefore produces a blocked recovery decision before
-Host or any settlement provider is called, even when the completed phase prefix
-would otherwise resume at durable writeback or a later effect. The current Turn
-driver does not produce Todo-less autonomous-replan transaction Journals, so it
-does not infer such a binding without authoritative Turn lineage.
+`journal_consistent` 还要求完整规范类型化结算身份。其 goal 与 agent 必须匹配 Journal、信封与请求的 owner；其 Turn 实例必须匹配事务；其绑定与 effect id 必须在结算 schema 下验证。Todo 绑定还必须匹配信封的权威所选 Todo，包括自适应主动作 Todo 覆盖。因此不匹配会在调用 Host 或任何结算 provider 之前产生阻塞恢复决策，即使已完成的相位前缀本来会恢复在持久化 writeback 或后续效果处。当前 Turn 驱动器不产生无 Todo 自主重规划事务 Journal，因此它不会在没有权威 Turn 血统的情况下推断这种绑定。
 
-For example, an `in_progress` Journal with a saved Host Result has
-`replay_legal=false` but may continue from `validation` without another Host
-call. `scheduler_action_required` continues from `scheduler_apply` and does not
-repeat Host, writeback, or quota spend. A failed Host Session is evaluated only
-when `--retry-failed-turn` is explicit and must pass the current Session Binding
-check. Retryable Host failures also carry a content-free
-`loopx_turn_host_failure_v0` record. The Journal persists the attempt before
-Host invocation, and the TypeScript recovery decision rejects another
-invocation after the declared bounded budget. Backoff is an outer-scheduler
-hint; `run-once` never sleeps in-process or silently changes the selected model.
-A dangling prepared effect remains owned by the existing provider
-readback protocol; the recovery decision only records that the readback is the
-next required check and does not claim general exactly-once execution.
+例如，带保存 Host Result 的 `in_progress` Journal 有 `replay_legal=false`，但可以从 `validation` 继续而无需另一次 Host 调用。`scheduler_action_required` 从 `scheduler_apply` 继续，不重复 Host、writeback 或配额花费。失败 Host Session 只在 `--retry-failed-turn` 显式时被评估，且必须通过当前 Session Binding 检查。可重试 Host 失败还携带无内容的 `loopx_turn_host_failure_v0` 记录。Journal 在 Host 调用前持久化尝试，TypeScript 恢复决策在声明有界预算后拒绝另一次调用。Backoff 是外层 scheduler 提示；`run-once` 从不在进程内睡眠，也不静默更换所选模型。悬挂的 prepare 效果仍归既有 provider 回读协议所有；恢复决策只记录该回读是下一必需检查，不声称通用 exactly-once 执行。
 
-When an existing Journal is continued, `run-once` persists one bounded
-`loopx_turn_recovery_audit_v0` record. Its `planned` value is the adopted shared
-decision; its `actual` value distinguishes `started` from `finished` and records
-only final Journal status, completed phase ids, and whether this recovery
-invoked Host. `inspect-journal` exposes that record as `last_recovery`. Raw Host
-output, Session data, effect payloads, credentials, and local paths remain
-excluded.
+继续既有 Journal 时，`run-once` 持久化一条有界 `loopx_turn_recovery_audit_v0` 记录。其 `planned` 值是采纳的共享决策；其 `actual` 值区分 `started` 与 `finished`，只记录最终 Journal 状态、已完成相位 id 与本次恢复是否调用 Host。`inspect-journal` 把该记录暴露为 `last_recovery`。原始 Host 输出、Session 数据、effect 载荷、凭据与本地路径保持排除。
 
-### User-Gate Quiet Wait
+### 用户 Gate 安静等待
 
-When the user owns the next step and the agent lane has no executable work, the
-decision envelope carries an execution obligation of kind `user_gate_quiet_wait`
-with `must_attempt_work=false` and `delivery_allowed=false`. This happens when
-at least one open user-action todo exists while the agent lane exposes no first
-executable item, and no agent replan obligation takes precedence.
+当用户拥有下一步且 agent lane 无可执行工作时，决策信封携带执行义务种类 `user_gate_quiet_wait`，`must_attempt_work=false` 与 `delivery_allowed=false`。这发生在至少一个开放用户动作 todo 存在、而 agent lane 不暴露首个可执行项、且没有 agent replan 义务优先时。
 
-A quiet-wait envelope is not a stall:
+安静等待信封不是停住：
 
-- the host must not invoke the model, send prompts, retry with backoff, or
-  consume a heartbeat spend;
-- the host must not report a stall, session failure, or dead-process risk for a
-  driver that is correctly waiting at this obligation;
-- the driver stays quiet until the projected user action clears the frontier or
-  a later decision rotates the obligation (for example to a replan or a fresh
-  runnable todo).
+- host 不得调用模型、发送 prompt、带退避重试或消耗 heartbeat 花费；
+- host 不得为正确等待在此义务上的驱动器报告停住、会话失败或死进程风险；
+- 驱动器保持安静，直到投影的用户动作清除前沿或后续决策轮换义务（例如到 replan 或新鲜可运行 todo）。
 
-The obligation is machine-enforced by the control plane, not host prose: the
-host reads `must_attempt_work=false` from the typed obligation and preserves the
-quiet wait without re-deriving an action from status text.
+该义务由控制面机器强制，而非 host 散文：host 从类型化义务读取 `must_attempt_work=false` 并保留安静等待，而不从状态文本重新推导动作。
 
-For material results, schema-valid host output is only candidate evidence. The
-caller or adapter must select an independent task/postcondition validator
-before host execution. The generic CLI accepts a trusted JSON argv array,
-passes the normalized host result on stdin, never invokes a shell, and discards
-validator stdout and stderr. A missing, failed, or inconclusive validator stops
-at `validation_failed`, records a typed `repair_required` or `replan_required`
-recovery disposition, and cannot write state or spend quota. Typed stop results
-do not require task validation because they produce no material writeback.
+对于物化结果，schema 有效 host 输出只是候选证据。调用方或适配器必须在 host 执行前选择独立任务/后置条件验证器。通用 CLI 接受可信 JSON argv 数组，把规范化 host 结果经 stdin 传入，绝不调用 shell，并丢弃验证器 stdout 与 stderr。缺失、失败或无定论验证器在 `validation_failed` 停止，记录类型化 `repair_required` 或 `replan_required` 恢复处置，且不能写状态或花费配额。类型化停止结果不需要任务验证，因为它们不产生物化 writeback。
 
-An independent callback validator may distinguish terminal completion from
-validated intermediate progress. `status=passed` means the declared terminal
-postcondition holds and uses exit code `0`. `status=progress` means a bounded,
-task-facing postcondition is independently proven but the terminal
-postcondition is still open; it uses an explicit non-zero marker. Both statuses
-may commit exactly one Turn and one quota spend. Only `progress` permits a host
-adapter to start another Turn, and only under a predeclared maximum, shared
-total time budget, and no-feedback continuation policy. Every other validator
-status fails closed before writeback.
+独立回调验证器可以区分终态完成与验证的中间进展。`status=passed` 意为声明的终态后置条件成立，使用退出码 `0`。`status=progress` 意为有界、任务面向的后置条件被独立证明，但终态后置条件仍开放；它使用显式非零标记。两种状态都可以恰好提交一个 Turn 与一次配额花费。只有 `progress` 允许 host 适配器启动另一个 Turn，且只在预先声明的最大次数、共享总时间预算与无反馈继续策略下。每个其他验证器状态在 writeback 前失效关闭。
 
-Adapters that lack a separate terminal signal may declare a bounded `fixed-n`
-terminal policy. Under that policy, each successful independent validator call
-proves progress, while only a successful final configured Turn satisfies the
-sequence terminal postcondition. The default `validator` policy continues to
-interpret exit code `0` as per-Turn terminal completion. Within a bounded
-multi-Turn sequence, a successful Turn that also proves a durable content
-change receives one further blinded review Turn before sequence termination;
-the next successful no-change Turn may terminate early. The policy is explicit
-in public-safe runner prerequisites and never changes benchmark scoring.
+缺乏独立终态信号的适配器可以声明有界 `fixed-n` 终态策略。在该策略下，每次成功独立验证器调用证明进展，而只有最终配置成功的 Turn 满足序列终态后置条件。默认 `validator` 策略继续把退出码 `0` 解释为每 Turn 终态完成。在有界多 Turn 序列内，一个成功且同时证明持久化内容变更的 Turn 会先收到一次盲审 Turn，然后才序列终止；下一个成功的无变更 Turn 可以提前终止。该策略在公开安全 runner 前置条件中显式，绝不改变 benchmark 评分。
 
-## Turn Input
+## Turn 输入
 
-The driver input is a small composition of existing contracts:
+驱动器输入是既有契约的小型组合：
 
 ```json
 {
@@ -384,159 +216,98 @@ The driver input is a small composition of existing contracts:
 }
 ```
 
-`session_handle` is local adapter state. It must not be committed, copied into
-LoopX public state, or treated as identity authority. The stable control-plane
-identity is `(goal_id, agent_id, selected_todo.todo_id)`.
+`session_handle` 是本地适配器状态。它不得被提交、复制进 LoopX 公开状态或当作身份权限。稳定控制面身份是 `(goal_id, agent_id, selected_todo.todo_id)`。
 
-Adapters may support two explicit execution modes:
+适配器可以支持两种显式执行模式：
 
-- `interactive_visible`: user-visible and interruptible; never falls back to
-  hidden execution.
-- `isolated_headless`: an explicitly selected experiment or worker mode in an
-  isolated workspace; never claims to preserve an interactive TUI.
+- `interactive_visible`：用户可见且可中断；绝不回退到隐藏执行。
+- `isolated_headless`：隔离工作区中的显式选择的实验或 worker 模式；绝不声称保留交互 TUI。
 
-Mode selection is input policy, not a retry heuristic.
+模式选择是输入策略，不是重试启发式。
 
-## Typed Result
+## 类型化结果
 
-Every attempted tick returns one result kind:
+每次尝试的 tick 返回一个结果种类：
 
-| Result kind | Meaning | Required next state |
+| 结果种类 | 含义 | 所需下一状态 |
 | --- | --- | --- |
-| `validated_progress` | One bounded segment produced validated evidence. | Update current todo, refresh, spend once. |
-| `validated_completion` | Acceptance for the current todo is met. | Complete todo with exactly one typed continuation (`successor`, `active_goal`, or `no_followup`), refresh, spend once. |
-| `repair_required` | The todo remains sound but a recoverable execution defect blocks it. | Keep or create a concrete repair todo; do not mark success. |
-| `replan_required` | The current route is exhausted or incompatible while the goal acceptance gap remains. | Write a bounded todo delta or vision replan trigger. |
-| `user_action_required` | A concrete user decision, payload, or credential action is projected. | Notify with the projected action in the configured operator language; no host run and no spend. |
-| `wait` | Quota, monitor, scheduler, or another typed wait contract applies. | Preserve state, apply cadence if needed, no spend. |
-| `host_failure` | The host could not start, resume, or finish a turn. | Record the failure class and retry or repair policy. |
-| `validation_failed` | Host output exists but task validation failed or is inconclusive. | Preserve failure evidence and route to repair/replan. |
-| `writeback_failed` | Validated work could not be durably recorded. | Do not spend; retry idempotent writeback before more delivery. |
+| `validated_progress` | 一个有界段落产出了验证证据。 | 更新当前 todo、刷新、花费一次。 |
+| `validated_completion` | 当前 todo 的验收已满足。 | 恰好带一个类型化继续（`successor`、`active_goal` 或 `no_followup`）完成 todo、刷新、花费一次。 |
+| `repair_required` | Todo 仍健全，但可恢复执行缺陷阻塞它。 | 保留或创建具体 repair todo；不标记成功。 |
+| `replan_required` | 当前路由耗尽或不兼容，而 goal 验收缺口仍存在。 | 写有界 todo 增量或 vision replan 触发。 |
+| `user_action_required` | 投影出具体用户决策、载荷或凭据动作。 | 用配置的操作员语言通知投影动作；不运行 host、不花费。 |
+| `wait` | Quota、monitor、scheduler 或另一类型化等待契约适用。 | 保留状态、需要时应用节奏、不花费。 |
+| `host_failure` | Host 无法启动、恢复或完成一个 Turn。 | 记录失败类别与重试或修复策略。 |
+| `validation_failed` | Host 输出存在，但任务验证失败或无定论。 | 保留失败证据并路由到修复/replan。 |
+| `writeback_failed` | 已验证工作无法持久化记录。 | 不花费；更多投递前先重试幂等 writeback。 |
 
-`validated_completion` is admitted only when the Turn caller supplies an
-explicit Todo lifecycle adapter. After independent validation, the adapter must
-authorize and complete the selected Todo through the existing Todo lifecycle,
-then return a compact outcome for that same Todo: linked successors, an
-authorized `no_followup` record, or `active_goal` continuation. The durable
-Turn journal records that outcome before quota spend. A Todo completion alone
-never terminates the goal; a fresh decision owns successor selection and goal
-termination.
+`validated_completion` 只在 Turn 调用方提供显式 Todo 生命周期适配器时被准入。独立验证后，适配器必须通过既有 Todo 生命周期授权并完成所选 Todo，然后为该同一 Todo 返回紧凑结局：链接 successors、授权 `no_followup` 记录或 `active_goal` 继续。持久化 Turn journal 在配额花费前记录该结局。仅 Todo 完成绝不终止 goal；新鲜决策拥有 successor 选择与 goal 终止。
 
-Every newly completed Todo persists `completion_continuation` and an opaque
-completion identity explicitly. The
-value must agree with its durable relations: `successor` requires at least one
-`successor_todo_id`, `no_followup` requires `no_followup=true`, and
-`active_goal` requires neither. A completed record that omits the field is not
-interpreted as `active_goal`; it fails closed until an agent explicitly repairs
-it by replaying `loopx todo complete`. The only post-completion transition is
-the narrow #3261 recovery seam: during the original quota-bound
-`completion_turn_key`, an explicit `active_goal` may be upgraded to
-`no_followup` after the matching writeback and spend receipts exist. The
-recovery records `completion_recovery=same_turn_terminal_closeout`; it cannot
-cross a Turn or replace a successor. A completion made outside a quota Turn
-instead persists a TS-derived `local_completion_*` identity. When a strict
-`refresh-state` rejection later proves that only Todo lifecycle settlement is
-missing, it may project that exact key through `--completion-identity-key`.
-The completion fence accepts this distinct
-`lifecycle_reentry_terminal_closeout` only for the matching completed Todo with
-`active_goal`, no successor, and an authorized lifecycle actor. It does not
-reinterpret the local key as a quota receipt or permit arbitrary cross-Turn
-terminal replay.
+每个新完成的 Todo 显式持久化 `completion_continuation` 与不透明完成身份。该值必须与其持久化关系一致：`successor` 要求至少一个 `successor_todo_id`，`no_followup` 要求 `no_followup=true`，`active_goal` 两者都不要求。省略该字段的已完成记录不被解释为 `active_goal`；它失效关闭，直到 agent 通过重放 `loopx todo complete` 显式修复。唯一的后完成转换是窄 #3261 恢复接缝：在原 quota 绑定 `completion_turn_key` 内，匹配的 writeback 与花费回执存在后，显式 `active_goal` 可以升级为 `no_followup`。恢复记录 `completion_recovery=same_turn_terminal_closeout`；它不能跨 Turn，也不能替换 successor。配额 Turn 之外做出的完成则持久化 TS 派生的 `local_completion_*` 身份。当严格 `refresh-state` 拒绝后来证明只缺 Todo 生命周期结算时，它可以通过 `--completion-identity-key` 投影该精确键。完成围栏只为带 `active_goal`、无 successor、且授权生命周期 actor 的匹配已完成 Todo 接受这个不同 `lifecycle_reentry_terminal_closeout`。它不把本地键重新解释为配额回执，也不允许任意跨 Turn 终态重放。
 
-`repair_required` and `replan_required` are distinct. Repair preserves the
-current task intent. Replan changes the runnable todo set or route because the
-existing task no longer advances the goal. Replan is required when any of the
-following is true:
+`repair_required` 与 `replan_required` 有别。Repair 保留当前任务意图。Replan 改变可运行 todo 集或路由，因为既有任务不再推进 goal。以下任一为真时要求 replan：
 
-- no runnable todo exists while the active vision still has an acceptance gap;
-- the selected todo is terminal, obsolete, or incompatible with observed host
-  capabilities;
-- validated negative evidence invalidates the current route; or
-- two eligible turns produce no material progress through the same route.
+- 无可运行 todo，而活动 vision 仍有验收缺口；
+- 所选 todo 终态、过期或与观察到的 host 能力不兼容；
+- 已验证负面证据使当前路由无效；或
+- 两次合格 Turn 经同一路由无物化进展。
 
-A driver must not terminate merely because one todo ended. Goal termination
-requires goal acceptance evidence, an explicit user stop, or a typed blocked
-state with a concrete projected action.
+驱动器不得仅因一个 todo 结束而终止。Goal 终止要求 goal 验收证据、显式用户停止、或带具体投影动作的类型化阻塞状态。
 
-## Recoverable Failure Classes
+## 可恢复失败类别
 
-| Failure class | Driver behavior |
+| 失败类别 | 驱动器行为 |
 | --- | --- |
-| `auth_required` | Stop for the concrete credential action; never read or upload credentials. |
-| `session_unavailable` | Return `host_failure`; retry resume or start a new session only if the selected mode permits it. |
-| `capability_missing` | Re-run decision with observed capabilities and use capability repair routing, not a fabricated user gate. |
-| `workspace_guard_denied` | Repair or relocate the workspace before writes. |
-| `executor_timeout` or `transport_lost` | Return `host_failure` with bounded retry metadata; do not infer completion. |
-| `provider_capacity`, `provider_overloaded`, or `rate_limited` | Prefer an exact structured provider code, otherwise use a bounded adapter-local diagnostic fallback. Preserve only the typed class, exact attempt, same-configuration strategy, bounded exponential backoff, and maximum attempts. Never persist provider prose or silently select another model. |
-| `quota_exhausted` | Treat hard plan, billing, or included-usage exhaustion as non-retryable repair. Do not collapse it into a timed rate limit. |
-| `result_missing` | Return `validation_failed`; a process exit without typed result is inconclusive. |
-| `validation_failed` | Preserve compact negative evidence and choose repair or replan. |
-| `writeback_failed` | Retry idempotent writeback; never spend first. |
-| `scheduler_apply_failed` | Preserve completed writeback, record cadence failure, and retry scheduler control without a delivery spend. |
+| `auth_required` | 为具体凭据动作停止；绝不读取或上传凭据。 |
+| `session_unavailable` | 返回 `host_failure`；只有所选模式允许时才重试恢复或启动新会话。 |
+| `capability_missing` | 用观察到的能力重跑决策，使用能力修复路由，而非捏造用户 gate。 |
+| `workspace_guard_denied` | 写入前修复或迁移工作区。 |
+| `executor_timeout` 或 `transport_lost` | 返回带重试元数据的 `host_failure`；不推断完成。 |
+| `provider_capacity`、`provider_overloaded` 或 `rate_limited` | 优先精确结构化 provider 码，否则使用有界适配器局部诊断回退。只保留类型化类别、精确尝试、同配置策略、有界指数退避与最大尝试数。绝不持久化 provider 散文或静默选择另一模型。 |
+| `quota_exhausted` | 把硬计划、计费或包含用量耗尽视为不可重试修复。不要把它坍缩成限时速率限制。 |
+| `result_missing` | 返回 `validation_failed`；无类型化结果的进程退出是无定论。 |
+| `validation_failed` | 保留紧凑负面证据并选择修复或 replan。 |
+| `writeback_failed` | 重试幂等 writeback；绝不先花费。 |
+| `scheduler_apply_failed` | 保留已完成 writeback、记录节奏失败、无需投递花费地重试 scheduler 控制。 |
 
-Structured failure discrimination is fail-closed. A known `error.code` wins
-over HTTP status and prose. An unknown non-empty code becomes `unknown` and
-routes to repair; it must not be reinterpreted from its message. HTTP 429 is a
-bounded `rate_limited` signal only when no more-specific provider code exists,
-so an `insufficient_quota` response remains non-retryable even when transported
-as HTTP 429. Current `codex exec --json` releases expose message-only error
-events, so diagnostic matching remains the live compatibility path for that
-adapter; structured Responses, app-server, and JSON-RPC envelopes are accepted
-as forward-compatible inputs but are not claimed as fields emitted by the
-current exec JSONL contract.
+结构化失败判别是失效关闭的。已知 `error.code` 胜过 HTTP 状态与散文。未知非空码变成 `unknown` 并路由到修复；它不得从其消息重新解释。HTTP 429 只在无更具体 provider 码时是有界 `rate_limited` 信号，因此 `insufficient_quota` 响应即使以 HTTP 429 传输也保持不可重试。当前 `codex exec --json` 版本暴露仅消息错误事件，因此诊断匹配仍是该适配器的实时兼容路径；结构化 Responses、app-server 与 JSON-RPC 信封被接受为前向兼容输入，但不声称是当前 exec JSONL 契约发出的字段。
 
-Session recovery is fail-closed:
+会话恢复是失效关闭的：
 
-| Host observation | Session disposition | Next Turn |
+| Host 观察 | 会话处置 | 下一 Turn |
 | --- | --- | --- |
-| Typed result returned | Keep the opaque session eligible. | Resume when the same todo remains selected. |
-| Timeout or transport loss after a session was observed | Keep it eligible, but do not infer progress. | Retry the side-effect-safe host phase. |
-| Incompatible host version or rejected startup/output contract | Invalidate it. | Start a fresh session after repair. |
-| Host reports the session is missing | Invalidate it. | Start a fresh session if policy still allows execution. |
-| Failure before any session was observed | Store nothing. | Re-decide, then start fresh only if allowed. |
+| 返回类型化结果 | 保持不透明会话合格。 | 同一 todo 仍被选中时恢复。 |
+| 观察会话后超时或传输丢失 | 保持合格，但不推断进展。 | 重试副效应安全 host 相位。 |
+| 不兼容 host 版本或被拒绝的启动/输出契约 | 使其失效。 | 修复后启动新会话。 |
+| Host 报告会话缺失 | 使其失效。 | 策略仍允许执行时启动新会话。 |
+| 观察任何会话前失败 | 不存储。 | 重新决策，然后只在允许时全新开始。 |
 
-Session eligibility is recovery metadata, not evidence that work happened. It
-never bypasses a fresh Turn decision, task lease, independent validation, or
-writeback ordering.
+会话资格是恢复元数据，不是工作发生的证据。它绝不绕过新鲜 Turn 决策、任务 lease、独立验证或 writeback 顺序。
 
-## Adapter Requirements
+## 适配器要求
 
-An external host adapter must provide:
+外部 host 适配器必须提供：
 
-- capability discovery that can be passed to `--available-capability`;
-- start, resume, cancel, and bounded-timeout operations;
-- a public-safe typed result channel separate from raw transcript output;
-- an explicit execution mode and no silent mode fallback;
-- an opaque local session handle with no authority beyond host resume;
-- visibility and idle proof before injecting into an interactive session; and
-- deterministic failure mapping to the result and failure classes above.
+- 可以传给 `--available-capability` 的能力发现；
+- 启动、恢复、取消与有界超时操作；
+- 与原始 transcript 输出分离的公开安全类型化结果 channel；
+- 显式执行模式与无静默模式回退；
+- 除 host 恢复外无权限的不透明本地会话句柄；
+- 注入交互会话前的可见性与空闲证明；以及
+- 到上述结果与失败类别的确定性失败映射。
 
-The smallest useful adapter has only three responsibilities: translate the
-typed request into one bounded agent-CLI invocation, preserve an opaque local
-resume handle when the host supports it, and translate the final outcome into
-one typed candidate result. It must not parse LoopX status prose, write LoopX
-state, spend quota, or validate its own work.
+最小有用适配器只有三个职责：把类型化请求翻译为一次有界 agent-CLI 调用、host 支持时保留不透明本地恢复句柄、把最终结局翻译为一种类型化候选结果。它不得解析 LoopX 状态散文、写 LoopX 状态、花费配额或验证自己的工作。
 
-The driver may discard raw stdout and stderr, but it must not mistake their
-absence for a typed result. Raw prompts, transcripts, benchmark task text,
-verifier tails, credentials, and local session paths stay outside committed
-fixtures and LoopX state.
+驱动器可以丢弃原始 stdout 与 stderr，但不得把它们的缺失当作类型化结果。原始 prompt、transcript、benchmark 任务文本、verifier 尾部、凭据与本地会话路径保持在已提交 fixtures 与 LoopX 状态之外。
 
-## Promotion Gates
+## 提升关卡
 
-The protocol remains experimental until all of these are true:
+本协议只有在以下全部成立时保持实验性：
 
-1. shadow replay preserves the live TurnEnvelope action signature across
-   delivery, user gate, monitor wait, capability repair, workspace repair,
-   replan, blocked, and throttled states;
-2. one real host adapter proves start/resume, typed result, validation,
-   idempotent writeback, spend ordering, and scheduler acknowledgement;
-3. interactive and isolated-headless modes fail closed without switching into
-   each other;
-4. a controlled benchmark dogfood run shows source, budget, concurrency, and
-   no-feedback boundaries remain comparable; and
-5. rollback can disable the adapter while leaving normal LoopX CLI state and
-   Codex App heartbeat operation intact.
+1. 影子重放在投递、用户 gate、monitor 等待、能力修复、工作区修复、replan、阻塞与限流状态中保留实时 TurnEnvelope 动作签名；
+2. 一个真实 host 适配器证明启动/恢复、类型化结果、验证、幂等 writeback、花费顺序与 scheduler 确认；
+3. 交互与隔离无头模式失效关闭而不互切；
+4. 受控 benchmark dogfood 运行显示来源、预算、并发与无反馈边界保持可比；并且
+5. 回滚可以禁用适配器，同时保持普通 LoopX CLI 状态与 Codex App heartbeat 运行完好。
 
-This protocol does not authorize benchmark launch, leaderboard submission,
-production writes, credential handling, or default replacement of Codex App.
+本协议不授权 benchmark 启动、leaderboard 提交、生产写入、凭据处理或默认替换 Codex App。

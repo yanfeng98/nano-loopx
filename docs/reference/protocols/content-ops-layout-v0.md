@@ -1,18 +1,15 @@
-# Content-Ops Layout v0
+# Content-Ops 布局 v0
+> [English](content-ops-layout-v0.md)
 
-`content_ops_layout_*_v0` makes content presentation a reviewable LoopX
-contract. It separates three owners:
+`content_ops_layout_*_v0` 使内容呈现成为可评审的 LoopX 契约。它分离三个 owner：
 
-- LoopX core owns built-in templates, typed page roles, deterministic
-  compactness thresholds, and acceptance results.
-- A writing or platform adapter owns the copy, page selection, narrative
-  structure, author voice, and rendering.
-- A renderer owns pixels and emits a compact measurement packet; LoopX does not
-  add an image-processing dependency or ingest draft bodies.
+- LoopX core 拥有内置模板、类型化页面角色、确定性紧凑性阈值与验收结果。
+- 写作或平台适配器拥有文案、页面选择、叙事结构、作者语气与渲染。
+- 渲染器拥有像素并发出紧凑测量包；LoopX 不增加图像处理依赖，也不摄取草稿正文。
 
-This is a machine-enforced acceptance check, not optional prose guidance.
+这是机器强制的验收检查，不是可选的散文指导。
 
-## Template library
+## 模板库
 
 ```bash
 loopx content-ops template-list --format json
@@ -21,24 +18,18 @@ loopx content-ops template-show \
   --format json
 ```
 
-The built-in `content_ops_layout_template_catalog_v0` currently includes:
+内置 `content_ops_layout_template_catalog_v0` 目前包含：
 
-- `light-serif-longform` for dense analytical storytelling;
-- `monochrome-editorial` for high-contrast technical commentary;
-- `product-brief` for problem/mechanism/boundary summaries;
-- `control-plane-hybrid` for prose plus state, gate, and evidence artifacts.
+- `light-serif-longform` 用于密集的分析型叙事；
+- `monochrome-editorial` 用于高对比技术评论；
+- `product-brief` 用于问题/机制/边界摘要；
+- `control-plane-hybrid` 用于散文加状态、gate 与 evidence 工件。
 
-Templates define canvas size, safe area, density limits, page archetypes, and
-portable style tokens. They do not contain project names, private paths, draft
-bodies, or provider credentials.
+模板定义画布尺寸、安全区、密度限制、页面原型与可移植样式 token。它们不包含项目名、私有路径、草稿正文或 provider 凭据。
 
-All built-in templates set `density.role_overrides.cover.min` to `0.90` and
-`max` to `0.98`. The cover default is intentionally stricter than ordinary
-pages: at least 90% of the safe-area height must be occupied by meaningful
-content bounds. Decorative rules, indexes, page numbers, and footers do not
-count toward that density.
+所有内置模板把 `density.role_overrides.cover.min` 设为 `0.90`、`max` 设为 `0.98`。封面默认刻意比普通页面严格：安全区高度的至少 90% 必须被有意义的内容边界占据。装饰性规则线、索引、页码与页脚不计入该密度。
 
-Every built-in template also exposes the same `page_sequence` defaults:
+每个内置模板还暴露相同的 `page_sequence` 默认值：
 
 ```json
 {
@@ -48,20 +39,13 @@ Every built-in template also exposes the same `page_sequence` defaults:
 }
 ```
 
-The first planned page must be the cover and its measured density must be at
-least every later page. Pages between the cover and final page use `0.80` as a
-density floor, or a stricter role/template minimum when one exists. The final
-page keeps its own closing/CTA role limits so an intentional synthesis page
-does not need to imitate a dense analytical middle page.
+首个规划页必须是封面，且其测量密度必须至少与后续每一页相同。封面与末页之间的页面以 `0.80` 为密度下限，或采用更严格的角色/模板下限（若存在）。末页保持其自己的收尾/CTA 角色限制，使有意的综合页无需模仿密集的分析中间页。
 
-These defaults change acceptance for formerly valid sparse or misordered page
-sets: a cover below `0.90`, an interior page below `0.80`, a non-cover first
-page, or a later page denser than the cover now returns a typed revision
-failure. Publishing authority remains unchanged.
+这些默认值改变了先前合法但现在稀疏或错序页集的验收结果：封面低于 `0.90`、内部页低于 `0.80`、非封面首页，或后续页比封面更密，现在都返回类型化修订失败。发布权限保持不变。
 
-## Typed plan
+## 类型化的计划
 
-Build a plan before rendering:
+渲染前构建计划：
 
 ```bash
 loopx content-ops layout-plan \
@@ -80,15 +64,11 @@ loopx content-ops layout-plan \
   --format json
 ```
 
-Roles are typed as `cover`, `argument`, `mechanism`, `evidence`, `boundary`,
-`closing`, or `cta`. Project-specific narrative obligations—such as ending in
-the creator's voice or bridging from one named subject to another—remain in the
-writing adapter or item-local review plan. LoopX does not universalize them or
-infer them from prose substrings.
+角色被类型化为 `cover`、`argument`、`mechanism`、`evidence`、`boundary`、`closing` 或 `cta`。项目特定的叙事义务——例如以创作者语气结尾或从一个命名主题桥接到另一个——仍留在写作适配器或 item 局部评审计划中。LoopX 不把它们普遍化，也不从散文子串中推断它们。
 
-## Renderer measurement
+## 渲染器测量
 
-The renderer emits `content_ops_layout_measurement_v0`:
+渲染器发出 `content_ops_layout_measurement_v0`：
 
 ```json
 {
@@ -111,11 +91,9 @@ The renderer emits `content_ops_layout_measurement_v0`:
 }
 ```
 
-`asset_ref` must be a relative public-safe reference. Meaningful bounds exclude
-decorative rules, page numbers, and footers so they cannot make a sparse page
-look full.
+`asset_ref` 必须是相对公开安全引用。有意义边界排除装饰性规则线、页码与页脚，使它们无法让稀疏页面显得充实。
 
-## Acceptance
+## 验收
 
 ```bash
 loopx content-ops layout-check \
@@ -124,15 +102,14 @@ loopx content-ops layout-check \
   --format json
 ```
 
-`content_ops_layout_check_packet_v0` returns `pass` only when:
+`content_ops_layout_check_packet_v0` 仅在以下条件满足时返回 `pass`：
 
-- measured page ids exactly match the plan;
-- the first page has role `cover` and is at least as dense as every later page;
-- every interior page satisfies the built-in `0.80` density floor;
-- all required roles are present and the last page has the planned closing role;
-- canvas and density satisfy the selected template and role;
-- overflow, collision, and single-character-line checks are explicitly false;
-- every renderer safety check is explicitly satisfied.
+- 测量页面 id 与计划精确匹配；
+- 首页面角色为 `cover`，且密度至少不低于每个后续页面；
+- 每个内部页满足内置 `0.80` 密度下限；
+- 所有必需角色都存在，且末页具有规划的收尾角色；
+- 画布与密度满足所选模板与角色；
+- overflow、collision 与单字符行检查显式为 false；
+- 每个渲染器安全检查显式满足。
 
-The packet always keeps `autopublish_allowed=false`. Layout acceptance never
-grants provider access, publishing authority, or approval for the content body.
+该包始终保持 `autopublish_allowed=false`。布局验收绝不授予 provider 访问、发布权限或对内容正文的批准。

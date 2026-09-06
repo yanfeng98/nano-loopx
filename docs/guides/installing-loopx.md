@@ -1,8 +1,9 @@
-# Installing LoopX
+# 安装 LoopX
 
-PyPI is the default LoopX release channel. Use Python 3.11 or later in an
-active virtual environment, a managed user environment, or another environment
-whose console scripts are on `PATH`:
+> [English](installing-loopx.md)
+
+PyPI 是 LoopX 的默认发布通道。在激活的虚拟环境、受管的用户环境或另一个 console
+脚本已位于 `PATH` 上且使用 Python 3.11 及更高版本的环境中安装：
 
 ```bash
 python3 -m pip install --upgrade loopx
@@ -10,46 +11,40 @@ loopx workflow-skills --install
 loopx doctor
 ```
 
-Choose one installation owner and keep it authoritative:
+选择一个安装 owner 并保持其权威：
 
-| Use case | Owner | Install or acquire | Upgrade |
+| 使用场景 | Owner | 安装或获取 | 升级 |
 | --- | --- | --- | --- |
-| Normal release | Python package environment | `python3 -m pip install loopx` | `loopx update apply` or the manual pip sequence below |
-| Isolated CLI on an externally managed machine | `pipx` | `pipx install loopx` | `pipx upgrade loopx`, then refresh LoopX host material |
-| Contributor or source qualification | Git checkout | clone/fetch plus `scripts/install-local.sh` | update the checkout explicitly, rerun the installer, validate `loopx-canary` before promotion |
-| No-clone recovery fallback | LoopX archive snapshot | published archive installer | `loopx update apply` |
+| 常规发布 | Python 包环境 | `python3 -m pip install loopx` | `loopx update apply` 或下面的手动 pip 序列 |
+| 在外部管理的机器上的隔离 CLI | `pipx` | `pipx install loopx` | `pipx upgrade loopx`，然后刷新 LoopX 宿主材料 |
+| 贡献者或源码资格验证 | Git checkout | clone/fetch 加 `scripts/install-local.sh` | 显式更新 checkout、重跑安装器、在晋升前验证 `loopx-canary` |
+| 无需 clone 的恢复回退 | LoopX 归档快照 | 已发布的归档安装器 | `loopx update apply` |
 
-PyPI is the canonical source for normal releases. A source checkout is a
-development and qualification surface, not a second implicit package channel.
-The archive snapshot remains a recovery path rather than a competing default.
+PyPI 是常规发布的规范来源。源码 checkout 是开发与资格验证界面，不是第二个隐式
+包通道。归档快照仍是恢复路径，而不是竞争性默认项。
 
-LoopX's Effect Program core runs in a managed, idle-exiting TypeScript runtime
-and requires Node.js 22.6 or later. LoopX starts and reuses that local runtime
-automatically; users do not run a daemon manually. The runtime binds only to
-loopback, authenticates requests with a user-private token, rotates when the
-packaged Effect core changes, and exits after an idle period. `loopx doctor`
-reports it as `ready`, `missing`, `unsupported`, or `probe_failed`; a missing
-or stale runtime fails closed instead of falling back to a second Python rule
-engine. The same doctor projection exposes `runtime_lifecycle.state` as
-`running`, `stopped`, or `unavailable`, plus a public-safe `diagnostic_code`;
-the App can render this projection without inventing a second health model.
-`stopped` is healthy and means the idle-exited runtime will restart on the next
-control-plane request. Validate Node before installing or upgrading LoopX:
+LoopX 的 Effect Program 核心运行在一个受管、空闲即退出的 TypeScript runtime 中，
+要求 Node.js 22.6 或更高。LoopX 自动启动并复用该本地 runtime；用户不需要手动运行
+daemon。该 runtime 只绑定 loopback，用用户私有 token 认证请求，在打包的 Effect
+core 变化时轮换，并在空闲一段时间后退出。`loopx doctor` 将其报告为 `ready`、
+`missing`、`unsupported` 或 `probe_failed`；缺失或过期的 runtime 会 fail closed，
+而不是回退到第二个 Python 规则引擎。同一 doctor 投影把 `runtime_lifecycle.state`
+暴露为 `running`、`stopped` 或 `unavailable`，外加一个公开安全的
+`diagnostic_code`；App 可以直接渲染该投影，无需发明第二套健康模型。`stopped` 是
+健康状态，表示空闲退出的 runtime 会在下一次控制面请求时重启。安装或升级 LoopX
+前验证 Node：
 
 ```bash
 node --version
 # v22.6.0 or newer
 ```
 
-Use `loopx doctor --deep` after installation to start the managed runtime and
-exercise the packaged Effect semantics and native journal checkpoint handler.
-`workflow-skills --install` copies the packaged LoopX workflow skills into the
-user's Codex skill directory and writes a revision readback; it does not change
-project state or grant repository, network, or merge authority. Restart the
-host after first install so it reloads the new skills.
+安装后使用 `loopx doctor --deep` 启动受管 runtime，并演练打包的 Effect 语义与
+原生 journal 检查点处理器。`workflow-skills --install` 把打包的 LoopX workflow
+skills 复制到用户的 Codex skill 目录并写入 revision readback；它不改变项目状态，
+也不授予仓库、网络或 merge 权限。首次安装后重启宿主，让它重新加载新 skills。
 
-If Python packages are externally managed on the machine, use a dedicated tool
-environment instead of modifying the system interpreter:
+如果机器上 Python 包受外部管理，使用专用工具环境，而不是修改系统解释器：
 
 ```bash
 pipx install loopx
@@ -57,10 +52,10 @@ loopx workflow-skills --install
 loopx doctor
 ```
 
-## Native Windows PowerShell 7
+## 原生 Windows PowerShell 7
 
-The PyPI distribution is also the default native Windows path. From PowerShell
-7, use a Python 3.11+ interpreter and validate the installed console script:
+PyPI 发行版也是原生 Windows 默认路径。在 PowerShell 7 中使用 Python 3.11+
+解释器，并验证已安装的 console 脚本：
 
 ```powershell
 py -3.11 -m pip install --upgrade loopx
@@ -68,9 +63,8 @@ loopx workflow-skills --install
 loopx doctor
 ```
 
-Contributors and operators who deliberately need an immutable snapshot from a
-trusted checkout can install the native PowerShell launcher without Bash,
-POSIX symlinks, or WSL:
+需要不可变快照（来自可信 checkout）的贡献者与操作者，可以在没有 Bash、POSIX
+symlink 或 WSL 的情况下安装原生 PowerShell launcher：
 
 ```powershell
 git clone https://github.com/huangruiteng/loopx.git "$HOME/loopx"
@@ -81,22 +75,19 @@ pwsh -NoLogo -NoProfile -File .\scripts\install-windows.ps1 `
 loopx doctor --deep
 ```
 
-The snapshot installer validates the candidate before promotion, writes an
-atomic release pointer, and places `loopx.ps1` plus its release-pointer sidecar
-in `$HOME/.local/bin` by default. `-InstallRoot`, `-BinDir`, and `-SkillsDir`
-remain explicit overrides; a fresh shell discovers a custom install through
-the sidecar, without requiring `LOOPX_CURRENT_RELEASE_FILE`. Use `-SkipSkills`
-when another trusted host manager owns the LoopX skill files, and omit
-`-AddToUserPath` when PATH changes are not authorized.
+快照安装器在晋升前验证 candidate，写入原子发布指针，并默认把 `loopx.ps1` 及其
+release-pointer sidecar 放在 `$HOME/.local/bin`。`-InstallRoot`、`-BinDir` 与
+`-SkillsDir` 保持为显式覆盖；新 shell 通过 sidecar 发现自定义安装，无需
+`LOOPX_CURRENT_RELEASE_FILE`。当另一个可信宿主管理器拥有 LoopX skill 文件时使用
+`-SkipSkills`；当不允许修改 PATH 时省略 `-AddToUserPath`。
 
-Native snapshot `loopx update` and automatic rollback fail closed. To upgrade
-or roll back, check out the intended trusted revision, rerun
-`scripts/install-windows.ps1`, then verify `loopx doctor --deep`. The previous
-release directories remain under the selected install root until the operator
-removes them; changing a pointer by hand is not the supported rollback path.
+原生快照 `loopx update` 与自动回滚都 fail closed。要升级或回滚，检出目标可信
+revision，重跑 `scripts/install-windows.ps1`，然后验证 `loopx doctor --deep`。
+先前的 release 目录仍留在所选安装根下，直到操作者移除；手工改动指针不是受支持的
+回滚路径。
 
-Before removing a native snapshot, run the managed host uninstallers while the
-launcher is still available, then remove the launcher files and snapshot root:
+移除原生快照前，在 launcher 仍可用时运行受管宿主卸载器，然后移除 launcher 文件
+与快照根：
 
 ```powershell
 loopx slash-commands --uninstall
@@ -106,33 +97,27 @@ Remove-Item -LiteralPath "$HOME/.local/bin/loopx-current-release.json" -ErrorAct
 Remove-Item -LiteralPath "$HOME/.local/share/loopx" -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
-If installation used `-AddToUserPath`, remove the chosen `BinDir` from the
-Windows user PATH through Windows Environment Variables after uninstalling.
-Installation and PATH opt-in only expose local command and skill files. They do
-not grant repository, network, credential, external-system, or merge authority,
-and uninstall does not delete project-local `.loopx/`, `.codex/goals/`, or
-evidence state.
+如果安装使用了 `-AddToUserPath`，卸载后通过 Windows 环境变量从 Windows 用户 PATH
+中移除所选的 `BinDir`。安装与 PATH opt-in 只暴露本地命令与 skill 文件。它们不授予
+仓库、网络、凭证、外部系统或 merge 权限；卸载也不删除项目本地的 `.loopx/`、
+`.codex/goals/` 或证据状态。
 
-## Host Command Surfaces
+## 宿主命令界面
 
-The workflow-skill command installs the rich Codex workflows and managed
-`$loopx` entry. Install additional command facades only for hosts that need
-them:
+workflow-skill 命令安装丰富的 Codex workflows 与受管 `$loopx` 入口。只为需要它们的
+宿主安装额外的命令 facade：
 
 ```bash
 loopx slash-commands --install
 ```
 
-The default command-facade set covers Codex, Claude Code, and OpenCode. Other
-surfaces remain explicit; inspect `loopx slash-commands --help` before enabling
-one. Host integration changes command discovery only. It does not grant LoopX
-permission to write a repository, contact external systems, or bypass a user
-gate.
+默认命令 facade 集合覆盖 Codex、Claude Code 与 OpenCode。其他界面保持显式；启用前
+检查 `loopx slash-commands --help`。宿主集成只改变命令发现方式。它不授予 LoopX
+写仓库、联系外部系统或绕过用户 gate 的权限。
 
-## Upgrade And Repair
+## 升级与修复
 
-`loopx update` is the channel-aware upgrade entry point. Its actions have the
-same meaning for humans and agents:
+`loopx update` 是通道感知的升级入口。其动作对人与 agent 具有相同含义：
 
 ```bash
 loopx update check       # read-only freshness and installation-owner check
@@ -140,23 +125,20 @@ loopx update plan        # read-only command, validation, and rollback plan
 loopx update apply       # explicit local-environment mutation
 ```
 
-Bare `loopx update` remains a read-only plan. The older `--check`, `--dry-run`,
-and `--execute` spellings remain compatibility aliases, but new instructions
-should use the named actions.
+裸 `loopx update` 仍是只读计划。较旧的 `--check`、`--dry-run` 与 `--execute`
+拼写仍作为兼容别名保留，但新指令应使用命名动作。
 
-Human-readable output starts with **No update was applied** and a copyable
-**Next Action** command. JSON output exposes the same decision as
-`requested_action`, `changes_applied`, and a typed `next_action` object with
-mutation and explicit-approval fields. Agents should inspect those fields instead
-of inferring authority from prose.
+人类可读输出以 **No update was applied** 和一个可复制的 **Next Action** 命令开头。
+JSON 输出把同一决策暴露为 `requested_action`、`changes_applied` 与一个带 mutation
+和 explicit-approval 字段的 typed `next_action` 对象。Agent 应检查这些字段，而不是
+从散文推断权威。
 
-For a PyPI distribution installed by pip, `update apply` asks the exact Python
-interpreter that owns LoopX to upgrade its environment, then starts fresh
-processes to install workflow skills and slash commands, runs doctor, revalidates
-enabled extensions, and restarts managed local LoopX services. It does not
-switch the installation to an archive snapshot.
+对于由 pip 安装的 PyPI 发行版，`update apply` 要求拥有 LoopX 的那个确切 Python
+解释器升级其环境，然后启动新进程安装 workflow skills 与 slash commands、运行
+doctor、重新验证已启用的扩展，并重启受管的本地 LoopX 服务。它不把安装切换到归档
+快照。
 
-The equivalent manual sequence is:
+等效手动序列：
 
 ```bash
 python3 -m pip install --upgrade loopx
@@ -165,50 +147,40 @@ loopx slash-commands --install
 loopx doctor
 ```
 
-The first command is the package transaction; the remaining commands are the
-LoopX activation and readback contract. Running only `pip install` can leave
-host material from the previous version active. Conversely, `loopx update
-apply` does not replace pip as the owner of dependency resolution, environment
-policy, package indexes, or uninstall.
+第一条命令是包事务；其余命令是 LoopX 激活与 readback 契约。只运行 `pip install`
+可能让上一版本的宿主材料保持激活。反之，`loopx update apply` 不取代 pip 作为
+依赖解析、环境策略、包索引或卸载的 owner。
 
-### Verify The Active Layers
+### 验证各激活层
 
-An upgrade is not fully qualified just because the package-manager step exits
-successfully. Read back each layer that can remain stale independently:
+升级不会因为包管理器步骤成功退出就算完全合格。逐一读取可能独立过期的每一层：
 
-| Layer | Readback | What success proves | Recovery when it is not ready |
+| 层 | Readback | 成功证明什么 | 未就绪时的恢复 |
 | --- | --- | --- | --- |
-| Installation owner and package | `loopx update check` | The active executable, package owner, freshness, and next action are identified without mutation. | Follow the reported owner command; do not mix pip, pipx, archive, and source-checkout upgrade paths. |
-| Host material | `loopx --format json doctor` | `skill_delivery.status` describes the workflow-skill delivery used by the active host. | Run `loopx workflow-skills --install`; refresh `loopx slash-commands --install` when those facades are in use, then restart the host. |
-| Managed Effect runtime | `loopx doctor --deep` | The packaged TypeScript Effect runtime can start and answer the deep probe. An idle-exited `stopped` lifecycle remains healthy. | Apply the doctor recommendation or reinstall the selected package version; do not substitute a second Python rule path. |
-| Enabled extensions | `loopx extension doctor --all-enabled --execute --format json` | Every enabled extension has a current runtime identity and passes its readiness checks. | Repair the named provider or extension and rerun its doctor; a failed provider remains closed. |
+| 安装 owner 与包 | `loopx update check` | 无变更地识别活动可执行文件、包 owner、新鲜度与下一步动作。 | 遵循报告的 owner 命令；不要混用 pip、pipx、归档与源码 checkout 升级路径。 |
+| 宿主材料 | `loopx --format json doctor` | `skill_delivery.status` 描述活动宿主使用的 workflow-skill 投递。 | 运行 `loopx workflow-skills --install`；使用这些 facade 时刷新 `loopx slash-commands --install`，然后重启宿主。 |
+| 受管 Effect runtime | `loopx doctor --deep` | 打包的 TypeScript Effect runtime 能启动并应答深度探测。空闲退出的 `stopped` 生命周期仍是健康的。 | 应用 doctor 建议或重装所选包版本；不要用第二条 Python 规则路径替代。 |
+| 已启用扩展 | `loopx extension doctor --all-enabled --execute --format json` | 每个启用扩展都有当前 runtime 身份并通过就绪检查。 | 修复点名的 provider 或扩展并重跑其 doctor；失败的 provider 保持闭合。 |
 
-`loopx update apply` runs the host-material refresh, core doctor, and enabled
-extension doctor after the owning package or archive update succeeds. The
-standalone commands above are still useful as independent readbacks and
-recovery entry points; rerunning them does not change the installation owner.
+在拥有包或归档更新成功后，`loopx update apply` 运行宿主材料刷新、核心 doctor 与
+已启用扩展 doctor。上面的独立命令作为独立 readback 与恢复入口仍有用；重跑它们
+不会改变安装 owner。
 
-These checks also prevent a common release mistake: code merged to `main` is
-not necessarily active in an installed release. Archive maintainers may use
-`loopx update check --ref main` to inspect
-`runtime_activation_qualification`; ordinary pip and pipx users should stay on
-the tagged package channel and wait for the corresponding release instead of
-trying to switch an installed distribution to `main`.
+这些检查也防止一个常见的发布错误：合入 `main` 的代码不一定在已安装的发布里处于
+激活状态。归档维护者可以用 `loopx update check --ref main` 检查
+`runtime_activation_qualification`；普通 pip 与 pipx 用户应留在打标签的包通道上，
+等待对应发布，而不是尝试把已安装的发行版切换到 `main`。
 
-For an installation owned by another Python package manager, `update plan`
-reports that owner and its command; LoopX fails closed instead of guessing a
-pip mutation. For a live source checkout, it reports the contributor installer
-and never performs `git pull` or rewrites the worktree. Source acquisition and
-repository mutation remain explicit human or authorized-agent actions.
+对于由其他 Python 包管理器拥有的安装，`update plan` 报告该 owner 及其命令；
+LoopX fail closed，而不是猜测 pip 变更。对于活动源码 checkout，它报告贡献者
+安装器，绝不执行 `git pull` 或改写工作区。源码获取与仓库变更始终是显式的人类或
+授权 Agent 动作。
 
-`loopx doctor` reports `install_kind: python_distribution` for this path and
-returns the same pip-native repair sequence when packaged skills are missing or
-stale. It also verifies the required TypeScript Effect runtime before a
-control-plane upgrade is considered healthy. Runtime metadata is fingerprinted
-by the installed sources, so an upgraded LoopX starts a matching process while
-an older process exits after becoming idle. When a release needs to be rolled
-back, reinstall the previously selected version, refresh the packaged host
-material, and validate again:
+`loopx doctor` 对这条路径报告 `install_kind: python_distribution`，并在打包
+skills 缺失或过期时返回同一 pip 原生修复序列。它还验证控制面升级被视为健康之前
+所需的 TypeScript Effect runtime。Runtime 元数据由已安装源码做指纹，因此升级后的
+LoopX 启动匹配进程，而旧进程在空闲后退出。当发布需要回滚时，重装先前选择的
+版本、刷新打包宿主材料并再次验证：
 
 ```bash
 python3 -m pip install "loopx==<previous-version>"
@@ -217,11 +189,10 @@ loopx slash-commands --install
 loopx doctor
 ```
 
-## Archive Fallback
+## 归档回退
 
-The GitHub Pages installer remains a fallback for machines where an appropriate
-Python package environment is unavailable or the CLI is too damaged to run its
-own repair path:
+GitHub Pages 安装器仍是回退方案，用于没有合适 Python 包环境、或 CLI 损坏到无法
+运行自身修复路径的机器：
 
 ```bash
 curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash
@@ -229,8 +200,8 @@ export PATH="$HOME/.local/bin:$PATH"
 loopx doctor
 ```
 
-This fallback installs an archive snapshot, wrapper, man page, and host
-materials together. LoopX owns that snapshot lifecycle, so its update path is:
+该回退把归档快照、wrapper、man page 与宿主材料一起安装。LoopX 拥有该快照的
+生命周期，因此其更新路径是：
 
 ```bash
 loopx update check
@@ -238,14 +209,12 @@ loopx update plan
 loopx update apply
 ```
 
-Archive apply retains the atomic release pointer, doctor validation, extension
-readback, managed-service restart, and first-class snapshot rollback. The
-installation-owner projection prevents this path from being mixed with an
-active PyPI executable.
+归档 apply 保留原子发布指针、doctor 验证、扩展 readback、受管服务重启与一等
+快照回滚。安装 owner 投影防止该路径与活动 PyPI 可执行文件混用。
 
-## Uninstall
+## 卸载
 
-Remove LoopX-owned host material before uninstalling the Python package:
+先移除 LoopX 拥有的宿主材料，再卸载 Python 包：
 
 ```bash
 loopx slash-commands --uninstall
@@ -253,9 +222,8 @@ loopx workflow-skills --uninstall
 python3 -m pip uninstall loopx
 ```
 
-Both host uninstallers preserve same-name files whose content changed after
-LoopX installed them. Project-local `.loopx/`, `.codex/goals/`, evidence, and
-runtime state are not deleted by package uninstall.
+两个宿主卸载器都保留 LoopX 安装后内容被修改过的同名文件。项目本地的 `.loopx/`、
+`.codex/goals/`、证据与 runtime 状态不会被包卸载删除。
 
-Contributors who need a live canary should use a real checkout and
-`scripts/install-local.sh`; see [Getting Started](getting-started.md).
+需要在线 canary 的贡献者应使用真实 checkout 与 `scripts/install-local.sh`；见
+[开始使用](getting-started.md)。

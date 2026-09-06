@@ -1,22 +1,23 @@
-# Complex Project Read-Only Adapter
+# 复杂项目只读适配器
 
-Some projects are too large for a single goal tick to understand safely. They
-may have many docs, TODO systems, reports, tests, external sync surfaces, and
-active branches. For these projects, the first LoopX adapter should not
-edit files. It should build a read-only map.
+> [English](complex-project-readonly-adapter.md)
 
-The adapter's job is to answer:
+有些项目过于庞大,单个 goal tick 无法安全理解。它们可能有大量文档、TODO 系统、
+报告、测试、外部同步界面与活跃分支。对这类项目,第一个 LoopX 适配器不应编辑
+文件,而应构建只读图谱。
 
-- What is the current goal?
-- Which files or systems are authoritative?
-- Which work clusters are active?
-- Which validation surfaces prove progress?
-- Which peer task scopes are safe to run in parallel?
-- Which open peer should claim or coordinate the next task bundle?
+适配器的职责是回答:
 
-## Read-Only Map Shape
+- 当前 goal 是什么?
+- 哪些文件或系统是权威?
+- 哪些工作集群处于活动状态?
+- 哪些验证面可以证明进展?
+- 哪些对等任务范围可以安全并行运行?
+- 哪个开放的 peer 应该 claim 或协调下一个任务包?
 
-A read-only adapter map should contain:
+## 只读图谱的结构
+
+只读适配器图谱应包含:
 
 ```json
 {
@@ -32,25 +33,23 @@ A read-only adapter map should contain:
 }
 ```
 
-The map is evidence, not a command. Claims, gates, and operator decisions still
-decide what happens next.
+图谱是证据,不是命令。claim、gate 与操作员决策仍然决定接下来发生什么。
 
-## Authority Sources
+## 权威来源
 
-List the files or systems that define project truth. Examples:
+列出定义项目真相的文件或系统。例如:
 
-- project TODO or issue board,
-- document registry,
-- design docs,
-- current git status,
-- recent run reports,
-- test or CI entrypoints,
-- managed external-doc manifest.
+- 项目 TODO 或 issue 看板,
+- 文档注册表,
+- 设计文档,
+- 当前 git 状态,
+- 最近的运行报告,
+- 测试或 CI 入口,
+- 受管的外部文档清单(manifest)。
 
-For documentation-heavy projects, prefer an explicit authority registry over a
-flat list of files. The registry should name default entry docs, topic
-authority, document status, conflict rules, and update rules. A read-only map
-should report authority coverage before proposing sub-agent work:
+对文档密集型项目,优先使用显式权威注册表,而不是扁平的文档列表。注册表应指明
+默认入口文档、主题权威、文档状态、冲突规则与更新规则。只读图谱在提出子 agent
+工作之前应报告权威覆盖情况:
 
 ```json
 {
@@ -72,61 +71,57 @@ should report authority coverage before proposing sub-agent work:
 }
 ```
 
-This prevents a complex project from being driven by whichever old design doc
-or diagnostic report the agent happened to read first.
-For multi-material migration work, the public compact map should expose counts
-for material roles, repository links, owner-review gaps, stale sources, and
-current authorities. Keep exact URLs, repository roots, product configs, and raw
-review text in the project-local registry or adapter payload.
+这可以防止复杂项目被 agent 碰巧先读到的某个旧设计文档或诊断报告所驱动。
+对多材料迁移工作,公开紧凑图谱应暴露材料角色、仓库链接、owner 评审缺口、过时
+来源与当前权威的计数。把确切 URL、仓库根、产品配置与原始评审文本保留在项目
+本地注册表或适配器载荷中。
 
-Each source should include:
+每个来源应包含:
 
-- `path` or stable identifier,
+- `path` 或稳定标识符,
 - `source_type`,
 - `read_status`,
 - `why_it_matters`,
-- `privacy_level`: `public`, `project-local`, or `private`.
+- `privacy_level`:`public`、`project-local` 或 `private`。
 
-## Work Clusters
+## 工作集群
 
-Group active work by the type of evidence needed to finish it:
+按完成工作所需的证据类型对活动工作进行分组:
 
-- docs or design cleanup,
-- benchmark or eval work,
-- runtime or adapter work,
-- external-doc sync,
-- PR or CI work,
-- governance or public/private boundary work.
+- 文档或设计清理,
+- benchmark 或 eval 工作,
+- runtime 或适配器工作,
+- 外部文档同步,
+- PR 或 CI 工作,
+- 治理或公开/私有边界工作。
 
-The current-priority source should be written as current belief, not only as a
-chronological task dump. The most useful shape is: what we believe now, why,
-what changes the decision, and the next bounded action.
+当前优先的来源应写为当前判断,而不仅仅是按时间顺序的任务清单。最有用的形态是:
+现在相信什么、为什么、什么会改变这一判断、下一个有界动作是什么。
 
-Each cluster should include:
+每个集群应包含:
 
-- current status,
-- likely owner,
-- blocking condition,
-- safe next probe,
-- whether sub-agents can inspect it independently.
+- 当前状态,
+- 可能的 owner,
+- 阻塞条件,
+- 安全的下一步探测,
+- 子 agent 是否可以独立检查它。
 
-## Validation Surfaces
+## 验证面
 
-Complex projects rarely have one pass/fail metric. A useful adapter names the
-surfaces explicitly:
+复杂项目很少只有一个通过/失败指标。有用的适配器会明确列举验证面:
 
-| Work type | Validation surface |
+| 工作类型 | 验证面 |
 | --- | --- |
-| Docs | markdown structure, links, registry entry, review note |
-| External sync | manifest, remote fetch, comment/highlight preservation |
-| Benchmark/eval | run artifact, metric file, trace, hidden/eval split |
-| Code | unit tests, type checks, integration smoke test |
-| PR/CI | branch status, CI checks, review comments |
-| Public release | sensitive scan, README quickstart, examples |
+| 文档 | markdown 结构、链接、注册表条目、评审记录 |
+| 外部同步 | 清单(manifest)、远程获取、评论/高亮保留 |
+| Benchmark/eval | 运行 artifact、指标文件、trace、hidden/eval 划分 |
+| 代码 | 单元测试、类型检查、集成 smoke 测试 |
+| PR/CI | 分支状态、CI 检查、评审评论 |
+| 公开发布 | 敏感信息扫描、README 快速开始、示例 |
 
-## Sub-Agent Scopes
+## 子 Agent 范围
 
-The read-only adapter should propose child scopes, not launch them by itself:
+只读适配器应建议子范围,而不是自行启动:
 
 ```json
 [
@@ -154,48 +149,43 @@ The read-only adapter should propose child scopes, not launch them by itself:
 ]
 ```
 
-The controller may accept, edit, or reject these scopes before spawning agents.
+控制器可以在启动 agent 之前接受、编辑或拒绝这些范围。
 
-## Handoff Packet
+## 交接包
 
-The final output to an eligible peer or operator should be short:
+交给合格 peer 或操作员的最终输出应简短:
 
-- current classification,
-- one recommended action,
-- active work clusters,
-- proposed peer task scopes,
-- validation surfaces,
-- hard guards,
-- files inspected,
-- residual risk.
+- 当前分类,
+- 一条建议动作,
+- 活动工作集群,
+- 建议的对等任务范围,
+- 验证面,
+- 硬保护,
+- 检查过的文件,
+- 残余风险。
 
-Do not include raw private evidence in a handoff packet intended for another
-thread or public artifact.
+不要把原始私有证据放进打算交给另一个线程或公开 artifact 的交接包。
 
-## Upgrade Path
+## 升级路径
 
-Use staged adapter status:
+使用分阶段的适配器状态:
 
-1. `planned`: goal exists in registry, no run yet.
-2. `read-only-map-ready`: adapter can produce a current map.
-3. `connected-read-only`: the operator has opted in to read-only runs.
-4. `selective-assist`: controller may ask LoopX for bounded edits with
-   explicit write scopes.
+1. `planned`:goal 已在注册表中,尚未运行。
+2. `read-only-map-ready`:适配器可以生成当前图谱。
+3. `connected-read-only`:操作员已同意只读运行。
+4. `selective-assist`:控制器可以请 LoopX 在显式写入范围内做有界编辑。
 
-`loopx read-only-map --dry-run` is allowed at `planned` as a controller
-opt-in preview. It reads only registry metadata, active-state sections, and the
-bounded file inventory, returns `opt_in_required=true`, and appends no run.
-Running without `--dry-run` still requires `read-only-map-ready`,
-`connected-read-only`, or `connected`.
+在 `planned` 阶段,`loopx read-only-map --dry-run` 允许以控制器 opt-in 预览方式
+运行。它只读取注册表元数据、活动状态章节与有界文件清单,返回
+`opt_in_required=true`,并且不追加任何运行。不带 `--dry-run` 运行仍然需要
+`read-only-map-ready`、`connected-read-only` 或 `connected`。
 
-The preview also returns `residual_risks`, using stable labels such as
-`planned_adapter_requires_controller_opt_in` and
-`project_local_goal_state_not_detected`, so the target controller can review
-one shared risk vocabulary.
-For repositories with more than one goal, the preview checks the selected
-goal's own `.codex/goals/<goal-id>/` directory. If a side bypass has not yet
-been connected locally, the risk list includes
-`project_goal_state_dir_not_detected:<goal-id>` even if the main control goal in
-the same repository is already healthy.
+预览还会返回 `residual_risks`,使用诸如
+`planned_adapter_requires_controller_opt_in` 与
+`project_local_goal_state_not_detected` 等稳定标签,以便目标控制器用同一套共享
+风险词汇评审。对含多个 goal 的仓库,预览检查所选 goal 自己的
+`.codex/goals/<goal-id>/` 目录。如果本地尚未接好侧旁路(side bypass),风险清单
+就会包含 `project_goal_state_dir_not_detected:<goal-id>`,即使同一仓库中的主控制
+goal 已经健康。
 
-Skipping directly to editing creates avoidable coordination risk.
+直接跳到编辑会带来本可避免的协调风险。

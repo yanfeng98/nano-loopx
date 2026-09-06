@@ -1,223 +1,104 @@
 # loopx_goal_command_v0
+> [English](loopx-goal-command-v0.md)
 
-`loopx_goal_command_v0` defines the project-local `/loopx` slash command:
+`loopx_goal_command_v0` 定义项目局部的 `/loopx` slash 命令：
 
-| Command | Intent | Mutation policy |
+| 命令 | 意图 | 变更策略 |
 | --- | --- | --- |
-| `/loopx` | Inspect or preview project connection. | Read-first; ask before bootstrap/connect writes. |
-| `/loopx <goal text>` | Start a concrete goal, plan ranked todos, activate the host loop, and enter the LoopX automation flow. | Explicit invocation may write project-local LoopX state and todos, then must activate or gate the host loop. |
+| `/loopx` | 检查或预览项目连接。 | 读取优先；bootstrap/connect 写入前询问。 |
+| `/loopx <goal text>` | 启动具体 goal、规划排序 todos、激活 host loop 并进入 LoopX 自动化流程。 | 显式调用可以写入项目局部 LoopX 状态与 todos，然后必须激活或关卡 host loop。 |
 
-This command is intentionally separate from `/loopx-global-*`: global commands
-summarize and manage visible control-plane state across projects, while
-`/loopx <goal text>` starts or continues one project goal.
+该命令刻意与 `/loopx-global-*` 分离：global 命令总结并管理跨项目的可见控制面状态，而 `/loopx <goal text>` 启动或继续一个项目 goal。
 
-## Goal-Start Flow
+## Goal 启动流程
 
-When the user provides text after `/loopx`, the host should:
+用户在 `/loopx` 后提供文本时，host 应：
 
-1. Treat the text as explicit user intent to start this project goal.
-2. Connect project-local LoopX state if no matching registry goal exists.
-3. Plan before writing todos.
-4. Write planned todos in exact plan order.
-5. Run `refresh-state`.
-6. Activate the host loop if it is missing, unknown, or stale:
-   - `codex-app`: create or update the Codex App heartbeat automation from the
-     generated `heartbeat-prompt` task body.
-   - `codex-app-ssh`: when Codex App is attached to a remote workspace over SSH
-     and host automation tools are unavailable, set the current visible task to
-     `/goal <task_body>` using the generated `codex_app_ssh_goal` profile. After
-     its typed unchanged-poll limit and final quota check, use native
-     `update_goal(status=blocked)` to block only that host Goal; keep the
-     registered LoopX goal active and resume the host with `/goal resume`.
-   - `codex-cli`: set the visible Codex CLI TUI to `/goal <task_body>`.
-   - `codex-ide-plugin`: set the visible IDE composer task to
-     `/goal <task_body>` through the same `codex_cli` runtime profile.
-   - `ark-managed-agent`: submit the generated `<task_body>` once as a native
-     Goal. The Goal runtime owns continuation and terminal evaluation; do not
-     wrap its inner iterations in LoopX Turn or resubmit at phase boundaries.
-   - `claude-code`: arm LoopX with `/loopx <task>`, then run native `/loop`.
-   - `opencode`: call `loopx_goal_activate` from the installed LoopX OpenCode
-     bridge; the bridge gates idle continuation and timer wakes through
-     `quota should-run` and completes only on validated terminal no-follow-up.
-   - `traex-cli`: set the visible TraeX TUI to `/goal <task_body>` through the
-     TraeX visible-goal renderer while quota remains bound to the generic
-     `generic_cli` runtime profile. TraeX `/goal` requires
-     `[features] goals = true` in `~/.trae/traecli.toml`; if goal mode is off,
-     show the pasteable `/goal <task_body>` gate. Do not route to `/loop`
-     unless a verified LoopX adapter is installed. LoopX ships no Codex App
-     automation and no slash-command installer for TraeX; it loads skills
-     from `~/.trae/skills`.
-   - `pi`: call `loopx_goal_activate` from the installed LoopX Pi extension;
-     the extension gates settled continuations and timer wakes through
-     `quota should-run` and stops only on validated terminal no-follow-up.
-   - `manual` / `other-agent`: wire the external loop driver described by
-     `loopx agent-onboard`.
-7. If the host cannot mutate that surface, report the exact pasteable gate
-   instead of claiming autonomous setup complete.
-8. Run `quota should-run`, then start the first bounded segment only when the
-   quota contract allows it.
+1. 把文本视为启动此项目 goal 的显式用户意图。
+2. 若不存在匹配 registry goal，则连接项目局部 LoopX 状态。
+3. 在写入 todos 之前先规划。
+4. 按精确计划顺序写入规划的 todos。
+5. 运行 `refresh-state`。
+6. 若 host loop 缺失、未知或过期，则激活它：
+   - `codex-app`：根据生成的 `heartbeat-prompt` 任务正文创建或更新 Codex App heartbeat 自动化。
+   - `codex-app-ssh`：当 Codex App 通过 SSH 附着到远程工作区且 host 自动化工具不可用时，使用生成的 `codex_app_ssh_goal` profile 把当前可见任务设为 `/goal <task_body>`。在其类型化未变化轮询限制与最终 quota 检查之后，使用原生 `update_goal(status=blocked)` 只阻塞该 host Goal；保持已注册 LoopX goal 活动，并用 `/goal resume` 恢复 host。
+   - `codex-cli`：把可见 Codex CLI TUI 设为 `/goal <task_body>`。
+   - `codex-ide-plugin`：通过同一 `codex_cli` 运行时 profile 把可见 IDE composer 任务设为 `/goal <task_body>`。
+   - `ark-managed-agent`：把生成的 `<task_body>` 作为原生 Goal 提交一次。Goal 运行时拥有继续与终态评估；不要用 LoopX Turn 包装其内部迭代，也不要在相位边界重提。
+   - `claude-code`：用 `/loopx <task>` 武装 LoopX，然后运行原生 `/loop`。
+   - `opencode`：从已安装的 LoopX OpenCode bridge 调用 `loopx_goal_activate`；bridge 通过 `quota should-run` 关卡空闲继续与定时器唤醒，且只在已验证终态 no-follow-up 时完成。
+   - `traex-cli`：通过 TraeX 可见 goal 渲染器把可见 TraeX TUI 设为 `/goal <task_body>`，而配额仍绑定到通用 `generic_cli` 运行时 profile。TraeX `/goal` 要求 `~/.trae/traecli.toml` 中有 `[features] goals = true`；若 goal 模式关闭，显示可粘贴的 `/goal <task_body>` gate。除非安装了已验证的 LoopX 适配器，否则不要路由到 `/loop`。LoopX 不为 TraeX 提供 Codex App 自动化或 slash-command 安装器；它从 `~/.trae/skills` 加载 skills。
+   - `pi`：从已安装的 LoopX Pi extension 调用 `loopx_goal_activate`；extension 通过 `quota should-run` 关卡已结算继续与定时器唤醒，且只在已验证终态 no-follow-up 时停止。
+   - `manual` / `other-agent`：接入 `loopx agent-onboard` 描述的外部 loop 驱动器。
+7. 若 host 不能修改该界面，报告精确可粘贴 gate，而不是声称自主设置完成。
+8. 运行 `quota should-run`，然后只在配额契约允许时启动首个有界段落。
 
-New hosts should discover exact agent types with:
+新 host 应使用以下命令发现精确 agent 类型：
 
 ```bash
 loopx agent-onboard --list-agent-types
 ```
 
-Ambiguous values such as `codex` must fail closed because Codex App automation,
-Codex App over SSH, the IDE plugin, and Codex CLI use different host-loop
-activation paths.
+`codex` 这类歧义值必须失效关闭，因为 Codex App 自动化、SSH 上的 Codex App、IDE 插件与 Codex CLI 使用不同 host-loop 激活路径。
 
-Codex App SSH, Codex CLI/IDE, and Ark Managed Agent form one native Goal host
-family. They share the stable `loopx_goal_prompt_v0` body, the 4,000-character
-host budget, per-continuation `quota should-run` packets, durable LoopX
-writeback, and non-heartbeat quota accounting. Their continuation owner remains
-an explicit host contract:
+Codex App SSH、Codex CLI/IDE 与 Ark Managed Agent 构成一个原生 Goal host 家族。它们共享稳定 `loopx_goal_prompt_v0` 正文、4,000 字符 host 预算、每次继续的 `quota should-run` 包、持久化 LoopX writeback 与非 heartbeat 配额记账。它们的继续 owner 仍是显式 host 契约：
 
-| Native Goal host | Activation | Continuation and blocked-state owner |
+| 原生 Goal host | 激活 | 继续与阻塞状态 owner |
 | --- | --- | --- |
-| Codex App SSH / Codex CLI / Codex IDE | Set a visible `/goal <task_body>`. | Native Codex Goal; after the unchanged limit it may call `update_goal(status=blocked)`, and only user `/goal resume` reactivates it. |
-| Ark Managed Agent | Submit the same prompt family once. | Managed Agent Goal runtime and its durable journal; LoopX must not emulate `/goal resume` or blindly resubmit. |
+| Codex App SSH / Codex CLI / Codex IDE | 设置可见 `/goal <task_body>`。 | 原生 Codex Goal；在未变化限制后可以调用 `update_goal(status=blocked)`，只有用户 `/goal resume` 重新激活它。 |
+| Ark Managed Agent | 一次性提交同一 prompt 家族。 | Managed Agent Goal 运行时及其持久化 journal；LoopX 不得模拟 `/goal resume` 或盲目重提。 |
 
-This family is a prompt, quota, and state-boundary abstraction, not a claim that
-all hosts have the same transport or lifecycle API.
+该家族是 prompt、quota 与状态边界抽象，不是声称所有 host 具有相同传输或生命周期 API。
 
-The `codex-app-ssh` task body is an interactive Goal contract, not a scheduled
-heartbeat. It must fit the Codex `/goal` text limit, call `quota should-run`
-with `--begin-turn` so the CLI mints the identity required for exact Todo
-selection, and must not instruct the host to invoke `automation_update`, apply
-an RRULE, or synthesize `LOOPX_TURN`. This CLI-owned selection receipt does not
-turn the Goal into heartbeat automation or a Turn-bound settlement flow; after
-validated writeback, the Goal still spends once with `--source visible-goal`.
+`codex-app-ssh` 任务正文是交互式 Goal 契约，不是计划 heartbeat。它必须适配 Codex `/goal` 文本限制、用 `--begin-turn` 调用 `quota should-run`，使 CLI 铸造精确 Todo 选择所需的身份，且不得指示 host 调用 `automation_update`、应用 RRULE 或合成 `LOOPX_TURN`。这个 CLI 自有选择回执不把 Goal 变成 heartbeat 自动化或 Turn 绑定 settlement 流程；在已验证 writeback 之后，Goal 仍以 `--source visible-goal` 花费一次。
 
-Visible Goal activation captures the capabilities observed when the task body
-is generated, but that initial list is not exhaustive for a long-running
-session. Dynamic capability guidance therefore belongs to the CLI decision
-packet, not the stable Goal prompt. When `quota should-run` finds a repairable
-runtime capability gap, `interaction_contract.cli_channel` returns a typed
-`runtime_capability_reentry_v0` packet. Each candidate requires a successful
-real-callsite observation before its exact re-entry command may declare
-`--available-capability`.
+可见 Goal 激活捕获任务正文生成时观察到的能力，但该初始列表对长程会话并非穷尽。因此动态能力指引属于 CLI 决策包，而非稳定 Goal prompt。当 `quota should-run` 发现可修复的运行时能力缺口时，`interaction_contract.cli_channel` 返回类型化 `runtime_capability_reentry_v0` 包。每个候选在其实时调用点成功观察后，其精确重新进入命令才可声明 `--available-capability`。
 
-The verified re-entry invocation becomes the capability envelope for that
-decision. LoopX then projects the same session-scoped capability flags into
-follow-up refresh, spend, monitor, and quota commands. It never persists those
-observations as durable grants, and owner-held capabilities such as credentials
-remain user gates. This contract is shared by local visible Goal hosts and Ark
-Managed Agent Goal mode without requiring prompt regeneration.
+已验证的重新进入调用成为该决策的能力信封。LoopX 随后把相同的会话作用域能力标志投影进后续 refresh、spend、monitor 与 quota 命令。它绝不把那些观察持久化为常驻授予，而凭据等 owner 持有能力保持用户 gate。本契约由本地可见 Goal host 与 Ark Managed Agent Goal 模式共享，无需重新生成 prompt。
 
-Agent identity follows the same fail-closed rule. `agent-onboard` keeps its
-fresh-registration path, while Codex App `start-goal --guided` consumes the
-ambient `CODEX_THREAD_ID` when `--thread-id` is omitted and must reuse a
-matching stable opaque thread binding when available. A stable thread ID with
-no binding is no longer treated as fresh onboarding when registered lanes
-exist: `start-goal` returns an identity gate that requires selecting one
-existing lane, and fresh registration is the default only for a goal with no
-registered lanes or explicit `--new-peer`. Existing identities are takeover
-choices, never an implicit automatic selection; selecting one requires
-explicit user intent for that exact agent. A missing thread ID follows the
-same gate when registered lanes exist and remains fail-closed otherwise,
-requiring explicit `--agent-id`, lane selection, or new-session intent with
-`--new-peer`. LoopX persists `(host_surface, goal_id, thread_id) -> agent_id` with
-`bind-agent-thread --execute`; later `/loopx` calls reuse that bound identity
-across `start-goal`, heartbeat, quota, refresh-state, and Todo commands. The
-preview is advisory; todo writeback requires verified registration and binding
-readback. Without a stable thread id, callers must continue to pass an explicit
-registered `--agent-id` or explicit `--new-peer`. No gated path may advertise
-unscoped heartbeat or quota commands.
+Agent 身份遵循同一失效关闭规则。`agent-onboard` 保留其全新注册路径，而 Codex App `start-goal --guided` 在省略 `--thread-id` 时消费环境中的 `CODEX_THREAD_ID`，且可用时必须复用匹配的稳定不透明线程绑定。当存在已注册 lane 时，带绑定的稳定线程 ID 不再当作全新 onboarding：`start-goal` 返回要求选择一个既有 lane 的身份 gate，而只有无已注册 lane 的 goal 或显式 `--new-peer` 才默认全新注册。既有身份是接管选择，绝非隐式自动选择；选择其中一个需要针对该精确 agent 的显式用户意图。存在已注册 lane 时，缺失线程 ID 遵循同一 gate，否则失效关闭，要求显式 `--agent-id`、lane 选择或带 `--new-peer` 的新会话意图。LoopX 以 `bind-agent-thread --execute` 持久化 `(host_surface, goal_id, thread_id) -> agent_id`；后续 `/loopx` 调用在 `start-goal`、heartbeat、quota、refresh-state 与 Todo 命令间复用该绑定身份。预览是咨询性的；todo writeback 需要验证注册与绑定回读。无稳定线程 id 时，调用方必须继续传显式已注册 `--agent-id` 或显式 `--new-peer`。任何受限路径都不得广告无作用域 heartbeat 或 quota 命令。
 
-The command pack preview is still read-only. It describes the commands and
-contracts; the slash invocation is what authorizes project-local state writes.
-New-user surfaces should also show the compact slash command catalog from the
-command pack, or the equivalent `loopx slash-commands` CLI help, so users can
-discover `/loopx`, `/loopx <goal text>`, and the `/loopx-global-*` read-only
-manager commands.
+命令包预览仍只读。它描述命令与契约；slash 调用才授权项目局部状态写入。新用户界面还应显示命令包中的紧凑 slash 命令目录，或等价 `loopx slash-commands` CLI 帮助，使用户能发现 `/loopx`、`/loopx <goal text>` 与 `/loopx-global-*` 只读 manager 命令。
 
-## Planning Contract
+## 规划契约
 
-The planner must create an ordered planning checkpoint before any `todo add`,
-but the shape depends on how clear the goal already is:
+规划器必须在任何 `todo add` 之前创建有序规划检查点，但形状取决于 goal 已有多清晰：
 
-- `open_ended_product_direction`: broad or fuzzy product directions should
-  produce 2-5 public-safe todo items so the user can see the main lanes,
-  risks, and execution order before LoopX starts working.
-- `clear_bounded_problem`: concrete tasks with a clear success condition should
-  use a planner-sized ordered todo plan. The model should produce enough
-  concise todos to make the approach explicit, without arbitrary item-count
-  caps or management-only filler.
+- `open_ended_product_direction`：宽泛或模糊的产品方向应产出 2-5 个公开安全 todo 项，使用户在 LoopX 开始工作前看到主要 lane、风险与执行顺序。
+- `clear_bounded_problem`：有明确成功条件的具体任务应使用规划器规模的有序 todo 计划。模型应产出足够多且简洁的 todos 使方案显式，而不做任意项数上限或纯管理填充。
 
-Each new item includes:
+每个新项包括：
 
-- `priority`: `P0`, `P1`, or `P2`;
-- `text`: a short checkbox title beginning with `[P0]`, `[P1]`, or `[P2]`;
-- `task_class`: usually `advancement_task`;
-- `action_kind`: a compact action token such as `implement`, `test`,
-  `review`, `document`, or `investigate`.
+- `priority`：`P0`、`P1` 或 `P2`；
+- `text`：以 `[P0]`、`[P1]` 或 `[P2]` 开头的简短复选框标题；
+- `task_class`：通常为 `advancement_task`；
+- `action_kind`：紧凑动作 token，如 `implement`、`test`、`review`、`document` 或 `investigate`。
 
-At least one new item should be `P0` unless the first useful step is blocked by
-a concrete user gate. User todos are reserved for owner decisions, private
-material, credentials, destructive git, or production authorization.
+除非首个有用步骤被具体用户 gate 阻塞，否则至少一个新项应为 `P0`。用户 todos 保留给 owner 决策、私有物料、凭据、破坏性 git 或生产授权。
 
-## Priority Ordering
+## 优先级排序
 
-Priority buckets sort as `P0`, then `P1`, then `P2`. Within the same bucket,
-the planner's list order is the relative priority.
+优先级桶排序为 `P0`、`P1`、`P2`。同一桶内，规划器的列表顺序即相对优先级。
 
-Hosts must preserve that order while running `loopx todo add`. LoopX status and
-quota projections already use todo index as the same-priority tie-breaker, so
-the first written `P0` outranks the second written `P0` without adding a new
-rank field.
+Host 必须在使用 `loopx todo add` 运行时保留该顺序。LoopX status 与 quota 投影已使用 todo index 作为同优先级决胜器，因此先写入的 `P0` 无需新等级字段即胜过后写入的 `P0`。
 
-## Explicit Issue-Fix Capability Route
+## 显式 Issue-Fix 能力路由
 
-Goal text never selects a product capability. To enter the issue-fix route, the
-caller must explicitly pass `--capability-route issue-fix` to `start-goal` (or
-use the equivalent explicit host switch). Issue/PR wording, a public URL, or the
-literal string `issue-fix` remain objective text only and grant no route.
+Goal 文本绝不选择产品 capability。要进入 issue-fix 路由，调用方必须对 `start-goal` 显式传 `--capability-route issue-fix`（或使用等价显式 host 开关）。Issue/PR 措辞、公开 URL 或字面字符串 `issue-fix` 都只是客观文本，不授予任何路由。
 
-Conversational hosts must not ask the model to split that switch from the goal
-text and then rebuild separate CLI arguments. Their generated `/loopx` entry
-passes the complete visible argument string once through
-`start-goal --slash-command-arguments`; the CLI consumes only a leading typed
-route switch and treats the remainder as goal text. Direct integrations may
-continue to use structured `--capability-route` plus `--goal-text`. These two
-input forms are mutually exclusive, and malformed or unsupported leading route
-switches fail closed before the guided transaction is built.
+会话型 host 不得让模型从 goal 文本拆分该开关，然后重建单独 CLI 参数。它们生成的 `/loopx` 条目把完整可见参数字符串一次性经 `start-goal --slash-command-arguments` 传入；CLI 只消费前导的类型化路由开关，并把剩余部分当作 goal 文本。直接集成可以继续使用结构化 `--capability-route` 加 `--goal-text`。这两种输入形式互斥，畸形或不支持的领导路由开关在构建引导事务前失效关闭。
 
-Only the leading `--capability-route` switch is parsed. A later occurrence of
-the same text in the raw argument string is ordinary goal text and is not an
-error.
+只有前导 `--capability-route` 开关被解析。原始参数字符串中后续出现的同一文本是普通 goal 文本，不是错误。
 
-`start-goal` projects that explicit switch as a typed
-`selected_capability_route`.
-This is a bootstrap-only selection, not later-turn authority. The guided
-transaction first persists candidate admission in capability-owned state.
-Missing evidence projects `evidence_required`; unresolved cross-references,
-closed PRs, or maintainer comments project `verification_required`. Only an
-`admitted` `proceed` candidate enters feasibility. Final reuse and terminal
-routes are distinct from pending verification. The Todo keeps only the
-scheduling route (`action_kind`) and stable public target
-(`target_key`); issue facts, prior-work checks, repository evidence,
-reproduction, scope, and validation remain owned by `issue_fix` state.
+`start-goal` 把该显式开关投影为类型化 `selected_capability_route`。这是仅引导选择，不是后续 Turn 权限。引导事务先把候选准入持久化在 capability 自有状态中。缺失证据投影 `evidence_required`；未解决的交叉引用、已关闭 PR 或维护者评论投影 `verification_required`。只有 `admitted` 的 `proceed` 候选进入可行性。最终复用与终态路由不同于待验证。Todo 只保留调度路由（`action_kind`）与稳定公开目标（`target_key`）；issue 事实、先前工作检查、仓库证据、复现、scope 与验证仍归 `issue_fix` 状态所有。
 
-Later turns continue through `quota should-run.selected_todo`; they do not call
-`start-goal` again or infer admission from stale prompt context. A runnable
-feasibility result binds its projected successor to the persisted feasibility
-row with `capability_binding_ref`. The route's typed
-`implementation_admission.durable_execution_binding` contract tells a Host how
-to resolve that ref and compare the Todo's exact `action_kind` and `target_key`
-with the admitted projection.
+后续 Turn 通过 `quota should-run.selected_todo` 继续；它们不再次调用 `start-goal`，也不从过期 prompt 上下文推断准入。可运行可行性结果用 `capability_binding_ref` 把投影的 successor 绑定到持久化可行性行。路由的类型化 `implementation_admission.durable_execution_binding` 契约告诉 Host 如何解析该引用，并把 Todo 的精确 `action_kind` 与 `target_key` 与准入投影对比。
 
-For pre-binding Todos, a Host may compare the exact action and target against
-the current feasibility row. Prefix-only matching is never admission authority.
-This keeps capability selection, durable Todo execution ownership, and Goal
-continuation as separate contracts.
+对于预绑定 Todos，Host 可以把精确动作与目标与当前可行性行对比。仅前缀匹配绝不是准入权限。这使 capability 选择、持久化 Todo 执行所有权与 Goal 继续保持为独立契约。
 
-The guided transaction's `command_cwd_source` points to the packet's resolved
-`project`; hosts execute its project-relative commands from that exact root.
+引导事务的 `command_cwd_source` 指向包中解析出的 `project`；host 从该精确根目录执行其项目相对命令。
 
-Before planning implementation, select a currently open public tracker issue.
-Repository TODO/FIXME entries, warnings, and incidental test failures may
-support later reproduction, but they are not issue identity:
+在规划实现前，选择当前开放的公开 tracker issue。仓库 TODO/FIXME 条目、警告与偶然测试失败可能支持后续复现，但它们不是 issue 身份：
 
 ```bash
 gh issue list \
@@ -238,26 +119,7 @@ loopx issue-fix workflow-plan \
   --format json
 ```
 
-The preview maps public metadata, repository context, intake classification,
-branch planning, validation labels, the feasibility checkpoint, and PR review
-readiness blockers into `/loopx <goal text>`. Repository context pins compact
-policy, architecture, change-scope, reproduction, and validation refs to a
-revision; memory and external experts stay advisory until repository-verified.
-The built-in public GitHub collector produces issue-specific, complete,
-non-truncated receipts for closing PR references, cross-references, and
-maintainer comment metadata without retaining bodies. Exact closing
-references may be reused directly. Cross-references remain
-`verification_required` until their exact current revision is inspected;
-maintainer comments project a content-read gate plus disposition successor.
-The optional `--candidate-resolution-json` binds those compact outcomes to the
-current PR head or maintainer-comment `updatedAt` revision before they feed back
-to current source rows, so a changed source revision fails closed. A capped aggregate
-PR index may generate candidates but cannot prove that prior work is absent.
-The command persists the preflight receipt when `--goal-id` is present. Only
-an `admitted` `proceed` decision may start a new implementation and enter
-feasibility. Pending verification, final reuse, and terminal routes must not invoke feasibility. For a
-`proceed` candidate, record a compact observation and let LoopX select exactly
-one implementation route. Write projected successors in priority and planner order:
+预览把公开元数据、仓库上下文、摄取分类、分支规划、验证标签、可行性检查点与 PR 评审就绪 blockers 映射进 `/loopx <goal text>`。仓库上下文把紧凑策略、架构、变更范围、复现与验证引用钉到一个修订；记忆与外部专家在仓库验证之前保持咨询性。内置公开 GitHub 收集器对关闭的 PR 引用、交叉引用与维护者评论元数据生成 issue 特定、完整、非截断回执，而不保留正文。精确关闭引用可以直接复用。交叉引用在检查其精确当前修订之前保持 `verification_required`；维护者评论投影内容读取 gate 加处置 successor。可选 `--candidate-resolution-json` 在它们反馈到当前源行之前把那些紧凑结局绑定到当前 PR head 或维护者评论 `updatedAt` 修订，使变更的来源修订失效关闭。有上限的聚合 PR 索引可以生成候选，但不能证明先前工作缺失。存在 `--goal-id` 时命令持久化预检回执。只有 `admitted` 的 `proceed` 决策可以启动新实现并进入可行性。待验证、最终复用与终态路由不得调用可行性。对于 `proceed` 候选，记录紧凑观察并让 LoopX 选择恰好一条实现路由。按优先级与规划器顺序写入投影的 successors：
 
 ```bash
 loopx issue-fix feasibility \
@@ -269,18 +131,14 @@ loopx issue-fix feasibility \
   --format json
 ```
 
-Write only the projected route successor or no-follow-up. User todos or operator
-gates must cover private repro material, issue body/comment reads, external
-issue comments, PR creation, merge, publish, destructive git, production
-actions, and repository-policy approvals.
+只写入投影的路由 successor 或 no-follow-up。用户 todos 或操作员 gate 必须覆盖私有复现物料、issue 正文/评论读取、外部 issue 评论、PR 创建、合并、发布、破坏性 git、生产动作与仓库策略批准。
 
-## Stop Conditions
+## 停止条件
 
-Stop and ask the user instead of writing or executing when:
+在以下情况停止并询问用户，而不是写入或执行：
 
-- private source material must be read before a public-safe todo can be formed;
-- credentials or secrets are required;
-- destructive git or production actions are needed;
-- the host cannot execute shell/CLI/tool calls or persist LoopX state;
-- the host cannot activate or expose the required host loop and no concrete
-  pasteable gate can be shown.
+- 形成公开安全 todo 前必须读取私有源物料；
+- 需要凭据或 secret；
+- 需要破坏性 git 或生产动作；
+- host 无法执行 shell/CLI/工具调用或持久化 LoopX 状态；
+- host 无法激活或暴露所需 host loop，且无法显示具体可粘贴 gate。

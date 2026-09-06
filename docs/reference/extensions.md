@@ -1,191 +1,97 @@
-# Extensions And Capabilities
+# 扩展与能力
 
-Capabilities and extensions are independent dimensions in LoopX:
+> [English](extensions.md)
 
-- a **capability** describes what LoopX can do and the product contract exposed
-  to callers;
-- an **extension** is a delivery unit that can provide one or more capabilities
-  and has its own installation, enablement, disablement, and upgrade lifecycle.
+Capability 与扩展是 LoopX 中的独立维度:
 
-Built-in capabilities and extension-provided capabilities share one registry.
-Implementation directories do not become capabilities merely because they live
-under `loopx/capabilities/`; registration is explicit.
+- **capability** 描述 LoopX 能做什么,以及暴露给调用方的产品合同;
+- **extension** 是一个可以提供一种或多种 capability 的交付单元,拥有自己的安装、启用、停用与升级生命周期。
+
+内置 capability 与扩展提供的 capability 共享同一个 registry。实现目录不会仅仅因为位于 `loopx/capabilities/` 之下就成为 capability;注册是显式的。
 
 ```text
 LoopX Core
-|-- capability contracts
-|-- built-in capability registrations
+|-- capability 合同
+|-- 内置 capability 注册
 `-- extension runtime
-      |-- extension A -- provides a new capability
-      |-- extension B -- implements a core capability
-      `-- extension C -- remains disabled
+      |-- extension A -- 提供新 capability
+      |-- extension B -- 实现核心 capability
+      `-- extension C -- 保持禁用
 ```
 
-## Runtime Responsibilities
+## Runtime 职责
 
-Capability and extension are code and delivery boundaries. At runtime, keep
-four responsibilities distinct:
+Capability 与扩展是代码与交付边界。在 runtime 中,保持四种职责彼此区分:
 
-| Responsibility | Contract |
+| 职责 | 合同 |
 | --- | --- |
-| Agent | Plans and performs one bounded action through a host/runtime and an available capability. |
-| Provider | Calls an external system and returns a bounded observation, effect result, or readback. |
-| Capability | Normalizes provider output, applies domain policy and validation, and proposes a finite transition. |
-| LoopX Kernel | Accepts or rejects that proposal and owns durable todo, gate, monitor, writeback, quota, recovery, and scheduling state. |
+| Agent | 通过 host/runtime 与可用 capability 规划并执行一个有界动作。 |
+| Provider | 调用外部系统并返回有界 observation、effect 结果或回读。 |
+| Capability | 规范化 provider 输出,应用域策略与验证,并提议有限的转换。 |
+| LoopX Kernel | 接受或拒绝该提议,并拥有持久的 todo、gate、monitor、写回、配额、恢复与调度状态。 |
 
-The normal flow is:
+正常流程是:
 
 ```text
 Agent -> Capability -> Provider -> external system
 Provider readback -> Capability transition proposal -> LoopX Kernel
 ```
 
-### Agent-scoped external event connectors
+### Agent 作用域的外部事件连接器
 
-`loopx.extensions.external_connector_runtime` defines the provider-neutral
-binding shared by interactive group messages and document-comment streams. It
-keeps source and cursor references owner-local while exposing a content-free
-status projection with source kind, capture policy, ingress policy, response
-policy, lifecycle, and declared operations.
+`loopx.extensions.external_connector_runtime` 定义交互式群消息与文档评论流共享的 provider-neutral 绑定。它把来源与 cursor 引用保留在 owner 本地,同时暴露一个无内容的 status 投影,包含来源种类、capture 策略、ingress 策略、响应策略、生命周期与声明的操作。
 
-The contract separates three independent decisions:
+该合同把三个独立决策分开:
 
-- capture: addressed events, all events from one configured source, or an
-  incremental source stream;
-- ingress: live steering, the same session's ordered queue, or an Agent-scoped
-  asynchronous inbox; and
-- response: no response, source-thread response, topic response, or a
-  configured mirror.
+- capture:寻址事件、来自一个已配置来源的所有事件,或增量来源流;
+- ingress:实时转向、同一会话的有序队列,或 Agent 作用域的异步 inbox;
+- response:不响应、源线程响应、主题响应,或已配置的 mirror。
 
-Live steering and session queue bindings require one exact Agent session;
-asynchronous inbox bindings require one owner-local inbox. History catch-up
-requires a cursor reference. A response-capable provider must declare both
-write and readback support.
+实时转向与会话队列绑定需要精确的一个 Agent session;异步 inbox 绑定需要一个 owner 本地 inbox。历史补齐需要 cursor 引用。具备响应能力的 provider 必须同时声明写入与回读支持。
 
-Acknowledgement is a separate fail-closed decision. LoopX permits ACK and
-cursor advancement only after a committed durable effect (including an
-explicit no-follow-up effect) and, when a response is required, verified
-provider readback. For an ordered working-session delivery, the completed and
-persisted session Turn is the minimum effect receipt; an asynchronous inbox
-requires its own accepted writeback or explicit no-follow-up receipt. Raw event
-bodies, author identities, source references, cursor values, and provider
-payloads do not enter the status projection.
+确认(ACK)是独立的 fail-closed 决策。LoopX 只在已提交的持久 effect(包括显式无后续 effect)之后,以及在需要响应时验证过的 provider 回读之后,才允许 ACK 与 cursor 推进。对于有序的工作会话投递,已完成并持久化的会话 Turn 是最小的 effect receipt;异步 inbox 需要自己的已接受写回或显式无后续 receipt。原始事件主体、作者身份、来源引用、cursor 值与 provider payload 不进入 status 投影。
 
-The Agent-bound Lark Goal Topic path is the first caller. Legacy Goal-only
-bindings remain readable, while new live, queued, and asynchronous Agent
-bindings persist the generic Connector contract alongside their
-provider-specific routing data. This runtime contract is not itself a new
-capability registry entry; providers advertise stable caller outcomes through
-their existing extension and capability surfaces.
+Agent 绑定的 Lark Goal Topic 路径是第一个调用方。旧的仅 Goal 绑定保持可读,而新的实时、排队与异步 Agent 绑定在持久化泛型 Connector 合同的同时保留其 provider 特定的路由数据。该 runtime 合同本身不是新的 capability registry 条目;provider 通过其现有扩展与 capability surface 宣传稳定的调用方结果。
 
-For asynchronous sources, the same module provides an owner-local incremental
-inbox runtime. A provider translates a bounded page into
-`agent_external_connector_event_v0` envelopes and calls the capture operation
-with the exact previously committed cursor. Capture deduplicates stable event
-ids, applies the declared addressed/all-source filter, preserves document
-anchors and reply-chain references in private storage, and assigns a restart-
-safe order. The page cursor remains pending until every accepted event from
-that page is settled; a fully filtered page may checkpoint immediately because
-it contains no accepted Agent input.
+对于异步来源,同一模块提供 owner 本地的增量 inbox runtime。provider 把一个有界 page 转换为 `agent_external_connector_event_v0` envelope,并用之前精确提交的 cursor 调用 capture 操作。Capture 对稳定事件 id 去重,应用声明的寻址/全来源过滤器,在私有存储中保留文档锚点与回复链引用,并分配重启安全的顺序。在该 page 的所有已接受事件结算之前,page cursor 保持待处理;完全被过滤的 page 可以立即建立检查点,因为它不包含已接受的 Agent 输入。
 
-The bound Agent drains pending events in that order. Settlement rejects an
-out-of-order event and calls the common ACK decision, so a missing durable
-effect or required provider readback leaves both the event and cursor pending.
-Only a successful settlement records the event as acknowledged, and only the
-last accepted event from a captured page advances its cursor. After that state
-is durably committed, the processed private event body is removed; its
-content-free identity remains available for replay deduplication. Provider
-failures are stored as content-free error codes. The public inbox projection
-exposes only pending count, oldest age, failure count, and freshness; event ids,
-bodies, anchors, reply chains, source references, and cursor values remain
-owner-local.
+绑定的 Agent 按该顺序清空待处理事件。结算拒绝乱序事件并调用公共 ACK 决策,因此缺失的持久 effect 或必需的 provider 回读会使事件与 cursor 都保持待处理。只有成功的结算才把事件记录为已确认,而且只有捕获 page 的最后一个已接受事件才推进其 cursor。该状态持久提交后,已处理的私有事件主体被移除;其无内容身份仍可用于重放去重。Provider 失败以无内容的错误码存储。公开 inbox 投影只暴露待处理数量、最长等待时长、失败数量与新鲜度;事件 id、主体、锚点、回复链、来源引用与 cursor 值保持 owner 本地。
 
-`loopx.extensions.external_connector_provider` adds the fail-closed provider
-call boundary for document comments. A document-comment registration must
-reference material that was registered separately; the comment stream remains
-`external_input_only` and cannot promote itself to project authority. Exact
-provider identities, scopes, publication requirements, and official HTTPS
-repair URLs stay in owner-local permission guidance. Status exposes only
-content-free readiness and operation counts. Guidance must match the exact
-requirements persisted with the Connector, and those requirements must cover
-history capture plus response write and readback when the response policy needs
-them.
+`loopx.extensions.external_connector_provider` 为文档评论添加 fail-closed 的 provider 调用边界。文档评论注册必须引用单独注册过的材料;评论流保持 `external_input_only`,不能自我提升为项目权限。精确的 provider 身份、scope、发布要求与官方 HTTPS 修复 URL 保留在 owner 本地的权限指南中。Status 只暴露无内容的就绪度与操作计数。指南必须与 Connector 持久化的精确要求匹配,并且当响应策略需要时,这些要求必须覆盖历史捕获以及响应写入与回读。
 
-The provider call sequence is permission evaluation, bounded page read,
-durable inbox capture, Agent effect, provider response with readback, then ACK.
-The runtime does not call the page reader until the registered permissions are
-ready, does not call the response writer before a committed effect receipt, and
-does not advance the cursor until an event-bound response receipt and provider
-readback succeed. Concrete provider adapters supply the page reader and response
-writer; LoopX does not own their credentials or raw payloads.
+Provider 调用顺序是:权限评估、有界 page 读取、持久 inbox 捕获、Agent effect、带回读的 provider 响应,然后 ACK。Runtime 直到注册权限就绪才调用 page reader,在已提交 effect receipt 之前不调用响应写入器,直到 event 绑定响应 receipt 与 provider 回读成功才推进 cursor。具体的 provider adapter 提供 page reader 与响应写入器;LoopX 不拥有它们的凭据或原始 payload。
 
-The bundled Lark extension supplies the first concrete document-comment
-adapter through `lark-cli`. Its owner-local target binds a safe Connector source
-reference to a private document URL, profile, and bot or user identity. The
-adapter probes exact comment read/create scopes, paginates comment cards and
-nested replies with a restart-safe private cursor, and maps stable reply ids to
-hashed Connector event ids. A completed scan restarts from the first comment
-page so new replies on older cards remain discoverable; the generic inbox
-deduplicates already captured or acknowledged events. Because Lark does not
-expose provider idempotency for reply creation, the adapter requires an
-owner-local receipt store: it records intent before the write, recovers a reply
-by its opaque idempotency marker after a crash, records the returned reply id
-before readback, and reuses that receipt on retry. The comment-list shortcut
-requires `lark-cli` 1.0.69 or newer. Public status and provider receipts omit
-document URLs, profiles, raw ids, cursor values, bodies, and subprocess output.
+随附的 Lark 扩展通过 `lark-cli` 提供第一个具体的文档评论 adapter。它的 owner 本地 target 把一个安全的 Connector 来源引用绑定到私有文档 URL、profile 与 bot 或用户身份。adapter 探测精确的评论读取/创建 scope,用重启安全的私有 cursor 分页评论卡片与嵌套回复,并把稳定回复 id 映射为哈希后的 Connector 事件 id。完成的扫描从第一个评论 page 重新开始,因此旧卡片上的新回复仍然可发现;泛型 inbox 对已捕获或已确认的事件去重。由于 Lark 不为回复创建暴露 provider 幂等性,adapter 需要 owner 本地的 receipt 存储:写入前记录意图,崩溃后通过其不透明幂等标记恢复回复,回读前记录返回的回复 id,并在重试时复用该 receipt。评论列表快捷方式要求 `lark-cli` 1.0.69 或更新版本。公开 status 与 provider receipt 省略文档 URL、profile、原始 id、cursor 值、主体与子进程输出。
 
-The Lark adapter intentionally rejects `addressed_only`. Correct mention
-filtering needs an explicit provider identity contract, and treating every
-comment on a configured document as an Agent mention would silently weaken the
-generic capture policy. Configured-source and incremental bindings remain
-supported. Source-thread response bindings also filter solved and whole-
-document comment cards, which the Lark reply API does not allow replying to.
+Lark adapter 刻意拒绝 `addressed_only`。正确的提及过滤需要显式的 provider 身份合同,而把已配置文档上的每条评论都视为 Agent 提及会静默削弱泛型 capture 策略。已配置来源与增量绑定仍然受支持。源线程响应绑定还会过滤已解决的和整文档评论卡片,而 Lark 回复 API 不允许对这些卡片回复。
 
-`Provider` is an implementation role. When it implements a LoopX capability,
-it is registered under that capability; a standalone extension provider may
-instead expose only its own bounded command. A provider may be built into LoopX
-or delivered by an extension. `Extension` is not a fifth runtime role: it owns
-provider packaging, installation, enablement, upgrade, and compatibility
-lifecycle. It does not own domain transition policy or goal state. Domain state
-and receipts are data crossing these boundaries, not independent actors.
+`Provider` 是实现角色。当它实现 LoopX capability 时,它注册在该 capability 之下;独立的扩展 provider 也可以只暴露自己的有界命令。Provider 可以内置在 LoopX 中,也可以由扩展交付。`Extension` 不是第五个 runtime 角色:它拥有 provider 打包、安装、启用、升级与兼容性生命周期。它不拥有域转换策略或 Goal 状态。域状态与 receipt 是跨越这些边界的数据,不是独立参与者。
 
-## Repository Layout
+## 仓库布局
 
-The repository uses one path for each ownership boundary:
+仓库为每个所有权边界使用一个路径:
 
 ```text
-loopx/capabilities/<capability>/   caller-facing contracts and core providers
-loopx/extensions/                  extension lifecycle and bundled providers
-packages/<package-id>/             independently installable distributions
+loopx/capabilities/<capability>/   面向调用方的合同与核心 providers
+loopx/extensions/                  扩展生命周期与随附 providers
+packages/<package-id>/             可独立安装的发行包
 ```
 
-`loopx/extensions/` is a Python package shipped in the LoopX wheel.
-`packages/` is a monorepo package root; its children have their own packaging
-metadata and do not become part of the LoopX wheel. There is intentionally no
-repository-root `extensions/` directory. That duplicate name obscured whether a
-path represented importable LoopX code or a separately installable artifact.
+`loopx/extensions/` 是随 LoopX wheel 分发的 Python 包。`packages/` 是 monorepo 包根目录;其子目录有自己的打包元数据,不成为 LoopX wheel 的一部分。仓库根目录刻意没有 `extensions/` 目录。这个重复名称曾经模糊了路径代表可导入的 LoopX 代码还是可独立安装的制品。
 
-The layout does not merge capabilities and extensions. They remain separate
-axes and compose through the capability/provider registry: a capability names
-the stable outcome contract, while an extension owns provider delivery and
-lifecycle.
+该布局不合并 capability 与扩展。它们保持为独立轴,并通过 capability/provider registry 组合:capability 命名稳定的结果合同,扩展拥有 provider 交付与生命周期。
 
-## Registration Model
+## 注册模型
 
-Every registered capability declares three provider-facing fields:
+每个已注册 capability 声明三个面向 provider 的字段:
 
-- `origin`: `builtin` or `extension`;
-- `visibility`: `public` or `internal`;
-- `provider_id`: `loopx-core` or the extension manifest id.
+- `origin`:`builtin` 或 `extension`;
+- `visibility`:`public` 或 `internal`;
+- `provider_id`:`loopx-core` 或扩展 manifest id。
 
-The built-in catalog remains the default source. Extension manifests declare
-providers and contracts; the extension runtime state is the only source for
-whether each provider is installed, enabled, and doctor-ready. Duplicate
-capability or provider ids fail closed. Internal registrations remain available
-to the registry but are omitted from the public catalog.
+内置 catalog 仍然是默认来源。扩展 manifest 声明 provider 与合同;每个 provider 是否已安装、已启用且 doctor 就绪,唯一来源是扩展 runtime 状态。重复的 capability 或 provider id 会 fail closed。内部注册对 registry 保持可用,但被从公开 catalog 中省略。
 
-Catalog discovery does not scan arbitrary directories or import extension
-Python code. A caller can add a declaration-only manifest to a catalog read:
+Catalog 发现不扫描任意目录,也不导入扩展 Python 代码。调用方可以在 catalog 读取时附加一个仅声明式的 manifest:
 
 ```bash
 loopx capability list \
@@ -197,51 +103,24 @@ loopx capability show lark-kanban \
   --format json
 ```
 
-The resulting provider reports `declared=true` and
-`installed=enabled=ready=false`. The normal CLI read also composes installed
-providers from `<runtime-root>/extensions/state.json`, so the catalog and
-runtime dispatch see the same active manifest revision. `loopx extension`
-registers an already-installed subprocess entrypoint only after the manifest,
-API, permission, and doctor checks pass. It does not download packages or grant
-new permissions.
+结果 provider 报告 `declared=true` 且 `installed=enabled=ready=false`。常规 CLI 读取也会从 `<runtime-root>/extensions/state.json` 组合已安装 provider,因此 catalog 与 runtime 分发看到相同的活跃 manifest 修订。`loopx extension` 只在 manifest、API、权限与 doctor 检查通过后,才注册一个已安装的子进程 entrypoint。它不下载包,也不授予新权限。
 
-## Starter And Scaffold
+## Starter 与脚手架
 
-Create the next standalone extension through the same management surface. The
-command previews by default and writes only with `--execute`:
+通过同一个管理 surface 创建下一个独立扩展。该命令默认预览,只有 `--execute` 才写入:
 
 ```bash
 loopx extension init loopx-example --format json
 loopx extension init loopx-example --execute --format json
 ```
 
-The default destination is `packages/<extension-id>`. Use `--destination`
-when the provider is developed in another package or repository. The scaffold
-creates an independently installable Python package, declarative manifest,
-JSON stdin/stdout provider, versioned request and response JSON Schemas,
-side-effect-free doctor, example request, and a short README. The generated
-provider rejects missing, mismatched, or structurally invalid request contracts
-before doing work. The init receipt explicitly identifies the starter as
-`standalone` and names `loopx extension run` as its managed entrypoint.
+默认目标是 `packages/<extension-id>`。当 provider 在另一个包或仓库中开发时,使用 `--destination`。脚手架创建一个可独立安装的 Python 包、声明式 manifest、JSON stdin/stdout provider、带版本号的请求与响应 JSON Schema、无副作用的 doctor、示例请求与简短 README。生成的 provider 在任何工作之前拒绝缺失、不匹配或结构无效的请求合同。init receipt 明确标识该 starter 为 `standalone`,并把 `loopx extension run` 指定为其受管入口点。
 
-`extension init` intentionally does not register a capability. It currently
-generates only the complete standalone path. A `[[provides]]` extension needs a
-real caller contract and command, while an `[[implements]]` extension needs an
-existing capability-specific resolver, policy check, action/scope mapping, and
-execution-envelope adapter. A generic scaffold cannot infer those authority
-semantics safely. Add a capability integration profile first, then scaffold or
-author the provider against that profile; do not add manifest tables that are
-discoverable but not callable.
+`extension init` 刻意不注册 capability。它目前只生成完整的独立路径。`[[provides]]` 扩展需要真实的调用方合同与命令,而 `[[implements]]` 扩展需要现有的 capability 特定 resolver、策略检查、action/scope 映射与执行 envelope adapter。泛型脚手架无法安全推断那些权限语义。先添加 capability 集成 profile,再对照该 profile 脚手架化或编写 provider;不要添加可被发现但不可调用的 manifest 表。
 
-The command refuses every existing destination, including an empty directory;
-there is no force or merge mode. It also does not build, install, register, or
-enable the generated provider. Those remain explicit lifecycle steps so the
-package manager and LoopX activation state cannot drift behind one command:
+该命令拒绝所有已存在的目标,包括空目录;没有强制或合并模式。它也不构建、安装、注册或启用生成的 provider。这些仍然是显式生命周期步骤,使包管理器与 LoopX 激活状态不会落后于一条命令:
 
-Run all three commands from the same activated Python environment. LoopX
-verifies the provider through its installed console entrypoint, so installing
-the package into a different environment correctly fails with
-`entrypoint_missing`.
+从同一个已激活的 Python 环境运行所有三条命令。LoopX 通过其已安装的 console entrypoint 验证 provider,因此把包安装到不同环境会正确地以 `entrypoint_missing` 失败。
 
 ```bash
 python3 -m pip install packages/loopx-example
@@ -255,16 +134,14 @@ loopx extension run loopx-example \
   --format json
 ```
 
-Treat the generated response as executable documentation, not a permanent
-domain contract. Before productizing the provider, replace the starter request,
-response, permission, and doctor semantics with bounded domain-specific ones.
+把生成的响应视为可执行文档,而不是永久的域合同。在产品化 provider 之前,把 starter 的请求、响应、权限与 doctor 语义替换为有界的领域特定语义。
 
-## Runtime Lifecycle
+## Runtime 生命周期
 
-The lifecycle is local, explicit, and dry-run by default:
+生命周期是本地、显式的,并默认 dry-run:
 
 ```bash
-# Inspect the bundled OpenViking pilot, then activate it only if doctor passes.
+# 检查随附的 OpenViking pilot,仅当 doctor 通过时才激活它。
 loopx extension install \
   --bundled openviking-semantic-preference \
   --execute \
@@ -275,57 +152,31 @@ loopx extension doctor openviking-semantic-preference --execute --format json
 loopx extension disable openviking-semantic-preference --execute --format json
 loopx extension enable openviking-semantic-preference --execute --format json
 
-# Activate the bundled Lark lifecycle provider before using lark-inbox.
+# 使用 lark-inbox 之前激活随附的 Lark 生命周期 provider。
 loopx extension install --bundled loopx-lark --execute --format json
 ```
 
-After an install, update, or rollback changes the active LoopX release,
-revalidate all enabled extension runtimes as one bounded read-only batch:
+当安装、更新或回滚改变了活跃 LoopX release 后,作为一个有界的只读批次重新验证所有已启用扩展 runtime:
 
 ```bash
 loopx extension doctor --all-enabled --execute --format json
 ```
 
-The local installer runs this batch automatically. A passing doctor refreshes
-only the local runtime-identity proof; it grants no new provider permission and
-performs no connector write. Failed providers remain fail closed and the batch
-names the exact repair command.
+本地安装器自动运行该批次。通过的 doctor 只刷新本地 runtime 身份证明;它不授予新的 provider 权限,也不执行任何连接器写入。失败的 provider 保持 fail closed,且批次会指明精确的修复命令。
 
-For a separately distributed provider, pass `--manifest <extension.toml>`.
-`upgrade` validates and probes the new manifest before changing the active
-revision. `rollback` probes the previous revision before switching back. A
-failed probe leaves the current revision untouched. Activation state contains
-validated manifest snapshots and revision ids in the private LoopX runtime
-root; it does not contain provider output or credentials.
+对于单独分发的 provider,传入 `--manifest <extension.toml>`。`upgrade` 在改变活跃修订之前验证并探测新 manifest。`rollback` 在切回之前探测先前修订。失败的探测使当前修订保持不变。激活状态在私有的 LoopX runtime 根目录中包含经过验证的 manifest 快照与修订 id;不包含 provider 输出或凭据。
 
-Standalone extensions use the same managed command shape as built-in
-capabilities: LoopX accepts a bounded request, previews by default, executes
-only with `--execute`, and returns a structured receipt. The v0 invocation
-contract is:
+独立扩展使用与内置 capability 相同的受管命令形态:LoopX 接受有界请求,默认预览,只有 `--execute` 才执行,并返回结构化 receipt。v0 调用合同是:
 
 ```bash
 loopx extension run <extension-id> --input-json <path-or-> [--execute]
 ```
 
-The active manifest fixes the executable, arguments, protocol, permissions,
-timeout, and revision. The caller supplies one JSON object over stdin and the
-provider must return one JSON object over stdout. LoopX does not accept an
-arbitrary executable path or argument passthrough. `run` never installs a
-missing extension, and it rejects extensions with `[[provides]]`,
-`[[implements]]`, or any declared permission; those providers are invoked
-through their capability or domain command. Extension lifecycle management is
-shared, but direct execution is reserved for zero-permission, runtime-only
-standalone extensions.
-Direct provider binaries are implementation and debugging surfaces; they are
-not the supported management API.
+活跃 manifest 固定可执行文件、参数、协议、权限、超时与修订。调用方通过 stdin 提供一个 JSON 对象,provider 必须通过 stdout 返回一个 JSON 对象。LoopX 不接受任意可执行路径或参数透传。`run` 永远不会安装缺失的扩展,并拒绝带 `[[provides]]`、`[[implements]]` 或任何已声明权限的扩展;这些 provider 通过其 capability 或域命令调用。扩展生命周期管理是共享的,但直接执行保留给零权限、仅 runtime 的独立扩展。直接 provider 二进制是实现与调试 surface,不是受支持的受管 API。
 
-### Goal-bound external capability providers
+### Goal 绑定的外部 capability provider
 
-An extension that owns a new domain capability may attach one relative JSON
-`integration_profile` to its `[[provides]]` record. LoopX reads, validates, and
-snapshots this profile during manifest installation; later invocation resolves
-only the enabled, doctor-ready active revision. The profile is data, not an
-import or executable path.
+拥有新域 capability 的扩展可以向其 `[[provides]]` 记录附加一个相对 JSON `integration_profile`。LoopX 在 manifest 安装期间读取、验证并快照该 profile;之后的调用只解析已启用、doctor 就绪的活跃修订。profile 是数据,不是导入或可执行路径。
 
 ```toml
 [runtime]
@@ -358,11 +209,7 @@ integration_profile = "integration-profile.json"
 }
 ```
 
-A durable Goal binding enables bounded operations for one exact active provider
-revision. It is Goal-scoped rather than Turn-scoped, so the same working Agent
-session may reuse an enabled read-only capability without creating a governed
-Turn for every observation. Preview the binding first, then persist it in the
-Goal record of the project registry:
+持久的 Goal 绑定为一个精确的活跃 provider 修订启用有界操作。它是 Goal 作用域而不是 Turn 作用域,因此同一个工作 Agent session 可以复用已启用的只读 capability,而不会为每次 observation 创建受治理的 Turn。先预览绑定,再把它持久化到项目 registry 的 Goal 记录中:
 
 ```bash
 loopx --registry .loopx/registry.json capability bind requirement-delivery \
@@ -375,8 +222,7 @@ loopx --registry .loopx/registry.json capability bind requirement-delivery \
   --execute
 ```
 
-LoopX resolves the enabled, doctor-ready provider while creating the binding.
-The persisted `goal.external_capability_bindings` entry has this typed shape:
+LoopX 在创建绑定时解析已启用、doctor 就绪的 provider。持久化的 `goal.external_capability_bindings` 条目具有以下 typed 形状:
 
 ```json
 {
@@ -392,7 +238,7 @@ The persisted `goal.external_capability_bindings` entry has this typed shape:
 }
 ```
 
-Preview or execute a read-only operation by resolving the durable Goal binding:
+通过解析持久 Goal 绑定来预览或执行只读操作:
 
 ```bash
 loopx --registry .loopx/registry.json capability invoke requirement-delivery \
@@ -407,32 +253,15 @@ loopx --registry .loopx/registry.json capability invoke requirement-delivery \
   --execute
 ```
 
-The input object contains `context_refs` plus a bounded domain `input` object.
-LoopX checks that the requested capability and operation are enabled for the
-Goal and that the provider id, active revision, and snapshotted profile digest
-still match. The binding digest plus the bounded input derives a deterministic
-invocation id. Managed runtime limits still apply. `--goal-binding-json`
-remains available as a compatibility and debugging input, but normal execution
-should resolve the binding from `--goal-id` so the LoopX registry remains the
-task ground truth.
+输入对象包含 `context_refs` 加上一个有界的域 `input` 对象。LoopX 检查所请求的 capability 与操作是否已为 Goal 启用,以及 provider id、活跃修订与快照 profile 摘要是否仍然匹配。绑定摘要加有界输入推导出确定性的调用 id。受管 runtime 限制仍然适用。`--goal-binding-json` 仍作为兼容性与调试输入可用,但常规执行应从 `--goal-id` 解析绑定,使 LoopX registry 保持为任务的事实来源。
 
-The direct `capability invoke` route admits read-only operations only: provider
-results must not contain domain mutations, transition proposals, effect
-receipts, raw payloads, credential-like fields, or private-looking strings. It
-does not write LoopX state or spend quota.
+直接的 `capability invoke` 路由只接受只读操作:provider 结果不得包含域变更、转换提议、effect receipt、原始 payload、类凭据字段或看似私有的字符串。它不写 LoopX 状态,也不消耗配额。
 
-An integration profile may also declare `effect_class: external_write`, but
-that operation is deliberately unavailable through direct invocation. A host
-adapter must call the governed material lifecycle in
-`loopx.extensions.governed_capability_execution`:
+集成 profile 也可以声明 `effect_class: external_write`,但该操作刻意不能通过直接调用使用。host adapter 必须调用 `loopx.extensions.governed_capability_execution` 中的治理物化生命周期:
 
-An external-write operation also declares a typed `todo_contract` beside
-`effect_class`, containing one or more lower-snake `action_kinds` and bounded
-`target_key_prefixes`.
+外部写入操作除 `effect_class` 外还声明一个 typed `todo_contract`,包含一个或多个 lower-snake `action_kinds` 与有界 `target_key_prefixes`。
 
-When a long-running provider needs LoopX to keep polling its external job, the
-same operation may declare a `transition_contract`. This is an authority
-allowlist, not a provider-owned Todo schema:
+当长期运行的 provider 需要 LoopX 持续轮询其外部任务时,同一操作可以声明一个 `transition_contract`。这是权限允许清单,不是 provider 拥有的 Todo schema:
 
 ```json
 {
@@ -447,143 +276,45 @@ allowlist, not a provider-owned Todo schema:
 }
 ```
 
-The profile bounds every monitor identity, action, external target, and
-required capability that the provider may propose. A proposal outside those
-bounds fails before any LoopX state write. The provider receives no registry
-path and never calls Todo APIs directly.
+profile 限制 provider 可能提议的每个 monitor 身份、动作、外部目标与必需 capability。超出这些边界的提议会在任何 LoopX 状态写入之前失败。provider 不接收 registry 路径,也从不直接调用 Todo API。
 
-1. obtain `quota should-run` admission for one exact Goal, Agent, Todo, and
-   `turn_instance_id`; the selected open Agent Todo's `action_kind` and
-   `target_key` must match the operation profile's `todo_contract`, so an
-   admitted Turn cannot borrow an unrelated Goal-bound write capability;
-2. call `start_governed_external_capability(...)`, which journals intent before
-   dispatch and gives the provider the settlement effect id as its stable
-   idempotency key;
-3. call `reconcile_governed_external_capability(...)` until the provider returns
-   a terminal `loopx_external_effect_receipt_v0`;
-4. let the LoopX Kernel materialize admitted monitor upserts through the normal
-   Todo APIs. A `running` result may only create or retarget its bounded
-   continuous monitor, so the recovery entry remains schedulable while the
-   external operation or its settlement is incomplete;
-5. supply typed writeback and spend callbacks. LoopX reuses the shared Turn
-   settlement driver, requires the effect receipt digest in durable writeback,
-   and never spends quota before that writeback commits;
-6. only after the shared Turn settlement commits, let the Kernel materialize an
-   admitted terminal monitor completion. A failed writeback or spend therefore
-   leaves the monitor open for recovery instead of closing the only retry lane.
+1. 为一个精确 Goal、Agent、Todo 与 `turn_instance_id` 获得 `quota should-run` 准入;所选开放 Agent Todo 的 `action_kind` 与 `target_key` 必须匹配操作 profile 的 `todo_contract`,因此已准入的 Turn 不能借用无关的 Goal 绑定写入 capability;
+2. 调用 `start_governed_external_capability(...)`,它在分发前记录意图,并把结算 effect id 作为 provider 的稳定幂等 key;
+3. 调用 `reconcile_governed_external_capability(...)`,直到 provider 返回终态 `loopx_external_effect_receipt_v0`;
+4. 让 LoopX Kernel 通过常规 Todo API 物化已准入的 monitor upsert。`running` 结果只能创建或重定向其有界持续 monitor,因此外部操作或其结算未完成时,恢复条目保持可调度;
+5. 提供 typed 写回与消耗回调。LoopX 复用共享 Turn 结算驱动,在持久写回中要求 effect receipt 摘要,并且在该写回提交之前从不消耗配额;
+6. 只有在共享 Turn 结算提交之后,才让 Kernel 物化已准入的终态 monitor 完成。因此失败的写回或消耗会让 monitor 保持开放以支持恢复,而不是关闭唯一的重试通道。
 
-The provider may return `running`, so a service-side job can outlive the bounded
-provider process. Start and reconcile are separately replayable from a mode-0600
-journal. Exact provider revision, request digest, Goal binding, settlement
-identity, transition proposal receipts, provider effect receipt, writeback
-receipt, and quota receipt remain attached to the same invocation. Each
-materialized proposal is checkpointed immediately. Monitor upserts belong to
-the pre-settlement phase; monitor completion belongs to the post-settlement
-phase. A crash between either Todo write and its checkpoint recovers by the
-proposal's stable monitor key and completion identity instead of duplicating
-work. A crash after an external
-effect replays with the same idempotency key and reconciles the receipt instead
-of starting an unrelated operation. One settlement effect id owns exactly one
-material invocation: retrying the same request replays it, while attempting a
-different operation or input under the same Turn receipt fails before provider
-dispatch. A new invocation also requires `should_run=true`; an existing journal
-may still be recovered with its exact typed receipt after the runnable decision
-has changed.
+provider 可以返回 `running`,因此服务端任务可以比有界 provider 进程存活更久。start 与 reconcile 可以从 mode-0600 的 journal 分别重放。精确 provider 修订、请求摘要、Goal 绑定、结算标识、转换提议 receipt、provider effect receipt、写回 receipt 与配额 receipt 保持附加在同一次调用上。每个物化提议都立即建立检查点。Monitor upsert 属于结算前阶段;monitor 完成属于结算后阶段。任一 Todo 写入与其检查点之间的崩溃会通过提议的稳定 monitor key 与完成标识恢复,而不是重复工作。外部 effect 之后的崩溃会用同一幂等 key 重放,并重新对账 receipt,而不是开始无关操作。一个结算 effect id 恰好拥有一次物化调用:重试同一请求会重放它,而在同一 Turn receipt 下尝试不同操作或输入会在 provider 分发之前失败。新调用还要求 `should_run=true`;在可运行决策改变后,现有 journal 仍可用其精确 typed receipt 恢复。
 
-Transition proposals are deliberately narrower than arbitrary Goal mutation.
-The first version supports only continuous-monitor upsert and completion. It
-cannot create a general advancement Todo, change a Goal, widen capability
-authority, complete another Agent's work, or reopen a completed monitor. The
-Kernel resolves one exact monitor by its admitted binding key, applies the
-normal ownership and completion rules, and returns a content-bounded receipt.
+转换提议刻意比任意 Goal 变更更窄。第一个版本只支持持续 monitor 的 upsert 与完成。它不能创建通用推进 Todo、变更 Goal、扩大 capability 权限、完成其他 Agent 的工作,或重新打开已完成的 monitor。Kernel 通过其已准入绑定 key 解析一个精确 monitor,应用常规所有权与完成规则,并返回内容有界的 receipt。
 
-Goal enablement alone never grants write authority. Creating or updating the
-binding is an explicit Goal configuration change: it uses preview/apply, but it
-does not create a Turn or spend Turn quota. Turn scope starts only when an
-invocation may produce a material external or LoopX-state effect. The Goal
-binding is a local typed projection, not a security token or proof of a remote
-issuer; service authentication and authorization remain the provider's
-responsibility.
+仅启用 Goal 永远不会授予写入权限。创建或更新绑定是显式 Goal 配置变更:它使用 preview/apply,但不创建 Turn,也不消耗 Turn 配额。只有当调用可能产生物化的外部或 LoopX 状态 effect 时,才进入 Turn 作用域。Goal 绑定是本地 typed 投影,不是安全令牌或远端签发者证明;服务认证与授权仍然是 provider 的责任。
 
-The generic runner is deliberately non-effectful and grants no operation
-effects. Both manifest `permissions` and runtime `required_permissions` must
-be empty. Any operation needing read, write, send, publish, manage, or another
-declared authority must enter through a capability or domain command that can
-apply its domain policy before managed dispatch. Request files and stdin are capped while
-being read. Provider stdout and stderr are drained concurrently and the provider
-is started in a dedicated process group. Timeout or either output limit
-terminates the entire group, so a descendant cannot continue effects after
-LoopX reports that execution stopped.
+泛型 runner 刻意无 effect,不授予任何操作 effect。manifest `permissions` 与 runtime `required_permissions` 必须都为空。任何需要读取、写入、发送、发布、管理或其他已声明权限的操作,都必须通过一个能在受管分发之前应用其域策略的 capability 或域命令进入。请求文件与 stdin 在读取时被设上限。Provider stdout 与 stderr 被并发排空,provider 在专用进程组中启动。超时或任一输出上限会终止整个进程组,因此后代进程不会在 LoopX 报告执行已停止后继续产生 effect。
 
-Effectful capability dispatch uses
-`loopx_extension_execution_envelope_v0`. The capability command, not the caller
-or provider, creates this minimal envelope after resolving one enabled,
-doctor-ready implementation and checking the domain activation policy. It binds:
+有 effect 的 capability 分发使用 `loopx_extension_execution_envelope_v0`。在解析一个已启用、doctor 就绪的实现并检查域激活策略后,由 capability 命令(而不是调用方或 provider)创建这个最小 envelope。它绑定:
 
-- the exact action;
-- structured effect scope;
-- extension id and active manifest revision;
-- a digest of the exact provider request, excluding the attached envelope.
+- 精确的 action;
+- 结构化的 effect scope;
+- 扩展 id 与活跃 manifest 修订;
+- 排除所附 envelope 的精确 provider 请求摘要。
 
-The provider repeats this validation before any effect. A caller-supplied
-envelope, different request, wider scope, changed action, or mismatched active
-revision fails closed. Capability id, protocol, and permission remain
-authoritative in manifest resolution instead of being duplicated in the
-envelope. The envelope is request binding, not proof of issuer identity, a
-security token, or a replacement for service-side authentication and
-authorization.
+provider 在任何 effect 之前重复这一验证。调用方提供的 envelope、不同的请求、更宽的 scope、改变的 action 或不匹配的活跃修订都会 fail closed。capability id、协议与权限在 manifest 解析中保持权威,而不是在 envelope 中重复。envelope 是请求绑定,不是签发者身份证明、安全令牌,也不是服务端认证与授权的替代品。
 
-`disable` is reversible, but `enable` never trusts an earlier readiness result:
-it reruns the configured doctor and changes the enabled bit only after that
-probe succeeds. A successful doctor binds readiness to both the active manifest
-revision and a content-addressed runtime identity. Moving an unchanged release
-to a new install root, inode, or equivalent interpreter path preserves that
-identity; changed executable, interpreter, or Python module content fails closed
-until a new executed doctor succeeds. A failed executed doctor clears the stale
-proof without switching revisions.
+`disable` 是可逆的,但 `enable` 从不信任早期的就绪结果:它重新运行配置的 doctor,并且只有在该探测成功后才修改启用位。成功的 doctor 把就绪度同时绑定到活跃 manifest 修订与内容寻址 runtime 身份。把未变更 release 移到新安装根目录、inode 或等效解释器路径会保留该身份;可执行文件、解释器或 Python 模块内容改变后会 fail closed,直到新的执行 doctor 成功。失败的执行 doctor 清除过期证明,而不切换修订。
 
-An enabled implementation is resolved by capability id and versioned protocol,
-then checked against its declared permission, current revision, and current
-doctor proof. Callers do not need to copy an extension id into normal config.
-Disabled or stale implementations remain visible in the catalog but are not
-dispatch candidates. When multiple enabled, doctor-ready extensions implement
-the same capability/protocol pair, resolution fails closed until the caller
-selects the intended provider during migration. Domain config may add bounded
-provider arguments, but cannot replace the manifest entrypoint, timeout,
-protocol, or permission contract.
+已启用实现通过 capability id 与带版本协议解析,然后对照其声明权限、当前修订与当前 doctor 证明检查。调用方不需要把扩展 id 复制到常规配置中。禁用或过期的实现在 catalog 中保持可见,但不是分发候选。当多个已启用、doctor 就绪的扩展实现同一 capability/协议对时,解析 fail closed,直到调用方在迁移期间选择预期 provider。域配置可以添加有界 provider 参数,但不能替换 manifest 入口点、超时、协议或权限合同。
 
-Compatibility delegates use the same revision-bound readiness rule. Every
-configured `loopx lark-inbox` operation resolves the enabled `loopx-lark`
-provider, its current doctor proof, and the permission needed by that operation
-before entering the in-process provider code. Disabling the extension therefore
-blocks new collector starts, drain, ingest, reply, and acknowledge operations;
-upgrade and rollback affect new invocations without changing project
-configuration. Extension lifecycle commands do not terminate an already
-running host-managed collector process; stop or restart that supervisor service
-separately when changing the active provider revision.
+兼容性 delegate 使用相同的修订绑定就绪规则。每个已配置的 `loopx lark-inbox` 操作都会在进入进程内 provider 代码之前解析已启用的 `loopx-lark` provider、其当前 doctor 证明以及该操作所需的权限。因此禁用扩展会阻止新的 collector 启动、drain、ingest、回复与确认操作;升级与回滚影响新的调用,而不改变项目配置。扩展生命周期命令不会终止已在运行的 host 管理 collector 进程;改变活跃 provider 修订时,请单独停止或重启该 supervisor 服务。
 
-Quota and Turn composition apply the same read gate. They inject the Lark
-extension's urgency projector only after resolving `lark.inbox.read`; provider
-profile/chat schema and private config reads stay in the extension. If the
-extension is missing, disabled, or stale, urgency is unavailable and cannot
-activate a Lark work lane. This adds no agent-facing CLI arguments.
+Quota 与 Turn 组合应用相同的读取 gate。它们只在解析 `lark.inbox.read` 之后注入 Lark 扩展的紧急度投影器;provider 的 profile/chat schema 与私有配置读取保持在扩展中。如果扩展缺失、禁用或过期,紧急度不可用,也就不能激活 Lark 工作通道。这不会增加面向 Agent 的 CLI 参数。
 
-## Presentation Surfaces
+## 呈现 Surface
 
-An independently delivered extension can declare an operator-facing
-presentation surface without shipping browser code or making Core understand
-the provider's domain. The provider owns source validation, the `view_schema`
-contract, and the mapping into it. Core owns lifecycle resolution, revision
-binding, persistence, and the public-safe surface catalog. Every declared
-surface names its validator with a `module:callable` reference. The publisher
-process loads that exact callable before accepting the provider view; missing or
-unloadable validators fail closed. Core does not freeze any one domain's view
-into core. Dashboard's generic status parser consumes only that compact
-contract. A built-in renderer may separately own a provider view schema, as the
-Finance renderer does for `decision_research_dashboard_v0`.
+独立交付的扩展可以声明面向运营者的呈现 surface,而不必随附浏览器代码,也不必让 Core 理解 provider 的域。provider 拥有来源验证、`view_schema` 合同以及到该 schema 的映射。Core 拥有生命周期解析、修订绑定、持久化与公开安全 surface catalog。每个声明的 surface 用 `module:callable` 引用命名其验证器。发布进程在接受 provider view 之前加载该精确 callable;缺失或无法加载的验证器会 fail closed。Core 不会把任何单一域的 view 冻结进 core。Dashboard 的通用状态解析器只消费那个紧凑合同。内置 renderer 可以单独拥有 provider view schema,如 Finance renderer 对 `decision_research_dashboard_v0` 所做的那样。
 
-The finance value-discovery extension declares the first such view,
-`decision_research_dashboard_v0`, a read-only decision-research view:
+Finance 价值发现扩展声明了第一个这样的 view,`decision_research_dashboard_v0`,一个只读的决策研究 view:
 
 ```toml
 [[presentation_surfaces]]
@@ -597,14 +328,9 @@ empty_state_title = "No validated research yet"
 empty_state_detail = "Publish a validated projection."
 ```
 
-Declarations are strict and bounded. Surface ids are stable kebab-case
-identifiers. Titles and empty-state text are plain text without markup, URLs,
-or local paths. A declaration does not make the surface visible by itself:
-the extension must be installed, enabled, and doctor-ready at its active
-manifest revision.
+声明是严格且有界的。Surface id 是稳定的 kebab-case 标识符。标题与空状态文本是纯文本,不含 markup、URL 或本地路径。声明本身不会让 surface 可见:扩展必须在活跃 manifest 修订上已安装、已启用且 doctor 就绪。
 
-Publication uses the same managed, dry-run-by-default lifecycle gate as a
-standalone extension invocation:
+发布使用与独立扩展调用相同的受管、默认 dry-run 生命周期 gate:
 
 ```bash
 loopx extension publish-projection \
@@ -621,116 +347,55 @@ loopx extension publish-projection \
   --format json
 ```
 
-The preview resolves the active declaration but does not run the provider or
-write a file. With `--execute`, LoopX runs the exact ready provider, validates
-its `extension_presentation_projection_v0`, binds extension id, active revision,
-surface kind, schema, and visibility from lifecycle state, then atomically
-writes an `extension_projection_surface_v0` envelope. The receipt includes the
-canonical payload SHA-256 and confirms exact readback. If lifecycle identity or
-the declaration changes while publishing, the write fails closed.
+预览解析活跃声明,但不运行 provider,也不写入文件。使用 `--execute` 时,LoopX 运行精确的就绪 provider,验证其 `extension_presentation_projection_v0`,从生命周期状态绑定扩展 id、活跃修订、surface 种类、schema 与可见性,然后原子写入一个 `extension_projection_surface_v0` envelope。receipt 包含标准 payload SHA-256,并确认精确回读。如果在发布过程中生命周期身份或声明发生变化,写入会 fail closed。
 
-Status collection never executes the provider, reads its owner input, or grows
-the Dashboard status hot path with extension rows. The loopback status server
-advertises a cold-path surface-catalog endpoint that reads only the active
-manifest snapshot and persisted, bounded envelope. A `ready` or `review_due`
-catalog item carries a content-addressed `detail_ref` (extension id, surface id,
-revision, and payload SHA-256) rather than inlining the full provider view.
-Consumers that need the view use the separately advertised projection endpoint.
-That read revalidates the active extension revision, declared surface, persisted
-envelope, and payload hash before returning a `public-safe` projection. Because
-the endpoints have no authenticated audience contract, projection reads reject
-`owner-only` surfaces rather than treating loopback access as owner
-authentication.
-Visibility follows this matrix:
+Status 收集从不执行 provider、不读取其 owner 输入,也不因扩展行而扩大 Dashboard 状态热路径。loopback 状态服务器提供一个冷路径 surface catalog 端点,只读取活跃 manifest 快照与持久化的有界 envelope。`ready` 或 `review_due` catalog 条目携带内容寻址的 `detail_ref`(扩展 id、surface id、修订与 payload SHA-256),而不是内联完整 provider view。需要该 view 的消费者使用单独广告的投影端点。该读取在返回 `public-safe` 投影之前会重新验证活跃扩展修订、声明的 surface、持久化 envelope 与 payload 哈希。由于端点没有已认证受众合同,投影读取拒绝 `owner-only` surface,而不是把 loopback 访问视为 owner 认证。可见性遵循以下矩阵:
 
-| Lifecycle or projection state | Cold-path surface catalog | Dashboard |
+| 生命周期或投影状态 | 冷路径 surface catalog | Dashboard |
 | --- | --- | --- |
-| Not installed, disabled, or doctor-stale | No item | Tab and home summary hidden |
-| Ready declaration, no matching active-revision file | `empty` | Declarative empty state |
-| Valid active-revision envelope | `ready` with `detail_ref` | Read-only view and summaries |
-| Valid envelope past `review_due_at` | `review_due` with `detail_ref` | View retained with review warning |
-| Corrupt active-revision envelope | `invalid` without `detail_ref` | Safe diagnostic, no partial content |
-| File belongs to another revision | `empty` | No fallback to old content |
+| 未安装、已禁用或 doctor 过期 | 无条目 | Tab 与首页摘要隐藏 |
+| 就绪声明,无匹配活跃修订文件 | `empty` | 声明式空状态 |
+| 有效的活跃修订 envelope | 带 `detail_ref` 的 `ready` | 只读 view 与摘要 |
+| 超过 `review_due_at` 的有效 envelope | 带 `detail_ref` 的 `review_due` | 保留 view 并附评审警告 |
+| 损坏的活跃修订 envelope | 无 `detail_ref` 的 `invalid` | 安全诊断,无部分内容 |
+| 文件属于其他修订 | `empty` | 不回退到旧内容 |
 
-Disable hides the surface but does not delete its projection. Re-enabling and
-successfully re-running doctor restores a matching-revision projection.
-Upgrade keeps the old file for audit continuity, but the new revision sees
-`empty` until it publishes its own envelope. Rollback applies the same exact
-revision rule.
+禁用会隐藏 surface,但不删除其投影。重新启用并成功重新运行 doctor 会恢复匹配修订的投影。升级为审计连续性保留旧文件,但新修订在看到自己发布的 envelope 之前一直为 `empty`。回滚应用同一条精确修订规则。
 
-Presentation projections are display sinks, not authority. They cannot change
-goal state, promote a method, submit a trade, or grant provider permissions.
-The finance research view rejects credentials, account or order fields, raw
-provider/request/response bodies, private relative or absolute paths, sensitive
-URL parameters, non-finite numbers, and unbounded text. Canonical persistence
-uses standard JSON only; `NaN` and infinity fail closed before publication.
-Providers must emit compact references and conclusions, not private evidence
-bodies. Dashboard routing identifies a surface by both extension id and surface
-id so independently versioned providers may reuse a local surface id without
-colliding. A `public-safe` surface still passes the public/private scan; an
-`owner-only` surface describes an operator boundary and is never permission to
-persist secrets or bypass that scan.
+呈现投影是展示接收端,不是权限。它们不能改变 Goal 状态、推广方法、提交交易或授予 provider 权限。Finance 研究 view 拒绝凭据、账户或订单字段、原始 provider/请求/响应主体、私有相对或绝对路径、敏感 URL 参数、非有限数字与无界文本。标准持久化只使用标准 JSON;`NaN` 与 infinity 在发布前 fail closed。Provider 必须输出紧凑引用与结论,而不是私有证据主体。Dashboard 路由同时用扩展 id 与 surface id 标识 surface,因此独立版本化的 provider 可以复用本地 surface id 而不冲突。`public-safe` surface 仍然通过公开/私有扫描;`owner-only` surface 描述运营者边界,永远不会是持久化机密或绕过该扫描的权限。
 
-Run the public synthetic lifecycle proof after changing this contract:
+改变本合同后,运行公开的合成生命周期证明:
 
 ```bash
 uv run --extra test python examples/extension-presentation-surface-smoke.py
 ```
 
-## Placement Decision For Agents
+## 面向 Agent 的放置决策
 
-Before creating a directory, LoopX or an executing agent must answer these
-questions in order:
+创建目录之前,LoopX 或执行中的 Agent 必须按顺序回答这些问题:
 
-1. **What user outcome and caller-visible contract is being added or changed?**
-   Capability ids describe outcomes, not transports. Names such as
-   `connector`, `provider`, `adapter`, or `sink` usually describe an extension
-   or internal mechanism unless callers use and validate that mechanism as an
-   independent product contract. If an existing
-   capability already owns that contract, add the implementation to
-   `loopx/capabilities/<existing-capability>/` instead of creating a sibling.
-2. **Must LoopX core always ship and maintain the implementation?** If yes, it
-   may be a built-in capability. A new built-in needs a stable id, a real
-   entrypoint or protocol call site, focused validation, and catalog
-   registration.
-3. **Does the implementation need independent installation, enablement,
-   disablement, upgrade, dependencies, credentials, or provider ownership?**
-   If yes, it is an extension provider. The capability remains the contract;
-   the extension manifest declares that it provides the contract.
-4. **Is this only registration or lifecycle machinery shared by all
-   extensions?** Put that mechanism in `loopx/extensions/`, not in a provider
-   package.
-5. **Is this only an internal helper?** Put it in the nearest module that owns
-   its change reason. Do not register a capability or create an extension.
+1. **正在添加或改变的是什么用户结果与调用方可见合同?** Capability id 描述结果,而不是传输。`connector`、`provider`、`adapter` 或 `sink` 这类名称通常描述扩展或内部机制,除非调用方把该机制作为独立产品合同使用并验证。如果现有 capability 已拥有该合同,把实现加入 `loopx/capabilities/<existing-capability>/`,而不是创建兄弟目录。
+2. **LoopX core 是否必须始终随包分发并维护该实现?** 如果是,它可以是内置 capability。新的内置 capability 需要稳定 id、真实的入口点或协议调用位点、聚焦验证与 catalog 注册。
+3. **实现是否需要独立的安装、启用、停用、升级、依赖、凭据或 provider 所有权?** 如果是,它就是扩展 provider。capability 仍然是合同;扩展 manifest 声明它提供该合同。
+4. **这只是一切扩展共享的注册或生命周期机制吗?** 把该机制放在 `loopx/extensions/`,而不是 provider 包中。
+5. **这只是一个内部辅助吗?** 把它放在距离其变更原因最近的模块中。不要注册 capability,也不要创建扩展。
 
-Use this placement map after answering the questions:
+回答完这些问题后,使用这张放置映射表:
 
-| Change | Placement |
+| 变更 | 放置位置 |
 | --- | --- |
-| Existing built-in capability behavior | `loopx/capabilities/<capability-id>/` |
-| Built-in catalog and registration contract | `loopx/capabilities/catalog.py` or `registry.py` |
-| Generic extension runtime | `loopx/extensions/` |
-| Co-located optional extension distribution | `packages/<package-id>/` |
-| Separately distributed extension/provider | owner package or repository |
-| Internal implementation helper | nearest owning module |
+| 现有内置 capability 行为 | `loopx/capabilities/<capability-id>/` |
+| 内置 catalog 与注册合同 | `loopx/capabilities/catalog.py` 或 `registry.py` |
+| 泛型扩展 runtime | `loopx/extensions/` |
+| 同仓可选的扩展分发 | `packages/<package-id>/` |
+| 单独分发的扩展/provider | owner 包或仓库 |
+| 内部实现辅助 | 最近的持有模块 |
 
-Some work belongs on both axes, but an optional workflow does not need a
-capability merely because it is user-visible. Create a capability only when
-LoopX callers need a provider-neutral contract, catalog identity, and routing
-surface. An extension-owned command and packet contract may remain a
-standalone extension runtime. Finance value discovery uses this standalone
-shape; public-market, filing, and news collection can stay inside that
-extension until a real cross-provider LoopX contract exists.
+有些工作同时属于两条轴,但可选工作流不会仅仅因为用户可见就需要 capability。只有当 LoopX 调用方需要 provider-neutral 合同、catalog 身份与路由 surface 时才创建 capability。扩展拥有的命令与 packet 合同可以保持为独立扩展 runtime。Finance 价值发现就使用这种独立形态;在真实跨 provider 的 LoopX 合同出现之前,公开市场、文件与新闻收集可以留在这个扩展内。
 
-`value-connectors` is an existing compatibility CLI and protocol surface. Do
-not use it as the public capability owner for new work. Migrate each profile
-to an existing outcome capability such as `issue-fix` or `content-ops`, or to
-a standalone extension such as `loopx-finance-value-discovery`, before
-retiring the compatibility surface. This keeps the migration
-behavior-preserving instead of replacing one broad bucket with another broad
-bucket.
+`value-connectors` 是现有的兼容性 CLI 与协议 surface。不要把它用作新工作的公开 capability 持有者。在退役兼容性 surface 之前,把每个 profile 迁移到现有结果 capability(如 `issue-fix` 或 `content-ops`),或迁移到独立扩展(如 `loopx-finance-value-discovery`)。这让迁移保持行为不变,而不是用一个宽泛桶替换另一个宽泛桶。
 
-Before editing, record a compact rationale in the active todo or plan:
+编辑前,在活跃 todo 或 plan 中记录一条紧凑理由:
 
 ```text
 capability_id: <existing-or-new-contract>
@@ -740,22 +405,11 @@ placement: <target-directory-or-package>
 reason: <why the nearest existing owner is or is not sufficient>
 ```
 
-Use `capability_id: none` for a standalone extension. Do not create a new
-capability directory merely because no current directory has the feature name
-or because the manifest needs a lifecycle anchor. Do not create an extension
-merely because an external service is involved: a built-in connector can still
-belong to an existing capability when it shares the core release and
-lifecycle.
+独立扩展使用 `capability_id: none`。不要仅仅因为当前目录没有该特性名称,或因为 manifest 需要生命周期锚点,就创建新 capability 目录。不要仅仅因为涉及外部服务就创建扩展:当内置连接器与核心 release 与生命周期共享时,它仍然可以属于现有 capability。
 
-## Manifest Contract
+## Manifest 合同
 
-An extension manifest is declarative TOML. An executable `[runtime]` is enough
-for a standalone extension. `[[provides]]` records add new capability contracts
-to the catalog. `[[implements]]` binds a provider runtime to an existing
-core-owned capability without duplicating that capability id. Do not add either
-table solely to make a runtime installable.
-The v0 runtime exposes integer extension API version `1` and accepts bounded
-integer constraints such as `>=1,<2`; incompatible manifests fail closed.
+扩展 manifest 是声明式 TOML。独立扩展只需要可执行的 `[runtime]`。`[[provides]]` 记录向 catalog 添加新的 capability 合同。`[[implements]]` 把 provider runtime 绑定到现有 core 拥有的 capability,而不重复该 capability id。不要仅仅为了让 runtime 可安装就添加任一表。v0 runtime 暴露整数扩展 API 版本 `1`,接受 `>=1,<2` 这样的有界整数约束;不兼容的 manifest 会 fail closed。
 
 ```toml
 schema_version = "loopx_extension_manifest_v0"
@@ -783,7 +437,7 @@ entry_command = "loopx lark-kanban sync"
 next_real_step = "Validate one explicitly enabled owner-approved sink."
 ```
 
-The bundled OpenViking pilot uses `[[implements]]` instead:
+随附的 OpenViking pilot 改用 `[[implements]]`:
 
 ```toml
 [runtime]
@@ -797,18 +451,11 @@ capability_id = "semantic-preference"
 protocol = "semantic_preference_provider_v0"
 ```
 
-The optional `packages/loopx-obelisk` package follows the same placement rule.
-It implements the existing `decision-context` capability's advisory
-`ContextProvider` port; it does not register a second session-context
-capability. LoopX Core parses a copied Codex deep link into the normalized
-`host-session:codex:<thread-id>` scope, and the extension maps that scope to
-Obelisk's public read-only query CLI. See
+可选的 `packages/loopx-obelisk` 包遵循同一放置规则。它实现现有 `decision-context` capability 的建议 `ContextProvider` 端口;不注册第二个 session 上下文 capability。LoopX Core 把复制的 Codex 深链接解析为规范化的 `host-session:codex:<thread-id>` scope,扩展再把这个 scope 映射到 Obelisk 的公开只读查询 CLI。激活、验证与移除参见
 [`decision_context_advisory_provider_v0`](protocols/decision-context-advisory-provider-v0.md)
-and the package README for activation, validation, and removal.
+与包 README。
 
-The bundled periodic-report archive uses the same ownership direction. It
-implements one existing capability port rather than registering a second
-"OpenViking report" product capability:
+随附的 periodic-report 归档使用同一所有权方向。它实现一个现有 capability 端口,而不是注册第二个 "OpenViking report" 产品 capability:
 
 ```toml
 [runtime]
@@ -821,18 +468,11 @@ capability_id = "periodic-report"
 protocol = "periodic_report_sink_v0"
 ```
 
-Its capability-specific activation wrapper additionally requires an enabled
-`periodic_report_activation_v0`, a matching non-disabled sink binding, and the
-observed `openviking_context_write` runtime capability. Those project and turn
-facts do not belong in the generic extension manifest or lifecycle state.
+它的 capability 特定激活包装器额外要求已启用的 `periodic_report_activation_v0`、匹配的未禁用 sink 绑定,以及观测到的 `openviking_context_write` runtime capability。那些项目与 Turn 事实不属于泛型扩展 manifest 或生命周期状态。
 
-### Finance value-discovery sample
+### Finance 价值发现示例
 
-`packages/loopx-finance-value-discovery/` is a co-located, independently
-packaged standalone workflow. Its manifest registers only the
-`finance_value_discovery_extension_v0` runtime; it does not create a capability
-catalog entry or a `value-connectors` route. After an explicit install and
-successful doctor probe, invoke it through the managed extension command:
+`packages/loopx-finance-value-discovery/` 是同仓、独立打包的独立工作流。其 manifest 只注册 `finance_value_discovery_extension_v0` runtime;它不创建 capability catalog 条目,也不创建 `value-connectors` 路由。显式安装且 doctor 探测成功后,通过受管扩展命令调用它:
 
 ```bash
 loopx extension install \
@@ -844,68 +484,25 @@ loopx extension run loopx-finance-value-discovery \
   --format json
 ```
 
-The included PayPal packet preserves a reusable de-beta research method, not
-an investment conclusion: start from a frozen cross-sectional screen, retain
-same-group controls, separate structural growth from profit-pool capture,
-require dilution and terminal-risk evidence, then falsify the candidate before
-selecting at most one successor. The reducer performs no live reads, gives no
-price target or advice, and cannot trade or start a continuous watch.
+随附的 PayPal packet 保存一种可复用的去 beta 研究方法,而不是投资结论:从冻结的横截面筛选开始,保留同组对照,把结构性增长与利润池捕获区分开,要求稀释与终态风险证据,然后在最多选择一个后继者之前证伪候选。该 reducer 不执行实时读取,不给出目标价或建议,不能交易,也不能启动持续关注。
 
-For upgrade compatibility, the retired
-`value-connectors` Finance selectors, including the legacy
-`plan --connector-id finance_market_snapshot` form, remain as migration
-tombstones. They return `value_connector_extension_migration_v0` with ordered
-extension startup prerequisites; they do not execute Finance or restore a
-Finance capability. Source checkouts can install the co-located provider package
-before registration. Packaged LoopX users still need a separately distributed
-provider artifact, so agents must stop rather than claiming automatic
-installation when that artifact is unavailable.
+为升级兼容,已退役的 `value-connectors` Finance 选择器(包括旧式 `plan --connector-id finance_market_snapshot` 形式)保留为迁移墓碑。它们返回带有序扩展启动前置条件的 `value_connector_extension_migration_v0`;它们不执行 Finance,也不恢复 Finance capability。源码 checkout 可以在注册前安装同仓 provider 包。打包的 LoopX 用户仍然需要单独分发的 provider 制品,因此当该制品不可用时,Agent 必须停止,而不能声称自动安装。
 
-Runtime-required permissions must be a subset of the provider's declared
-permissions. Declaring either does not grant authority: existing LoopX goal
-boundaries, user gates, and external-write authorization still decide whether
-an operation may execute. Extension packages are trusted executable code rather
-than an operating-system sandbox; the manifest records and constrains managed
-routing, but cannot make an untrusted provider safe.
+Runtime 必需权限必须是 provider 声明权限的子集。声明任一权限都不授予权限:现有 LoopX Goal 边界、用户 gate 与外部写入授权仍然决定操作是否可以执行。扩展包是可信可执行代码,而不是操作系统沙箱;manifest 记录并约束受管路由,但不能让不受信任的 provider 变安全。
 
-Every executable runtime declares exactly one launch target. Use `entrypoint`
-for a separately installed executable such as the OpenViking provider. Use
-`python_module` for a provider shipped in the LoopX Python package. Module
-providers run as `<current-loopx-python> -m <module>` and their doctor proof is
-bound to both that interpreter and the resolved module source. This lets a
-clean source checkout and a local LoopX release activate bundled providers
-without separately installing a console script; catalog discovery remains
-declarative and does not import the module.
+每个可执行 runtime 精确声明一个启动目标。单独安装的可执行文件(如 OpenViking provider)使用 `entrypoint`。随 LoopX Python 包分发的 provider 使用 `python_module`。模块 provider 以 `<current-loopx-python> -m <module>` 运行,其 doctor 证明同时绑定到该解释器与解析后的模块源码。这让干净的源码 checkout 与本地 LoopX release 可以激活随附 provider,而无需单独安装 console script;catalog 发现保持声明式且不导入模块。
 
-## Scope Boundaries
+## 范围边界
 
-The executable v0 runtime intentionally does not:
+可执行 v0 runtime 刻意不会:
 
-- rename or move existing capability implementation directories;
-- infer capabilities from Python packages;
-- download, build, or install extension packages;
-- start services, create credentials, or edit provider configuration;
-- import an extension entrypoint during catalog discovery;
-- let manifest permissions bypass LoopX control-plane authority.
+- 重命名或移动现有 capability 实现目录;
+- 从 Python 包推断 capability;
+- 下载、构建或安装扩展包;
+- 启动服务、创建凭据或编辑 provider 配置;
+- 在 catalog 发现期间导入扩展入口点;
+- 让 manifest 权限绕过 LoopX 控制面权限。
 
-These boundaries keep activation reversible and auditable while leaving package
-distribution and service setup to explicit operator-owned workflows.
+这些边界让激活保持可逆、可审计,同时把包分发与服务设置留给显式的运营者所有工作流。
 
-Provider migration follows the same direction. Core routing consumes compact
-provider-neutral read models, while provider packages own collection, transport,
-credentials, and external effects. For example, quota reads
-`operator_inbox_urgency_v0` through an injected projector. The generic parser
-and read-model contract stay in the control plane; Lark schema, identity,
-destination, collection, reply transport, and provider-owned configuration live
-under `loopx/extensions/lark/`. The existing
-`loopx lark-inbox` command remains a direct compatibility delegate, but it now
-requires an installed, enabled, doctor-verified `loopx-lark` revision with the
-operation's declared permission. The provider subprocess currently implements
-doctor only; command execution remains in-process until the transport protocol
-is migrated.
-The former `loopx.capabilities.lark` provider imports are intentionally removed
-instead of kept as wrappers. Lark Kanban and Explore presentation sinks live
-under `loopx.extensions.lark.presentation`; their compatibility CLI delegates
-require the installed, enabled, doctor-verified revision to declare
-`lark.projection_sink.use`. No additional agent-facing CLI arguments are
-required.
+Provider 迁移遵循同一方向。Core 路由消费紧凑的 provider-neutral 读模型,而 provider 包拥有采集、传输、凭据与外部 effect。例如,配额通过注入的投影器读取 `operator_inbox_urgency_v0`。泛型解析器与读模型合同留在控制面;Lark schema、身份、目标、采集、回复传输与 provider 拥有的配置位于 `loopx/extensions/lark/` 之下。现有的 `loopx lark-inbox` 命令仍然是直接的兼容性 delegate,但它现在要求已安装、已启用、doctor 验证过的 `loopx-lark` 修订,并具有该操作声明的权限。provider 子进程目前只实现 doctor;在传输协议迁移之前,命令执行仍在进程内。以前的 `loopx.capabilities.lark` provider 导入被刻意移除,而不是保留为包装器。Lark Kanban 与 Explore 呈现 sink 位于 `loopx.extensions.lark.presentation`;其兼容性 CLI delegate 要求已安装、已启用、doctor 验证过的修订声明 `lark.projection_sink.use`。不需要额外的面向 Agent 的 CLI 参数。

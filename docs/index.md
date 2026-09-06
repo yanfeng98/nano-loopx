@@ -1,55 +1,53 @@
-# Welcome to LoopX
+# 欢迎使用 LoopX
 
-LoopX is the local control plane for long-running AI agent work. It keeps
-objectives, gates, todos, evidence, quota, and handoffs stable while Codex,
-Claude Code, OpenCode, Cursor, or a custom runner executes bounded turns.
+> [English](index.md)
 
-New to LoopX? Start with the
-[Developer Book](/loopx/docs/book/) for a curated bilingual path, or
-[Getting started](guides/getting-started.md) to run your first loop.
+LoopX 是长时 AI Agent 工作的本地控制面。它保持 objective、gate、todo、evidence、
+quota 与 handoff 稳定，同时让 Codex、Claude Code、OpenCode、Cursor 或自定义 runner
+执行有界的 turn。
 
-## Choose Your Path
+LoopX 新手？从 [Developer Book](/loopx/docs/book/) 的精心双语路径开始，
+或用 [快速上手](guides/getting-started.md) 跑你的第一个 loop。
+
+## 选择你的路径
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch-outline: **Start using LoopX**
+-   :material-rocket-launch-outline: **开始使用 LoopX**
 
-    Install the CLI, connect a project, inspect the current gate, and start a
-    real goal from your agent.
+    安装 CLI、连接项目、检查当前 gate，并从你的 Agent 启动一个真实目标。
 
-    [:octicons-arrow-right-24: Getting started](guides/getting-started.md)
+    [:octicons-arrow-right-24: 快速上手](guides/getting-started.md)
 
--   :material-map-marker-path: **Understand the control plane**
+-   :material-map-marker-path: **理解控制面**
 
-    Learn how goals, user gates, agent todos, quota, evidence, and handoffs fit
-    into one durable state kernel.
+    了解 goals、user gates、agent todos、quota、evidence 与 handoffs 如何
+    融入一个持久 state 内核。
 
-    [:octicons-arrow-right-24: Concepts](concepts/README.md)
+    [:octicons-arrow-right-24: 核心概念](concepts/README.md)
 
--   :material-book-open-page-variant: **Follow the Developer Book**
+-   :material-book-open-page-variant: **跟随 Developer Book**
 
-    Use a curated bilingual path from control-plane foundations to project
-    onboarding and developer contributions.
+    使用一条从控制面基础到项目上手与开发者贡献的精心双语路径。
 
     [:octicons-arrow-right-24: Developer Book](/loopx/docs/book/)
 
--   :material-console-line: **Operate a long task**
+-   :material-console-line: **运维一个长任务**
 
-    Use status, quota, review packets, and the local dashboard without making
-    the browser the source of truth.
+    使用 status、quota、review packets 与本地 dashboard，
+    而不让浏览器成为真相源。
 
-    [:octicons-arrow-right-24: Operations](operations/README.md)
+    [:octicons-arrow-right-24: 运维](operations/README.md)
 
--   :material-source-branch: **Build or extend LoopX**
+-   :material-source-branch: **构建或扩展 LoopX**
 
-    Work from the developer guide, testing policy, protocol references, and
-    public/private boundary checks.
+    从开发者指南、测试策略、协议参考与公共/私有边界检查出发。
 
-    [:octicons-arrow-right-24: Development](development/README.md)
+    [:octicons-arrow-right-24: 开发](development/README.md)
 
 </div>
 
-## Quick Start
+## 快速上手
 
 ```bash
 python3 -m pip install --upgrade loopx
@@ -61,30 +59,29 @@ loopx connect
 loopx status
 ```
 
-Then start real work from your agent:
+然后从你的 Agent 开始真实工作：
 
 ```text
 /loopx <complex task>
 ```
 
-## Core Commands
+## 核心命令
 
-| Need | Command |
+| 需求 | 命令 |
 | --- | --- |
-| Check installation | `loopx doctor` |
-| Inspect current state | `loopx status` |
-| Decide whether a turn may run | `loopx quota should-run --goal-id <goal-id>` |
-| Manage user and agent todos | `loopx todo --help` |
-| Build a handoff packet | `loopx review-packet --goal-id <goal-id>` |
-| Serve local dashboard data | `loopx serve-status --global-registry --port 8766` |
+| 检查安装 | `loopx doctor` |
+| 检查当前状态 | `loopx status` |
+| 判断一个 turn 能否运行 | `loopx quota should-run --goal-id <goal-id>` |
+| 管理用户与 Agent todos | `loopx todo --help` |
+| 构建 handoff packet | `loopx review-packet --goal-id <goal-id>` |
+| 提供本地 dashboard 数据 | `loopx serve-status --global-registry --port 8766` |
 
-## Source Of Truth
+## 真相源
 
-The docs site is a published read model over repository Markdown. The canonical
-source remains the Markdown in `docs/`, while project-local runtime state stays
-ignored and private.
+文档站点是仓库 Markdown 的公开读模型。canonical 源仍是 `docs/` 中的 Markdown，
+而项目本地运行时状态保持被忽略且私有。
 
-- [Project README](https://github.com/huangruiteng/loopx#readme)
-- [Public/private boundary](public-private-boundary.md)
-- [Status data contract](status-data-contract.md)
-- [Release readiness](product/release-readiness.md)
+- [项目 README](https://github.com/huangruiteng/loopx#readme)
+- [公共/私有边界](public-private-boundary.md)
+- [Status 数据契约](status-data-contract.md)
+- [发布就绪](product/release-readiness.md)

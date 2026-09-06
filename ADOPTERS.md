@@ -1,61 +1,56 @@
-# LoopX Adopters
+# LoopX 采用者
 
-This is a voluntary, self-attested directory of projects and users who choose
-to use LoopX. An entry records a public relationship; it is not a testimonial,
-certification, security review, support commitment, or maintainer endorsement.
+> [English](ADOPTERS.md)
 
-The maintainer-observed [Ecosystem Adoption](docs/community/ecosystem-adoption.md)
-inventory remains a separate evidence surface. `ADOPTERS.md` is for people and
-projects to describe their own use, including a planned or experimental trial.
+这是一份自愿、自我声明的目录，收录选择使用 LoopX 的项目与用户。一条登记记录
+公开关系；它不是 testimonial、认证、安全审查、支持承诺或维护者背书。
 
-## Current Directory
+维护者基于公开证据观察的[生态采用清单](docs/community/ecosystem-adoption.md)
+仍然是独立的证据表面。`ADOPTERS.md` 用于项目与用户描述自己的使用，
+包括计划中或实验性的试用。
 
-There are no public self-attested entries yet. This empty list is intentional:
-projects and users should add themselves only when they want to be named.
+## 当前目录
 
-| Project or user | Public link | Adoption mode | Status | Public note | Last verified |
+目前还没有公开自报条目。这个空列表是有意为之：只有项目与用户愿意被公开
+点名时才添加自己。
+
+| 项目或用户 | 公开链接 | 采用模式 | 状态 | 公开说明 | 最后核验 |
 | --- | --- | --- | --- | --- | --- |
 
-### Adoption modes
+### 采用模式
 
-- **Integration** — calls LoopX CLI or contracts from a real project workflow.
-- **Workflow** — uses LoopX to govern a recurring or long-running work lane.
-- **Learning** — follows LoopX contracts in a tutorial, book, course, or study.
-- **Derivative** — builds a fork, package, adapter, or adjacent tool inspired by
-  LoopX and identifies the relationship clearly.
+- **Integration（集成）** — 在真实项目工作流中调用 LoopX CLI 或契约。
+- **Workflow（工作流）** — 使用 LoopX 治理一条周期性或长程的工作通道。
+- **Learning（学习）** — 在教程、书籍、课程或研究中遵循 LoopX 契约。
+- **Derivative（衍生）** — 构建受 LoopX 启发的 fork、包、适配器或相邻工具，
+  并明确标注该关系。
 
-Use `active`, `experimental`, `planned`, or `paused` for status. A user may
-identify themselves by a public handle or project name; no legal name or private
-organization detail is required.
+状态使用 `active`、`experimental`、`planned` 或 `paused`。用户可以用公开
+昵称或项目名称标识自己；不需要法定姓名或私有组织细节。
 
-## Add Or Update An Entry
+## 添加或更新条目
 
-Project and user owners may add, update, or remove their own row through a small
-pull request. No private account, internal deployment, credential, customer
-detail, raw transcript, or unverifiable performance claim belongs here.
+项目与用户所有者可以通过一个小型 pull request 添加、更新或删除自己的行。
+私有账号、内部部署、凭据、客户信息、原始 transcript 或不可验证的性能声明
+不属于这里。
 
-Copy this shape and replace only the fields you can support publicly:
+复制以下格式，只替换你能公开支持的字段：
 
 ```md
-| Project or user | Public link | Integration / Workflow / Learning / Derivative | active / experimental / planned / paused | One sentence describing the public use and boundary | YYYY-MM-DD |
+| 项目或用户 | 公开链接 | Integration / Workflow / Learning / Derivative | active / experimental / planned / paused | 一句话说明公开使用方式和边界 | YYYY-MM-DD |
 ```
 
-The contributor should:
+贡献者应：
 
-1. use a public project, profile, issue, pull request, release, or documentation
-   link;
-2. state what is actually used and whether the entry is planned or running;
-3. avoid claiming LoopX caused an outcome unless the public evidence supports
-   that claim;
-4. run the repository's public/private boundary and documentation checks; and
-5. sign the commit according to [`CONTRIBUTING.md`](CONTRIBUTING.md).
+1. 使用公开的项目、主页、issue、pull request、发布或文档链接；
+2. 说明实际使用的内容，以及条目是计划中还是运行中；
+3. 除非公开证据支持该声明，否则不声称 LoopX 导致了某项结果；
+4. 运行仓库的公共/私有边界与文档检查；以及
+5. 按 [`CONTRIBUTING.md`](CONTRIBUTING.md) 的要求签署提交。
 
-This is intentionally a narrow public-doc change. A collaborator with merge
-permission may self-merge a clean entry after the required checks pass; a
-project or user without that permission can submit the same focused PR for the
-normal maintainer merge path. Adding a row never grants repository, product,
-support, or endorsement authority.
+这有意是一项窄范围的公开文档变更。拥有合并权限的协作者可以在必需检查通过后
+自行合并一条清晰条目；没有该权限的项目或用户可提交同样的聚焦 PR 走常规
+维护者合并路径。添加一行永远不会授予仓库、产品、支持或背书权限。
 
-Owners can request removal at any time. Maintainers may ask for a stale link to
-be updated or remove a confusing, private, or unsupported claim while keeping
-the change history public.
+所有者可以随时请求删除。维护者可能要求更新失效链接，或在保持变更历史公开的
+前提下移除令人混淆、私有或缺乏支持的声明。

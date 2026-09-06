@@ -1,98 +1,72 @@
-# Session Runtime to LoopX Contract
+# 会话运行时到 LoopX 契约
+> [English](session-runtime-loopx-projection-v0.md)
 
-Status: public-safe contract v0 for read-only first-screen projections.
+状态：面向只读首屏投影的公开安全契约 v0。
 
-This contract defines how an external agent runtime can map a visible session
-into LoopX without making LoopX the runtime, copying private traces, or hiding
-the user's primary control surface. It is intentionally runtime-neutral: Codex
-CLI, Claude Code, Cursor, custom workers, and future host integrations should
-all be able to project the same small shape.
+本契约定义外部 agent 运行时如何把可见会话映射进 LoopX，而无需让 LoopX 成为运行时、复制私有 trace 或隐藏用户的主控制界面。它刻意保持运行时中立：Codex CLI、Claude Code、Cursor、自定义 worker 与未来 host 集成都应能投影同一份小而稳定的形状。
 
-## Boundary
+## 边界
 
-The session runtime owns:
+会话运行时拥有：
 
-- session lifecycle, model/tool execution, sandboxing, host auth, and billing;
-- raw transcripts, raw logs, raw tool outputs, and host audit trails;
-- host-native session, event, tool-call, artifact, and approval ids.
+- 会话生命周期、模型/工具执行、沙箱、host 认证与计费；
+- 原始 transcript、原始日志、原始工具输出与 host 审计轨迹；
+- host 原生会话、事件、工具调用、工件与批准 id。
 
-LoopX owns:
+LoopX 拥有：
 
-- goal id, goal boundary, and authority sources;
-- todo, gate, quota, run history, reward, and handoff state;
-- compact public-safe projections over session facts;
-- controlled writeback decisions through LoopX commands or equivalent adapters.
+- goal id、goal 边界与权威源；
+- todo、gate、quota、run 历史、reward 与 handoff 状态；
+- 会话事实之上的紧凑公开安全投影；
+- 通过 LoopX 命令或等价适配器进行的受控 writeback 决策。
 
-The first integration mode is read-only. A runtime may feed compact session
-facts to LoopX, but LoopX must not write to the runtime, launch a new session,
-or claim same-session automation until a separate controlled-write contract is
-accepted.
+首个集成模式是只读的。运行时可以把紧凑会话事实喂给 LoopX，但直到单独的受控写入契约被接受之前，LoopX 不得写入运行时、不得启动新会话、也不得声称同会话自动化。
 
-## Identity Map
+## 身份映射
 
-Every projection should preserve the join keys needed to debug a handoff while
-keeping private data out of LoopX state.
+每个投影都应保留排查一次交接所需的关联键，同时把私有数据排除在 LoopX 状态之外。
 
-| Field | Owner | Meaning |
+| 字段 | Owner | 含义 |
 | --- | --- | --- |
-| `goal_id` | LoopX | Stable goal being controlled. |
-| `agent_id` | LoopX | Registered automation or human-facing agent lane. |
-| `runtime_id` | Runtime adapter | Public-safe runtime family, such as `codex_cli_tui` or `custom_worker`. |
-| `session_id` | Runtime adapter | Public-safe handle for the visible session or worker. Redact when unsafe. |
-| `run_id` | LoopX | Compact LoopX run-history event that records the projection. |
-| `event_id` | Runtime adapter | Optional compact source event pointer. |
-| `todo_id` | LoopX | Linked todo when the projection selects or blocks a concrete task. |
-| `outcome_id` | Runtime adapter | Optional compact outcome/result pointer. |
+| `goal_id` | LoopX | 正在控制的稳定 goal。 |
+| `agent_id` | LoopX | 已注册自动化或面向用户的 agent lane。 |
+| `runtime_id` | 运行时适配器 | 公开安全运行时家族，如 `codex_cli_tui` 或 `custom_worker`。 |
+| `session_id` | 运行时适配器 | 可见会话或 worker 的公开安全句柄。不安全时进行脱敏。 |
+| `run_id` | LoopX | 记录该投影的紧凑 LoopX run 历史事件。 |
+| `event_id` | 运行时适配器 | 可选紧凑来源事件指针。 |
+| `todo_id` | LoopX | 当投影选择或阻塞具体任务时的关联 todo。 |
+| `outcome_id` | 运行时适配器 | 可选紧凑结局/结果指针。 |
 
-`session_id`, `event_id`, and `outcome_id` are references, not evidence
-payloads. They must not embed raw prompts, local paths, credentials, private
-document ids, or full host URLs.
+`session_id`、`event_id` 与 `outcome_id` 是引用，不是证据载荷。它们不得内嵌原始 prompt、本地路径、凭据、私有文档 id 或完整 host URL。
 
-## First-Screen Projection
+## 首屏投影
 
-The first screen is the minimum operator view needed to decide whether a loop
-can continue:
+首屏是判断一个 loop 是否可以继续所需的最小操作员视图：
 
-| Field | Required | Description |
+| 字段 | 必需 | 描述 |
 | --- | --- | --- |
-| `waiting_on` | yes | `none`, `user`, `controller`, `agent`, `runtime`, or `external_evidence`. |
-| `next_action` | yes | One compact safe action, written for the current actor. |
-| `open_user_todo` | yes | First concrete user todo, or `null`. |
-| `first_executable_agent_todo` | yes | First runnable agent todo after quota, scope, and capability gates, or `null`. |
-| `latest_validation` | yes | Latest compact validation, blocker, or missing-evidence summary. |
-| `gate_state` | yes | `clear`, `user_todo`, `operator_gate`, `blocked`, `deferred`, or `approved`. |
-| `quota_state` | yes | `eligible`, `throttled`, `monitor_quiet_skip`, `operator_gate`, or `blocked`. |
-| `boundary` | yes | Read/write scope, private-data rule, and stop condition. |
+| `waiting_on` | 是 | `none`、`user`、`controller`、`agent`、`runtime` 或 `external_evidence`。 |
+| `next_action` | 是 | 一个紧凑安全动作，写给当前执行者。 |
+| `open_user_todo` | 是 | 首个具体用户 todo，或 `null`。 |
+| `first_executable_agent_todo` | 是 | 通过 quota、scope 与 capability 关卡后的首个可运行 agent todo，或 `null`。 |
+| `latest_validation` | 是 | 最新紧凑验证、blocker 或缺失证据摘要。 |
+| `gate_state` | 是 | `clear`、`user_todo`、`operator_gate`、`blocked`、`deferred` 或 `approved`。 |
+| `quota_state` | 是 | `eligible`、`throttled`、`monitor_quiet_skip`、`operator_gate` 或 `blocked`。 |
+| `boundary` | 是 | 读/写 scope、私有数据规则与停止条件。 |
 
-### Boundary Key States
+### 边界键状态
 
-The `boundary` block reports how input keys were classified, using a typed
-word-level rule (exact keys, whole words, or exact word sequences after
-splitting on `_`, `-`, and camelCase; never substrings). Values from
-raw-material and unclassified keys
-are never copied; values from the explicit compact field contract may be used
-to build the bounded projection.
+`boundary` 块使用类型化词级规则报告输入键如何被分类（精确键、完整词，或在 `_`、`-` 与驼峰命名拆分后的精确词序列；绝不使用子串）。来自 raw-material 与未分类键的值从不复制；显式紧凑字段契约中的值可用于构建有界投影。
 
-- **compact**: keys the projection reads, timestamps, usage metrics
-  (`*_tokens`), and pointers/counts (`*_id`, `*_ref`, `*_count`, `*_at`) only
-  when no raw-material word or phrase is present. Known collisions such as
-  `trace_id`, `message_id`, `conversation_id`, `log_count`, `prompt_tokens`,
-  and `prompt_token_count` are explicit safe exceptions.
-- **raw material**: credentials, messages/transcripts, logs, local paths, and raw tool
-  output. Sets `raw_material_detected`, lists `raw_material_key_names` and
-  `raw_material_categories`, and turns `agent_can_continue` off.
-- **unclassified**: any other key. Listed in `unclassified_key_names` (bounded)
-  so producers can see contract drift; it never blocks continuation.
+- **compact**：投影读取的键、时间戳、用量指标（`*_tokens`）与指针/计数（`*_id`、`*_ref`、`*_count`、`*_at`），仅在没有 raw-material 词或短语存在时。已确认的冲突，如 `trace_id`、`message_id`、`conversation_id`、`log_count`、`prompt_tokens` 与 `prompt_token_count`，是显式安全例外。
+- **raw material**：凭据、消息/transcript、日志、本地路径与原始工具输出。设置 `raw_material_detected`，列出 `raw_material_key_names` 与 `raw_material_categories`，并关闭 `agent_can_continue`。
+- **unclassified**：任何其他键。列在 `unclassified_key_names`（有界）中，使生产者能发现契约漂移；它从不阻塞继续。
 
-Raw-material evidence takes precedence over a generic pointer suffix. For
-example, `secret_id`, `transcript_id`, `raw_id`, and `api_key_id` are raw
-material, not compact pointers.
+Raw-material 证据优先于通用指针后缀。例如 `secret_id`、`transcript_id`、`raw_id` 与 `api_key_id` 是 raw material，而非紧凑指针。
 
-The projection should be useful even when no session is currently attached. In
-that case, `runtime_id` may be `none`, `session_id` may be `null`, and
-`latest_validation` should explain which runtime fact is missing.
+即使当前没有附着会话，投影也应有意义。此时 `runtime_id` 可为 `none`，`session_id` 可为 `null`，并且 `latest_validation` 应解释缺失的是哪个运行时事实。
 
-## Minimal JSON Shape
+## 最小 JSON 形状
 
 ```json
 {
@@ -129,27 +103,19 @@ that case, `runtime_id` may be `none`, `session_id` may be `null`, and
 }
 ```
 
-## Product Surfaces
+## 产品界面
 
-The same contract should feed two different surfaces:
+同一契约应供给两个不同界面：
 
-- **Showcase frontstage:** public fixtures only, rendered as narrative case
-  cards or motion states. It may dramatize progress, gates, and handoffs, but it
-  must not publish live registry state.
-- **Local control plane:** live private/local projections for the operator.
-  It may show session handles and current gates when they are safe in the local
-  environment, but those details stay out of GitHub Pages and public docs.
+- **Showcase frontstage：** 仅公开 fixture，渲染为叙事案例卡片或动效状态。它可以渲染进度、关卡与交接，但不得发布实时 registry 状态。
+- **本地控制面：** 面向操作员的实时私有/本地投影。当它们在本地环境安全时可以显示会话句柄与当前关卡，但这些细节不得进入 GitHub Pages 与公开文档。
 
-## Acceptance Checks
+## 验收检查
 
-A session-runtime projection is acceptable when:
+一个会话运行时投影在以下条件下可接受：
 
-1. `goal_id`, `agent_id`, `runtime_id`, and LoopX refs are enough to reconcile a
-   handoff without copying raw evidence.
-2. `waiting_on`, `next_action`, user todo, agent todo, validation, gate, and
-   quota state can be rendered on the first screen.
-3. Missing runtime facts become explicit blockers or `null` fields, not guessed
-   actions.
-4. The projection is read-only unless a separate writeback contract is enabled.
-5. Public fixtures contain no raw transcripts, credentials, private links,
-   local paths, or internal project names.
+1. `goal_id`、`agent_id`、`runtime_id` 与 LoopX 引用足以在无需复制原始证据的情况下对账一次交接。
+2. `waiting_on`、`next_action`、用户 todo、agent todo、验证、关卡与配额状态可在首屏渲染。
+3. 缺失运行时事实变成显式 blocker 或 `null` 字段，而不是猜测动作。
+4. 在单独的 writeback 契约启用之前，投影始终只读。
+5. 公开 fixture 不包含原始 transcript、凭据、私有链接、本地路径或内部项目名。

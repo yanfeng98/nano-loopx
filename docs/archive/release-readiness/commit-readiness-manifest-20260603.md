@@ -1,48 +1,40 @@
-# Commit Readiness Manifest - 2026-06-03 (Closed Historical Snapshot)
+# 提交就绪清单 - 2026-06-03(已关闭的历史快照)
 
-Status: closed historical snapshot. The public dirty tree described below was
-validated, committed, and pushed through later LoopX slices. Do not use
-this file as a current dirty-tree checklist.
+> [English](commit-readiness-manifest-20260603.md)
 
-Current use:
+状态:已关闭的历史快照。下述公开脏树已经过验证,并在后续 LoopX 切片中提交、
+推送。不要把这个文件当作当前脏树检查清单。
 
-- Treat this file as archival evidence of how the 2026-06-03 public tree was
-  grouped before publication.
-- Re-check current readiness with `git status --short`, `git log -1 --oneline`,
-  `loopx --format json check --scan-root .`, and
-  `goals/loopx-meta/ACTIVE_GOAL_STATE.md` before acting on any cluster.
-- Preserve the publish-policy notes below as historical context, not as proof
-  that the present tree is ready to publish.
+当前用途:
 
-For public LoopX daily iteration, autonomous commit/push and PR creation
-are allowed when the public-sensitive scan is clean, validation passes, and the
-change does not include company-internal or private material.
+- 把这个文件当作档案证据:2026-06-03 公开树在发布前如何分组。
+- 在任何簇(cluster)行动之前,用 `git status --short`、`git log -1
+  --oneline`、`loopx --format json check --scan-root .` 和
+  `goals/loopx-meta/ACTIVE_GOAL_STATE.md` 重新检查当前就绪状态。
+- 把下述发布策略说明当作历史上下文,而不是当前树已可发布的证明。
 
-## Steering Audit
+对于公开 LoopX 每日迭代,当 public-sensitive 扫描干净、验证通过,且变更不含
+公司内部或私有材料时,允许自主提交/推送与 PR 创建。
 
-Chosen slice: produce a four-cluster commit-readiness manifest for the current
-public dirty tree.
+## Steering 审计
 
-Candidates considered:
+选定切片:为当前公开脏树生成一个四簇提交就绪清单。
 
-- P0 commit-readiness manifest for the dirty tree: chosen because ungrouped
-  public changes now create coordination load.
-- P0 health/status recheck: valuable, but already clean and not enough by
-  itself to make the dirty tree reviewable.
-- P1 dashboard/demo polish: allowed again, but lower value until the existing
-  changes are grouped and validated.
+考虑过的候选:
 
-No-progress self-stop check: not triggered. The recent eligible heartbeats
-produced real state, automation, and public prompt-generator changes, so this
-was not a 5-turn status-loop.
+- P0 脏树提交就绪清单:选定,因为未分组的公开变更现在造成了协调负担。
+- P0 健康/状态复查:有价值,但已经干净,且单靠它不足以让脏树可审阅。
+- P1 dashboard/demo 打磨:再次允许,但在现有变更被分组并验证之前价值较低。
 
-## Cluster 1 - First-Run And Heartbeat Lifecycle Contract
+无进展自停检查:未触发。近期合格的 heartbeat 产生了真实状态、自动化和公开
+提示词生成器变更,所以这不是一个 5-turn 状态循环。
 
-Purpose: make the fresh-user path and recurring heartbeat prompt safer to copy,
-with a built-in no-progress self-stop guard so automatic runs do not spin
-forever on repeated status checks.
+## Cluster 1 - 首次运行与 Heartbeat 生命周期契约
 
-Candidate files:
+目的:让全新用户路径与循环 heartbeat 提示词更安全地复制,内置无进展自停防护,
+使自动运行不会在反复状态检查上无限空转。
+
+候选文件:
 
 - `README.md`
 - `docs/heartbeat-automation-prompt.md`
@@ -50,153 +42,142 @@ Candidate files:
 - `skills/loopx-project/SKILL.md`
 - `examples/control_plane/heartbeat-prompt-smoke.py`
 
-Validation already run in this slice:
+本切片已运行的验证:
 
 - `python3 examples/control_plane/heartbeat-prompt-smoke.py`
 - `python3 -m py_compile loopx/heartbeat_prompt.py examples/control_plane/heartbeat-prompt-smoke.py`
 - `python3 -m compileall -q loopx`
 
-Remaining before commit:
+提交前剩余:
 
-- Regenerate one sample `loopx heartbeat-prompt --goal-id ...` output
-  manually and skim that it stays human-readable.
-- Check that the public template does not promise a specific Codex App API
-  surface beyond "delete or pause through automation management".
+- 手动重新生成一个样例 `loopx heartbeat-prompt --goal-id ...` 输出,并浏览
+  确认其保持人类可读。
+- 检查公开模板没有承诺超出"通过自动化管理删除或暂停"的特定 Codex App API
+  surface。
 
-Boundary risks:
+边界风险:
 
-- The prompt discusses Codex App automation behavior. Keep it generic enough for
-  public users and do not mention local thread ids, local automation ids beyond
-  examples, or private operator history.
+- 该提示词讨论 Codex App 自动化行为。把它保持得足够通用以面向公开用户,不要
+  提及本地线程 id、超出示例的本地自动化 id,或私有操作员历史。
 
-## Cluster 2 - Runtime, Status, And Contract Truth
+## Cluster 2 - Runtime、Status 与契约真相
 
-Purpose: keep status and health trustworthy when local/demo runtime residue or
-run-bound human reward overlays exist.
+目的:当存在本地/demo 运行时残留或 run 绑定的人类奖励叠加(human reward
+overlay)时,保持 status 与健康可信。
 
-Candidate files:
+候选文件:
 
 - `loopx/history.py`
-- `loopx/status.py` (runtime/status hunks)
+- `loopx/status.py`(runtime/status hunks)
 - `loopx/contract.py`
 - `examples/control_plane/status-markdown-smoke.py`
 - `examples/contract-reward-overlay-smoke.py`
 
-Validation already run in prior slices or this slice:
+先前切片或本切片已运行的验证:
 
 - `python3 examples/control_plane/status-markdown-smoke.py`
 - `python3 examples/contract-reward-overlay-smoke.py`
 - `loopx --format json check --scan-root .`
 
-Remaining before commit:
+提交前剩余:
 
-- Run the aggregate public smoke runner after the final staged set:
-  `python3 examples/run-smokes.py`.
-- Confirm reward-overlay duplicate handling still warns on ordinary duplicate
-  index rows, not only on the new fixture.
+- 在最终暂存集上运行聚合公开 smoke runner:`python3 examples/run-smokes.py`。
+- 确认 reward-overlay 重复处理仍在普通重复索引行上报警,而不只是新 fixture。
 
-Boundary risks:
+边界风险:
 
-- `status.py` also carries review-material changes from Cluster 3, so a
-  file-level commit will mix clusters unless using hunk staging.
-- Runtime or demo directories under a shared local runtime must not be staged.
+- `status.py` 还携带 Cluster 3 的审阅材料变更,所以文件级提交会混入簇,除非
+  使用 hunk staging。
+- 共享本地 runtime 下的 runtime 或 demo 目录绝不能暂存。
 
-## Cluster 3 - User Todo Review-Material Reader
+## Cluster 3 - 用户 Todo 审阅材料读取器
 
-Purpose: let a user-facing todo carry safe Markdown review materials so the
-dashboard can show the first useful reading packet without forcing the operator
-to browse project files manually.
+目的:让面向用户的 todo 携带安全的 Markdown 审阅材料,使 dashboard 能在不强迫
+操作员手动浏览项目文件的情况下展示第一个有用的阅读包。
 
-Candidate files:
+候选文件:
 
 - `loopx/materials.py`
-- `loopx/status.py` (todo review-material hunks)
-- `loopx/status_server.py` (loopback `/review-material` endpoint)
+- `loopx/status.py`(todo 审阅材料 hunks)
+- `loopx/status_server.py`(回环 `/review-material` 端点)
 - `apps/dashboard/src/data/status.ts`
-- `apps/dashboard/src/views/dashboard-page.tsx` (review-material UI hunks)
+- `apps/dashboard/src/views/dashboard-page.tsx`(审阅材料 UI hunks)
 - `examples/user-todo-review-material-smoke.py`
 
-Validation already run in prior slices:
+先前切片已运行的验证:
 
 - `python3 examples/user-todo-review-material-smoke.py`
 
-Remaining before commit:
+提交前剩余:
 
-- Re-run `python3 examples/user-todo-review-material-smoke.py` after final
-  staging because it covers path containment and server access.
-- Confirm dashboard build still passes after shared dashboard hunks:
-  `npm --prefix apps/dashboard run build`.
+- 最终暂存后重新运行 `python3 examples/user-todo-review-material-smoke.py`,因为
+  它覆盖路径包含检查与服务器访问。
+- 确认共享 dashboard hunks 后 dashboard 构建仍通过:
+  `npm --prefix apps/dashboard run build`。
 
-Boundary risks:
+边界风险:
 
-- Review material reads must remain local Markdown only, root-limited to the
-  goal repo/state/runtime roots, and loopback-only through the status server.
-- Do not weaken the URL/path checks to support remote URLs in this cluster.
+- 审阅材料读取必须保持仅本地 Markdown,根限制在 goal repo/state/runtime 根目录
+  内,并且只通过 status server 回环访问。
+- 本簇中不要为支持远程 URL 而削弱 URL/路径检查。
 
-## Cluster 4 - Dashboard Reward Append Flow
+## Cluster 4 - Dashboard 奖励追加流程
 
-Purpose: make the dashboard reward append path use the exact dry-run payload,
-including `recorded_at`, so the append action cannot drift from the preview the
-operator accepted.
+目的:让 dashboard 奖励追加路径使用精确的 dry-run 载荷,包括 `recorded_at`,使
+追加动作不能偏离操作员接受的预览。
 
-Candidate files:
+候选文件:
 
-- `apps/dashboard/src/views/dashboard-page.tsx` (reward dry-run payload lock
-  hunks)
+- `apps/dashboard/src/views/dashboard-page.tsx`(奖励 dry-run 载荷锁定 hunks)
 - `examples/dashboard-reward-append-browser-smoke.mjs`
 
-Validation already run in prior slices:
+先前切片已运行的验证:
 
 - `npm --prefix apps/dashboard run build`
 - `node examples/dashboard-reward-append-browser-smoke.mjs`
 
-Remaining before commit:
+提交前剩余:
 
-- Re-run the dashboard build after Cluster 3 and Cluster 4 hunks are both
-  staged.
-- Re-run the browser smoke if committing the reward append path.
+- Cluster 3 与 Cluster 4 hunks 都暂存后,重新运行 dashboard 构建。
+- 如果提交奖励追加路径,重新运行 browser smoke。
 
-Boundary risks:
+边界风险:
 
-- `apps/dashboard/src/views/dashboard-page.tsx` contains both Cluster 3 and
-  Cluster 4 hunks. If the operator wants separate commits, use hunk staging; if
-  not, commit Clusters 3 and 4 together as "dashboard operator action paths".
-- Reward append is intentionally gated by the loopback status server and
-  `--enable-reward-write-api`; do not make it available for remote status URLs.
+- `apps/dashboard/src/views/dashboard-page.tsx` 同时含 Cluster 3 与 Cluster 4
+  hunks。如果操作员想要独立提交,请使用 hunk staging;如果不想要,就把
+  Cluster 3 与 Cluster 4 一起作为"dashboard 操作员动作路径"提交。
+- 奖励追加有意由回环 status server 与 `--enable-reward-write-api` 把门;不要
+  为远程 status URL 提供它。
 
-## Cross-Cutting State And Manifest Files
+## 跨领域状态与清单文件
 
-Candidate files:
+候选文件:
 
 - `goals/loopx-meta/ACTIVE_GOAL_STATE.md`
 - `docs/commit-readiness-manifest-20260603.md`
 
-Commit guidance:
+提交指引:
 
-- Treat `goals/loopx-meta/ACTIVE_GOAL_STATE.md` as public state
-  writeback. It may be included with a final "state and manifest" commit if the
-  public boundary scan remains clean.
-- This manifest can be committed as review metadata or deleted before a final
-  feature-only commit, depending on the operator's release preference.
+- 把 `goals/loopx-meta/ACTIVE_GOAL_STATE.md` 当作公开状态写回。若公开边界扫描
+  保持干净,可随最终"状态与清单"提交一起包含。
+- 本清单可作为审阅元数据提交,或视操作员发布偏好,在最终纯功能提交前删除。
 
-## Do Not Commit
+## 不要提交
 
-These are not part of the public dirty tree and must stay out of any commit:
+这些不属于公开脏树,必须排除在任何提交之外:
 
-- `.local/**` from any connected project.
-- Codex App automation config and thread metadata.
-- Shared runtime history under the local LoopX runtime directory,
-  including quota spend, state refresh, archived demo, and reward overlay run
-  files.
-- Temporary demo project directories, dashboard dev-server artifacts, generated
-  screenshots, browser session state, and `apps/dashboard/dist/` unless the
-  release explicitly asks for built assets.
-- Private project worktrees, internal links, private documents, raw local paths,
-  credentials, tokens, task ids, or production run identifiers.
+- 任何 connected 项目的 `.local/**`。
+- Codex App 自动化配置与线程元数据。
+- 本地 LoopX runtime 目录下的共享 runtime 历史,包括 quota spend、状态刷新、
+  归档 demo 与 reward overlay 运行文件。
+- 临时 demo 项目目录、dashboard dev-server 工件、生成的截图、浏览器会话状态,
+  以及 `apps/dashboard/dist/`(除非发布明确要求构建产物)。
+- 私有项目 worktree、内部链接、私有文档、原始本地路径、凭据、token、任务 id,
+  或生产运行标识符。
 
-## Minimum Final Validation
+## 最低最终验证
 
-Before any commit or PR, run:
+任何提交或 PR 前,运行:
 
 ```bash
 python3 examples/run-smokes.py
@@ -210,14 +191,14 @@ loopx --format json check --scan-root .
 git diff --check
 ```
 
-If any dashboard/browser smoke is skipped, record the skip reason in the active
-goal state before committing.
+如果任何 dashboard/browser smoke 被跳过,在提交前把跳过原因记录到活动目标状态
+中。
 
-## Final Validation Run - 2026-06-03T10:53:49+08:00
+## 最终验证运行 - 2026-06-03T10:53:49+08:00
 
-Status: passed.
+状态:通过。
 
-Commands run:
+运行的命令:
 
 - `python3 examples/run-smokes.py`
 - `python3 examples/control_plane/heartbeat-prompt-smoke.py`
@@ -229,81 +210,70 @@ Commands run:
 - `loopx --format json check --scan-root .`
 - `git diff --check`
 
-Notes:
+备注:
 
-- The aggregate smoke runner passed 18 public smoke scripts.
-- The dashboard build passed with the existing Vite chunk-size warning.
-- The dashboard reward append browser smoke passed.
-- `loopx check` passed with errors=0, warnings=0, and a clean public
-  boundary scan over 86 files.
+- 聚合 smoke runner 通过了 18 个公开 smoke 脚本。
+- Dashboard 构建通过,带现有的 Vite chunk-size 警告。
+- Dashboard 奖励追加 browser smoke 通过。
+- `loopx check` 通过,errors=0、warnings=0,86 个文件上公开边界扫描干净。
 
-## Public-Sensitive Diff Review - 2026-06-03T10:56:57+08:00
+## Public-Sensitive 差异审阅 - 2026-06-03T10:56:57+08:00
 
-Status: passed. No commit, push, or staging was performed in that slice.
+状态:通过。该切片中没有提交、推送或暂存。
 
-Scope reviewed:
+审阅范围:
 
-- 13 modified tracked files from `git diff --name-status`.
-- 5 untracked public candidate files from `git ls-files --others
-  --exclude-standard`.
-- The current dirty tree remains within the four clusters plus state/manifest
-  writeback listed above.
+- 来自 `git diff --name-status` 的 13 个修改过的已跟踪文件。
+- 来自 `git ls-files --others --exclude-standard` 的 5 个未跟踪公开候选文件。
+- 当前脏树仍属于上面列出的四个簇加状态/清单写回。
 
-Commands run:
+运行的命令:
 
 - `git status --short`
 - `git diff --name-status`
 - `git ls-files --others --exclude-standard`
 - `git diff --stat`
-- Targeted `rg` sensitive-pattern scan over the candidate files.
+- 对候选文件进行针对性 `rg` 敏感模式扫描。
 
-Findings:
+发现:
 
-- No private path, internal URL, company-doc marker, sensitive assignment,
-  auth-header pattern, or cloud-key pattern was found in the reviewed candidate
-  files.
-- `apps/dashboard/src/views/dashboard-page.tsx` contains both review-material
-  and reward-append hunks; use hunk staging if the operator wants separate
-  commits for Cluster 3 and Cluster 4.
-- `loopx/status.py` contains both runtime/status and review-material
-  hunks; use hunk staging if Cluster 2 and Cluster 3 should stay separate.
-- `goals/loopx-meta/ACTIVE_GOAL_STATE.md` is large state writeback; keep
-  it as a final state/manifest commit or omit it from feature commits if the
-  operator wants a lean release branch.
+- 在审阅的候选文件中未发现私有路径、内部 URL、公司文档标记、敏感指派、认证头
+  模式或云密钥模式。
+- `apps/dashboard/src/views/dashboard-page.tsx` 同时含审阅材料与奖励追加 hunks;
+  若操作员想为 Cluster 3 与 Cluster 4 分开提交,请使用 hunk staging。
+- `loopx/status.py` 同时含 runtime/status 与审阅材料 hunks;若 Cluster 2 与
+  Cluster 3 要保持分离,请使用 hunk staging。
+- `goals/loopx-meta/ACTIVE_GOAL_STATE.md` 是大型状态写回;把它保留为最终
+  状态/清单提交,或当操作员想要精简发布分支时从功能提交中省略。
 
-Suggested staging order for autonomous or operator-requested commits:
+自主或操作员请求提交的建议暂存顺序:
 
-1. Cluster 1: first-run and heartbeat lifecycle contract.
-2. Cluster 2: runtime, status, and contract truth.
-3. Cluster 3: user todo review-material reader.
-4. Cluster 4: dashboard reward append flow.
-5. State and manifest writeback, if useful as review metadata.
+1. Cluster 1:首次运行与 heartbeat 生命周期契约。
+2. Cluster 2:runtime、status 与契约真相。
+3. Cluster 3:用户 todo 审阅材料读取器。
+4. Cluster 4:dashboard 奖励追加流程。
+5. 状态与清单写回,若适合作审阅元数据。
 
-Re-run the Minimum Final Validation after any hunk staging, because hunk splits
-can accidentally move shared dashboard/status assumptions across commits.
+任何 hunk staging 后重新运行最低最终验证,因为 hunk 拆分可能把共享的
+dashboard/status 假设意外移到不同提交之间。
 
-## Publish Policy Update - 2026-06-03T11:05:02+08:00
+## 发布策略更新 - 2026-06-03T11:05:02+08:00
 
-The operator clarified that public daily iteration does not need an explicit
-request before commit, push, or PR creation.
+操作员澄清:公开每日迭代在提交、推送或 PR 创建前不需要显式请求。
 
-Current policy:
+当前策略:
 
-- Autonomous commit/push is allowed for public LoopX changes when the
-  public boundary scan is clean and validation passes.
-- Autonomous PR creation is allowed under the same boundary, usually when the
-  work is not already on the intended target branch.
-- Stop before publishing if a change includes private state, company-internal
-  material, credentials, production identifiers, or unexplained generated
-  artifacts.
-- For this validated dirty tree, use the staging order above and re-run the
-  Minimum Final Validation before publishing.
+- 公开边界扫描干净且验证通过时,允许公开 LoopX 变更的自主提交/推送。
+- 同一边界下允许自主 PR 创建,通常在工作不在意图目标分支上时。
+- 如果变更包含私有状态、公司内部材料、凭据、生产标识符或无法解释的生成工件,
+  在发布前停止。
+- 对这个已验证的脏树,使用上述暂存顺序,并在发布前重新运行最低最终验证。
 
-## Publication Validation - 2026-06-03T11:06:50+08:00
+## 发布验证 - 2026-06-03T11:06:50+08:00
 
-Status: passed; safe to publish the current public LoopX dirty tree.
+状态:通过;发布当前公开 LoopX 脏树是安全的。
 
-Commands run:
+运行的命令:
 
 - `python3 examples/run-smokes.py`
 - `python3 examples/control_plane/heartbeat-prompt-smoke.py`
@@ -314,13 +284,12 @@ Commands run:
 - `node examples/dashboard-reward-append-browser-smoke.mjs`
 - `loopx --format json check --scan-root .`
 - `git diff --check`
-- Targeted `rg` sensitive-pattern scan over the candidate files.
+- 对候选文件进行针对性 `rg` 敏感模式扫描。
 
-Notes:
+备注:
 
-- The aggregate smoke runner passed 18 public smoke scripts.
-- The dashboard build passed with the existing Vite chunk-size warning.
-- The dashboard reward append browser smoke passed.
-- `loopx check` passed with errors=0, warnings=0, and a clean public
-  boundary scan over 88 files.
-- The targeted sensitive-pattern scan produced no findings.
+- 聚合 smoke runner 通过了 18 个公开 smoke 脚本。
+- Dashboard 构建通过,带现有的 Vite chunk-size 警告。
+- Dashboard 奖励追加 browser smoke 通过。
+- `loopx check` 通过,errors=0、warnings=0,88 个文件上公开边界扫描干净。
+- 针对性敏感模式扫描没有发现任何内容。

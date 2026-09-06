@@ -3,37 +3,35 @@ name: loopx-doc-registry
 description: Use when a connected LoopX project is asked to read, remember, record, index, register, or use a durable project material such as a Lark/wiki/design doc, research note, SOP, owner packet, migration report, benchmark paper, or external material source. Use even when the user does not mention LoopX or doc registry.
 ---
 
-# LoopX Doc Registry
+# LoopX 文档注册表
 
-Use this skill for durable project materials. The goal is to make future agents
-find the material from the project authority surface, not only from chat or
-personal memory.
+> [English](SKILL.md)
 
-## Default Route
+对持久项目材料使用本技能。目标是让未来的 agent 从项目权威界面找到材料，
+而不只是从聊天或个人记忆中找到。
 
-1. Resolve the target project and stable `goal_id` from the current repo or the
-   user's named project. Prefer `.loopx/registry.json` and
-   `.codex/goals/<goal-id>/ACTIVE_GOAL_STATE.md`.
-2. If the material belongs to that project, register it in that project's own
-   authority surface. Do not register it into `loopx-meta` just because
-   the current worker discovered it.
-3. If the project has a tracked `docs/meta/DOC_REGISTRY.yaml` or equivalent,
-   update that first. If it does not, use `.loopx/registry.json` as the
-   project-local doc registry through `authority_registry.topic_authority` and
-   `authority_registry.project_materials`.
-4. Run `loopx register-authority-source` with a redacted source contract.
-   Raw URLs, doc ids, local private paths, comments, and source bodies must not
-   be stored in public files.
-5. Refresh status or state so review packets, read-only maps, dashboards, and
-   heartbeat workers can find the material.
+## 默认路线
 
-Memory extensions are allowed only as secondary personal reminders. They are
-not a substitute for project-local authority registration when the project is
-connected to LoopX.
+1. 从当前仓库或用户命名的项目解析目标项目与稳定的 `goal_id`。优先使用
+   `.loopx/registry.json` 与
+   `.codex/goals/<goal-id>/ACTIVE_GOAL_STATE.md`。
+2. 如果材料属于该项目，则注册到该项目自己的权威界面。不要仅因为当前 worker
+   发现了它，就把它注册进 `loopx-meta`。
+3. 如果项目有受跟踪的 `docs/meta/DOC_REGISTRY.yaml` 或等价物，先更新它。
+   如果没有，则通过 `authority_registry.topic_authority` 与
+   `authority_registry.project_materials` 把 `.loopx/registry.json` 用作
+   项目本地文档注册表。
+4. 用脱敏的源契约运行 `loopx register-authority-source`。
+   原始 URL、doc id、本地私有路径、评论与源正文不得存储在公开文件中。
+5. 刷新状态或状态文件，使 review packet、只读地图、dashboard 与 heartbeat
+   worker 能找到该材料。
 
-## Command Shape
+内存扩展只允许作为辅助性个人提醒。当项目已连接到 LoopX 时，它们不能替代
+项目本地权威注册。
 
-From the target project:
+## 命令形状
+
+从目标项目中执行：
 
 ```bash
 loopx --registry .loopx/registry.json register-authority-source \
@@ -51,16 +49,13 @@ loopx --registry .loopx/registry.json register-authority-source \
   --topic <topic-key>
 ```
 
-Use `--dry-run` first when the source classification or target project is not
-obvious.
+当源分类或目标项目不明显时，先使用 `--dry-run`。
 
-## Stop Conditions
+## 停止条件
 
-Stop and write a project-local todo or blocker instead of registering when:
+在以下情况下停止，改为写入项目本地 todo 或 blocker，而不是注册：
 
-- the target project or goal is ambiguous;
-- the material cannot be represented as public-safe metadata;
-- registering would require reading private content that was not requested or
-  permitted;
-- the source conflicts with a newer owner-approved material and the conflict
-  rule is unclear.
+- 目标项目或 goal 不明确；
+- 材料无法表示为公开安全元数据；
+- 注册需要读取未被请求或未获允许的私有内容；
+- 源与更新的所有者批准材料冲突，且冲突规则不明确。

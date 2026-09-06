@@ -1,55 +1,52 @@
-# State Definitions
+# State 定义
 
-LoopX state should be small, observable, and reusable. A state definition is
-valid only when a future agent or product surface can answer: where does this
-state come from, who can change it, and what transition does it allow?
+> [English](state-definitions.md)
 
-This file keeps public-safe definitions for the core state bodies and runtime
-states used by the interaction catalog and state machine.
+LoopX state 应当小而可观察、可复用。只有当未来的 agent 或产品界面能够回答以下问题时,state 定义才有效:这个 state 来自哪里,谁可以改变它,它允许什么转换?
 
-## Canonical State Bodies
+本文件保留交互目录与状态机使用的核心 state 体与运行时 state 的公开安全定义。
 
-| State Body | Source Of Truth | Primary Writer | Meaning | Must Not Mean |
+## 规范 State 体
+
+| State 体 | 真相源 | 主要写入者 | 含义 | 不得意指 |
 | --- | --- | --- | --- | --- |
-| Registry | Project/global registry | `connect`, project setup, registry sync | Goal identity, active-state path, runtime root, registered agents, primary owner, and runtime routing. | A promise that automation has already run. |
-| Active State Workbench | Active goal state projection or Markdown workbench | LoopX lifecycle commands and controlled agent writeback | Human-readable current goal, progress, todos, gates, validation notes, and next action. | Canonical truth when an event/todo projection says otherwise. |
-| Todo | Todo projection or event stream | `loopx todo` and compatible lifecycle writers | Smallest executable or waiting unit, with role, priority, status, task class, action kind, capability hints, and evidence refs. | A full project plan or a hidden chat reminder. |
-| Claim | Todo metadata, lease projection, or event stream | `loopx todo claim`, owner reassignment, lease refresh | Soft ownership and routing signal for one agent or lane. | A lock that permits ignoring better evidence or current gates. |
-| Gate / Decision Scope | User todo, operator gate, or quota interaction contract | User/controller decision writers | Concrete authority still needed, including the scope it blocks and how it can be resolved. | A global stop sign unless explicitly scoped as global. |
-| Dependency / Resume | Todo metadata and event refs | Todo lifecycle writers | Wait condition, unblock relation, successor relation, or supersession chain. | A reason to lose the original task after waiting. |
-| Evidence Bundle | Todo/run/event refs | Agent writeback, reducers, validation tools | Compact proof, artifact refs, source refs, validation result, blocker, or rollback anchor. | Raw private logs, transcripts, credentials, or unsupported claims. |
-| Run Snapshot | Run history | Adapter, refresh-state, execution wrappers | What one bounded turn saw, attempted, recommended, and delivered. | The whole project memory. |
-| Event Ledger | Append-only events | LoopX lifecycle commands | Ordered lifecycle facts for todos, gates, runs, evidence, quota, projections, and rollbacks. | A mutable note file. |
-| Projection | Status, quota, frontstage, review packet, dashboard | Projection builders | Read-only rendering of source facts for one consumer. | A write API or source of truth. |
+| 注册表 | 项目/全局注册表 | `connect`、项目设置、注册表同步 | Goal 身份、active 状态路径、运行时根、注册的 agent、主 owner 与运行时路由。 | 自动化已经运行的承诺。 |
+| Active 状态工作台 | Active goal 状态投影或 Markdown 工作台 | LoopX 生命周期命令与受控 agent 写回 | 人类可读的当前 goal、进度、todo、gate、校验注记与下一步动作。 | 当事件/todo 投影另有说法时的规范真相。 |
+| Todo | Todo 投影或事件流 | `loopx todo` 与兼容的生命周期写入者 | 最小的可执行或等待单元,含角色、优先级、状态、任务类别、动作类型、能力提示与 evidence 引用。 | 完整的项目计划或隐藏的聊天提醒。 |
+| Claim | Todo 元数据、租约投影或事件流 | `loopx todo claim`、owner 重新分配、租约刷新 | 一个 agent 或车道的软所有权与路由信号。 | 允许忽略更好 evidence 或当前 gate 的锁。 |
+| Gate / Decision Scope | 用户 todo、运维者 gate 或配额交互契约 | 用户/控制器决策写入者 | 仍然需要的具体权威,包括它阻碍的范围与如何解决。 | 除非显式标记为全局,否则不是全局停止牌。 |
+| Dependency / Resume | Todo 元数据与事件引用 | Todo 生命周期写入者 | 等待条件、解除阻碍关系、后继关系或取代链。 | 等待后丢失原任务的理由。 |
+| Evidence Bundle | Todo/run/事件引用 | Agent 写回、归约器、校验工具 | 紧凑证据、产物引用、来源引用、校验结果、阻碍或回滚锚点。 | 原始私有日志、转录、凭据或未经支持的声明。 |
+| Run Snapshot | 运行历史 | 适配器、refresh-state、执行包装器 | 一个有界 Turn 看到、尝试、推荐并交付了什么。 | 整个项目记忆。 |
+| Event Ledger | 仅追加事件 | LoopX 生命周期命令 | Todo、gate、run、evidence、配额、投影与回滚的有序生命周期事实。 | 可变的笔记文件。 |
+| Projection | 状态、配额、前场、评审包、dashboard | 投影构建器 | 面向一个消费者的源事实只读渲染。 | 写 API 或真相源。 |
 
-## Derived Runtime States
+## 派生的运行时 State
 
-These states are derived from the state bodies above. They are useful for
-status, quota, scheduler, frontstage, review packets, and agent prompts.
+这些 state 由上表 state 体派生。它们对状态、配额、调度器、前场、评审包与 agent 提示有用。
 
-| Runtime State | Derived From | Meaning | Agent Behavior | User Behavior |
+| 运行时 State | 派生自 | 含义 | Agent 行为 | 用户行为 |
 | --- | --- | --- | --- | --- |
-| `eligible` | Registry + active state + todo + quota | There is runnable or repairable work and no active gate covers the selected action. | Deliver one bounded segment, validate, write back. | Usually no interruption. |
-| `bounded_delivery` | `eligible` plus selected todo | The current turn should create an artifact, blocker, evidence observation, or state update. | Must attempt; spend only after validated writeback. | Review only if result needs approval. |
-| `user_gate` / `operator_gate` | Gate + decision scope + interaction contract | A human/controller decision blocks the selected action. | Ask or notify the concrete gate; do not run the gated path. | Answer, defer, reject, or redirect the decision. |
-| `scoped_user_gate_fallback` | Gate + independent todo + decision scope | A gate remains open, but another action is independent and safe. | Surface the gate, run only the independent fallback, validate. | See the gate without being forced to answer before fallback work. |
-| `agent_scope_wait` | Todo claims, blocks_agent, handoff gate, agent id | The current agent has no in-scope runnable candidate, or another owner holds the blocker. | Stay active and quiet; wait for reassignment, unblock, or new scoped work. | Usually no interruption. |
-| `successor_replan_required` | Dependency / Resume + Handoff + Todo lifecycle | A deferred or handoff gate has cleared, but the current agent still has no stable successor, supersede link, or no-follow-up rationale to run. | Do not run ordinary delivery yet; reopen, supersede, create a successor, or record no-follow-up, then rerun the guard. | Usually no interruption unless the successor decision is user-held. |
-| `waiting` / `external_evidence_observation` | Waiting metadata, monitor todo, external handle | Work depends on terminal external evidence or compact observation. | Observe only bounded public-safe handles; write blocker if no handle exists. | Supply missing handle only when asked concretely. |
-| `monitor_quiet_skip` | Continuous monitor todo + cadence metadata | The monitor is not due or has no material transition. | Append at most one no-spend poll when contracted, then stay quiet. | No interruption. |
-| `focus_wait` | Outcome floor, handoff readiness, delivery outcome | The lane needs outcome-scale evidence, clean baseline, or fresh owner evidence before ordinary delivery. | Recover the named evidence or report a blocker. | Decide only if the blocker is owner-held. |
-| `blocked_health` | Registry/projection/boundary checks | Control-plane health is broken enough that delivery would be unsafe. | Repair if allowed; otherwise stop with a concrete blocker. | Review only concrete repair gates. |
-| `workspace_guard` | Agent profile + current worktree + requested goal | The agent is in the wrong checkout or missing the required isolated lane. | Relocate or write a concrete workspace blocker before quota work. | No interruption unless relocation needs owner action. |
-| `capability_gate` | Todo required capabilities + host/runtime capabilities | Some candidates need capabilities the current host lacks. | Run a runnable candidate, repair a bridge, or ask for owner-held capability. | Provide credentials or protected access only through a concrete gate. |
-| `throttled` / `paused` | Quota ledger or explicit pause | The goal should not spend automatic compute now. | Stay quiet. | Resume or add quota if desired. |
-| `writeback_spend` | Validated artifact/blocker/evidence + quota contract | The turn produced durable value and may account for one spend. | Write state/history, then spend exactly once. | No interruption. |
-| `done` / `archived` | Todo/goal terminal state | No required work remains for that unit. | Stop or create successor only when needed. | Review final summary if surfaced. |
-| `projection_gap` | Projection mismatch, stale sink, missing concrete todo | A display or prompt projection is incomplete or conflicts with source state. | Repair source/projection before using the stale view. | No vague gate; ask only for missing concrete user input. |
+| `eligible` | 注册表 + active 状态 + todo + 配额 | 存在可运行或可修复的工作,且没有活动 gate 覆盖所选动作。 | 交付一个有界分段,校验,写回。 | 通常无需打断。 |
+| `bounded_delivery` | `eligible` 加所选 todo | 当前 Turn 应创建产物、阻碍、evidence 观察或 state 更新。 | 必须尝试;只在已验证写回后花费。 | 仅当结果需要批准时才评审。 |
+| `user_gate` / `operator_gate` | Gate + 决策范围 + 交互契约 | 人/控制器决策阻碍所选动作。 | 询问或通知具体 gate;不要运行被 gate 覆盖的路径。 | 回答、延迟、拒绝或重定向该决策。 |
+| `scoped_user_gate_fallback` | Gate + 独立 todo + 决策范围 | Gate 仍打开,但另一动作独立且安全。 | 呈现 gate,只运行独立的 fallback,校验。 | 看到 gate 而无需在 fallback 工作前被迫回答。 |
+| `agent_scope_wait` | Todo 认领、blocks_agent、交接 gate、agent id | 当前 agent 没有范围内的可运行候选,或另一 owner 持有阻碍。 | 保持活跃而安静;等待重新分配、解除阻碍或新的范围工作。 | 通常无需打断。 |
+| `successor_replan_required` | Dependency / Resume + Handoff + Todo 生命周期 | 延迟或交接 gate 已清除,但当前 agent 仍没有稳定的后继、取代链接或不跟进理由可运行。 | 暂不运行常规交付;重开、取代、创建后继或记录不跟进,然后重跑护栏。 | 除非后继决策由用户持有,否则通常无需打断。 |
+| `waiting` / `external_evidence_observation` | 等待元数据、monitor todo、外部句柄 | 工作依赖终结性外部 evidence 或紧凑观察。 | 只观察有界的公开安全句柄;若无句柄则写阻碍。 | 只在被具体询问时提供缺失句柄。 |
+| `monitor_quiet_skip` | 连续 monitor todo + 节奏元数据 | Monitor 未到期或没有实质性转换。 | 契约允许时最多追加一次无花费轮询,然后保持安静。 | 无需打断。 |
+| `focus_wait` | 结果下限、交接就绪度、交付结果 | 车道在常规交付前需要结果尺度的 evidence、干净基线或新的 owner evidence。 | 恢复命名的 evidence 或报告阻碍。 | 只在阻碍由 owner 持有时才决策。 |
+| `blocked_health` | 注册表/投影/边界检查 | 控制面健康已坏到交付不安全。 | 若允许则修复;否则以具体阻碍停止。 | 只评审具体修复 gate。 |
+| `workspace_guard` | Agent 配置 + 当前工作树 + 请求的 goal | Agent 在错误的 checkout 中或缺少所需的隔离车道。 | 在配额工作前迁移或写入具体的工作区阻碍。 | 除非迁移需要 owner 动作,否则无需打断。 |
+| `capability_gate` | Todo 必需能力 + host/运行时能力 | 某些候选需要当前 host 缺失的能力。 | 运行可运行候选、修复桥接,或请求 owner 持有的能力。 | 只通过具体 gate 提供凭据或受保护访问。 |
+| `throttled` / `paused` | 配额台账或显式暂停 | Goal 现在不应花费自动算力。 | 保持安静。 | 如需可恢复或增加配额。 |
+| `writeback_spend` | 已验证产物/阻碍/evidence + 配额契约 | 该 Turn 产生了持久价值,可以计一次花费。 | 写入 state/历史,然后恰好花费一次。 | 无需打断。 |
+| `done` / `archived` | Todo/goal 终结 state | 该单元没有剩余必要工作。 | 仅在需要时停止或创建后继。 | 如果呈现则评审最终摘要。 |
+| `projection_gap` | 投影不匹配、陈旧 sink、缺失具体 todo | 展示或提示投影不完整,或与源 state 冲突。 | 使用陈旧视图前修复源/投影。 | 不要含糊 gate;只请求缺失的具体用户输入。 |
 
-## Channel Invariant
+## 通道不变量
 
-User and agent channels can disagree without contradiction. For example,
-`scoped_user_gate_fallback` intentionally means:
+用户与 agent 通道可以不一致而不矛盾。例如,`scoped_user_gate_fallback` 刻意含义是:
 
 ```text
 user_channel.action_required = true
@@ -57,19 +54,16 @@ agent_channel.must_attempt = true
 agent_channel.selected_action = independent_fallback
 ```
 
-The user channel names the open decision. The agent channel names the safe work
-that does not depend on that decision. A projection is wrong when it collapses
-these into one boolean and either blocks all work or hides the gate.
+用户通道命名未决决策。Agent 通道命名不依赖该决策的安全工作。当投影把这些折叠成一个布尔值,要么阻碍全部工作要么隐藏 gate 时,投影就是错的。
 
-## Definition Checklist
+## 定义清单
 
-Before adding a new state name:
+新增 state 名称之前:
 
-1. Identify the source state body or projection field.
-2. Identify who can write the source.
-3. Identify the legal next transition.
-4. Identify whether the user must be interrupted, notified, or left alone.
-5. Identify a public-safe evidence shape and validation path.
+1. 确定源 state 体或投影字段。
+2. 确定谁能写入源头。
+3. 确定合法的下一步转换。
+4. 确定用户必须被打断、通知还是不受打扰。
+5. 确定公开安全的 evidence 形态与校验路径。
 
-If any item is missing, prefer refining a catalog pattern or projection field
-over adding a new state.
+若任一项缺失,优先精化目录模式或投影字段,而不是新增 state。

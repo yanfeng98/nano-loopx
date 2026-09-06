@@ -3,41 +3,41 @@ name: loopx-pr-review
 description: Use for `/loopx-pr-review` or evidence-backed PR queue review. Run `loopx pr-review` first, execute the capability-owned review plan for each selected exact head, then publish full bilingual PR reviews (complete Chinese five-block review plus one concise English verdict) that match the verified findings. Use `loopx-pr-merge` for approval or merge actions.
 ---
 
-# LoopX PR Review
+# LoopX PR 评审
 
-This skill is a thin host adapter. The built-in `pull-request-review`
-capability owns review depth, evidence requirements, completeness, and verdict
-policy through the CLI packet. Do not copy those rules into this skill or
-replace them with a host-specific checklist.
+> [English](SKILL.md)
 
-## Route
+本技能是薄的宿主适配器。内置 `pull-request-review` capability 通过 CLI 包拥有
+评审深度、证据要求、完整性与裁决政策。不要把这些规则复制到本技能中，也不要用
+宿主特定检查清单替换它们。
 
-Use this skill for `/loopx-pr-review`, explicit PR reviews, or review queues by
-state or time window. Route approval, merge, self-merge, and admin bypass to
-`loopx-pr-merge` after the evidence review is complete.
+## 路由
 
-Run the LoopX CLI before ad hoc GitHub reads:
+对 `/loopx-pr-review`、显式 PR 评审或按状态/时间窗口的评审队列使用本技能。
+证据评审完成后，把批准、合并、自合并与管理员绕过路由到 `loopx-pr-merge`。
+
+在临时 GitHub 读取前先运行 LoopX CLI：
 
 ```bash
 loopx --format json pr-review --state all
 ```
 
-Translate only explicit filters:
+仅翻译显式过滤条件：
 
 - `--repo owner/repo`
 - `--since ISO`
 - `--state open|merged|all`
 - `--limit N`
 
-Words such as `today`, `open`, or `merged` are filters, not permission to
-return a table only. Stats-only output requires an explicit opt-out such as
-`只统计`, `只列出`, `stats only`, or `不要 review`.
+`today`、`open` 或 `merged` 这样的词是过滤条件，不是只返回一个表而不用
+评审的许可。仅统计输出需要显式 opt-out，如 `只统计`、`只列出`、`stats only`
+或 `不要 review`。
 
-## Preserve The Packet
+## 保留包
 
-Save the full first JSON packet before printing a compact projection. Keep all
-paths named by `agent_response_contract.required_packet_fields_to_preserve`,
-especially:
+在打印紧凑投影前保存完整的首个 JSON 包。保留
+`agent_response_contract.required_packet_fields_to_preserve` 命名的所有路径，
+尤其是：
 
 - `agent_response_contract.review_execution_contract`
 - `result_completeness`
@@ -46,128 +46,109 @@ especially:
 - `pull_requests[].review_template`
 - `pull_requests[].evidence_commands`
 
-Do not pipe the only copy through `jq`. When an exhaustive request has
-`result_completeness.complete=false`, rerun with its `recommended_limit` before
-reviewing.
+不要只通过 `jq` 管道处理唯一副本。当穷尽请求的
+`result_completeness.complete=false` 时，在评审前用其 `recommended_limit` 重跑。
 
-## Execute One Review Plan
+## 执行一个评审计划
 
-Review `review_groups.unmerged` first, then `review_groups.merged`. For every
-selected PR:
+先评审 `review_groups.unmerged`，再评审 `review_groups.merged`。对每个所选 PR：
 
-1. Record the packet's exact head and run its `evidence_commands`, plus focused
-   repository-native validation when applicable.
-2. Fill `review_plan.result_template` from the shared execution contract;
-   preserve missing evidence as `unverified`. For `default_off_isolation`, run
-   its paired counterfactual across every shared and automatically loaded
-   surface, including skills, agent instructions, prompt templates, help,
-   schemas, install bundles, and provider guidance. Treat installation,
-   discovery, provider readiness, accepted input, and resolver success as
-   availability rather than activation; a runtime default-off flag cannot
-   compensate for capability behavior already projected through a baseline
-   instruction surface. For scoped activation, verify the intended scope and
-   every required subject before capability-specific guidance or effects. For
-   `authority_semantics`, match names to actor authority. Never infer
-   `verified` from metadata or CI.
-3. Apply `completion_gate` literally. If an applicable requirement is missing,
-   do not manufacture a detailed verdict; name the evidence gap.
-4. Render the verified result through `review_template`. The five sections are
-   output structure, while the execution contract is the evidence authority.
-5. Re-read the remote head immediately before verdict and publication. Restart
-   the evidence pass if it changed.
+1. 记录包的精确 head，运行其 `evidence_commands`，适用时外加聚焦的仓库原生
+   验证。
+2. 从共享执行契约填充 `review_plan.result_template`；把缺失证据保留为
+   `unverified`。对 `default_off_isolation`，跨每个共享与自动加载界面运行其
+   配对反事实，包括 skills、agent 指令、提示模板、帮助、schema、安装包与
+   provider 指引。把安装、发现、provider 就绪、接受输入与 resolver 成功视为
+   可用性而非激活；运行时 default-off 标志不能补偿已通过基线指令界面投影的
+   capability 行为。对 scoped activation，在 capability 特定指引或效果前验证
+   预期范围与每个必需主题。对 `authority_semantics`，把名称与 actor 权限匹配。
+   绝不可从元数据或 CI 推断 `verified`。
+3. 字面应用 `completion_gate`。如果适用要求缺失，不要制造详细裁决；说出证据
+   缺口。
+4. 通过 `review_template` 渲染验证结果。五个部分是输出结构，执行契约是证据
+   权威。
+5. 在裁决与发布前立即重读远端 head。如果它变化了，重新启动证据环节。
 
-Each PR gets an independent evidence pass and standalone card. A queue table is
-only a preface. For large queues, finish fewer complete cards and name the
-remainder instead of compressing every review into metadata prose.
+每个 PR 获得独立证据环节与独立卡片。队列表只是序言。对大型队列，完成较少的
+完整卡片并点名剩余部分，而不是把每个评审压缩成元数据散文。
 
-## Publish And Read Back
+## 发布并回读
 
-For an open PR, publish validated actionable findings by default unless the
-user explicitly requested local-only/dry-run output or the finding contains
-private or security-sensitive material.
+对打开的 PR，默认发布验证过的可执行发现，除非用户显式要求仅本地/干跑输出，
+或发现包含不得公开发布的私有或安全敏感材料。
 
-- Remaining blocker: formal `REQUEST_CHANGES`; for an author-owned PR, use a
-  `COMMENTED` review titled `Request changes conclusion (author-owned PR; GitHub blocks formal self-review)`.
-- Non-blocking finding with no blockers: formal `APPROVE`, not a bare comment.
-  When the GitHub account is the PR author and GitHub rejects self-approval,
-  record the same approval conclusion as a `COMMENTED` review
-  titled `Approval conclusion (author-owned PR; GitHub blocks formal self-approval)`
-  so the verdict remains public and machine-visible.
-- Non-blocking finding with only P2 suggestions: still `APPROVE`; keep the P2
-  items in the review body rather than downgrading the verdict.
-- Merged PR: publish a post-merge audit comment only for a new actionable
-  finding; avoid duplicating an equivalent exact-head result.
+- 剩余 blocker：正式 `REQUEST_CHANGES`；对作者拥有的 PR，使用标题为
+  `Request changes conclusion (author-owned PR; GitHub blocks formal self-review)`
+  的 `COMMENTED` 评审。
+- 无 blocker 的非阻塞发现：正式 `APPROVE`，而非裸评论。当 GitHub 账号是 PR
+  作者且 GitHub 拒绝自批准时，把同一批准结论记录为标题为
+  `Approval conclusion (author-owned PR; GitHub blocks formal self-approval)`
+  的 `COMMENTED` 评审，使裁决保持公开且机器可见。
+- 仅含 P2 建议的非阻塞发现：仍 `APPROVE`；把 P2 项保留在评审正文中，而不是
+  降级裁决。
+- 已合并的 PR：仅对有新的可执行发现发布合并后审计评论；避免重复等价的
+  exact-head 结果。
 
-Build public text from the exact reviewed head. Remove local paths, private
-context, raw logs, credentials, and internal-only links. Read the published
-review back, verify its state and rendered body, and return its URL. Merge
-still routes through `loopx-pr-merge`; an `APPROVE` is not merge authority.
-Do not leave a public blocker only in chat.
+从审查过的精确 head 构建公开文本。移除本地路径、私有上下文、原始日志、凭据与
+仅内部链接。回读已发布的评审，验证其状态与渲染正文，并返回其 URL。合并仍经
+`loopx-pr-merge` 路由；`APPROVE` 不是合并权限。不要把公开 blocker 只留在
+聊天中。
 
-## Full PR Review And Bilingual Format
+## 完整 PR 评审与双语格式
 
-Every review must cover the whole PR, not only the top finding. Read the full
-diff/checks, then explain motivation, architecture, changed files/symbols,
-positive and negative paths, risk across the whole diff, validation, and
-overall judgment. A findings-only or blocker-only body is incomplete.
+每个评审必须覆盖整个 PR，而不只是主要发现。读取完整 diff/checks，然后解释
+动机、架构、变更文件/符号、正负路径、整个 diff 的风险、验证与总体判断。
+仅发现或仅 blocker 的正文是不完整的。
 
-Publish two artifacts:
+发布两个产物：
 
-1. **详细中文评审** - a standalone Chinese full-PR review with the exact head
-   and five sections: `动机`, `改动思路`, `具体改动`, `对主干的风险`,
-   `我的整体评价`. Cover every changed surface and key symbols, not just the
-   main finding.
-2. **英文简短结论** - start with exactly `English verdict:` and include the
-   verdict, exact head, key finding, and validation.
+1. **详细中文评审** — 独立的中文全文 PR 评审，带精确 head 与五个部分：
+   `动机`、`改动思路`、`具体改动`、`对主干的风险`、`我的整体评价`。
+   覆盖每个变更界面与关键符号，而不只是主要发现。
+2. **英文简短结论** — 以精确的 `English verdict:` 开头，包含裁决、精确 head、
+   关键发现与验证。
 
-Do not publish before the Chinese section covers the entire PR. Read both
-artifacts back.
+在中文部分覆盖整个 PR 之前不要发布。回读两个产物。
 
-## Full PR Interpretation Depth
+## 完整 PR 解读深度
 
-A complete review is a whole-PR interpretation, not a checklist or findings
-summary. For each selected PR:
+完整评审是全文 PR 解读，不是清单或发现摘要。对每个所选 PR：
 
-1. Read every changed file and map each file to its responsibility, inputs,
-   outputs, and key symbols.
-2. Pick 2-5 behavior-bearing symbols and explain before/after behavior,
-   critical branches, callers/callees, side effects, and failure paths.
-3. Walk one positive path from user/host action to observable result.
-4. Walk one negative path (invalid input, permission, timeout, corrupt state,
-   private boundary, or rollback) and show where it fails closed.
-5. Cover all changed surfaces in the five sections: motivation, approach,
-   concrete changes, main risk, overall judgment.
-6. List validation per surface and name anything not independently verified.
-7. State overall judgment for the entire PR, not only for the top finding.
+1. 读取每个变更文件，并把每个文件映射到其职责、输入、输出与关键符号。
+2. 选择 2-5 个行为承载符号，解释前后行为、关键分支、调用方/被调用方、
+   副作用与失败路径。
+3. 从用户/宿主动作到可观察结果走一条正向路径。
+4. 走一条负向路径（无效输入、权限、超时、损坏状态、私有边界或回滚），
+   指出它在哪里失败关闭。
+5. 在五个部分中覆盖所有变更界面：动机、改动思路、具体改动、主要风险、
+   总体判断。
+6. 按界面列出验证，并指出任何未独立验证的内容。
+7. 对整个 PR 给出总体判断，而不只是主要发现。
 
-A review that only repeats the PR body, only discusses one blocker, or omits
-whole files/modules is incomplete and must be reworked.
+只重复 PR 正文、只讨论一个 blocker 或遗漏整个文件/模块的评审不完整，必须
+重做。
 
-## Example / Walkthrough / Smoke-Only PRs
+## 示例 / 演练 / 仅冒烟 PR
 
-When the review plan marks `smoke_or_example_only`, the `durable_smoke_value`
-evidence is mandatory before approval. The essence is real, durable value to
-the repository and product: running, deterministic, and public-safe are
-necessary but not enough.
+当评审计划标记 `smoke_or_example_only` 时，批准前 `durable_smoke_value`
+证据是强制的。本质是对仓库与产品的真实、持久价值：可运行、确定性且公开安全
+是必要但不充分。
 
-1. Name the shipped behavior, boundary, or maintenance cost this artifact
-   guards. "Demonstrates something that already works" is not durable value.
-2. Scan existing coverage (`rg -l '<behavior|module>' examples tests`) and the
-   same-author batch (`gh pr list ... --author <author>` / `gh search prs`);
-   flag same-shape batches opened within minutes as PR farming.
-3. Apply the repo smoke policy: thin + durable, guard shipped behavior or a
-   real boundary, compress rather than append, consolidate same-shape
-   walkthroughs into one PR or focused tests.
-4. Verdict: `REQUEST_CHANGES` for duplicative, oversized, or value-less
-   scaffolding; name the consolidation or thinning repair in the body.
-5. Repeat offenders: after a REQUEST_CHANGES warning, further low-value
-   same-shape PRs from the same author escalate to a contribution-restriction
-   recommendation (owner blocks the account from further PR submissions); the
-   warning must name this consequence.
+1. 说出该产物守护的已交付行为、边界或维护成本。"演示了已经能工作的东西"
+   不是持久价值。
+2. 扫描既有覆盖（`rg -l '<behavior|module>' examples tests`）与同作者批次
+   （`gh pr list ... --author <author>` / `gh search prs`）；
+   把几分钟内打开的同形状批次标记为 PR farming。
+3. 应用仓库冒烟政策：薄且持久、守护已交付行为或真实边界、压缩而非追加、
+   把同形状演练合并为一个 PR 或聚焦测试。
+4. 裁决：对重复、过大或无价值的脚手架用 `REQUEST_CHANGES`；在正文中命名
+   合并或变薄的修复。
+5. 重复违规者：在 REQUEST_CHANGES 警告之后，同一作者的进一步低价值同形状 PR
+   升级为贡献限制建议（所有者阻止该账号继续提交 PR）；警告必须点名这一后果。
 
-## Autonomous Queue
+## 自主队列
 
-For recurring observation, keep one ignored checkpoint and use the same capability:
+对周期观察，保留一个被忽略的 checkpoint，并使用同一 capability：
 
 ```bash
 loopx --format json pr-review --repo owner/repo --state open \
@@ -175,14 +156,13 @@ loopx --format json pr-review --repo owner/repo --state open \
   [--projected-exact-head NUMBER@HEAD_OID] [--handled-exact-head NUMBER@HEAD_OID]
 ```
 
-Treat `candidate` as a preview, not a durable projection. Follow this order: durable
-Todo target-key readback -> `--projected-exact-head` -> exact-head review/comment
-readback -> `--handled-exact-head`. Never send the projection ACK before the Todo
-exists, or the handled ACK before readback at that head. Observation states remain literal;
-the checkpoint grants no authority. Stateless callers may use `--previous-observation-json` instead.
+把 `candidate` 视为预览，而非持久投影。遵循此顺序：持久 Todo target-key
+回读 -> `--projected-exact-head` -> exact-head 评审/评论回读 ->
+`--handled-exact-head`。在 Todo 存在前不得发送投影 ACK，在该 head 回读前也不得
+发送 handled ACK。观察状态保持字面；checkpoint 不授予权限。无状态调用方可用
+`--previous-observation-json` 代替。
 
-## Failure
+## 失败
 
-If `loopx pr-review` is unavailable, repair the LoopX install or use the
-intended checked-out CLI. Do not reconstruct the queue manually and call it a
-successful `/loopx-pr-review` run.
+如果 `loopx pr-review` 不可用，修复 LoopX 安装或使用预期检出的 CLI。不要
+手动重建队列并称其为成功的 `/loopx-pr-review` 运行。

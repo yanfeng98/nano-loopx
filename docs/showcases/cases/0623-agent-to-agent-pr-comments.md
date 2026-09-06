@@ -1,58 +1,46 @@
-# 0623: Agent-To-Agent PR Comment And Fix Loop
+# 0623:Agent 对 Agent 的 PR 评论与修复 Loop
 
-## Summary
+> [English](0623-agent-to-agent-pr-comments.md)
 
-This case captures a public-safe version of a multi-agent review loop: one
-agent lane can notice or respond to PR review feedback, while another lane
-keeps the implementation and fix evidence reviewable. The important behavior is
-not the chat transcript. It is the control-plane loop around a PR: comment,
-handoff, fix, validation, and review packet.
+## 摘要
 
-The original evidence included operator-side screenshots and review context, so
-this repository keeps only the reusable pattern. Public PR surfaces can be used
-as evidence, but raw screenshots and private coordination details stay out of
-the repo.
+这个案例捕获的是一个公开安全版本的多 agent 审查 Loop:一条 agent lane 可以注意到或回应 PR 审查反馈,而另一条 lane 保持实现与修复证据可审查。重要的行为不是聊天转录,而是围绕 PR 的控制面 Loop:评论、交接、修复、验证和审查包。
 
-## Pattern
+原始证据包含操作者侧截图与审查上下文,因此本仓库只保留可复用的模式。公开 PR 界面可以用作证据,但原始截图和私有协调细节不进入仓库。
 
-A review comment is a good boundary object for long-running agents:
+## 模式
 
-- it is concrete enough to turn into a todo;
-- it belongs to a public or reviewable PR surface;
-- it can be routed to the agent that owns the implementation lane;
-- it can be closed only after a fix and validation are visible.
+审查评论是长程 agent 很好的边界对象:
 
-LoopX keeps that flow explicit instead of relying on a human to remember which
-agent saw the comment.
+- 它足够具体,可以转化为 todo;
+- 它属于一个公开或可审查的 PR 界面;
+- 它可以路由到拥有实现 lane 的 agent;
+- 只有在修复与验证可见之后,它才能被关闭。
 
-## LoopX Behavior
+LoopX 让这条流程保持明确,而不是依赖人去记住哪个 agent 看到了评论。
 
-LoopX contributes the following control-plane pieces:
+## LoopX 行为
 
-- a claimed todo names the PR feedback or comment thread;
-- a handoff gate keeps the blocked agent from guessing outside its lane;
-- the implementation agent records the fix and validation evidence;
-- the review packet points the reviewer back to the public PR surface;
-- follow-up work becomes a successor todo rather than a loose chat note.
+LoopX 贡献了以下控制面部件:
 
-## User-Facing Value
+- 被认领的 todo 指明 PR 反馈或评论线程;
+- 交接关卡防止被阻塞的 agent 在自己的 lane 之外瞎猜;
+- 实现 agent 记录修复与验证证据;
+- 审查包把审查者指回公开 PR 界面;
+- 后续工作变成继任 todo,而不是一条松散的聊天笔记。
 
-The operator does not need to manually shepherd every PR comment across agent
-threads. LoopX turns review feedback into a bounded work item with owner,
-evidence, and handoff state. That makes agent-to-agent collaboration useful
-without hiding the final review responsibility.
+## 用户价值
 
-## Evidence Boundary
+操作者不需要手动把每条 PR 评论在 agent 线程之间牵线。LoopX 把审查反馈转成有主、有证据、有交接状态的有界工作项。这让 agent 对 agent 的协作变得有用,同时不隐藏最终的审查责任。
 
-This case excludes private screenshots, raw chats, internal review notes, local
-state, credentials, and unpublished artifacts. The public-safe evidence shape
-is the PR comment/fix lifecycle itself: a visible PR surface, a claimed todo,
-the fix diff, validation output, and the resulting review packet.
+## 证据边界
 
-## Public Evidence Sequence
+这个案例排除私有截图、原始聊天、内部审查笔记、本地状态、凭据和未公开工件。公开安全的证据形态是 PR 评论/修复生命周期本身:一个可见的 PR 界面、被认领的 todo、修复 diff、验证输出,以及由此产生的审查包。
 
-1. A PR receives feedback that should become executable work.
-2. LoopX turns the feedback into an owned todo instead of a chat reminder.
-3. Another agent lane implements or verifies the fix.
-4. The review packet links the comment, fix, and validation evidence.
-5. Follow-up work remains explicit as successor todos.
+## 公开证据序列
+
+1. 一条 PR 收到了应该变成可执行工作的反馈。
+2. LoopX 把反馈转成一个有主的 todo,而不是聊天提醒。
+3. 另一条 agent lane 实现或验证修复。
+4. 审查包把评论、修复与验证证据链接起来。
+5. 后续工作作为继任 todos 保持明确。

@@ -1,47 +1,34 @@
-# Independent user: four-day unattended agent run
+# 独立用户:四天无人值守 agent 运行
 
-> **Case type:** Independent user
+> [English](independent-four-day-unattended-agent.md)
+
+> **案例类型:** 独立用户
 >
-> **Evidence strength:** Owner-approved, minimally redacted user report
-> **Runtime / scale:** Four days; one long-running agent reported
+> **证据强度:** 经所有者批准、最小脱敏的用户报告
+> **运行时长 / 规模:** 四天;报告了一个长程 agent
 
-## Scenario And Problem
+## 场景与问题
 
-The user was evaluating a long-running agent on an active engineering task.
-The practical question was whether the agent could continue useful work without
-constant prompting, rather than merely keeping a process alive.
+用户在一个活跃的工程任务上评估一个长程 agent。实际问题在于:agent 能否在不需要持续提示的情况下继续做有用工作,而不只是保持进程存活。
 
-## How LoopX Ran
+## 运行方式
 
-LoopX kept the task active across a four-day window. The user reported that no
-human intervention was required during that period and that the agent continued
-doing useful work. A periodic report capability provided a later inspection
-point for accumulated progress.
+LoopX 让任务在四天窗口内保持活动。用户报告该期间不需要任何人工干预,agent 持续在做有用工作。周期报告能力为积累的进展提供了后来的检查点。
 
-## Human Intervention
+## 人类干预
 
-The user explicitly reported no intervention during the four-day run. The
-surrounding task definition and the later judgment of usefulness remained
-human responsibilities.
+用户明确报告四天运行期间无干预。周边任务定义与之后对"有用"的判断仍是人类职责。
 
-## Outcome
+## 结果
 
-The user described the work as valuable and highlighted the report surface as a
-way to review progress after an unattended interval. There is no public task
-repository or run history, so this case does not claim independently reproduced
-quality or task completion.
+用户把这项工作描述为有价值的,并突出报告界面是一种在无人值守间隔后审查进展的方式。没有公开任务仓库或运行历史,因此本案例不声称独立复现的质量或任务完成。
 
-## Evidence
+## 证据
 
-![Redacted authorized chat excerpt reporting a four-day LoopX agent run without human intervention](../../assets/showcases/user-feedback/four-day-unattended-user-report.jpg)
+![脱敏后的授权聊天摘录:报告一次无人值守四天的 LoopX agent 运行](../../assets/showcases/user-feedback/four-day-unattended-user-report.jpg)
 
-*Source: an owner-approved message excerpt from the LoopX public Lark developer
-group, cropped to remove chat identity and unrelated reporting context. All
-runtime and outcome claims remain user-reported.*
+*来源:来自 LoopX 公共 Lark 开发者群、经所有者批准的消息摘录,裁剪以移除聊天身份与不相关的报告语境。所有运行时与结果声明仍是用户报告的。*
 
-## Evidence Boundary
+## 证据边界
 
-The published image is an approved excerpt from the LoopX public Lark developer
-group. The workload, repository, run history, report contents, and unselected
-chat context remain private. This page preserves only the minimally redacted
-excerpt and does not infer facts beyond its text.
+发布的图片是来自 LoopX 公共 Lark 开发者群、经批准的摘录。工作量、仓库、运行历史、报告内容与未选中的聊天语境仍然私有。本页只保留最小脱敏的摘录,不从其文本推断超出的事实。

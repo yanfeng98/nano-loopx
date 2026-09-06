@@ -1,65 +1,53 @@
-# Codex CLI No-Clone Release Verification
+# Codex CLI 无克隆发布验证
 
-Status: release verification note.
+> [English](codex-cli-no-clone-release-verification.md)
 
-The Codex CLI first-run route can be advertised as the preferred interactive
-path only when the shipped command surface matches the docs. The user should
-not have to clone LoopX before trying it from a project repo.
+状态：发布验证说明。
 
-## Verification Shape
+只有当已发布的命令 surface 与文档相符时，Codex CLI 首次运行路径才能宣传为偏好的交互路径。用户不必先克隆 LoopX 就能从项目仓库尝试它。
 
-The release verifier exercises the path as a fresh user would see it:
+## 验证形态
 
-1. create a temporary HOME and a temporary project repo;
-2. run `scripts/install-from-github.sh` with the same archive-installer
-   mechanism used by the public no-clone command;
-3. confirm the installed `loopx` wrapper can run `doctor`;
-4. confirm the installed top-level help points at `loopx commands`, and the
-   installed command reference exposes the first-run commands:
-   `codex-cli-bootstrap-message`, `codex-cli-tui-bootstrap-smoke-bundle`, and
-   `codex-cli-visible-attach-acceptance`;
-5. generate the one-message TUI bootstrap text from the fresh project;
-6. generate the transcript-free bootstrap bundle from the fresh project;
-7. replay the public proof-capture fixture from the installed release snapshot.
+发布验证器按新用户所见的路径走一遍：
 
-The verifier does not launch Codex, read transcripts, read session files, read
-credentials, mutate a Codex session, or spend LoopX quota.
+1. 创建临时 HOME 与临时项目仓库；
+2. 用与公开无克隆命令相同的归档安装器机制运行 `scripts/install-from-github.sh`；
+3. 确认安装的 `loopx` wrapper 可以运行 `doctor`；
+4. 确认安装的顶级 help 指向 `loopx commands`，并且安装的命令参考暴露首次运行命令：`codex-cli-bootstrap-message`、`codex-cli-tui-bootstrap-smoke-bundle` 与 `codex-cli-visible-attach-acceptance`；
+5. 从新项目生成一条消息的 TUI bootstrap 文本；
+6. 从新项目生成免 transcript bootstrap bundle；
+7. 从安装的发布快照回放公开 proof-capture 夹具。
 
-Run it with:
+验证器不启动 Codex、不读 transcript、不读 session 文件、不读凭据、不改动 Codex session，也不 spend LoopX quota。
+
+运行方式：
 
 ```bash
 python3 examples/release/codex-cli-no-clone-release-verification-smoke.py
 ```
 
-## Current Result
+## 当前结果
 
-Current archive route: **qualified as the recovery fallback, with one boundary**.
+当前归档路由：**合格作为恢复回退，带一个边界**。
 
-Ready:
+就绪：
 
-- the archive installer creates a stable release snapshot without requiring a
-  local LoopX checkout;
-- the installed wrapper exposes the first-run TUI bootstrap, smoke bundle, and
-  visible-attach acceptance commands;
-- the generated bootstrap text tells the agent to install, connect, run quota,
-  preserve the visible TUI, write back evidence, and avoid raw transcripts;
-- the smoke bundle confirms no Codex launch and no LoopX quota spend;
-- proof-capture fixtures are packaged into the release snapshot and can be
-  replayed by the installed wrapper.
+- 归档安装器在不要求本地 LoopX checkout 的情况下创建稳定发布快照；
+- 已安装 wrapper 暴露首次运行 TUI bootstrap、smoke bundle 与 visible-attach acceptance 命令；
+- 生成的 bootstrap 文本告诉 agent 安装、连接、运行 quota、保留可见 TUI、写回 evidence，并避免 raw transcripts；
+- smoke bundle 确认无 Codex 启动、无 LoopX quota spend；
+- proof-capture 夹具被打包进发布快照，并可由已安装 wrapper 回放。
 
-Boundary:
+边界：
 
-- public install still depends on network access to GitHub archive endpoints
-  unless the caller overrides `LOOPX_ARCHIVE_URL` with a trusted archive;
-- same-TUI automation is not the default path until visible proof plus runtime
-  idle evidence pass.
+- 除非调用方用受信任归档覆盖 `LOOPX_ARCHIVE_URL`，公开安装仍依赖对 GitHub 归档端点的网络访问；
+- 在可见证据加 runtime idle evidence 通过之前，same-TUI 自动化不是默认路径。
 
-That means the archive route can remain a tested recovery option while PyPI is
-the default and contributor clone-plus-canary remains the development path.
+这意味着 PyPI 保持默认、contributor 的 clone-plus-canary 保持开发路径时，归档路由可以继续作为经过测试的恢复选项。
 
-## Release Checklist
+## 发布检查清单
 
-Before promoting a new release snapshot, run:
+晋升新的发布快照之前，运行：
 
 ```bash
 python3 examples/release/codex-cli-no-clone-release-verification-smoke.py
@@ -68,22 +56,19 @@ python3 examples/codex-cli-tui-bootstrap-smoke-bundle-smoke.py
 python3 examples/codex-cli-proof-capture-demo-fixtures-smoke.py
 ```
 
-If the first command fails, do not advertise the archive fallback as qualified
-until the failure is reduced to a compact blocker: missing installer
-dependency, archive layout mismatch, missing installed command, broken
-bootstrap generation, or missing public proof fixture.
+如果第一个命令失败，在失败被归结为紧凑 blocker 之前不要宣传归档回退合格：缺少安装器依赖、归档布局不匹配、缺少已安装命令、bootstrap 生成损坏或缺少公开证明夹具。
 
-## Boundary
+## 边界
 
-Keep this verification public-safe:
+保持此项验证 public-safe：
 
-- no raw Codex transcript or session material;
-- no credentials, auth material, or private local paths;
-- no benchmark logs, task text, trajectories, or production evidence;
-- no Codex execution as part of the verifier.
+- 无原始 Codex transcript 或 session 资料；
+- 无凭据、认证资料或私有本地路径；
+- 无 benchmark 日志、任务文本、轨迹或生产 evidence；
+- 验证器不执行 Codex。
 
-See also:
+参见：
 
-- [Codex CLI packaged install path](codex-cli-packaged-install.md)
-- [Codex CLI first-run rehearsal](codex-cli-first-run-rehearsal.md)
-- [Codex CLI proof-capture demo](codex-cli-proof-capture-demo.md)
+- [Codex CLI 打包安装路径](codex-cli-packaged-install.md)
+- [Codex CLI 首次运行彩排](codex-cli-first-run-rehearsal.md)
+- [Codex CLI proof-capture 演示](codex-cli-proof-capture-demo.md)

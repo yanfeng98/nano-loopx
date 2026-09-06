@@ -1,10 +1,11 @@
-# PR Program Snapshot Contract
+# PR 项目快照契约
 
-Use `loopx_pr_program_snapshot_v0` as the provider-neutral boundary between
-source acquisition and LoopX program reconciliation. Keep source-specific
-commands and credentials outside the snapshot producer committed to LoopX.
+> [English](snapshot-contract.md)
 
-## Shape
+把 `loopx_pr_program_snapshot_v0` 用作源获取与 LoopX 项目协调之间的
+provider-neutral 边界。把源特定命令与凭据保留在提交给 LoopX 的快照生产者之外。
+
+## 形状
 
 ```json
 {
@@ -55,74 +56,64 @@ commands and credentials outside the snapshot producer committed to LoopX.
 }
 ```
 
-## Required Invariants
+## 必需不变量
 
-- `program_id`, `generated_at`, `result_completeness`, `requirements`, and
-  `change_requests` must be present.
-- `ref` is the stable unique key. Prefer `repository#number`; do not use title.
-- `result_completeness.scope` is a structured inventory identity. It must name
-  repository, state, author, and time-window filters explicitly; arrays are
-  unordered filter sets. The delta helper normalizes and hashes the complete
-  object, including any additional provider-neutral filters.
-- `result_completeness.complete` controls removal semantics only when the
-  previous and current scope fingerprints match. Missing rows are removals only
-  when the current inventory is complete for the same scope. Incomplete or
-  scope-mismatched snapshots must not replace the durable baseline or monitor
-  result hash.
-- `updated_at` is observational. It must not trigger a material transition by
-  itself.
-- `description_digest` and `review_digest` may prove content movement without
-  storing raw private text.
-- `requirements[].priority` is the product priority. A change request may have a
-  lower effective priority only when the owner explicitly records that choice.
-- `coverage` is `none`, `partial`, or `complete`. Do not infer `complete` from a
-  merged neighbor.
+- `program_id`、`generated_at`、`result_completeness`、`requirements` 与
+  `change_requests` 必须存在。
+- `ref` 是稳定唯一键。优先 `repository#number`；不要使用标题。
+- `result_completeness.scope` 是结构化库存身份。它必须显式命名 repository、
+  state、author 与 time-window 过滤条件；数组是无序过滤集合。delta helper
+  对完整对象做规范化与哈希，包括任何额外 provider-neutral 过滤条件。
+- 仅当先前与当前范围 fingerprint 匹配时，`result_completeness.complete`
+  才控制移除语义。只有当前库存对同一范围穷尽时，缺失行才是移除。
+  不完整或范围不匹配的快照不得替换持久基线或 monitor result hash。
+- `updated_at` 是观察性的。它本身不得触发材料性迁移。
+- `description_digest` 与 `review_digest` 可以在不存储原始私有文本的前提下
+  证明内容移动。
+- `requirements[].priority` 是产品优先级。只有当所有者显式记录该选择时，
+  change request 才能有更低的有效优先级。
+- `coverage` 为 `none`、`partial` 或 `complete`。不要从合并的邻居推断
+  `complete`。
 
-## Integration-Branch Composition
+## 集成分支组合
 
-The snapshot is the remote lifecycle and requirement view; it is not an
-integration-branch plan. When the program uses a local integration candidate,
-map only explicitly selected change requests to the separate ignored
-`loopx_integration_branch_plan_v0` state.
+快照是远端生命周期与需求视图；它不是集成分支计划。当项目使用本地集成候选时，
+只把显式选择的 change request 映射到单独的被忽略
+`loopx_integration_branch_plan_v0` 状态。
 
-Before each reconcile, prove that the selected local source ref resolves to the
-snapshot row's `head_sha`. Feed the resulting
-`loopx_integration_branch_status_v0` readback into the grouped program monitor
-as additional evidence. Keep source ref names and sync receipts in ignored
-project-local state; do not add them to a public roadmap merely to make this
-composition work.
+每次协调前，证明所选本地源 ref 解析到快照行的 `head_sha`。把结果
+`loopx_integration_branch_status_v0` 回读作为额外证据送入分组项目 monitor。
+把源 ref 名称与同步 receipts 保留在被忽略的项目本地状态；不要仅为让此组合
+生效而把它们加进公开路线图。
 
-Normalize lifecycle values as follows:
+按如下方式规范化生命周期值：
 
-| Field | Values |
+| 字段 | 取值 |
 | --- | --- |
-| `state` | `open`, `merged`, `closed`, `unknown` |
-| `checks` | `passed`, `failed`, `pending`, `unknown` |
-| `review` | `pending`, `approved`, `changes_requested`, `unknown` |
-| `work_item` | `passed`, `failed`, `action_required`, `unknown` |
-| `priority` | `P0`, `P1`, `P2`, or `unclassified` |
+| `state` | `open`、`merged`、`closed`、`unknown` |
+| `checks` | `passed`、`failed`、`pending`、`unknown` |
+| `review` | `pending`、`approved`、`changes_requested`、`unknown` |
+| `work_item` | `passed`、`failed`、`action_required`、`unknown` |
+| `priority` | `P0`、`P1`、`P2` 或 `unclassified` |
 
-## Material Fields
+## 材料性字段
 
-The delta helper considers these fields material:
+delta helper 认为以下字段是材料性的：
 
-- `title`, `state`, `draft`, `target_branch`, and `head_sha`;
-- `checks`, `review`, and `work_item`;
-- `theme`, `priority`, `requirement_ids`, `depends_on`, and `supersedes`;
-- `description_digest` and `review_digest`;
-- requirement title, priority, and coverage.
+- `title`、`state`、`draft`、`target_branch` 与 `head_sha`；
+- `checks`、`review` 与 `work_item`；
+- `theme`、`priority`、`requirement_ids`、`depends_on` 与 `supersedes`；
+- `description_digest` 与 `review_digest`；
+- requirement 标题、优先级与覆盖。
 
-Treat additions and complete-snapshot removals as material. Treat
-`generated_at` and timestamp-only `updated_at` changes as observation-only.
+把新增与完整快照移除视为材料性。把 `generated_at` 与仅时间戳的 `updated_at`
+变化视为仅观察。
 
-## Privacy Checklist
+## 隐私清单
 
-Before committing any fixture or example derived from a real program, verify:
+在提交任何源自真实项目的 fixture 或示例前，验证：
 
-- repository names, URLs, change request titles, people, and comments are
-  public;
-- no credential, token, private executable name, internal hostname, local path,
-  or document id remains;
-- raw comments and descriptions are replaced with public-safe digests unless
-  their public text is intentionally part of the fixture;
-- the fixture is minimal and proves a reusable semantic invariant.
+- 仓库名、URL、change request 标题、人员与评论都是公开的；
+- 没有残留凭据、token、私有可执行名、内部主机名、本地路径或文档 id；
+- 原始评论与描述被替换为公开安全摘要，除非其公开文本有意作为 fixture 的一部分；
+- fixture 最小化，并证明一个可复用的语义不变量。

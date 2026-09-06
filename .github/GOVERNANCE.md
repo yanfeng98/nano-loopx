@@ -1,204 +1,168 @@
-# LoopX Project Governance
+# LoopX 项目治理
 
-This document defines the public project roles and decision process for LoopX.
-It governs the repository and its releases. It is separate from LoopX runtime
-concepts such as agent peers, todo claims, quota, gates, and write scopes.
+> [English](GOVERNANCE.md)
 
-## Current Maintainer
+本文档定义 LoopX 的公开项目角色与决策流程。它管辖本仓库及其发布物，
+与 LoopX 运行时概念（如 agent peer、todo claim、quota、gate、write scope）是
+彼此独立的。
 
-| Person | Role | Since | Public evidence |
+## 当前维护者
+
+| 人员 | 角色 | 自 | 公开证据 |
 | --- | --- | --- | --- |
-| [`@huangruiteng`](https://github.com/huangruiteng) | Creator and lead maintainer | 2026-05-31 | [Initial public commit](https://github.com/huangruiteng/loopx/commit/7dcdc9dc79226d157ba57d3e8ff4bae664f020c1) |
+| [`@huangruiteng`](https://github.com/huangruiteng) | 创建者兼首席维护者 | 2026-05-31 | [首次公开提交](https://github.com/huangruiteng/loopx/commit/7dcdc9dc79226d157ba57d3e8ff4bae664f020c1) |
 
-The lead maintainer is currently the final decision maker for releases,
-maintainer appointments, security-sensitive handling, and changes to this
-governance model. That tie-break role should be revisited when the active
-maintainer group grows.
+首席维护者目前是发布、维护者任命、安全敏感处理以及本治理模型变更的最终
+决策人。当活跃维护者群体扩大后，应重新审视这个裁决角色。
 
-Path-scoped subsystem appointments and preferred review assignments are
-recorded below. A subsystem appointment does not by itself grant
-repository-wide maintainer authority.
+按路径划分子系统的任命与优先评审指派记录如下。子系统任命本身并不授予
+仓库级维护者权限。
 
-## Repository Developers With Write Access
+## 具有写权限的仓库开发者
 
-The following developers have, or have been invited to accept, GitHub's
-repository `write` role. Write access supports day-to-day pull-request and
-branch work within the repository rules. It does not by itself appoint someone
-as a maintainer or grant release, security, or governance authority.
+以下开发者已经持有或受邀接受 GitHub 的仓库 `write` 角色。写权限用于仓库
+规则范围内的日常 pull request 与分支工作。它本身不构成维护者任命，也不授予
+发布、安全或治理权限。
 
-| GitHub account | Repository role | Access status |
+| GitHub 账号 | 仓库角色 | 访问状态 |
 | --- | --- | --- |
-| [`@wujc12`](https://github.com/wujc12) | Write | Active |
-| [`@ZaynJarvis`](https://github.com/ZaynJarvis) | Write | Active |
-| [`@Hoey041`](https://github.com/Hoey041) | Write | Active |
-| [`@maxliux5`](https://github.com/maxliux5) | Write | Active |
-| [`@JackyCSer`](https://github.com/JackyCSer) | Write | Active |
-| [`@steven-kid`](https://github.com/steven-kid) | Write | Active |
-| [`@liubf21`](https://github.com/liubf21) | Write | Invitation pending |
-| [`@wchwawa`](https://github.com/wchwawa) | Write | Invitation pending |
+| [`@wujc12`](https://github.com/wujc12) | Write | 活跃 |
+| [`@ZaynJarvis`](https://github.com/ZaynJarvis) | Write | 活跃 |
+| [`@Hoey041`](https://github.com/Hoey041) | Write | 活跃 |
+| [`@maxliux5`](https://github.com/maxliux5) | Write | 活跃 |
+| [`@JackyCSer`](https://github.com/JackyCSer) | Write | 活跃 |
+| [`@steven-kid`](https://github.com/steven-kid) | Write | 活跃 |
+| [`@liubf21`](https://github.com/liubf21) | Write | 邀请待处理 |
+| [`@wchwawa`](https://github.com/wchwawa) | Write | 邀请待处理 |
 
-GitHub's repository settings are the operational source of truth for access.
-This public snapshot should be updated through a pull request when a write-role
-invitation is accepted, expires, or is revoked. Maintainer appointments remain
-subject to the process below.
+GitHub 的仓库设置是访问权限的实际操作依据。当写角色邀请被接受、过期或
+撤销时，这份公开快照应通过 pull request 更新。维护者任命仍受下文流程约束。
 
-## Subsystem Maintainers
+## 子系统维护者
 
-A subsystem maintainer is accountable for review quality and contract
-coherence inside a named surface. The appointment does not grant authority
-over unrelated subsystems, releases, security handling, repository settings,
-or admin-bypass merges.
+子系统维护者负责指定界面内的评审质量与契约一致性。该任命不授予无关子系统、
+发布、安全处理、仓库设置或管理员绕过合并方面的权限。
 
-### Lark Integration
+### Lark 集成
 
-| Role | Account | Scope |
+| 角色 | 账号 | 范围 |
 | --- | --- | --- |
-| Subsystem maintainer | [`@steven-kid`](https://github.com/steven-kid) | Bundled Lark extension, its direct CLI delegates, Lark capability and integration documentation, and focused Lark validation |
-| Lead maintainer and fallback reviewer | [`@huangruiteng`](https://github.com/huangruiteng) | Repository governance, cross-subsystem decisions, and review of changes authored by the subsystem maintainer |
+| 子系统维护者 | [`@steven-kid`](https://github.com/steven-kid) | 内置 Lark 扩展、其直接 CLI 委托、Lark 能力与集成文档，以及聚焦的 Lark 验证 |
+| 首席维护者兼兜底评审者 | [`@huangruiteng`](https://github.com/huangruiteng) | 仓库治理、跨子系统决策，以及对子系统维护者所写变更的评审 |
 
-The Lark integration maintainer is expected to:
+Lark 集成维护者应：
 
-- provide the first substantive response and design review for Lark pull
-  requests;
-- keep extension implementation, direct CLI delegates, public documentation,
-  and focused validation consistent;
-- protect authority, readback, owner-private receipt, retry, idempotency, and
-  cross-platform boundaries;
-- submit approval or change-request reviews on pull requests authored by other
-  contributors; and
-- escalate changes that alter shared extension lifecycle, status, quota, todo,
-  release, security, or repository-governance contracts.
+- 对 Lark 相关 pull request 提供第一批实质响应与设计评审；
+- 保持扩展实现、直接 CLI 委托、公开文档与聚焦验证一致；
+- 保护 authority、readback、owner-private receipt、retry、idempotency 以及
+  跨平台边界；
+- 对其他贡献者提交的 pull request 提交 approval 或 change-request 评审；以及
+- 对改变共享扩展生命周期、status、quota、todo、release、security 或
+  仓库治理契约的变更进行升级上报。
 
-The appointment does not authorize the subsystem maintainer to approve their
-own pull requests. A non-author reviewer must still approve those changes under
-the repository rules. Merge, release, security, repository-settings, and
-admin-bypass authority remain governed by this document and the lead
-maintainer.
+该任命不授权子系统维护者批准自己的 pull request。根据仓库规则，这些变更
+仍须由非作者的评审者批准。合并、发布、安全、仓库设置与管理员绕过权限
+仍由本文档与首席维护者管辖。
 
-The matching paths are recorded in [`CODEOWNERS`](CODEOWNERS). That file
-provides automatic review routing. This appointment does not make code-owner
-approval a branch-protection requirement. After at least three, and normally
-five, completed cross-author exact-head review cycles, the lead maintainer may
-separately decide whether to propose required code-owner review.
+相应路径记录在 [`CODEOWNERS`](CODEOWNERS)。该文件提供自动评审路由。
+此任命并不把 code-owner 批准设为分支保护要求。在完成至少三次（通常五次）
+跨作者 exact-head 评审周期后，首席维护者可另行决定是否提议强制 code-owner
+评审。
 
-### Shared Host Integration Seams
+### 共享宿主集成衔接点
 
-`@steven-kid` is a preferred reviewer, not the sole code owner, for the shared
-host integration seams currently centered on:
+`@steven-kid` 对当前主要围绕以下内容的共享宿主集成衔接点是优先评审者，
+而非唯一 code owner：
 
-- `loopx/host_loop_activation.py`;
-- `loopx/host_mode_planner.py`;
-- `loopx/cli_commands/host_mode_plan.py`; and
-- `docs/integrations/runtime-connector-catalog.md`.
+- `loopx/host_loop_activation.py`；
+- `loopx/host_mode_planner.py`；
+- `loopx/cli_commands/host_mode_plan.py`；以及
+- `docs/integrations/runtime-connector-catalog.md`。
 
-Host integration spans Codex, Claude Code, OpenCode, DeepSeek Harness, and
-other runtime providers. Provider-specific implementation remains with the
-relevant contributors and repository maintainers, while shared status, quota,
-todo, scheduler, and Turn contracts remain outside the Lark appointment. These
-host paths are therefore not assigned to `@steven-kid` in `CODEOWNERS` at this
-stage.
+宿主集成横跨 Codex、Claude Code、OpenCode、DeepSeek Harness 及其他
+runtime provider。provider 特定实现仍归相关贡献者与仓库维护者，而共享的
+status、quota、todo、scheduler 与 Turn 契约不属于 Lark 任命范围。因此现阶段
+这些宿主路径在 `CODEOWNERS` 中未指派给 `@steven-kid`。
 
-### Changing A Subsystem Appointment
+### 变更子系统任命
 
-Adding, expanding, narrowing, or retiring a subsystem appointment requires a
-public pull request that updates this document and any matching `CODEOWNERS`
-routes. Contribution count alone is not sufficient evidence. The decision
-should consider sustained technical judgment, cross-author review quality,
-boundary discipline, responsiveness, and whether the proposed path scope is
-cohesive.
+增加、扩大、缩小或退役一个子系统任命，需要公开 pull request 更新本文档及
+任何匹配的 `CODEOWNERS` 路由。仅凭贡献数量不足以作为证据。决策应考虑持久的
+技术判断力、跨作者评审质量、边界纪律、响应性，以及提议的路径范围是否内聚。
 
-## Project Roles
+## 项目角色
 
-### Maintainers
+### 维护者
 
-Maintainers may review and merge pull requests, publish releases, triage
-security reports, and make repository governance decisions. They are expected
-to protect compatibility, the public/private boundary, contributor trust, and
-the quality of LoopX's control-plane contracts.
+维护者可以评审与合并 pull request、发布版本、分诊安全报告，并做出仓库治理
+决策。他们应保护兼容性、公共/私有边界、贡献者信任以及 LoopX 控制面契约的
+质量。
 
-Maintainer authority is explicit: it comes from this document and repository
-permissions, not from commit count, a runtime todo claim, or an agent role.
+维护者权限是显式的：它来自本文档与仓库权限，而非提交数量、运行时 todo claim
+或某个 agent 角色。
 
-### Contributors
+### 贡献者
 
-Anyone who improves code, tests, documentation, design, issues, or reviews is a
-contributor. Accepted commits and co-authored commits are credited through the
-public Git history and GitHub contributor views. Contribution does not by
-itself grant merge, release, or governance authority.
+任何改进代码、测试、文档、设计、issue 或评审的人都是贡献者。被接受的提交
+与共同署名提交通过公开 Git 历史与 GitHub 贡献者视图得到归属。贡献本身不授予
+合并、发布或治理权限。
 
-### Agents And Automation
+### Agent 与自动化
 
-Agents and automation may prepare changes, run validation, or appear in commit
-provenance. They do not become human maintainers and cannot grant themselves
-repository authority. A human maintainer remains accountable for merges,
-releases, and boundary decisions.
+Agent 与自动化可以准备变更、运行验证，或出现在提交来源记录中。它们不会成为
+人类维护者，也不能授予自己仓库权限。人类维护者仍对合并、发布与边界决策负责。
 
-## How Decisions Are Made
+## 决策方式
 
-- Routine changes use pull-request review, focused validation, and maintainer
-  judgment. Silence is not approval when a change requires an explicit gate.
-- Changes to persisted state, public contracts, defaults, permissions,
-  evidence policy, or compatibility should explain the behavioral impact and
-  include proportionate regression coverage.
-- Significant product or governance changes should be discussed in a public
-  issue or pull request before they are finalized.
-- Security reports, credentials, private evidence, and other sensitive matters
-  must not be posted in a public issue. Ask a maintainer for a private contact
-  path without including the sensitive details.
-- Releases are cut by a maintainer after the documented release checks pass.
-  Exceptions and known skips should be recorded in the release or pull request.
-- When consensus is not reached, the lead maintainer records the decision and
-  rationale in the relevant issue or pull request.
+- 常规变更使用 pull request 评审、聚焦验证与维护者判断。当变更需要显式
+  gate 时，沉默不构成批准。
+- 对持久状态、公开契约、默认值、权限、证据策略或兼容性的变更，应说明行为
+  影响并包含成比例的回归覆盖。
+- 重大的产品或治理变更应在定稿前通过公开 issue 或 pull request 讨论。
+- 安全报告、凭据、私有证据及其他敏感内容不得发布在公开 issue 中。向维护者
+  索取私下联系渠道，但不要附带敏感细节。
+- 发布由维护者在文档化的发布检查通过后执行。例外与已知跳过应记录在发布
+  或 pull request 中。
+- 没有达成共识时，首席维护者在相关 issue 或 pull request 中记录决策与理由。
 
-## Technical Direction Governance
+## 技术方向治理
 
-The versioned
-[Current Technical Directions](../docs/project/technical-directions.md) page is
-the canonical map of active strategic programs, maturity, contribution routes,
-and promotion gates. The pinned
-[GitHub Discussion](https://github.com/huangruiteng/loopx/discussions/2851) is
-its community-facing projection; an issue, Discussion, RFC, or integration
-branch does not override merged runtime and stable reference contracts.
+带版本的
+[当前技术方向](../docs/project/technical-directions.md) 页面是活跃战略项目、
+成熟度、贡献路径与晋升 gate 的权威地图。置顶的
+[GitHub Discussion](https://github.com/huangruiteng/loopx/discussions/2851) 是
+其面向社区的投影；issue、Discussion、RFC 或集成分支不覆盖已合并的运行时与
+稳定参考契约。
 
-Each strategic direction has one long-lived tracking issue. Trackers record
-outcomes, boundaries, implementation leads, material decisions, and links to
-bounded work. They are not themselves blanket implementation authorization.
-A claimable change should have a separate issue or public task-board row with
-an explicit smallest slice, base branch, non-goals, and validation plan.
+每个战略方向有一个长期存在的跟踪 issue。跟踪器记录结果、边界、实现负责人、
+材料性决策，以及对有界工作的链接。它们本身不是全面实施授权。可认领的变更
+应有单独的 issue 或公开任务板行，并带显式的最小切片、基线分支、非目标与
+验证计划。
 
-A material change to a direction's stage, scope, implementation lead,
-integration branch, or promotion gate requires a pull request updating the
-canonical map. The RFC index and contributor task board should change in the
-same pull request when their routing changes. Maintainers update the pinned
-Discussion after merge and should not maintain an independent roadmap body
-there.
+对某个方向的阶段、范围、实现负责人、集成分支或晋升 gate 的材料性变更，
+需要 pull request 更新权威地图。当 RFC 索引与贡献者任务板的路由变化时，应在
+同一个 pull request 中同步修改。维护者在合并后更新置顶 Discussion，不应在
+那里维护独立的路线图正文。
 
-The `direction/*` labels route discovery and review. They do not grant
-authority, promise delivery, or imply that a Draft or Research item is ready
-for implementation. Recognition as an implementation lead records current
-public work; it is separate from repository write access, subsystem maintainer
-appointment, and repository-wide maintainer authority.
+`direction/*` 标签用于路由发现与评审。它们不授予权限、不承诺交付，也不意味着
+Draft 或 Research 项目已可实施。被认定为实现负责人只是记录当前公开工作；
+它与仓库写权限、子系统维护者任命以及仓库级维护者权限彼此独立。
 
-## Becoming A Maintainer
+## 成为维护者
 
-Maintainers are selected from contributors who have shown sustained technical
-judgment, reliable review, respect for project boundaries, and care for other
-contributors. An active maintainer nominates the candidate; the active
-maintainers approve the appointment; and the change is recorded here through a
-pull request.
+维护者从展现出持久技术判断力、可靠评审、尊重项目边界并关心其他贡献者的
+贡献者中产生。由一名活跃维护者提名候选人；由活跃维护者批准任命；变更通过
+pull request 记录于此。
 
-A maintainer may step down at any time. Inactive or emeritus status, when
-needed, should likewise be recorded in this file rather than inferred from
-recent commit activity.
+维护者可以随时卸任。需要时，不活跃或荣誉身份也应记录在此文件中，而非从
+近期提交活跃度推断。
 
-## Accountability And Scope
+## 问责与范围
 
-Important decisions should leave durable public rationale in an issue, pull
-request, release, or stable project document. Private incident details and raw
-agent trajectories do not belong in that public record.
+重要决策应在 issue、pull request、发布或稳定的项目文档中留下持久的公开
+理由。私有事件细节与原始 agent 轨迹不属于该公开记录。
 
-This charter does not create a legal entity, employment relationship,
-copyright assignment, or trademark registration. See
-[Authors and Contributors](../docs/project/authors.md) for attribution,
-[Name and Marks](../docs/project/trademarks.md) for name and mark usage, and
-[`CONTRIBUTING.md`](../CONTRIBUTING.md) for the contribution workflow.
+本宪章不创建法律实体、雇佣关系、版权转让或商标注册。归属参见
+[作者与贡献者](../docs/project/authors.md)，名称与标识使用参见
+[名称与标识](../docs/project/trademarks.md)，贡献流程参见
+[`CONTRIBUTING.md`](../CONTRIBUTING.md)。

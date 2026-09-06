@@ -1,36 +1,27 @@
-# Peer Supervisor v0
+# 对等 Supervisor v0
+> [English](peer-supervisor-v0.md)
 
-## Status
+## 状态
 
-Experimental and default-off. This protocol adds an observation and proposal
-layer over registered `peer_v1` agents. It does not add a new scheduler, create
-agent sessions, or grant one identity durable authority over another.
+实验性且默认关闭。本协议在已注册 `peer_v1` agent 之上增加一个观察与建议层。它不新增 scheduler、不创建 agent 会话，也不授予某个身份对另一个的持久化权限。
 
-The design is informed by Shepherd's runtime-supervisor experiments, where a
-stronger observer can compare concurrent effect streams and choose to inject,
-handoff, or discard a branch. LoopX keeps those actions as typed proposals until
-a host runtime exposes the required execution capabilities and returns evidence.
+设计受 Shepherd 的运行时 supervisor 实验启发：更强的观察者可以比较并发效果流，并选择注入、交接或丢弃一个分支。LoopX 将这些动作保持为类型化建议，直到 host 运行时暴露所需的执行能力并返回证据。
 
-## Why A Supervisor
+## 为何要 Supervisor
 
-Several equal peers are useful for independent progress, but they give the user
-multiple places to inspect. An optional supervisor provides one synthesis
-channel that can compare:
+几个对等方对独立进展有用，但它们给用户多处检查点。可选 supervisor 提供一个可对比的综合 channel：
 
-- goal status and user gates;
-- each peer's quota and interaction contract;
-- todo claims, leases, and continuation state;
-- recent agent-scoped evidence;
-- compact runtime effect or state references.
+- goal 状态与用户 gates；
+- 每个对等方的 quota 与交互契约；
+- todo claims、leases 与继续状态；
+- 近期 agent 作用域证据；
+- 紧凑运行时效果或状态引用。
 
-The user can use the supervisor task as the preferred control-room conversation
-while several peers run. The user may still talk directly to any peer. Decisions
-that change goal authority remain LoopX user todos or gates, so they do not live
-only in a supervisor transcript.
+用户可以在多个对等方运行时把 supervisor 任务用作首选控制室对话。用户仍可直接与任何对等方交谈。改变 goal 权限的决策仍是 LoopX 用户 todos 或 gates，因此它们不只存在于 supervisor transcript 中。
 
-## Configuration
+## 配置
 
-The supervisor must already be a registered peer. Enabling it is explicit:
+Supervisor 必须已是已注册对等方。启用它是显式的：
 
 ```bash
 loopx configure-goal \
@@ -41,18 +32,15 @@ loopx configure-goal \
   --execute
 ```
 
-Omit `--supervised-agent` to observe every registered peer except the supervisor.
-Disable the feature with:
+省略 `--supervised-agent` 以观察除 supervisor 外的每个已注册对等方。禁用该功能：
 
 ```bash
 loopx configure-goal --goal-id <goal-id> --clear-supervisor --execute
 ```
 
-Configuration is stored as `coordination.supervisor` with schema
-`peer_supervisor_v0`. Absence means disabled. The canonical configuration has
-`execution_mode=proposal_only`.
+配置以 schema `peer_supervisor_v0` 存储为 `coordination.supervisor`。缺失即禁用。规范配置具有 `execution_mode=proposal_only`。
 
-Generate the dedicated task body after configuration:
+配置后生成专用任务正文：
 
 ```bash
 loopx supervisor-prompt \
@@ -60,8 +48,7 @@ loopx supervisor-prompt \
   --agent-id <supervisor-agent-id>
 ```
 
-The prompt runs the supervisor's own quota guard, then consumes one read-only
-observation packet:
+该 prompt 先运行 supervisor 自己的 quota guard，然后消费一个只读观察包：
 
 ```bash
 loopx supervisor-observe \
@@ -69,19 +56,11 @@ loopx supervisor-observe \
   --agent-id <supervisor-agent-id>
 ```
 
-`supervisor_observation_v0` selects from existing public-safe projections. For
-each supervised peer it includes current claim, state, next action, last
-activity, workspace/handoff references, recent thin evidence rows, and compact
-effect references. It does not run another peer's quota guard, include raw
-history or transcripts, or introduce write authority. Missing peer status or
-evidence is projected as a warning and makes `decision_input_complete=false`.
-Degraded status contracts behave the same way: the packet preserves the usable
-read-only projection, reports compact health counts, and does not claim that
-the decision input is complete.
+`supervisor_observation_v0` 从既有公开安全投影中选择。对每个受监督对等方，它包括当前 claim、状态、下一动作、最后活动、工作区/交接引用、近期薄证据行与紧凑效果引用。它不运行另一个对等方的 quota guard、不包含原始历史或 transcript、不引入写权限。缺失的对等方状态或证据投影为警告并使 `decision_input_complete=false`。降级状态契约行为相同：包保留可用的只读投影、报告紧凑健康计数，且不声称决策输入完整。
 
-## Durable Proposals And Host Receipts
+## 持久化建议与 Host 回执
 
-The supervisor records its exact normalized decision before reporting it:
+Supervisor 在报告前记录其精确规范化决策：
 
 ```bash
 loopx supervisor-event propose \
@@ -91,10 +70,9 @@ loopx supervisor-event propose \
   --execute
 ```
 
-This appends a goal-local `supervisor_proposed` event. It remains
-`proposal_only`; the proposal is never proof that a host changed a session.
+这追加一条 goal 局部 `supervisor_proposed` 事件。它保持 `proposal_only`；该建议绝不证明 host 变更了会话。
 
-The CLI can validate or append a `rejected` or `failed` attempt receipt:
+CLI 可以验证或追加 `rejected` 或 `failed` 尝试回执：
 
 ```bash
 loopx supervisor-event receipt \
@@ -104,18 +82,9 @@ loopx supervisor-event receipt \
   --execute
 ```
 
-An `executed` receipt is stricter: it can only be appended through the host
-adapter API, which supplies verified capabilities outside the editable receipt
-JSON. It also requires an opaque authority reference, compact evidence
-references, and an explicit rollback boundary. Rollback mode is closed to
-`compensating_action` or `not_reversible`; neither mode authorizes automatic
-rollback. Missing capability, authority, evidence, or rollback boundary fails
-closed. A normal CLI caller therefore cannot promote a proposal to executed
-merely by naming a capability. `rejected` and `failed` receipts remain durable
-attempt evidence without projecting success. Reusing the same record id is
-idempotent when the payload matches and a conflict when it differs.
+`executed` 回执更严格：它只能通过 host 适配器 API 追加，该 API 提供可编辑回执 JSON 之外的已验证能力。它还需要不透明权限引用、紧凑证据引用与显式回滚边界。回滚模式限于 `compensating_action` 或 `not_reversible`；两种模式都不授权自动回滚。缺失能力、权限、证据或回滚边界失效关闭。因此普通 CLI 调用方不能仅凭命名能力把建议提升为已执行。`rejected` 与 `failed` 回执保持为持久化尝试证据而不投影成功。载荷匹配时复用同一记录 id 是幂等的，不同则为冲突。
 
-Read the compact projection with:
+用以下命令读取紧凑投影：
 
 ```bash
 loopx supervisor-event list \
@@ -123,91 +92,62 @@ loopx supervisor-event list \
   --agent-id <supervisor-agent-id>
 ```
 
-The ledger is local-private goal runtime state. JSON input paths are never
-recorded, and inline credential-shaped values are rejected.
+该 ledger 是 local-private goal 运行时状态。JSON 输入路径从不记录，内联凭据形状的值被拒绝。
 
-## Decision Contract
+## 决策契约
 
-`supervisor_decision_v0` uses an enum-like closed set:
+`supervisor_decision_v0` 使用枚举式封闭集合：
 
-| Kind | Meaning | Required host capability |
+| 种类 | 含义 | 所需 host 能力 |
 | --- | --- | --- |
-| `observe` | Keep watching; no intervention is justified. | none |
-| `inject` | Propose a bounded message to an existing session. | `session_message_injection` |
-| `handoff` | Propose continuing a target from a named source state. | `session_state_fork`, `workspace_state_transfer` |
-| `discard` | Propose terminating a failed branch while retaining compact evidence. | `session_termination` |
+| `observe` | 继续观察；没有正当干预。 | 无 |
+| `inject` | 建议向既有会话发送有界消息。 | `session_message_injection` |
+| `handoff` | 建议从命名源状态继续目标。 | `session_state_fork`、`workspace_state_transfer` |
+| `discard` | 建议终止失败分支，同时保留紧凑证据。 | `session_termination` |
 
-Every proposal names reason codes and compact evidence references. `inject`
-names a target and message. `handoff` names source, target, and state reference.
-`discard` names target and state reference.
+每个建议指名原因码与紧凑证据引用。`inject` 指名目标与消息。`handoff` 指名源、目标与状态引用。`discard` 指名目标与状态引用。
 
-The v0 CLI does not execute these actions. Missing host capabilities leave the
-proposal unexecuted; a model response is never accepted as proof that a session
-was injected, forked, or terminated. Destructive actions require explicit host
-authority even after an executor exists.
+v0 CLI 不执行这些动作。缺失 host 能力使建议保持未执行；模型响应绝不作为会话被注入、分叉或终止的证明。破坏性动作即使有执行器也需显式 host 权限。
 
-## Future Fork Extension Gate
+## 未来 Fork 扩展关卡
 
-A Shepherd-style `fork` is useful, but it is not another spelling of
-`handoff`:
+Shepherd 式 `fork` 有用，但它不是 `handoff` 的另一种拼写：
 
-| Operation | Source continues | Target | Scheduling effect |
+| 操作 | 源继续 | 目标 | 调度效果 |
 | --- | --- | --- | --- |
-| `handoff` | Usually finished or yielding | Another registered peer continues from `state_ref` | Transfers continuation; should not increase active branch count by default |
-| future `fork` | Yes | The scheduler leases a temporary execution branch to an idle capability-matched registered peer | Increases active work and must reserve bounded capacity |
+| `handoff` | 通常已结束或让位 | 另一个已注册对等方从 `state_ref` 继续 | 转移继续；默认不应增加活动分支计数 |
+| 未来 `fork` | 是 | Scheduler 把临时执行分支租给空闲且能力匹配的已注册对等方 | 增加活动工作，必须预留有界容量 |
 
-LoopX should add `fork` to the closed supervisor decision set only when a real
-host call site can satisfy the complete execution contract. Until then it stays
-a documented extension gate rather than speculative production schema or a
-prompt-only action.
+LoopX 只有在真实 host 调用点能兑现完整执行契约时才应把 `fork` 加入封闭 supervisor 决策集。在此之前它保持为文档化扩展关卡，而非投机性生产 schema 或纯 prompt 动作。
 
-### Identity And State Model
+### 身份与状态模型
 
-Raft's persistent-agent model is the right constraint for LoopX: one registered
-peer keeps one durable identity and accumulated context. A fork copies
-execution state, not identity. It creates an `execution_branch_id`, then the
-scheduler assigns a `branch_lease_id` to an existing idle, capability-matched
-`executor_agent_id`. The source and executor may be the same peer, but the
-normal multi-agent path uses another available peer so the source can continue.
-The scheduler must not register a cloned peer, copy durable memory into a new
-identity, or create a hidden leader/follower relationship.
+Raft 的持久化 agent 模型是 LoopX 的正确约束：一个已注册对等方保持一个持久身份与累积上下文。Fork 复制执行状态，而非身份。它创建 `execution_branch_id`，然后 scheduler 把 `branch_lease_id` 赋给一个既有空闲、能力匹配的 `executor_agent_id`。源与执行者可以是同一对等方，但正常多 agent 路径使用另一个可用对等方，使源可以继续。Scheduler 不得注册克隆对等方、不得把持久化记忆复制进新身份、不得创建隐藏 leader/follower 关系。
 
-The branch therefore separates four identities explicitly:
+因此分支显式分离四个身份：
 
-- `source_agent_id`: the peer whose versioned execution state is forked;
-- `source_state_ref`: the immutable execution and workspace checkpoint;
-- `execution_branch_id`: the temporary branch identity;
-- `executor_agent_id` plus `branch_lease_id`: the registered peer temporarily
-  scheduled to run it.
+- `source_agent_id`：其版本化执行状态被 fork 的对等方；
+- `source_state_ref`：不可变执行与工作区检查点；
+- `execution_branch_id`：临时分支身份；
+- `executor_agent_id` 加 `branch_lease_id`：被临时调度运行它的已注册对等方。
 
-The branch lease is narrower than normal todo ownership. It authorizes bounded
-execution of one branch, not claiming the source peer's todo, inheriting its
-quota, or merging its durable memory. If the result is selected, ordinary
-LoopX continuation or handoff policy decides which peer owns the next durable
-todo.
+分支 lease 比普通 todo 所有权更窄。它授权一个分支的有界执行，而非认领源对等方的 todo、继承其配额或合并其持久化记忆。若结果被选中，由普通 LoopX 继续或交接策略决定哪个对等方拥有下一个持久化 todo。
 
-The source must be a versioned immutable `source_state_ref`, not a reconstructed
-chat transcript. The branch receives an isolated session/process view and a
-copy-on-write workspace view. Its effect and evidence streams remain separately
-addressable and join back to the source through stable refs.
+源必须是版本化不可变 `source_state_ref`，而非重建的聊天 transcript。分支获得隔离的会话/进程视图与写时复制工作区视图。其效果与证据流保持可单独寻址，并通过稳定引用接回源。
 
-### Admission And Settlement
+### 准入与 Settlement
 
-Forking consumes more compute and creates competing outputs, so a supervisor
-proposal is not enough to start one. A future host admission receipt must prove:
+Fork 消耗更多计算并产生竞争输出，因此 supervisor 建议不足以启动一个。未来 host 准入回执必须证明：
 
-- `versioned_execution_state` and `session_state_fork`;
-- `workspace_copy_on_write` or equivalent isolated workspace state;
-- `scheduler_capacity_reservation` and `idle_peer_selection`, including
-  capability matching, fanout, cost, fairness, expiry, and cancel boundaries;
-- `branch_execution_lease`, preventing one idle peer from accepting competing
-  branches and making lease loss fail closed;
-- an opaque authority ref and idempotent branch id;
-- compact effect/evidence refs without raw transcript injection; and
-- `held_result_settlement`, so branch output cannot land in the canonical
-  workspace or LoopX state merely because the branch finished.
+- `versioned_execution_state` 与 `session_state_fork`；
+- `workspace_copy_on_write` 或等价隔离工作区状态；
+- `scheduler_capacity_reservation` 与 `idle_peer_selection`，包括能力匹配、扇出、成本、公平性、过期与取消边界；
+- `branch_execution_lease`，防止一个空闲对等方接受竞争分支，并使失去 lease 失效关闭；
+- 一个不透明权限引用与幂等分支 id；
+- 无原始 transcript 注入的紧凑效果/证据引用；以及
+- `held_result_settlement`，使分支输出不能仅仅因为分支结束就落入规范工作区或 LoopX 状态。
 
-The minimum lifecycle is:
+最小生命周期是：
 
 ```text
 proposal_only -> admitted -> leased -> running -> held_result
@@ -216,62 +156,30 @@ proposal_only -> admitted -> leased -> running -> held_result
 held_result -> selected | discarded
 ```
 
-`selected` still passes through ordinary LoopX todo ownership, validation,
-review, merge, and user-gate policy. It is not an automatic merge. `discarded`
-retains compact evidence and releases the executor peer plus reserved capacity;
-it does not authorize destructive git cleanup. A branch that expires or loses
-its lease must fail closed instead of silently continuing.
+`selected` 仍经过普通 LoopX todo 所有权、验证、评审、合并与用户 gate 策略。它不是自动合并。`discarded` 保留紧凑证据并释放执行者对等方加预留容量；它不授权破坏性 git 清理。过期或失去 lease 的分支必须失效关闭，而不是静默继续。
 
-### Supervisor And Workspace Interaction
+### Supervisor 与工作区交互
 
-The supervisor remains the preferred synthesis channel, not a centralized
-company brain. Branch progress should appear as queryable inbox-like projection
-rows so the supervisor can pull relevant changes without pushing every branch
-event into its context. Completed branch output remains held until explicit
-settlement, matching an agent-native workspace where persistent peers keep
-their own context and exchange bounded messages or artifacts.
+Supervisor 仍保持首选综合 channel，而非集中式公司大脑。分支进展应作为可查询的收件箱式投影行出现，使 supervisor 可以拉取相关变更，而不把每个分支事件推入其上下文。已完成分支输出保持 held，直到显式 settlement，这与 agent 原生工作区一致：持久化对等方保持各自上下文并交换有界消息或工件。
 
-This extension should first ship as a default-off dry-run canary over a concrete
-multi-agent scheduler/host adapter. Required validation includes capacity
-exhaustion, duplicate fork idempotency, source-state immutability, workspace
-isolation, capability-based idle-peer selection, competing branch leases,
-branch expiry/cancellation, held-result settlement, and recovery when the host
-reports a partial failure. Only that evidence justifies widening
-`SupervisorDecisionKind` and the public event schema.
+该扩展应首先作为默认关闭的 dry-run canary 落在具体多 agent scheduler/host 适配器之上。所需验证包括容量耗尽、重复 fork 幂等、源状态不可变、工作区隔离、基于能力的空闲对等方选择、竞争分支 lease、分支过期/取消、held-result settlement，以及 host 报告部分失败时的恢复。只有该证据才正当化扩展 `SupervisorDecisionKind` 与公开事件 schema。
 
-## Opt-In Inject Adapter Canary
+## 可选注入适配器 Canary
 
-`loopx.control_plane.agents.supervisor_inject` exposes one narrow Python host
-seam for `inject`. LoopX ships no default adapter and no CLI switch that enables
-it. A host must explicitly supply an adapter with
-`session_message_injection`, a rollback mode and opaque rollback policy ref,
-plus an authority ref for the individual execution. Dry-run validates the
-entire request without calling the host.
+`loopx.control_plane.agents.supervisor_inject` 为 `inject` 暴露一个窄 Python host 接缝。LoopX 不提供默认适配器，也没有启用它的 CLI 开关。Host 必须显式提供带 `session_message_injection`、回滚模式与不透明回滚策略引用、外加单次执行权限引用的适配器。Dry-run 不调用 host 即验证整个请求。
 
-On execution, the adapter receives a stable `SupervisorInjectRequest` and must
-return a typed `SupervisorInjectResult`. LoopX then appends the capability-
-matched receipt. A prior executed receipt suppresses a second host call, so a
-repeated control-plane request is idempotent. The rollback field records the
-boundary; it does not retract a message or grant authority to send a
-compensating message. `handoff` and `discard` remain proposal-only until their
-own host contracts and safety evidence exist.
+执行时，适配器接收稳定 `SupervisorInjectRequest` 并必须返回类型化 `SupervisorInjectResult`。LoopX 随后追加能力匹配的回执。先前已执行回执抑制第二次 host 调用，使重复控制面请求幂等。回滚字段记录边界；它不撤回消息，也不授予发送补偿消息的权限。`handoff` 与 `discard` 保持 proposal-only，直到其自身 host 契约与安全证据存在。
 
-## Authority Boundaries
+## 权限边界
 
-- The supervisor is an equal peer with an extra observation responsibility.
-- It cannot claim another peer's todo, spend another peer's quota, or rewrite a
-  user gate merely to resolve a proposal.
-- Review and handoff remain ordinary task policies; the supervisor does not
-  become a hidden review owner.
-- Pre-peer hierarchy fields remain confined to the existing exactly-once
-  migration reader. They are not a live configuration model and are not used
-  by this protocol.
+- Supervisor 是带额外观察职责的对等对等方。
+- 它不能认领另一个对等方的 todo、花费另一个对等方的配额，或仅为解决建议而改写用户 gate。
+- 评审与交接保持普通任务策略；supervisor 不成为隐藏评审 owner。
+- Pre-peer 层级字段仍限于既有 exactly-once 迁移读取器。它们不是活动配置模型，本协议也不使用它们。
 
-This separation lets LoopX test whether richer synthesis improves delivery
-without coupling the State Kernel to a particular session runtime or bringing
-durable hierarchy back into `peer_v1`.
+该分离使 LoopX 可在不把 State Kernel 耦合到特定会话运行时、也不把持久化层级带回 `peer_v1` 的情况下，测试更丰富的综合是否改善投递。
 
-## References
+## 参考
 
 - [Shepherd: A Meta-Agent for Versioned Execution](https://arxiv.org/abs/2605.10913)
 - [CooperBench](https://arxiv.org/abs/2601.13295)

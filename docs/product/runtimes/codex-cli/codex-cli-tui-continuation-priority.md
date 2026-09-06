@@ -1,74 +1,49 @@
-# Codex CLI TUI Continuation Priority
+# Codex CLI TUI 延续优先级
 
-Status: scheduling contract for the next Codex CLI product slice.
+> [English](codex-cli-tui-continuation-priority.md)
 
-This note exists because any peer can drift toward visible, easy-to-ship
-frontstage work even when the user has just steered the product priority back
-to Codex CLI TUI adoption. Frontstage and showcase work are important support
-surfaces, but they must not outrank a runnable Codex CLI TUI continuation task.
+状态：下一块 Codex CLI 产品切片的调度契约。
 
-## Product Priority
+本说明存在的原因是：任何 peer 都可能漂向可见、易交付的 frontstage 工作，哪怕用户刚刚把产品优先级拨回 Codex CLI TUI 采用。Frontstage 与 showcase 工作是很重要的支撑 surface，但它们不得排在可运行的 Codex CLI TUI 延续任务之前。
 
-The near-term product promise is:
+## 产品优先级
 
-1. a user opens Codex CLI TUI in a project repo;
-2. one pasted LoopX message starts the loop;
-3. LoopX can later steer or resume work through the same visible TUI
-   whenever Codex exposes a safe attach primitive;
-4. the user can keep watching, interrupt, steer, review, or take over.
+近期产品承诺是：
 
-The first message is already documented. The next priority is the second half:
-prove a later visible steering turn after the first TUI bootstrap, or record the
-exact blocker that prevents it.
+1. 用户在项目仓库中打开 Codex CLI TUI；
+2. 一条粘贴的 LoopX 消息启动 loop；
+3. 只要 Codex 暴露安全的 attach 原语，LoopX 以后就可以通过同一个可见 TUI 转向或恢复工作；
+4. 用户可以继续观察、中断、转向、评审或接管。
 
-## Scheduling Rule
+第一条消息已经文档化。下一个优先级是后半句：证明首次 TUI 引导之后的一次后续可见转向 Turn，或者记录阻止它的精确 blocker。
 
-When LoopX chooses between runnable productization tasks:
+## 调度规则
 
-- Codex CLI TUI continuation wins over frontstage polish, showcase copy, or
-  dashboard route work when the continuation task is runnable and in scope.
-- Frontstage and showcase work can run first only when the TUI continuation is
-  concretely gated by missing proof, missing CLI capability, user decision, or
-  a higher-risk runtime boundary.
-- If LoopX selects frontstage work while a Codex CLI TUI continuation
-  task is runnable, the agent should treat that as a planning drift and run
-  self-repair before writing code.
+当 LoopX 在可运行的产品化任务之间选择时：
 
-This is not a permanent global priority. It is a current product-stage rule:
-the most valuable external-developer path is fast Codex CLI adoption without
-losing the trusted TUI.
+- 当延续任务可运行且在范围内时，Codex CLI TUI 延续胜过 frontstage 打磨、showcase 文案或 dashboard 路由工作。
+- 只有当 TUI 延续被缺失证明、缺失 CLI capability、用户决策或更高风险的 runtime 边界具体阻塞时，frontstage 与 showcase 工作才可以优先跑。
+- 如果 Codex CLI TUI 延续任务可运行，而 LoopX 却选择 frontstage 工作，agent 应把该情形当作规划漂移，并在写代码之前运行 self-repair。
 
-## Acceptance Target
+这不是永久的全局优先级。它是当前产品阶段的规则：最有价值的外部开发者路径是快速 Codex CLI 采用，同时不丢掉可信 TUI。
 
-The next useful Codex CLI TUI continuation slice should produce public-safe
-evidence for one of these outcomes:
+## 验收目标
 
-- `same_tui_continuation_proven`: a later LoopX steering prompt is added
-  to the same open Codex CLI TUI session, with visible proof and runtime idle
-  evidence.
-- `same_tui_continuation_blocked`: the current Codex CLI surface cannot safely
-  accept a later visible turn; the blocker names the missing primitive and the
-  fallback remains manual paste or explicit `codex exec`.
-- `same_tui_continuation_gated`: the task cannot run because it would require
-  raw transcripts, session files, private material, credentials, or production
-  actions.
+下一块有用的 Codex CLI TUI 延续切片应为以下结果之一产出 public-safe evidence：
 
-The evidence must stay transcript-free. It may use public-safe fixtures,
-boolean capability probes, visible-window metadata, and compact writeback
-records, but must not read raw Codex transcripts, session files, hidden TUI
-buffers, credentials, or private project state.
+- `same_tui_continuation_proven`：一条后续 LoopX 转向 prompt 被加入同一个打开的 Codex CLI TUI session，带可见证明与 runtime idle evidence。
+- `same_tui_continuation_blocked`：当前 Codex CLI surface 无法安全接受后续可见 Turn；blocker 说明缺失的原语，回退保持为手动粘贴或显式 `codex exec`。
+- `same_tui_continuation_gated`：任务无法运行，因为它会要求原始 transcripts、session 文件、私有资料、凭据或生产动作。
 
-## Agent Reminder
+Evidence 必须保持免 transcript。它可以使用 public-safe 夹具、布尔 capability 探针、可见窗口元数据与紧凑写回记录，但不得读取原始 Codex transcripts、session 文件、隐藏 TUI 缓冲、凭据或私有项目状态。
 
-If a heartbeat, quota summary, or claimed advancement lane recommends
-frontstage while recent user steering says Codex CLI TUI continuation should
-come first, the agent should:
+## Agent 提醒
 
-1. inspect the current runnable todo list;
-2. prefer the Codex CLI TUI continuation todo if it is runnable;
-3. write back the reason if it is not runnable;
-4. only then advance frontstage or showcase support work.
+如果 heartbeat、quota 摘要或已认领的推进泳道推荐 frontstage，而近期用户转向说 Codex CLI TUI 延续应该优先，agent 应：
 
-This keeps fancy demo surfaces aligned with the more important adoption path:
-LoopX should be easy to start from inside the TUI that developers
-already trust.
+1. 检查当前可运行的 todo 列表；
+2. 如果可运行，优先选 Codex CLI TUI 延续 todo；
+3. 如果不可运行，写回原因；
+4. 然后才推进 frontstage 或 showcase 支撑工作。
+
+这让华丽的演示 surface 对齐更重要的采用路径：LoopX 应该易于从开发者已经信任的 TUI 内部启动。

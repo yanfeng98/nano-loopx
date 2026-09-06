@@ -1,42 +1,40 @@
-# Decision Context
+# Decision Context 能力介绍
 
-[中文](README.zh-CN.md) | [Architecture contract](../../../docs/reference/protocols/decision-context-architecture-v0.md)
+[English](README.md) | [架构协议](../../../docs/reference/protocols/decision-context-architecture-v0.zh-CN.md)
 
-Status: experimental, built in, default off, goal scoped.
+状态：实验能力、内置、默认关闭、goal-scoped。
 
-Decision Context helps a long-running LoopX agent rebuild **what is currently
-true for one decision** before it acts. It combines revisioned authority
-sources, bounded provider recall, exact reads, freshness checks, and conflict
-handling into an auditable evidence packet. The agent may then produce a
-proposal, while LoopX Core remains the only lifecycle and action authority.
+Decision Context 帮助长程 LoopX Agent 在行动前重建：**针对当前这次决策，
+哪些事实仍然可信**。它把带 revision 的 authority source、有界召回、精确读取、
+新鲜度检查和冲突处理组装成可审计的证据包；Agent 再基于证据提出建议，而
+LoopX Core 仍是生命周期和动作权限的唯一 authority。
 
-It is useful when a goal spans days or weeks and the answer cannot safely come
-from the current prompt or model memory alone.
+当一个 goal 跨越数天或数周，且答案不能安全地只依赖当前 prompt 或模型记忆时，
+这项能力最有价值。
 
-## The Problem It Solves
+## 它解决什么问题
 
-A long-running agent often has more context than it can keep in one session:
+长程 Agent 的上下文通常分散在多个周期和系统中：
 
-- project state and source documents change independently;
-- previous judgments can become stale;
-- semantic recall can find useful clues but cannot prove current truth;
-- recommendations are easily mistaken for facts;
-- a decision is hard to improve if its later outcome is not linked back to the
-  evidence that produced it.
+- 项目状态和信源文档各自变化；
+- 旧判断可能已经过期；
+- 语义召回可以找到线索，但不能证明当前事实；
+- 模型建议容易被误当成事实；
+- 如果决策和后续结果没有关联，就难以校准下一次决策。
 
-Decision Context turns that loose context into a bounded decision cycle:
+Decision Context 把这些松散信息变成一个有边界的决策闭环：
 
 ```mermaid
 flowchart LR
-    SOURCES["Authority sources<br/>documents · repositories · messages · state"]
-    RECALL["Advisory recall<br/>OpenViking · local search · other providers"]
-    READ["Bounded scan + exact read<br/>freshness · revision · conflicts"]
-    EVIDENCE["Evidence packet<br/>accepted · rejected · stale · conflicting"]
-    PROPOSAL["Decision proposal<br/>recommendation · alternatives · stop list"]
+    SOURCES["Authority sources<br/>文档 · 仓库 · 消息 · 状态"]
+    RECALL["Advisory recall<br/>OpenViking · 本地检索 · 其他 provider"]
+    READ["有界扫描 + exact read<br/>freshness · revision · conflict"]
+    EVIDENCE["Evidence packet<br/>采纳 · 拒绝 · 过期 · 冲突"]
+    PROPOSAL["Decision proposal<br/>建议 · 备选 · stop list"]
     REVIEW["Review settlement<br/>approve · reject · defer · no change"]
     CORE["LoopX lifecycle<br/>todo · user gate · event"]
-    OUTCOME["Outcome receipt<br/>later observed result"]
-    MEMORY["Reward Memory<br/>reviewed reusable experience"]
+    OUTCOME["Outcome receipt<br/>后续真实结果"]
+    MEMORY["Reward Memory<br/>经评审的可复用经验"]
 
     SOURCES --> READ
     RECALL --> READ
@@ -45,92 +43,76 @@ flowchart LR
     PROPOSAL --> REVIEW
     REVIEW --> CORE
     CORE --> OUTCOME
-    OUTCOME -. "verified outcome only" .-> MEMORY
+    OUTCOME -. "仅 verified outcome" .-> MEMORY
 ```
 
-## What It Owns
+## 它负责什么
 
-Decision Context owns the decision-quality layer:
+Decision Context 负责“决策质量层”：
 
-1. **Incremental source profiles** declare which source classes matter, their
-   freshness policy, scan mode, and evidence weight.
-2. **Bounded scan and exact read** discover changes without copying raw source
-   bodies into LoopX packets.
-3. **Evidence rebase** promotes current facts and explicitly records stale,
-   rejected, or conflicting claims.
-4. **Decision proposals** keep recommendations, alternatives, next actions,
-   and stop lists separate from evidence.
-5. **Review receipts** record owner `approve`, `reject`, or `defer` through the
-   existing user gate, or one explicit semantic `no_change` result without a
-   gate.
-6. **Cursor commit** advances private source cursors after the review settlement
-   and lifecycle writeback have been validated. It does not wait for a future
-   real-world outcome.
-7. **Outcome receipts** later link an accepted decision to observed outcomes
-   and invalidated assumptions.
+1. **增量信源 profile**：声明需要关注的信源类型、新鲜度、扫描方式和证据权重。
+2. **有界扫描与 exact read**：发现变化，但不把原始正文复制进 LoopX packet。
+3. **证据 rebase**：提升当前事实，并明确记录过期、拒绝或冲突的 claim。
+4. **决策建议**：把 recommendation、alternatives、next actions 和 stop list
+   与事实证据分开。
+5. **评审回执**：复用现有 user gate 记录 owner 的 `approve`、`reject`、`defer`，
+   或者在没有实质变化时记录一条无需 gate 的语义 `no_change`。
+6. **cursor commit**：review settlement 与 lifecycle writeback 验证通过后推进
+   私有信源 cursor，不等待未来的真实结果。
+7. **结果回执**：在后续把接受的决策与真实结果、失效假设关联起来。
 
-## What It Does Not Own
+## 它不负责什么
 
-Decision Context does not:
+Decision Context 不会：
 
-- replace LoopX Core todo, gate, quota, event, or authority semantics;
-- turn provider recall into trusted truth;
-- automatically persist chat bodies, tool output, credentials, or raw provider
-  payloads;
-- grant permission to execute a recommendation;
-- automatically activate a Reward Memory candidate;
-- require OpenViking or any other single provider.
+- 替代 LoopX Core 的 todo、gate、quota、event 或 authority 语义；
+- 把 provider 召回直接当成可信事实；
+- 自动持久化聊天正文、tool output、凭据或原始 provider payload；
+- 因为给出建议就获得执行权限；
+- 自动激活 Reward Memory candidate；
+- 强绑定 OpenViking 或任何单一 provider。
 
-If a provider is unavailable, the capability fails open to the remaining
-authority sources and records provider health. It does not block the Core
-lifecycle or silently advance source cursors.
+如果 provider 不可用，它会记录 provider health，并 fail open 到剩余 authority
+source；不会阻断 Core lifecycle，也不会静默推进 source cursor。
 
-The assembly also emits `decision_source_coverage_v0`. This public-safe receipt
-summarizes scan status, exact-read completeness, and uncovered P0 sources by
-priority. Incomplete P0 coverage does not block safe LoopX lifecycle work, but
-the caller must label the conclusion as partial or exact-read the missing
-authority through another path. Fail-open must not masquerade as complete
-context coverage.
+Assembly 还会输出 `decision_source_coverage_v0`。它把每个优先级的扫描状态、
+exact-read 完整度和未覆盖的 P0 source 投影为公开安全的回执。`P0 incomplete`
+不阻断安全的 LoopX lifecycle，但调用方必须显式标记结论为部分覆盖，或者先通过
+其他 authority 路径补齐 exact read；不能把 fail-open 误写成“所有关键上下文已检查”。
 
-## Four Auditable Outputs
+## 四类可审计产物
 
-| Output | Answers | Typical contents |
+| 产物 | 回答的问题 | 典型内容 |
 |---|---|---|
-| `decision_evidence_packet_v0` | What should the decision trust now? | Changed facts, accepted recall, stale/rejected claims, conflicts, revisions, provider health |
-| `decision_proposal_v0` | What should happen next? | Objective scores, recommendation, alternatives, actions, stop list |
-| `decision_review_receipt_v0` | What did the owner decide about the proposal? | Approve/reject/defer gate evidence, or an explicit quiet no-change settlement |
-| `decision_outcome_receipt_v0` | What happened after the decision? | Accepted decision, transitions, outcomes, invalidated assumptions, review time |
+| `decision_evidence_packet_v0` | 这次决策现在应该相信什么？ | changed facts、采纳的召回、过期/拒绝 claim、冲突、revision、provider health |
+| `decision_proposal_v0` | 下一步建议做什么？ | objective score、推荐决策、备选方案、行动、stop list |
+| `decision_review_receipt_v0` | Owner 如何处理这次建议？ | approve/reject/defer 的 gate 证据，或显式 quiet no-change settlement |
+| `decision_outcome_receipt_v0` | 决策之后实际发生了什么？ | 接受的决策、状态迁移、真实结果、失效假设、复核时间 |
 
-The evidence packet is intended to be deterministic and auditable. The
-proposal is explicitly advisory. The review receipt settles whether the source
-material has been consumed; it is not proof of a future outcome. The outcome
-receipt is append-only evidence; only a verified outcome may later become a
-Reward Memory candidate, and that candidate still follows Reward Memory review
-and activation.
+Evidence packet 尽量确定性和可审计；proposal 明确只是建议；review receipt
+只结算“这批材料是否已经处理”，不是未来 outcome 的证明。Outcome receipt 是
+追加式证据。只有经过验证的 outcome 才可能生成 Reward Memory candidate，而
+candidate 仍需走 Reward Memory 自己的 review 和 activation。
 
-## Typical Uses
+## 典型场景
 
-- Rebase a multi-week engineering or product decision against changed
-  repositories, documents, and owner communication.
-- Reject a previously recalled claim after an exact read shows that it is
-  stale.
-- Stop a planned action when the current source revision invalidates its
-  premise.
-- Keep a recurring decision review quiet when no material source changed.
-- Provide revision-bound evidence for another capability, such as Material
-  Lifecycle reranking.
+- 在多周工程或产品决策前，重新核对发生变化的仓库、文档和 owner 沟通。
+- 语义召回命中旧信息后，通过 exact read 将其明确拒绝。
+- 当前 source revision 推翻原前提时，停止已经规划的动作。
+- 周期性决策复核中没有实质变化时，保持 quiet、no-spend。
+- 给 Material Lifecycle 等其他 capability 提供带 revision 的排序证据。
 
-This capability is not needed for a one-off answer with one stable source.
+如果只是基于一个稳定信源回答一次性问题，通常不需要启用这项能力。
 
-## Available Surfaces
+## 当前可用入口
 
-Inspect the provider-neutral architecture:
+查看 provider-neutral 架构：
 
 ```bash
 loopx decision-context architecture --format json
 ```
 
-Prove the default-off route or inspect an explicitly enabled private profile:
+证明默认关闭，或检查显式启用的私有 profile：
 
 ```bash
 loopx decision-context inspect-profile \
@@ -139,7 +121,7 @@ loopx decision-context inspect-profile \
   --format json
 ```
 
-Project an enabled profile without accessing providers:
+在不访问 provider 的情况下生成公开安全的 source manifest：
 
 ```bash
 loopx decision-context source-manifest \
@@ -149,8 +131,8 @@ loopx decision-context source-manifest \
   --format json
 ```
 
-Recall one task or other provider scope without modifying the profile or
-entering the evidence-settlement workflow:
+一次性召回某个 task 或其他 provider scope，且不修改 profile、也不进入
+evidence settlement 流程：
 
 ```bash
 loopx decision-context recall-context \
@@ -158,32 +140,28 @@ loopx decision-context recall-context \
   --agent-id <agent-id> \
   --profile <ignored-private-profile.json> \
   --context-scope-ref 'host-session:codex:<thread-id>' \
-  --query '<specific private provider query>' \
-  --query-summary '<public-safe intent summary>' \
+  --query '<发送给 provider 的具体私有查询>' \
+  --query-summary '<公开安全的查询意图摘要>' \
   --format json
 ```
 
-The profile still gates the Goal, Agent, and provider, but the one-off scope is
-not persisted. The command does not scan authority sources, read or write
-cursors, create pending settlement, or grant execution authority. Its top-level
-output is explicitly `local_private_transient` because it contains the recalled
-text for the current agent. The nested retrieval receipt is public-safe and
-retains only the query summary, provider-safe summaries, scores, and hashed
-references. Each recalled item is marked `untrusted_advisory` and must never be
-treated as an instruction.
+Profile 仍负责 Goal、Agent 与 provider activation gate，但本次 scope 不落盘。
+该命令不扫描 authority source、不读写 cursor、不创建 pending settlement，也不授予
+execution authority。顶层输出显式标记为 `local_private_transient`，因为其中包含供当前
+Agent 使用的召回原文；嵌套 retrieval receipt 保持 public-safe，只保留查询摘要、
+provider-safe 摘要、分数与哈希引用。每个召回 item 都标记为
+`untrusted_advisory`，不得当作指令执行。
 
-Keeping this profile enabled does not make Obelisk a required LoopX
-dependency. If the selected extension is not installed, is disabled, or no
-longer has a current doctor proof, recall exits normally with
-`status=unavailable`, a typed `provider_readiness` receipt, and no provider
-scan or write. Do not remove or rewrite the profile just to recover the
-provider: install it, run
-`loopx extension enable <extension-id> --execute --format json`, or run
-`loopx extension doctor <extension-id> --execute --format json` according to
-`provider_readiness.next_action`. The next recall re-resolves lifecycle state
-and resumes automatically when the provider is ready.
+保持该 profile 启用，并不意味着 Obelisk 会变成 LoopX 的必需依赖。如果指定的
+extension 尚未安装、已禁用，或缺少当前有效的 doctor 证明，召回仍会正常退出，
+返回 `status=unavailable` 和类型化的 `provider_readiness` 回执，并且不会执行
+provider scan 或写入。恢复时无需删除或改写 profile：根据
+`provider_readiness.next_action` 安装 provider，执行
+`loopx extension enable <extension-id> --execute --format json`，或执行
+`loopx extension doctor <extension-id> --execute --format json`。下一次召回会重新解析
+extension lifecycle state，并在 provider ready 后自动恢复。
 
-Run bounded scans and exact reads without committing private cursors:
+执行有界 scan 和 exact read，但不提交私有 cursor：
 
 ```bash
 loopx decision-context prepare-evidence \
@@ -194,17 +172,15 @@ loopx decision-context prepare-evidence \
   --format json
 ```
 
-An optional extension can implement the existing advisory `ContextProvider`
-port. For example, `packages/loopx-obelisk` accepts a normalized
-`host-session:codex:<thread-id>` scope and retrieves bounded historical task
-messages through Obelisk's public CLI. The profile selects it with
-`context_provider.provider=extension`; `config.extension_id` may name the exact
-provider, otherwise exactly one enabled, doctor-ready implementation must be
-available. Provider failure remains fail-open, and raw recalled text never
-enters the public packet.
+可选 extension 可以实现现有 advisory `ContextProvider` 端口。例如，
+`packages/loopx-obelisk` 接受 normalized
+`host-session:codex:<thread-id>` scope，并通过 Obelisk 的公开 CLI 有界检索历史任务
+消息。Profile 通过 `context_provider.provider=extension` 选择该路径；
+`config.extension_id` 可以指定精确 provider，否则必须恰好存在一个 enabled 且
+doctor-ready 的实现。Provider 失败继续 fail open，原始召回文本不会进入公开 packet。
 
-`prepare-evidence` is deliberately read only. A domain adapter can provide a
-strict semantic rebase and persist an unapplied private checkpoint:
+`prepare-evidence` 刻意保持只读。领域 adapter 可以提交严格的语义 rebase，并把
+尚未应用的 cursor proposal 写入私有 pending checkpoint：
 
 ```bash
 loopx decision-context prepare-review \
@@ -218,9 +194,8 @@ loopx decision-context prepare-review \
   --format json
 ```
 
-After a proposal is decided through an existing `user_gate`, settle it with
-the exact gate event. The gate must use
-`decision_scope=direction:action:<proposal-packet-ref>`:
+Proposal 经现有 `user_gate` 决定后，用精确 gate event 结算；该 gate 必须使用
+`decision_scope=direction:action:<proposal-packet-ref>`：
 
 ```bash
 loopx decision-context settle-review \
@@ -239,20 +214,17 @@ loopx decision-context settle-review \
   --format json
 ```
 
-For an explicit semantic `no_change`, omit `--proposal-json` and
-`--source-event-id`; no user gate is created. Preview by omitting `--execute`.
-These commands write only the caller-selected private pending/cursor state and
-the existing local rollout event log. They grant no trading, external action,
-or other irreversible authority. Removing the private profile disables the
-route; removing the pending checkpoint abandons an unsettled review without
-changing active cursors.
+显式语义 `no_change` 不传 `--proposal-json` 和 `--source-event-id`，也不会创建
+user gate。去掉 `--execute` 即为预览。这些命令只写调用方指定的私有 pending/
+cursor 状态和现有本地 rollout event log，不授予交易、外部动作或其他不可逆权限。
+移除私有 profile 即关闭入口；删除尚未结算的 pending checkpoint 不会改变 active
+cursor。
 
-### Opt-in Source-Reference Capture
+### 显式启用来源变更采集
 
-Automatic capture is **default off**. Earlier profiles rejected every
-`automatic_capture=true`; it now means explicitly allowlisted **reference
-capture**, not automatic semantic review, raw-content archiving, or memory sync.
-Add these fields to an existing private profile's `automation` object:
+自动采集仍然**默认关闭**。此前 profile 拒绝所有 `automatic_capture=true`；
+现在它表示显式白名单内的**变更引用采集**，不表示自动审阅、正文归档或 memory 同步。
+在已有私有 profile 的 `automation` 对象中配置：
 
 ```json
 {
@@ -264,9 +236,8 @@ Add these fields to an existing private profile's `automation` object:
 }
 ```
 
-Every listed source must already be enabled, incremental, and exact-readable.
-On-demand sources are never enrolled implicitly. The same goal/agent activation
-checks apply. Preview does not call providers or create the spool:
+白名单只能包含已启用、支持 exact read 的 incremental source，不会隐式纳入
+on-demand 来源；goal/agent 的启用边界不变。先预览，再添加 `--execute` 执行一次：
 
 ```bash
 loopx decision-context capture --goal-id <goal-id> --agent-id <agent-id> \
@@ -274,23 +245,17 @@ loopx decision-context capture --goal-id <goal-id> --agent-id <agent-id> \
   --cursor-state <reviewed-cursors.json> --format json
 ```
 
-Add `--execute` for one tick. Use `capture-status` with the same arguments
-and without `--execute` for readback. Configure a host scheduler to invoke the
-tick; the capability enforces `interval_seconds`, while the host owns process
-startup, an outer process timeout, and stop/uninstall. No model heartbeat is
-created. Private integrations use `capture_profile_sources` from
-`loopx.capabilities.decision_context.capture` with existing
-`source_provider_overrides`; generic queue/configuration rules remain here.
+`capture-status` 使用相同参数但不带 `--execute`，只读回查。宿主负责定时调用、
+进程总超时和启动/卸载；capability 执行配置中的采集间隔，不创建模型 heartbeat。
+私有接入方调用 `loopx.capabilities.decision_context.capture` 中的
+`capture_profile_sources`，注入已有 `source_provider_overrides`，不用重写队列逻辑。
 
-The mode-0600 SQLite spool binds to one goal/agent and records bounded public-safe
-scan receipts plus **private replay cursors**. It contains no source bodies.
-Ticks are serialized; batch insertion and capture cursor advancement commit
-together. Failed scans keep their cursor, and capacity exhaustion reports
-`backpressure` without dropping pending batches. A changed source binding reports
-`binding_changed`, requiring an explicit rebase or a separately scoped new spool.
-Do not store the spool or its journal in a public repository.
+权限为 0600 的私有 SQLite spool 绑定单个 goal/agent，只保存有界 scan receipt
+和私有回放游标，不保存正文。采集事务串行执行，批次和采集游标一起提交；失败不前移
+游标，容量耗尽报 `backpressure` 而不丢弃待审阅批次。来源绑定变化报
+`binding_changed`，需显式 rebase 或启用独立新 spool。数据库及 journal 均不得公开。
 
-Consume each source's `next_batch_id` through a fresh bounded scan and exact read:
+每个来源从状态中的 `next_batch_id` 开始回读：
 
 ```bash
 loopx decision-context prepare-captured --goal-id <goal-id> --agent-id <agent-id> \
@@ -300,61 +265,55 @@ loopx decision-context prepare-captured --goal-id <goal-id> --agent-id <agent-id
   --pending-settlement <private-pending.json> --execute --format json
 ```
 
-A domain host can instead use `assemble_captured_decision_evidence` with a
-`rebase` callback to inspect transient exact content. Preparing evidence does
-not acknowledge a batch. Use the existing `settle-review` path above; a later
-capture tick retires only the oldest batch whose before/after cursors match a
-newly observed transition in the **settlement-owned reviewed cursor file**.
-Unchanged reviewed cursors never acknowledge later batches, including A→B→A
-source changes. Capture-owned observations are not review authority. Never
-substitute capture cursors for that file or manually manufacture reviewed cursors.
+宿主也可调用 `assemble_captured_decision_evidence`，由 `rebase` 回调读取瞬时正文。
+准备证据不代表消费完成；继续走上述 `settle-review`。后续采集只在新观察到的
+**既有 review settlement 写入的游标文件**变化，与最早批次的前后游标同时匹配时，
+清理该单个批次。未变化的审阅游标不能确认后续批次，包括 A→B→A 的来源变化。
+采集侧的观察记录不拥有审阅权，绝不把采集游标当作审阅游标，也不能手工伪造“已消费”。
 
-If several settlements occur between ticks, their intermediate transitions may
-be unobservable; ambiguous batches are retained, not inferred to be reviewed.
-An older spool without review observations is baselined without retiring rows.
-For either hold, reconcile against actual review evidence explicitly; if starting
-a new spool after a current-source rebase, retain the old spool as a private
-checkpoint. This conservative protocol does not promise automatic queue drainage
-after skipped review transitions.
+两次采集之间若发生多次 settlement，中间变化可能无法观察；有歧义的批次保留，
+不推断为已审阅。旧 spool 没有观察记录时，仅建立基线，不清理已有批次。
+这两类阻塞均需依据真实审阅证据显式核对；若在当前来源 rebase 后启用新 spool，
+旧 spool 仍须保留为私有检查点。本协议不保证跳过审阅变化后自动排空队列。
 
-This is a change-reference spool, **not a lossless source archive**. First-scan
-history, pagination, late edits, deletion visibility and deadlines remain provider
-contracts. Providers must support deterministic bounded replay; an unavailable
-captured revision raises a hold rather than reviewing substituted content. Use
-an explicit current-source rebase and ordinary reviewed settlement when historical
-replay is impossible. Capture health is not proof of complete decision coverage.
+这是变更引用队列，**不是无损历史归档**。首轮历史范围、分页、旧消息编辑/删除可见性、
+超时依然由 provider 保证。回读要求同一边界能确定性复现；历史版本已不可读时明确
+阻塞，不能拿新正文冒充旧证据。此时应显式读取当前来源并经普通 review settlement
+完成 rebase。采集健康不等于决策覆盖完整。
 
-To stop collection, set `automatic_capture=false` and unload the host scheduler.
-Existing reviewable batches remain private and can still be prepared. To roll
-back to an older release, also remove the three new automation fields; retain
-the spool as a private checkpoint rather than deleting unreviewed work.
+停用时设置 `automatic_capture=false` 并卸载宿主定时任务，已有私有批次仍可回读。
+回滚到旧版本还需移除新增的三个 automation 字段；保留 spool 作为私有检查点，
+不要删除尚未审阅的工作。验证：
 
-## Relationship To Other Capabilities
+```bash
+python3 -m pytest -q tests/capabilities/test_decision_context_capture.py
+```
 
-| Capability | Primary question | Relationship |
+## 与其他能力的关系
+
+| 能力 | 核心问题 | 与 Decision Context 的关系 |
 |---|---|---|
-| LoopX Core | What work is authorized and what is its lifecycle state? | Decision Context consumes Core truth and proposes through existing lifecycle contracts. |
-| Reward Memory | What verified experience should be reusable later? | Decision Context may consume reviewed memory; verified outcomes may create review candidates. |
-| Material Lifecycle | Which materials should be active, archived, rebuilt, or reranked? | Decision Context can supply revision-bound evidence; Material Lifecycle owns the material transition. |
-| Context provider | What prior context may be relevant? | Advisory recall only; every promoted claim still needs authority and exact-read checks. |
+| LoopX Core | 哪些工作已获授权，生命周期状态是什么？ | Decision Context 消费 Core truth，并通过现有生命周期契约提出动作。 |
+| Reward Memory | 哪些已验证经验值得以后复用？ | Decision Context 可消费经评审的 memory；verified outcome 可产生待评审 candidate。 |
+| Material Lifecycle | 哪些素材应活跃、归档、重建或重排？ | Decision Context 提供带 revision 的证据；Material Lifecycle 拥有素材迁移。 |
+| Context provider | 哪些历史上下文可能相关？ | 只负责 advisory recall；claim 仍需 authority 和 exact-read 校验。 |
 
-## Maturity And Adoption Boundary
+## 当前成熟度与接入边界
 
-The public capability currently ships its packet contracts, default-off
-activation profile, provider-neutral source contract, bounded evidence
-assembly, public-safe projections, owner-gated or quiet review settlement,
-private cursor commit, opt-in source-reference capture, and later validated
-outcome feedback.
+公开能力已经具备 packet 契约、默认关闭的 activation profile、
+provider-neutral source contract、有界 evidence assembly、公开安全投影、
+owner-gated 或 quiet review settlement、私有 cursor commit，以及后续经验证的
+outcome feedback，以及显式启用的来源变更引用采集。
 
-It is still marked **experimental**. A production integration must provide its
-own private source adapters, profile, authority policy, proposal logic, and
-validated lifecycle writeback. Public packets must never contain private
-locators, source bodies, raw chats, provider payloads, or credentials.
+它目前仍标记为 **experimental**。生产接入方需要提供自己的私有 source adapter、
+profile、authority policy、proposal logic 和经过验证的 lifecycle writeback。
+公开 packet 绝不能包含私有 locator、source body、原始聊天、provider payload
+或凭据。
 
-For implementation details and invariants, read the
-[Decision Context architecture contract](../../../docs/reference/protocols/decision-context-architecture-v0.md).
+更完整的实现细节和不变量见
+[Decision Context 架构协议](../../../docs/reference/protocols/decision-context-architecture-v0.zh-CN.md)。
 
-## Validate
+## 验证
 
 ```bash
 python3 examples/decision-context-contract-smoke.py
@@ -363,8 +322,7 @@ python3 -m pytest -q tests/test_decision_context_material.py
 python3 -m pytest -q tests/capabilities/test_decision_context_capture.py
 ```
 
-The contract smoke covers Decision Context packet and architecture readback.
-The walkthrough smoke feeds revision-bound evidence into a Material Lifecycle
-rerank preview, keeps stale/conflicting evidence visible, omits source bodies
-and private locators, and leaves apply/cursor commits as separate owner-gated
-actions.
+contract smoke 覆盖 Decision Context packet 与 architecture 回读；walkthrough smoke
+把带 revision 的证据喂进 Material Lifecycle rerank preview，保留过期/冲突证据可见，
+省略 source body 与私有 locator，并把 apply/cursor commit 留作独立 owner-gated
+动作。

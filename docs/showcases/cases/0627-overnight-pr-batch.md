@@ -1,27 +1,18 @@
-# 0627: Overnight PR Batch With Reviewable Control
+# 0627:带可审查控制的隔夜 PR 批处理
 
-## Summary
+> [English](0627-overnight-pr-batch.md)
 
-LoopX produced an overnight burst of public repository progress without turning
-the project into an unreadable pile of agent output. In the ten-hour public Git
-window from `2026-06-27 01:29 +08:00` to `2026-06-27 11:29 +08:00`, the public
-repository advanced by 22 merged commits touching 60 files, with 6695 insertions
-and 223 deletions.
+## 摘要
 
-This case is useful because the signal is PR-shaped and reviewable. The work
-landed as small slices across docs, state projection, issue-fix workflow,
-event-sourced state, benchmark launch contracts, status/quota smokes, and
-release/runtime guardrails. LoopX did not make a single giant change that a
-maintainer had to trust blindly.
+LoopX 在一个隔夜窗口里产出了一大批公共仓库进展,却没有把项目变成一堆不可读的 agent 输出。在从 `2026-06-27 01:29 +08:00` 到 `2026-06-27 11:29 +08:00` 的十小时公共 Git 窗口中,公共仓库通过 22 个合并 commit 推进,触及 60 个文件,包含 6695 行插入和 223 行删除。
 
-The public case deliberately uses merged Git history as the evidence floor. The
-operator-side note also tracked a larger contemporaneous PR queue, but this
-page only claims what the public repository can support.
+这个案例之所以有用,是因为信号是 PR 形态的、可审查的。这些工作以小切片落在文档、状态投影、问题修复工作流、事件溯源状态、基准启动契约、状态/配额 smoke 和发布/运行时护栏之间。LoopX 没有制造一个需要维护者盲目信任的巨大单一变更。
 
-## Public Repository Signal
+这个公开案例刻意把合并后的 Git 历史当作证据底线。操作者侧说明还跟踪了一个更大的同期 PR 队列,但本页只声明公共仓库能够支持的内容。
 
-The evidence window is anchored to public Git history and can be reproduced
-locally:
+## 公共仓库信号
+
+证据窗口锚定在公共 Git 历史,可以在本地复现:
 
 ```bash
 git log --since="2026-06-27T01:29:00+08:00" \
@@ -31,72 +22,51 @@ git log --since="2026-06-27T01:29:00+08:00" \
   --until="2026-06-27T11:29:00+08:00" --numstat
 ```
 
-| Signal | Value |
+| 信号 | 值 |
 | --- | --- |
-| Public evidence window | 2026-06-27 01:29 +08:00 to 2026-06-27 11:29 +08:00 |
-| Merged commits in window | 22 |
-| Unique files touched | 60 |
-| Public insertions / deletions | 6695 / 223 |
-| Commit messages with explicit PR numbers | 10 |
-| Evidence floor | Public Git history only |
+| 公共证据窗口 | 2026-06-27 01:29 +08:00 至 2026-06-27 11:29 +08:00 |
+| 窗口内合并 commit | 22 |
+| 涉及的唯一文件数 | 60 |
+| 公共 insertions / deletions | 6695 / 223 |
+| 带明确 PR 编号的 commit 消息 | 10 |
+| 证据底线 | 仅公共 Git 历史 |
 
-Representative merged slices in the window included:
+窗口内具有代表性的合并切片包括:
 
-- issue-fix workflow planning and command-pack guidance;
-- event-sourced LoopX state contracts, API, compaction, and downstream read
-  path checks;
-- Terminal-Bench and SkillsBench launch or prerequisite contracts;
-- status/quota performance budget and projection smokes;
-- rollout-state documentation and README workflow refinement;
-- agent-scope wait scheduler progression.
+- 问题修复工作流规划与 command-pack 指引;
+- 事件溯源的 LoopX 状态契约、API、压缩与下游读取路径检查;
+- Terminal-Bench 和 SkillsBench 启动或前置契约;
+- 状态/配额性能预算与投影 smoke;
+- rollout 状态文档与 README 工作流润色;
+- agent 作用域等待调度器的推进。
 
-## LoopX Behavior
+## LoopX 行为
 
-The product behavior was not "make more commits." The useful behavior was that
-high-throughput work stayed bounded and reviewable:
+产品行为不是"制造更多 commit"。有用的行为是高吞吐的工作保持有界且可审查:
 
-- each slice remained small enough to review as a PR or PR-sized commit;
-- public docs, examples, and runtime code moved together when the contract
-  changed;
-- focused smokes validated reusable control-plane behavior instead of
-  preserving raw run traces;
-- self-merge stayed limited to narrow validated changes;
-- broader review gates and handoffs remained visible instead of being hidden
-  behind the throughput number;
-- public/private boundary checks kept internal screenshots, local state, raw
-  logs, and private planning out of the repository.
+- 每个切片都小到可以作为 PR 或 PR 规模 commit 审查;
+- 契约变更时,公共文档、示例和运行时代码一起移动;
+- 聚焦 smoke 验证可复用的控制面行为,而不是保留原始运行轨迹;
+- self-merge 只限于狭窄的已验证变更;
+- 更宽的审查关卡与交接保持可见,而不是藏在吞吐数字背后;
+- 公共/私有边界检查把内部截图、本地状态、原始日志和私有规划挡在仓库之外。
 
-## User-Facing Value
+## 用户价值
 
-For an operator, this case shows a different shape of agent productivity:
-overnight progress can be high-throughput without becoming high-risk. The user
-can wake up to a batch of merged, reviewable public slices, while the control
-plane still records what changed, which validations ran, which gates remained,
-and which evidence is safe to publish.
+对操作者来说,这个案例展示了 agent 生产力的另一种形态:隔夜进展可以高吞吐而不高风险。用户醒来面对一批合并的、可审查的公共切片,同时控制面仍然记录什么变了、跑了哪些验证、留下了哪些关卡、以及哪些证据可以安全发布。
 
-For an agent-platform developer, the reusable pattern is a PR-scale work loop:
-LoopX keeps each lane tied to todo ownership, validation, review policy, and
-public evidence, so a long-running agent team can move quickly without relying
-on chat memory or private screenshots.
+对 agent 平台开发者来说,可复用模式是一套 PR 规模的工作 Loop:LoopX 让每条 lane 与 todo 所有权、验证、审查策略和公开证据挂钩,因此长程 agent 团队可以快速推进,而不依赖聊天记忆或私有截图。
 
-## Evidence Boundary
+## 证据边界
 
-This case intentionally excludes private workspace state, internal documents,
-screenshots, raw chats, local paths, raw benchmark logs, credentials, and any
-unpublished operator notes. The public evidence floor is Git history and the
-public repository surfaces it changed.
+这个案例刻意排除私有工作区状态、内部文档、截图、原始聊天、本地路径、原始基准日志、凭据和任何未公开的操作者笔记。公开证据底线是 Git 历史以及它改变的公共仓库界面。
 
-The 22-commit window is not a universal productivity benchmark. It is a
-showcase of reviewable control-plane throughput in one public repository at one
-point in time. Future versions can strengthen the case by linking each public
-PR number to its validation evidence and review outcome.
+这个 22-commit 窗口不是通用生产力基准。它是某个时间点、某个公共仓库中可审查控制面吞吐的实例展示。未来版本可以通过把每个公开 PR 编号链接到其验证证据与审查结果来强化本案例。
 
-## Public Evidence Sequence
+## 公开证据序列
 
-1. A long-running LoopX project enters an overnight autonomous work window.
-2. Many small slices land across runtime, docs, benchmark contracts, smokes, and
-   state projection.
-3. LoopX keeps each slice tied to todo ownership, validation, and review policy.
-4. The operator sees public Git evidence instead of raw agent logs.
-5. The evidence boundary keeps private screenshots and internal planning out of
-   the showcase.
+1. 一个长程 LoopX 项目进入隔夜自主工作窗口。
+2. 许多小切片落在运行时、文档、基准契约、smoke 和状态投影之间。
+3. LoopX 让每个切片与 todo 所有权、验证和审查策略挂钩。
+4. 操作者看到公开 Git 证据,而不是原始 agent 日志。
+5. 证据边界把私有截图和内部规划挡在案例展示之外。

@@ -1,185 +1,150 @@
-# LoopX Brand Guide For External Use
+# LoopX 对外品牌使用指南
 
-> [简体中文](brand-guide.zh-CN.md)
+> [English](brand-guide.md)
 
-This guide is for open-source projects, commercial companies, users, writers,
-and event organizers that want to mention LoopX, describe an integration, or
-show the LoopX name or artwork. It is practical project guidance, not legal
-advice. The separate [Name And Marks](trademarks.md) page records the current
-project position on names and marks.
+这份指南面向希望提及 LoopX、描述集成、展示 LoopX 名称或图形的开源项目、商业公司、
+用户、作者和活动组织者。它是项目层面的实务指引，不是法律意见；名称和标识的当前
+项目立场仍见[名称与标识使用说明](trademarks.md)。
 
-The short rule is: identify LoopX accurately, identify your own product clearly,
-and never make a reader infer sponsorship, certification, partnership, or an
-official release where none exists.
+最短规则是：准确介绍 LoopX，清楚介绍自己的产品，并且不要让读者在没有依据时误以为
+存在赞助、认证、合作、背书或官方发行关系。
 
-## 1. What LoopX Is
+## 1. LoopX 是什么
 
-Use this description as a factual starting point:
+对外介绍可以从这段事实性描述开始：
 
-> LoopX is an open, provider-neutral, local-first dynamic goal control plane
-> for long-running agent work. It keeps goals, todos, decision scope, gates,
-> evidence, quota, handoff, and recovery legible across bounded turns.
+> LoopX 是一个开放、provider-neutral、local-first 的长程 Agent 动态目标控制面。
+> 它让 goal、todo、decision scope、gate、evidence、quota、handoff 和 recovery
+> 在有界 turn 之间保持可见。
 
-LoopX runs on top of agent harnesses. The harness or application still executes
-the work; LoopX keeps the control state reviewable and recoverable.
+LoopX 运行在 agent harness 之上。harness 或应用继续执行工作；LoopX 负责让控制状态
+可审阅、可恢复。
 
-Do not describe LoopX as a model, an agent runtime, a complete agent platform,
-or an autonomous production controller. LoopX does not grant credentials,
-approve destructive or production actions, or turn an unverified run into proof
-of success.
+不要把 LoopX 描述成模型、agent runtime、完整 agent platform 或自治生产控制器。LoopX
+不授予 credential，不批准 destructive 或 production action，也不会把未经验证的运行
+变成成功证明。
 
-## 2. Choose The Relationship Words First
+## 2. 先选择关系表述
 
-Choose the narrowest relationship that your public implementation and evidence
-support:
+根据公开实现和证据，选择最窄的关系词：
 
-| If your project or product… | Say… | Do not imply… |
+| 你的项目或产品… | 可以说… | 不要暗示… |
 | --- | --- | --- |
-| links to or discusses LoopX | “mentions LoopX” or “documents LoopX” | an integration or endorsement |
-| calls a public LoopX command or contract | “uses LoopX” | that LoopX operates your service |
-| exchanges state through a maintained adapter | “integrates with LoopX” | that the adapter is an official product |
-| adds a provider or extension around LoopX | “extends LoopX” | that the extension is maintained by LoopX |
-| is a modified distribution | “a fork of LoopX” or “based on LoopX” | that it is an official LoopX release |
-| is only exploring an idea | “proposed” or “experimental” | shipped compatibility |
+| 链接或讨论 LoopX | “提到 LoopX”或“记录 LoopX” | 已经集成或获得背书 |
+| 调用公开的 LoopX 命令或契约 | “使用 LoopX” | LoopX 在运营你的服务 |
+| 通过维护中的 adapter 交换状态 | “集成 LoopX” | adapter 是 LoopX 官方产品 |
+| 在 LoopX 周围增加 provider 或 extension | “扩展 LoopX” | extension 由 LoopX 维护 |
+| 是修改版发行 | “LoopX 的 fork”或“基于 LoopX” | 是官方 LoopX 发行版 |
+| 仍在探索想法 | “proposed”或“experimental” | 已交付兼容能力 |
 
-Only use “official LoopX”, “certified by LoopX”, “LoopX partner”, or similar
-language when a maintainer has explicitly authorized that wording for the
-specific surface and version.
+只有维护者针对具体表面和版本明确授权时，才使用“LoopX 官方”“LoopX 认证”“LoopX
+合作伙伴”等表述。
 
-## 3. Name And Package Usage
+## 3. 名称、包名和产品身份
 
-- Write the project name as **LoopX**. Do not write `Loop X`, `loop-x`, or use
-  an unqualified “autonomous agent platform” as a substitute.
-- A project, company, hosted service, package, domain, or social account that
-  is not operated by LoopX should not use `LoopX` as its primary identity in a
-  way that looks official.
-- Descriptive names such as `acme-loopx-adapter` may explain a real
-  integration, but the surrounding page must identify Acme as the operator and
-  must not use “official” or equivalent language.
-- A fork or materially modified distribution should have its own primary name;
-  state the LoopX relationship in a secondary description instead.
-- Keep the exact project name and relationship visible in titles, package
-  descriptions, directory listings, and social profile bios rather than hiding
-  it in a badge or footer.
+- 项目名称写作 **LoopX**。不要写成 `Loop X`、`loop-x`，也不要用没有边界的“自治
+  Agent 平台”替代项目名。
+- 不由 LoopX 运营的项目、公司、托管服务、package、domain 或社交账号，不应把
+  `LoopX` 作为主要身份使用到看起来像官方表面的程度。
+- `acme-loopx-adapter` 这类描述真实集成关系的名称可以解释用途，但周边页面必须清楚
+  写明 Acme 是运营者，并且不能使用“官方”等同义表述。
+- fork 或实质修改后的发行版应有自己的主要名称，把与 LoopX 的关系放在次要描述中。
+- 在标题、package 描述、目录条目和社交简介中直接写清项目名称和关系，不要只藏在 badge
+  或页脚里。
 
-## 4. Logo And Artwork
+## 4. Logo 与图形素材
 
-The repository's current public artwork is available under [`docs/assets/`](../assets/),
-including [`loopx-logo.png`](../assets/loopx-logo.png), the social preview, and
-control-plane diagrams.
+仓库当前的公开素材在 [`docs/assets/`](../assets/)，包括
+[`loopx-logo.png`](../assets/loopx-logo.png)、social preview 和 control-plane 图表。
 
-When showing a mark or screenshot:
+展示标识或截图时：
 
-- preserve the artwork, aspect ratio, and readable contrast;
-- keep enough surrounding space that the mark is not mistaken for your own
-  product mark;
-- link the surrounding reference to the official LoopX repository or docs;
-- identify your product as the operator when the mark appears on an integration
-  page, hosted service, or commercial product page.
+- 保留原图、比例和可读对比度；
+- 留出足够周边空间，避免读者把标识误认成你自己的产品标识；
+- 在周边引用中链接官方 LoopX 仓库或文档；
+- 在集成页、托管服务页或商业产品页上展示标识时，明确写出你的产品和运营者。
 
-Do not redraw, distort, recolor, crop into a new logo, animate, combine, or
-place the mark in a way that makes your offering look like an official LoopX
-surface. Do not use a LoopX mark as the favicon, app icon, or primary avatar of
-an unrelated product without maintainer permission.
+不要重绘、拉伸、改色、裁切成新 logo、动画化，也不要以让产品看起来像 LoopX 官方表面的
+方式组合标识。未经维护者许可，不要把 LoopX 标识用作无关产品的 favicon、app icon 或
+主要头像。
 
-If the supplied artwork does not fit your layout, use the word **LoopX** in
-plain text and link to the project rather than inventing a replacement mark.
+如果现有素材不适合布局，使用纯文本 **LoopX** 并链接项目，不要自行发明替代 logo。
 
-## 5. Guidance For Common External Surfaces
+## 5. 常见对外表面
 
-### Open-source README or documentation
+### 开源 README 或文档
 
-Good:
+可以这样写：
 
-> Acme Relay integrates with LoopX to persist bounded goal state. Acme Relay
-> is an independent project; see the integration guide and the LoopX project.
+> Acme Relay 集成 LoopX 以持久化有界 goal state。Acme Relay 是独立项目；详见集成
+> 指南和 LoopX 项目。
 
-Include the relevant version, adapter, or command when the claim is version
-specific. A “works with LoopX” badge must link to a page that explains what is
-actually exercised; a badge is not proof of certification.
+如果能力依赖版本、adapter 或命令，写出具体边界。`works with LoopX` badge 应链接到
+解释实际测试内容的页面；badge 不是认证证明。
 
-### Commercial product or hosted service
+### 商业产品或托管服务
 
-Name the company and service as the primary product. Explain what the service
-does with LoopX and who operates it. “Acme Cloud integrates with LoopX” is
-clearer than “LoopX Cloud” when LoopX does not operate the service.
+把公司和服务作为主要产品来命名，说明服务如何使用 LoopX 以及谁负责运营。“Acme Cloud
+集成 LoopX”比“LoopX Cloud”更清楚，后者会让人误以为服务由 LoopX 运营。
 
-Do not use LoopX in a pricing tier, domain, account name, or sales headline in a
-way that suggests the service is hosted, sold, or supported by the LoopX
-project. Do not claim a partnership merely because an API or adapter exists.
+不要在定价层级、domain、账号名称或销售标题中使用 LoopX 到让人误以为服务由 LoopX 托管、
+销售或支持的程度。仅有 API 或 adapter 并不等于合作伙伴关系。
 
-### Fork, plugin, extension, or distribution
+### Fork、plugin、extension 或发行版
 
-Give the distribution a distinct primary name and describe the relationship:
-“Acme Flow, a fork of LoopX” or “Acme Flow, an extension for LoopX.” Preserve
-the notices required by the applicable software license. Make material changes,
-support boundaries, and the absence of LoopX endorsement clear.
+给发行版一个独立的主要名称并写清关系，例如“Acme Flow，LoopX 的 fork”或“Acme Flow，
+LoopX 的 extension”。保留适用软件许可证要求的 notices，说明修改、支持边界以及没有
+LoopX 背书这一事实。
 
-### Blog, talk, benchmark, or comparison
+### 博客、演讲、benchmark 或比较文章
 
-Use LoopX to identify the subject accurately. Attribute measurements to the
-specific public setup, version, and evidence. Do not turn a single demo, star
-count, benchmark row, or user report into a claim that LoopX universally
-delivers the result.
+准确使用 LoopX 作为被讨论对象。把测量结果归因到具体的公开 setup、版本和证据。不要
+把一次 demo、star 数、benchmark 行或用户报告写成 LoopX 普遍都会得到的结果。
 
-## 6. Co-branding, Campaigns, And Official-looking Uses
+## 6. 联合品牌、活动和看起来官方的使用
 
-Ask maintainers before launch if a use involves any of the following:
+如果使用涉及以下情况，请在发布前向维护者询问：
 
-- a joint logo, “official” integration badge, certification, or partner mark;
-- a hosted service, paid offering, conference track, or campaign whose name
-  prominently includes LoopX;
-- a package, domain, social account, or app icon that could be confused with a
-  LoopX-operated surface;
-- a press quote, launch copy, or compatibility statement presented as a LoopX
-  announcement;
-- a modified distribution whose visual identity closely follows the LoopX
-  project identity.
+- 联合 logo、“官方”集成 badge、认证或 partner 标识；
+- 托管服务、付费产品、会议板块或活动，其名称显著包含 LoopX；
+- 可能被误认成 LoopX 运营表面的 package、domain、社交账号或 app icon；
+- 以 LoopX 公告形式发布的 press quote、launch 文案或兼容性声明；
+- 视觉身份高度接近 LoopX 项目的修改版发行。
 
-Open a focused GitHub issue with the proposed wording, surface, and relevant
-version. Do not put credentials, private evidence, embargoed security details,
-or private business arrangements in the issue.
+请开一个聚焦的 GitHub issue，写明拟用文案、使用表面和相关版本。不要在 issue 中放
+credential、私有证据、未公开的安全细节或私下商业安排。
 
-## 7. ADOPTERS And Public Attribution
+## 7. ADOPTERS 与公开归因
 
-Projects and users may voluntarily add a public, self-attested entry to
-[`ADOPTERS.md`](../../ADOPTERS.md). The directory records what the submitter
-claims to use, not what LoopX certifies or endorses. Choose an adoption mode,
-state whether it is active or experimental, link to public evidence, and avoid
-private or unverifiable claims.
+项目和用户可以自愿在 [`ADOPTERS.md`](../../ADOPTERS.md) 添加公开、自报的条目。该目录
+记录提交者声称使用了什么，不代表 LoopX 认证或背书。选择 adoption mode，说明 active
+还是 experimental，链接公开证据，并避免私有或无法核验的声明。
 
-The maintainer-observed [ecosystem adoption inventory](../community/ecosystem-adoption.md)
-is a different record. Do not copy an observation into `ADOPTERS.md` without a
-voluntary owner or user submission.
+维护者观察到的[生态采用清单](../community/ecosystem-adoption.zh-CN.md)是另一份记录。没有
+项目或用户自愿提交，不要把观察内容复制进 `ADOPTERS.md`。
 
-## 8. Attribution And Claim Hygiene
+## 8. 归因与声明卫生
 
-For any external reference:
+每次对外引用都应：
 
-1. Link **LoopX** to the canonical repository or the relevant versioned docs.
-2. Name the external project's operator and support boundary.
-3. Say which command, adapter, release, or public behavior was used.
-4. Label the claim as shipped, observed, reported, or proposed when the
-   distinction matters.
-5. Say what the evidence does not establish; in particular, do not imply
-   endorsement or universal capability.
+1. 把 **LoopX** 链接到规范仓库或对应版本文档；
+2. 写出外部项目的运营者和支持边界；
+3. 说明使用了哪个 command、adapter、release 或公开行为；
+4. 在有必要时标记 shipped、observed、reported 或 proposed；
+5. 说明证据没有证明什么，尤其不要暗示背书或普遍能力。
 
-The Apache and historical MIT license files cover the code and documentation
-under their terms. They do not turn a third-party product into an official
-LoopX product or grant permission to misrepresent project identity.
+Apache 和历史 MIT license 按各自条款覆盖代码和文档。它们不会把第三方产品变成官方
+LoopX 产品，也不授予误述项目身份的许可。
 
-## 9. Quick Review Checklist
+## 9. 快速检查清单
 
-Before publishing a page, package, launch, or visual that mentions LoopX:
+发布提及 LoopX 的页面、package、launch 或视觉素材前，检查：
 
-- Is **LoopX** spelled and linked correctly?
-- Is the external operator or author unmistakable?
-- Is the relationship word supported by the implementation and evidence?
-- Is the version, adapter, or tested surface named where relevant?
-- Could a reader mistake the page, package, logo, or service for an official
-  LoopX offering?
-- Does the copy avoid certification, sponsorship, partnership, or endorsement
-  language unless explicitly authorized?
-- Are screenshots, user data, private paths, and raw runs public-safe?
-- If the use is ambiguous, has a focused maintainer question been opened before
-  launch?
+- **LoopX** 是否拼写正确并正确链接？
+- 外部运营者或作者是否一眼可见？
+- 关系词是否由实现和证据支持？
+- 相关时是否写明版本、adapter 或测试表面？
+- 页面、package、logo 或服务是否可能被误认为 LoopX 官方提供？
+- 未经明确授权，是否避免了认证、赞助、合作、背书等表述？
+- 截图、用户数据、私有路径和 raw run 是否 public-safe？
+- 如果使用有歧义，是否已在发布前开聚焦的维护者询问？

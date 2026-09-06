@@ -1,48 +1,33 @@
-# Frontstage Channel And Lease Roadmap
+# Frontstage Channel 与 Lease 路线图
 
-LoopX should not become a chat product. Its durable value is the
-backstage control plane: registry, active state, append-only event history,
-quota, gates, leases, and auditable recovery. The missing product layer is a
-frontstage projection that lets people understand and coordinate that control
-plane without reading raw CLI dumps.
+> [English](frontstage-channel-lease-roadmap.md)
 
-This note frames the product direction as:
+LoopX 不应该变成一个聊天产品。它的持久价值在 backstage 控制面：registry、活跃状态、append-only 事件历史、quota、gates、leases 与可审计恢复。缺失的产品层是 frontstage 投影，让人在不读原始 CLI 转储的情况下理解和协调该控制面。
+
+本说明把产品方向表述为：
 
 ```text
 frontstage channel UX + backstage LoopX ledger
 ```
 
-The channel is a view. The ledger is truth.
+Channel 是视图。Ledger 是 truth。
 
-## Product Boundary
+## 产品边界
 
-LoopX should borrow collaboration language without moving the source of
-truth into chat history:
+LoopX 应该借用协作语言，但把事实源留出聊天历史：
 
-- A **goal can project as a channel**: one timeline with latest state, next
-  action, user todos, agent todos, gates, artifacts, quota, and run events.
-- An **agent can project as a workspace member**: controller, executor,
-  reviewer, monitor, critic, or dreaming/planning proposer, each with scope and
-  last action.
-- A **task claim is a soft per-todo route by default**. When a concrete
-  contention case needs exclusivity, an optional hard lease adds TTL, write
-  scope, idempotency, and conflict handling for one `todo_id`.
-- A **chat or channel thread is a projection**: useful for human collaboration,
-  but never the only durable authority.
+- **Goal 可以投影成 channel**：一条时间线，包含最新状态、下一个动作、user todos、agent todos、gates、artifacts、quota 与 run 事件。
+- **Agent 可以投影成 workspace 成员**：controller、executor、reviewer、monitor、critic 或 dreaming/规划提案者，各有 scope 与最后动作。
+- **任务 claim 默认为每 todo 的软路由**。当具体争用案例需要排他性时，可选的硬 lease 为一个 `todo_id` 增加 TTL、写范围、幂等性与冲突处理。
+- **聊天或 channel 线程是投影**：对人类协作有用，但绝不是唯一的持久 authority。
 
-The key product lesson is not "add Slack-like chat". It is that humans think in
-channels, members, tasks, and approvals, while agents need registry, state,
-history, quota, gates, and leases.
+关键产品教训不是"加 Slack 式聊天"。而是：人类以 channel、成员、任务与审批思考，而 agent 需要 registry、状态、历史、quota、gates 与 leases。
 
-## Minimal Schemas
+## 最小 Schema
 
 ### `goal_channel_projection_v0`
 
-This is a read-only, human-facing projection over existing LoopX state.
-It lets a frontstage render a goal as a channel without making the channel a
-new source of truth. The append-only run ledger, active state, and registry
-remain authoritative; the projection only carries compact source references and
-freshness metadata.
+这是对既有 LoopX 状态的只读、面向人的投影。它让 frontstage 把 goal 渲染成 channel，而不让 channel 成为新的事实源。Append-only run ledger、活跃状态与 registry 保持权威；投影只携带紧凑来源引用与新鲜度元数据。
 
 ```json
 {
@@ -120,61 +105,40 @@ freshness metadata.
 }
 ```
 
-The v0 source map should stay boring and inspectable:
+v0 来源映射应保持平淡且可检查：
 
-| Projection field | Source surface |
+| 投影字段 | 来源 surface |
 | --- | --- |
-| `goal_id`, `display_name`, `waiting_on`, `latest_status` | `loopx status` project asset and registry metadata |
-| `next_action`, `user_todos`, `agent_todos`, `open_gates` | active state todo/gate sections plus `review-packet` summaries |
-| `decision_frame` | `interaction_contract` from `quota should-run` and review-packet routing |
-| `quota` | `quota should-run`, including the spend policy and capability/workspace guards when present |
-| `artifacts` | public-safe docs, compact run artifacts, review packets, or showcase assets already allowed by `goal_boundary` |
-| `active_leases` | current soft claims and explicitly supplied optional `task_lease_v0` rows |
-| `recent_events` | compact run-history rows only, not raw logs or transcripts |
-| `source_warnings` | stale state, todo projection gaps, private-boundary omissions, or missing authority sources |
+| `goal_id`、`display_name`、`waiting_on`、`latest_status` | `loopx status` 项目资产与 registry 元数据 |
+| `next_action`、`user_todos`、`agent_todos`、`open_gates` | 活跃状态 todo/gate 区块加上 `review-packet` 摘要 |
+| `decision_frame` | 来自 `quota should-run` 的 `interaction_contract` 与 review-packet 路由 |
+| `quota` | `quota should-run`，含 spend policy 与引入时的 capability/workspace guard |
+| `artifacts` | 已由 `goal_boundary` 允许的 public-safe 文档、紧凑 run artifacts、review packets 或 showcase 资产 |
+| `active_leases` | 当前软 claim 与显式提供的可选 `task_lease_v0` 行 |
+| `recent_events` | 仅紧凑 run-history 行，不是原始日志或 transcript |
+| `source_warnings` | 过期状态、todo 投影缺口、私有边界遗漏或缺失 authority 来源 |
 
-The projection must exclude raw chat transcripts, raw benchmark task text, raw
-trajectories, credentials, production logs, private document URLs, local
-absolute paths, and write-capable commands. If a useful frontstage field would
-need one of those sources, emit a compact `source_warnings` item instead of
-copying the raw material.
+投影必须排除原始聊天 transcript、原始 benchmark 任务文本、原始轨迹、凭据、生产日志、私有文档 URL、本地绝对路径与可写命令。如果某个有用 frontstage 字段需要上述来源之一，就输出一个紧凑 `source_warnings` 项，而不是复制原始材料。
 
-Frontstage consumers should treat this as an input snapshot:
+Frontstage 消费方应把它当作输入快照：
 
-- refresh it from LoopX rather than editing it in the UI;
-- render controlled actions as links to CLI/review-packet flows, not as hidden
-  write authority;
-- show stale or missing-source warnings near the affected card;
-- keep event detail drill-downs tied to compact run artifacts; and
-- never let the channel view override `goal_boundary`, operator gates, quota,
-  required capabilities, workspace guards, or task leases.
+- 从 LoopX 刷新它，而不是在 UI 中编辑；
+- 把受控动作渲染为指向 CLI/review-packet 流程的链接，而不是隐藏的写 authority；
+- 在受影响的卡片附近显示过期或缺失来源警告；
+- 保持事件详情下钻绑定到紧凑 run artifacts；以及
+- 绝不让 channel 视图覆盖 `goal_boundary`、operator gates、quota、必需 capability、workspace guard 或 task leases。
 
-The first product-path read model lives in
-`loopx/control_plane/goals/goal_channel_projection.py` and is covered by
-`examples/project/goal-channel-projection-smoke.py` plus
-`examples/project/goal-channel-frontstage-fixture-smoke.py`. It intentionally
-stays read-only: callers pass already-compact status, quota, run-history,
-review-packet, artifact, and lease/claim payloads; the builder emits
-`source_warnings` when raw or private-looking fields appear instead of copying
-those values into the channel. The static HTML renderer in
-`loopx/presentation/renderers/goal_channel_html.py` and fixture in
-`examples/goal-channel-frontstage-fixture.py` renders that projection into
-semantic panels with `data-panel` markers, no write controls, and a visible
-truth contract. `loopx --format json status` and the loopback
-`serve-status` feed now expose the same read-only projection on
-`attention_queue.items[].goal_channel_projection`, so a dashboard can render the
-channel without recomputing project truth.
+首个产品路径读模型位于
+`loopx/control_plane/goals/goal_channel_projection.py`，由 `examples/project/goal-channel-projection-smoke.py` 与 `examples/project/goal-channel-frontstage-fixture-smoke.py` 覆盖。它有意保持只读：调用方传入已经紧凑的 status、quota、run-history、review-packet、artifact 与 lease/claim 载荷；构建器在出现原始或疑似私有字段时发出 `source_warnings`，而不是把这些值复制进 channel。`loopx/presentation/renderers/goal_channel_html.py` 中的静态 HTML 渲染器与 `examples/goal-channel-frontstage-fixture.py` 中的夹具把这个投影渲染成语义面板，带 `data-panel` 标记、无写控件，以及可见的 truth 契约。`loopx --format json status` 与 loopback
+`serve-status` feed 现在在 `attention_queue.items[].goal_channel_projection` 上暴露同一只读投影，让 dashboard 无需重算项目 truth 就能渲染 channel。
 
-### `agent_profile_v1` And `agent_member_v1`
+### `agent_profile_v1` 与 `agent_member_v1`
 
-The registry-owned `agent_profile_v1` contract is defined in
-[`docs/product/foundations/agent-profile-contract.md`](../foundations/agent-profile-contract.md).
-Use it as the source of truth for registered agent id and advisory capability,
-scope, and action preferences. Runtime authority still comes from peer identity,
-task claims/leases, boundaries, repository policy, and explicit continuation policy.
-The channel roadmap only needs the read-only member projection.
+由 registry 拥有的 `agent_profile_v1` 契约定义在
+[`docs/product/foundations/agent-profile-contract.md`](../foundations/agent-profile-contract.md)。
+用它作为注册 agent id 与建议性 capability、scope、动作偏好的事实源。Runtime authority 仍来自 peer 身份、任务 claim/lease、边界、仓库策略与显式延续策略。Channel 路线图只需要只读成员投影。
 
-This is an identity and activity projection for an actor participating in a goal:
+这是参与某 goal 的行动者的身份与活动投影：
 
 ```json
 {
@@ -190,27 +154,13 @@ This is an identity and activity projection for an actor participating in a goal
 }
 ```
 
-Profile roles should stay product-level and portable: executor, reviewer,
-monitor, critic, dreaming proposer. They guide UI copy and discovery, not
-identity rank or default permission. Concrete authority comes from
-`goal_boundary`, claims/leases, typed task policy, and active-state todos.
+Profile role 应保持在产品级且可移植：executor、reviewer、monitor、critic、dreaming proposer。它们引导 UI 文案与发现，而不是身份排名或默认权限。具体 authority 来自 `goal_boundary`、claims/leases、类型化任务策略与活跃状态 todos。
 
 ### `task_lease_v0`
 
-This optional local file-backed concurrency contract is shipped through
-`loopx task-lease acquire|renew|transfer|release|inspect`. It does not replace
-the default soft `claimed_by` route or participate in quota decisions. The
-pending key is per todo: `(goal_id, todo_id)`. Do not serialize an entire
-goal just because one todo is claimed; independent todos under the same goal
-should remain independently claimable when gates and write scopes allow it.
-LoopX does not have a separate issue object in this runtime model:
-`goal_id` names the control-plane boundary, and `todo_id` names the work item
-inside that boundary.
-The peer control plane keeps assignment explicit: `claimed_by` or a task lease
-owns one todo, and repository-writing peers use isolated worktrees when task or
-goal policy requires it. A small AGENTS-eligible change may self-merge with
-evidence; otherwise completion creates an independent successor or an explicit
-review action over an independent handoff, optionally excluding the author.
+这个可选的文件支撑本地并发契约通过 `loopx task-lease acquire|renew|transfer|release|inspect` 发布。它不替换默认软 `claimed_by` 路由，也不参与 quota 决策。PENDING 键按 todo：`(goal_id, todo_id)`。不要因为一个 todo 被 claim 就序列化整个 goal；当 gates 与写范围允许时，同一 goal 下相互独立的 todos 应保持可独立认领。
+在这个 runtime 模型中，LoopX 没有单独的 issue 对象：`goal_id` 命名控制面边界，`todo_id` 命名该边界内的工作项。
+Peer 控制面保持显式指派：`claimed_by` 或 task lease 拥有一个 todo，而写仓库的 peers 在任务或 goal 策略要求时使用隔离 worktree。小到符合 AGENTS 的变更可以在有 evidence 时自合入；否则完成会创建一个独立后继，或在独立交接上创建显式评审动作，可选排除作者。
 
 ```json
 {
@@ -229,76 +179,41 @@ review action over an independent handoff, optionally excluding the author.
 }
 ```
 
-The current implementation is local and file-backed, with per-goal locking,
-renewal, transfer, release, registered-owner validation, and stale-owner
-invalidation. A concrete same-agent/multi-process completion race established
-the first lifecycle adoption case: while a lease is effective, `todo complete`
-must present the acquire idempotency key and current version, and holds the
-lease lock through Todo and successor writeback. The pair fences execution
-instances that share one registered `agent_id`; renew, transfer, release, and
-terminal writeback all require the current version. `lease_epoch` is the
-authority-owned generation: acquire and transfer advance it, while ordinary
-renewal only advances `version`.
+当前实现是本地、文件支撑的，带按 goal 的锁、续期、转移、释放、注册 owner 校验与过期 owner 失效。一个具体的同 agent/多进程完成竞态确立了第一个生命周期采用案例：lease 生效时，`todo complete` 必须呈现获取时的幂等键与当前版本，并在 Todo 与后继写回期间持有 lease 锁。这对组合围栏住共享同一注册 `agent_id` 的执行实例；续期、转移、释放与终端写回都要求当前版本。`lease_epoch` 是 authority 拥有的代际：acquire 与 transfer 推进它，而普通续期只推进 `version`。
 
-Release and committed terminal writeback retain an inactive `status=released`
-record at the same per-todo path. This single-record tombstone preserves the
-last version and epoch, so re-acquire cannot reset to version 1. Reusing the
-just-retired execution key is rejected; a new execution key receives the next
-version and epoch. Active-lease projections ignore the tombstone, while exact
-release retries return its original terminal result. A completed Todo remains
-terminal-idempotent, so a stale replay cannot append a second successor after
-the canonical completion commits. A later server can own the same schema and
-coordination surface.
-Conflicts should be detected by `(goal_id, todo_id)` plus overlapping
-write-scope checks: another agent may claim a different todo in the same goal,
-but a second pending claim on the same todo must fail closed, renew, or
-explicitly transfer ownership.
+释放与已提交的终端写回在同一 per-todo 路径保留非活跃的 `status=released` 记录。这个单记录墓碑保留最后版本与代际，所以重新获取不能重置到版本 1。复用刚退役的执行键会被拒绝；新执行键接收下一个版本与代际。Active-lease 投影忽略墓碑，而精确的释放重试返回其原始终端结果。已完成的 Todo 保持终端幂等，所以过期回放不能在规范完成提交后再追加第二个后继。将来的 server 可以拥有相同 schema 与协调 surface。
+冲突应当通过 `(goal_id, todo_id)` 加重叠写范围检查检测：另一 agent 可以认领同一 goal 中的不同 todo，但对同一 todo 的第二个 pending claim 必须 fail closed、续期或显式转移所有权。
 
-## Priority
+## 优先级
 
-P1:
+P1：
 
-- Keep the shipped optional `task_lease_v0` runtime, lifecycle fence, and
-  conflict smoke stable. The proven same-agent completion race justifies
-  fencing `todo complete` when a lease is active; do not turn lease acquisition
-  into a default quota gate.
-- Treat the shipped React `/frontstage` route as the baseline
-  `goal_channel_projection_v0` reader. Future work should polish visual
-  acceptance, operator onboarding, and local fixture realism while preserving
-  the invariant that the CLI/status export is the source and the browser has no
-  write authority.
+- 保持已发布的可选 `task_lease_v0` runtime、生命周期围栏与冲突冒烟稳定。已验证的同 agent 完成竞态证明 lease 生效时围栏 `todo complete` 的必要性；不要默认把 lease 获取变成 quota gate。
+- 把已发布的 React `/frontstage` 路由当作基线 `goal_channel_projection_v0` 读取器。未来工作应打磨视觉验收、operator onboarding 与本地夹具真实性，同时保持"CLI/status 导出是来源、浏览器无写权限"的不变量。
 
-P2:
+P2：
 
-- Decide whether active hard-lease rows should join the existing agent-member
-  status/review projection after an adoption case proves the extra signal useful.
-- Build a Raft-style local frontstage view that renders channel timelines and
-  member activity from LoopX projections.
-- Let dreaming/planning proposals appear as a separate channel lane or badge.
-- Add bridge adapters that can post channel summaries to collaboration tools,
-  while preserving LoopX as the ledger of record.
+- 在一个采用案例证明额外信号有用之后，再决定活跃硬 lease 行是否应加入现有 agent-member status/review 投影。
+- 构建 Raft 风格的本地 frontstage 视图，从 LoopX 投影渲染 channel 时间线与成员活动。
+- 让 dreaming/规划提案作为独立 channel 泳道或徽章出现。
+- 添加桥接 adapter，可以向协作工具发布 channel 摘要，同时保留 LoopX 作为记录 ledger。
 
-## Non-Goals
+## 非目标
 
-- Do not make conversation history the only project state.
-- Do not let UI membership labels override `goal_boundary`, operator gates, or
-  run permissions.
-- Do not require a server for the first schema; the CLI must remain a usable
-  fallback/client.
-- Do not let background dreaming claim delivery work without the normal
-  `quota should-run` and lease path.
+- 不把对话历史当作唯一项目状态。
+- 不让 UI 成员标签覆盖 `goal_boundary`、operator gates 或 run 权限。
+- 不为第一个 schema 要求 server；CLI 必须保持可用 fallback/client。
+- 不让后台 dreaming 在未经正常 `quota should-run` 与 lease 路径的情况下认领交付工作。
 
-## Acceptance Frame
+## 验收框架
 
-The first successful slice should prove that a human can open one goal view and
-see:
+第一个成功切片应证明：人类打开一个 goal 视图就能看到：
 
-- what the goal is;
-- who or what is currently responsible;
-- which task is claimed and until when;
-- which files/surfaces that claim may touch;
-- which event made the current state true;
-- what the next safe action is.
+- 这个 goal 是什么；
+- 当前谁或什么负责；
+- 哪个任务被认领、截止何时；
+- 该 claim 可以触及哪些文件/surface；
+- 哪个事件让当前状态成立；
+- 下一个安全动作是什么。
 
-The corresponding agent should be able to read the machine projection and avoid
-double-running, double-spending, or writing outside scope.
+对应 agent 应当能够读取机器投影，避免双重运行、双重 spend 或越界写入。

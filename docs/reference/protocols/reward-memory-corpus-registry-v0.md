@@ -1,141 +1,96 @@
-# Reward Memory Corpus Registry v0
+# Reward Memory 语料注册表 v0
+> [English](reward-memory-corpus-registry-v0.md)
 
-Stage 1 turns the five Stage-0 reward-memory classes into a provider-neutral
-corpus inventory and health contract. The registry is a stateless read model;
-it does not mirror provider content, become a second memory store, or grant an
-agent permission to write or apply recalled material.
+阶段 1 把五个 Stage-0 reward-memory 类别变成 provider-neutral 的语料清单与健康契约。注册表是无状态读模型；它不镜像 provider 内容、不成为第二个记忆存储，也不授予 agent 写入或应用召回物料的权限。
 
 ```bash
 loopx reward-memory corpus-registry --format json
 loopx reward-memory health-check --case wrong-project --format json
 ```
 
-## Corpus declaration
+## 语料声明
 
-Every corpus declares:
+每个语料声明：
 
-- `corpus_id`, Stage-0 `class_id`, `provider_id`, and `owner_ref`;
-- the canonical `source_of_truth`;
-- separate read and write authority;
-- workspace, project, module surface, and optional user, peer, or session scope;
-- freshness mode and optional source revision or maximum age;
-- active, superseded, or retired lifecycle plus lineage;
-- whether an index, result readback, and application receipt are required;
-- writeback triggers, closure policy, and retirement authority;
-- privacy visibility and the invariant that raw content is absent.
+- `corpus_id`、Stage-0 `class_id`、`provider_id` 与 `owner_ref`；
+- 权威 `source_of_truth`；
+- 分开的读与写权限；
+- workspace、project、module surface 与可选 user、peer 或 session scope；
+- 新鲜度模式与可选来源修订或最大年龄；
+- active、superseded 或 retired 生命周期及血统；
+- 是否需要 index、结果回读与应用回执；
+- writeback 触发、关闭策略与退役权限；
+- 隐私可见性以及原始内容不存在的恒等式。
 
-The reference registry covers all five classes through seven corpus families:
+参考注册表通过七个语料家族覆盖全部五个类别：
 
-| Corpus family | Class | Source and lifecycle |
+| 语料家族 | 类别 | 来源与生命周期 |
 | --- | --- | --- |
-| `run_reward_overlays` | `run_bound_reward` | LoopX human-reward event ledger; append-only exact goal/run overlay. |
-| `authority_policy_sources` | `hard_policy` | Explicit or verified-contributor-derived policy content, always bound to independently verified user/repository/operator authority scope. |
-| `scoped_preferences` | `soft_preference` | Provider-managed, explicitly reviewed feedback for module-owned surfaces. |
-| `execution_trajectories` | `procedural_experience` | Revision-stamped execution evidence. |
-| `distilled_experiences` | `procedural_experience` | Reviewed and supersedable procedural or architectural learning. |
-| `session_working_memory` | `working_context` | Session/archive-revision-bound continuation context. |
-| `fresh_execution_context` | `working_context` | Current registry, todo, checkout, and bounded tool observation. |
+| `run_reward_overlays` | `run_bound_reward` | LoopX human-reward 事件 ledger；追加式的精确 goal/run overlay。 |
+| `authority_policy_sources` | `hard_policy` | 显式或由已验证贡献者推导的策略内容，始终绑定到独立验证的用户/仓库/操作员权限 scope。 |
+| `scoped_preferences` | `soft_preference` | Provider 管理、显式评审过的、针对模块自有界面的反馈。 |
+| `execution_trajectories` | `procedural_experience` | 带修订戳的执行证据。 |
+| `distilled_experiences` | `procedural_experience` | 经评审并可被 supersede 的程序性或架构性学习。 |
+| `session_working_memory` | `working_context` | 会话/归档修订绑定的继续上下文。 |
+| `fresh_execution_context` | `working_context` | 当前 registry、todo、checkout 与有界工具观察。 |
 
-These reference entries are declarative families, not claims that a live
-provider or corpus is configured. A live module builds a `registered` packet
-from its provider-owned inventory. The existing semantic-preference provider
-inventory can be bridged without exposing its raw scope URI; the generic
-registry retains only a digest and the explicit project and surface scope.
+这些参考条目是声明性家族，不是对某个实时 provider 或语料已配置的声称。实时模块从 provider 自有清单构建 `registered` 包。现有语义偏好 provider 清单可以在不暴露其原始 scope URI 的情况下桥接；通用注册表只保留摘要与显式项目及 surface scope。
 
-## Authority and maintenance
+## 权限与维护
 
-Read and write authority remain separate. A module-scoped read does not grant a
-provider write, a provider-managed write does not grant repository publication,
-and neither grants patch authority. Corpus maintenance follows these rules:
+读与写权限保持分离。模块级读取不授予 provider 写入，provider 管理写入不授予仓库发布，二者都不授予补丁权限。语料维护遵循这些规则：
 
-1. inventory is owned by the provider or canonical source owner;
-2. writes use only the declared write authority;
-3. source revision, archive revision, or freshness window is verified before use;
-4. superseded and retired corpora remain in compact lineage but stop influencing recall;
-5. project or surface mismatch fails closed;
-6. retirement keeps a compact reason, never raw memory content.
+1. 清单归 provider 或权威源 owner 所有；
+2. 写入只使用声明的写权限；
+3. 使用前验证来源修订、归档修订或新鲜度窗口；
+4. superseded 与 retired 语料留在紧凑血统中，但停止影响召回；
+5. 项目或 surface 不匹配失效关闭；
+6. 退役保留紧凑原因，绝不保留原始记忆内容。
 
-Policy content may be derived from a verified owner or core contributor's
-rewards, preferences, current-artifact-verified experience, selections, and
-accepted/rejected outcomes. The registry records this as a maintenance trigger
-only after actor identity and repository/action scope are independently
-verified; inference cannot create a new write, publish, production, cross-user,
-or cross-repository authority scope, and cannot fabricate the current state of
-a concrete gate. Confidence is intentionally absent from the health promotion
-path because it cannot widen authority.
+策略内容可以从已验证 owner 或核心贡献者的 reward、偏好、经当前工件验证的经验、选择以及接受/拒绝结局推导。注册表只在 actor 身份与仓库/动作 scope 独立验证之后，把它记录为维护触发；推断不能创建新的写入、发布、生产、跨用户或跨仓库权限 scope，也不能捏造具体 gate 的当前状态。置信度有意缺席于健康提升路径，因为它无法扩大权限。
 
-## Health states
+## 健康状态
 
-`reward_memory_corpus_health_v0` keeps inventory, retrieval, readback, and use
-as distinct observations. The classifier applies this precedence:
+`reward_memory_corpus_health_v0` 把清单、检索、回读与使用保持为不同观察。分类器采用下列优先级：
 
-| State | Meaning |
+| 状态 | 含义 |
 | --- | --- |
-| `wrong_project` | The requested project differs from the corpus scope. |
-| `wrong_surface` | The consuming module surface is not registered. |
-| `unavailable` | The provider cannot be reached or the declared corpus is absent. |
-| `empty` | The corpus exists and is readable but contains no records. |
-| `stale` | Lifecycle, source revision, archive revision, or freshness evidence is not current. |
-| `index_unavailable` | A required derived index is absent even though the corpus exists. |
-| `retrieval_failed` | The scoped query failed or has not run. |
-| `readback_unverified` | Retrieval returned but the selected result was not read back. |
-| `retrieval_verified` | A current in-scope result was read back but has no application receipt. |
-| `applied_verified` | A verified result also has a compact application receipt. |
+| `wrong_project` | 请求的项目与语料 scope 不同。 |
+| `wrong_surface` | 消费模块表面未注册。 |
+| `unavailable` | 无法联系 provider 或声明的语料缺失。 |
+| `empty` | 语料存在且可读，但不含记录。 |
+| `stale` | 生命周期、来源修订、归档修订或新鲜度证据不是当前。 |
+| `index_unavailable` | 语料存在但所需派生 index 缺失。 |
+| `retrieval_failed` | 有界查询失败或尚未运行。 |
+| `readback_unverified` | 检索返回了，但所选结果未回读。 |
+| `retrieval_verified` | 当前作用域内结果已回读，但没有应用回执。 |
+| `applied_verified` | 已验证结果还带有紧凑应用回执。 |
 
-The output always preserves the individual pipeline fields:
+输出总是保留各个 pipeline 字段：
 
-- `provider_available`;
-- `corpus_present` and `record_count`;
-- `index_required` and `index_present`;
-- `retrieval_query_succeeded`;
-- `result_readback_verified`;
-- `memory_applied_with_receipt`.
+- `provider_available`；
+- `corpus_present` 与 `record_count`；
+- `index_required` 与 `index_present`；
+- `retrieval_query_succeeded`；
+- `result_readback_verified`；
+- `memory_applied_with_receipt`。
 
-An empty corpus is therefore not reported as unavailable. An existing index is
-not proof that the content corpus exists. Retrieval success is not proof that a
-result was expanded and verified, and verified readback is not proof that the
-memory influenced an artifact.
+因此空语料不会被报告为不可用。已有 index 不证明内容语料存在。检索成功不证明结果已被展开并验证，已验证回读不证明记忆影响了工件。
 
-Contradictory observations fail validation: application requires readback,
-readback requires retrieval, and retrieval requires an available present
-corpus. A healthy result can make memory eligible for advisory use, but still
-returns `memory_patch_authority=false` and
-`external_write_authorized=false`.
+矛盾观察导致验证失败：应用要求回读，回读要求检索，检索要求语料可用且存在。健康结果可以使记忆具备咨询使用的资格，但始终返回 `memory_patch_authority=false` 与 `external_write_authorized=false`。
 
-## OpenViking alignment
+## OpenViking 对齐
 
-For OpenViking, AGFS content remains the source of truth and the vector index
-is a derived retrieval reference. Preferences map to scoped preferences,
-trajectories and experiences map to the two procedural corpus families, and a
-completed Working Memory archive maps to session working context. Cases remain
-training and evaluation fixtures and are not registered as executable memory.
+对于 OpenViking，AGFS 内容保持事实来源，向量 index 是派生的检索引用。偏好映射到作用域偏好，轨迹与经验映射到两个程序性语料家族，完成的 Working Memory 归档映射到会话工作上下文。Cases 仍是训练与评估 fixture，不注册为可执行记忆。
 
-The `fresh_execution_context` corpus family is an inventory view over LoopX's
-already complete registry, active-state, todo/quota, checkout, and bounded tool
-observations. Stage 2 does not add another context store or retrieval path.
+`fresh_execution_context` 语料家族是 LoopX 已完整 registry、active-state、todo/quota、checkout 与有界工具观察之上的清单视图。阶段 2 不新增另一个上下文存储或检索路径。
 
-Account, user, peer, session, project, surface, and repository revision remain
-independent scope dimensions. In particular, a project-peer preference corpus
-cannot be reused for another project or surface merely because the provider
-returned a high-scoring match.
+Account、user、peer、session、project、surface 与仓库修订仍是独立 scope 维度。特别是，项目-对等偏好语料不能仅仅因为 provider 返回高分匹配，就复用于另一个项目或 surface。
 
-OpenViking's default type-quota recall currently allows an experience corpus to
-exist while the experiences quota is zero. The registry therefore never
-derives retrieval health from corpus or index presence.
+OpenViking 默认的类型配额召回目前允许一个经验语料存在，而经验配额为零。因此注册表绝不从语料或 index 存在性推导检索健康。
 
-## Stage boundary
+## 阶段边界
 
-Stage 1 implements corpus declarations, the semantic-preference inventory
-bridge, maintenance invariants, and deterministic health classification. It
-does not perform provider writes, persist a second registry, read raw memory,
-distill candidates, enable cross-module recall, or promote a release.
+阶段 1 实现语料声明、语义偏好清单桥、维护恒等式与确定性健康分类。它不执行 provider 写入、不持久化第二个注册表、不读取原始记忆、不蒸馏候选、不启用跨模块召回、不提升发布。
 
-Stage 2 owns one thin candidate and activation-decision seam. It may derive
-policy content from verified contributor signals but does not create authority,
-add a second store or scheduler, perform provider writes, or enable automatic
-recall. Issue Fix consumes the same generic seam rather than a parallel design.
-Stage 3 implements explicit exact-corpus, module-surface recall and
-reasoning-mediated application receipts;
-deterministic code remains limited to scope, authority, privacy, freshness, and
-conflict guards. Stage 4 owns evaluation and the release gate; Stage 5 owns
-bounded dogfood and operator edit or retirement controls.
+阶段 2 拥有一个薄候选与激活决策接缝。它可以从已验证贡献者信号推导策略内容，但不创建权限、不增加第二个存储或 scheduler、不执行 provider 写入、不启用自动召回。Issue Fix 消耗同一通用接缝，而非平行设计。阶段 3 实现显式精确语料、模块表面召回与推理中介的应用回执；确定性代码仍限于 scope、权限、隐私、新鲜度与冲突 guard。阶段 4 拥有评估与发布关卡；阶段 5 拥有有界 dogfood 与操作员编辑或退役控制。

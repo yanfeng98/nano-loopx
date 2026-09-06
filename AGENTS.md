@@ -1,447 +1,353 @@
-# Agent Instructions
-
-## Commit And PR Hygiene
-
-### Worktree And PR Gate
-
-For any tracked repository change beyond a trivial typo fix, create or use a
-dedicated clean `git worktree` on a `codex/` branch. Use latest `origin/main`
-unless the user explicitly names an integration or release branch; in that
-case, fetch that branch and use its latest remote head as both the worktree
-baseline and pull-request base. Before pushing, verify the merge base and PR
-base so unrelated `main` history cannot leak into a stacked integration PR.
-Do not implement changes directly in a dirty primary worktree, even when the
-task starts by inspecting that dirty tree.
-
-When a dirty worktree contains potentially valuable changes, first classify it
-read-only, then copy or reapply the valuable subset into the dedicated clean
-worktree and open a PR from that branch. Reset or clean the original dirty
-worktree only after the valuable subset has been merged or explicitly judged
-obsolete. Leave unrelated untracked local artifacts alone.
-
-Every tracked repository change must be pushed on a branch and reviewed through
-a pull request before it reaches `main`. Do not push broad mixed commits or
-direct commits to `main`.
-
-### DCO Sign-Off
-
-Every commit in a pull-request branch must include a
-`Signed-off-by: Your Name <your.email@example.com>` trailer, or the `DCO`
-check will reject the PR. Always commit with `git commit -s`. If a commit is
-already missing the trailer, amend it with `git commit --amend -s` (or an
-interactive rebase for multiple commits) before pushing. See CONTRIBUTING.md
-for the full DCO policy.
-
-Only skip this worktree/PR gate when the user explicitly says the change is
-local-only and must not be proposed for the repository.
-
-For non-trivial repository changes, especially anything that touches benchmark
-adapters, smoke tests, public docs, or commit/push workflows, use the
-`git-split-commit-pr` workflow before staging:
-
-1. Establish ground truth with `git status --short --branch`,
-   `git diff --stat`, `git diff --name-only`, and
-   `git ls-files --others --exclude-standard`.
-2. Classify every changed path before staging:
-   - core product code;
-   - core documentation;
-   - durable validation smoke;
-   - local/private state;
-   - low-value or obsolete artifact.
-3. Scan candidate paths for credentials, private state, local absolute paths,
-   raw benchmark logs, trajectories, verifier output, and internal links.
-4. Stage by explicit pathspecs only. Do not use `git add .`.
-5. Split commits by reviewer logic:
-   - runtime/API behavior;
-   - public docs and protocol notes;
-   - focused validation or cleanup.
-6. Push a branch and open a PR for reviewable batches.
-
-For small, low-risk PRs, maintainers may self-merge after validation when all
-of the following are true:
-
-Here, "自合并" means: 自己 review/refine, then admin-bypass merge after the
-required validation and authorization.
-
-- the PR only touches public docs, contributor metadata, or narrow cleanup;
-- the change is single-purpose and easy to review from the diff;
-- required checks or focused smokes have passed;
-- private state, raw benchmark evidence, credentials, local paths, and
-  generated logs are excluded;
-- there is no runtime behavior, benchmark adapter, permission, destructive git,
-  or public evidence-policy change that needs separate review.
-
-Small benchmark seam/refactor PRs may also be self-merged when they are like
-PR #145: they add or clarify a reusable adapter/control-plane contract, include
-focused public smokes, do not launch benchmark jobs, do not change scoring or
-runner behavior for an existing benchmark, and do not include temporary probes,
-raw evidence, private state, credentials, local paths, or generated logs.
-
-Benchmark helper/runtime PRs may also be self-merged after owner authorization
-when they are limited to public benchmark helper code, status/runtime
-observation, reducer/closeout plumbing, or benchmark developer workflow support;
-focused smokes or compile checks pass; public/private boundary scans are clean;
-and the PR does not change benchmark scoring, task semantics, leaderboard or
-submission behavior, permission boundaries, or launch new benchmark jobs.
-
-After self-merging, sync local `main`, leave unrelated untracked local artifacts
-alone, and continue with the next safe project batch.
-
-Before self-merging non-trivial LoopX changes, run
-`loopx canary premerge --from-git-diff` or an equivalent risk-based validation
-set. The PR comment must name the changed surfaces, checks run, failures/skips,
-manual holds, and why the coverage is enough. One hand-picked smoke is not
-enough for runtime, quota/status, scheduler, todo, install, dashboard,
-benchmark-boundary, or public/private evidence changes.
-
-### Release Contributor Attribution
-
-Keep the shipped product changes as the primary release narrative. When the tag
-range contains merged work from community contributors other than project
-founder `@huangruiteng`, add a prominent `## Community Contributors` section
-after the English product groups and a matching `### 社区贡献者` section after
-the Chinese product groups. Place both before compatibility, validation, or
-update material so the credit remains visible without replacing the release
-summary.
-
-Link each eligible contributor's GitHub handle and relevant pull requests, and
-describe the concrete contribution instead of publishing an unannotated name
-list. Explicitly highlight external and first-time contributors when
-applicable. Do not list or thank `@huangruiteng` in contributor sections;
-founder stewardship is implicit in LoopX releases. Omit both contributor
-sections when the tag range has no eligible community contribution.
-
-Derive attribution from the previous-tag-to-current-tag Git range plus merged
-PR metadata. Do not guess from commit display names, omit contributors because
-their work is summarized elsewhere, let contributor credit displace product
-content, or invent community attribution for a founder-only release. The
-release PR and final GitHub release body must preserve the same bilingual
-attribution.
-
-### Release Capability Usage Gate
-
-When a release introduces or materially changes an optional capability,
-workflow, managed skill, or host surface, the final GitHub release body must
-teach the user how to operate it. For every affected surface, include matching
-English and Chinese entries with:
-
-- exact activation or per-command/profile opt-in;
-- a minimum runnable validation or readback command;
-- exact disable, uninstall, envelope-removal, or rollback guidance;
-- the authority and privacy boundary that activation does not grant;
-- a canonical versioned documentation link.
-
-Save the complete final release body in an ignored or temporary Markdown file.
-Run `examples/release/release-readiness-doc-smoke.py --release-notes ...` with
-one `--surface` argument per affected surface before publication, then read the
-remote body back and run the same check again. A release with no applicable
-surface changes must use `--expect-no-optional-capability-changes` and include
-the validator's explicit bilingual no-change declarations. Never treat the
-existence of a checklist, a release PR draft, or architecture-only capability
-copy as proof that the final release body is usable.
-
-## First-Screen Review Gate
-
-Treat the first visible screen of public product surfaces as owner-reviewed
-presentation, not as ordinary copy. Before committing, pushing, or self-merging
-changes that alter the first viewport, hero block, primary CTA, or opening
-navigation of README, hosted frontstage, showcase index pages, product home
-pages, or similarly prominent public entry points, show the user a preview
-first and wait for approval.
-
-The preview should be concrete enough to judge the presentation: provide the
-local URL and, when the surface is visual HTML, a screenshot or browser view of
-the first viewport. Do not move the review gate into a PR comment, todo note, or
-final summary after the fact. It must happen before the public first-screen
-change is finalized.
-
-## UI Design Standard
-
-Before changing or reproducing any LoopX UI, read and follow the repository-root
-`docs/development/design.md`. This includes websites, dashboards, desktop applications,
-documentation, prototypes, screenshots, and framework migrations. When an
-approved design source is provided, match it and use `docs/development/design.md` for unspecified
-details.
-
-## Public And Private Boundary
-
-Do not commit internal department, team, customer, meeting, reporting,
-strategy, or local operating context into the public repository. This includes
-planning notes, status narratives, rollout stories, fixtures, screenshots,
-examples, catalog rows, PR descriptions, and review artifacts whose value
-depends on private organizational context rather than reusable public product
-behavior.
-
-Keep private planning and incident evidence in ignored local state such as
-`.local/`, or another explicitly ignored owner-approved location. Only commit
-material after it has been generalized into public-safe product, maintainer, or
-developer language and no longer reveals internal actors, timelines, reporting
-needs, local paths, raw logs, private links, or private decision context.
-
-Before staging public docs, fixtures, examples, catalogs, or metadata, scan the
-candidate paths for internal/private wording and ignored local artifact
-references. If such context was already pushed, stop normal delivery, run
-LoopX self-repair, clean the current public heads, and record any remaining
-PR-ref or cached-view cleanup as an explicit user/support gate.
-
-## PR Review Comments
-
-When the user asks the agent to review a GitHub PR, treat PR feedback as a
-public collaboration artifact by default. After validating the findings,
-publish actionable review findings directly on the PR as a comment or review,
-unless the user explicitly asks for a local-only review or the finding contains
-private/security-sensitive material that must not be posted publicly.
-
-Do not leave actionable PR blockers only in chat memory. The final user report
-should include the PR comment URL and a compact summary of the posted findings.
-
-Before publishing a review, run the capability-owned review lenses for typed
-state rules, domain neutrality, behavior-change disclosure, and
-guidance-vs-obligation, plus default-off isolation and authority semantics
-(defined in `pull_request_review_execution_contract_v2`).
-Flag substring denylists or prose-only classification rules with the concrete
-misclassification risk, product- or benchmark-specific wording in generic
-control-plane contracts, silent default-behavior changes, and text that calls a
-machine-enforced obligation "guidance". For opt-in behavior, prove feature-off
-parity across every shared changed surface. Reject protocol names that imply a
-broader actor lifecycle or authority model than the implementation provides.
-
-## Engineering Quality And Right-Sized Scope
-
-### Refactor Real-Path Validation
-
-Before delivering a refactor, validate the affected production entrypoint and
-real backend, not only mocks, in-memory substitutes, or unit tests. Authority
-store refactors that affect PostgreSQL must run the PostgreSQL integration
-suite against an isolated real server; report the exact source and results.
-Use a separate database/tenant and disposable runtime with synthetic fixtures
-or an owner-authorized read-only snapshot. Never test by promoting, rewriting,
-or corrupting an active goal, its registry, writer fence, Todo, or lease state.
-If the required real environment is unavailable, report the evidence gap and
-hold delivery; a skipped test does not satisfy this gate. See the testing and
-quality guide for the same safety and evidence boundary.
-
-Treat code volume as a cost, especially during refactors. A good LoopX change
-should make the next change easier to localize, test, and revert; it should not
-turn a design possibility into unused production structure.
-
-### Bounded Future-Facing Refactoring
-
-During development and again before approving or merging each PR, explicitly
-ask whether the touched behavior or its adjacent owning boundary has a small,
-related, behavior-preserving refactor that would make the next likely product
-or control-plane change easier. Prefer removing duplicate authority,
-strengthening typed contracts, narrowing module ownership, and retiring
-obsolete compatibility seams over adding speculative frameworks. For
-control-plane work, keep state-machine and effect authority in the typed
-TypeScript boundary when that is the established owner; Python may adapt or
-bridge that contract, but must not silently recreate a second source of truth.
-
-Apply the refactor in the current PR when it shares the same domain or change
-reason, remains locally reviewable and reversible, and is covered by
-characterization or parity validation; it need not be strictly required for
-the immediate fix. Do not use this principle to justify broad migration or
-unrelated cleanup. When the valuable related refactor is larger than a bounded
-companion change, record a focused follow-up instead. PR review and merge notes
-should state whether this future-facing pass was applied, deferred, or found
-unnecessary, with the concrete boundary considered.
-
-## Capability And Extension Placement
-
-Before adding an ability, decide its capability owner and provider boundary;
-do not choose a directory from the feature name alone:
-
-- name public capabilities after caller outcomes, not delivery mechanisms. A
-  proposed `connector`, `provider`, `adapter`, or `sink` capability needs an
-  independently useful caller contract; otherwise make it an extension
-  provider or an internal part of the outcome capability it serves;
-- extend `loopx/capabilities/<capability>/` when the change belongs to an
-  existing product contract and shares that built-in capability's lifecycle;
-- create a new built-in capability only when LoopX core must ship it by
-  default and it has a stable caller contract, real entrypoint, and focused
-  validation;
-- put generic manifest, registration, compatibility, and lifecycle mechanics
-  in `loopx/extensions/`;
-- put an independently versioned or optional provider distribution in
-  `packages/<package-id>/` when it is co-located, or in its own package or
-  repository when it is distributed separately. Reserve `loopx/extensions/`
-  for extension lifecycle code and providers bundled in the LoopX wheel;
-- do not create a capability merely to make an extension installable. An
-  extension-owned command or workflow may declare only its runtime and
-  lifecycle when LoopX callers do not need a provider-neutral capability
-  contract;
-- when a provider introduces a new product contract, register the capability
-  contract and implement it through the extension only when that contract is
-  intentionally provider-neutral and belongs in LoopX's capability catalog;
-- keep private helpers in the nearest owning module. A helper is not a new
-  capability or extension merely because several files are involved.
-
-Record the placement rationale before editing: capability id, provider id,
-whether the provider is built-in or extension-delivered, and why the nearest
-existing owner is or is not sufficient. See `docs/reference/extensions.md` for the full
-decision guide.
-
-Before adding a new module, builder, protocol field, CLI option, fixture, smoke
-section, or abstraction, pass a scope-fit review:
-
-- Identify the shipped behavior, active call site, or explicit compatibility
-  contract that needs it. If the value is only an uncommitted future runner, a
-  design note, or a hypothetical extension with no validation contract, keep the
-  design in docs or todo state until the real call site appears.
-- Prefer a cohesive behavior-preserving seam. For example, let the ledger first
-  recognize one compact public-safe row shape before adding a dedicated
-  benchmark-specific builder, arm constants, or wide field-level smoke. Do not
-  split so narrowly that reviewers must reconstruct one logical behavior from
-  several dependent PRs.
-- Design tests from semantics, not observed output. Independently review the
-  intended invariant and legal or illegal transitions before testing the
-  implementation. Never derive expected results from the implementation under
-  test or its current output; characterization fixtures are non-authoritative,
-  and contradictions require rule repair plus negative or mutation coverage.
-- Characterize before moving code. For status, quota, review-packet, scheduler,
-  monitor, and handoff behavior, add or extend parity fixtures first, then
-  extract the proven rule or cohesive rule group.
-- Reuse existing repository patterns and bounded contexts. Add code where its
-  change reason belongs, such as `control_plane/runtime`, `control_plane/quota`,
-  or `control_plane/todos`; do not create generic sink directories or helper
-  layers just because several files share a similar shape.
-- Treat large or hot files as warning signals. When a change would grow an
-  already oversized module, first look for a narrow read model, domain helper,
-  or bounded-context home. For internal module moves, update active call sites
-  and delete the old entry point; leave a compatibility wrapper only when a
-  real external import, persisted state, CLI/API contract, or migration window
-  requires it.
-- Distinguish duplicate knowledge from duplicate-looking code. Collapse shared
-  state rules, protocol semantics, serialization contracts, and lifecycle
-  invariants; avoid a parameter-heavy abstraction when two callers merely look
-  similar but will evolve for different reasons.
-- Keep smokes thin and durable. They should prove shipped behavior, boundary
-  enforcement, and regression contracts, not every incidental field produced by
-  a temporary builder. Large smokes are a prompt to move reusable logic into
-  product modules or to narrow the assertion surface.
-- Make illegal states hard to express. For status, quota, scheduler, monitor,
-  todo, and handoff flows, prefer explicit enums, schemas, and transition
-  helpers over scattered booleans and prose-only assumptions.
-- State-classification and delivery-semantics rules belong in typed enums,
-  schemas, or transition helpers. Substring denylists and prose heuristics must
-  carry a documented reason and a typed follow-up; PR review must flag them
-  with the concrete false-positive/negative risk.
-- Core control-plane obligations and error text must stay domain-neutral. Do
-  not put product- or benchmark-specific wording (for example "product
-  advancement") into generic work-lane, quota, todo, or settlement contracts;
-  prefer goal-agnostic phrasing.
-- Default behavior changes must be disclosed: rename the smoke that encoded the
-  old default, update docs/release notes, and name the affected lanes.
-  "Guidance" versus machine-enforced obligations (such as `must_attempt_work`)
-  must be explicit in the contract, not inferred from prose.
-- Fail fast with actionable context at input, config, permission, and state
-  boundaries, but do not replace clear control flow with broad exception
-  plumbing or silent fallback.
-- Ship right-sized, reversible batches. A PR should be theme-unified, locally
-  validated, and reviewable as a complete stage package. A few hundred to
-  roughly one or two thousand lines can be appropriate when the diff is cohesive
-  and avoids hidden future scaffolding; a 30-line PR can still be too small if it
-  leaves behavior split across follow-up PRs. Separate characterization/parity
-  fixtures, mechanical moves, behavior changes, and cleanup when that makes
-  review and rollback clearer.
-- Keep public PRs concise and current-purpose focused. Future extension points
-  are allowed when they reduce near-term churn, preserve compatibility, or
-  define a real contract that is documented and tested. Do not bundle
-  private/local experiment scaffolding, diagnostic run dumps, unused speculative
-  plumbing, or long background narratives with the code path needed by the
-  current behavior.
-- Compress rather than append. For docs, fixtures, dashboards, and examples,
-  replace or retire stale material when adding new current truth; do not let
-  canonical surfaces accumulate multiple versions of the same conclusion.
-
-Use this checklist to delete, defer, or right-size code as actively as you add
-it. A PR that removes an unused abstraction, narrows a smoke to the real
-contract, or moves a rule into the right bounded context is often more valuable
-than one that adds a larger framework around the same behavior.
-
-## Automation And Monitor Todos
-
-Do not hard-code one-off project or PR monitor logic into a generic heartbeat
-automation prompt. Recurring project-specific watches, such as "monitor PR #532
-until merge", belong in LoopX state as `continuous_monitor` todos with compact
-metadata such as `claimed_by`, `unblocks_todo_id`, and evidence notes. The
-heartbeat prompt should remain generic and discover monitor work through
-status, quota, and todo projection. Only update an automation prompt when the
-heartbeat lifecycle contract itself changes or the user explicitly asks to
-change the scheduler.
-
-## Projection Sink Design
-
-When adding an operator-facing display sink such as Lark Base, dashboards,
-chat summaries, or reports, build it from LoopX's public-safe state and
-projection surfaces instead of parsing project-specific private source files.
-Valid display inputs include todo projection, quota/status contracts,
-frontstage projections, compact run-history events, public-safe evidence
-pointers, and redacted source warnings.
-
-Do not make a generic sink depend on the shape of one local document, private
-planning file, non-public wiki, raw transcript, local path, or connector payload.
-If a source is valuable, first convert it into a bounded LoopX projection with
-stable ids, source labels, evidence, and explicit gates; then let the sink
-render that projection. Public or multi-user sinks must consume redacted
-public-safe evidence. An explicitly owner-only operator board may sync private
-planning evidence when the user authorizes that boundary, but it should still
-scope rows by `agent_id` and avoid credentials or secrets unless the user
-explicitly asks for a credential-handling workflow.
-
-Projection sinks should preserve row lineage as data, not as ad hoc prose. When
-rows supersede, migrate, or retire earlier display rows, represent that through
-projection lifecycle fields such as `row_lifecycle`, `supersedes`,
-`superseded_by`, `source_id`, and compact migration audit evidence. A sink may
-render the lineage in existing evidence/history fields, but should not require
-reading a project-private source document to understand why a row changed.
-
-## Smoke Retention Policy
-
-Keep a smoke test only when it validates a durable public behavior:
-
-- shipped CLI/runtime behavior;
-- a reusable control-plane contract;
-- public/private boundary enforcement;
-- a regression that previously stranded automation;
-- a representative fixture that is likely to catch future bugs.
-
-Do not keep one-off smokes whose main purpose is to assert the exact text of a
-dated research note, candidate ranking packet, temporary run review, or
-transitional benchmark decision. Preserve that information in the research doc
-itself, and cover shared invariants with a data-driven aggregate smoke.
-
-When a smoke grows beyond roughly 500 lines, re-check whether it is really one
-test. Prefer splitting reusable logic into product modules and keeping the
-smoke as a thin public behavior check. Large integration smokes are acceptable
-only when they cover a real end-to-end adapter contract that smaller unit tests
-cannot cover.
-
-Benchmark smokes must never require raw task text, raw trajectories, raw logs,
-verifier output tails, credentials, uploads, leaderboard submissions, or local
-private artifact paths.
+# Agent 指令
+
+> [English](AGENTS.md)
+
+## 提交与 PR 卫生
+
+### Worktree 与 PR 关卡
+
+对任何超出简单错别字修复的已跟踪仓库变更，在 `codex/` 分支上创建或使用
+一个专用干净的 `git worktree`。除非用户明确指定集成分支或发布分支，否则
+使用最新的 `origin/main`；若指定了，则获取该分支并以其最新远端头部同时作为
+worktree 基线与 pull request 基线。推送前核验 merge base 与 PR base，以免无关的
+`main` 历史渗入堆叠的集成 PR。不要在脏的主 worktree 中直接实现变更，即使任务
+从检查该脏树开始。
+
+当脏 worktree 含有可能有价值的变更时，先将其只读分类，然后把有价值的子集
+复制或重新应用到专用干净 worktree 中，并从该分支打开 PR。只有在有价值子集
+已合并或明确判定过时之后，才重置或清理原始脏 worktree。无关的未跟踪本地
+产物不要动。
+
+每个已跟踪仓库变更必须在分支上推送，并在到达 `main` 之前经过 pull request
+评审。不要推送宽泛的混合提交或直接提交到 `main`。
+
+### DCO 签署
+
+pull request 分支中的每个提交必须包含
+`Signed-off-by: Your Name <your.email@example.com>` 结尾，否则 `DCO` 检查会
+拒绝 PR。始终使用 `git commit -s` 提交。如果提交已缺少该结尾，在推送前用
+`git commit --amend -s`（多个提交则用交互式 rebase）修正。完整 DCO 政策参见
+CONTRIBUTING.md。
+
+仅当用户明确说明该变更是本地专用、不得提交到仓库时，才跳过此 worktree/PR
+关卡。
+
+对于非平凡的仓库变更，尤其是任何触及 benchmark 适配器、冒烟测试、公开文档或
+提交/推送工作流的变更，在暂存前使用 `git-split-commit-pr` 工作流：
+
+1. 用 `git status --short --branch`、`git diff --stat`、
+   `git diff --name-only` 与 `git ls-files --others --exclude-standard`
+   确立事实基准。
+2. 在暂存前对每个变更路径分类：
+   - 核心产品代码；
+   - 核心文档；
+   - 持久验证冒烟；
+   - 本地/私有状态；
+   - 低价值或过时产物。
+3. 扫描候选路径中的凭据、私有状态、本地绝对路径、原始 benchmark 日志、
+   轨迹、verifier 输出与内部链接。
+4. 仅按显式 pathspec 暂存。不要使用 `git add .`。
+5. 按评审者逻辑拆分提交：
+   - 运行时/API 行为；
+   - 公开文档与协议说明；
+   - 聚焦验证或清理。
+6. 推送分支并为可评审批次打开 PR。
+
+对于小型、低风险 PR，当以下条件全部满足时，维护者可在验证后自行合并：
+
+这里的"自合并"意思是：自己 review/refine，然后在完成所需验证与授权后
+admin-bypass merge。
+
+- PR 只触及公开文档、贡献者元数据或窄范围清理；
+- 变更是单目的的，从 diff 中容易评审；
+- 必需的检查或聚焦冒烟已通过；
+- 私有状态、原始 benchmark 证据、凭据、本地路径与生成的日志已被排除；
+- 没有需要单独评审的运行时行为、benchmark 适配器、权限、破坏性 git 或
+  公开证据政策变更。
+
+类似 PR #145 的小型 benchmark 衔接点/重构 PR 也可自行合并：它们添加或澄清
+可复用的适配器/控制面契约、包含聚焦公开冒烟、不启动 benchmark 任务、不改变
+现有 benchmark 的评分或 runner 行为，且不包含临时探针、原始证据、私有状态、
+凭据、本地路径或生成日志。
+
+Benchmark helper/runtime PR 在获得所有者授权后也可自行合并，前提是它们仅限
+公开 benchmark helper 代码、状态/运行时观察、reducer/closeout 管道或 benchmark
+开发者工作流支持；聚焦冒烟或编译检查通过；公共/私有边界扫描干净；且 PR 不
+改变 benchmark 评分、任务语义、排行榜或提交行为、权限边界，也不启动新
+benchmark 任务。
+
+自行合并后，同步本地 `main`，无关的未跟踪本地产物不要动，继续下一个安全的
+项目批次。
+
+在自行合并非平凡 LoopX 变更前，运行 `loopx canary premerge --from-git-diff`
+或等价的风险基础验证集。PR 评论必须指出变更的界面、运行的检查、失败/跳过、
+人工挂起，以及覆盖为何充分。对于 runtime、quota/status、scheduler、todo、install、
+dashboard、benchmark 边界或公共/私有证据变更，一个拣选的冒烟是不够的。
+
+### 发布贡献者归属
+
+把已发布的产品变更作为主要发布叙事。当标签范围包含项目创始人 `@huangruiteng`
+之外的社区贡献者合并工作时，在英文产品分组之后添加醒目的 `## Community
+Contributors` 部分，并在中文产品分组之后添加匹配的 `### 社区贡献者` 部分。
+两者都放在兼容性、验证或更新材料之前，使署名可见而不取代发布摘要。
+
+链接每位合格贡献者的 GitHub 昵称与相关 pull request，描述具体贡献，而不是
+发布无注释的名字列表。适用时显式突出外部与新首次贡献者。不要在贡献者部分
+列出或感谢 `@huangruiteng`；创始人管理职责在 LoopX 发布中是隐含的。当标签
+范围内没有合格的社区贡献时，两个贡献者部分都省略。
+
+归属从前一标签到当前标签的 Git 范围加合并 PR 元数据推导。不要从提交显示名
+猜测、因为贡献者的工作在其他地方有总结就省略他们、让贡献者署名挤占产品内容，
+或为创始人专属发布虚构社区归属。发布 PR 与最终 GitHub 发布正文必须保留相同
+的双语归属。
+
+### 发布能力使用关卡
+
+当发布引入或重大改动可选能力、工作流、受管 skill 或宿主界面时，最终 GitHub
+发布正文必须教会用户如何操作它。对每个受影响的界面，包含匹配的中英文条目，
+要求包括：
+
+- 精确的激活或按命令/配置文件 opt-in；
+- 一个最小可运行的验证或回读命令；
+- 精确的禁用、卸载、envelope 移除或回滚指引；
+- 激活不授予的权限与隐私边界；
+- 一个带版本的权威文档链接。
+
+把完整最终发布正文保存在被忽略或临时 Markdown 文件中。发布前对每个受影响的
+界面以 `--surface` 参数运行
+`examples/release/release-readiness-doc-smoke.py --release-notes ...`，然后回读
+远端正文并再次运行同一检查。没有适用界面变更的发布必须使用
+`--expect-no-optional-capability-changes`，并包含验证器的显式双语无变更声明。
+不要把检查清单存在、发布 PR 草稿或仅架构的能力文案当作最终发布正文可用的证据。
+
+## 首屏评审关卡
+
+把公开产品界面的第一可见屏视为所有者评审过的展示内容，而非普通文案。在提交、
+推送或自行合并会改变 README、托管前台、展示索引页、产品主页或类似显眼公开
+入口的第一视口、hero 块、主 CTA 或开头导航的变更之前，先向用户展示预览并
+等待批准。
+
+预览应足够具体以判断展示效果：提供本地 URL，当界面是可视化 HTML 时提供
+第一视口的截图或浏览器视图。不要事后把评审关卡移入 PR 评论、todo 记录或
+最终摘要。它必须在公开首屏变更定稿前发生。
+
+## UI 设计标准
+
+在变更或复现任何 LoopX UI 之前，阅读并遵循仓库根部的
+`docs/development/design.md`。这包括网站、dashboard、桌面应用、文档、原型、
+截图与框架迁移。提供已批准的设计源时，与之匹配，未指定细节用
+`docs/development/design.md`。
+
+## 公共与私有边界
+
+不要把内部部门、团队、客户、会议、汇报、战略或本地运营背景提交到公开仓库。
+这包括价值依赖私有组织背景而非可复用公开产品行为的规划笔记、状态叙述、
+上线故事、fixture、截图、示例、目录行、PR 描述与评审产物。
+
+把私有规划与事件证据保存在被忽略的本地状态中（如 `.local/`）或另一个显式
+被忽略、经所有者批准的位置。只有在材料被概括为公开安全的产品、维护者或
+开发者语言，且不再泄露内部参与者、时间线、汇报需求、本地路径、原始日志、
+私有链接或私有决策上下文之后，才提交。
+
+在暂存公开文档、fixture、示例、目录或元数据前，扫描候选路径中的内部/私有措辞
+与被忽略本地产物引用。如果此类上下文已被推送，停止正常交付，运行 LoopX
+self-repair，清理当前公开头，并把任何剩余的 PR-ref 或缓存视图清理记录为显式的
+用户/支持关卡。
+
+## PR 评审评论
+
+当用户让 agent 评审 GitHub PR 时，默认把 PR 反馈视为公开协作产物。验证发现后，
+直接把可执行的评审发现作为评论或 review 发布到 PR 上，除非用户明确要求仅本地
+评审，或发现包含不得公开发布的私有/安全敏感材料。
+
+不要把可执行的 PR 阻塞项只留在聊天记忆中。最终用户报告应包括 PR 评论 URL 与
+所发布发现的紧凑摘要。
+
+在发布评审前，运行 capability 所属的评审透镜：typed state 规则、领域中立性、
+行为变更披露、guidance-vs-obligation，以及 default-off 隔离与 authority 语义
+（定义于 `pull_request_review_execution_contract_v2`）。
+对子串拒绝清单或仅散文分类规则，用具体的误分类风险、通用控制面契约中的
+产品或 benchmark 特定措辞、静默默认行为变更，以及把机器强制义务称为
+"guidance" 的文本进行标记。对 opt-in 行为，证明每个共享变更界面的 feature-off
+对齐。拒绝暗示比实现所提供的更广的 actor 生命周期或权限模型的协议名。
+
+## 工程质量与合身范围
+
+### 重构真实路径验证
+
+在交付重构前，验证受影响的生产入口点与真实后端，而不只是 mock、内存替代或
+单元测试。影响 PostgreSQL 的 authority store 重构必须对隔离的真实服务器运行
+PostgreSQL 集成套件；报告精确来源与结果。使用独立数据库/租户与一次性运行时，
+配合合成 fixture 或经所有者授权的只读快照。绝不通过晋升、重写或破坏活跃
+goal、其 registry、writer fence、Todo 或 lease 状态来测试。如果必需的真实环境
+不可用，报告证据缺口并挂起交付；跳过的测试不满足此关卡。相同安全与证据边界
+参见测试与质量指南。
+
+把代码体积视为成本，尤其是在重构期间。一个好的 LoopX 变更应让下一个变更
+更容易定位、测试与回滚；不应把设计可能性变成未使用的生产结构。
+
+### 有界的面向未来重构
+
+在开发期间以及批准或合并每个 PR 之前，再次显式询问：被触及行为或其邻近的
+所属边界是否有一个小而相关、保持行为不变的重构，能让下一个可能的产品或
+控制面变更更容易。优先移除重复 authority、强化类型化契约、收窄模块所有权、
+退役过时的兼容衔接点，而非添加投机性框架。对控制面工作，当 typed TypeScript
+边界是既定所有者时，把状态机与效果 authority 保留在那里；Python 可以适配或
+桥接该契约，但不得静默重建第二个真相源。
+
+当重构与当前变更共享同一领域或变更原因、保持本地可评审且可逆转，并受
+特征化或对齐验证覆盖时，在当前 PR 中应用它；它不必是即时修复的严格要求。
+不要用此原则为宽泛迁移或无关清理辩护。当有价值的相关重构大于一个受限伴生
+变更时，改为记录一个聚焦的后续项。PR 评审与合并说明应说明此面向未来环节
+是否被应用、推迟或判定不必要，并给出考虑的具体边界。
+
+## 能力与扩展放置
+
+在添加一项能力前，决定其 capability 所有者与 provider 边界；不要仅凭功能名
+选择目录：
+
+- 公共能力按调用方结果命名，而非按交付机制。提议的 `connector`、`provider`、
+  `adapter` 或 `sink` 能力需要独立有用的调用方契约；否则把它做成扩展 provider
+  或其所服务结果能力的内部分；
+- 当变更属于既有产品契约并共享该内置能力的生命周期时，扩展
+  `loopx/capabilities/<capability>/`；
+- 只有当 LoopX 核心必须默认交付它且它具有稳定调用方契约、真实入口点与聚焦
+  验证时，才创建新的内置能力；
+- 把通用 manifest、注册、兼容性与生命周期机制放在 `loopx/extensions/`；
+- 当独立版本化或可选 provider 发行版共置时放在 `packages/<package-id>/`，
+  单独分发时放在自己的包或仓库中。把 `loopx/extensions/` 保留给扩展生命周期
+  代码与随 LoopX wheel 捆绑的 provider；
+- 不要仅为让扩展可安装而创建能力。当 LoopX 调用方不需要 provider-neutral
+  能力契约时，扩展所有的命令或工作流可以只声明其运行时与生命周期；
+- 当 provider 引入新产品契约时，只有当该契约有意 provider-neutral 且属于
+  LoopX 能力目录时，才注册能力契约并通过扩展实现；
+- 把私有 helper 保留在最近的所有者模块中。helper 不因涉及几个文件就成为新
+  能力或扩展。
+
+在编辑前记录放置理由：capability id、provider id、provider 是内置还是扩展
+交付，以及最近的既有所有者为何充分或不充分。完整决策指南参见
+`docs/reference/extensions.md`。
+
+在添加新模块、builder、协议字段、CLI 选项、fixture、冒烟段或抽象前，通过
+合身范围评审：
+
+- 识别需要它的已交付行为、活跃调用点或显式兼容契约。如果其价值只是未提交的
+  未来 runner、设计说明或没有验证契约的假设扩展，把设计保留在 docs 或 todo
+  状态中，直到真实调用点出现。
+- 优先选择内聚、保持行为的衔接点。例如，让 ledger 先识别一个紧凑的公开安全
+  行形状，再添加专用 benchmark builder、arm 常量或宽字段级冒烟。不要把范围
+  切得如此窄，以致评审者必须从多个依赖 PR 重构一个逻辑行为。
+- 从语义而非观察到的输出设计测试。在测试实现前独立评审预期不变量与合法或
+  非法迁移。绝不从被测实现或其当前输出推导期望结果；特征化 fixture 不是
+  权威，矛盾需要规则修复加负向或变异覆盖。
+- 移动代码前先特征化。对 status、quota、review-packet、scheduler、monitor 与
+  handoff 行为，先添加或扩展对齐 fixture，再提取证明过的规则或内聚规则组。
+- 复用既有仓库模式与有界上下文。把代码添加到其变更原因所属的位置，如
+  `control_plane/runtime`、`control_plane/quota` 或 `control_plane/todos`；
+  不要仅因几个文件形状相似就创建通用 sink 目录或 helper 层。
+- 把大型或热点文件视为警告信号。当变更会增大已超大的模块时，先寻找窄读模型、
+  领域 helper 或有界上下文归属。对内部模块移动，更新活跃调用点并删除旧入口点；
+  只有真实外部导入、持久状态、CLI/API 契约或迁移窗口需要时才保留兼容包装器。
+- 区分重复知识与看起来重复的代码。合并共享状态规则、协议语义、序列化契约与
+  生命周期不变量；当两个调用方只是看起来相似但将因不同原因演化时，避免参数
+  繁重的抽象。
+- 保持冒烟薄而持久。它们应证明已交付行为、边界强制与回归契约，而非临时
+  builder 产生的每一个附带字段。大型冒烟是提示把可复用逻辑移入产品模块或
+  收窄断言面。
+- 让非法状态难以表达。对 status、quota、scheduler、monitor、todo 与 handoff
+  流程，优先显式 enum、schema 与迁移 helper，而非零散布尔与仅散文假设。
+- 状态分类与交付语义规则属于 typed enum、schema 或迁移 helper。子串拒绝清单
+  与散文启发式必须携带文档化理由与 typed 后续项；PR 评审必须用具体的
+  误报/漏报风险标记它们。
+- 核心控制面义务与错误文本必须保持领域中立。不要把产品或 benchmark 特定措辞
+  （例如 "product advancement"）放入通用 work-lane、quota、todo 或 settlement
+  契约；优先目标无关措辞。
+- 默认行为变更必须披露：重命名编码旧默认值的冒烟、更新文档/发布说明并点名
+  受影响的通道。契约中的 "Guidance" 与机器强制义务（如 `must_attempt_work`）
+  必须显式区分，而不是从散文推断。
+- 在输入、配置、权限与状态边界快速失败并携带有用上下文，但不要用宽泛异常
+  管道或静默回退替代清晰的流程。
+- 交付合身、可逆转的批次。PR 应主题统一、本地验证，并可作为完整阶段包评审。
+  当 diff 内聚且避免隐藏未来脚手架时，几百到约一两千行可以合适；如果行为被
+  拆分到后续 PR，30 行的 PR 也可能太小。当这样做让评审与回滚更清晰时，
+  分离特征化/对齐 fixture、机械移动、行为变更与清理。
+- 保持公开 PR 简洁并聚焦当前目的。当未来扩展点减少近期震荡、保持兼容性或
+  定义已文档化并测试的真实契约时，允许它们。不要把私有/本地实验脚手架、
+  诊断运行转储、未使用的投机管道或冗长背景叙事与当前行为需要的代码路径打包。
+- 压缩而非追加。对文档、fixture、dashboard 与示例，添加新的当前真相时替换或
+  退役陈旧材料；不要让权威界面堆积同一结论的多个版本。
+
+像积极添加代码一样使用此清单来删除、推迟或合身化代码。一个移除未使用抽象、
+把冒烟收窄到真实契约或把规则移入正确有界上下文的 PR，往往比在同一行为周围
+添加更大框架的 PR 更有价值。
+
+## 自动化与 Monitor Todos
+
+不要把一次性项目或 PR monitor 逻辑硬编码到通用 heartbeat 自动化提示词中。
+周期性的项目特定 watch（如"监控 PR #532 直到合并"）属于 LoopX 状态中的
+`continuous_monitor` todo，带紧凑元数据如 `claimed_by`、`unblocks_todo_id` 与
+证据说明。heartbeat 提示词应保持通用，并通过 status、quota 与 todo 投影发现
+monitor 工作。只有 heartbeat 生命周期契约本身变化或用户明确要求更改 scheduler
+时，才更新自动化提示词。
+
+## 投影 Sink 设计
+
+当添加面向操作员的展示 sink（如 Lark Base、dashboard、聊天摘要或报告）时，
+从 LoopX 的公开安全状态与投影界面构建，而不是解析特定项目的私有源文件。
+有效的展示输入包括 todo 投影、quota/status 契约、前台投影、紧凑 run-history
+事件、公开安全证据指针与脱敏源警告。
+
+不要让通用 sink 依赖某个本地文档、私有规划文件、非公开 wiki、原始 transcript、
+本地路径或 connector 负载的形状。如果源有价值，先把它转换为带有稳定 id、
+源标签、证据与显式 gate 的有界 LoopX 投影；然后让 sink 渲染该投影。公开或
+多用户 sink 必须消费脱敏的公开安全证据。经用户授权的边界下，显式所有者的
+操作面板可同步私有规划证据，但仍应通过 `agent_id` 限定行，并避免凭据或机密，
+除非用户明确要求凭据处理工作流。
+
+投影 sink 应把行谱系作为数据保留，而非临时散文。当行取代、迁移或退役较早
+展示行时，通过投影生命周期字段（如 `row_lifecycle`、`supersedes`、
+`superseded_by`、`source_id` 与紧凑迁移审计证据）表示。sink 可在现有
+证据/历史字段中渲染谱系，但不应要求读取项目私有源文档才能理解一行为何变化。
+
+## 冒烟保留政策
+
+仅当冒烟测试验证持久公开行为时才保留：
+
+- 已交付的 CLI/运行时行为；
+- 可复用的控制面契约；
+- 公共/私有边界强制；
+- 先前曾搁浅自动化的回归；
+- 可能捕获未来 bug 的代表性 fixture。
+
+不要保留主体目的是断言陈旧研究说明精确文本、候选排名包、临时运行评审或
+过渡性 benchmark 决策的一次性冒烟。把该信息保留在研究文档本身，并用数据驱动
+的聚合冒烟覆盖共享不变量。
+
+当冒烟超过约 500 行时，重新检查它是否真的只有一个测试。优先把可复用逻辑
+拆分到产品模块，并让冒烟保持为薄的公开行为检查。大型集成冒烟仅在覆盖真实
+端到端适配器契约（更小单元测试无法覆盖）时才可接受。
+
+Benchmark 冒烟绝不要求原始任务文本、原始轨迹、原始日志、verifier 输出尾部、
+凭据、上传、排行榜提交或本地私有产物路径。
 
 ## LoopX Self-Repair
 
-When LoopX behavior is surprising, too small, contradictory, or called
-out by the user as likely wrong, use the project skill
-`skills/loopx-self-repair/SKILL.md`. Treat recurring mistakes as product
-or process gaps: update the skill, interaction docs, active-state projection,
-or focused smoke so the lesson is durable. Do not resolve self-repair by
-lowering gates, guessing around contradictory payloads, or committing private
-logs and local state.
+当 LoopX 行为出乎意料、过小、矛盾或用户指出可能错误时，使用项目技能
+`skills/loopx-self-repair/SKILL.md`。把重复错误视为产品或流程缺口：更新技能、
+交互文档、活动状态投影或聚焦冒烟，使教训持久。不要通过降低 gate、猜测绕过
+矛盾负载或提交私有日志与本地状态来解决 self-repair。
 
-## Benchmark Smoke Classification
+## Benchmark 冒烟分类
 
-Use this classification when cleaning or reviewing benchmark-related changes:
+在清理或评审 benchmark 相关变更时使用此分类：
 
-- Keep focused boundary smokes such as
-  `examples/benchmark-candidate-source-boundary-smoke.py`; they guard a reusable
-  public/private source contract.
-- Keep toolkit permission and integrity smokes while they validate the shipped
-  provider-neutral capability contract.
-- Keep benchmark-native runners, adapters, ledgers, scoring reducers, and dated
-  experiment packets outside the active product surface. Historical versions
-  belong under `deprecate/benchmark-legacy/` and are not part of active CI.
-- Add a new active benchmark smoke only when it protects a stable toolkit
-  behavior; experiment-specific validation belongs with the research workspace.
+- 保留聚焦边界冒烟（如
+  `examples/benchmark-candidate-source-boundary-smoke.py`）；它们守护可复用的
+  公共/私有源契约。
+- 在它们验证已交付的 provider-neutral 能力契约期间，保留工具包权限与完整性
+  冒烟。
+- 把 benchmark 原生 runner、适配器、ledger、评分 reducer 与带日期实验包保留在
+  活跃产品界面之外。历史版本属于 `deprecate/benchmark-legacy/`，不是活跃 CI
+  的一部分。
+- 仅当它保护稳定的工具包行为时才添加新的活跃 benchmark 冒烟；实验特定验证
+  属于研究工作区。

@@ -1,46 +1,46 @@
-# Auto Research Stop, Takeover, And State-Aware Wake
+# Auto Research 停止、接管与状态感知唤醒
 
-Contributor walkthrough for the shipped Auto Research control transitions.
-Reuse the existing one-command path. Do not add a second launcher, and do not
-change the README first screen without maintainer preview.
+> [English](auto-research-stop-takeover-wake-walkthrough.md)
 
-Runtime control transitions landed in
-[#2786](https://github.com/huangruiteng/loopx/pull/2786) (related
-[#2783](https://github.com/huangruiteng/loopx/issues/2783)). This guide is the
-operator-facing proof path for GH-C43.
+面向贡献者的、已交付 Auto Research 控制转移走查。复用现有单命令路径。不要添加
+第二个 launcher，也不要在未经 maintainer 预览的情况下修改 README 首屏。
 
-Canonical command path:
-[Auto-research command path](../../demo/auto_research/README.md).
+运行时控制转移在
+[#2786](https://github.com/huangruiteng/loopx/pull/2786) 交付（相关
+[#2783](https://github.com/huangruiteng/loopx/issues/2783)）。本指南是 GH-C43 的
+操作者侧证明路径。
 
-## What This Walkthrough Covers
+规范命令路径：
+[Auto-research 命令路径](../../demo/auto_research/README.md)。
 
-| Transition | Operator signal | Result |
+## 本走查覆盖什么
+
+| 转移 | 操作者信号 | 结果 |
 | --- | --- | --- |
-| External stop | Place `workspace/.loopx-auto-research-stop` | Worker-loop exits with `stop_reason = operator_stop_requested` before the next round |
-| Operator takeover | `auto-research start … --execute --attach` | Attach to the visible tmux session; skip default background wake so the operator acts first |
-| State-aware wake | `--wake-visible-after-launch` with `--no-attach` | Only lanes with a selected runnable todo and `quota.should_run` receive the fixed A2A wake |
-| Quota pause | Live `quota.ok && !quota.should_run` | Worker turn returns `mode = paused_by_quota`; the loop reports `stop_reason = quota_paused` |
+| 外部停止 | 放置 `workspace/.loopx-auto-research-stop` | Worker-loop 在下一轮之前以 `stop_reason = operator_stop_requested` 退出 |
+| 操作者接管 | `auto-research start … --execute --attach` | 附加到可见 tmux 会话；跳过默认后台唤醒，让操作者先行动 |
+| 状态感知唤醒 | `--wake-visible-after-launch` 配合 `--no-attach` | 只有带选中可运行 todo 且 `quota.should_run` 的 lane 收到固定 A2A 唤醒 |
+| Quota 暂停 | 实时 `quota.ok && !quota.should_run` | Worker turn 返回 `mode = paused_by_quota`；Loop 报告 `stop_reason = quota_paused` |
 
-Individual `worker-turn` calls are not gated by the stop marker. That preserves
-manual lane advance while the multi-round loop is paused.
+单个 `worker-turn` 调用不受停止标记拦截。这样在多轮 Loop 暂停时仍保留手动推进
+lane 的能力。
 
-## Boundaries
+## 边界
 
-- Stay on the shipped `loopx auto-research start` / `worker-loop` / `worker-turn`
-  commands. Do not invent a parallel demo launcher.
-- Use synthetic or redacted public-safe evidence only. No credentials, raw
-  Codex transcripts, private paths, or live model claims.
-- `--attach` and `--wake-visible-after-launch` conflict by design: choose
-  operator takeover or background wake, not both.
-- Stopping the worker-loop is not the same as killing the tmux session. Remove
-  the stop marker to resume the loop; use `tmux kill-session` only when the
-  visible rehearsal itself should end.
+- 坚持使用交付的 `loopx auto-research start` / `worker-loop` / `worker-turn`
+  命令。不要发明并行 demo launcher。
+- 只使用合成或脱敏的公开安全证据。不携带凭证、原始 Codex 记录、私有路径或
+  在线模型主张。
+- `--attach` 与 `--wake-visible-after-launch` 按设计互斥：选择操作者接管或
+  后台唤醒，不要两者兼得。
+- 停止 worker-loop 不等于杀死 tmux 会话。移除停止标记即可恢复 Loop；仅当
+  可见彩排本身应当结束时才使用 `tmux kill-session`。
 
-## 1. Start From The Existing Command Path
+## 1. 从现有命令路径出发
 
-Export one explicit goal and workspace identity first, and reuse it in every
-later command. Without `--goal-id`, `start` creates a fresh timestamped goal
-that the stop/resume commands below could not address:
+先导出一个显式 goal 与工作区身份，并在之后的每条命令中复用。没有
+`--goal-id` 时，`start` 会创建一个带时间戳的新 goal，下面的停止/恢复命令
+将无法指向它：
 
 ```bash
 export GOAL_ID="loopx-auto-research-demo"
@@ -66,7 +66,7 @@ loopx --registry "$LOOPX_REGISTRY" \
   --replace-existing
 ```
 
-For JSON automation that records wake evidence without attaching:
+对于记录唤醒证据、但不附加的 JSON 自动化：
 
 ```bash
 loopx --registry "$LOOPX_REGISTRY" \
@@ -81,17 +81,16 @@ loopx --registry "$LOOPX_REGISTRY" \
   --wake-visible-after-launch
 ```
 
-## 2. Stop The Worker Loop Without Killing State
+## 2. 停止 Worker Loop 而不破坏状态
 
-While a multi-round worker-loop is running against the `$WORKSPACE` research
-workspace, place the stop marker there. `worker-loop` reads the marker from
-its own working directory, so run it from `$WORKSPACE`:
+当多轮 worker-loop 正对 `$WORKSPACE` 研究工作区运行时，把停止标记放在那里。
+`worker-loop` 从其自身工作目录读取标记，因此请从 `$WORKSPACE` 运行：
 
 ```bash
 touch "$WORKSPACE/.loopx-auto-research-stop"
 ```
 
-The next round check exits with:
+下一轮检查以如下内容退出：
 
 ```json
 {
@@ -101,12 +100,10 @@ The next round check exits with:
 }
 ```
 
-when the marker is present before round 1, or with prior turns retained when the
-marker appears between rounds. The marker is checked at the top of every round,
-not only at process entry.
+当标记在第 1 轮之前存在时如此；若标记出现在轮次之间，则保留先前轮次。标记在
+每轮顶部检查，而不只是进程入口。
 
-Resume by removing the marker and calling `worker-loop` again from the same
-workspace with the same goal:
+通过移除标记并调用 `worker-loop` 从同一工作区、同一 goal 恢复：
 
 ```bash
 rm -f "$WORKSPACE/.loopx-auto-research-stop"
@@ -126,14 +123,13 @@ loopx --registry "$LOOPX_REGISTRY" \
   --complete-selected-todo
 ```
 
-`operator_stop_requested` is distinct from `quota_paused`, `no_executed_turns`,
-`no_runnable_frontier`, and `max_rounds`.
+`operator_stop_requested` 与 `quota_paused`、`no_executed_turns`、
+`no_runnable_frontier` 和 `max_rounds` 不同。
 
-## 3. Take Over A Visible Lane
+## 3. 接管可见 Lane
 
-Immediate operator takeover uses the same start command with `--attach`,
-targeting the same explicit goal and workspace. This skips the default
-visible-role wake so the operator enters the tmux session first:
+立即的操作者接管使用同一个 start 命令配合 `--attach`，指向同一显式 goal 与
+工作区。这会跳过默认的可见角色唤醒，让操作者先进入 tmux 会话：
 
 ```bash
 loopx --registry "$LOOPX_REGISTRY" \
@@ -146,34 +142,34 @@ loopx --registry "$LOOPX_REGISTRY" \
   --attach
 ```
 
-Inside the session, interrupt a pane, run a single-lane worker-turn or advance
-todos manually, then continue. Attach later without relaunching:
+在会话内，中断某个 pane，运行单个 lane 的 worker-turn 或手动推进 todo，然后
+继续。之后无需重新启动即可附加：
 
 ```bash
 tmux attach -t loopx-auto-research
 ```
 
-Stop only the visible rehearsal (not the LoopX goal state) with:
+只停止可见彩排（而非 LoopX goal 状态）用：
 
 ```bash
 tmux kill-session -t loopx-auto-research
 ```
 
-## 4. State-Aware Wake Filter
+## 4. 状态感知唤醒过滤器
 
-When wake is requested after launch, Auto Research loads each lane frontier
-through `load_auto_research_worker_frontier()` and skips lanes that should not
-receive the fixed A2A prompt:
+当启动后请求唤醒时，Auto Research 通过
+`load_auto_research_worker_frontier()` 加载每个 lane 的 frontier，并跳过不应该
+收到固定 A2A prompt 的 lane：
 
-| Skip reason | Meaning |
+| 跳过原因 | 含义 |
 | --- | --- |
-| `quiet_completion_allowed` | Goal already allows quiet completion |
-| `no_selected_todo` | Frontier has no selected runnable todo |
-| `quota_should_run_false` | Scheduler blocked the lane |
-| `no_agent_mapping` | Started lane has no agent id mapping |
-| `frontier_load_failed` | Frontier load failed; receipt uses `error_code`, never a raw exception string |
+| `quiet_completion_allowed` | Goal 已允许安静完成 |
+| `no_selected_todo` | Frontier 没有选中的可运行 todo |
+| `quota_should_run_false` | 调度器拦截了该 lane |
+| `no_agent_mapping` | 已启动 lane 没有 agent id 映射 |
+| `frontier_load_failed` | Frontier 加载失败；receipt 使用 `error_code`，绝不使用原始异常字符串 |
 
-If every lane is filtered, the wake receipt is a public-safe no-op:
+如果每个 lane 都被过滤，唤醒 receipt 是一个公开安全的 no-op：
 
 ```json
 {
@@ -186,27 +182,26 @@ If every lane is filtered, the wake receipt is a public-safe no-op:
 }
 ```
 
-An empty ready set must not call the underlying wake helper with `[]`, because
-legacy wake semantics treat an empty list as “all lanes”.
+空的就绪集合绝不能以 `[]` 调用底层唤醒 helper，因为遗留唤醒语义把空列表解释为
+“所有 lane”。
 
-Filtered lanes appear under `state_aware_filter` for auditability. The
-broadcaster still does not select todos or write LoopX research truth.
+被过滤的 lane 出现在 `state_aware_filter` 下以便审计。广播器仍然不选择 todo，
+也不写入 LoopX 研究真值。
 
-## 5. Quota Pause Versus Operator Stop
+## 5. Quota 暂停对操作者停止
 
-When a turn sees `quota.ok` and `quota.should_run == false`, it returns
-`mode = paused_by_quota` before execution. If every turn in a round is paused
-that way, the worker-loop stops with `stop_reason = quota_paused`.
+当某一 Turn 看到 `quota.ok` 且 `quota.should_run == false` 时，它在执行之前返回
+`mode = paused_by_quota`。如果一轮中每个 Turn 都这样暂停，worker-loop 以
+`stop_reason = quota_paused` 停止。
 
-Do not treat resource pressure as operator intent:
+不要将资源压力当作操作者意图：
 
-- `quota_paused` — scheduler said not to spend;
-- `operator_stop_requested` — operator placed the stop marker.
+- `quota_paused` —— 调度器说不要花费；
+- `operator_stop_requested` —— 操作者放置了停止标记。
 
-## Reproducible Validation
+## 可复现验证
 
-No live model is required. Run the synthetic smokes that pin each transition,
-then the optional cycle smoke:
+无需在线模型。运行固定每个转移的合成 smoke，然后是可选周期 smoke：
 
 ```bash
 python3 examples/auto-research-stop-marker-smoke.py
@@ -219,10 +214,8 @@ python3 examples/showcase-catalog-smoke.py
 loopx check --scan-path docs/showcases --scan-path docs/guides
 ```
 
-## Evidence Boundary
+## 证据边界
 
-This walkthrough documents shipped public contracts with synthetic fixtures.
-It does not claim that a research finding is production-ready, does not record
-raw logs or credentials, and does not promote Auto Research as a second core
-scheduler. Promotion still requires rollout-backed evidence and normal LoopX
-gate or writeback rules.
+本走查用合成夹具记录已交付的公开契约。它不声称某研究发现已可投产，不记录原始
+日志或凭证，也不把 Auto Research 当作第二个核心调度器晋升。晋升仍需要 rollout
+支撑的证据以及常规 LoopX gate 或写回规则。

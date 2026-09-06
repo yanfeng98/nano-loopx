@@ -1,35 +1,34 @@
 # Attention Queue
 
-The attention queue is the first-screen status contract for LoopX. It is
-designed for Codex goal ticks, heartbeat jobs, and a future UI that needs to
-answer one question quickly:
+> [English](attention-queue.md)
 
-> Which goal needs attention next, and who is it waiting on?
+Attention queue 是 LoopX 的首屏 status 契约。它为 Codex goal tick、heartbeat
+作业和未来的 UI 设计，用来快速回答一个问题：
 
-`loopx status` builds the queue from three public-safe surfaces:
+> 哪个目标下一个需要关注，它在等谁？
 
-- registry goals and adapter declarations,
-- compact run-history indexes,
-- the public/private contract check.
+`loopx status` 从三个 public-safe 面构建队列：
 
-It does not read private run payloads beyond the compact index fields, does not
-inspect project-specific logs, and does not mutate files.
+- registry 目标与 adapter 声明，
+- 紧凑 run-history 索引，
+- 公共/私有契约检查。
 
-For the full JSON shape intended for dashboards and scripts, see
-[status-data-contract.md](../status-data-contract.md).
+它不读取紧凑索引字段之外的私有 run payload，不检查项目特定日志，也不改动文件。
 
-## Command
+供 dashboard 和脚本使用的完整 JSON 形状见
+[status-data-contract.md](../status-data-contract.md)。
+
+## 命令
 
 ```bash
 loopx status
 loopx --format json status
 ```
 
-The command intentionally stays generic. Project adapters decide their own
-domain-specific classifications, but status maps common classifications into a
-small queue model.
+该命令刻意保持通用。项目 adapter 决定自己的领域特定分类，但 status 把常见分类
+映射到一个小的队列模型。
 
-## Queue Item Schema
+## 队列条目 Schema
 
 ```json
 {
@@ -55,50 +54,41 @@ small queue model.
 }
 ```
 
-Fields:
+字段：
 
-- `goal_id`: stable public-safe goal id from registry or runtime.
-- `status`: classification or derived state.
-- `lifecycle_phase`: derived state-interaction phase for dashboard grouping.
-- `lifecycle_flags`: all compact phases that apply to the latest goal state.
-- `waiting_on`: one of `user_or_controller`, `codex`, `external_evidence`,
-  `monitor_signal`, or `controller`.
-- `severity`: `high`, `action`, or `watch`.
-- `recommended_action`: exactly one user-facing next action from the adapter or
-  status layer.
-- `operator_question`: optional human-facing gate to show in the LoopX
-  operator view. Dashboard action cards should treat this as the primary
-  first-screen question when it is present.
-- `agent_command`: optional target-agent command or instruction that becomes
-  valid only after the operator gate is approved.
-- `quota`: optional compact compute-quota state. It should explain whether a
-  goal is eligible, throttled, waiting, paused, or operator-gated before an
-  automation spends another agent turn.
-- `user_todos`: optional active-state checkbox summary for the human/operator.
-  Dashboard consumers should surface the first unfinished item before generic
-  gate prose when present.
-- `agent_todos`: optional active-state checkbox summary for Codex/project
-  agents. This belongs in status/CLI and handoff context; it does not replace a
-  user/controller gate.
-- `source`: `contract`, `registry`, `run_history`, or `latest_run`.
+- `goal_id`：来自 registry 或运行时的稳定 public-safe 目标 id。
+- `status`：分类或派生状态。
+- `lifecycle_phase`：用于 dashboard 分组的派生 state 交互阶段。
+- `lifecycle_flags`：适用于最新目标状态的所有紧凑阶段。
+- `waiting_on`：`user_or_controller`、`codex`、`external_evidence`、
+  `monitor_signal` 或 `controller` 之一。
+- `severity`：`high`、`action` 或 `watch`。
+- `recommended_action`：来自 adapter 或 status 层的恰好一个面向用户的下一步行动。
+- `operator_question`：可选的、要在 LoopX operator 视图显示的面向人类 gate。
+  Dashboard 动作卡片应把它当作存在时的首要首屏问题。
+- `agent_command`：可选的、目标 Agent 的命令或指令，仅在 operator gate 获批后生效。
+- `quota`：可选的紧凑计算配额状态。它应在自动化再花一个 Agent turn 之前说明目标
+  是否合格、受限、等待、暂停或 operator-gated。
+- `user_todos`：可选的、给人类/operator 的 active-state 复选框摘要。
+  Dashboard 消费方在存在时应在通用 gate 散文之前显示第一个未完成条目。
+- `agent_todos`：可选的、给 Codex/项目 Agent 的 active-state 复选框摘要。
+  它属于 status/CLI 与 handoff 上下文；不替代用户/controller gate。
+- `source`：`contract`、`registry`、`run_history` 或 `latest_run`。
 
-## Summary Counters
+## 摘要计数器
 
-The queue summary keeps controller handoff visible:
+队列摘要保持 controller handoff 可见：
 
-- `needs_user_or_controller`: counts both `waiting_on=user_or_controller` and
-  `waiting_on=controller`.
-- `needs_controller`: counts only goals waiting for a target controller or
-  adapter connection.
-- `needs_codex`: counts goals ready for Codex action.
-- `watching_external_evidence`: counts goals waiting on outside evidence or
-  metrics.
-- `watching_monitor`: counts monitor-only goals that should stay visible but
-  do not require immediate Codex work.
+- `needs_user_or_controller`：同时统计 `waiting_on=user_or_controller` 与
+  `waiting_on=controller`。
+- `needs_controller`：只统计等待目标 controller 或 adapter 连接的 Goal。
+- `needs_codex`：统计准备好接受 Codex 行动的目标。
+- `watching_external_evidence`：统计等待外部证据或指标的目标。
+- `watching_monitor`：统计应保持可见但不要求立即 Codex 工作的 monitor-only 目标。
 
-## Classification Mapping
+## 分类映射
 
-Status treats these as user/controller attention:
+Status 把这些视为用户/controller 关注：
 
 - `needs_controller_opt_in`
 - `needs_human_reward`
@@ -106,7 +96,7 @@ Status treats these as user/controller attention:
 - `ready_for_controller_opt_in`
 - `ready_for_user_relay`
 
-Status treats these as Codex-ready action:
+Status 把这些视为 Codex-ready 行动：
 
 - `controller_opted_in_waiting_for_run`
 - `design_next_experiment`
@@ -118,24 +108,20 @@ Status treats these as Codex-ready action:
 - `run_validation`
 - `state_refreshed`
 
-`state_refreshed` means a controller updated active state, ledger, or planning
-docs without running a project adapter. The next Codex action is to inspect the
-refreshed state and continue one bounded progress segment.
+`state_refreshed` 表示 controller 更新了 active state、ledger 或规划文档，
+但没有运行项目 adapter。下一个 Codex 行动是检查刷新后的状态并继续一个有界进度片段。
 
-A registry entry can explicitly override first-screen attention with
-`waiting_on`, `attention_status`, `recommended_action`, `operator_question`, and
-`next_handoff_condition`. This lets a controller keep a refreshed goal in the
-operator lane when the latest run is fresh but the real next step is still a
-human or target-controller decision. The override changes status and quota
-eligibility, but does not grant project-agent execution. If quota later reports
-`safe_bypass_allowed=true`, the target heartbeat may work on another bounded
-read-only steering or analysis item from the active state, but it still must not
-execute the gated command or any adapter/write/production path.
+Registry 条目可以用 `waiting_on`、`attention_status`、`recommended_action`、
+`operator_question` 和 `next_handoff_condition` 显式覆盖首屏关注。
+这让 controller 在最新 run 很新鲜但真实下一步仍是人类或目标 controller 决策时，
+把已刷新目标留在 operator lane。该覆盖改变 status 与 quota 资格，
+但不授予项目 Agent 执行权。如果 quota 后来报告 `safe_bypass_allowed=true`，
+目标 heartbeat 可以处理 active state 中另一个有界的只读 steering 或分析条目，
+但仍不得执行被 gate 的命令或任何 adapter/write/生产路径。
 
-For complex goals, avoid encoding a whole reading queue in one long
-`recommended_action`. Keep `recommended_action` as one routing sentence, then
-write explicit checkbox sections in the active state. Project agents should
-prefer the CLI helper instead of hand-editing section names:
+对复杂目标，避免把整个阅读队列编码进一个很长的 `recommended_action`。
+把 `recommended_action` 保持为一个路由句，然后在 active state 里写显式复选框区块。
+项目 Agent 应优先使用 CLI helper 而不是手编区块名：
 
 ```bash
 loopx todo add \
@@ -151,9 +137,8 @@ loopx todo add \
   --text "Build the next read-only worksheet after the user decision is recorded."
 ```
 
-The helper resolves the goal's active state from the registry, creates the
-canonical section when needed, and avoids duplicate exact todo text. The
-resulting Markdown shape is:
+Helper 从 registry 解析目标的 active state，在需要时创建规范区块，
+并避免重复的确切 todo 文本。生成的 Markdown 形状是：
 
 ```md
 ## User Todo / Owner Review Reading Queue
@@ -166,83 +151,70 @@ resulting Markdown shape is:
 - [ ] Build the next read-only worksheet after the user decision is recorded.
 ```
 
-Status lifts those checkboxes into `user_todos` and `agent_todos`, so dashboard
-attention stays human-readable and agent-facing status remains actionable.
+Status 把这些复选框提升到 `user_todos` 和 `agent_todos`，因此 dashboard 关注
+保持人类可读，Agent 面向的 status 保持可执行。
 
-`read_only_project_map` means a connected read-only project now has a standard
-map run from `loopx read-only-map`. The next Codex action should use the
-map's recommended action or upgrade to a project-specific adapter when needed.
+`read_only_project_map` 表示一个已连接的只读项目现在有了来自
+`loopx read-only-map` 的标准 map run。下一个 Codex 行动应使用 map 的推荐行动，
+或按需升级到项目特定 adapter。
 
-Status treats `blocked_by_safety` as high-severity user/controller attention.
+Status 把 `blocked_by_safety` 视为高严重度的用户/controller 关注。
 
-Status treats classifications prefixed with `await_` or `monitor_` as external
-evidence watches.
+Status 把带 `await_` 或 `monitor_` 前缀的分类视为外部证据关注。
 
-If a connected goal has no saved run yet, status emits `connected_without_run`
-so the next Codex action is clear: run the first read-only adapter tick and save
-a compact run record.
+如果一个已连接目标还没有保存的 run，status 发出 `connected_without_run`，
+这样下一个 Codex 行动就清楚了：运行第一个只读 adapter tick 并保存紧凑 run 记录。
 
-If a planned high-complexity read-only-map adapter has no saved run yet, status
-keeps it in user/controller attention, asks the operator gate in LoopX,
-and exposes `loopx read-only-map --goal-id <goal> --dry-run` as
-`agent_command`. The command is execution context, not approval. The preview
-appends nothing; a real map run still waits for the target controller to move
-the adapter to `read-only-map-ready` or `connected-read-only`.
-Agent executors should use
+如果一个计划中的高复杂度 read-only-map adapter 还没有保存 run，status 把它
+保持在用户/controller 关注里，在 LoopX 中询问 operator gate，并把
+`loopx read-only-map --goal-id <goal> --dry-run` 暴露为 `agent_command`。
+该命令是执行上下文，不是批准。预览不追加任何内容；真正的 map run 仍等待
+目标 controller 把 adapter 移到 `read-only-map-ready` 或 `connected-read-only`。
+Agent 执行者应使用
 `loopx --registry "$HOME/.codex/loopx/registry.global.json" quota should-run --goal-id <goal>`
-as the hard compute gate. While the item is still planned, that guard stays
-`should_run=false` and omits `agent_command`, even though status displays the
-preview command for the human operator.
-If the guard also reports `safe_bypass_allowed=true`, the agent can do one
-independent read-only steering or analysis step that does not depend on this
-operator gate; it cannot run the preview command until the gate is approved.
-Before taking that safe-bypass step, the agent should surface the current gate
-to the user/controller if the same unresolved question was not already asked in
-the recent visible thread. `quota should-run` exposes `gate_prompt`,
-`operator_question`, `user_todo_summary`, and `agent_todo_summary` so the agent
-can ask one concrete Chinese question and still see its own safe follow-up
-checklist instead of silently skipping or forcing the user to inspect the
-dashboard manually.
-Markdown status output also prints an `operator_gate_dry_run` helper before
-`agent_command`, so CLI-facing agents see that the operator gate is a
-user-owned dry-run preview before any project-agent handoff.
+作为硬计算 gate。当条目仍是 planned 时，该 guard 保持 `should_run=false`
+并省略 `agent_command`，即使 status 为人类 operator 显示预览命令。
+如果 guard 也报告 `safe_bypass_allowed=true`，Agent 可以做一个不依赖该
+operator gate 的独立只读 steering 或分析步骤；在 gate 获批前不能运行预览命令。
+在采取该 safe-bypass 步骤前，如果同一未决问题没有在最近可见线程中问过，
+Agent 应向用户/controller 表露当前 gate。`quota should-run` 暴露
+`gate_prompt`、`operator_question`、`user_todo_summary` 和 `agent_todo_summary`，
+因此 Agent 可以问一个具体的中文问题并看到自己的安全后续清单，
+而不是静默跳过或强迫用户手动检查 dashboard。
+Markdown status 输出还在 `agent_command` 前打印 `operator_gate_dry_run` helper，
+让 CLI 面向的 Agent 看到 operator gate 是任何项目 Agent handoff 之前的
+用户拥有 dry-run 预览。
 
-After the operator answers that gate, record it with `loopx
-operator-gate`. Approved gates produce `operator_gate_approved` and move the
-next action to Codex with the approved `agent_command`; rejected or deferred
-gates produce `operator_gate_rejected` or `operator_gate_deferred` and keep the
-goal in the user/controller lane with the recorded reason.
+operator 回答那个 gate 后，用
+`loopx operator-gate` 记录。已批准的 gate 产生 `operator_gate_approved`
+并把下一个行动连同已批准的 `agent_command` 移交给 Codex；被拒绝或延迟的 gate
+产生 `operator_gate_rejected` 或 `operator_gate_deferred`，并把目标留在
+用户/controller lane，带记录的理由。
 
-If runtime contains an actionable goal that is not in the registry, status emits
-`unregistered_runtime_goal`. This is a controller action: either add the goal to
-the registry so it becomes part of the multi-project surface, or archive the
-runtime record so old experiments do not look like active work. Watch-only
-legacy records such as `await_*` and `monitor_*` stay in run history without
-becoming queue items.
+如果运行时包含一个不在 registry 中的可执行目标，status 发出
+`unregistered_runtime_goal`。这是 controller 行动：要么把目标加入 registry
+使它成为多项目面的一部分，要么归档运行时记录，使旧实验不像活跃工作。
+只读的遗留记录，如 `await_*` 和 `monitor_*`，留在 run history 而不成为队列条目。
 
-Use `loopx archive-runtime --goal-id <goal-id>` to preview cleanup of an
-obsolete runtime-only goal. The command only moves files when rerun with
-`--execute`.
+用 `loopx archive-runtime --goal-id <goal-id>` 预览清理一个过期的纯运行时目标。
+该命令只在重跑 `--execute` 时移动文件。
 
-If the contract check fails, status prepends a high-severity
-`loopx-contract` item before project goals.
+如果契约检查失败，status 在项目目标前插入一个高严重度 `loopx-contract` 条目。
 
-## Boundary
+## 边界
 
-The queue is safe to show in public docs or a local UI only when goal ids and
-recommended actions are sanitized. It should not contain:
+每当目标 id 与推荐行动已脱敏时，队列才安全出现在公共文档或本地 UI。它不应包含：
 
-- local absolute paths,
-- internal task ids,
-- raw metric values from private systems,
-- document links,
-- credentials,
-- raw prompts or logs.
+- 本地绝对路径，
+- 内部任务 id，
+- 来自私有系统的原始指标值，
+- 文档链接，
+- 凭据，
+- 原始提示或日志。
 
-Project-specific adapters may keep richer private evidence in their own repo or
-runtime payloads, but the status queue should remain compact and public-safe.
+项目特定 adapter 可以在自己的仓库或运行时 payload 里保留更丰富的私有证据，
+但 status 队列应保持紧凑且 public-safe。
 
-Lifecycle phases are derived by the status layer and should stay separate from
-adapter classifications. A queue item can keep its domain-specific status while
-also saying whether the goal is merely connected, mapped, refreshed,
-adapter-inspected, reward-judged, or controller-ready.
+生命周期阶段由 status 层派生，且应保持独立于 adapter 分类。一个队列条目可以保留
+其领域特定 status，同时说明目标只是 connected、mapped、refreshed、
+adapter-inspected、reward-judged，还是 controller-ready。

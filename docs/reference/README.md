@@ -1,18 +1,16 @@
-# Reference
+# 参考文档
 
-Reference docs are machine-facing or contract-facing documents that should be
-stable enough to test, lint, or link from implementation.
+> [English](README.md)
 
-Current groups:
+参考文档是面向机器或面向合同的文档,应足够稳定,可供实现代码测试、lint 或链接引用。
 
-- [Reference contracts](contracts/README.md)
-- [Protocol contracts](protocols/README.md)
-- [Extensions and capabilities](extensions.md): outcome contracts, provider
-  registration, extension packaging, readiness, and lifecycle boundaries.
-- [Project skill delivery](../../loopx/capabilities/project_skill_delivery/README.md): release-owned,
-  project-local skill discovery and managed-copy lifecycle.
+当前分组:
 
-High-traffic read paths:
+- [参考合同](contracts/README.md)
+- [协议合同](protocols/README.md)
+- [扩展与能力](extensions.md):outcome 合同、provider 注册、扩展打包、就绪度与生命周期边界。
+- [项目 skill 交付](../../loopx/capabilities/project_skill_delivery/README.md):release 持有、项目本地的 skill 发现与受管副本生命周期。
 
-- [agent_scoped_evidence_ledger_v0](protocols/agent-scoped-evidence-ledger-v0.md):
-  thin, per-agent evidence chronology used before replan or handoff.
+高流量读取路径:
+
+- [agent_scoped_evidence_ledger_v0](protocols/agent-scoped-evidence-ledger-v0.md):在 replan 或交接前使用的薄型、按 Agent 划分的证据时间线。

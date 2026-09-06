@@ -1,45 +1,39 @@
 # agent_scoped_evidence_ledger_v0
+> [English](agent-scoped-evidence-ledger-v0.md)
 
-`agent_scoped_evidence_ledger_v0` defines a thin, chronological read model for
-agents that need to replan, hand off, or explain progress without reading raw
-rollout logs, private active state, or another agent's detailed working trail.
+`agent_scoped_evidence_ledger_v0` 为需要重规划、交接或解释进展、又不读取原始 rollout 日志、私有 active state 或另一个 agent 详细工作轨迹的 agent 定义了一个薄的时间顺序读模型。
 
-The contract is a read model. It does not replace `ACTIVE_GOAL_STATE.md`, todo
-state, compact run history, status projection, review packets, quota routing, or
-the append-only rollout event log.
+本契约是读模型。它不取代 `ACTIVE_GOAL_STATE.md`、todo 状态、紧凑 run 历史、状态投影、评审包、quota 路由或追加式 rollout 事件日志。
 
-## Current Sources
+## 当前来源
 
-LoopX already has useful history and evidence surfaces, but they serve different
-jobs:
+LoopX 已有有用的历史与证据界面，但它们服务于不同工作：
 
-| Surface | Current job | Gap for agent replan |
+| 界面 | 当前工作 | 对 agent 重规划的缺口 |
 | --- | --- | --- |
-| `rollout-event-log.jsonl` | Append-only structured events such as todo, quota, refresh, validation, and compact evidence events. | It is a low-level event source, not an agent-facing filtered chronology. |
-| `loopx status` | Projects current state, todo index, attention queues, agent lanes, run history, and event summaries. | It answers "what is true now", not "what sequence should this agent review before replanning". |
-| `loopx review-packet` | Packages status and attention items for review or handoff. | It is packet-shaped, not a general scoped event ledger. |
-| `loopx history` | Reads compact run history and run indexes. | It is run-centric and not equivalent to rollout events. |
-| `loopx quota should-run --agent-id ...` | Decides whether a specific agent lane should act and projects a compact coverage ledger plus uncovered frontier from the evidence source. | It does not ask the model to reconstruct history or treat a read receipt as progress. |
+| `rollout-event-log.jsonl` | 追加式结构化事件，如 todo、quota、refresh、validation 与紧凑证据事件。 | 它是底层事件来源，不是面向 agent 的过滤时间线。 |
+| `loopx status` | 投影当前状态、todo index、关注队列、agent lane、run 历史与事件摘要。 | 它回答「现在什么是真的」，而非「该 agent 重规划前应复习什么序列」。 |
+| `loopx review-packet` | 为评审或交接打包状态与关注项。 | 它是包形状，不是通用作用域事件 ledger。 |
+| `loopx history` | 读取紧凑 run 历史与 run index。 | 它以 run 为中心，不等于 rollout 事件。 |
+| `loopx quota should-run --agent-id ...` | 决定特定 agent lane 是否应行动，并从证据来源投影紧凑覆盖 ledger 加未覆盖前沿。 | 它不要求模型重建历史，也不把读取回执当作进展。 |
 
-The resulting surface is a public-safe, bounded, agent-scoped ledger that the
-host can project into a replan action packet and an operator can inspect in full.
+得到的界面是公开安全、有界、agent 作用域的 ledger，host 可投影进重规划动作包，操作员可完整检查。
 
-## Ownership Boundary
+## 所有权边界
 
-| Layer | Owns | Must Not Own |
+| 层 | 拥有 | 不得拥有 |
 | --- | --- | --- |
-| Event sources | Durable append-only events, compact run records, ids, timestamps, and public-safe refs. | Prompt-ready planning summaries or cross-agent privacy policy. |
-| Status and review packets | Current projections, attention queues, frontier summaries, and operator packets. | Raw chronological replay or write authority. |
-| Quota | Lane routing, spend policy, scheduler hints, host context delivery, and the minimal replan action packet. | Storing replan rationale or accepting writeback. |
-| Agent-scoped evidence ledger | Thin chronological rows for the current agent plus compressed frontier for other agents. | Replan selection policy, semantic-delta validation, canonical writes, raw logs, raw trajectories, private documents, or full other-agent traces. |
-| Replan context policy | Builds the coverage ledger, delivery receipt, and uncovered frontier. | Reimplementing typed progress comparison or terminal-closure truth. |
-| Semantic write gate | Validates typed progress, state-grounded successors, fresh vision outcomes, blockers, and coverage-backed terminal results against the current obligation. | Reconstructing the evidence ledger or interpreting classification prose. |
-| Acting agent | Selects an uncovered direction from delivered context and submits a typed observation or vision outcome. | Treating context delivery, a manual read, or a legacy ACK alone as progress. |
+| 事件来源 | 持久化追加式事件、紧凑 run 记录、id、时间戳与公开安全引用。 | 面向 prompt 的规划摘要或跨 agent 隐私策略。 |
+| Status 与评审包 | 当前投影、关注队列、前沿摘要与操作员包。 | 原始时间顺序重放或写权限。 |
+| Quota | Lane 路由、花费策略、scheduler 提示、host 上下文投递与最小重规划动作包。 | 存储重规划理由或接受 writeback。 |
+| Agent 作用域证据 ledger | 当前 agent 的薄时间顺序行，加其他 agent 压缩前沿。 | 重规划选择策略、语义增量验证、规范写入、原始日志、原始轨迹、私有文档或完整其他 agent 轨迹。 |
+| 重规划上下文策略 | 构建覆盖 ledger、投递回执与未覆盖前沿。 | 重新实现类型化进展比较或终态关闭真相。 |
+| 语义写 gate | 依据当前义务验证类型化进展、状态接地的 successors、新鲜 vision 结局、blockers 与覆盖背书的终态结果。 | 重建证据 ledger 或解释分类措辞。 |
+| 行动 agent | 从投递的上下文选择一个未覆盖方向，提交类型化观察或 vision 结局。 | 单独把上下文投递、手动读取或遗留 ACK 当作进展。 |
 
-## Read Model Shape
+## 读模型形状
 
-The CLI payload uses the shipped `agent_scoped_evidence_log_v0` schema (the
-protocol name describes the ledger concept rather than a second wire schema):
+CLI 载荷使用交付的 `agent_scoped_evidence_log_v0` schema（协议名描述的是 ledger 概念，而非第二个线格式 schema）：
 
 ```json
 {
@@ -93,57 +87,45 @@ protocol name describes the ledger concept rather than a second wire schema):
 }
 ```
 
-The schema is intentionally narrow. It should be cheap to produce, cheap to read
-in a prompt, and stable enough for quota/replan tests.
+该 schema 刻意窄。它应廉价生成、prompt 中廉价读取，并稳定到足以支撑配额/重规划测试。
 
-## CLI Contract
+## CLI 契约
 
-The public CLI is read-only:
+公开 CLI 只读：
 
 ```bash
 loopx --format json evidence-log --goal-id <goal-id> --agent-id <agent-id> --thin --limit 30
 ```
 
-Supported filters:
+受支持过滤器：
 
-| Option | Meaning |
+| 选项 | 含义 |
 | --- | --- |
-| `--todo-id <todo-id>` | Filter rollout events by exact todo id and compact runs by bounded todo mention. |
-| `--since <iso8601>` | Return rows recorded after a timestamp. |
-| `--event-kind <kind>` | Filter rollout event kinds such as `todo_update`, `quota_should_run`, or `validation`. |
-| `--limit <n>` | Bound rows after filtering. Default should be small enough for an agent prompt. |
-| `--history-limit <n>` | Bound compact run-history rows scanned before filtering. |
-| `--rollout-limit <n>` | Bound rollout-event rows scanned from the tail before filtering. |
-| `--thin` | Select the only current public-safe mode; accepted explicitly for readable generated commands. |
-| global `--format json\|markdown` | Select JSON or the compact Markdown rendering. |
+| `--todo-id <todo-id>` | 按精确 todo id 过滤 rollout 事件，并按有界 todo 提及过滤紧凑 runs。 |
+| `--since <iso8601>` | 返回时间戳之后记录的行。 |
+| `--event-kind <kind>` | 过滤 rollout 事件种类，如 `todo_update`、`quota_should_run` 或 `validation`。 |
+| `--limit <n>` | 过滤后界定行数。默认应小到足以进入 agent prompt。 |
+| `--history-limit <n>` | 过滤前扫描的紧凑 run 历史行数上限。 |
+| `--rollout-limit <n>` | 过滤前从尾部扫描的 rollout 事件行数上限。 |
+| `--thin` | 选择当前唯一的公开安全模式；显式接受它以便生成可读命令。 |
+| 全局 `--format json\|markdown` | 选择 JSON 或紧凑 Markdown 渲染。 |
 
-The command must fail closed on missing `goal_id` or `agent_id`. A vague
-surface value such as `codex` should not silently fall into `other-agent`
-semantics; callers should pass a registered agent id and, when needed, a
-separate host surface such as `codex-app`, `codex-cli`, `opencode`, or `claude-code`.
+命令在缺 `goal_id` 或 `agent_id` 时必须失效关闭。`codex` 这类模糊界面值不应静默落入 other-agent 语义；调用方应传已注册 agent id，并在需要时传独立 host 界面，如 `codex-app`、`codex-cli`、`opencode` 或 `claude-code`。
 
-## Scoping Rules
+## 作用域规则
 
-The current implementation returns detailed rows under these deterministic
-rules:
+当前实现按以下确定性规则返回详情行：
 
-- the event has `agent_id` equal to the requested agent id;
-- when `--todo-id` is present, the event has that exact todo id;
-- compact run-history rows have the requested agent id and, when filtered by
-  todo, mention that todo in one of the bounded run fields;
-- `--since` and normalized `--event-kind` filters are applied before the final
-  newest-first limit.
+- 事件的 `agent_id` 等于请求的 agent id；
+- 存在 `--todo-id` 时，事件具有该精确 todo id；
+- 紧凑 run 历史行具有请求的 agent id，且按 todo 过滤时在有界 run 字段之一提及该 todo；
+- `--since` 与规范化 `--event-kind` 过滤器在最终最新优先限制之前应用。
 
-Other agents should not be shown row by row by default. They should be compressed
-into `other_agent_frontier` from the latest compact run-history row per agent,
-with a maximum of three rows. This lets an agent understand the shared direction
-without inheriting another lane's private scratchpad.
+其他 agent 默认不应逐行显示。它们应从每个 agent 的最新紧凑 run 历史行压缩进 `other_agent_frontier`，至多三行。这使 agent 了解共享方向，而不会继承另一个 lane 的私有草稿。
 
-## Replan Integration
+## 重规划集成
 
-When quota or status projects a replan obligation for an agent, the host folds
-the bounded agent-scoped chronology into a compact coverage ledger and delivers
-it with the current obligation:
+当 quota 或 status 为 agent 投影重规划义务时，host 把有界 agent 作用域时间线折叠进紧凑覆盖 ledger，并与当前义务一同投递：
 
 ```json
 {
@@ -165,114 +147,58 @@ it with the current obligation:
 }
 ```
 
-The full obligation also carries `replan_context_v0`: a bounded
-`coverage_ledger`, the same uncovered frontier, and a
-`replan_context_delivery_receipt_v0`. The control-plane responsibilities are
-deliberately split and causally bound:
+完整义务还携带 `replan_context_v0`：一个有界 `coverage_ledger`、同一未覆盖前沿与 `replan_context_delivery_receipt_v0`。控制面责任刻意拆分并因果绑定：
 
-- the evidence log remains the durable public-safe chronology;
-- quota owns context delivery and does not require a weak protocol-following
-  model to discover or execute a read ritual;
-- `typed_progress_observation_v0` owns work-slice identity and result semantics;
-- quota and `refresh-state` use the same goal-frontier reducer, while the write
-  gate closes only the current obligation with an accepted semantic delta.
+- 证据 ledger 保持持久化公开安全时间线；
+- quota 拥有上下文投递，不需要弱协议遵循模型去发现或执行读仪式；
+- `typed_progress_observation_v0` 拥有工作切片身份与结果语义；
+- quota 与 `refresh-state` 使用同一 goal-frontier reducer，写 gate 只以接受的语义增量关闭当前义务。
 
-When a turn identity makes the settlement chain executable,
-`interaction_contract.cli_channel.replan_settlement_contract` names its one
-causal binding. Its `semantic_obligation.settlement_bound` field is `false`
-when a selected Todo owns the receipt: in that case the typed replan delta is
-written and spent with `--todo-id` only, while the obligation id stays
-available for semantic validation. Combining `--todo-id` and
-`--replan-obligation-id` is never a valid settlement identity. Without a
-selected Todo, the same contract marks the replan obligation as directly bound
-and projects `--replan-obligation-id`. An unscoped diagnostic read keeps only
-compact replan guidance; it does not advertise an executable settlement
-contract or quota spend without the missing turn identity.
+当 Turn 身份使 settlement 链可执行时，`interaction_contract.cli_channel.replan_settlement_contract` 指名其唯一因果绑定。当所选 Todo 拥有回执时，其 `semantic_obligation.settlement_bound` 字段为 `false`：此时类型化 replan 增量只用 `--todo-id` 写入并花费，而义务 id 保留用于语义验证。组合 `--todo-id` 与 `--replan-obligation-id` 绝不成为有效 settlement 身份。没有所选 Todo 时，同一契约把 replan 义务标记为直接绑定并投影 `--replan-obligation-id`。无作用域诊断读取只保留紧凑 replan 指引；它不在缺失 Turn 身份时广告可执行 settlement 契约或配额花费。
 
-The agent should then write back one of:
+agent 随后应写回以下之一：
 
-- an `advanced` observation with a new surface, hypothesis, or probe family;
-- an `advanced` observation naming a successor Todo that is actually runnable
-  in current state;
-- a new concrete blocker with evidence;
-- coverage-backed `exploration_exhausted` or `no_followup`; or
-- for a vision-derived duty, a fresh evidence-linked vision path outcome.
+- 带新界面、假设或 probe 家族的 `advanced` 观察；
+- 指名当前状态中实际可运行的 successor Todo 的 `advanced` 观察；
+- 带证据的新具体 blocker；
+- 覆盖背书的 `exploration_exhausted` 或 `no_followup`；或
+- 对 vision 派生职责，一个新鲜、证据链接的 vision 路径结局。
 
-An accepted typed semantic ACK settles the corresponding projected obligation
-even when the source acceptance gap remains visible. Terminal coverage inputs
-fail at the CLI boundary when their required coverage scope is missing;
-`exploration_exhausted` additionally requires explicit coverage completion.
+被接受的类型化语义 ACK 结清相应投影义务，即使来源验收缺口仍可见。终态覆盖输入在其所需覆盖作用域缺失时于 CLI 边界失败；`exploration_exhausted` 另外要求显式覆盖完成。
 
-Every successful diagnostic `loopx evidence-log` execution appends an
-`evidence_log_read` rollout event and returns an
-`evidence_log_read_receipt_v0`. The receipt carries the goal id, agent id,
-bounded read window, canonical public-safe command, and recorded timestamp.
-Receipt events are excluded from an unfiltered ledger view so repeated reads do
-not recursively inflate the chronology. They are observability facts only: a
-read, a failed read, a prose ACK, or a historical repair-delta ACK does not
-close the current obligation. This prevents a receipt for an earlier periodic
-review from masking a later vision/frontier duty.
+每次成功的诊断性 `loopx evidence-log` 执行都追加一个 `evidence_log_read` rollout 事件并返回 `evidence_log_read_receipt_v0`。回执携带 goal id、agent id、有界读取窗口、规范公开安全命令与记录时间戳。回执事件从无过滤 ledger 视图中排除，使重复读取不会递归膨胀时间线。它们只是可观测性事实：一次读取、一次失败读取、一个散文 ACK 或一个历史修复增量 ACK 都不关闭当前义务。这防止先前周期评审的回执掩盖后续 vision/frontier 职责。
 
-### Effect-program boundary
+### Effect 程序边界
 
-This flow uses the effect-program separation without adding a second settlement
-executor. Host context projection is a repeatable read effect; the typed
-progress writeback is a separately validated state transition. The delivery
-receipt proves context delivery, while the semantic delta proves use of that
-context. Neither receipt is allowed to impersonate the other.
+本流程使用 effect-program 分离，而不添加第二个 settlement 执行器。Host 上下文投影是可重复读取效果；类型化进展 writeback 是单独验证的状态迁移。投递回执证明上下文投递，语义增量证明该上下文的使用。任一回执都不得冒充另一个。
 
-The live behavior qualification tests that causal handoff through an actual
-function-tool conversation rather than a testing-only output field. A Doubao
-actor receives the shipped Codex App heartbeat body and chooses the quota
-command against a hermetic public-safe Goal. The harness runs that command
-through the real LoopX CLI, returns its actual context/action packet, and asks
-the actor to choose the next real tool action. The actor independently qualifies
-the selected typed observation, then executes the real `refresh-state` command.
-Evidence-log-only, prose-only, pre-quota, equivalent-fingerprint, and ungrounded
-successor actions do not pass. Only temporary fixture state may change, and the
-receipt stores bounded command digests and typed outcomes rather than prompts,
-packets, or output.
+实时行为资格测试通过实际函数工具对话而非仅测试输出字段验证该因果交接。一个 Doubao actor 接收交付的 Codex App heartbeat 正文，并针对一个封闭公开安全 Goal 选择 quota 命令。Harness 通过真实 LoopX CLI 运行该命令，返回其实际上下文/动作包，并要求 actor 选择下一个真实工具动作。actor 独立资格选定的类型化观察，然后执行真实 `refresh-state` 命令。仅证据日志、仅散文、quota 前、等价指纹与无 grounding 的 successor 动作都不能通过。只允许临时 fixture 状态变化，回执存储有界命令摘要与类型化结局，而非 prompt、包或输出。
 
-## Privacy Boundary
+## 隐私边界
 
-The ledger must preserve the rollout event boundary:
+Ledger 必须保留 rollout 事件边界：
 
-- no raw task text;
-- no raw logs, stdout, stderr, trajectories, or verifier tails;
-- no credentials, tokens, headers, or secrets;
-- no absolute local paths;
-- no private document body or chat transcript;
-- no private source payload copied into public-safe rows.
+- 无原始任务文本；
+- 无原始日志、stdout、stderr、轨迹或 verifier 尾部；
+- 无凭据、token、header 或 secret；
+- 无本地绝对路径；
+- 无私有文档正文或聊天 transcript；
+- 无复制进公开安全行的私有源载荷。
 
-Rows may contain compact ids, relative public artifact refs, redacted summaries,
-omission notes, and private source counts. If a source is private, the row should
-say that only a compact pointer or count was recorded.
+行可以包含紧凑 id、相对公开工件引用、脱敏摘要、省略说明与私有源计数。若来源私有，行应说明只记录了紧凑指针或计数。
 
-## Current Implementation Status
+## 当前实现状态
 
-The CLI, rollout-event/run-history merge, bounded other-agent frontier,
-host-projected coverage context, minimal action packet, typed repeat detector,
-and shared quota/write-time semantic gate are implemented. Todo and material
-projections remain separate current-state surfaces; they are not copied into
-this chronological ledger. Historical repair ACKs have a bounded read adapter
-for old run rows, but new replan closure has one truth: typed semantic delta.
+CLI、rollout 事件/run 历史合并、有界其他 agent 前沿、host 投影覆盖上下文、最小动作包、类型化重复检测器与共享 quota/写时语义 gate 均已实现。Todo 与物料投影仍是独立当前状态界面；它们不复制进本时间顺序 ledger。历史修复 ACK 对旧 run 行有有界读取适配器，但新重规划关闭只有一条真相：类型化语义增量。
 
-## Acceptance
+## 验收
 
-A change satisfies this contract only when:
+一项变更只有满足以下条件才符合本契约：
 
-- `loopx evidence-log` returns a bounded JSON packet for a concrete `goal_id` and
-  `agent_id`;
-- current-agent rows are detailed while other-agent rows are compressed by
-  default;
-- filters behave deterministically and do not require parsing raw JSONL in agent
-  prompts;
-- replan-capable quota/status payloads deliver a compact coverage ledger and
-  uncovered frontier without requiring a model read ritual;
-- the live function-tool qualification proves that the default model selects
-  and executes a semantic next action from a production heartbeat/quota
-  exchange rather than merely echoing a test field;
-- the existing status, history, review-packet, and rollout-event-log surfaces
-  keep their current responsibilities; and
-- public tests prove the privacy boundary without committing private state,
-  local paths, raw logs, or raw trajectories.
+- `loopx evidence-log` 针对具体 `goal_id` 与 `agent_id` 返回有界 JSON 包；
+- 当前 agent 行详细，而其他 agent 行默认压缩；
+- 过滤器表现确定，无需 agent prompt 解析原始 JSONL；
+- 可重规划 quota/status 载荷投递紧凑覆盖 ledger 与未覆盖前沿，而不要求模型读仪式；
+- 实时函数工具资格证明默认模型从生产 heartbeat/quota 交换中选择并执行语义下一动作，而非仅仅复述测试字段；
+- 既有 status、history、review-packet 与 rollout-event-log 界面保持当前职责；并且
+- 公开测试在不提交私有状态、本地路径、原始日志或原始轨迹的情况下证明隐私边界。

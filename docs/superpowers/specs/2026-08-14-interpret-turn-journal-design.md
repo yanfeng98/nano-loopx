@@ -1,48 +1,39 @@
-# Read-Only Turn Journal Interpretation Design
+# 只读 Turn Journal 解释设计
 
-## Goal
+> [English](2026-08-14-interpret-turn-journal-design.md)
 
-Add a read-only `interpret_turn_journal` lens that maps an existing fenced
-LoopX Turn journal onto `EffectTurn`. The lens reports whether effect-free
-replay is legal, explains identity and phase-order violations as structured
-data, and preserves terminal journal tombstones without executing or mutating
-anything.
+## 目标
 
-## Scope
+添加一个只读的 `interpret_turn_journal` lens，把现有的 fenced LoopX Turn journal 映射到
+`EffectTurn`。该 lens 报告无效应回放（effect-free replay）是否合法，把身份与阶段顺序违规解释为
+结构化数据，并在不执行或变更任何东西的情况下保留 terminal journal tombstones。
 
-The change will:
+## 范围
 
-- add `interpret_turn_journal` to
-  `loopx.control_plane.effect_program`;
-- compare goal, owner, and Turn-key identity across the journal trace;
-- verify that `completed_phases` is an ordered prefix of
-  `TRANSACTION_PHASES`;
-- expose terminal `committed`, `stopped`, and `failed` journal state as a
-  retained tombstone;
-- distinguish `replay_legal` from `replay_blocked` without authorizing
-  execution;
-- add focused semantic tests and update the Effect Interpreter Packet
-  reference.
+本次变更将：
 
-The change will not add a journal loader, executor, scheduler path, write
-operation, schema migration, model call, quota spend, or second settlement
-ledger.
+- 把 `interpret_turn_journal` 添加到 `loopx.control_plane.effect_program`；
+- 在整个 journal trace 上比较 goal、owner 与 Turn-key 身份；
+- 验证 `completed_phases` 是 `TRANSACTION_PHASES` 的有序前缀；
+- 把 terminal 的 `committed`、`stopped` 与 `failed` journal 状态暴露为保留的 tombstone；
+- 在不授权执行的情况下区分 `replay_legal` 与 `replay_blocked`；
+- 添加聚焦语义测试并更新 Effect Interpreter Packet 参考文档。
 
-## Ownership And Placement
+本次变更不会添加 journal 加载器、executor、scheduler 路径、写操作、schema 迁移、模型调用、
+quota 花费或第二套 settlement 账本。
 
-- Capability outcome: read an existing Turn journal as an Effect Program
-  observation.
-- Capability owner: the existing Turn / Effect Program contract.
-- Provider: built into LoopX core; no extension provider is involved.
-- Implementation home: `loopx/control_plane/effect_program.py`, beside
-  `interpret_quota_should_run_packet` and `interpret_turn_result_packet`.
+## 归属与放置
 
-The nearest existing owner is sufficient because this is another packet lens
-over an already shipped Turn contract. A new capability package, journal
-adapter, or interpreter protocol would add structure without a separate caller
-contract.
+- Capability 结果：把现有 Turn journal 读取为 Effect Program observation。
+- Capability owner：现有的 Turn / Effect Program 契约。
+- Provider：内置于 LoopX core；不涉及 extension provider。
+- 实现位置：`loopx/control_plane/effect_program.py`，与 `interpret_quota_should_run_packet` 和
+  `interpret_turn_result_packet` 并列。
 
-## Public API
+最近且存在的 owner 就足够了，因为这只是对已经发布的 Turn 契约的另一个 packet lens。新的
+capability 包、journal 适配器或解释器协议会引入结构却没有独立的调用方契约。
+
+## 公开 API
 
 ```python
 def interpret_turn_journal(
@@ -56,131 +47,116 @@ def interpret_turn_journal(
     ...
 ```
 
-The supplied identity arguments are expectations, not authority grants. The
-function reads the supplied mapping and returns an `EffectTurn`; it does not
-open a path, acquire a lock, write a journal, or invoke replay.
+传入的身份参数是期望，不是 authority 授予。该函数读取传入的映射并返回 `EffectTurn`；
+它不打开路径、获取锁、写入 journal，也不调用回放。
 
-## Identity And Phase Interpretation
+## 身份与阶段解释
 
-The lens reads identity from the existing trace locations:
+该 lens 从现有 trace 位置读取身份：
 
-- journal: `goal_id` and `turn_key`;
-- stored plan envelope: `goal_id` and `agent_id`;
-- transaction plan: `turn_key`;
-- typed settlement identity: `goal_id` and `agent_id`;
-- host result and receipt: any present `turn_key`.
+- journal：`goal_id` 与 `turn_key`；
+- 存储的 plan envelope：`goal_id` 与 `agent_id`；
+- transaction plan：`turn_key`；
+- 类型化 settlement identity：`goal_id` 与 `agent_id`；
+- host result 与 receipt：任何存在的 `turn_key`。
 
-All present values for one identity dimension must agree with each other and
-with the corresponding explicit expectation when one is supplied. Missing
-required journal, envelope, transaction, or settlement identity is reported as
-structured invalid identity rather than raising an exception. Optional host
-result and receipt fields are compared only when present because an
-in-progress trace may not have reached those stages.
+一个身份维度上所有存在的值必须彼此一致，并在提供了相应显式期望时与之一致。缺失的必需
+journal、envelope、transaction 或 settlement 身份以结构化 invalid identity 报告，而不是抛出
+异常。可选的 host result 与 receipt 字段只在存在时才比较，因为进行中的 trace 可能尚未到达
+这些阶段。
 
-`completed_phases` is valid only when it is a list whose string values equal
-the same-length prefix of `TRANSACTION_PHASES`. An empty list is a valid
-ordered prefix, but it does not make an in-progress journal eligible for
-effect-free replay.
+`completed_phases` 只有在其字符串值等于 `TRANSACTION_PHASES` 相同长度前缀的列表时才有效。
+空列表是合法有序前缀，但它不会使进行中的 journal 有资格进行无效应回放。
 
-## Replay And Tombstone Semantics
+## 回放与 Tombstone 语义
 
-An effect-free replay is legal when:
+当以下条件满足时，无效应回放合法：
 
-1. goal, owner, and Turn-key identity match;
-2. completed phases form an ordered transaction prefix; and
-3. the journal has a terminal status currently treated as a replay tombstone:
-   `committed`, `stopped`, or `failed`.
+1. goal、owner 与 Turn-key 身份匹配；
+2. 已完成阶段形成有序 transaction 前缀；且
+3. journal 具有当前视为回放 tombstone 的 terminal 状态：
+   `committed`、`stopped` 或 `failed`。
 
-This describes the existing default replay boundary. It does not authorize a
-`retry_failed=True` recovery, which remains executor-owned and may perform
-effects.
+这描述了现有的默认回放边界。它不授权 `retry_failed=True` 恢复，后者仍归 executor 所有，
+并且可能执行效应。
 
-The input journal is never modified. Terminal status is projected as
-`tombstone_retained=True` with its original `journal_status`; no tombstone is
-created, deleted, or rewritten. Non-terminal state is visible but has
-`replay_legal=False` and `tombstone_retained=False`.
+输入 journal 绝不被修改。Terminal 状态投影为 `tombstone_retained=True` 并保留原始
+`journal_status`；不创建、删除或重写任何 tombstone。非 terminal 状态可见，但
+`replay_legal=False`、`tombstone_retained=False`。
 
-## EffectTurn Mapping
+## EffectTurn 映射
 
-`EffectRequest`:
+`EffectRequest`：
 
-- `kind="turn_journal"`;
-- `source="turn_journal"`;
-- expected `goal_id`, `agent_id`, and capabilities remain visible;
-- `context` contains:
-  - `replay_legal`;
-  - `goal_matches`;
-  - `owner_matches`;
-  - `turn_key_matches`;
-  - `phases_form_ordered_prefix`;
-  - `journal_status`;
-  - `tombstone_retained`;
-  - normalized `completed_phases`;
-  - an ordered tuple of typed violation values.
+- `kind="turn_journal"`；
+- `source="turn_journal"`；
+- 期望的 `goal_id`、`agent_id` 与 capabilities 保持可见；
+- `context` 包含：
+  - `replay_legal`；
+  - `goal_matches`；
+  - `owner_matches`；
+  - `turn_key_matches`；
+  - `phases_form_ordered_prefix`；
+  - `journal_status`；
+  - `tombstone_retained`；
+  - 规范化的 `completed_phases`；
+  - 有序的类型化违规值元组。
 
-`EffectInterpretation`:
+`EffectInterpretation`：
 
-- `route="turn_journal_replay"`;
-- `obligation="observe_fenced_replay"`;
-- `interaction_mode="read_only"`.
+- `route="turn_journal_replay"`；
+- `obligation="observe_fenced_replay"`；
+- `interaction_mode="read_only"`。
 
-`EffectObservation`:
+`EffectObservation`：
 
-- `decision` is `replay_legal` or `replay_blocked`;
-- `should_run` is always `False`, so the lens cannot be mistaken for
-  execution permission;
-- `effective_action` is `observe_replay` or `block_replay`;
-- `recommended_action` gives a compact, domain-neutral readback;
-- `protocol_summary` summarizes legality without embedding raw journal data.
+- `decision` 是 `replay_legal` 或 `replay_blocked`；
+- `should_run` 恒为 `False`，使该 lens 不会被误认为执行许可；
+- `effective_action` 是 `observe_replay` 或 `block_replay`；
+- `recommended_action` 给出紧凑、领域中立的 readback；
+- `protocol_summary` 在不内嵌原始 journal 数据的情况下总结合法性。
 
-`EffectNext` is empty. The structured `request.context["replay_legal"]` field,
-not `should_run`, is the replay-legality signal.
+`EffectNext` 为空。结构化的 `request.context["replay_legal"]` 字段（而不是 `should_run`）是
+回放合法性信号。
 
-## Structured Violations
+## 结构化违规
 
-Implementation will define a typed `StrEnum` for stable violation values and
-project their string values into `EffectRequest.context`. The initial values
-cover:
+实现将定义一个类型化 `StrEnum` 用于稳定的违规值，并把其字符串值投影到
+`EffectRequest.context`。初始值覆盖：
 
-- `goal_identity_missing`;
-- `goal_mismatch`;
-- `owner_identity_missing`;
-- `owner_mismatch`;
-- `turn_key_identity_missing`;
-- `turn_key_mismatch`;
-- `completed_phases_invalid`;
-- `completed_phases_not_ordered_prefix`;
-- `journal_not_terminal`;
-- `journal_status_unsupported`.
+- `goal_identity_missing`；
+- `goal_mismatch`；
+- `owner_identity_missing`；
+- `owner_mismatch`；
+- `turn_key_identity_missing`；
+- `turn_key_mismatch`；
+- `completed_phases_invalid`；
+- `completed_phases_not_ordered_prefix`；
+- `journal_not_terminal`；
+- `journal_status_unsupported`。
 
-Violations are accumulated in deterministic order so one trace can expose all
-independent problems in a single read. Classification is based on typed fields
-and exact equality, not substring heuristics.
+违规按确定性顺序累积，使一个 trace 在单次读取中暴露所有独立问题。分类基于类型化字段与精确
+相等，不使用子串启发式。
 
-## Error Handling And Compatibility
+## 错误处理与兼容性
 
-Semantic mismatches return `EffectTurn` with `decision="replay_blocked"`.
-They do not raise. The function accepts any `Mapping`; malformed nested values
-are treated as missing or invalid structured fields.
+语义不匹配返回带 `decision="replay_blocked"` 的 `EffectTurn`。它们不抛出异常。该函数接受任何
+`Mapping`；格式错误的嵌套值被视为缺失或无效的结构化字段。
 
-Existing `EffectTurn` dataclasses and existing interpreter behavior remain
-unchanged. No journal or Turn wire schema changes. Callers that do not use the
-new lens observe no behavior change.
+现有 `EffectTurn` dataclasses 与现有解释器行为保持不变。没有 journal 或 Turn wire schema
+变更。不使用新 lens 的调用方观察不到行为变化。
 
-## Testing
+## 测试
 
-Focused tests will derive expectations from the Turn transaction contract and
-cover:
+聚焦测试将从 Turn transaction 契约推导期望，并覆盖：
 
-1. a terminal journal with matching trace identity and ordered phases;
-2. owner, goal, and Turn-key mismatches accumulated as structured violations;
-3. a non-prefix phase sequence blocked even when the journal is terminal;
-4. retained `committed`, `stopped`, and `failed` tombstone status;
-5. a non-terminal journal that remains observable but not replay-legal;
-6. malformed or missing identity fields returning a blocked result rather
-   than raising;
-7. input immutability and empty `EffectNext` fields.
+1. 带匹配 trace 身份与有序阶段的 terminal journal；
+2. owner、goal 与 Turn-key 不匹配累积为结构化违规；
+3. 即使 journal 是 terminal，非前缀阶段序列也被阻止；
+4. 保留的 `committed`、`stopped` 与 `failed` tombstone 状态；
+5. 保持可观察但不可回放合法的非 terminal journal；
+6. 格式错误或缺失的身份字段返回被阻止的结果而非抛出异常；
+7. 输入不可变性与空的 `EffectNext` 字段。
 
-Validation will include focused pytest coverage, the existing fake-host Turn
-walkthrough, the documented `loopx check` scans, and the repository's
-risk-based premerge canary for the final diff.
+验证将包括聚焦 pytest 覆盖、现有 fake-host Turn walkthrough、文档化的 `loopx check` 扫描，
+以及仓库基于风险的 premerge canary 对最终 diff 的检查。

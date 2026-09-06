@@ -1,66 +1,59 @@
-# Embed LoopX In Your Agent Runner
+# 把 LoopX 嵌入你的 Agent Runner
 
-[简体中文](custom-agent-runner-integration.zh-CN.md)
+[English](custom-agent-runner-integration.md)
 
-This guide is for developers who already run agents on a remote development
-machine, through a custom CLI, or behind an existing workflow supervisor.
-You do not need to replace that runtime or move domain orchestration into
-LoopX. Keep your runner, and use LoopX as the durable control-plane contract
-between turns.
+这篇指南面向已经在远端开发机、自有 Agent CLI 或工作流 supervisor 中运行 Agent 的
+开发者。你不需要替换现有 runtime，也不需要把领域编排搬进 LoopX。保留自己的 runner，
+把 LoopX 作为跨 Turn 的持久控制面合同即可。
 
-Want the shortest public contract first? Start with the
-[minimal custom runtime example](minimal-custom-runtime-example.md) and run
-`python3 examples/custom-runtime-minimal-cli-turn-smoke.py`. The advanced typed
-Turn path is separate:
-`python3 examples/loopx-turn-fake-host-walkthrough-smoke.py`.
+想先看最短公共契约？从
+[最小自定义 Runtime 示例](minimal-custom-runtime-example.zh-CN.md) 开始，并运行
+`python3 examples/custom-runtime-minimal-cli-turn-smoke.py`。进阶 typed Turn 路径是另一条：
+`python3 examples/loopx-turn-fake-host-walkthrough-smoke.py`。
 
-The shortest useful mental model has three pieces:
+最小心智模型只有三部分：
 
-| Piece | Owns | Does not own |
+| 部件 | 负责什么 | 不负责什么 |
 | --- | --- | --- |
-| **LoopX CLI** | Durable goal, todo, claim, gate, quota, evidence, monitor, scheduler hint, and accepted writeback state | Agent reasoning, tools, or the external system |
-| **Lightweight skill or re-entry instruction** | How the Agent reads a fresh LoopX packet, obeys its boundary, validates work, and writes back | Current task state or another scheduler |
-| **Your runner** | Wakeups, workspace/session setup, Agent invocation, and applying the actual timer or scheduler value | LoopX policy, hidden authority, or domain truth |
+| **LoopX CLI** | 持久化 goal、todo、claim、gate、quota、evidence、monitor、scheduler hint 和已接受的 writeback | Agent 推理、工具或外部系统本身 |
+| **轻量 skill / re-entry instruction** | 教 Agent 每轮读取新鲜 LoopX packet、遵守边界、验证并写回 | 保存当前任务状态或再造一个 scheduler |
+| **你的 runner** | 唤醒、workspace/session、调用 Agent，以及应用真实 timer/scheduler 值 | LoopX policy、隐式授权或领域事实 |
 
-The CLI is the source of truth. The skill is a small behavior contract. Your
-runner is the loop driver.
+CLI 是事实源，skill 是小型行为合同，你的 runner 是 loop driver。
 
 ```mermaid
 flowchart LR
-  R["Your runner<br/>wake · session · workspace"] --> Q["loopx quota should-run"]
-  Q --> P["Fresh CLI packet<br/>interaction · boundary · next action"]
-  P --> A["Agent + lightweight skill"]
-  A --> X["Tools / external systems"]
-  X --> V["Independent validation / readback"]
+  R["你的 runner<br/>唤醒 · session · workspace"] --> Q["loopx quota should-run"]
+  Q --> P["新鲜 CLI packet<br/>interaction · boundary · next action"]
+  P --> A["Agent + 轻量 skill"]
+  A --> X["工具 / 外部系统"]
+  X --> V["独立验证 / readback"]
   V --> W["LoopX writeback<br/>todo · evidence · refresh · spend"]
   W --> R
 ```
 
-## What You Do Not Need
+## 不需要先建设什么
 
-You do not need a permanent leader Agent, a second orchestration database, or a
-LoopX capability for every task. An Agent may plan, split work, use tools, and
-create a successor todo from the facts it discovers.
+不需要常驻的 leader Agent、第二套编排数据库，也不需要为每件事定义一个 LoopX
+Capability。Agent 可以根据目标做方案、拆任务、调用工具，并根据新事实创建 successor todo。
 
-When Agent A finishes and Agent B should continue, A writes or links the
-successor todo through LoopX. The next host wake reads the new frontier and B
-claims it. No central model needs to remember or manually route the handoff.
+Agent A 完成后若应由 Agent B 接力，A 通过 LoopX 写入或链接 successor todo；下一次 host
+唤醒重新读取 frontier，由 B 认领即可。无需一个中央模型记住并人工路由整个交接。
 
-Add a Capability only when the caller needs a stable, provider-neutral outcome
-contract with reusable observation normalization, validation, and transition
-policy. Put an external implementation behind a Provider. Ordinary reasoning,
-repository edits, and one-off tool use can remain Agent work.
+只有当调用方需要稳定、provider-neutral 的结果合同，并且 observation 归一化、验证和
+transition policy 可复用时，才值得新增 Capability；外部实现放在 Provider 后面。普通推理、
+仓库修改和一次性工具使用仍然属于 Agent 工作。
 
-## Bootstrap A Custom Host
+## 接入 Custom Host
 
-Install the CLI on the machine that owns the project workspace:
+先在拥有项目 workspace 的机器上安装 CLI：
 
 ```bash
 python3 -m pip install --upgrade loopx
 loopx doctor --agent-type other-agent
 ```
 
-Ask LoopX for the current custom-host packet instead of hard-coding commands:
+不要自己猜一套固定命令，让 LoopX 生成当前 custom-host packet：
 
 ```bash
 loopx agent-onboard \
@@ -68,44 +61,41 @@ loopx agent-onboard \
   --project . \
   --goal-id <goal-id> \
   --agent-id <agent-id> \
-  --task-text "<first task>" \
+  --task-text "<第一个任务>" \
   --available-capability shell
 ```
 
-The packet returns the current doctor/install command, bootstrap command pack,
-quota guard, and recheck command. Declare only capabilities the current host
-actually has. `--available-capability` reports observed execution ability; it
-does not grant permission or satisfy a user gate.
+packet 会返回当前 doctor/install、bootstrap command pack、quota guard 和 recheck
+命令。只声明 host 真实具备的 capability。`--available-capability` 表示观察到的执行能力，
+不授予权限，也不能替代 user gate。
 
-For `other-agent`, doctor intentionally does not inspect `~/.codex/skills`.
-CLI health and workflow delivery are separate checks. The custom host must
-deliver `loopx-project`, `loopx-pr-program`, `loopx-pr-review`,
-`loopx-doc-registry`, `loopx-benchmark`, and `loopx-self-repair` from the same
-LoopX revision through its own skill manifest or equivalent prompt injection.
-`loopx-benchmark` is task-triggered for LoopX-managed experiments; loading it
-does not grant benchmark runner or private-evidence authority. When the current goal enables
-`change_quality_qualification`, the onboarding packet also lists
-`loopx-change-quality` as an active project skill; deliver that workflow or its
-equivalent self-contained prepare-packet instructions. Then read back the
-integration mode, loaded skill ids, and source revision. Do not assume a Codex,
-Claude, or OpenCode directory layout for an unknown host. Loading the quality
-skill does not activate it; the current goal policy controls activation.
+对于 `other-agent`，doctor 会有意跳过 `~/.codex/skills` 检查。CLI 健康与 workflow
+交付是两件事：custom host 仍需通过自己的 skill manifest 或等价 prompt injection，
+从同一 LoopX revision 交付 `loopx-project`、`loopx-pr-program`、
+`loopx-pr-review`、`loopx-doc-registry`、`loopx-benchmark` 和
+`loopx-self-repair`。`loopx-benchmark` 只在 LoopX 管理的 benchmark 实验任务中
+触发；加载它不授予 benchmark runner 或私有证据读取权限。当当前 goal 启用
+`change_quality_qualification` 时，onboarding packet 会额外把
+`loopx-change-quality` 列为 active project skill；host 需要交付该 workflow，
+或注入等价的自包含 prepare packet 指令。随后 readback integration mode、
+loaded skill ids 和 source revision。不要假设未知 host 采用 Codex、Claude 或
+OpenCode 的目录布局。加载质量 skill 不代表启用，是否生效由当前 goal policy 决定。
 
-If the host has no skill system, inject the equivalent `SKILL.md` instructions
-and keep one short re-entry instruction that tells the Agent to:
+如果 host 没有 skill 系统，就注入等价的 `SKILL.md` 指令，并保留一段短
+re-entry instruction，要求 Agent：
 
-1. read a fresh JSON quota packet for the current goal and Agent;
-2. follow `interaction_contract`, `goal_boundary`, and the selected todo;
-3. perform one bounded action and validate the real postcondition;
-4. write the result through LoopX; and
-5. apply and acknowledge any scheduler hint before the next wake.
+1. 为当前 goal 与 Agent 读取新鲜 JSON quota packet；
+2. 遵守 `interaction_contract`、`goal_boundary` 和 selected todo；
+3. 只做一次有界动作，并验证真实 postcondition；
+4. 通过 LoopX 写回结果；
+5. 在下次唤醒前应用并 ACK scheduler hint。
 
-The re-entry instruction stays stable. It must not cache a previous CLI packet,
-todo list, cadence, or project policy.
+这段 re-entry instruction 应保持稳定，不能缓存上一轮 CLI packet、todo 列表、cadence 或
+项目 policy。
 
-## Run One Self-Driven Tick
+## 跑一个自驱动 Tick
 
-Use JSON for the machine path:
+机器路径使用 JSON：
 
 ```bash
 loopx --format json \
@@ -116,79 +106,70 @@ loopx --format json \
   --available-capability shell
 ```
 
-Then follow this loop:
+然后按以下闭环运行：
 
-1. **Decide:** Treat `should-run` and `interaction_contract` as the gate. A
-   quiet, wait, or monitor-only result makes no model call and spends no quota.
-2. **Route:** If the user channel requires action, show the concrete user todo
-   or question. Do not substitute an owner gate for a missing payload.
-3. **Claim:** Claim the selected executable todo before write-capable work.
-   Keep independent handoffs unclaimed unless an explicit assignment is known.
-4. **Execute:** Give the Agent only the current objective, selected todo,
-   boundary, compact evidence references, and writeback contract. Let it
-   dynamically plan the bounded action.
-5. **Validate:** Read the real repository, test, CI, service, or Provider
-   result. The Agent's completion claim is not proof.
-6. **Write back:** Complete, update, block, defer, or add a successor todo;
-   record compact evidence; then run `refresh-state`.
-7. **Account:** Spend quota only after validated durable writeback. A failed
-   validator, cadence update, quiet monitor poll, or no-op retry does not spend.
-8. **Schedule:** Apply the current scheduler hint in the runner, read back the
-   value actually applied, and ACK it through the returned CLI command.
+1. **决策：** 把 `should-run` 和 `interaction_contract` 当作 gate。quiet、wait 或
+   monitor-only 不调用模型，也不花 quota。
+2. **路由：** user channel 要求动作时，展示具体 user todo 或问题；缺少 payload 时不要只说
+   “owner gate”。
+3. **认领：** 在可写执行前 claim selected executable todo。独立交接默认保持 unclaimed，
+   除非已有明确 assignment。
+4. **执行：** 只把当前 objective、selected todo、boundary、紧凑 evidence ref 和 writeback
+   contract 交给 Agent，让它动态规划本轮有界动作。
+5. **验证：** 读取真实 repository、测试、CI、服务或 Provider 结果。Agent 自称完成不是 proof。
+6. **写回：** complete、update、block、defer 或新增 successor todo，记录紧凑 evidence，
+   再运行 `refresh-state`。
+7. **计费：** 只有验证通过并完成持久 writeback 后才 spend。validator 失败、cadence 更新、
+   quiet monitor poll 和 no-op retry 都不 spend。
+8. **调度：** runner 应用当前 scheduler hint，readback 实际生效值，再执行 packet 返回的
+   ACK CLI。
 
-Before a non-trivial delivery, inspect the goal's change-quality policy. When
-enabled, run `change-quality prepare`, review the exact final diff, and record
-its receipt. A custom host without a skill system can consume the self-contained
-prepare packet directly. `safe_fix` allows one bounded repair pass;
-`strict_receipt` makes `canary premerge --goal-id <goal-id>` reject a missing or
-stale receipt.
+非平凡交付前，先读取 goal 的 change-quality policy。启用后运行
+`change-quality prepare`，review 精确 final diff，并记录 receipt。没有 skill 系统的
+custom host 可以直接消费自包含的 prepare packet。`safe_fix` 允许一次有界修复；
+`strict_receipt` 会让 `canary premerge --goal-id <goal-id>` 拒绝缺失或已失效的
+receipt。
 
-Every new wake starts again at step 1. Do not resume from remembered model
-state or a cached packet.
+每次新唤醒都重新从第 1 步开始，不能依赖模型记忆或缓存 packet 续跑。
 
-## Choose The Right Execution Boundary
+## 选择合适的执行边界
 
-There are two valid integration depths. In both cases, your runner still owns
-the outer wake/schedule loop:
+接入深度有两种，都合理；无论选择哪种，外层唤醒与调度循环仍由你的 runner 负责：
 
 ```text
-outer runner: wake -> one bounded execution -> apply scheduler hint -> next wake
-LoopX Turn:             decide -> execute -> validate -> commit
+outer runner: 唤醒 -> 一次有界执行 -> 应用 scheduler hint -> 下次唤醒
+LoopX Turn:              决策 -> 执行 -> 验证 -> 提交
 ```
 
-| Path | Use it when | Boundary |
+| 路径 | 适用情况 | 边界 |
 | --- | --- | --- |
-| **Direct CLI orchestration** | Your runner already invokes Agents and validates their work | The runner consumes `quota should-run`, todo lifecycle, refresh, spend, and scheduler ACK contracts |
-| **LoopX Turn adapter (experimental)** | You want one typed command to plan, invoke one bounded host segment, validate, and commit | Use `turn run-once` with the built-in `codex-cli` adapter or a thin `generic-cli` adapter |
+| **直接编排 CLI** | 你的 runner 已经会调用 Agent，并能独立验证结果 | runner 消费 `quota should-run`、todo lifecycle、refresh、spend 和 scheduler ACK 合同 |
+| **LoopX Turn adapter（experimental）** | 希望由一条 typed command 完成 plan、调用一次 bounded host、验证和 commit | 使用 `turn run-once` 的内置 `codex-cli` adapter，或薄 `generic-cli` adapter |
 
-Direct CLI orchestration is the current compatibility baseline. LoopX Turn is
-an experimental transaction boundary inside the runner, not a permanent
-scheduler or multi-Agent coordinator. Choose one owner for decide, validate,
-writeback, and spend in each tick: do not run the direct sequence and
-`turn run-once` for the same logical action.
+直接编排 CLI 是当前兼容基线；LoopX Turn 是 runner 内部 experimental 的
+transaction boundary，不是常驻 scheduler 或多 Agent 调度中枢。每个 tick 只能有一个
+decide、validate、writeback 和 spend owner；同一逻辑动作不能同时跑手工闭环与
+`turn run-once`。
 
-Treat a new Turn integration as development and qualification work. Before
-depending on it, prove the host adapter emits the typed result contract, the
-validator is independent, retry/resume/replay cannot duplicate effects, and
-the outer runner applies and acknowledges scheduler state correctly. Those are
-useful extension and contribution surfaces for making Turn more mature; an
-Agent process exit code or scraped transcript is not a substitute for them.
+新的 Turn 接入应被视为开发与 qualification 工作。依赖它之前，需要证明 host adapter
+能返回 typed result contract、validator 与执行器独立、retry/resume/replay 不会重复产生
+effect，并且外层 runner 能正确应用和 ACK scheduler state。这些正是继续提升 Turn
+成熟度的 extension / contribution surface；Agent 进程退出码或从 transcript 猜结果不能
+替代这些证明。
 
-## Acceptance Checklist
+## 验收清单
 
-Before calling the integration autonomous, prove that:
+在把集成称为“自主运行”前，至少证明：
 
-- restarting the runner recovers from LoopX state without transcript replay;
-- a concrete user action is surfaced, while an unrelated safe todo may still
-  run;
-- two Agents cannot silently claim the same work;
-- validation failure cannot complete a todo or spend quota;
-- scheduler application and ACK are idempotent;
-- raw transcripts, credentials, private paths, and unbounded logs stay outside
-  LoopX state; and
-- the Agent can hand off through a successor todo without a permanent leader.
+- runner 重启后能从 LoopX state 恢复，不依赖 transcript replay；
+- 具体 user action 会被投影，同时无关的安全 todo 仍可继续；
+- 两个 Agent 不会静默认领同一份工作；
+- 验证失败不能完成 todo 或 spend quota；
+- scheduler 应用和 ACK 幂等；
+- raw transcript、credentials、私有路径和无界日志不进入 LoopX state；
+- Agent 能通过 successor todo 接力，不依赖常驻 leader。
 
-For exact read/write contracts, see
-[Host Integration Surface v0](../reference/protocols/host-integration-surface-v0.md).
-For the optional typed Turn path, see
-[Run One LoopX Turn With Codex CLI](../product/runtimes/codex-cli/loopx-turn-codex-cli-quickstart.md).
+精确读写合同见
+[Host Integration Surface v0](../reference/protocols/host-integration-surface-v0.md)；
+可选的 typed Turn 路径见
+[Run One LoopX Turn With Codex CLI](../product/runtimes/codex-cli/loopx-turn-codex-cli-quickstart.md)。

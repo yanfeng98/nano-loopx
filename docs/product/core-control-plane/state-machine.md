@@ -1,33 +1,22 @@
-# State Machines
+# 状态机
 
-LoopX does not have one giant state machine. It has a small set of
-cooperating machines that are projected from the same canonical state bodies:
-registry entries, active state, todo metadata, run history, quota events,
-operator gates, scheduler acknowledgements, and projection sinks.
+> [English](state-machine.md)
 
-This document is not a new store and not a private incident narrative. It is a
-public-safe map over the current repository contracts, especially:
+LoopX 没有一台巨型状态机。它有一小组协作机器,这些机器从相同的规范 state 体投影而来:注册表条目、active 状态、todo 元数据、运行历史、配额事件、运维者 gate、调度器确认与投影 sink。
 
-- [`state-definitions.md`](state-definitions.md) for source state bodies and
-  derived runtime names;
-- [`interaction-catalog.md`](interaction-catalog.md) for reusable interaction
-  patterns;
-- [`loopx/control_plane/todos/contract.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/todos/contract.py) for todo status,
-  task class, decision scope, resume, claim, and monitor metadata fields;
-- [`loopx/quota.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/quota.py) for `quota should-run`, runtime
-  states, `effective_action`, `interaction_contract`, spend, and monitor poll
-  contracts;
-- [`loopx/control_plane/scheduler/scheduler_hint.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/scheduler/scheduler_hint.py)
-  for cadence/backoff/reset-token behavior;
-- [`goal_vision_replan_contract_v0`](../../reference/protocols/goal-vision-replan-contract-v0.md)
-  for bounded per-agent vision, replan transitions, and goal-route projection;
-- cross-agent handoff gate states in
-  [`loopx/control_plane/todos/handoff_gate.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/todos/handoff_gate.py);
-- [`loopx/project_map.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/project_map.py) and
-  [`loopx/bootstrap.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/bootstrap.py) for project registration,
-  read-only-map opt-in, global sync, and host-loop activation.
+本文不是新存储,也不是私有事件叙述。它是当前仓库契约之上的公开安全地图,尤其是:
 
-## How The Machines Compose
+- [`state-definitions.md`](state-definitions.md):源 state 体与派生的运行时名称;
+- [`interaction-catalog.md`](interaction-catalog.md):可复用的交互模式;
+- [`loopx/control_plane/todos/contract.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/todos/contract.py):todo 状态、任务类别、决策范围、恢复、认领与 monitor 元数据字段;
+- [`loopx/quota.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/quota.py):`quota should-run`、运行时状态、`effective_action`、`interaction_contract`、花费与 monitor 轮询契约;
+- [`loopx/control_plane/scheduler/scheduler_hint.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/scheduler/scheduler_hint.py):节奏/退避/重置令牌行为;
+- [`goal_vision_replan_contract_v0`](../../reference/protocols/goal-vision-replan-contract-v0.md):有界的逐 agent 愿景、重规划转换与 goal 路由投影;
+- [`loopx/control_plane/todos/handoff_gate.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/todos/handoff_gate.py) 中的跨 agent 交接 gate 状态;
+- [`loopx/project_map.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/project_map.py) 与
+  [`loopx/bootstrap.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/bootstrap.py):项目注册、只读地图选择加入、全局同步与 host-loop 激活。
+
+## 机器如何组合
 
 ```mermaid
 flowchart LR
@@ -45,52 +34,44 @@ flowchart LR
   Onboard["Agent onboarding"] --> Registry
 ```
 
-The top-level loop is simple:
+顶层 Loop 很简单:
 
-1. Resolve registry and active state.
-2. Project todos, gates, evidence, and current agent identity.
-3. Ask `quota should-run`.
-4. Either run exactly one bounded segment, ask a concrete gate, observe a
-   waiting handle, repair the control plane, or quiet no-op according to the
-   projected machine state.
-5. State changes return through LoopX write APIs, not through dashboard text or
-   chat memory.
+1. 解析注册表与 active 状态。
+2. 投影 todo、gate、evidence 与当前 agent 身份。
+3. 询问 `quota should-run`。
+4. 按投影的机器状态,或恰好运行一个有界分段,或询问具体 gate,或观察一个等待句柄,或修复控制面,或安静地空操作。
+5. State 变更通过 LoopX 写 API 回传,而不是通过 dashboard 文本或聊天记忆。
 
-## State Machine As Effect Interpretation Table
+## 作为效果解释表的状态机
 
-Every state machine below can be read through the same lens:
+以下每台状态机都可以用同一个透镜解读:
 
 ```text
 input effect -> interpreter -> decision -> observation -> next effect
 ```
 
-This is the model described in the
-[Agent Loop Effect Interpreter RFC](../../architecture/rfcs/agent-loop-effect-interpreter-v0.md).
-The agent loop is the loop. The harness is the effectful program. The state
-machine is not the product; it is the decision table inside that effect
-interpreter. This framing follows the public lecture
-[主线一：Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share).
+这是
+[Agent Loop Effect Interpreter RFC](../../architecture/rfcs/agent-loop-effect-interpreter-v0.md)
+描述的模型。Agent Loop 就是那个 Loop。Harness 是效果式程序。状态机不是产品;它是该效果解释器内部的决策表。这一框架遵循公开讲座
+[主线一:Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share)。
 
-| State family | Input effect | Interpreter | Decision | Observation | Next effect |
+| State 族 | 输入效果 | 解释器 | 决策 | 观察 | 下一个效果 |
 |---|---|---|---|---|---|
-| Todo lifecycle | Agent proposes work, claim, completion, or blocker | Todo projection and authority rules | `open` / `claimed` / `deferred` / `blocked` / `done` / `superseded` | Todo summary and frontier | Next runnable todo or successor |
-| Quota runtime | Agent proposes a bounded turn | `quota should-run` | `run` / `gate` / `wait` / `repair` / `quiet` | Quota packet + `interaction_contract` | Execute, ask owner, observe, repair, or no-op |
-| Scheduler / heartbeat | Host asks when to wake again | Scheduler hint and ACK rules | Host RRULE / initial interval / backoff | `scheduler_hint` packet | Next heartbeat or monitor poll |
-| Gate and capability | Agent requests an effect with external authority | Capability and user gate rules | `repair_bridge` / `ask_owner` / allow / block | Gate packet and primary action | Repair, ask, execute, or stop |
-| Vision and replan | Agent closes or continues a bounded stage | Replan and vision rules | Continue / replan / watch / close | `goal_frontier_projection` + `vision_continuation_audit` | Next advancement or successor |
-| Monitor | Host polls a target | Monitor scheduler and evidence rules | Due / future / quiet / external observe | Monitor poll event and scheduler hint | Next poll or material transition |
+| Todo 生命周期 | Agent 提议工作、认领、完成或阻碍 | Todo 投影与权威规则 | `open` / `claimed` / `deferred` / `blocked` / `done` / `superseded` | Todo 摘要与前沿 | 下一个可运行 todo 或后继 |
+| 配额运行时 | Agent 提议一个有界 Turn | `quota should-run` | `run` / `gate` / `wait` / `repair` / `quiet` | 配额包 + `interaction_contract` | 执行、询问 owner、观察、修复或空操作 |
+| 调度器/心跳 | Host 询问何时再次唤醒 | 调度提示与 ACK 规则 | Host RRULE / 初始间隔 / 退避 | `scheduler_hint` 包 | 下一个心跳或 monitor 轮询 |
+| Gate 与能力 | Agent 请求带外部权威的效果 | 能力与用户 gate 规则 | `repair_bridge` / `ask_owner` / 允许 / 阻止 | Gate 包与主动作 | 修复、询问、执行或停止 |
+| 愿景与重规划 | Agent 关闭或继续一个有界阶段 | 重规划与愿景规则 | 继续 / 重规划 / 关注 / 关闭 | `goal_frontier_projection` + `vision_continuation_audit` | 下一个推进或后继 |
+| Monitor | Host 轮询一个目标 | Monitor 调度与 evidence 规则 | 到期 / 未来 / 安静 / 外部观察 | Monitor 轮询事件与调度提示 | 下一次轮询或实质性转换 |
 
-Each table row should answer: who owns the source state, who may interpret the
-effect, what decision is legal, what observation is returned, and what effect
-should come next.
+每行表项应回答:谁拥有源 state,谁可以解释效果,什么决策合法,返回什么观察,下一个效果应是什么。
 
-## 1. Todo Lifecycle Machine
+## 1. Todo 生命周期机器
 
-Todo is the smallest executable or waiting unit. Current source fields include
-`status`, `task_class`, `action_kind`, `claimed_by`, `blocks_agent`,
-`global_gate`, `decision_scope`, `required_decision_scopes`,
-`required_capabilities`, `unblocks_todo_id`, `resume_when`, `no_followup`,
-`superseded_by`, monitor metadata, and evidence/reason fields.
+Todo 是最小的可执行或等待单元。当前源字段包括 `status`、`task_class`、`action_kind`、`claimed_by`、`blocks_agent`、
+`global_gate`、`decision_scope`、`required_decision_scopes`、
+`required_capabilities`、`unblocks_todo_id`、`resume_when`、`no_followup`、
+`superseded_by`、monitor 元数据以及 evidence/原因字段。
 
 ```mermaid
 stateDiagram-v2
@@ -109,34 +90,31 @@ stateDiagram-v2
   Superseded --> ReplacementOpen
 ```
 
-| State | Source Fields | Runtime Meaning | Legal Exit |
+| State | 源字段 | 运行时含义 | 合法退出 |
 | --- | --- | --- | --- |
-| `Suggested` | Suggestion output or planning prompt | Candidate work that has not entered the durable todo list. | Promote to `Open` or drop it. |
-| `Open` | `status=open` or unchecked Markdown item | Durable backlog item. | Claim, block, defer, supersede, or complete. |
-| `Claimed` | `claimed_by=<agent_id>` | Soft ownership/routing signal. It is not a lock. | Run if quota selects it, reassign, block, or complete. |
-| `Running` | Derived from `quota should-run` plus run history | A bounded turn is currently attempting this item. | Write evidence/blocker, then complete or reopen. |
-| `Done` | `status=done` or checked item plus evidence | The item has a terminal outcome. | Archive, create successor, or expose handoff clearance. |
-| `Blocked` | `status=blocked`, `reason`, capability/gate fields | Known blocker, not vague waiting. | Repair, ask owner, supersede, or reopen. |
-| `Deferred` | `status=deferred`, `resume_when` | Waiting for a concrete condition. | `ResumeReady` when the condition is satisfied. |
-| `Superseded` | `superseded_by` | Replaced without deleting history. | Follow `ReplacementOpen`. |
+| `Suggested` | 建议输出或规划提示 | 尚未进入持久 todo 列表的候选工作。 | 提升为 `Open` 或丢弃。 |
+| `Open` | `status=open` 或未勾选的 Markdown 项 | 持久积压项。 | 认领、阻碍、延迟、取代或完成。 |
+| `Claimed` | `claimed_by=<agent_id>` | 软所有权/路由信号。它不是锁。 | 若配额选中则运行,或重新分配、阻碍、完成。 |
+| `Running` | 由 `quota should-run` 加运行历史派生 | 一个有界 Turn 正在尝试此项。 | 写入 evidence/阻碍,然后完成或重开。 |
+| `Done` | `status=done` 或已勾选项加 evidence | 项目已有终结结果。 | 归档、创建后继或暴露交接清除。 |
+| `Blocked` | `status=blocked`、`reason`、能力/gate 字段 | 已知阻碍,而非含糊等待。 | 修复、询问 owner、取代或重开。 |
+| `Deferred` | `status=deferred`、`resume_when` | 等待具体条件。 | 条件满足时进入 `ResumeReady`。 |
+| `Superseded` | `superseded_by` | 在不删除历史的情况下被替换。 | 跟随 `ReplacementOpen`。 |
 
-`Running` is deliberately derived. Adding a persistent todo status for it would
-duplicate quota/run-history truth.
+`Running` 是刻意派生的。为它新增持久 todo 状态会复制配额/运行历史的真相。
 
-## 2. Quota / Runtime Machine
+## 2. 配额/运行时机器
 
-`quota should-run` is the compute gate. It decides whether the next automatic
-tick should spend compute, but it does not grant protected permissions. The
-current state order in `loopx/quota.py` is:
+`quota should-run` 是算力 gate。它决定下一次自动 tick 是否应花费算力,但不授予受保护权限。`loopx/quota.py` 中当前的状态顺序是:
 
 ```text
 blocked_health -> operator_gate -> focus_wait -> eligible -> waiting -> throttled -> paused
 ```
 
-Additional fields such as `effective_action`, `safe_bypass_allowed`,
-`capability_gate`, `workspace_guard`, `agent_scope_frontier`,
-`heartbeat_recommendation`, `execution_obligation`, and
-`interaction_contract` refine what the agent and host must do next.
+`effective_action`、`safe_bypass_allowed`、
+`capability_gate`、`workspace_guard`、`agent_scope_frontier`、
+`heartbeat_recommendation`、`execution_obligation` 与
+`interaction_contract` 等额外字段细化了 agent 与 host 接下来必须做什么。
 
 ```mermaid
 stateDiagram-v2
@@ -170,25 +148,23 @@ stateDiagram-v2
   Paused --> NoSpend
 ```
 
-| Runtime State / Action | Agent Behavior | Spend Rule |
+| 运行时 State / 动作 | Agent 行为 | 花费规则 |
 | --- | --- | --- |
-| `eligible` + runnable action | Attempt one bounded delivery, recovery, or repair. | Spend only after validated writeback. |
-| `operator_gate` / user gate | Ask or surface the concrete payload. | No spend for asking. |
-| `scoped_user_gate_fallback` | Surface the gate and run only an independent fallback. | Spend after fallback writeback. |
-| `focus_wait` | Produce the named outcome/fresh-evidence recovery or write a blocker. | Recovery can spend after validation; passive waiting cannot. |
-| `waiting` / `external_evidence_observe` | Observe a public-safe handle or write a compact blocker. | Follow the observation contract; unchanged waiting is usually no-spend. |
-| `monitor_quiet_skip` | Preserve liveness, optionally append one no-spend monitor poll. | No spend. |
-| `agent_scope_wait` | Stay active but quiet until reassignment, unblock, or scoped todo appears. | No spend. |
-| `blocked_health` | Repair registry/projection/boundary/workspace/capability if allowed. | Spend only after validated repair writeback. |
-| `throttled` / `paused` | Do not deliver. | No spend. |
+| `eligible` + 可运行动作 | 尝试一次有界交付、恢复或修复。 | 只在已验证写回后花费。 |
+| `operator_gate` / 用户 gate | 询问或呈现具体 payload。 | 询问不花费。 |
+| `scoped_user_gate_fallback` | 呈现 gate 并只运行独立的 fallback。 | Fallback 写回后花费。 |
+| `focus_wait` | 产出命名的结果/新鲜 evidence 恢复或写阻碍。 | 恢复可以在校验后花费;被动等待不能。 |
+| `waiting` / `external_evidence_observe` | 观察公开安全句柄或写紧凑阻碍。 | 遵循观察契约;未变化的等待通常无花费。 |
+| `monitor_quiet_skip` | 保持存活,契约允许时追加一次无花费 monitor 轮询。 | 无花费。 |
+| `agent_scope_wait` | 保持活跃但安静,直到重新分配、解除阻碍或出现范围 todo。 | 无花费。 |
+| `blocked_health` | 若允许则修复注册表/投影/边界/工作区/能力。 | 只在已验证修复写回后花费。 |
+| `throttled` / `paused` | 不要交付。 | 无花费。 |
 
-## 3. Gate Decision Scope Machine
+## 3. Gate 决策范围机器
 
-Gates are scoped authority, not a universal boolean. A gate blocks a selected
-action only when its scope covers that action or agent. Current source fields
-include `task_class=user_gate`, `global_gate`, `blocks_agent`,
-`decision_scope`, `required_decision_scopes`, `operator_gate`, and
-`interaction_contract.user_channel`.
+Gate 是有范围的权威,而非通用布尔值。只有当 gate 的范围覆盖所选动作或 agent 时,它才阻碍该动作。当前源字段包括 `task_class=user_gate`、`global_gate`、`blocks_agent`、
+`decision_scope`、`required_decision_scopes`、`operator_gate` 与
+`interaction_contract.user_channel`。
 
 ```mermaid
 flowchart TD
@@ -204,17 +180,17 @@ flowchart TD
   Repair --> Recheck["rerun quota"]
 ```
 
-| Transition | Required Evidence |
+| 转换 | 必需 evidence |
 | --- | --- |
-| Open gate -> Ask | Concrete payload todo/question, not only "owner gate". |
-| Open gate -> Fallback | Proof that selected fallback is independent of the gate scope. |
-| Open gate -> Repair | Explanation of missing or contradictory scope fields. |
-| Approve | Completed, exactly linked `user_gate`; consume only covered target scopes and preserve the rest. |
-| Reject | Supersede or compensation record; never consume decision authority. |
-| Defer | Decision event with a supported `resume_when`. |
-| Fallback complete | Artifact/blocker/evidence linked to the independent todo. |
+| 打开 gate -> 询问 | 具体的 payload todo/问题,而非仅"owner gate"。 |
+| 打开 gate -> Fallback | 所选 fallback 独立于 gate 范围的证明。 |
+| 打开 gate -> 修复 | 缺失或矛盾的 scope 字段的解释。 |
+| 批准 | 已完成、精确链接的 `user_gate`;只消耗被覆盖的目标 scope,保留其余。 |
+| 拒绝 | 取代或补偿记录;绝不消耗决策权威。 |
+| 延迟 | 带受支持的 `resume_when` 的决策事件。 |
+| Fallback 完成 | 链接到独立 todo 的产物/阻碍/evidence。 |
 
-This machine is why user and agent channels can intentionally disagree:
+这台机器正是用户与 agent 通道刻意不一致的原因:
 
 ```text
 user_channel.action_required = true
@@ -222,16 +198,13 @@ agent_channel.must_attempt = true
 selected_action = independent_fallback
 ```
 
-## 4. Owner Route / Multi-Agent Handoff Machine
+## 4. Owner 路由/多 Agent 交接机器
 
-Multi-agent routing is modeled with todo ownership and handoff gates. Review is
-not a separate kernel state. It is a todo/gate relation that can block a named
-agent until an owner route completes, reassigns, or records no follow-up.
+多 agent 路由以 todo 所有权与交接 gate 建模。评审不是独立的内核 state。它是一个 todo/gate 关系,可以在 owner 路由完成、重新分配或记录不跟进之前阻碍具名 agent。
 
-`loopx/control_plane/todos/handoff_gate.py` currently projects `blocks_agent`
-todos into:
-`blocking`, `cleared_without_successor`, `cleared_with_successor`,
-`cleared_no_followup`, `superseded`, and `deferred`.
+`loopx/control_plane/todos/handoff_gate.py` 当前把 `blocks_agent` todo 投影为:
+`blocking`、`cleared_without_successor`、`cleared_with_successor`、
+`cleared_no_followup`、`superseded` 与 `deferred`。
 
 ```mermaid
 stateDiagram-v2
@@ -256,21 +229,18 @@ stateDiagram-v2
   SelfMerged --> Done
 ```
 
-| Handoff State | Meaning | Next Legal Action |
+| 交接 State | 含义 | 下一合法动作 |
 | --- | --- | --- |
-| `blocking` | Another owner route blocks this agent. | Wait quietly or surface concrete gate. |
-| `cleared_with_successor` | The blocker is done and a successor exists. | Route to successor. |
-| `cleared_without_successor` | The blocker is done but no successor/no-follow-up is projected. | Enter successor replan before ordinary delivery. |
-| `cleared_no_followup` | Owner explicitly says no follow-up. | Archive or continue unrelated work. |
-| `superseded` | A replacement todo exists. | Follow replacement. |
-| `deferred` | Resume condition is not yet satisfied. | Wait or observe condition. |
+| `blocking` | 另一 owner 路由阻碍此 agent。 | 安静等待或呈现具体 gate。 |
+| `cleared_with_successor` | 阻碍已完成且存在后继。 | 路由到后继。 |
+| `cleared_without_successor` | 阻碍已完成但未投影出后继/不跟进。 | 在常规交付前进入后继重规划。 |
+| `cleared_no_followup` | Owner 明确表示不跟进。 | 归档或继续无关工作。 |
+| `superseded` | 存在替换 todo。 | 遵循替换。 |
+| `deferred` | 恢复条件尚未满足。 | 等待或观察条件。 |
 
-## 5. Evidence / Rollout / Rollback Machine
+## 5. Evidence/上线/回滚机器
 
-Evidence determines whether a state transition is trustworthy. Agent-declared
-"done" is not enough. A transition should be backed by artifact refs, source
-refs, validation results, blocker evidence, commit/PR/doc revision anchors, or
-compact external observations.
+Evidence 决定 state 转换是否可信。Agent 声明的"完成"不够。转换应由产物引用、来源引用、校验结果、阻碍 evidence、commit/PR/doc 修订锚点或紧凑的外部观察支撑。
 
 ```mermaid
 flowchart LR
@@ -284,25 +254,23 @@ flowchart LR
   Rollback --> Successor
 ```
 
-| Evidence State | Can Change Control-Plane State? | Notes |
+| Evidence State | 能改变控制面状态吗? | 说明 |
 | --- | --- | --- |
-| Hypothesis | No | Explains direction only. |
-| Evidence bundle | Maybe | Must include enough refs and validation shape. |
-| Validated run snapshot | Yes | Can drive todo completion, spend, or status projection. |
-| Blocker evidence | Yes | Can justify blocked/deferred/successor states. |
-| Rollout event | Yes | Append-only lifecycle fact. |
-| Mutation anchor | Yes | Commit, PR, doc revision, Base row, automation version, or equivalent. |
-| Rollback / compensation | Yes | Fix-forward and rollback remain part of history. |
+| Hypothesis | 不能 | 只解释方向。 |
+| Evidence bundle | 可能 | 必须包含足够引用与校验形态。 |
+| 已验证的 run snapshot | 能 | 可驱动 todo 完成、花费或状态投影。 |
+| 阻碍 evidence | 能 | 可证明 blocked/deferred/successor 状态。 |
+| 上线事件 | 能 | 仅追加的生命周期事实。 |
+| 变更锚点 | 能 | Commit、PR、doc 修订、Base 行、自动化版本或等价物。 |
+| 回滚/补偿 | 能 | 前向修复与回滚都保留在历史中。 |
 
-Rollback should never mean deleting the evidence chain. It appends a new
-compensating fact and usually creates or unblocks a successor todo.
+回滚绝不意味着删除 evidence 链。它追加一条新的补偿事实,通常会创建或解除阻碍一个后继 todo。
 
-## 6. Scheduler / Heartbeat Machine
+## 6. 调度器/心跳机器
 
-`scheduler_hint` is waiting policy, not execution permission. It is derived
-from quota payload fields such as `should_run`, `effective_action`,
-`heartbeat_recommendation`, `execution_obligation`,
-`automation_liveness`, and `interaction_contract`.
+`scheduler_hint` 是等待策略,不是执行许可。它由配额 payload 字段派生,如 `should_run`、`effective_action`、
+`heartbeat_recommendation`、`execution_obligation`、
+`automation_liveness` 与 `interaction_contract`。
 
 ```mermaid
 stateDiagram-v2
@@ -336,27 +304,22 @@ stateDiagram-v2
   ResetToInitial --> ActiveCadence
 ```
 
-| Scheduler Action | Current Cadence Class | Typical Codex App Initial / Max | Meaning |
+| 调度器动作 | 当前节奏类别 | 典型 Codex App 初始/最大 | 含义 |
 | --- | --- | --- | --- |
-| `run_now` | `active_work` | 3 / 10 minutes | Work or repair must be attempted. |
-| `backoff_waiting_for_user` | `human_gate` | 30 / 120 minutes | Concrete user/controller action is next. |
-| `backoff_until_reassigned` | `agent_scope_wait` | 10 / 60 minutes, progression 10/20/30/60 | Handoff owner or reassignment may unblock this agent. |
-| `backoff_until_material_transition` | `monitor_wait` | 15 / 60 minutes | Monitor-only liveness without compute spend. |
-| `backoff_until_fresh_evidence` | `unchanged_noop` | 60 / 240 minutes | Wait for fresh mapped or post-handoff evidence. |
-| `backoff_until_state_change` | `quiet_wait` | 30 / 120 minutes | No specific user/monitor path is projected. |
-| `stop_until_explicit_resume` | `terminal_no_followup` | stopped | LoopX-derived closure from complete todo sources, no-follow-up evidence, and an empty frontier stops recurring automation until resume or new work. |
-| `keep_default_cadence` | `default` | 3 / 30 minutes | No backoff condition is projected. |
+| `run_now` | `active_work` | 3 / 10 分钟 | 必须尝试工作或修复。 |
+| `backoff_waiting_for_user` | `human_gate` | 30 / 120 分钟 | 接下来是具体的用户/控制器动作。 |
+| `backoff_until_reassigned` | `agent_scope_wait` | 10 / 60 分钟,进度 10/20/30/60 | 交接 owner 或重新分配可能解除阻碍此 agent。 |
+| `backoff_until_material_transition` | `monitor_wait` | 15 / 60 分钟 | 仅 monitor 存活,不花费算力。 |
+| `backoff_until_fresh_evidence` | `unchanged_noop` | 60 / 240 分钟 | 等待新鲜的映射或交接后 evidence。 |
+| `backoff_until_state_change` | `quiet_wait` | 30 / 120 分钟 | 未投影出具体的用户/monitor 路径。 |
+| `stop_until_explicit_resume` | `terminal_no_followup` | 停止 | LoopX 从完整 todo 源、不跟进 evidence 与空前沿推导出的收尾,停止周期性自动化直到恢复或新工作。 |
+| `keep_default_cadence` | `default` | 3 / 30 分钟 | 未投影出退避条件。 |
 
-The reset token is part of the machine. When identity, selected action,
-recommended mode, user feedback, gate resolution, reassignment, material
-evidence, or active work changes the token, hosts should return to the profile
-initial cadence and acknowledge the scheduler state. Cadence changes do not
-spend quota.
+重置令牌是机器的一部分。当身份、所选动作、推荐模式、用户反馈、gate 解决、重新分配、实质性 evidence 或活动工作改变令牌时,host 应回到配置初始节奏并确认调度器状态。节奏变更不花费配额。
 
-## 7. Projection Sink Machine
+## 7. 投影 Sink 机器
 
-Status, review packet, frontstage, manager summary, Lark Kanban, and dashboard
-rows are projection sinks. They make state readable; they do not own state.
+状态、评审包、前场、经理摘要、Lark Kanban 与 dashboard 行都是投影 sink。它们让 state 可读;它们不拥有 state。
 
 ```mermaid
 flowchart LR
@@ -369,22 +332,17 @@ flowchart LR
   WriteAPI --> Source
 ```
 
-| Projection State | Meaning | Required Behavior |
+| 投影 State | 含义 | 必需行为 |
 | --- | --- | --- |
-| `Read-only view` | The sink matches current source fields closely enough to display. | It may guide a user/agent, but writes go through LoopX APIs. |
-| `Projection gap` | Missing concrete todo, stale route, conflicting source, or collapsed user/agent channel. | Repair the source or projection builder before relying on it. |
-| `Write API` | Todo update, gate decision, refresh-state, monitor poll, spend, scheduler ack, or event append. | Append durable facts; do not mutate the sink as truth. |
+| 只读视图 | Sink 与当前源字段足够接近,可以展示。 | 它可以指引用户/agent,但写入必须经由 LoopX API。 |
+| 投影缺口 | 缺失的具体 todo、陈旧路由、冲突源或折叠的用户/agent 通道。 | 依赖它之前先修复源或投影构建器。 |
+| 写 API | Todo 更新、gate 决策、refresh-state、monitor 轮询、花费、调度 ACK 或事件追加。 | 追加持久事实;不要把 sink 当真相变更。 |
 
-This machine protects the public/private boundary: a projection may render
-public-safe summaries and evidence refs, but it must not become a dependency on
-private raw docs, transcripts, credentials, local paths, benchmark logs, or
-unredacted connector payloads.
+这台机器保护公开/私有边界:投影可以渲染公开安全摘要与 evidence 引用,但绝不能成为对私有原始文档、转录、凭据、本地路径、基准日志或未脱敏 connector payload 的依赖。
 
-## 8. Agent Onboarding / Automation Enablement Machine
+## 8. Agent 接入/自动化启用机器
 
-Connecting a project is not the same as enabling long-running automation. The
-current code separates project registration, global sync, quota visibility,
-heartbeat opt-in, host-loop installation, and first tick verification.
+连接项目与启用长程自动化不同。当前代码把项目注册、全局同步、配额可见性、心跳选择加入、host-loop 安装与首次 tick 验证分开。
 
 ```mermaid
 stateDiagram-v2
@@ -407,36 +365,24 @@ stateDiagram-v2
   FirstTickVerified --> [*]
 ```
 
-| State | Source Fields / Commands | Product Meaning |
+| State | 源字段/命令 | 产品含义 |
 | --- | --- | --- |
-| `ProjectRegistered` | Registry goal, adapter kind/status, active state path | LoopX knows the project. Automation is not implied. |
-| `GlobalSyncPending` / `GlobalRegistered` | `global_sync` payload | Shared status/quota can discover the goal. |
-| `GlobalWriteBlocked` / `RepairNeeded` | Registry writability probe or sync error | Produce a concrete repair/gate; do not silently downgrade. |
-| `QuotaVisible` | `quota should-run` can resolve goal and agent | The scheduler can reason about the target. |
-| `HeartbeatConsentRequired` | `codex_app_heartbeat=ask` | Ask before installing a recurring Codex App automation. |
-| `HeartbeatPreauthorized` | `codex_app_heartbeat=yes` | Install/update the host loop before claiming automation is active. |
-| `ManualLoopOnly` | `codex_app_heartbeat=no` or host unsupported | Manual, TUI, Claude, or on-demand loops remain valid. |
-| `FirstTickVerified` | Run history or quota evidence from a real tick | The operating loop has actually been exercised. |
+| `ProjectRegistered` | 注册表 goal、适配器种类/状态、active 状态路径 | LoopX 知道该项目。不暗示自动化。 |
+| `GlobalSyncPending` / `GlobalRegistered` | `global_sync` payload | 共享状态/配额可以发现该 goal。 |
+| `GlobalWriteBlocked` / `RepairNeeded` | 注册表可写性探针或同步错误 | 产生具体的修复/gate;不要悄然降级。 |
+| `QuotaVisible` | `quota should-run` 可解析 goal 与 agent | 调度器可以推理该目标。 |
+| `HeartbeatConsentRequired` | `codex_app_heartbeat=ask` | 在安装周期性 Codex App 自动化前询问。 |
+| `HeartbeatPreauthorized` | `codex_app_heartbeat=yes` | 在声称自动化活动之前安装/更新 host loop。 |
+| `ManualLoopOnly` | `codex_app_heartbeat=no` 或 host 不受支持 | 手动、TUI、Claude 或按需 Loop 仍然有效。 |
+| `FirstTickVerified` | 来自真实 tick 的运行历史或配额 evidence | 运行 Loop 实际被演练过。 |
 
-For read-only project maps, `adapter.status=planned` permits only a dry-run
-preview until the `read_only_map_opt_in` operator gate approves it. Connected
-read-only states such as `connected`, `connected-read-only`, and
-`read-only-map-ready` can append a real read-only map.
+对于只读项目地图,`adapter.status=planned` 只允许试运行预览,直到 `read_only_map_opt_in` 运维者 gate 批准。已连接的只读状态,如 `connected`、`connected-read-only` 与 `read-only-map-ready`,可以追加一个真实的只读地图。
 
-## 9. Agent Vision / Replan Machine
+## 9. Agent 愿景/重规划机器
 
-Agent vision is compact executable routing state, not a scratchpad. Each agent
-may have a bounded vision packet that describes its current role direction,
-scope, acceptance summary, replan trigger, dreaming policy, and latest patch.
-The CLI/write API must enforce those budgets before quota or status consumes
-the projection.
+Agent 愿景是紧凑的可执行路由状态,不是草稿纸。每个 agent 可以有一个有界的愿景包,描述其当前角色方向、范围、验收摘要、重规划触发、dreaming 策略与最新补丁。CLI/写 API 必须在配额或状态消费投影之前强制这些预算。
 
-Vision is per `agent_id`, including closeout checks. A material
-`refresh-state` emits `vision_checkpoint_v0` for the current agent: patched,
-unchanged with reason, retired/superseded, missing required, or not required.
-Missing required checkpoints are preserved in compact run history, filtered by
-the current agent, and can become goal-frontier acceptance gaps before local
-quiet/wait decisions.
+愿景按 `agent_id` 划分,包括收尾检查。一次实质性的 `refresh-state` 会为当前 agent 发出 `vision_checkpoint_v0`:已补丁、未变化且附原因、已退休/取代、缺失必需或不需要。缺失的必需检查点保存在紧凑运行历史中,按当前 agent 过滤,并可在本地安静/等待决策之前成为 goal 前沿验收缺口。
 
 ```mermaid
 stateDiagram-v2
@@ -454,57 +400,36 @@ stateDiagram-v2
   ActiveVision --> Retired: acceptance or no-follow-up recorded
 ```
 
-| State | Product Meaning | Legal Exit |
+| State | 产品含义 | 合法退出 |
 | --- | --- | --- |
-| `DraftVision` | A compact packet is being seeded or rewritten. | Validate budget and acceptance. |
-| `ActiveVision` | The role may use the packet for lane-local work. | Evidence, drift, dreaming proposal, supersession, or retirement. |
-| `ReplanRequired` | Goal-level progress requires replan before quiet/wait. | Write a bounded vision/todo/acceptance delta. |
-| `VisionPatchProposed` | Replan produced a bounded patch. | Apply through LoopX write APIs or reject as over budget. |
+| `DraftVision` | 紧凑包正在播种或重写。 | 校验预算与验收。 |
+| `ActiveVision` | 角色可将该包用于车道局部工作。 | Evidence、漂移、dreaming 提议、取代或退休。 |
+| `ReplanRequired` | Goal 级进度需要在安静/等待前重规划。 | 写入有界的愿景/todo/验收增量。 |
+| `VisionPatchProposed` | 重规划产生了一个有界补丁。 | 通过 LoopX 写 API 应用,或作为超预算拒绝。 |
 
-The important ordering is goal-level first: required replan is evaluated before
-monitor quiet skip, scoped gate wait, or an individual agent's no-candidate
-state. Those local states may remain visible, but they cannot clear a required
-replan. An acknowledgement without a vision, todo, acceptance, or no-follow-up
-delta is `replan_noop`. A future monitor `next_due_at` is scheduler metadata,
-not a frontier delta, and cannot by itself suppress a monitor-only empty-frontier
-replan.
+重要的顺序是 goal 级优先:必需的重规划在 monitor 安静跳过、有范围 gate 等待或单个 agent 的无候选状态之前评估。这些局部状态可以保持可见,但不能清除必需的重规划。没有愿景、todo、验收或不跟进增量的确认是 `replan_noop`。未来的 monitor `next_due_at` 是调度器元数据,不是前沿增量,本身不能抑制仅 monitor 的空前沿重规划。
 
-The same ordering applies when an agent records a bounded
-`replan_trigger_summary` in its vision packet. Status/quota exposes that trigger
-as a goal-frontier `acceptance_gaps[]` entry. If no advancement frontier remains,
-the gap becomes a replan trigger before the lane can quietly back off.
+当 agent 在其愿景包中记录一个有界的 `replan_trigger_summary` 时,同样顺序适用。Status/quota 将该触发暴露为 goal 前沿的 `acceptance_gaps[]` 条目。如果不再有推进前沿,该缺口在车道可以安静退避之前成为重规划触发。
 
-Long runnable lanes also pass through this machine. When the current agent can
-select about 15 advancement todos, or about 20 open todos with advancement work
-still present, quota should trigger a bounded vision replan before continuing
-linearly. The replan reads the agent-scoped evidence log, uses bounded public
-research when local evidence is insufficient for a public claim, then groups,
-prunes, or reprioritizes the chain into the next high-value runnable slice.
+长可运行车道也经过这台机器。当当前 agent 可以选择约 15 个推进 todo,或约 20 个仍含推进工作的打开 todo 时,配额应在继续线性推进之前触发有界愿景重规划。重规划读取 agent 范围的 evidence 日志,在本地 evidence 不足以支撑公开声明时使用有界公开研究,然后把链路分组、剪枝或重新排序为下一个高价值可运行切片。
 
-The same ordering also applies to `vision_checkpoint_v0`: if a role records
-material progress but omits both a vision patch and an unchanged/no-follow-up
-decision, quota should project that role's `vision_checkpoint_missing` gap and
-route that role back through replan.
+同样的顺序也适用于 `vision_checkpoint_v0`:如果角色记录了实质性进展,但既没有愿景补丁也没有未变化/不跟进决策,配额应投影该角色的 `vision_checkpoint_missing` 缺口,并把该角色路由回重规划。
 
-See
-[`goal_vision_replan_contract_v0`](../../reference/protocols/goal-vision-replan-contract-v0.md)
-for the field budgets and projection contract.
+字段预算与投影契约参见
+[`goal_vision_replan_contract_v0`](../../reference/protocols/goal-vision-replan-contract-v0.md)。
 
-## Catalog Linkage
+## 目录联动
 
-| Machine | Representative Patterns |
+| 机器 | 代表性模式 |
 | --- | --- |
-| Todo lifecycle | IP-001 Bounded Delivery, IP-029 Handoff Todo Gate State |
-| Quota / runtime | IP-001, IP-007 Outcome Floor Recovery, IP-008 Monitor Quiet Skip |
-| Gate decision scope | IP-002 Blocked Priority With Safe Fallback, IP-003 Scoped Gate With Safe Fallback, IP-004 Concrete User Todo Projection |
-| Owner route / handoff | IP-026 Agent-Scoped No-Candidate Gap, IP-029 Handoff Todo Gate State |
-| Evidence / rollout | IP-001 Bounded Delivery, IP-007 Outcome Floor Recovery |
-| Scheduler / heartbeat | IP-008 Monitor Quiet Skip, IP-026 Agent-Scoped No-Candidate Gap |
-| Projection sink | IP-005 State Projection Gap |
-| Agent onboarding | Project bootstrap/connect and read-only-map opt-in flows |
-| Agent vision / replan | Autonomous replan, dreaming proposal promotion, successor replan |
+| Todo 生命周期 | IP-001 Bounded Delivery,IP-029 Handoff Todo Gate State |
+| 配额/运行时 | IP-001,IP-007 Outcome Floor Recovery,IP-008 Monitor Quiet Skip |
+| Gate 决策范围 | IP-002 Blocked Priority With Safe Fallback,IP-003 Scoped Gate With Safe Fallback,IP-004 Concrete User Todo Projection |
+| Owner 路由/交接 | IP-026 Agent-Scoped No-Candidate Gap,IP-029 Handoff Todo Gate State |
+| Evidence/上线 | IP-001 Bounded Delivery,IP-007 Outcome Floor Recovery |
+| 调度器/心跳 | IP-008 Monitor Quiet Skip,IP-026 Agent-Scoped No-Candidate Gap |
+| 投影 sink | IP-005 State Projection Gap |
+| Agent 接入 | 项目 bootstrap/connect 与只读地图选择加入流程 |
+| Agent 愿景/重规划 | 自主重规划、dreaming 提议提升、后继重规划 |
 
-If a new interaction pattern cannot be placed in one of these machines, first
-check whether it is a UI variant, wording variant, or private incident label.
-Only add a new machine when a source field, legal transition, owner, and
-validation path are all observable from public-safe LoopX state.
+如果新的交互模式无法放入其中某台机器,先检查它是否是 UI 变体、措辞变体或私有事件标签。只有当源字段、合法转换、owner 与校验路径都能从公开安全的 LoopX state 观察到时,才新增机器。

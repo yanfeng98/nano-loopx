@@ -1,41 +1,25 @@
-# Repo-Health Provider Contract
+# Repo-Health Provider 契约
 
-`repo_health_snapshot_v0` is a provider-neutral, public-safe snapshot of GitHub
-repository health. The provider collects typed observations from the GitHub
-REST API and freezes them into one document; consumers (monthly reports,
-community-funnel monitors, content material) render or aggregate the snapshot
-but do not reinterpret missing metrics as zero.
+`repo_health_snapshot_v0` 是 GitHub 仓库健康的 provider-neutral、public-safe 快照。provider 从 GitHub REST API 收集类型化观察并冻结成一个文档;消费者(月度报告、社区漏斗监控器、内容素材)渲染或聚合该快照,但不把缺失的指标重新解释为零。
 
-## Ownership
+## 所有权
 
-| Surface | Owner | Responsibility |
+| 组件面 | 所有者 | 职责 |
 | --- | --- | --- |
-| Contract | `loopx-repo-health` extension | Schema, frozen metric ids, boundary rules |
-| Observation | GitHub REST collector | Public evidence with typed values or `null` |
-| Rendering | `loopx-repo-health` | Deterministic markdown projection |
-| Revision | Human owner | Approval before metric semantics change |
+| 契约 | `loopx-repo-health` 扩展 | schema、冻结指标 id、边界规则 |
+| 观察 | GitHub REST 收集器 | 带类型化值或 `null` 的公开证据 |
+| 渲染 | `loopx-repo-health` | 确定性的 markdown 投影 |
+| Revision | 人工所有者 | 指标语义变更前的批准 |
 
-## Rules
+## 规则
 
-- All metric values are non-negative integers or `null`; a failed collection is
-  represented as a warning plus `null`, never a fabricated number.
-- `latency.pr_merge_*` and `latency.first_response_*` are bounded samples; the
-  evidence `warnings` list names the sample size.
-- `traffic_14d` requires repository access; unavailable surfaces become zero
-  counts with a warning, so consumers can distinguish "no traffic" from
-  "no access".
-- `traffic_14d.paths` is the bounded top-paths list returned by GitHub
-  (`traffic/popular/paths`). `traffic_14d.docs_views` is derived from those
-  paths with the single classification rule: README (`/readme...`),
-  `docs/` tree (including blob/tree links), and `wiki/` tree. The derived
-  `uniques` value is the sum of per-path uniques and is not de-duplicated
-  across paths.
-- Credentials are never part of the request or response packet; authentication
-  comes from the process environment only.
-- The provider rejects a request with a mismatched `schema_version` before
-  doing any network work.
+- 所有指标值为非负整数或 `null`;失败的收集表示为警告加 `null`,绝不是捏造的数字。
+- `latency.pr_merge_*` 与 `latency.first_response_*` 是有界样本;evidence 的 `warnings` 列表标明样本大小。
+- `traffic_14d` 需要仓库访问权限;不可用的组件面变成零计数并带警告,以便消费者区分"无流量"与"无访问权限"。
+- `traffic_14d.paths` 是 GitHub 返回的有界热门路径列表(`traffic/popular/paths`)。`traffic_14d.docs_views` 由这些路径按单条分类规则推导:README(`/readme...`)、`docs/` 树(包括 blob/tree 链接)与 `wiki/` 树。推导出的 `uniques` 值是各路径 uniques 之和,不跨路径去重。
+- 凭据绝不属于请求或响应包的一部分;认证只来自进程环境。
+- provider 在开始任何网络工作之前,拒绝 `schema_version` 不匹配的请求。
 
-## Evidence
+## 证据
 
-Each snapshot carries `evidence.sources`, `evidence.rate_limit_remaining`, and
-`evidence.warnings` so downstream reports can audit freshness and sampling.
+每个快照携带 `evidence.sources`、`evidence.rate_limit_remaining` 与 `evidence.warnings`,以便下游报告可以审计新鲜度与采样。

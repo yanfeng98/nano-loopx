@@ -1,24 +1,20 @@
-# Codex CLI TUI-First LoopX Loop
+# Codex CLI TUI 优先的 LoopX Loop
 
-Status: product contract and implementation target.
+> [English](codex-cli-tui-loop.md)
 
-LoopX should make Codex CLI easy to adopt without taking away the
-interactive TUI that users already trust. The target is not "run a hidden
-daemon instead of Codex." The target is:
+状态：产品契约与实现目标。
 
-1. A user opens Codex CLI TUI inside a project repo.
-2. The user sends one short message.
-3. Codex discovers or installs LoopX without requiring a manual repo
-   clone, connects the repo conservatively, reads gate/todo state, and reports
-   the next safe action.
-4. The setup turn installs the thin LoopX goal/heartbeat body immediately, then
-   stops before longer delivery work.
-5. Later automation can steer the same visible session when safe, while the
-   user can still watch, interrupt, review, or take over.
+LoopX 应该让 Codex CLI 易于采用，同时不夺走用户已经信任的交互式 TUI。目标不是"用隐藏 daemon 代替 Codex"。目标是：
 
-## Product Goal
+1. 用户在项目仓库内打开 Codex CLI TUI。
+2. 用户发送一条简短消息。
+3. Codex 在不要求手工克隆仓库的情况下发现或安装 LoopX，保守地连接仓库，读取 gate/todo 状态，并报告下一个安全动作。
+4. 设置 Turn 立即安装薄的 LoopX goal/heartbeat 正文，然后在更长交付工作之前停止。
+5. 后续自动化可以在安全时转向同一个可见 session，而用户仍可观察、中断、评审或接管。
 
-The best first-run experience is one TUI setup message:
+## 产品目标
+
+最佳首次运行体验是一条 TUI 设置消息：
 
 ```text
 Connect this repo to LoopX from this visible Codex CLI TUI. Do not clone the
@@ -37,230 +33,154 @@ and set the current Codex CLI goal to `/goal <thin task_body>`. Then stop and
 report the goal id, current user gate, top agent todo, and next safe action.
 ```
 
-That text should be a Codex CLI-native setup path for the same lifecycle App
-uses: setup first, including immediate installation of the thin loop prompt into
-the surface. In Codex CLI the loop is `/goal <thin task_body>`; in Codex App
-the loop is heartbeat automation every 3 minutes with `<thin task_body>`. The
-message should be enough for a terminal agent to:
+这段文本应当是 Codex CLI 原生的设置路径，对应 App 使用的同一生命周期：先设置，包括把薄 loop prompt 立即安装进 surface。在 Codex CLI 中 loop 是 `/goal <thin task_body>`；在 Codex App 中 loop 是每 3 分钟带 `<thin task_body>` 的 heartbeat 自动化。这条消息足以让终端 agent：
 
-- run `loopx doctor`;
-- install or repair the local CLI if it is missing, using PyPI and the packaged
-  workflow-skill installer before asking the user to clone the LoopX repo;
-- reuse existing LoopX state without creating or overwriting a goal;
-- connect the repo when needed, using bootstrap only for clear initialization;
-- ensure `.loopx/`, `.codex/goals/`, and `.local/` stay local;
-- generate `heartbeat-prompt --thin`;
-- set the current Codex CLI goal to `/goal <thin task_body>`;
-- report the goal id, user gate, top agent todo, and next safe action;
-- write back setup status without spending delivery quota unless delivery was
-  explicitly requested and validated.
+- 运行 `loopx doctor`；
+- 在要求用户克隆 LoopX 仓库之前，用 PyPI 与打包 workflow-skill 安装器安装或修复缺失的本地 CLI；
+- 在不创建或覆盖 goal 的情况下复用既有 LoopX 状态；
+- 需要时连接仓库，只在明确需要初始化时使用 bootstrap；
+- 确保 `.loopx/`、`.codex/goals/` 与 `.local/` 保持本地；
+- 生成 `heartbeat-prompt --thin`；
+- 把当前 Codex CLI goal 设置为 `/goal <thin task_body>`；
+- 报告 goal id、user gate、首要 agent todo 与下一个安全动作；
+- 在未被显式请求并验证交付之前，写回设置状态而不 spend 交付配额。
 
-The user should not need to understand registry paths, runtime roots, active
-state files, quota JSON, or heartbeat prompts before seeing value.
+用户不应在看到价值之前就需要理解 registry 路径、runtime root、活跃状态文件、quota JSON 或 heartbeat prompt。
 
-## Runtime Split
+## Runtime 划分
 
-| Layer | Owns | Must Not Do |
+| 层 | 拥有 | 不得做 |
 | --- | --- | --- |
-| Codex CLI TUI | visible user interaction, local tool execution, steering, review, manual takeover | hide user decisions inside LoopX state |
-| LoopX | goal state, user gates, agent todos, claims, quota, writeback, compact evidence | replace the Codex CLI runtime or store raw transcripts |
-| Local driver or scheduler | wakeups, idle checks, session attachment attempts, fallback launch | inject into an active user turn or bypass a gate |
+| Codex CLI TUI | 可见用户交互、本地工具执行、转向、评审、手动接管 | 在 LoopX 状态里隐藏用户决策 |
+| LoopX | goal 状态、user gates、agent todos、claims、quota、写回、紧凑 evidence | 替换 Codex CLI runtime 或存储原始 transcripts |
+| 本地驱动或 scheduler | wakeups、idle 检查、session 附着尝试、回退启动 | 注入到活跃用户 Turn 或绕过 gate |
 
-LoopX should be the control plane. Codex CLI should remain the executor
-and the user's live console.
+LoopX 应当做控制面。Codex CLI 应当保持执行器与用户的实时控制台。
 
-## Operating Modes
+## 运行模式
 
 ### 1. TUI Bootstrap
 
-This is the first supported path. The user starts in Codex CLI TUI and pastes a
-single LoopX setup request. The agent performs install/connect,
-generates the thin heartbeat prompt, sets the current Codex CLI goal to
-`/goal <thin task_body>`, reports the current gate/todo/next-action snapshot,
-and stops. It should not stop after describing the product, and it should not
-spend delivery quota for setup-only work.
+这是第一个受支持的路径。用户在 Codex CLI TUI 中开始并粘贴一条 LoopX 设置请求。Agent 执行安装/连接，生成薄 heartbeat prompt，把当前 Codex CLI goal 设置为 `/goal <thin task_body>`，报告当前 gate/todo/next-action 快照，然后停止。它不应在描述完产品后就停，也不应为纯设置工作 spend 交付配额。
 
-This mode preserves the TUI completely because the human explicitly starts the
-loop there.
+该模式完全保留 TUI，因为人类显式在那里启动了 loop。
 
-Current prototype:
+当前原型：
 
 ```bash
 loopx codex-cli-bootstrap-message --project . --goal-id <goal-id>
 ```
 
-Copy the generated setup message into Codex CLI TUI. It tells the agent to
-repair/install LoopX if needed, connect the repo conservatively,
-generate the thin heartbeat body, set Codex CLI goal mode to `/goal <thin
-task_body>`, run the quota/status guard for the first snapshot, obey
-`interaction_contract`, preserve the visible TUI, and stop before longer work.
+把生成的设置消息复制进 Codex CLI TUI。它告诉 agent：需要时修复/安装 LoopX，保守连接仓库，生成薄 heartbeat 正文，把 Codex CLI goal 模式设置为 `/goal <thin task_body>`，为第一个快照运行 quota/status guard，遵守 `interaction_contract`，保留可见 TUI，并在更长工作之前停止。
 
-Transcript-free first-run smoke packet:
+免 transcript 首次运行冒烟 packet：
 
 ```bash
 loopx codex-cli-tui-bootstrap-smoke-bundle --project . --goal-id <goal-id> --agent-id <agent-id>
 ```
 
-This packet is for product and release validation, not an extra user step. It
-checks the PyPI-first install repair path, the copy-only paste block, the quota
-guard command, and the bounded writeback/spend commands without launching
-Codex, reading transcripts, inspecting session files, mutating a session, or
-spending quota.
+该 packet 用于产品与发布验证，不是额外用户步骤。它检查 PyPI-first 安装修复路径、纯复制粘贴块、quota guard 命令与有界写回/spend 命令，而不启动 Codex、不读 transcript、不检查 session 文件、不改动 session，也不 spend quota。
 
-The first useful TUI response should be a control-plane snapshot, not a lecture
-about internals:
+第一个有用的 TUI 响应应当是控制面快照，而不是关于内部的长篇讲解：
 
-- current goal id;
-- concrete user gate, or "none";
-- top user todo, or "none";
-- top agent todo;
-- next safe action.
+- 当前 goal id；
+- 具体 user gate，或"无"；
+- 首要 user todo，或"无"；
+- 首要 agent todo；
+- 下一个安全动作。
 
-Registry paths, runtime roots, JSON payloads, local-driver plans,
-clone/canary setup, and visible-session proof fixtures are follow-up
-diagnostics. They should not be required before a first-time user sees the
-current goal/gate/todo state.
+Registry 路径、runtime root、JSON 载荷、本地驱动计划、clone/canary 设置与 visible-session 证明夹具都是后续诊断。首次用户看到当前 goal/gate/todo 状态之前不需要这些。
 
-Current pilot packet:
+当前试点 packet：
 
 ```bash
 loopx codex-cli-one-message-loop-pilot --project . --goal-id <goal-id> --agent-id <agent-id>
 ```
 
-This command does not run Codex. It packages the first TUI paste message and
-the safe scheduler/executor bridge into one reviewable packet:
+该命令不运行 Codex。它把第一条 TUI 粘贴消息与安全的 scheduler/执行器桥打包进一个可评审 packet：
 
-- first turn: paste one LoopX message into the visible Codex CLI TUI;
-- first response: show goal id, concrete user gate or none, top user todo or
-  none, top agent todo, and next safe action;
-- first work segment: if the guard permits work, claim or choose one runnable
-  agent todo and complete one bounded validated segment in that same visible
-  TUI turn;
-- later scheduler: use `codex-cli-local-scheduler-exec` in dry-run mode by
-  default;
-- bridge side effects: require a fresh guard plus explicit candidate prefix or
-  blocker-writeback opt-in.
+- 首次 Turn：把一条 LoopX 消息粘贴进可见 Codex CLI TUI；
+- 首响应：显示 goal id、具体 user gate 或没有、首要 user todo 或没有、首要 agent todo 与下一个安全动作；
+- 首个工作片段：如果 guard 允许工作，认领或选择一个可运行的 agent todo，并在同一个可见 TUI Turn 中完成一个有边界的验证片段；
+- 后续 scheduler：默认以 dry-run 模式使用 `codex-cli-local-scheduler-exec`；
+- 桥副作用：要求新鲜 guard 加显式候选前缀或 blocker-writeback opt-in。
 
-The pilot is a contract check for the user experience. It is not a prerequisite
-for a first-time user; the first-time path remains "paste one message and watch
-the TUI."
+该试点是对用户体验的契约检查。它不是首次用户的先决条件；首次路径保持"粘贴一条消息并观察 TUI"。
 
-### 2. Session-Attached Automation
+### 2. Session-Attached 自动化
 
-This is the preferred automation target. A scheduler wakes up, runs
-`quota should-run`, then attempts to add a visible LoopX steering turn to
-the same Codex CLI session.
+这是偏好的自动化目标。Scheduler 唤醒，运行 `quota should-run`，然后尝试向同一个 Codex CLI session 添加一次可见的 LoopX 转向 Turn。
 
-A valid attachment needs:
+有效附着需要：
 
-- a stable session identifier or resume handle;
-- an idle guard so automation does not race a human-typed message;
-- a visible injected prompt that says why LoopX is steering now;
-- a hard stop when `interaction_contract.user_channel.action_required=true`;
-- writeback and spend only after the session produces validated evidence.
+- 稳定的 session 标识或恢复句柄；
+- idle guard，避免自动化与人类输入的消息赛跑；
+- 一条可见注入 prompt，说明 LoopX 现在为何转向；
+- `interaction_contract.user_channel.action_required=true` 时的硬停止；
+- 只在 session 产生验证过 evidence 之后写回与 spend。
 
-If Codex CLI cannot expose a safe session attachment primitive, LoopX
-should not fake it by writing hidden state. It should fall back to a transparent
-mode.
+如果 Codex CLI 无法暴露安全的 session 附着原语，LoopX 不应靠写隐藏状态伪造它。它应回退到透明模式。
 
-Current probe:
+当前探针：
 
 ```bash
 loopx codex-cli-session-probe
 ```
 
-The probe is help-only by default: it checks public Codex CLI command surfaces
-such as `codex --help`, `codex exec --help`, and `codex resume --help`. It does
-not read raw transcripts, credentials, local session files, or mutate a Codex
-session. The key distinction is deliberate: `exec` or `resume` support can be a
-useful fallback, but it is not evidence that LoopX can inject a visible
-turn into the same open TUI. Same-session automation requires an explicit
-visible attach/inject primitive plus an idle guard. A visible `resume [PROMPT]`
-or experimental `remote-control` surface is stronger than plain headless
-fallback, but it still belongs in a separate spike until LoopX proves the
-turn is visible, idle-guarded, interruptible, and not racing a human-typed TUI
-message.
+该探针默认只有 help：它检查公开 Codex CLI 命令 surface，如 `codex --help`、`codex exec --help` 与 `codex resume --help`。它不读原始 transcripts、凭据、本地 session 文件，也不改动 Codex session。关键区分是刻意的：`exec` 或 `resume` 支持可以是有用的回退，但它不是 LoopX 能把可见 Turn 注入同一个打开 TUI 的 evidence。同 session 自动化需要显式的可见 attach/inject 原语加 idle guard。可见 `resume [PROMPT]` 或实验性 `remote-control` surface 比纯 headless 回退更强，但直到 LoopX 证明该 Turn 可见、有 idle guard、可中断且不与人类输入的 TUI 消息赛跑之前，它仍属于单独 spike。
 
-Current driver-plan prototype:
+当前 driver-plan 原型：
 
 ```bash
 loopx codex-cli-visible-driver-plan --project . --goal-id <goal-id>
 ```
 
-This command turns the probe result into a dry-run driver plan. It does not run
-Codex, read raw transcripts, read session files, mutate a Codex session, or
-spend LoopX quota. Its job is to choose one of three next modes:
+该命令把探针结果变成 dry-run 驱动计划。它不运行 Codex、不读原始 transcripts、不读 session 文件、不改动 Codex session，也不 spend LoopX quota。它的职责是在三种下一模式中选择：
 
-- `session_attached_visible_turn`: a future local driver may try the detected
-  visible attach primitive, but only behind quota guard and idle guard.
-- `visible_resume_or_remote_control_spike`: `resume [PROMPT]` or
-  `remote-control` exists, but it must prove that the turn is visible and
-  interruptible before LoopX treats it as session-attached automation.
-- `tui_bootstrap_only`: ask the user to start inside Codex CLI TUI. If the
-  probe only exposes `codex exec`, LoopX still stays in this mode
-  because headless fallback is disabled for the default `/goal` product path.
+- `session_attached_visible_turn`：未来本地驱动可以尝试检测到的可见 attach 原语，但只在 quota guard 与 idle guard 之后。
+- `visible_resume_or_remote_control_spike`：`resume [PROMPT]` 或 `remote-control` 存在，但它必须证明该 Turn 可见且可中断，LoopX 才会把它当作 session-attached 自动化。
+- `tui_bootstrap_only`：要求用户从 Codex CLI TUI 内部开始。如果探针只暴露 `codex exec`，LoopX 仍留在此模式，因为默认 `/goal` 产品路径禁用了 headless 回退。
 
-Current local-driver planner:
+当前本地驱动规划器：
 
 ```bash
 loopx codex-cli-local-driver-plan --project . --goal-id <goal-id> --agent-id <agent-id>
 ```
 
-This command is the conservative MVP for automation setup. It composes the
-quota guard, visible-driver plan, TUI bootstrap command, headless-disabled
-boundary, and idle-guard requirement into a single dry-run packet. It
-does not run Codex, read transcripts, read session files, mutate a session, or
-spend quota.
+该命令是自动化设置的保守 MVP。它把 quota guard、visible-driver plan、TUI bootstrap 命令、headless 禁止边界与 idle-guard 要求组合进一个 dry-run packet。它不运行 Codex、不读 transcript、不读 session 文件、不改动 session，也不 spend quota。
 
-Current local-scheduler execution wrapper:
+当前本地 scheduler 执行 wrapper：
 
 ```bash
 loopx codex-cli-local-scheduler-exec --project . --goal-id <goal-id> --agent-id <agent-id>
 ```
 
-Without explicit execution flags, this command is still a no-execution packet.
-For a later visible Codex CLI turn, it must also receive public-safe runtime
-idle evidence through `--observe-local-runtime ...` or `--idle-fixture
-<public-runtime-idle.json>`. A visible-session proof says the route is visible
-and interruptible; the runtime-idle detector says this exact later turn is not
-racing human typing or an already-running Codex turn. Missing runtime-idle
-evidence produces a precise blocker instead of a candidate command.
+没有显式执行标志时，该命令仍是无执行 packet。对于之后的可见 Codex CLI Turn，它还须通过 `--observe-local-runtime ...` 或 `--idle-fixture <public-runtime-idle.json>` 接收 public-safe runtime idle evidence。Visible-session 证明说明该路由可见且可中断；runtime-idle 检测器说明这次精确的后续 Turn 没有与人类输入或已在运行的 Codex Turn 赛跑。缺失 runtime-idle evidence 产生精确 blocker，而不是候选命令。
 
-With runtime-idle evidence and `--guard-checked`, a local scheduler may choose
-exactly one opt-in side effect:
+带 runtime-idle evidence 与 `--guard-checked` 时，本地 scheduler 可以选择恰好一个 opt-in 副作用：
 
-- `--execute-candidate --candidate-command-prefix <prefix>`: run a proven
-  visible candidate whose command starts with an allowed prefix.
-- `--execute-blocker-writeback`: run the precise LoopX blocker writeback
-  command when the tick says proof is missing.
+- `--execute-candidate --candidate-command-prefix <prefix>`：运行一个已验证的可见候选，其命令以允许的前缀开头。
+- `--execute-blocker-writeback`：当 tick 表明证明缺失时，运行精确的 LoopX blocker 写回命令。
 
-The wrapper reports only whether it ran, return code, timeout, and the selected
-kind. It discards stdout/stderr, does not read transcripts, does not inspect
-session files, does not mutate hidden Codex state, and does not spend Goal
-Harness quota. This keeps the first executable bridge narrow enough to test
-without turning the user's TUI into an opaque background daemon.
+Wrapper 只报告是否运行、返回码、超时与选中的种类。它丢弃 stdout/stderr、不读 transcript、不检查 session 文件、不改动隐藏 Codex 状态，也不 spend Goal Harness quota。这使第一个可执行桥足够窄，可以在不把用户 TUI 变成不透明后台 daemon 的情况下测试。
 
-Current visible local-driver pilot:
+当前可见本地驱动试点：
 
 ```bash
 loopx codex-cli-visible-local-driver-pilot --project . --goal-id <goal-id> --agent-id <agent-id>
 ```
 
-This command still does not run Codex. It binds the first one-message TUI start
-to later scheduler ticks and makes the returning-user contract explicit:
+该命令仍不运行 Codex。它把第一条一条消息 TUI 启动绑定到后续 scheduler tick，并把返回用户契约显式化：
 
-- later turns must remain visible to the user;
-- the user must be able to interrupt or take over;
-- a public-safe visible proof is required before resume, remote-control, or
-  same-TUI prompt candidates can run;
-- every later tick needs quota guard and idle guard;
-- candidate execution still requires `--guard-checked` plus an allowed command
-  prefix;
-- blocker writeback still requires `--guard-checked`;
-- the pilot never reads transcripts, session files, credentials, stdout, or
-  stderr, and never spends quota by itself.
+- 后续 Turn 必须对用户可见；
+- 用户必须能中断或接管；
+- resume、remote-control 或 same-TUI prompt 候选运行之前需要 public-safe 可见证明；
+- 每个后续 tick 都需要 quota guard 与 idle guard；
+- 候选执行仍需 `--guard-checked` 加允许的命令前缀；
+- blocker 写回仍需 `--guard-checked`；
+- 试点从不读 transcripts、session 文件、凭据、stdout 或 stderr，也从不由自身 spend quota。
 
-Current visible-session proof harness:
+当前 visible-session 证明 harness：
 
 ```bash
 loopx codex-cli-visible-session-proof \
@@ -270,14 +190,9 @@ loopx codex-cli-visible-session-proof \
   --proof-fixture visible-proof.public.json
 ```
 
-The proof fixture must be public-safe. It records booleans for user opt-in,
-quota guard, idle guard, turn visibility, interruptibility, private-data
-boundaries, and compact writeback planning. Passing this proof only means a
-future local driver may try that visible surface behind the same guards; it
-does not mean LoopX may read transcripts, read session files, mutate
-hidden session state, or bypass user gates.
+证明夹具必须 public-safe。它记录用户 opt-in、quota guard、idle guard、Turn 可见性、可中断性、私有数据边界与紧凑写回规划的布尔值。通过该证明只意味着未来本地驱动可以在相同 guard 之后尝试该可见 surface；它不意味着 LoopX 可以读 transcripts、读 session 文件、改动隐藏 session 状态或绕过 user gates。
 
-Current runtime-idle detector:
+当前 runtime-idle 检测器：
 
 ```bash
 loopx codex-cli-runtime-idle-detector \
@@ -294,18 +209,9 @@ loopx codex-cli-runtime-idle-detector \
   --manual-takeover-available
 ```
 
-This detector accepts either a public-safe fixture or a narrow local
-observation adapter. The local adapter may probe a coarse platform idle counter
-for "no recent human input" and requires an explicit visible `--turn-state
-idle`; unknown or running turn state fails closed. It is deliberately separate
-from the visible-session proof: the proof says "this route can create a
-visible, interruptible turn"; the idle detector says "this exact later turn is
-not racing human typing or an already-running Codex turn." It must prove no
-active human typing, no running turn, and no
-transcript/session/stdout/stderr/credential reads before LoopX treats a
-later visible prompt as executable.
+该检测器接受 public-safe 夹具或窄的本地观察 adapter。本地 adapter 可以对粗粒度平台 idle 计数器探测"近期无人类输入"，并要求显式可见 `--turn-state idle`；未知或运行中的 turn state fail closed。它刻意与 visible-session 证明分开：证明说"这条路可以创建可见、可中断的 Turn"；idle 检测器说"这次精确的后续 Turn 没有与人类输入或已在运行的 Codex Turn 赛跑"。在 LoopX 把后续可见 prompt 视为可执行之前，它必须证明没有活跃人类输入、没有运行中 Turn，也没有 transcript/session/stdout/stderr/凭据读取。
 
-For reproducible tests or external sensors, the fixture path remains:
+对于可复现测试或外部传感器，fixture 路径保持：
 
 ```bash
 loopx codex-cli-runtime-idle-detector \
@@ -315,7 +221,7 @@ loopx codex-cli-runtime-idle-detector \
   --idle-fixture runtime-idle.public.json
 ```
 
-Current same-TUI acceptance packet:
+当前 same-TUI 验收 packet：
 
 ```bash
 loopx codex-cli-visible-attach-acceptance \
@@ -326,149 +232,74 @@ loopx codex-cli-visible-attach-acceptance \
   --idle-fixture runtime-idle.public.json
 ```
 
-This packet is the promotion gate before LoopX treats later Codex CLI
-automation as safe same-TUI attach. It composes the help-only probe,
-visible-session proof, and runtime-idle detector. `remote-control` or `resume
-[PROMPT]` can pass as a visible spike candidate, but they are not accepted as
-same-TUI automation unless the proof surface is `same_tui_visible_attach` and
-the idle detector passes. If either proof or idle evidence is missing, the
-packet returns a precise blocker and keeps the one-message setup bootstrap as the
-primary path.
+该 packet 是晋升 gate：之后 LoopX 才会把后续 Codex CLI 自动化视为安全的 same-TUI attach。它组合 help-only 探针、visible-session 证明与 runtime-idle 检测器。`remote-control` 或 `resume [PROMPT]` 可以作为可见 spike 候选通过，但除非证明 surface 是 `same_tui_visible_attach` 且 idle 检测器通过，否则不被接受为 same-TUI 自动化。如果证明或 idle evidence 任一缺失，packet 返回精确 blocker，并保持一条消息的设置引导作为主要路径。
 
-The first public-safe proof pilot is recorded in
-[Codex CLI Visible Attach Proof Pilot](codex-cli-visible-attach-proof-pilot.md):
-current `resume` / `remote-control` evidence is promising, but still blocked
-until a visible same-TUI proof and runtime-idle evidence exist.
+第一个 public-safe 证明试点记录在
+[Codex CLI 可见 Attach 证明试点](codex-cli-visible-attach-proof-pilot.md)：
+当前 `resume` / `remote-control` evidence 有希望，但在可见 same-TUI 证明与 runtime-idle evidence 存在之前仍被阻塞。
 
-The repeatable capture path is defined in
-[Codex CLI Visible Proof Capture Protocol](codex-cli-visible-proof-capture-protocol.md).
-It treats `resume` / `remote-control` as proof targets, keeps fixtures
-public-safe, and records blocker-first stop conditions before any later visible
-turn is promoted.
+可复现捕获路径定义在
+[Codex CLI 可见证明捕获协议](codex-cli-visible-proof-capture-protocol.md)。
+它把 `resume` / `remote-control` 当作证明目标，保持夹具 public-safe，并在任何后续可见 Turn 被晋升之前记录 blocker-first 停止条件。
 
-### 3. Headless Disabled Boundary
+### 3. Headless 禁止边界
 
-`codex exec` remains useful for scheduled or CI-like work, but it is not the
-primary product experience for interactive users. The default Codex CLI
-LoopX setup-then-`/goal` path does not expose a headless fallback, even
-as an opt-in, so a first-run packet cannot accidentally move work into hidden
-execution.
+`codex exec` 对调度式或 CI 式工作仍有用，但它在交互式用户中不是主要产品体验。默认 Codex CLI LoopX 设置-then-`/goal` 路径不暴露 headless 回退，即使作为 opt-in 也不暴露，因此首次运行 packet 不会意外把工作移入隐藏执行。
 
-Compatibility boundary:
+兼容性边界：
 
 ```bash
 loopx codex-cli-exec-handoff --project . --goal-id <goal-id>
 ```
 
-This command no longer prints a runnable `codex exec` handoff script. It
-reports the disabled boundary and points back to
-`codex-cli-bootstrap-message --message-only` for use inside the visible TUI.
-It does not run Codex, read transcripts, read credentials, read session files,
-mutate a session, or spend quota.
+该命令不再打印可运行的 `codex exec` 交接脚本。它报告被禁止的边界，并指回 `codex-cli-bootstrap-message --message-only` 以在可见 TUI 内使用。它不运行 Codex、不读 transcript、不读凭据、不读 session 文件、不改动 session，也不 spend quota。
 
-## Session-Attached Turn Algorithm
+## Session-Attached Turn 算法
 
 ```text
-1. Resolve repo, goal_id, registered agent_id, and current Codex session.
-2. Run `loopx quota should-run --goal-id <goal> --agent-id <agent>`.
-3. If user action is required, inject or display only the concrete user gate.
-4. If `workspace_guard` blocks a repository-writing task, move the current peer
-   to a compliant worktree before editing.
-5. Choose among current-agent claimed advancement todos and runnable unclaimed
-   candidates; monitor todos are context unless they produce a material event.
-6. Inject a visible steering prompt into the idle TUI session when proven, or
-   keep the one-message setup bootstrap as the user-facing path.
-7. After validation, run `refresh-state` and `quota spend-slot --execute`.
-8. If validation fails, write a compact blocker instead of spending success
-   prose.
+1. 解析仓库、goal_id、注册 agent_id 与当前 Codex session。
+2. 运行 `loopx quota should-run --goal-id <goal> --agent-id <agent>`。
+3. 如果需要用户动作，只注入或显示具体 user gate。
+4. 如果 `workspace_guard` 阻塞写仓库任务，在编辑前把当前 peer 移到合规 worktree。
+5. 在当前 agent 认领的推进 todos 与可运行的未认领候选中选择；monitor todos 只是上下文，除非它们产生实质事件。
+6. 在证明后向 idle TUI session 注入可见转向 prompt，或保持一条消息的设置引导作为用户路径。
+7. 验证后运行 `refresh-state` 与 `quota spend-slot --execute`。
+8. 验证失败时写紧凑 blocker，而不是 spend 成功散文。
 ```
 
-The actual todo choice remains the agent's steering decision. LoopX
-projects runnable candidates; it should not over-specify the model's local plan.
+实际 todo 选择仍是 agent 的转向决策。LoopX 投影可运行的候选；它不应过度指定模型的本地计划。
 
-## Safety Rules
+## 安全规则
 
-- Do not store raw Codex transcripts, credentials, private local paths, raw
-  logs, or production artifacts in LoopX state.
-- Do not inject automation into a session while the user is actively typing or
-  while a previous turn is still running.
-- Do not answer a user gate on the user's behalf.
-- Do not let a repository-writing peer edit from a workspace rejected by
-  `workspace_guard`.
-- Prefer a visible TUI prompt over silent background mutation.
-- Treat session-attachment failure as a disabled-boundary decision, not as a
-  reason to lose the LoopX loop.
+- 不把原始 Codex transcripts、凭据、私有本地路径、原始日志或生产 artifacts 存进 LoopX 状态。
+- 用户在活跃输入或上一个 Turn 仍在运行时，不向 session 注入自动化。
+- 不代替用户回答 user gate。
+- 不让写仓库 peer 从被 `workspace_guard` 拒绝的 workspace 编辑。
+- 优先可见 TUI prompt，而非静默后台变更。
+- 把 session 附着失败当作禁用边界决策，而不是丢失 LoopX loop 的理由。
 
-## Implementation Roadmap
+## 实现路线图
 
-1. **Bootstrap prompt**: ship a concise Codex CLI TUI paste message in README
-   and getting-started docs.
-2. **No-clone install repair**: make the first-run agent path able to install
-   the CLI and reusable skills from a GitHub archive, while reserving
-   clone-plus-canary setup for contributors.
-3. **Bootstrap command**: add a LoopX command that prints a tailored
-   Codex CLI bootstrap message for the current repo.
-4. **One-message loop pilot**: ship
-   `loopx codex-cli-one-message-loop-pilot` to bind the first TUI paste
-   message and the later scheduler/executor bridge into one public-safe packet.
-5. **Session probe**: document whether current Codex CLI exposes a stable
-   session id, resume handle, or safe injection primitive. The current
-   implementation is `loopx codex-cli-session-probe`; it separates
-   headless-disabled execution support, visible resume / remote-control spike
-   surfaces, and true same-open-TUI visible injection.
-6. **Visible driver plan**: generate a dry-run plan with
-   `loopx codex-cli-visible-driver-plan` so the next local driver knows
-   whether to attempt visible attach, run a resume/remote-control proof, or
-   keep the one-message setup bootstrap as the product path.
-7. **Local driver planner**: ship
-   `loopx codex-cli-local-driver-plan` as the dry-run command that
-   composes quota, visible-driver, TUI bootstrap, headless-disabled boundary,
-   and idle-guard requirements.
-8. **Visible-session proof harness**: validate public-safe observations with
-   `loopx codex-cli-visible-session-proof` before promoting
-   resume/remote-control into any same-session automation path.
-9. **Visible driver run packet**: add
-   `loopx codex-cli-visible-driver-run` as the no-execution packet that
-   decides whether the next turn needs visible proof, TUI bootstrap, or a
-   proven visible-session candidate.
-10. **Local scheduler tick**: add
-   `loopx codex-cli-local-scheduler-tick` as the first executor-facing
-   one-shot packet. It emits either an external command candidate or a precise
-   blocker writeback command, but does not run Codex, read session files, or
-   write LoopX state itself. Visible candidates require both
-   visible-session proof and runtime-idle detector approval; headless fallback
-   remains disabled for the default `/goal` path.
-11. **Local scheduler executor wrapper**: add
-   `loopx codex-cli-local-scheduler-exec` as the explicit opt-in bridge
-   that can run one tick result only after guard confirmation, runtime-idle
-   approval for visible candidates, and an allowed command prefix.
-12. **Visible local driver pilot**: ship
-   `loopx codex-cli-visible-local-driver-pilot` to bind the one-message
-   TUI start, scheduler executor, visible proof, idle guard, and no-transcript
-   boundary into one public-safe packet.
-13. **Runtime idle detector**: validate public-safe idle evidence with
-   `loopx codex-cli-runtime-idle-detector` before a visible later turn;
-   the command now supports fixture replay and a narrow local observation
-   adapter that can prove coarse human-input idle plus explicit visible
-   turn-state without reading transcripts, stdout/stderr, credentials, or
-   hidden session files.
-14. **Visible attach acceptance**: promote only a proven `same_tui_visible_attach`
-   route with passing runtime-idle evidence; keep `resume [PROMPT]` and
-   `remote-control` as visible spike candidates until they prove same-TUI
-   semantics.
-15. **Validation harness**: add a public-safe fixture that proves the driver
-   never stores raw transcript text and never spends quota before writeback.
-16. **Claude Code follow-up**: port the same product contract only after the
-   Codex CLI path is credible.
+1. **Bootstrap prompt**：在 README 与 getting-started 文档中发布简明的 Codex CLI TUI 粘贴消息。
+2. **无克隆安装修复**：让首次运行 agent 路径能从 GitHub 归档安装 CLI 与可复用 skills，同时为贡献者保留 clone-plus-canary 设置。
+3. **Bootstrap 命令**：添加 LoopX 命令，为当前仓库打印定制的 Codex CLI bootstrap 消息。
+4. **一条消息 loop 试点**：发布 `loopx codex-cli-one-message-loop-pilot`，把第一条 TUI 粘贴消息与后续 scheduler/执行器桥绑定进一个 public-safe packet。
+5. **Session 探针**：记录当前 Codex CLI 是否暴露稳定 session id、恢复句柄或安全注入原语。当前实现是 `loopx codex-cli-session-probe`；它分离 headless 禁止的执行支持、可见 resume / remote-control spike surface 与真正的 same-open-TUI 可见注入。
+6. **可见驱动计划**：用 `loopx codex-cli-visible-driver-plan` 生成 dry-run 计划，让下一个本地驱动知道是尝试可见 attach、跑 resume/remote-control 证明，还是保持一条消息的设置引导作为产品路径。
+7. **本地驱动规划器**：发布 `loopx codex-cli-local-driver-plan` 作为 dry-run 命令，组合 quota、visible-driver、TUI bootstrap、headless 禁止边界与 idle-guard 要求。
+8. **Visible-session 证明 harness**：在把 resume/remote-control 晋升进任何同 session 自动化路径之前，用 `loopx codex-cli-visible-session-proof` 验证 public-safe 观察。
+9. **可见驱动运行 packet**：添加 `loopx codex-cli-visible-driver-run` 作为无执行 packet，决定下一个 Turn 需要可见证明、TUI bootstrap 还是已验证的 visible-session 候选。
+10. **本地 scheduler tick**：添加 `loopx codex-cli-local-scheduler-tick` 作为第一个面向执行器的单发 packet。它要么发出外部命令候选，要么发出精确 blocker 写回命令，但自身不运行 Codex、不读 session 文件、也不写 LoopX 状态。可见候选要求 visible-session 证明与 runtime-idle 检测器批准；默认 `/goal` 路径的 headless 回退保持禁用。
+11. **本地 scheduler 执行器 wrapper**：添加 `loopx codex-cli-local-scheduler-exec` 作为显式 opt-in 桥，只允许在 guard 确认、可见候选的 runtime-idle 批准与允许的命令前缀之后运行一个 tick 结果。
+12. **可见本地驱动试点**：发布 `loopx codex-cli-visible-local-driver-pilot`，把一条消息的 TUI 启动、scheduler 执行器、可见证明、idle guard 与免 transcript 边界绑定进一个 public-safe packet。
+13. **Runtime idle 检测器**：在可见后续 Turn 之前用 `loopx codex-cli-runtime-idle-detector` 验证 public-safe idle evidence；该命令现在支持夹具回放与窄的本地观察 adapter，可不读 transcripts、stdout/stderr、凭据或隐藏 session 文件就证明粗略人类输入 idle 加显式可见 turn-state。
+14. **可见 attach 验收**：只晋升带通过 runtime-idle evidence 的已验证 `same_tui_visible_attach` 路由；在 `resume [PROMPT]` 与 `remote-control` 证明 same-TUI 语义之前，把它们当作可见 spike 候选。
+15. **验证 harness**：添加 public-safe 夹具，证明驱动从不存储原始 transcript 文本，从不在写回前 spend quota。
+16. **Claude Code 跟进**：仅在 Codex CLI 路径可信之后移植同一产品契约。
 
-## Success Criteria
+## 成功标准
 
-- A first-time user can start in Codex CLI TUI with one message and see a
-  current goal, user gate, agent todo, and next safe action without reading
-  LoopX docs first.
-- A returning user can keep the TUI open while LoopX automation performs
-  bounded turns that are visible, interruptible, and reviewable.
-- When session attachment is unavailable, the fallback is explicit and safe
-  rather than pretending the same TUI session was preserved.
-- LoopX state remains compact, public/private-safe, and independent of
-  raw Codex CLI transcript storage.
+- 首次用户可以用一条消息在 Codex CLI TUI 开始，无需先读 LoopX 文档就能看到当前 goal、user gate、agent todo 与下一个安全动作。
+- 返回用户可以在 LoopX 自动化执行有界 Turn 时保持 TUI 打开，这些 Turn 可见、可中断、可评审。
+- 当 session 附着不可用时，回退显式且安全，而不是假装同一个 TUI session 被保留了。
+- LoopX 状态保持紧凑、public/private 安全，并与原始 Codex CLI transcript 存储独立。

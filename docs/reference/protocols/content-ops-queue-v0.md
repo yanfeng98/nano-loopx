@@ -1,25 +1,22 @@
 # content_ops_queue_projection_v0
+> [English](content-ops-queue-v0.md)
 
-Status: read-only managed queue projection v0.
+状态：只读托管队列投影 v0。
 
-`content_ops_queue_projection_v0` is the queue surface for caller-owned
-`content_ops_item_v0` records. It is not a publisher and never stores draft
-bodies. The order of the input item files is the priority order.
+`content_ops_queue_projection_v0` 是调用方自有 `content_ops_item_v0` 记录的队列界面。它不是发布者，从不存储草稿正文。输入 item 文件的顺序即优先级顺序。
 
-## Boundary
+## 边界
 
-The projection derives from validated item records only:
+该投影仅由经校验的 item 记录推导：
 
-- stable `item_id`, `item_kind`, channel, state, revision, and opaque
-  `content_ref`;
-- state counts and terminal count;
-- the first actionable non-terminal item as `next_action`;
-- no draft bodies, credentials, browser state, media, private source maps, or
-  local paths.
+- 稳定的 `item_id`、`item_kind`、channel、state、revision 与不透明 `content_ref`；
+- 状态计数与终态计数；
+- 首个可行动的非终态 item 作为 `next_action`；
+- 不包含草稿正文、凭据、浏览器状态、媒体、私有源映射或本地路径。
 
 ## CLI
 
-Project a caller-owned queue:
+投影调用方自有的队列：
 
 ```bash
 loopx content-ops queue-status \
@@ -30,11 +27,8 @@ loopx content-ops queue-status \
   --format json
 ```
 
-The command reports `external_reads_performed=false`,
-`external_writes_performed=false`, and `autopublish_allowed=false`.
+该命令报告 `external_reads_performed=false`、`external_writes_performed=false` 与 `autopublish_allowed=false`。
 
-## Truth Contract
+## 事实契约
 
-`queue-status` is a read-only projection. Approval, delivery, and readback must
-still go through the item lifecycle and exact owner-authorization records; the
-queue surface itself has no publish authority.
+`queue-status` 是只读投影。审批、投递与回读仍须经过 item 生命周期与精确的 owner 授权记录；队列界面本身没有发布权限。

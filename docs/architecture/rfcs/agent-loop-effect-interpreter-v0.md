@@ -1,144 +1,125 @@
-# RFC: Agent Loop Effect Interpreter
+# RFC：Agent Loop Effect Interpreter（v0）
 
-| Field | Value |
+| 字段 | 值 |
 |---|---|
-| Status | Accepted |
-| Date | 2026-08-08 |
-| Author | LoopX maintainers |
-| Scope | Public control-plane docs, packet contracts, refactor direction, test strategy |
+| 状态 | 已接受 |
+| 日期 | 2026-08-08 |
+| 作者 | LoopX maintainers |
+| 范围 | 公开控制面文档、packet 合同、重构方向、测试策略 |
 
-> Language note: the
-> [Chinese version](./agent-loop-effect-interpreter-v0.zh-CN.md) and this
-> English version are semantic mirrors. A difference between them is a defect.
+> 本文与[英文版](./agent-loop-effect-interpreter-v0.md)互为语义镜像；两者不一致属于缺陷。
 
-## Summary
+## 摘要
 
-LoopX harness should be explained, designed, and tested as **the effectful
-program around an agent loop**, not as a collection of disconnected state
-machines.
+LoopX harness 应该被解释、设计和测试为**一个 agent loop 外围的 effectful program**，而不是一组彼此无关的状态机集合。
 
-The canonical shape is:
+标准形状是：
 
 ```text
 model -> effect request -> harness interprets effect -> observation -> model
 ```
 
-The agent loop is the loop. The harness is the effectful program that
-interprets each effect request and returns an observation to the next model
-step.
+agent loop 是循环本身；harness 是解释每个 effect request 并向下一个模型步骤返回 observation 的 effectful program。
 
-The framing builds on the public lecture series by 齐梦星空:
-[主线一：Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share),
-[主线一：Tool Calling 是 Kleisli arrow(2)](https://www.xiaohongshu.com/discovery/item/6a02f388000000003502b2d6?source=webshare&xhsshare=pc_web&xsec_token=ABHcIpzpd2RlhAaRr9sZZ-q1OIfRgt7rvG2jn7GUO3tNo=&xsec_source=pc_share)
-and
-[主线一：Agent Loop 里的小魔法：函数的组合(3)](https://www.xiaohongshu.com/discovery/item/6a057524000000003701f6aa?source=webshare&xhsshare=pc_web&xsec_token=AB43lNCJ5ULmfTrGfeTLWd2-jQ6q8nFMGyNAd-tlXJ1uw=&xsec_source=pc_share).
+该框架建立在齐梦星空的公开讲座系列之上：
+[主线一：Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share)、
+[主线一：Tool Calling 是 Kleisli arrow(2)](https://www.xiaohongshu.com/discovery/item/6a02f388000000003502b2d6?source=webshare&xhsshare=pc_web&xsec_token=ABHcIpzpd2RlhAaRr9sZZ-q1OIfRgt7rvG2jn7GUO3tNo=&xsec_source=pc_share) 和
+[主线一：Agent Loop 里的小魔法：函数的组合(3)](https://www.xiaohongshu.com/discovery/item/6a057524000000003701f6aa?source=webshare&xhsshare=pc_web&xsec_token=AB43lNCJ5ULmfTrGfeTLWd2-jQ6q8nFMGyNAd-tlXJ1uw=&xsec_source=pc_share)。
 
-LoopX's job is the middle two steps: it receives an effect request from an
-agent or host, decides whether and how to interpret it, writes back an
-observation, and returns control to the next loop iteration.
+LoopX 的职责是中间两步：它接收来自 agent 或 host 的 effect request，决定是否以及如何解释它，写回 observation，并把控制权交还给下一个循环迭代。
 
-This RFC establishes the mental model, defines canonical packet semantics,
-and gives a milestone plan for aligning documentation, code, and tests with
-that model over time.
+本 RFC 建立这套心智模型，定义 canonical packet 语义，并给出一个里程碑计划，让文档、代码和测试逐步与该模型对齐。
 
-## Milestone Status
+## 里程碑状态
 
-| Milestone | Status |
+| 里程碑 | 状态 |
 |---|---|
-| M0 RFC and Lecture 0 | Merged (#2905, #2906, #2908) |
-| M1 Canonical packet example | Merged (#2907, #2910) |
-| M1.5 Composition lens | Merged (#2911) |
-| M2 Bounded context alignment | Merged/Complete (#2912-#2915, #2919, #2926, #2933, #2963-#2982) |
-| M3 Focused test families | Merged/Complete (#2916-#2918, #2925, #2929, #2984) |
-| M4 Architecture documentation | Merged/Complete (#2921, #2923, #2924, #2985) |
-| M5 Steady-state review | Merged/Complete (#2922, #2931, #2984, #2985) |
-| M6 General effect-program abstraction | Narrow gate complete (#2963-#2987); qualitative transformation requires M7 |
-| M7.1 Causal characterization | Merged/Complete (#2994, #2998, #3009, #3022, #3026) |
-| M7.2 Typed settlement runtime | Merged/Complete (#3016, #3020, #3023, #3024, #3033-#3036) |
-| M7.3 Shared executor decision | Closed with no follow-up: the adapters share algebra, not execution ownership |
-| M7.4 Bounded core-path adoption | First non-Turn adoption landed for task lease (#3091, #3095); continue only where a typed effect removes duplicate runtime truth |
+| M0 RFC 与 Lecture 0 | 已合并（#2905、#2906、#2908） |
+| M1 Canonical packet 示例 | 已合并（#2907、#2910） |
+| M1.5 组合视角 | 已合并（#2911） |
+| M2 Bounded context 对齐 | 已合并/完成（#2912-#2915、#2919、#2926、#2933、#2963-#2982） |
+| M3 聚焦测试族 | 已合并/完成（#2916-#2918、#2925、#2929、#2984） |
+| M4 架构文档 | 已合并/完成（#2921、#2923、#2924、#2985） |
+| M5 稳态评审 | 已合并/完成（#2922、#2931、#2984、#2985） |
+| M6 通用 effect-program 抽象 | Narrow gate 已完成（#2963-#2987）；定性提升需要 M7 |
+| M7.1 因果刻画 | 已合并/完成（#2994、#2998、#3009、#3022、#3026） |
+| M7.2 Typed settlement runtime | 已合并/完成（#3016、#3020、#3023、#3024、#3033-#3036） |
+| M7.3 共享 executor 决策 | 以 no-follow-up 关闭：两个 adapter 共享 algebra，但不共享执行所有权 |
+| M7.4 有界核心路径采用 | 首个非 Turn 路径 task lease 已落地（#3091、#3095）；仅在 typed effect 能删除重复 runtime truth 时继续 |
 
-## Why This Matters
+## 为什么这很重要
 
-Today, LoopX has many correct but hard-to-explain pieces:
+现在 LoopX 有很多正确但难以解释的部件：
 
-- todo lifecycle and handoff state;
-- quota decision and spend state;
-- scheduler and heartbeat state;
-- capability gates and user gates;
-- vision, monitor, and replan state;
-- evidence and run history.
+- todo lifecycle 与 handoff 状态；
+- quota decision 与 spend 状态；
+- scheduler 与 heartbeat 状态；
+- capability gate 与 user gate；
+- vision、monitor 与 replan 状态；
+- evidence 与 run history。
 
-Each piece has a state machine. The difficulty is not that these state
-machines exist. It is that a reader cannot immediately see what effect each
-state machine interprets, what observation it produces, and how that
-observation returns to the next loop.
+每个部件都有自己的状态机。难点不是这些状态机存在，而是读者无法立即看到每个状态机解释的是什么 effect、产生什么 observation，以及该 observation 如何回到下一轮循环。
 
-The agent-loop-as-effectful-program lens fixes this by asking the same
-question everywhere:
+agent-loop-as-effectful-program 视角通过在每个地方问同一个问题来解决这一点：
 
-> Who interprets this effect request, and what observation comes back?
+> 谁解释这个 effect request，返回什么 observation？
 
-## Core Mental Model
+## 核心心智模型
 
 ### Agent Loop
 
-The underlying loop is:
+底层循环是：
 
 ```text
 model -> effect request -> harness interprets effect -> observation -> model
 ```
 
-The model proposes the next action. The harness decides whether the action is
-allowed, how to execute it, how to handle failure, and how to encode the
-result for the next model step.
+模型提出下一个动作。harness 决定该动作是否被允许、如何执行、如何处理失败，以及如何把结果编码成下一个模型步骤可用的输入。
 
 ### Effectful Program
 
-A pure computation is:
+纯计算是：
 
 ```text
 A => B
 ```
 
-An effectful computation is:
+effectful 计算是：
 
 ```text
 A => F[B]
 ```
 
-`F` captures the external world: persistence, permissions, budgets, timing,
-notifications, scheduling, evidence, and failure.
+`F` 捕获外部世界：持久化、权限、预算、时序、通知、调度、evidence 和失败。
 
-LoopX harness is best understood as that `F` around a long-running agent loop:
+最好把 LoopX harness 理解为长程 agent loop 外层的那个 `F`：
 
 ```text
 GoalState => F[QuotaDecision]
 ```
 
-## Mapping LoopX Concepts
+## 把 LoopX 概念映射到本框架
 
-| Article concept | LoopX equivalent |
+| 讲座概念 | LoopX 对应物 |
 |---|---|
-| Agent loop | Every automation heartbeat, PR monitor, and sustained refactor turn |
-| Effect request | `todo add`, `quota spend`, `refresh-state`, `notify`, `monitor poll`, `bind-agent-thread` |
-| Harness interprets effect | `quota should-run` + `interaction_contract` + `capability_gate` + `work_lane_contract` + `scheduler_hint` |
-| Observation | Quota packet, run history, evidence log, state writeback |
-| Middleware mount points | User gate, capability bridge, scheduler ACK, cooldown, external evidence poll |
-| `A => B` | Idealized `GoalState => GoalState` |
-| `A => F[B]` | Real `GoalState => F[QuotaDecision]` |
+| Agent loop | 每个自动化 heartbeat、PR monitor 和持续重构 turn |
+| Effect request | `todo add`、`quota spend`、`refresh-state`、`notify`、`monitor poll`、`bind-agent-thread` |
+| Harness 解释 effect | `quota should-run` + `interaction_contract` + `capability_gate` + `work_lane_contract` + `scheduler_hint` |
+| Observation | Quota packet、run history、evidence log、state writeback |
+| Middleware mount points | User gate、capability bridge、scheduler ACK、cooldown、external evidence poll |
+| `A => B` | 理想化的 `GoalState => GoalState` |
+| `A => F[B]` | 真实的 `GoalState => F[QuotaDecision]` |
 
-## Canonical Packet Semantics
+## Canonical Packet 语义
 
-Every important control-plane packet should be explainable through four
-semantic slots:
+每个重要的控制面 packet 都应该能用四个语义槽解释：
 
 1. `effect_request`
 2. `interpretation`
 3. `observation`
 4. `next_effect`
 
-Example for `quota should-run`:
+以 `quota should-run` 为例：
 
 ```json
 {
@@ -157,35 +138,29 @@ Example for `quota should-run`:
 }
 ```
 
-These slots should not be a second schema. They are a documentation and
-naming discipline over existing packet fields. A new packet may add an
-`effect_interpretation` envelope only when a real caller needs one canonical
-place to read all four slots.
+这些槽不是第二套 schema。它们是对现有 packet 字段的文档与命名纪律。只有当真实调用方需要一个统一位置读取全部四个槽时，新 packet 才可以增加 `effect_interpretation` envelope。
 
-## Composition And Around Semantics
+## 组合与 Around 语义
 
-The canonical loop is one effectful step:
+标准循环是一个 effectful 步骤：
 
 ```text
 GoalState => F[QuotaDecision]
 ```
 
-The public lecture series distinguishes three layers of composition:
+公开讲座系列区分三层组合：
 
-| Composition | Shape | LoopX counterpart |
+| 组合 | 形状 | LoopX 对应物 |
 |---|---|---|
-| Function composition | `A => B`, `B => C` | Read model -> projection -> decision |
-| Kleisli composition | `A => F[B]`, `B => F[C]` | One bounded turn, host effect, validated writeback |
-| Middleware composition | `(A => F[B]) => (A => F[B])` | Around decisions in `capability_gate`, `interaction_contract`, `work_lane_contract`, `scheduler_hint` |
+| 函数组合 | `A => B`、`B => C` | Read model -> projection -> decision |
+| Kleisli 组合 | `A => F[B]`、`B => F[C]` | 一个有界 turn、host effect、经过验证的 writeback |
+| Middleware 组合 | `(A => F[B]) => (A => F[B])` | `capability_gate`、`interaction_contract`、`work_lane_contract`、`scheduler_hint` 中的 around decision |
 
-LoopX does not expose a generic Python middleware registry. Its around
-semantics are declarative and packet-shaped.
+LoopX 不暴露通用 Python middleware registry。它的 around 语义是声明式的、packet 形状的。
 
-### Bounded Kleisli Runtime Decision
+### 有界 Kleisli Runtime Decision
 
-M7 uses Kleisli composition as an execution requirement, not as decorative
-terminology. The selected turn-closeout slice should be explainable as a
-sequence of typed steps:
+M7 把 Kleisli 组合当作执行要求，而不是装饰性术语。选中的 turn-closeout slice 应该能解释为一组 typed 步骤：
 
 ```text
 A => F[B]
@@ -193,453 +168,250 @@ B => F[C]
 A => F[C]
 ```
 
-For this slice, `F` must preserve a receipt-bearing result with explicit
-cancellation, permission-denial, budget-rejection, and settlement outcomes.
-Composition may be implemented with a closeout-local `bind`, `flat_map`, or
-`and_then` seam, but M7.2 must prove the semantics rather than standardize one
-method name. Its focused tests must cover:
+对该 slice 而言，`F` 必须保留带 receipt 的结果，并显式表达 cancellation、permission-denial、budget-rejection 和 settlement outcome。组合可以用 closeout 局部的 `bind`、`flat_map` 或 `and_then` seam 实现，但 M7.2 必须证明语义，而不是标准化某一个方法名。聚焦测试必须覆盖：
 
-- identity: adding the typed no-op step does not change receipts or effects;
-- associativity: regrouping the same ordered steps does not change their
-  receipts, short-circuit point, or externally visible effect sequence;
-- ordered short-circuit: a typed failure prevents later effects without
-  erasing the failure kind;
-- replay: a durable receipt skips an already committed effect; and
-- non-commutativity: writeback, spend, and host handoff may not be reordered.
+- identity：增加 typed no-op 步骤不改变 receipt 或 effect；
+- associativity：对同一组有序步骤重新分组，不改变 receipt、短路点或外部可见 effect 顺序；
+- ordered short-circuit：typed failure 阻止后续 effect 执行，同时不丢失失败类型；
+- replay：durable receipt 跳过已经提交的 effect；以及
+- non-commutativity：writeback、spend 与 host handoff 不允许重排。
 
-The runtime algebra now has three first-class adapters. The default Codex App path
-settles a normal LoopX turn through data-encoded CLI effects across agent and
-host boundaries. The isolated turn driver executes the same settlement shape
-through in-process callbacks. Task-lease acquisition composes validation and
-durable lease write through the same algebra while its bounded context retains
-owner eligibility, conflict, lock, and CAS rules. The adapters share plan,
-receipt, effect identity, and failure semantics, but they do not share one
-executor because their authority boundaries differ. A generic `Kleisli`, middleware stack,
-executor registry, or general `Effect` monad remains premature until shared
-execution ownership, not just similar packet fields, is proven.
+runtime algebra 目前有三个一等 adapter。默认 Codex App 路径通过跨 agent/host 边界的 data-encoded CLI effects 结算普通 LoopX turn。隔离 turn driver 通过 in-process callbacks 执行同一 settlement 形状。Task-lease acquire 也组合相同 algebra 来连接 validation 与 durable lease write，但 owner eligibility、conflict、file lock 和 CAS 仍归自己的 bounded context。三个 adapter 共享 plan、receipt、effect identity 和 failure 语义，不共享同一个 executor，因为它们的 authority boundary 不同。在共享执行所有权被证明之前，通用 `Kleisli`、middleware stack、executor registry 或通用 `Effect` monad 仍为时过早。
 
-The shared settlement algebra is owned by the core `effect_program` module.
-Quota supplies the Codex App/CLI plan builder and compatibility re-exports;
-each runtime adapter composes the core algebra instead of inheriting a domain
-program or moving its execution authority into a generic base class.
+共享 settlement algebra 由核心 `effect_program` 模块拥有。Quota 只提供 Codex App/CLI plan builder 与兼容 re-export；各 runtime adapter 组合核心 algebra，而不是继承领域 program，也不会把自己的执行权上移到通用基类。
 
-### Handler Is Data, Not a Callable
+### Handler 是数据，不是 Callable
 
-Runtime middleware receives a `handler` callable and decides whether to call
-it, call it once, retry, fallback, or short-circuit. LoopX cannot receive a
-model or host callable across context and session boundaries. Instead, the
-interpreter returns a `next_effect` in the packet: CLI actions, scheduler
-ACK, and failure hint. The host or the next automation turn invokes that
-data-encoded handler.
+Runtime middleware 接收一个 `handler` callable，并决定是否调用、调用一次、重试、fallback 或短路。LoopX 无法跨 context 和 session 边界接收 model 或 host callable。相反，interpreter 在 packet 中返回 `next_effect`：CLI actions、scheduler ACK 和 failure hint。host 或下一个自动化 turn 调用这个 data-encoded handler。
 
-This keeps the power of around style while making the handler durable and
-replayable:
+这保留了 around 风格的能力，同时让 handler 可持久、可重放：
 
-- short-circuit: `decision` and `effective_action` can say `skip`, `wait`,
-  `monitor_quiet_skip`, `repair_bridge`, or `ask_owner` without pretending
-  the original effect ran;
-- rewrite: `work_lane_contract` can preempt ordinary advancement with a due
-  monitor or Lark inbox, and `capability_gate` can rewrite the next effect to
-  materialize the missing capability first;
-- settle: `scheduler_hint.ack_hint` and `failure_hint` tell the host how to
-  commit success or failure, while `unchanged_poll` bounds repeated attempts.
+- short-circuit：`decision` 和 `effective_action` 可以说 `skip`、`wait`、`monitor_quiet_skip`、`repair_bridge` 或 `ask_owner`，而不假装原 effect 已执行；
+- rewrite：`work_lane_contract` 可以用到期 monitor 或 Lark inbox 抢占普通 advancement，`capability_gate` 可以把 next effect 重写为先物化缺失能力；
+- settle：`scheduler_hint.ack_hint` 和 `failure_hint` 告诉 host 如何提交成功或失败，`unchanged_poll` 限制重复尝试。
 
-Failure, cancellation, permission, and budget stay visible in typed packet
-fields instead of being swallowed by a catch-all wrapper:
+失败、取消、权限和预算保持在 typed packet 字段中可见，而不是被 catch-all wrapper 吞掉：
 
-| Around layer | Packet field | Short-circuit examples | Rewrite examples |
+| Around layer | Packet 字段 | 短路示例 | 重写示例 |
 |---|---|---|---|
-| Capability | `capability_gate` | `ask_owner`, `repair_bridge`, `unsupported` | Repair todo and CLI actions for the missing capability |
-| Interaction | `interaction_contract` | User channel `action_required`, `mode` | Primary action, protocol action, next CLI actions |
-| Work lane | `work_lane_contract` | Monitor or inbox preemption, `must_attempt_work=false` | Selected lane, obligation, `next_lane` |
-| Scheduler | `scheduler_hint` | Pause/delete heartbeat, no-spend quiet | RRULE, cadence class, stateful backoff |
+| Capability | `capability_gate` | `ask_owner`、`repair_bridge`、`unsupported` | 为缺失能力生成 repair todo 与 CLI actions |
+| Interaction | `interaction_contract` | 用户通道 `action_required`、`mode` | Primary action、protocol action、next CLI actions |
+| Work lane | `work_lane_contract` | Monitor 或 inbox 抢占、`must_attempt_work=false` | Selected lane、obligation、`next_lane` |
+| Scheduler | `scheduler_hint` | 暂停/删除 heartbeat、no-spend quiet | RRULE、cadence class、stateful backoff |
 
-The order of these around layers is a contract, not an implementation detail.
-Changing the order changes which gate is observed first, which monitor can
-preempt ordinary work, and whether an ACK is still expected after a failed
-host update. Such changes need parity fixtures and focused tests.
+这些 around layer 的顺序是合同，不是实现细节。改变顺序会改变先观察到哪个 gate、哪个 monitor 可以抢占普通工作，以及 host update 失败后是否仍然期待 ACK。这类变更需要 parity fixtures 和聚焦测试。
 
-Review a LoopX around decision with the same questions the lecture asks of a
-middleware stack:
+用讲座审视 middleware stack 的同样问题来评审 LoopX around decision：
 
-1. Which effect request is being interpreted?
-2. Which around layer owns the decision, and what observation does it emit?
-3. Can it short-circuit without pretending the effect ran?
-4. Where is the data-encoded handler (`next_effect`)?
-5. Are failure, cancellation, permission, and budget structured or swallowed?
-6. Is the around-layer order explicit and tested?
-7. Does evidence, trace, and budget continuity survive the host effect
-   through writeback, ACK, and spend?
+1. 正在解释哪个 effect request？
+2. 哪个 around layer 拥有该 decision，它发出什么 observation？
+3. 它能否在不假装 effect 已执行的情况下短路？
+4. data-encoded handler（`next_effect`）在哪里？
+5. failure、cancellation、permission 和 budget 是结构化的还是被吞掉的？
+6. around-layer 顺序是否显式并被测试？
+7. evidence、trace 和 budget continuity 是否能穿过 host effect 到达 writeback、ACK 和 spend？
 
-### CLI Is a Higher-Density Effect
+### CLI 是高密度 Effect
 
-A single tool call is `ToolInput => F[ToolOutput]`. A LoopX CLI packet is a
-higher-density effect: one command can carry permission, budget, parameter
-validation, external execution, failure semantics, scheduler ACK, and
-writeback in the same request. The model still only proposes effect requests;
-the harness interprets them into CLI actions.
+单个 tool call 是 `ToolInput => F[ToolOutput]`。LoopX CLI packet 是高密度 effect：一条命令可以在同一个 request 中携带 permission、budget、参数校验、外部执行、失败语义、scheduler ACK 和 writeback。模型仍然只提出 effect request；harness 把它们解释为 CLI actions。
 
-If a vendor API later supports serial tool calls or interleaved reasoning,
-that does not change the LoopX shape. It becomes an execution mode inside the
-interpreter:
+如果某个 vendor API 后续支持串行 tool calls 或交错推理，并不会改变 LoopX 的形状。它只是 interpreter 内部的一种 execution mode：
 
-- serial, parallel, and interleaved are execution strategies, not new state
-  machines;
-- `effect_request -> interpretation -> observation -> next_effect` stays
-  stable;
-- `next_effect` changes from one CLI command to an ordered effect program.
+- serial、parallel 和 interleaved 是执行策略，不是新状态机；
+- `effect_request -> interpretation -> observation -> next_effect` 保持稳定；
+- `next_effect` 从单条 CLI command 变成有序 effect program。
 
-## General Effect-Program Abstraction
+## 通用 Effect-Program 抽象
 
-The current `EffectTurn` lens is intentionally read-only and quota-specific.
-It gives LoopX a stable vocabulary, a canonical read model, and around
-semantics over one real packet. It is not yet a general effect-program
-abstraction.
+当前的 `EffectTurn` 视角刻意是 read-only 且 quota-specific 的。它为 LoopX 提供一个稳定词汇、一个 canonical read model，以及围绕一个真实 packet 的 around 语义。它还不是通用 effect-program 抽象。
 
-Refactoring alone will not create that abstraction. It creates the bounded
-contexts where a shared abstraction can safely live. The two tracks are
-parallel and equally important:
+仅靠重构不会产生该抽象。重构会创建共享抽象能够安全存在的 bounded contexts。两条轨道并行且同等重要：
 
-- refactor: keep each state family in its owning bounded context;
-- generalize: extract the shared effect shape only when real runtime callers
-  need it.
+- refactor：让每个状态族留在自己的 bounded context；
+- generalize：只有在真实 runtime 调用方需要时，才抽取共享 effect 形状。
 
-### Boundary With Goal Replan
+### 与 Goal Replan 的边界
 
-Effect execution and goal replan are adjacent but different control-plane
-problems:
+Effect 执行与 goal replan 相邻但是不同的控制面问题：
 
-| Plane | Question | Authoritative state |
+| Plane | 问题 | 权威状态 |
 |---|---|---|
-| Goal path | Why continue, what outcome is still missing, and which path should run next? | Vision, acceptance evidence, path delta, Todo frontier |
-| Effect runtime | How should one selected path execute, fail, resume, and settle? | Effect plan, host execution receipts, observation, writeback |
+| Goal path | 为什么继续、还缺什么 outcome、下一步该跑哪条路径？ | Vision、acceptance evidence、path delta、Todo frontier |
+| Effect runtime | 一条选中的路径应如何执行、失败、恢复和结算？ | Effect plan、host execution receipts、observation、writeback |
 
-The effect runtime must not decide whether a milestone still serves the final
-goal. Conversely, goal replan must not duplicate permission, idempotency,
-failure, or settlement semantics from the effect runtime. A more general
-effect interpreter does not by itself improve long-horizon goal alignment.
+effect runtime 不能决定某个 milestone 是否仍然服务于最终目标。反过来，goal replan 不能重复 effect runtime 的 permission、idempotency、failure 或 settlement 语义。更通用的 effect interpreter 本身不会改善 long-horizon goal alignment。
 
 ### Product Outcome Contract
 
-M7 is justified only if it produces at least one of these end effects:
+M7 只有在至少产生一个下列最终 effect 时才有理由存在：
 
-1. Remove a competing source of transition or command truth from a real host
-   path.
-2. Make partial execution recoverable through stable effect ids, explicit
-   authority, idempotency, and typed receipts.
-3. Let a second runtime caller reuse the same execution contract with less
-   orchestration code and no loss of domain invariants.
+1. 从真实 host path 中移除一个竞争性的 transition 或 command truth 来源。
+2. 通过稳定 effect ids、显式 authority、idempotency 和 typed receipts，让部分执行可恢复。
+3. 让第二个 runtime caller 以更少的编排代码、且不丢失 domain invariants 的方式复用同一执行合同。
 
-The following are supporting evidence, not product outcomes by themselves:
+下面是支持性证据，而不是 product outcome 本身：
 
-- a protocol or dataclass exists;
-- `EffectTurn` is constructed earlier in a packet builder;
-- another packet can be mapped onto the same four nouns;
-- module line budgets and parity tests pass; or
-- more Todo, monitor, or gate families sit behind one interface.
+- 存在一个 protocol 或 dataclass；
+- `EffectTurn` 在 packet builder 中更早构造；
+- 另一个 packet 可以映射到同样的四个名词；
+- module line budgets 和 parity tests 通过；或
+- 更多 Todo、monitor 或 gate 族放在同一个 interface 后面。
 
-The first M7 vertical slice must satisfy all of these acceptance checks:
+第一个 M7 vertical slice 必须满足所有这些验收检查：
 
-- one real path owns `request -> plan -> host execution -> receipt -> reduce`;
-- at least one previous command builder, settlement branch, or parallel
-  runtime path is deleted;
-- fault injection proves retry/resume does not duplicate an external effect,
-  ACK, writeback, or spend;
-- permission denial, cancellation, budget rejection, and partial completion
-  remain distinguishable;
-- public packets, CLI budgets, and existing domain transition invariants stay
-  compatible; and
-- a second caller is identified before a shared interpreter protocol is
-  extracted.
+- 一条真实路径拥有 `request -> plan -> host execution -> receipt -> reduce`；
+- 至少删除一个旧 command builder、settlement branch 或并行 runtime path；
+- fault injection 证明 retry/resume 不会重复 external effect、ACK、writeback 或 spend；
+- permission denial、cancellation、budget rejection 和 partial completion 仍然可区分；
+- public packets、CLI budgets 和现有 domain transition invariants 保持兼容；并且
+- 在抽取共享 interpreter protocol 前识别出第二个 caller。
 
-Stop or narrow M7 when any kill criterion holds:
+出现任一 kill criterion 时停止或收窄 M7：
 
-- the new layer primarily passes raw mappings or CLI strings through another
-  object without owning execution semantics;
-- production code grows while no prior source of truth is removed;
-- the proposed executor crosses a model, user, or host ownership boundary it
-  cannot settle itself;
-- parity cannot attribute changed behavior to the new path; or
-- a second real caller does not need the proposed shared protocol.
+- 新 layer 主要把 raw mappings 或 CLI strings 穿过另一个对象，而不拥有执行语义；
+- production code 增长，但没有移除任何既有 truth source；
+- 提议的 executor 跨越它无法自行结算的 model、user 或 host ownership boundary；
+- parity 无法把行为变化归因到新路径；或
+- 第二个真实 caller 并不需要提议的共享 protocol。
 
-### What Exists Today
+### 今天已存在什么
 
-- `EffectRequest`, `EffectInterpretation`, `EffectObservation`, `EffectNext`,
-  and `EffectTurn` as canonical slots.
-- A core-owned settlement algebra: `SettlementIdentity`, `SettlementPlan`,
-  `SettlementReceipt`, typed failure kinds, and receipt-preserving
-  `SettlementResult.bind`.
-- The default Codex App / CLI quota path builds one typed settlement plan and
-  binds validation, durable writeback, quota spend, and conditional terminal
-  closeout to the original turn effect identity. Final `no_followup` is a
-  post-spend effect; ordinary successor completion remains Todo-lifecycle
-  work (#3016, #3033, #3034).
-- The isolated turn driver consumes the same plan, identity, receipt, failure,
-  replay, and short-circuit algebra through its local callback executor
-  (#3020, #3023). It journals terminal closeout separately so a failed closeout
-  retries without repeating writeback or spend. Its loop controller derives
-  continuation from the committed receipt chain rather than a second
-  settlement truth (#3024).
-- Task-lease acquisition is the first bounded non-Turn core adoption. Its
-  adapter binds validation to the existing atomic lease write while pure
-  eligibility, conflict, file-lock, and CAS rules remain task-lease-owned
-  (#3091, #3095).
-- Scheduler apply, ACK, failure writeback, and cadence remain data-encoded host
-  handoffs outside agent-owned settlement.
-- `interpret_quota_should_run_packet` and `interpret_turn_result_packet` remain
-  packet lenses, while `EffectProgram` and
-  `effect_program_from_ordered_steps` still serve compatible ordered-step
-  readers for bootstrap and local scheduler construction.
-- Outcome-continuity waits are causal. An `unchanged_with_reason` checkpoint
-  without a material trigger and fresh evidence-linked path decision does not
-  clear an earlier material checkpoint or a five-Todo completion-chain gap.
-  This is intentional qualification behavior, not a watch-ACK integration
-  regression (#2998, #3009, #3022).
-- Formal tests now cover legal phase prefixes, failure short-circuit, replay,
-  exactly-once effect identity, cross-adapter conformance, semantic mutation
-  sentinels, and public-safe incident replays (#3026, #3032, #3035, #3036).
-- R1 replacement: bootstrap guided rendering reads `ordered_steps` through
-  `EffectProgram` (#2955).
-- R2 replacement: turn executor resolves result kind through
-  `interpret_turn_result_packet` (#2956).
-- R3 replacement: Codex CLI local scheduler commands are built through
-  `EffectProgram` (#2957).
-- R5 replacement: quota should-run TurnEnvelope derives its canonical action,
-  writeback, and scheduler slots through `interpret_quota_should_run_packet`.
-- around semantics encoded in `capability_gate`, `interaction_contract`,
-  `work_lane_contract`, and `scheduler_hint`.
-- focused tests and docs that pin the lens.
+- `EffectRequest`、`EffectInterpretation`、`EffectObservation`、`EffectNext` 和 `EffectTurn` 作为 canonical slots。
+- 核心层已经拥有 settlement algebra：`SettlementIdentity`、`SettlementPlan`、`SettlementReceipt`、typed failure kinds，以及保留 receipt 的 `SettlementResult.bind`。
+- 默认 Codex App / CLI quota 路径构建一份 typed settlement plan，把 validation、durable writeback、quota spend 和 conditional terminal closeout 绑定到原始 turn effect identity。final `no_followup` 是 spend 后 effect；普通 successor completion 仍属于 Todo lifecycle（#3016、#3033、#3034）。
+- 隔离 turn driver 通过自己的 callback executor 消费同一套 plan、identity、receipt、failure、replay 和 short-circuit algebra（#3020、#3023）；terminal closeout 单独写入 journal，因此 closeout 失败只重试 closeout，不重复 writeback/spend；loop controller 从已提交 receipt chain 派生 continuation，不再维护第二份 settlement truth（#3024）。
+- Task-lease acquire 是第一个有界采用该 algebra 的非 Turn 核心路径。adapter 把 validation 绑定到现有原子 lease write；纯 eligibility、conflict、file-lock 和 CAS 规则仍由 task-lease bounded context 持有（#3091、#3095）。
+- Scheduler apply、ACK、failure writeback 和 cadence 仍是 agent-owned settlement 之外的数据化 host handoff。
+- `interpret_quota_should_run_packet` 与 `interpret_turn_result_packet` 继续作为 packet lens；`EffectProgram` 和 `effect_program_from_ordered_steps` 继续为 bootstrap 与本地 scheduler construction 提供兼容的 ordered-step reader。
+- Outcome-continuity wait 已按因果关系判断。没有 material trigger 和 fresh evidence-linked path decision 的 `unchanged_with_reason` checkpoint，不能清除更早的 material checkpoint 或五条 Todo 完成长链 gap。这是有意的 qualification 行为，不是 watch-ACK 集成回归（#2998、#3009、#3022）。
+- 正式测试已经覆盖合法 phase prefix、failure short-circuit、replay、effect identity exactly-once、跨 adapter conformance、语义 mutation sentinel 和 public-safe 事故回放（#3026、#3032、#3035、#3036）。
+- R1 替换：bootstrap guided rendering 通过 `EffectProgram` 读取 `ordered_steps`（#2955）。
+- R2 替换：turn executor 通过 `interpret_turn_result_packet` 解析 result kind（#2956）。
+- R3 替换：Codex CLI 本地 scheduler commands 通过 `EffectProgram` 构建（#2957）。
+- R5 替换：quota should-run TurnEnvelope 通过 `interpret_quota_should_run_packet` 派生 canonical action、writeback 和 scheduler slots。
+- around 语义编码在 `capability_gate`、`interaction_contract`、`work_lane_contract` 和 `scheduler_hint` 中。
+- 聚焦测试和文档固定该视角。
 
-### What Is Missing
+### 还缺什么
 
-- A generic shared executor is deliberately absent. The current adapters share
-  plan/receipt algebra but have different execution ownership, so M7.3
-  is closed with no follow-up rather than filled with a speculative framework.
-- Regular LoopX paths still need bounded adoption decisions. A path should use
-  the algebra only when it has multi-step external effects, one stable
-  identity, durable receipts, replay requirements, and duplicate settlement
-  truth that the change can delete.
-- Race/CAS qualification remains deferred until a real concurrent execution
-  entry point exists. Synchronous adapters do not justify concurrency
-  infrastructure or tests by themselves.
-- M7.4 remains open as an evidence-driven replacement gate, not a request to
-  convert every Todo, gate, monitor, scheduler, or replan rule into a Kleisli
-  arrow.
+- 通用共享 executor 被有意保留为空。当前 adapter 共享 plan/receipt algebra，却拥有不同的执行边界，因此 M7.3 应以 no-follow-up 关闭，而不是用推测性 framework 填充。
+- 常规 LoopX 核心路径仍需逐条做有界采用判断。只有当路径包含多步 external effect、单一稳定 identity、durable receipt、replay 要求，并且变更能删除重复 settlement truth 时，才应该使用这套 algebra。
+- Race/CAS qualification 推迟到真实并发执行入口出现后；同步 adapter 本身不足以证明需要并发基础设施或测试。
+- M7.4 仍是 evidence-driven replacement gate，而不是把每个 Todo、gate、monitor、scheduler 或 replan rule 都改成 Kleisli arrow 的要求。
 
-### Core-Path Adoption Matrix
+### 核心路径采用矩阵
 
-| Core path | Decision | Boundary |
+| 核心路径 | 决策 | 边界 |
 |---|---|---|
-| Codex App / CLI normal-turn closeout | Adopted | Core plan/receipt algebra; quota adapter owns CLI binding and durable settlement checks |
-| Isolated turn-driver closeout | Adopted | Same algebra; local callback executor and journal remain turn-driver-owned |
-| Task-lease acquire | Bounded adoption | Validation and durable write share the core algebra; eligibility, conflicts, locking, CAS, and persistence remain task-lease-owned |
-| Turn continuation | Adopted as a consumer | Pure controller reads the committed receipt chain; it does not execute host effects |
-| Todo completion, `refresh-state`, quota spend | Bounded adoption | Ordinary completion stays Todo-owned; refresh/spend form the base settlement, and final `no_followup` is a conditional post-spend closeout |
-| Goal vision and replan checkpoints | Selective typed qualification | Causal evidence and completion-chain checkpoints are shared invariants; vision policy is not moved into the settlement executor |
-| Capability gates, user gates, monitor selection | Keep domain-local | These are decision state machines unless a future change proves duplicated external-effect settlement |
-| Scheduler apply, ACK, cadence, failure hint | Outside settlement | Host-owned effects stay data-encoded and are never hidden behind the agent executor |
-| Bootstrap and local scheduler command rendering | Read-model reuse only | `EffectProgram` may read ordered steps; no runtime migration without duplicate truth to remove |
-| Concurrent/racing settlement | Deferred | Add race/CAS behavior only with a real concurrent caller and authority boundary |
+| Codex App / CLI 常规 turn closeout | 已采用 | core plan/receipt algebra；quota adapter 拥有 CLI binding 和 durable settlement check |
+| 隔离 turn-driver closeout | 已采用 | 共享同一 algebra；local callback executor 与 journal 仍归 turn driver 所有 |
+| Task-lease acquire | 有界采用 | validation 与 durable write 共享 core algebra；eligibility、conflict、locking、CAS 和 persistence 仍归 task lease 所有 |
+| Turn continuation | 作为 consumer 采用 | pure controller 读取已提交 receipt chain，不执行 host effect |
+| Todo completion、`refresh-state`、quota spend | 有界采用 | 普通 completion 保持 Todo-owned；refresh/spend 组成基础 settlement，final `no_followup` 是 conditional post-spend closeout |
+| Goal vision 与 replan checkpoint | 选择性 typed qualification | causal evidence 与完成链 checkpoint 是共享 invariant；vision policy 不进入 settlement executor |
+| Capability gate、user gate、monitor selection | 保持 domain-local | 除非未来证明存在重复 external-effect settlement，否则它们仍是 decision state machine |
+| Scheduler apply、ACK、cadence、failure hint | settlement 之外 | host-owned effect 保持数据化，不隐藏到 agent executor 后面 |
+| Bootstrap 与本地 scheduler command rendering | 只复用 read model | `EffectProgram` 可以读取 ordered steps；没有可删除的重复 truth 就不迁移 runtime |
+| 并发/racing settlement | 推迟 | 只有真实 concurrent caller 与 authority boundary 出现后才加入 race/CAS 行为 |
 
-### When To Generalize
+### 何时泛化
 
-Generalize execution only when at least two real runtime paths share both
-plan/receipt semantics and execution ownership. The current adapters prove the
-algebra but refute a shared executor: one crosses CLI/host boundaries, one owns
-in-process callbacks, and one delegates atomic persistence to the task-lease
-bounded context. Packet similarity or a common `bind` method does not override
-those boundaries.
+只有至少两个真实 runtime path 同时共享 plan/receipt 语义和执行所有权时，才泛化执行层。当前 adapter 证明了共享 algebra，却反证了共享 executor：一条路径跨越 CLI/host boundary，一条拥有 in-process callback，另一条把原子 persistence 委托给 task-lease bounded context。Packet 相似或共同的 `bind` 方法不能覆盖这些边界。
 
-Before then, keep the abstraction as a documented lens and add tests that
-prove each packet maps losslessly. This avoids building a generic `Effect`
-framework that no runtime uses.
+在此之前，把抽象保持为文档化视角，并增加证明每个 packet 无损映射的测试。这可以避免构建一个没有 runtime 使用的通用 `Effect` 框架。
 
-### Replacement Status
+### 替换状态
 
-R1, R2, R3, and R5 are complete:
+R1、R2、R3 和 R5 已完成：
 
-- R1 bootstrap guided rendering through `EffectProgram` (#2955);
-- R2 turn executor result-kind resolution through `interpret_turn_result_packet`
-  (#2956);
-- R3 Codex CLI scheduler command set through `EffectProgram` (#2957).
-- R5 quota should-run TurnEnvelope through `interpret_quota_should_run_packet`.
+- R1 bootstrap guided rendering 通过 `EffectProgram`（#2955）；
+- R2 turn executor result-kind resolution 通过 `interpret_turn_result_packet`（#2956）；
+- R3 Codex CLI scheduler command set 通过 `EffectProgram`（#2957）；
+- R5 quota should-run TurnEnvelope 通过 `interpret_quota_should_run_packet`。
 
-R4's original generic-executor proposal is closed with no follow-up. Reopen it
-only when another real caller can delete duplicate orchestration without
-crossing an authority boundary.
+R4 原来的 generic-executor 提案以 no-follow-up 关闭。只有当另一个真实 caller 能在不跨 authority boundary 的前提下删除重复编排时，才重新开启。
 
-### Qualitative Change Plan
+### 定性改进计划
 
-The current effect abstraction is a read lens plus three small runtime
-replacements. M6 must not be called mostly complete until all of the following
-are true:
+当前 effect 抽象是 read lens 加三个小的 runtime replacement。只有以下全部为真时，M6 才能被称为 mostly complete：
 
-1. Hot modules shrink to bounded sizes:
-   - `loopx/quota.py` below 2000 lines (currently 1043);
-   - `loopx/status.py` below 2000 lines;
-   - `loopx/heartbeat_prompt.py` below 1200 lines.
-2. `loopx quota should-run` builds through a bounded `should_run` decision
-   module, and `loopx.quota.build_quota_should_run` becomes a thin
-   compatibility wrapper.
-3. `EffectTurn` and `EffectProgram` are consumed by CLI quota, turn driver,
-   and bootstrap construction, not only by tests and renderers.
-4. No effect abstraction remains test-only.
-5. Maintainability, import-graph, CLI output, and hot-path interface ratchets
-   pass without new exceptions.
-6. Doubao/model-behavior shadow qualification covers changed agent-facing
-   packets.
+1. 热模块缩小到有界大小：
+   - `loopx/quota.py` 低于 2000 行（当前 1043）；
+   - `loopx/status.py` 低于 2000 行；
+   - `loopx/heartbeat_prompt.py` 低于 1200 行。
+2. `loopx quota should-run` 通过有界的 `should_run` decision module 构建，`loopx.quota.build_quota_should_run` 成为 thin compatibility wrapper。
+3. `EffectTurn` 和 `EffectProgram` 被 CLI quota、turn driver 和 bootstrap construction 消费，而不只是测试和 renderer。
+4. 没有 effect 抽象保持 test-only。
+5. Maintainability、import-graph、CLI output 和 hot-path interface ratchets 无新增 exception 通过。
+6. Doubao/model-behavior shadow qualification 覆盖变更后的 agent-facing packets。
 
-Phases:
+阶段：
 
-- Q1: Stop milestone claims; keep M6 in progress.
-- Q2: Characterize hot modules and capture parity fixtures for
-  `quota.py`, `status.py`, and `heartbeat_prompt.py`.
-- Q3: Extract the quota `should-run` decision and packet builder into
-  bounded modules. Done: `should_run.py` entry decision (#2963),
-  `should_run_prepare.py` preparation chain (#2964), and
-  `should_run_packet.py` route/packet assembly (#2965).
-- Q4: Extract status read models, collection, and presentation into bounded
-  modules. Done: bounded status projections (#2967-#2978); `status.py` 1392.
-- Q5: Extract heartbeat prompt builders into bounded modules. Done: bounded
-  heartbeat task body/builder/support modules (#2979/#2980/#2982);
-  `heartbeat_prompt.py` 159.
-- Q6: Make CLI quota, turn driver, and bootstrap construction consume
-  `EffectTurn` / `EffectProgram`. Done: quota should-run TurnEnvelope consumes
-  `interpret_quota_should_run_packet` (#2983); turn driver and bootstrap
-  consume `interpret_turn_result_packet` / `effect_program_from_ordered_steps`.
-- Q7: Add quality gates and focused tests for each extraction. Done: RFC
-  module budgets are ratcheted in `module_metric_baseline.json` and a focused
-  M6 quality-gate pytest pins the hot-module ceilings plus the runtime
-  `EffectTurn` consumption (#2984).
-- Q8: Re-evaluate M6 only after the gates pass. Done: audit evidence below.
+- Q1：停止 milestone claims，保持 M6 in progress。
+- Q2：刻画热模块并为 `quota.py`、`status.py`、`heartbeat_prompt.py` 捕获 parity fixtures。
+- Q3：把 quota `should-run` decision 和 packet builder 抽取到有界模块。已完成：`should_run.py` entry decision（#2963）、`should_run_prepare.py` preparation chain（#2964）、`should_run_packet.py` route/packet assembly（#2965）。
+- Q4：把 status read models、collection 和 presentation 抽取到有界模块。已完成：bounded status projections（#2967-#2978）；`status.py` 1392。
+- Q5：把 heartbeat prompt builders 抽取到有界模块。已完成：bounded heartbeat task body/builder/support modules（#2979/#2980/#2982）；`heartbeat_prompt.py` 159。
+- Q6：让 CLI quota、turn driver 和 bootstrap construction 消费 `EffectTurn` / `EffectProgram`。已完成：quota should-run TurnEnvelope 消费 `interpret_quota_should_run_packet`（#2983）；turn driver 和 bootstrap 消费 `interpret_turn_result_packet` / `effect_program_from_ordered_steps`。
+- Q7：为每个抽取增加 quality gates 和聚焦测试。已完成：RFC module budgets 在 `module_metric_baseline.json` 中 ratchet，聚焦 M6 quality-gate pytest 固定热模块上限和 runtime `EffectTurn` 消费（#2984）。
+- Q8：gate 通过后再重新评估 M6。已完成：见下方 audit evidence。
 
-### M6 Completion Evidence
+### M6 完成证据
 
-- Hot module lines: `loopx/quota.py` 1049, `loopx/status.py` 1392,
-  `loopx/heartbeat_prompt.py` 159.
-- Maintainability ratchet: `ok=true`, no unreviewed findings, no stale
-  exceptions.
-- Focused M6 audit suite: 172 passed across quota parity, status re-export,
-  heartbeat support, effect interpreter/program/turn families, CLI output
-  budget/differential, import boundaries, model-behavior/Doubao shadow, and
-  turn driver/executor.
-- `loopx canary quality-audit`: `ready=true`, `gap_count=0`, `drift_count=0`.
+- 热模块行数：`loopx/quota.py` 1049、`loopx/status.py` 1392、`loopx/heartbeat_prompt.py` 159。
+- Maintainability ratchet：`ok=true`，无 unreviewed findings，无 stale exceptions。
+- 聚焦 M6 audit suite：172 通过，覆盖 quota parity、status re-export、heartbeat support、effect interpreter/program/turn families、CLI output budget/differential、import boundaries、model-behavior/Doubao shadow 和 turn driver/executor。
+- `loopx canary quality-audit`：`ready=true`、`gap_count=0`、`drift_count=0`。
 
-### M7: Effect Program Runtime
+### M7：Effect Program Runtime
 
-M6 makes the effect lens runtime-consumed but still descriptive: packet
-builders compute their decisions and then map them onto `EffectTurn`. M7 must
-not react by making every state family implement one protocol. It must first
-prove that a typed effect runtime removes one real orchestration split-brain.
+M6 让 effect lens 被 runtime 消费，但仍然偏描述性：packet builders 先计算 decision，再映射到 `EffectTurn`。M7 不能因此让每个状态族实现同一个 protocol。它必须首先证明 typed effect runtime 移除一个真实的编排 split-brain。
 
-M7.0: inventory real multi-step runtime candidates. The selected core is
-normal-turn settlement from a stable quota decision through validated
-writeback and exactly-once spend. It has two real adapters: the default Codex
-App interaction path and the isolated turn driver. Scheduler apply and ACK
-remain delegated host handoffs. Guided bootstrap was not selected because some
-ordered steps belong to the model, user, or host; quota-to-host scheduling was
-not selected because LoopX cannot settle the external automation mutation
-itself.
+M7.0：盘点真实多步 runtime 候选。选中的核心是从稳定 quota decision 出发，经过验证 writeback 和 exactly-once spend 的 normal-turn settlement。它有两个真实 adapter：默认 Codex App interaction path 和隔离 turn driver。Scheduler apply 和 ACK 保持为 delegated host handoffs。Guided bootstrap 未被选中，因为部分 ordered steps 属于 model、user 或 host；quota-to-host scheduling 未被选中，因为 LoopX 无法自行结算外部自动化 mutation。
 
-M7.1: characterize the selected vertical slice before adding a protocol.
-Capture parity fixtures for legal and illegal transitions, partial execution,
-retry, cancellation, permission denial, budget rejection, and settlement. The
-durable transfer must include cancellation at writeback and scheduler handoff,
-permission denial at host execution and quota spend, and spend-budget
-rejection after writeback. This stage preserves current runtime behavior,
-including any split projection that M7.2 is expected to repair. It must also
-characterize the default Codex App selection-drift seam: after the selected
-Todo is completed and writeback advances the frontier, spend must still settle
-the original effect identity rather than bind to a newly selected successor.
+M7.1：在添加 protocol 前刻画选中的 vertical slice。为合法与非法 transition、部分执行、重试、取消、权限拒绝、预算拒绝和结算捕获 parity fixtures。durable transfer 必须包含 writeback 和 scheduler handoff 时的 cancellation、host execution 和 quota spend 时的 permission denial，以及 writeback 后的 spend-budget rejection。该阶段保留当前 runtime behavior，包括 M7.2 预期修复的任何 split projection。还必须刻画默认 Codex App selection-drift seam：选中 Todo 完成后，writeback 推进 frontier 时，spend 仍必须结算原始 effect identity，而不是绑定到新选中的 successor。
 
-M7.2: replace the core settlement truth with one typed plan/receipt algebra. A
-plan step must carry a stable kind, owner, precondition, idempotency identity,
-and expected receipt. The default Codex App path and isolated turn driver bind
-validation, durable writeback, quota spend, and conditional terminal closeout
-to the original quota-turn effect identity. Ordinary successor completion may
-advance the Todo frontier before settlement, but final `no_followup` is applied
-only after matching writeback and spend receipts; no terminal-guard exception
-is allowed. Each replacement PR must delete its corresponding manual command
-or settlement truth. Raw mappings and free-form CLI commands may remain
-compatibility payloads, but they are not the semantic execution contract. The
-composition must satisfy the identity, associativity, short-circuit, replay,
-and ordering properties defined above, keep cancellation, permission denial,
-and budget rejection distinct, and leave scheduler apply or ACK outside the
-agent-owned settlement boundary.
+M7.2：用一个 typed plan/receipt algebra 替换核心 settlement truth。plan step 必须携带稳定 kind、owner、precondition、idempotency identity 和 expected receipt。默认 Codex App path 与隔离 turn driver 把 validation、durable writeback、quota spend 和 conditional terminal closeout 绑定到原始 quota-turn effect identity。普通 successor completion 可以在 settlement 前推进 Todo frontier；final `no_followup` 只有在 matching writeback/spend receipt 后才提交，不能增加 terminal guard 例外。每个 replacement PR 都必须删除对应的 manual command 或 settlement truth。Raw mappings 和 free-form CLI commands 可以保留为 compatibility payloads，但不是语义执行合同。组合必须满足上文定义的 identity、associativity、short-circuit、replay 和 ordering 性质，保持 cancellation、permission denial 和 budget rejection 可区分，并让 scheduler apply 或 ACK 留在 agent-owned settlement boundary 之外。
 
-M7.3: after both M7.2 adapters consume the proven plan and receipt semantics,
-compare their execution ownership. The 2026-08-21 cutover qualification found
-that settlement identity, bind/short-circuit, replay seeding, next-action
-selection, and commit reduction were still duplicated across the adapters.
-This reopens M7.3 for one bounded TypeScript Effect runtime. The runtime owns
-that shared algebra and the first internal effect, atomic Turn-journal
-checkpointing. Its server is only a temporary Python-to-TypeScript transport;
-one static typed handler registry routes coarse transactions to domain owners.
-It is not a generic composition framework and does not move model, user, host
-scheduler, credential, or third-party authority behind a universal executor.
-Every replaced Python semantic path is deleted in the same cutover PR.
+M7.3：在两个 M7.2 adapter 都消费经过验证的 plan/receipt 语义后，比较它们的执行所有权。2026-08-21 的 cutover qualification 发现，settlement identity、bind/short-circuit、replay seeding、next-action selection 与 commit reduction 仍在 adapter 间重复。因此重新打开 M7.3，引入一个 bounded TypeScript Effect runtime。Runtime 拥有共享 algebra 和第一个内部 effect——atomic Turn-journal checkpoint。它的 server 只是临时 Python-to-TypeScript transport；一个静态 typed handler registry 把粗粒度 transaction 路由给 domain owner。它不是通用组合框架，也不会把 model、user、host scheduler、credential 或第三方 authority 藏到万能 executor 后面。每条被替代的 Python 语义路径都必须在同一 cutover PR 删除。
 
-M7.4: expand one bounded family at a time only when it removes duplicate
-knowledge and switches a real production caller. Todo, monitor, capability,
-scheduler, and gate state machines keep their domain transition invariants.
-They may execute through the same managed runtime as they migrate, but they do
-not move behind one generic state protocol merely because their packets have
-similar fields. After the CLI is native TypeScript, CLI-only execution imports
-the kernel in-process; the daemon remains optional for App/multi-client shared
-authority rather than a mandatory server per family.
+M7.4：只有在移除重复知识并切换真实生产 caller 时，才一次扩展一个 bounded 状态族。Todo、monitor、capability、scheduler 和 gate 状态机保留自己的 domain transition invariants。它们迁移后可以通过同一个 managed runtime 执行，但不能仅仅因为 packet 字段相似就移到一个通用状态协议后面。CLI 原生迁到 TypeScript 后，CLI-only 在进程内 import kernel；daemon 只在 App/多 client 共享 authority 时可选保留，而不是每个状态族一个必选 server。
 
-The replan semantic-exit repair in #3208 is an explicit non-candidate:
-`refresh-state` already re-derives the current obligation and records a typed
-semantic ACK, while the defect was an extra goal-frontier settlement condition
-that ignored valid non-successor ACKs when acceptance gaps remained. This is a
-domain-local reducer/ACK invariant, not a second multi-step executor. Keep it in
-the replan/goal-frontier owner. Revisit Effect Program migration only when a
-second real runtime scenario—such as a quota/status read ACK with the same
-plan/receipt lifecycle—can replace duplicate orchestration across two adapters.
+#3208 的 replan semantic-exit 修复明确不是候选：`refresh-state` 已经会重新推导当前 obligation 并记录 typed semantic ACK，实际缺陷是 goal-frontier 中一个额外的 settlement 条件在 acceptance gaps 仍存在时忽略了合法的 non-successor ACK。这是 domain-local reducer/ACK invariant，不是第二个 multi-step executor，应继续由 replan/goal-frontier owner 持有。只有第二个真实 runtime 场景（例如具有相同 plan/receipt lifecycle 的 quota/status read ACK）出现，并且能在两个 adapter 间删除重复编排时，才重新评估 Effect Program 迁移。
 
-The earlier R5-R9 list is therefore not an implementation queue:
+因此，之前的 R5-R9 列表不是实施队列：
 
-- the shared `EffectInterpreter` protocol is deferred to M7.3;
-- packet-before-view ordering is replaced by one canonical decision-plan
-  source;
-- guided bootstrap remains one candidate, subject to host-boundary review;
-- turn closeout is another candidate and may be the better first vertical
-  slice; and
-- family-wide alignment is replaced by the duplicate-knowledge gate in M7.4.
+- 共享 `EffectInterpreter` protocol 推迟到 M7.3；
+- packet-before-view ordering 被一个 canonical decision-plan source 取代；
+- guided bootstrap 仍是候选，并受 host-boundary review 约束；
+- turn closeout 是另一个候选，可能是更好的第一个 vertical slice；并且
+- family-wide alignment 被 M7.4 的 duplicate-knowledge gate 取代。
 
-M7 completes only when a real vertical slice meets the Product Outcome
-Contract, its old path is removed, and a second caller provides evidence for
-the abstraction that remains.
+M7 只有在真实 vertical slice 满足 Product Outcome Contract、旧路径被移除、且第二个 caller 为保留的抽象提供证据时才完成。
 
-### Replacement-First Rule
+### Replacement-First 规则
 
-Every M6 code change must replace an existing real runtime call path, not add
-a parallel unused abstraction.
+每个 M6 代码变更都必须替换现有真实 runtime call path，而不是增加并行的未使用抽象。
 
-- Before replacement: capture a parity fixture or smoke for the existing
-  path.
-- Replace: make runtime read/write flow through `EffectTurn` / `EffectProgram`.
-- After: delete the old path, or keep a compatibility wrapper only when a real
-  external import or persisted contract requires it.
-- Test-only additions do not count as M6 progress.
+- 替换前：为现有路径捕获 parity fixture 或 smoke。
+- 替换：让 runtime 读写通过 `EffectTurn` / `EffectProgram`。
+- 替换后：删除旧路径；只有当真实外部 import 或持久化合同需要时，才保留 compatibility wrapper。
+- 仅测试性增加不算 M6 progress。
 
-Example replacements:
+示例替换：
 
-- `bootstrap_command_pack` should read `ordered_steps` through
-  `effect_program_from_ordered_steps` before rendering or validation;
-- `turn_driver/executor` should derive result status and next phase through
-  `interpret_turn_result_packet` before committing a receipt.
+- `bootstrap_command_pack` 应在 rendering 或 validation 前通过 `effect_program_from_ordered_steps` 读取 `ordered_steps`；
+- `turn_driver/executor` 应在提交 receipt 前通过 `interpret_turn_result_packet` 派生 result status 和 next phase。
 
-## State Machine As Interpretation Table
+## 把状态机当作解释表
 
-Instead of teaching state machines as a list of enum values, teach each state
-machine as an interpretation table:
+不要把状态机教成一串 enum values，而是把每个状态机教成一张解释表：
 
 ```text
 Input effect | Interpreter | Decision | Observation | Next effect
 ```
 
-Example for monitor scheduling:
+以 monitor scheduling 为例：
 
 ```text
 Monitor cadence or due horizon
@@ -649,305 +421,228 @@ Monitor cadence or due horizon
   -> next heartbeat or monitor poll
 ```
 
-This preserves the existing state machines while making their purpose
-visible.
+这保留了现有状态机，同时让它们的目的可见。
 
-## Milestones
+## 里程碑
 
-### M0: RFC and Lecture 0
+### M0：RFC 与 Lecture 0
 
-**Goal**: Publish this RFC and add a lecture that tells the story before any
-state machine detail.
+**目标**：发布本 RFC，并在任何状态机细节之前增加一讲来讲述这个故事。
 
-Steps:
+步骤：
 
-1. Merge this RFC.
-2. Add `Lecture 0: Harness Is the Effectful Program` to
-   `docs/development/control-plane-course/`.
-3. Rewrite `docs/product/core-control-plane/state-machine.md` to include an
-   interpretation-table section for each state family.
-4. Update `docs/README.md` and course navigation to point to the RFC.
+1. 合并本 RFC。
+2. 在 `docs/development/control-plane-course/` 增加 `Lecture 0: Harness Is the Effectful Program`。
+3. 重写 `docs/product/core-control-plane/state-machine.md`，为每个状态族加入 interpretation-table section。
+4. 更新 `docs/README.md` 和课程导航，指向本 RFC。
 
-Acceptance criteria:
+验收标准：
 
-- A new contributor can explain LoopX in one paragraph using the canonical
-  loop shape.
-- Every existing state machine doc links back to the interpretation-table
-  pattern.
-- No runtime behavior changes.
+- 新贡献者可以用一段话和标准循环形状解释 LoopX。
+- 每份现有状态机文档都链接回 interpretation-table 模式。
+- 没有 runtime behavior 变更。
 
-### M1: Canonical Packet Example
+### M1：Canonical Packet 示例
 
-**Goal**: Pick `quota should-run` as the canonical example and make the four
-semantic slots visible in docs and smokes.
+**目标**：选择 `quota should-run` 作为 canonical 示例，并让四个语义槽在文档和 smoke 中可见。
 
-Steps:
+步骤：
 
-1. Add a public-safe documentation section describing the four slots for
-   `quota should-run` (`docs/reference/effect-interpreter-packet.md`).
-2. Add a focused pytest or smoke that asserts the mapping from raw inputs to
-   the canonical interpretation fields.
-3. Keep the existing payload fields unchanged.
+1. 在 `docs/reference/effect-interpreter-packet.md` 增加描述 `quota should-run` 四个槽的 public-safe 文档 section。
+2. 增加聚焦 pytest 或 smoke，断言 raw inputs 到 canonical interpretation fields 的映射。
+3. 保持现有 payload 字段不变。
 
-Acceptance criteria:
+验收标准：
 
-- A reader can trace one real packet from effect request to observation.
-- No CLI output budget regression.
-- No new runtime contract without a real caller.
+- 读者能从一个真实 packet 的 effect request 追踪到 observation。
+- 没有 CLI output budget regression。
+- 没有真实 caller 时不引入新 runtime contract。
 
-### M1.5: Composition Lens
+### M1.5：组合视角
 
-**Goal**: Make the around semantics visible in the canonical packet lens.
+**目标**：让 around 语义在 canonical packet 视角中可见。
 
-Steps:
+步骤：
 
-1. Document the three composition layers and the data-encoded handler in this
-   RFC and Lecture 1.
-2. Extend `EffectTurn` with `next_effect` so all four semantic slots are
-   represented in code, not only in prose.
-3. Add a focused test proving a capability gate is a structured around
-   decision: it short-circuits, rewrites the next effect, and keeps
-   permission semantics visible.
-4. Cite the public Tool Calling and Function Composition sources in public
-   docs. Never cite internal lecture material.
+1. 在本 RFC 和 Lecture 1 中记录三层组合与 data-encoded handler。
+2. 扩展 `EffectTurn` 增加 `next_effect`，让四个语义槽不仅在 prose 中、也在代码中表示。
+3. 增加聚焦测试，证明 capability gate 是结构化 around decision：它会短路、重写 next effect，并保持 permission 语义可见。
+4. 在公开文档中引用公开 Tool Calling 与 Function Composition 来源。绝不引用内部讲座材料。
 
-Acceptance criteria:
+验收标准：
 
-- A reader can answer where `next_effect` is encoded for a real packet.
-- The code lens covers `effect_request`, `interpretation`, `observation`, and
-  `next_effect`.
-- No runtime behavior changes.
+- 读者能回答真实 packet 的 `next_effect` 编码在哪里。
+- 代码视角覆盖 `effect_request`、`interpretation`、`observation` 和 `next_effect`。
+- 没有 runtime behavior 变更。
 
-### M2: Bounded Context Alignment
+### M2：Bounded Context 对齐
 
-**Goal**: Align existing refactors with the effect-interpreter boundary.
+**目标**：把现有重构与 effect-interpreter boundary 对齐。
 
-Steps:
+步骤：
 
-1. Continue splitting `status.py`, `quota.py`, and `goal_frontier.py` into
-   read-model, projection, and decision modules.
-2. Name the boundaries in terms of the loop:
-   - read model = current `A` (state);
-   - projection = observation;
-   - decision = effect interpreter.
-3. Keep re-export compatibility for existing public imports.
-4. Do not create a generic effect abstraction until at least two real
-   callers need the same envelope.
+1. 继续把 `status.py`、`quota.py` 和 `goal_frontier.py` 拆分为 read-model、projection 和 decision modules。
+2. 用 loop 术语命名边界：
+   - read model = 当前 `A`（state）；
+   - projection = observation；
+   - decision = effect interpreter。
+3. 为现有 public imports 保持 re-export compatibility。
+4. 在至少两个真实 caller 需要同一 envelope 之前，不创建通用 effect abstraction。
 
-Acceptance criteria:
+验收标准：
 
-- Module names and docstrings make the effect-interpreter role explicit.
-- Public import compatibility tests remain green.
-- Maintainability and line-budget smokes remain green.
+- Module names 和 docstrings 明确 effect-interpreter 角色。
+- Public import compatibility tests 保持绿色。
+- Maintainability 和 line-budget smokes 保持绿色。
 
-### M3: Focused Test Families
+### M3：聚焦测试族
 
-**Goal**: Convert large control-plane smokes into focused pytest modules by
-effect family.
+**目标**：把大型控制面 smoke 按 effect family 转换为聚焦 pytest modules。
 
-Steps:
+步骤：
 
-1. Create focused pytest modules for:
-   - work-lane contract;
-   - quota decision;
-   - scheduler/monitor interpretation;
-   - state-machine interpretation tables.
-2. Keep thin end-to-end smokes that prove the CLI still works.
-3. Add regression tests for failure, cancellation, gate, and observation
-   writeback paths.
+1. 为以下内容创建聚焦 pytest modules：
+   - work-lane contract；
+   - quota decision；
+   - scheduler/monitor interpretation；
+   - state-machine interpretation tables。
+2. 保留证明 CLI 仍可工作的 thin end-to-end smokes。
+3. 为 failure、cancellation、gate 和 observation writeback 路径增加 regression tests。
 
-Acceptance criteria:
+验收标准：
 
-- Each effect family has a focused pytest module.
-- No large smoke is deleted before its focused replacement passes.
-- Full public smoke suite stays green.
+- 每个 effect family 都有聚焦 pytest module。
+- 在其聚焦替代通过前，不删除大型 smoke。
+- Full public smoke suite 保持绿色。
 
-### M4: Architecture Documentation
+### M4：架构文档
 
-**Goal**: Update architecture and product docs to use the same story.
+**目标**：让架构和产品文档使用同一个故事。
 
-Steps:
+步骤：
 
-1. Reframe `docs/architecture.md` around the canonical loop.
-2. Update the control-plane course so each lecture references the same
-   `effect_request -> interpretation -> observation` flow.
-3. Update README product language where it currently says "state machine"
-   without explaining the interpretation role.
+1. 围绕标准循环重构 `docs/architecture.md`。
+2. 更新 control-plane course，让每讲引用同一个 `effect_request -> interpretation -> observation` 流程。
+3. 在 README 产品语言仍只说 "state machine" 而未解释 interpretation 角色处更新。
 
-Acceptance criteria:
+验收标准：
 
-- The public docs no longer present LoopX as a pile of unrelated state
-  machines.
-- Technical readers can identify the loop boundary, effect request,
-  interpreter, and observation in each documented workflow.
+- 公开文档不再把 LoopX 呈现为一堆无关状态机。
+- 技术读者能在每个文档化工作流中识别 loop boundary、effect request、interpreter 和 observation。
 
-### M5: Steady-State Review
+### M5：稳态评审
 
-**Goal**: Keep the RFC as a living contract.
+**目标**：让 RFC 成为 living contract。
 
-Steps:
+步骤：
 
-1. Add a canary smoke or docs smoke that checks the canonical packet
-   documentation exists.
-2. Review new state machines and packet fields against the four semantic
-   slots.
-3. Update this RFC when a new effect family requires a new canonical slot.
+1. 增加 canary smoke 或 docs smoke，检查 canonical packet 文档存在。
+2. 对照四个语义槽评审新状态机和 packet fields。
+3. 当新 effect family 需要新 canonical slot 时更新本 RFC。
 
-Acceptance criteria:
+验收标准：
 
-- The RFC is referenced by maintainer docs and course material.
-- New control-plane features state which effect they interpret.
+- 维护者文档和课程材料引用本 RFC。
+- 新控制面功能说明它们解释哪个 effect。
 
-### M6: General Effect-Program Abstraction
+### M6：通用 Effect-Program 抽象
 
-**Goal**: Move from a quota-only read lens to a shared effect-program
-abstraction without speculative framework construction.
+**目标**：在没有投机性框架构建的前提下，从 quota-only read lens 走向共享 effect-program 抽象。
 
-Steps:
+步骤：
 
-1. Add a second real interpreter, for example `interpret_turn_result_packet`
-   or `interpret_status_packet`, with focused tests that prove `EffectTurn`
-   is lossless for that family too.
-2. Keep packet interpretation as a read-model seam. Extract a shared runtime
-   interpreter or executor protocol only when two execution paths need the
-   same plan/receipt semantics. Do not add a registry or generic composition
-   framework yet.
-3. Do not use replan as a generic read-and-ACK precedent. Replan evidence is
-   now host-projected context, and an exact runnable-successor Todo or typed
-   progress write is the semantic receipt. Keep that transition in the replan
-   domain until a second runtime caller needs the same effect identity,
-   freshness, atomic state transition, and turn-boundary semantics. If such a
-   caller appears, extract the smallest shared observation/transition receipt;
-   do not resurrect a manual evidence-read ACK ritual.
-4. Add `execution_mode` to `EffectNext` and document
-   `serial` / `parallel` / `interleaved` semantics with focused tests.
-5. Introduce a data-encoded ordered effect program shape and a real executor
-   seam when one owner can execute and settle multiple steps. Qualify turn
-   closeout, guided bootstrap, and quota-to-host scheduling before selecting
-   the first slice; an existing ordered list does not establish one executable
-   authority boundary.
-6. Keep failure, cancellation, permission, and budget semantics structured
-   across every interpreter. No catch-all wrapper.
+1. 增加第二个真实 interpreter，例如 `interpret_turn_result_packet` 或 `interpret_status_packet`，并用聚焦测试证明 `EffectTurn` 对该 family 也无损。
+2. 把 packet interpretation 保持为 read-model seam。只有当两个执行路径需要相同 plan/receipt 语义时，才抽取共享 runtime interpreter 或 executor protocol。暂不增加 registry 或通用组合框架。
+3. 不再把 replan 当作通用 read-and-ACK 的先例。replan evidence 由 host 投影为 context，精确绑定当前 obligation 的 runnable-successor Todo 或 typed progress 写入才是语义 receipt。在第二个 runtime caller 同时需要相同 effect identity、freshness、原子状态转移和 turn boundary 之前，该 transition 继续归 replan 领域所有。只有真实第二调用方出现时才抽取最小 observation/transition receipt；不要恢复手工 evidence-read ACK 仪式。
+4. 为 `EffectNext` 增加 `execution_mode`，用聚焦测试文档化 `serial` / `parallel` / `interleaved` 语义。
+5. 当一个 owner 能执行并结算多个步骤时，引入 data-encoded ordered effect program shape 和真实 executor seam。在选中第一个 slice 前，qualify turn closeout、guided bootstrap 和 quota-to-host scheduling；现有 ordered list 本身不建立可执行 authority boundary。
+6. 在每一个 interpreter 中保持 failure、cancellation、permission 和 budget 语义结构化。不引入 catch-all wrapper。
 
-Acceptance criteria:
+验收标准：
 
-- At least two packet families produce `EffectTurn`.
-- Runtime code, not only tests, consumes the shared shape.
-- `next_effect` can express an ordered effect program with an explicit
-  execution mode.
-- A shared observation/transition receipt contract has at least two runtime
-  callers; one domain transition alone remains domain-owned.
-- No generic `Effect` monad, registry, or middleware framework is added
-  without a second runtime caller.
+- 至少两个 packet family 产生 `EffectTurn`。
+- Runtime code（不只是 tests）消费共享 shape。
+- `next_effect` 能用显式 execution mode 表达有序 effect program。
+- 共享 observation/transition receipt contract 至少有两个 runtime caller；只有一条领域 transition 时继续由领域 owner 持有。
+- 在出现第二个 runtime caller 之前，不增加通用 `Effect` monad、registry 或 middleware framework。
 
-## Test Strategy
+## 测试策略
 
-Tests should be organized by effect family, not by source-file size:
+测试应按 effect family 组织，而不是按源文件大小：
 
 ```text
 effect_request -> interpretation -> observation -> next_effect
 ```
 
-Each focused pytest module should cover:
+每个聚焦 pytest module 都应覆盖：
 
-- positive routing;
-- gate and capability decisions;
-- failure and cancellation;
-- observation writeback;
-- compatibility of public imports.
+- positive routing；
+- gate 与 capability decisions；
+- failure 与 cancellation；
+- observation writeback；
+- public imports 兼容性。
 
-Large smokes remain only as thin end-to-end checks.
+大型 smoke 只保留为 thin end-to-end checks。
 
-### Runtime Replacement Testing
+### Runtime Replacement 测试
 
-For every runtime replacement:
+对每个 runtime replacement：
 
-- focused pytest covers the new seam and parity with the old path;
-- a thin public smoke exercises the real CLI or host path;
-- CLI output budget regression stays green;
-- model-behavior / Doubao shadow qualification covers agent-facing packet
-  changes;
-- canary premerge includes `core-control-plane` and `canary-runner` profiles.
+- focused pytest 覆盖新 seam 并与旧路径 parity；
+- thin public smoke 练习真实 CLI 或 host path；
+- CLI output budget regression 保持绿色；
+- model-behavior / Doubao shadow qualification 覆盖 agent-facing packet 变更；
+- canary premerge 包含 `core-control-plane` 和 `canary-runner` profiles。
 
 ## Non-Goals
 
-- Do not merge all state machines into one giant enum.
-- Do not create a generic `Effect` abstraction without two real callers.
-- Do not count test-only lenses as M6 progress; every M6 change must replace a
-  real runtime call path.
-- Do not mark M6 mostly complete while `quota.py`, `status.py`, or
-  `heartbeat_prompt.py` remain oversized or while effect abstraction is
-  test-only.
-- Do not treat the current `EffectTurn` lens as a general runtime abstraction
-  until a second interpreter and a real executor caller exist.
-- Do not rewrite `quota should-run` for the sake of naming.
-- Do not use effect-runtime generalization as a substitute for final-goal
-  acceptance, evidence, or replan.
-- Do not make guided bootstrap executable merely because its ordered steps
-  can be rendered as `EffectProgram`; preserve model, user, and host ownership
-  boundaries.
-- Do not align Todo, monitor, and gate families behind a shared protocol
-  without proving duplicate transition knowledge and deleting it.
-- Do not remove existing public compatibility routes without a migration
-  window.
+- 不把全部状态机合并成一个巨型 enum。
+- 在没有两个真实 caller 时，不创建通用 `Effect` 抽象。
+- 不把 test-only lenses 算作 M6 progress；每个 M6 变更必须替换真实 runtime call path。
+- 当 `quota.py`、`status.py` 或 `heartbeat_prompt.py` 仍然过大，或 effect 抽象仍 test-only 时，不把 M6 标记为 mostly complete。
+- 在出现第二个 interpreter 和真实 executor caller 前，不把当前 `EffectTurn` 视角当作通用 runtime 抽象。
+- 不为命名而重写 `quota should-run`。
+- 不用 effect-runtime 泛化替代 final-goal acceptance、evidence 或 replan。
+- 不因为 guided bootstrap 的 ordered steps 可以渲染成 `EffectProgram` 就让它可执行；保留 model、user 和 host ownership boundary。
+- 在没有证明重复 transition knowledge 并删除它之前，不让 Todo、monitor 和 gate 族对齐到共享 protocol 后。
+- 没有迁移窗口时，不删除现有 public compatibility routes。
 
-## Risks
+## 风险
 
-- Naming drift: we may use "effect" as decoration without changing semantics.
-  Mitigation: every RFC milestone must produce a real doc or test change.
-- Over-abstraction: a generic effect envelope could become unused scaffolding.
-  Mitigation: only add a shared envelope when a second caller needs it.
-- Decorative naming: docs say "effect program" while runtime still only
-  passes CLI strings. Mitigation: M6 requires a second interpreter and a real
-  runtime replacement before the RFC claims a general abstraction.
-- Test churn: converting large smokes too fast can reduce e2e confidence.
-  Mitigation: keep thin e2e until focused tests cover the same behavior.
-- Goal/effect conflation: a reliable executor can keep executing the wrong
-  milestone. Mitigation: keep goal-path evidence and effect settlement as
-  separate contracts, and require both at milestone closeout.
-- Executor boundary overreach: ordered steps may belong to different actors.
-  Mitigation: select the first vertical slice only after its owner and receipt
-  boundaries are explicit.
+- 命名漂移：可能把 "effect" 当装饰而不改变语义。缓解：每个 RFC milestone 必须产生真实文档或测试变更。
+- 过度抽象：通用 effect envelope 可能变成未使用 scaffolding。缓解：只有第二个 caller 需要时才增加共享 envelope。
+- 装饰性命名：文档说 "effect program"，runtime 仍只传 CLI strings。缓解：M6 要求在 RFC 声称通用抽象前出现第二个 interpreter 和真实 runtime replacement。
+- 测试 churn：过快转换大型 smoke 会降低 e2e confidence。缓解：在聚焦测试覆盖相同行为前保留 thin e2e。
+- Goal/effect 混淆：可靠 executor 可能持续执行错误 milestone。缓解：把 goal-path evidence 和 effect settlement 作为独立合同，并在 milestone closeout 时同时要求两者。
+- Executor boundary 越界：ordered steps 可能属于不同 actor。缓解：只有在 owner 和 receipt boundaries 明确后才选择第一个 vertical slice。
 
-## Open Questions
+## 开放问题
 
-- Should `effect_interpretation` be a first-class field in the hot quota
-  packet, or only a documented lens?
-- Should each capability own an interpretation table, or should the tables
-  stay in central docs?
-- When should a new state machine be considered a new effect family?
-- Which packet family should be the second real `EffectTurn` interpreter:
-  turn result, status, or monitor poll?
-- At what point should `next_effect` stop being a flat CLI tuple and become an
-  ordered effect program with `execution_mode`?
-- Which candidate removes the most duplicate orchestration with the narrowest
-  authority boundary: turn closeout, guided bootstrap, or quota-to-host
-  scheduling?
-- What stable effect identity and receipt let that path resume after partial
-  execution without duplicate ACK, writeback, spend, or external action?
-- Which second runtime caller needs the same proven plan/receipt semantics?
-- When should `EffectProgram` become runtime-owned rather than host-driven,
-  and which steps must remain model-, user-, or host-owned?
+- `effect_interpretation` 应该成为 hot quota packet 的一等字段，还是只作为文档化视角？
+- 每个 capability 应该拥有自己的 interpretation table，还是 table 保留在中心文档？
+- 何时应把新状态机视为新 effect family？
+- 哪个 packet family 应该成为第二个真实 `EffectTurn` interpreter：turn result、status 还是 monitor poll？
+- 何时 `next_effect` 应从扁平 CLI tuple 变成带 `execution_mode` 的有序 effect program？
+- 哪个候选以最窄 authority boundary 移除最多重复编排：turn closeout、guided bootstrap 还是 quota-to-host scheduling？
+- 什么稳定 effect identity 和 receipt 能让该路径在部分执行后恢复，而不会重复 ACK、writeback、spend 或外部 action？
+- 哪个第二个 runtime caller 需要相同、经过验证的 plan/receipt 语义？
+- 何时 `EffectProgram` 应从 host-driven 变成 runtime-owned，哪些 steps 必须保持 model、user 或 host-owned？
 
-## Success Metrics
+## 成功指标
 
-- A new technical reader can explain LoopX in one paragraph.
-- Each major control-plane packet can be traced through the four semantic
-  slots.
-- Focused pytest coverage grows while large smoke files shrink.
-- Public docs and course material use the same loop vocabulary.
-- Existing CLI output budgets and public compatibility contracts remain green.
-- At least one M7 vertical slice deletes an old command/settlement source and
-  passes retry, partial-failure, permission, cancellation, and budget tests.
-- Shared runtime protocol code exists only after two real callers use it.
+- 新技术读者能用一段话解释 LoopX。
+- 每个主要控制面 packet 都能穿过四个语义槽追踪。
+- Focused pytest coverage 增长，大型 smoke files 缩小。
+- 公开文档和课程材料使用同一套 loop 词汇。
+- 现有 CLI output budgets 和 public compatibility contracts 保持绿色。
+- 至少一个 M7 vertical slice 删除旧 command/settlement source，并通过 retry、partial-failure、permission、cancellation 和 budget 测试。
+- 只有在两个真实 caller 使用它之后，共享 runtime protocol code 才存在。
 
-## Conclusion
+## 结论
 
-LoopX harness is not "a set of state machines". It is the effectful program
-and effect interpreter around a long-running agent loop. This RFC makes that
-story explicit and gives the refactor and test work a stable target.
+LoopX harness 不是 "一组状态机"。它是长程 agent loop 外围的 effectful program 和 effect interpreter。本 RFC 让这个故事显式化，并为重构和测试工作提供稳定目标。
 
-## References
+## 参考
 
 - 齐梦星空,
   [*主线一：Agent Loop 是 effectful program(1)*](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share).

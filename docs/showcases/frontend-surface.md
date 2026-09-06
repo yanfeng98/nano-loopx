@@ -1,68 +1,63 @@
-# Showcase Frontend Surface
+# 案例展示前端界面
 
-This note defines the first public-facing showcase surface that can consume
-`docs/showcases/showcase-catalog.json`. It is a product explanation surface,
-not the local operator dashboard.
+> [English](frontend-surface.md)
 
-The goal is to help a new user understand LoopX in one screen:
+这篇说明定义了第一个可以消费 `docs/showcases/showcase-catalog.json` 的公开案例展示界面。它是产品说明界面,不是本地操作者仪表盘。
 
-- Codex, Claude Code, Cursor, and similar tools execute agent loops.
-- LoopX keeps the long-running goal control plane visible across those
-  loops: gates, todos, ownership, safe fallback, run history, quota, and
-  evidence.
-- A case is useful only when it shows a reusable control-plane behavior, not
-  just that an agent did work.
+目标是在一个屏幕内帮助新用户理解 LoopX:
 
-## Source Of Truth
+- Codex、Claude Code、Cursor 及类似工具执行 agent Loop。
+- LoopX 让长程 goal 控制面在这些 Loop 之间保持可见:关卡、todos、所有权、安全兜底、运行历史、quota 与证据。
+- 只有展示可复用控制面行为的案例才有用,而不只是"agent 做了工作"。
 
-The frontend should read `showcase-catalog.json` instead of scraping Markdown.
-Case pages provide narrative context; the catalog provides renderable data.
+## 真相来源
 
-Use these catalog fields directly:
+前端应读取 `showcase-catalog.json`,而不是抓取 Markdown。案例页提供叙事语境;目录提供可渲染数据。
 
-| Field | Frontend Use |
+直接使用这些目录字段:
+
+| 字段 | 前端用途 |
 | --- | --- |
-| `id`, `date`, `title` | Stable card identity and sort key. |
-| `status` | Badge and rendering state. |
-| `case_page` | Link to the narrative source. |
-| `interactive_page` | Optional static HTML case artifact; use a hosted Pages link when present. |
-| `demo_command` | "Try the demo" command when available. |
-| `storyboard_path` | Link to a frontend-ready storyboard when a runnable demo is not available. |
-| `feedback_contract_path` | Link to feedback/source-status rules when a case includes user steering. |
-| `domain`, `audience`, `pattern_tags` | Filters and grouping. |
-| `headline` | Main card copy. |
-| `problem` | Situation before LoopX helped. |
-| `loopx_behavior` | Timeline or behavior list. |
-| `user_value` | Outcome in plain language. |
-| `evidence_boundary` | Redaction and claim boundary drawer. |
-| `frontend_card.visual_metaphor` | Suggested visual treatment. |
-| `frontend_card.primary_metric_hint` | Lightweight value signal for leaders/users, not implementation trivia. |
-| `frontend_card.badges` | Compact chips. |
-| `frontend_card.story_beats` | Backward-compatible field for the case detail evidence sequence. New copy should render it as evidence, not as author notes. |
-| `evidence_metrics` | Optional compact value metrics. Use outcome or boundary signals such as reviewable commits, user wait avoided, gated action prevented, compression range, or public evidence window. Do not use raw file counts, smoke counts, panel counts, or other implementation-surface trivia as the main proof. |
-| `workload_signal.efficiency_model` | Optional evidence panel for conservative baseline-vs-actual efficiency modeling. |
+| `id`、`date`、`title` | 稳定的卡片标识与排序键。 |
+| `status` | 徽标与渲染状态。 |
+| `case_page` | 链接到叙事来源。 |
+| `interactive_page` | 可选静态 HTML 案例工件;存在时使用托管 Pages 链接。 |
+| `demo_command` | 可用时的"试试 demo"命令。 |
+| `storyboard_path` | 无可运行 demo 时,链接到前端就绪的 storyboard。 |
+| `feedback_contract_path` | 案例包含用户引导时,链接到反馈/来源状态规则。 |
+| `domain`、`audience`、`pattern_tags` | 过滤与分组。 |
+| `headline` | 主卡片文案。 |
+| `problem` | LoopX 帮助之前的情形。 |
+| `loopx_behavior` | 时间线或行为列表。 |
+| `user_value` | 用白话表达的结果。 |
+| `evidence_boundary` | 脱敏与声明边界抽屉。 |
+| `frontend_card.visual_metaphor` | 建议的视觉处理方式。 |
+| `frontend_card.primary_metric_hint` | 面向负责人/用户的轻量价值信号,而非实现琐事。 |
+| `frontend_card.badges` | 紧凑芯片。 |
+| `frontend_card.story_beats` | 用于案例详情证据序列的向后兼容字段。新文案应把它渲染成证据,而不是作者注记。 |
+| `evidence_metrics` | 可选紧凑价值指标。使用结果或边界信号,例如可审查 commit、避免的用户等待、被阻止的关卡化动作、压缩区间或公开证据窗口。不要把原始文件数、smoke 数、面板数或其他实现界面琐事当作主要证明。 |
+| `workload_signal.efficiency_model` | 可选证据面板,用于保守基线-实际效率建模。 |
 
-## First Screen
+## 首屏
 
-The first screen should answer the recurring confusion: "Is this replacing
-Codex goal mode?"
+首屏应解答反复出现的困惑:"这是在取代 Codex goal mode 吗?"
 
-Use a compact comparison block:
+使用紧凑对比块:
 
-| Surface | Role |
+| 界面 | 角色 |
 | --- | --- |
-| Codex goal / automation / CLI loop | Executes bounded work inside an agent session or scheduled turn. |
-| LoopX | Preserves the lifetime-goal control plane across turns, tools, agents, gates, evidence, and quota. |
+| Codex goal / 自动化 / CLI Loop | 在 agent session 或调度的 Turn 内执行有界工作。 |
+| LoopX | 跨 Turns、工具、agents、关卡、证据与 quota 保存 lifetime-goal 控制面。 |
 
-Recommended headline stack for Chinese-first material:
+面向中文优先素材的推荐标题栈:
 
 ```text
 Always-on agent teams, governed by human judgment
 Gate-aware human-in-the-loop control plane
-让多个 agent 昼夜接力，把人的判断留在控制面。
+让多个 agent 昼夜接力,把人的判断留在控制面。
 ```
 
-Recommended English explanation:
+推荐的英文说明:
 
 ```text
 LoopX keeps goals, gates, todos, claims, scopes, safe fallback, run
@@ -70,106 +65,89 @@ history, quota, and evidence in one shared state layer: the gated route waits
 clearly, while independent safe side work can keep moving with evidence.
 ```
 
-## Case Card Model
+## 案例卡片模型
 
-Each case card should show:
+每个案例卡片应展示:
 
-- title;
-- status badge;
-- one-line headline;
-- pattern tags;
-- user value;
-- evidence boundary badge;
-- demo command only when `demo_command` is present.
+- 标题;
+- 状态徽标;
+- 一行头条;
+- 模式标签;
+- 用户价值;
+- 证据边界徽标;
+- 仅当 `demo_command` 存在时展示 demo 命令。
 
-When a case includes `workload_signal.efficiency_model`, render it as a
-separate evidence panel rather than burying it in prose. The panel should show:
+当案例包含 `workload_signal.efficiency_model` 时,把它渲染为独立证据面板,而不是埋在散文里。面板应展示:
 
-- public Git workload, such as commit count;
-- actual public evidence window;
-- conservative AI-coding-assisted baseline range;
-- single-engineer and small-team compression ranges;
-- claim boundary, especially whether the estimate is directional,
-  maturity-adjusted, and public-Git-only.
+- 公共 Git 工作量,例如 commit 数;
+- 实际公开证据窗口;
+- 保守 AI 编码辅助基线区间;
+- 单工程师与小型团队的压缩区间;
+- 声明边界,尤其是该估算是否方向性、按成熟度调整、且仅基于公共 Git。
 
-Do not present this as a universal benchmark. It is a case-specific evidence
-model that helps readers understand why the self-iteration case is more than
-"an agent wrote files."
+不要把它当作通用基准。它是案例特定的证据模型,帮助读者理解自我迭代案例不只是"一个 agent 写了文件"。
 
-The polished mock should also expose lightweight catalog controls:
+打磨后的 mock 还应暴露轻量目录控件:
 
-- a segmented status filter generated from the catalog's `status` values;
-- a search input over title, headline, domain, audience, tags, behavior,
-  user value, and evidence boundary;
-- a visible result count so the surface feels like a product view rather than
-  a static README excerpt.
+- 由目录 `status` 值生成的分段状态过滤器;
+- 一个覆盖标题、头条、领域、受众、标签、行为、用户价值与证据边界的搜索输入;
+- 可见的结果计数,让界面感觉像产品视图,而不是静态 README 摘录。
 
-Do not render raw run logs, screenshots, private chat excerpts, task ids, or
-internal document links. A public case card should feel like a reusable product
-pattern, not a transcript.
+不要渲染原始运行日志、截图、私有聊天摘录、任务 id 或内部文档链接。公开案例卡片应感觉像可复用产品模式,而不是一段转录。
 
-## Detail Story Model
+## 详情故事模型
 
-A case detail view should be a compact evidence sequence:
+案例详情视图应是紧凑的证据序列:
 
-1. **Trigger**: what made the long-running goal hard to manage.
-2. **Visible State**: which LoopX objects made the situation explicit.
-3. **Agent Move**: what bounded action remained safe.
-4. **Human Role**: what the user did or did not need to decide.
-5. **Evidence**: what public-safe validation supports the case.
+1. **触发**:什么让长程 goal 难以管理。
+2. **可见状态**:哪些 LoopX 对象让情形变得明确。
+3. **Agent 动作**:哪个有界动作保持安全。
+4. **人类角色**:用户做了什么、或不需要决定什么。
+5. **证据**:哪些公开安全验证支撑该案例。
 
-For `redacted_stub_pending_contributor_details`, show the missing evidence
-plainly. Do not fill the gap with speculative claims.
-For `public_safe_interactive_case`, prefer the `interactive_page` artifact as
-the frontstage CTA, while keeping `case_page` as the companion narrative and
-evidence-boundary note.
+对于 `redacted_stub_pending_contributor_details`,坦率地展示缺失的证据。不要用推测性声明填补缺口。
+对于 `public_safe_interactive_case`,优先把 `interactive_page` 工件当作前场 CTA,同时保留 `case_page` 作为配套叙事与证据边界说明。
 
-## Status Rendering
+## 状态渲染
 
-| Status | Badge | Behavior |
+| 状态 | 徽标 | 行为 |
 | --- | --- | --- |
-| `reproducible_synthetic_demo` | Reproducible | Show demo command and link to synthetic fixture. |
-| `public_evidence_case` | Public evidence | Show Git/doc/smoke-backed evidence summary. |
-| `redacted_stub_pending_contributor_details` | Redacted stub | Show the pattern and missing public evidence. |
-| `public_safe_case_spec` | Case spec | Show narrative, storyboard, and feedback contract links when present. |
-| `public_safe_interactive_case` | Interactive case | Link the hosted HTML artifact and keep the evidence boundary visible. |
+| `reproducible_synthetic_demo` | 可复现 | 展示 demo 命令并链接到合成 fixture。 |
+| `public_evidence_case` | 公开证据 | 展示有 Git/文档/smoke 支撑的证据摘要。 |
+| `redacted_stub_pending_contributor_details` | 脱敏 stub | 展示模式与缺失的公开证据。 |
+| `public_safe_case_spec` | 案例规格 | 存在时展示叙事、storyboard 与反馈契约链接。 |
+| `public_safe_interactive_case` | 交互式案例 | 链接托管 HTML 工件,并保持证据边界可见。 |
 
-New statuses should be added to the catalog smoke before they appear in the
-website.
+新状态应先加入目录 smoke,再出现在网站上。
 
-## Public Boundary
+## 公共边界
 
-The showcase frontend may include:
+案例展示前端可以包含:
 
-- sanitized domain labels;
-- reusable control-plane patterns;
-- synthetic demos;
-- compact public Git evidence;
-- explicit evidence boundaries.
+- 脱敏的领域标签;
+- 可复用的控制面模式;
+- 合成 demo;
+- 紧凑的公共 Git 证据;
+- 明确的证据边界。
 
-It must not include:
+它不得包含:
 
-- raw screenshots from internal tools;
-- private document, wiki, or chat links;
-- raw benchmark task text, trajectories, logs, verifier tails, or task ids;
-- credentials, auth material, or local filesystem paths;
-- unpublished project artifacts or user-specific active state.
+- 内部工具的原始截图;
+- 私有文档、wiki 或聊天链接;
+- 原始基准任务文本、轨迹、日志、verifier 尾部或任务 id;
+- 凭据、认证材料或本地文件系统路径;
+- 未公开的项目工件或用户特定的 active state。
 
-## First Implementation Slice
+## 首个实现切片
 
-The first implementation should be static and catalog-driven:
+首个实现应是静态的、目录驱动的:
 
-1. Load `showcase-catalog.json`.
-2. Validate the known `schema_version`.
-3. Render the comparison block, filter/search controls, case grid, and detail
-   story from catalog fields.
-4. Link back to Markdown case pages, or to hosted static HTML when `interactive_page` is present.
-5. Use `docs/assets/control-plane-board.svg` as the first shared visual asset.
-6. Use `examples/showcase-frontstage-prototype.py` as the no-build static
-   prototype until a real frontend app exists.
-7. Run `python3 examples/showcase-catalog-smoke.py`,
-   `python3 examples/showcase-frontstage-prototype-smoke.py`, and
-   `loopx check --scan-path docs/showcases --scan-path docs/assets`.
+1. 加载 `showcase-catalog.json`。
+2. 验证已知的 `schema_version`。
+3. 从目录字段渲染对比块、过滤/搜索控件、案例网格与详情故事。
+4. 链接回 Markdown 案例页,或在 `interactive_page` 存在时链接到托管静态 HTML。
+5. 把 `docs/assets/control-plane-board.svg` 用作第一个共享视觉资产。
+6. 在真实前端应用存在之前,把 `examples/showcase-frontstage-prototype.py` 用作无构建静态原型。
+7. 运行 `python3 examples/showcase-catalog-smoke.py`、`python3 examples/showcase-frontstage-prototype-smoke.py` 与 `loopx check --scan-path docs/showcases --scan-path docs/assets`。
 
-This keeps the marketing surface honest: if a case is not in the catalog, it
-does not appear on the public showcase frontend.
+这让营销界面保持诚实:如果案例不在目录中,它就不会出现在公共案例展示前端上。

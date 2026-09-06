@@ -1,19 +1,18 @@
-# Effect Interpreter Packet
+# Effect 解释器 Packet
 
-This page documents the canonical read lens for `quota should-run`:
+> [English](effect-interpreter-packet.md)
+
+本页记录 `quota should-run` 的标准读取视角:
 
 ```text
 effect_request -> interpretation -> observation -> next_effect
 ```
 
-It does not add a new runtime contract. It names the existing packet fields
-that already play each role.
+它不增加新的 runtime 合同。它只是命名已经扮演各角色的现有 packet 字段。
 
-## Code Lens
+## 代码透镜
 
-`loopx.control_plane.effect_program.interpret_quota_should_run_packet` maps an
-existing `quota should-run` packet onto the canonical slots, and
-`interpret_turn_result_packet` maps an existing `loopx_turn_result_v0` packet:
+`loopx.control_plane.effect_program.interpret_quota_should_run_packet` 把现有的 `quota should-run` packet 映射到标准槽位,`interpret_turn_result_packet` 把现有的 `loopx_turn_result_v0` packet 映射到标准槽位:
 
 - `EffectRequest`
 - `EffectInterpretation`
@@ -21,34 +20,17 @@ existing `quota should-run` packet onto the canonical slots, and
 - `EffectNext`
 - `EffectTurn`
 
-Both functions are intentionally read-only. They do not replace quota
-decision or turn-settlement logic; they give refactor and test code one
-stable abstraction for reading the effect program shape across packet
-families.
+两个函数都刻意保持只读。它们不替代配额决策或 Turn 结算逻辑;它们给重构与测试代码提供一个稳定的抽象,用于跨 packet 族读取 effect program 形状。
 
-## Turn Journal Lens
+## Turn Journal 透镜
 
-`interpret_turn_journal` reads an existing fenced Turn journal and returns an
-`EffectTurn`. It compares goal, agent owner, and Turn-key identity across the
-journal, stored plan, typed settlement identity, host result, and receipt. It
-also validates that completed phases are an ordered transaction prefix and
-exposes retained `committed`, `stopped`, and `failed` journal tombstones.
+`interpret_turn_journal` 读取现有的 fenced Turn journal,并返回一个 `EffectTurn`。它跨 journal、已存储 plan、typed 结算标识、host 结果与 receipt,比较 Goal、Agent owner 与 Turn-key 身份。它还验证已完成的 phase 是有序事务前缀,并暴露保留的 `committed`、`stopped` 与 `failed` journal tombstone。
 
-`request.context.replay_legal` is only the effect-free terminal replay signal. Identity,
-phase-order, and terminal-status failures appear together as stable typed
-violation values in `request.context.violations`; semantic mismatches return a
-blocked observation instead of raising an exception.
+`request.context.replay_legal` 只是无 effect 的终态重放信号。身份、phase 顺序与终态失败会作为稳定的 typed 违规值一起出现在 `request.context.violations` 中;语义不匹配返回被阻断的 observation,而不是抛出异常。
 
-`EffectObservation.should_run` remains false and `EffectNext` remains empty, so
-inspection itself never grants effect authority. The same interpreter also
-projects `recovery_decision`, which is the executor's recovery plan: its action,
-whether continuation is allowed, the phase to resume, whether Host must be
-invoked again, a typed reason, and only the checks that participated. The real
-Turn executor consumes that decision before continuing. `replay_legal=false`
-therefore does not mean that an `in_progress` or `scheduler_action_required`
-journal is unrecoverable.
+`EffectObservation.should_run` 保持为 false,`EffectNext` 保持为空,因此检查本身永远不会授予 effect 权限。同一解释器还投影 `recovery_decision`,即 executor 的恢复计划:其动作、是否允许继续、要恢复的 phase、Host 是否必须再次被调用、typed 原因,以及只包含参与过的检查。真正的 Turn executor 在继续之前消费该决策。因此 `replay_legal=false` 并不意味着 `in_progress` 或 `scheduler_action_required` journal 不可恢复。
 
-The public read-only consumer is:
+公开的只读消费入口是:
 
 ```bash
 loopx turn inspect-journal \
@@ -58,167 +40,115 @@ loopx turn inspect-journal \
   --format json
 ```
 
-Add `--retry-failed-turn` to evaluate the same explicit failed-Turn retry used
-by `turn run-once`. When the failed Host recorded `resume_session`, inspection
-performs the current read-only Session Binding check; without an explicit retry
-request, the decision reports `failed_retry_not_requested`.
+添加 `--retry-failed-turn` 以评估 `turn run-once` 使用的同一显式失败 Turn 重试。当失败的 Host 记录了 `resume_session` 时,检查会执行当前的只读 Session 绑定检查;没有显式重试请求时,决策报告 `failed_retry_not_requested`。
 
-It resolves only the canonical journal location. There is no arbitrary
-`--journal-path` input. The command validates selectors, takes the existing
-journal lock, schema-checks the stored JSON, and returns the versioned
-`loopx_turn_journal_inspection_v1` projection. Version 1 retains every v0 replay
-and integrity field and adds `journal_consistent`, `recovery_decision`, and the
-optional `last_recovery` audit. The audit contains only the adopted public-safe
-plan and its bounded actual status, completed phase ids, and Host-invocation
-boolean. It never contains Host logs, Session content, provider payloads, or
-paths.
+它只解析标准的 journal 位置。不存在任意的 `--journal-path` 输入。该命令验证选择器、获取现有 journal 锁、对存储的 JSON 做 schema 检查,并返回带版本号的 `loopx_turn_journal_inspection_v1` 投影。版本 1 保留所有 v0 重放与完整性字段,并新增 `journal_consistent`、`recovery_decision` 与可选的 `last_recovery` 审计。审计只包含采用的公开安全 plan、它的有界实际状态、已完成的 phase id 与 Host 调用布尔值。它永远不包含 Host 日志、Session 内容、provider payload 或路径。
 
-Journal consistency is fail-closed over the canonical typed settlement
-identity as well as Journal/envelope lineage and phase ordering. Settlement
-goal, agent, Turn instance, binding, and effect id must all validate and bind to
-the inspected Turn before the shared recovery decision can authorize any
-provider call. In the current Turn driver, the binding is the envelope's
-selected Todo (or adaptive primary Todo override); a different canonical Todo
-identity is still inconsistent and fails closed.
+Journal 一致性对标准 typed 结算身份以及 Journal/envelope 谱系与 phase 排序都是 fail-closed 的。在共享恢复决策可以授权任何 provider 调用之前,结算 Goal、Agent、Turn 实例、绑定与 effect id 都必须验证并绑定到被检查的 Turn。在当前 Turn driver 中,绑定是 envelope 的所选 Todo(或自适应主 Todo 覆盖);不同的标准 Todo 身份仍然不一致并 fail closed。
 
-JSON and Markdown render the same projection. They do not expose raw journal,
-plan, host-result, or receipt bodies; request context; capabilities;
-recommended actions; credentials; evidence; or resolved local paths. A
-successfully interpreted `replay_blocked` journal exits zero because replay
-legality and recoverability are separate diagnostic data. Invalid selectors,
-missing journals, malformed
-JSON, and unsupported schemas exit non-zero.
+JSON 与 Markdown 渲染同一投影。它们不暴露原始 journal、plan、host 结果或 receipt 主体;请求上下文;capability;推荐动作;凭据;证据;或解析后的本地路径。成功解释的 `replay_blocked` journal 以 0 退出,因为重放合法性与可恢复性是独立的诊断数据。无效选择器、缺失 journal、格式错误的 JSON 与不支持的 schema 以非零退出。
 
-## Canonical Example
+## 标准示例
 
-### 1. Effect Request
+### 1. Effect 请求
 
-The agent or host proposes the next bounded turn. The inputs include:
+Agent 或 host 提出下一个有界 Turn。输入包括:
 
 - `goal_id`
 - `agent_id`
 - `available_capabilities`
-- host surface and scheduler execution context
-- current host RRULE where relevant
+- host surface 与 scheduler 执行上下文
+- 适用时的当前 host RRULE
 
-### 2. Interpretation
+### 2. 解释
 
-The harness interprets the request through:
+harness 通过以下方式解释请求:
 
-| Packet field | Role |
+| Packet 字段 | 角色 |
 |---|---|
-| `work_lane_contract.lane` | Route: advancement, monitor, gate, or wait |
-| `work_lane_contract.obligation` | What the selected route must do |
-| `interaction_contract.mode` | The host-facing interaction mode |
-| `capability_gate.action` | Capability decision when a gate is present |
-| `scheduler_hint.cadence_class` | Timing decision for the next host wake |
+| `work_lane_contract.lane` | 路由:advancement、monitor、gate 或 wait |
+| `work_lane_contract.obligation` | 所选路由必须做什么 |
+| `interaction_contract.mode` | 面向 host 的交互模式 |
+| `capability_gate.action` | 存在 gate 时的 capability 决策 |
+| `scheduler_hint.cadence_class` | 下一次 host 唤醒的时序决策 |
 
 ### 3. Observation
 
-The decision is returned as:
+决策以如下形式返回:
 
-| Packet field | Role |
+| Packet 字段 | 角色 |
 |---|---|
-| `decision` | Run, skip, observe, or repair |
-| `should_run` | Whether compute is allowed |
-| `effective_action` | Machine-visible effective action |
-| `recommended_action` | Next concrete action text |
-| `action_portfolio` | Primary plus bounded typed fallbacks, when present |
-| `protocol_action_packet.summary` | Compact actor-facing summary |
+| `decision` | Run、skip、observe 或 repair |
+| `should_run` | 是否允许计算 |
+| `effective_action` | 机器可见的有效动作 |
+| `recommended_action` | 下一个具体动作文本 |
+| `action_portfolio` | 主动作加有界 typed 回退(存在时) |
+| `protocol_action_packet.summary` | 紧凑的面向 actor 的摘要 |
 
-`EffectTurn.observation.action_portfolio` is the canonical TypeScript-owned
-observation of this field. Python supplies only scope/capability-admitted todo
-rows; the TypeScript reducer validates identity, removes duplicates, bounds the
-list, and fixes the execution-failure trigger before the Turn envelope signs
-it.
+`EffectTurn.observation.action_portfolio` 是该字段的标准 TypeScript 归属 observation。Python 只提供作用域/capability 允许的 todo 行;TypeScript reducer 在 Turn envelope 签名之前验证身份、移除重复、限制列表大小并修正执行失败触发器。
 
-### 4. Next Effect
+### 4. 下一个 Effect
 
-The observation points back into the loop:
+observation 指回 Loop:
 
-| Packet field | Role |
+| Packet 字段 | 角色 |
 |---|---|
-| `interaction_contract.cli_channel.next_cli_actions` | Next CLI effects |
-| `execution_mode` | Execution strategy (`serial` / `parallel` / `interleaved`) for an ordered effect program |
-| `scheduler_hint.action` | Scheduler around decision |
-| `scheduler_hint.cadence_class` | Cadence for the next host wake |
+| `interaction_contract.cli_channel.next_cli_actions` | 下一个 CLI effect |
+| `execution_mode` | 有序 effect program 的执行策略(`serial` / `parallel` / `interleaved`) |
+| `scheduler_hint.action` | 调度器周边决策 |
+| `scheduler_hint.cadence_class` | 下一次 host 唤醒的节奏 |
 | `scheduler_hint.codex_app.ack_hint.cli_args` | Host ACK effect |
-| `scheduler_hint.codex_app.failure_hint.cli_args` | Host failure effect |
+| `scheduler_hint.codex_app.failure_hint.cli_args` | Host 失败 effect |
 
-`EffectTurn.next_effect` is the code lens for this slot. It keeps the
-data-encoded handler visible: the host invokes the CLI actions and settles
-success or failure through the ACK/failure hints instead of LoopX holding a
-callable across turns. `execution_mode` is the data-encoded strategy when the
-next effect is an ordered effect program; it defaults to `None` when the
-packet does not declare one.
+`EffectTurn.next_effect` 是该槽位的代码透镜。它保持数据编码的 handler 可见:host 调用 CLI 动作,并通过 ACK/失败 hint 结算成功或失败,而不是让 LoopX 跨 Turn 持有一个 callable。当下一个 effect 是有序 effect program 时,`execution_mode` 是数据编码的策略;当 packet 未声明时默认为 `None`。
 
-## Around Semantics
+## Around 语义
 
-`capability_gate`, `interaction_contract`, `work_lane_contract`, and
-`scheduler_hint` are around decisions over the canonical effect step, not
-separate feature modules:
+`capability_gate`、`interaction_contract`、`work_lane_contract` 与 `scheduler_hint` 是对标准 effect 步骤的 around 决策,而不是独立的特性模块:
 
-| Around layer | Can short-circuit | Can rewrite |
+| Around 层 | 可短路 | 可重写 |
 |---|---|---|
-| `capability_gate` | `ask_owner`, `repair_bridge`, `unsupported` | Repair todo and next CLI actions |
-| `interaction_contract` | `action_required`, `mode` | Primary/protocol action and notification |
-| `work_lane_contract` | Monitor/inbox preemption, `must_attempt_work=false` | Lane, obligation, `next_lane` |
-| `scheduler_hint` | Pause/delete heartbeat, no-spend quiet | RRULE, cadence, stateful backoff |
+| `capability_gate` | `ask_owner`、`repair_bridge`、`unsupported` | 修复 todo 与下一个 CLI 动作 |
+| `interaction_contract` | `action_required`、`mode` | 主/协议动作与通知 |
+| `work_lane_contract` | Monitor/inbox 抢占、`must_attempt_work=false` | Lane、obligation、`next_lane` |
+| `scheduler_hint` | 暂停/删除 heartbeat、无消耗静默 | RRULE、节奏、有状态退避 |
 
-The ordering and effect semantics are contracts. A capability gate must not be
-collapsed into a generic exception handler: `owner_missing`,
-`repair_missing`, and `decision_owner` stay visible because `ask_owner` and
-`repair_bridge` lead to different next effects.
+顺序与 effect 语义是合同。capability gate 不能被折叠为通用异常处理器:`owner_missing`、`repair_missing` 与 `decision_owner` 必须保持可见,因为 `ask_owner` 与 `repair_bridge` 会导向不同的下一个 effect。
 
-A CLI packet is a higher-density effect than a single tool call: one command
-can carry permission, budget, validation, execution, failure semantics, ACK,
-and writeback. Vendor serial or interleaved tool APIs are execution modes
-inside the interpreter, not new state machines.
+CLI packet 是比单个工具调用密度更高的 effect:一条命令可以携带权限、预算、验证、执行、失败语义、ACK 与写回。vendor 的串行或交错工具 API 是解释器内部的执行模式,而不是新的状态机。
 
-## Ordered Effect Program
+## 有序 Effect Program
 
-`loopx.control_plane.effect_program.effect_program_from_ordered_steps` maps an
-existing `guided_transaction.ordered_steps` value onto `EffectProgram`:
+`loopx.control_plane.effect_program.effect_program_from_ordered_steps` 把现有的 `guided_transaction.ordered_steps` 值映射到 `EffectProgram`:
 
-- `EffectStep` keeps `step_id`, `kind`, `command`, and `purpose`;
-- `EffectProgram` keeps ordered steps and an optional `execution_mode`.
+- `EffectStep` 保留 `step_id`、`kind`、`command` 与 `purpose`;
+- `EffectProgram` 保留有序步骤与可选的 `execution_mode`。
 
-This is still a read-only lens. The executor remains host-driven until a
-LoopX runtime caller owns multi-step execution.
+这仍然是只读透镜。在 LoopX runtime 调用方拥有多步执行之前,executor 保持 host 驱动。
 
-## Terminal Closeout Ordering
+## 终态收尾顺序
 
-The settlement plan keeps final Goal closure distinct from ordinary Todo
-continuation. Its ordered contract is:
+结算 plan 把最终 Goal 收尾与普通 Todo 延续区分开来。其有序合同是:
 
 ```text
 validation -> durable_writeback -> quota_spend -> terminal_closeout?
 ```
 
-`terminal_closeout` is conditional: it is present only when the validated
-completion declares `no_followup`. Ordinary successor completion remains a
-Todo-lifecycle action and does not pretend to be a terminal settlement step.
-The final closeout must prove the same effect identity and matching writeback
-and spend receipts before it may make the Goal terminal.
+`terminal_closeout` 是有条件的:仅当已验证的完成声明 `no_followup` 时才存在。普通后继完成仍然是 Todo 生命周期动作,不会假装是终态结算步骤。最终收尾必须证明相同的 effect 身份以及匹配的写回与消耗 receipt,之后才能使 Goal 进入终态。
 
-This order is deliberate. Completing the final Todo first would make strict
-terminal guards reject the spend that accounts for the same material effect.
-The repair is not an after-terminal spend exception: terminal state remains
-strict, and the closeout moves after spend. If closeout fails, its journaled
-receipt may be retried without repeating writeback or spend. Scheduler apply
-and ACK remain host handoffs outside this settlement chain.
+这一顺序是刻意为之。先完成最终 Todo 会使严格的终态守卫拒绝为同一实质 effect 记账的消耗。修补不是终态之后的消耗例外:终态仍然严格,收尾移动到消耗之后。如果收尾失败,其已记录到 journal 的 receipt 可以重试,而不必重复写回或消耗。Scheduler apply 与 ACK 仍是本结算链之外的 host 交接。
 
-## Relationship To State Machines
+## 与状态机的关系
 
-Each state family is an interpretation table over this lens:
+每个状态族都是该透镜上的一个解释表:
 
 ```text
 input effect -> interpreter -> decision -> observation -> next effect
 ```
 
-See the
+参见
 [Agent Loop Effect Interpreter RFC](../architecture/rfcs/agent-loop-effect-interpreter-v0.md)
-and
-[Harness Is the Effectful Program](../development/control-plane-course/01-agent-loop-effectful-program.md).
-The public framing comes from 齐梦星空,
-[主线一：Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share).
+与
+[Harness 是 effectful Program](../development/control-plane-course/01-agent-loop-effectful-program.md)。
+公开框架来自齐梦星空,
+[主线一:Agent Loop 是 effectful program(1)](https://www.xiaohongshu.com/discovery/item/6a01d501000000003700c5de?source=webshare&xhsshare=pc_web&xsec_token=ABqpNuladcxhev099wLKw8M3ilhKBua0BQXNpxnBZEGkc=&xsec_source=pc_share)。

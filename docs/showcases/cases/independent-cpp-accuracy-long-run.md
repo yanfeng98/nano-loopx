@@ -1,57 +1,39 @@
-# Independent user: 13+ hour C++ algorithm accuracy run
+# 独立用户:13+ 小时的 C++ 算法精度运行
 
-> **Case type:** Independent user
+> [English](independent-cpp-accuracy-long-run.md)
+
+> **案例类型:** 独立用户
 >
-> **Evidence strength:** Owner-approved user report with one public method reference
-> **Runtime / scale:** More than 13 hours; one long-running agent reported
+> **证据强度:** 所有者批准的用户报告,含一个公开方法引用
+> **运行时长 / 规模:** 超过 13 小时;报告了一个长程 agent
 
-## Scenario And Problem
+## 场景与问题
 
-An independent user used LoopX on a complex C++ algorithm accuracy problem. The
-reported failure mode was not simply that the code was hard to read: a long
-execution could drift into local parameter tuning, lose the original accuracy
-goal, and repeatedly compress away useful context about call relationships.
+一位独立用户在一个复杂的 C++ 算法精度问题上使用了 LoopX。报告出的失败模式不只是代码难读:一次长执行可能漂移到本地参数调优,丢失原始精度目标,并反复压缩掉关于调用关系的有用上下文。
 
-## How LoopX Ran
+## 运行方式
 
-LoopX kept the multi-stage task aligned to the declared vision for more than 13
-hours. When the current route no longer appeared able to satisfy that vision,
-replan prompted public research instead of more local thrashing. The run then
-selected the public
-[`codebase-memory-mcp`](https://github.com/DeusData/codebase-memory-mcp) project
-to help inspect C++ call and coupling relationships.
+LoopX 让这个多阶段任务在超过 13 小时的时间里与声明的愿景保持一致。当当前路线看起来不再能满足该愿景时,replan 触发的是公开研究,而不是更多的本地折腾。随后运行选择了公开的
+[`codebase-memory-mcp`](https://github.com/DeusData/codebase-memory-mcp) 项目来帮助检查 C++ 调用与耦合关系。
 
-## Human Intervention
+## 人类干预
 
-The user reported no parameter micromanagement or repeated local redirection
-during the multi-stage run. This is not a claim of zero human involvement in
-the surrounding project: the original goal and final assessment still came
-from the user.
+用户报告在多阶段运行期间没有参数微管理,也没有反复的本地改道。这不是声称周边项目零人类参与:原始 goal 与最终评估仍然来自用户。
 
-## Outcome
+## 结果
 
-The user reported a clear improvement in final precision, less context
-compression, and enough retained experiment evidence to understand why the
-final approach worked. The private project and its measurements are not
-available for independent reproduction, so the performance result remains a
-user-reported outcome.
+用户报告最终精度明显提升、上下文压缩减少,并保留了足够的实验证据来理解最终方案为什么有效。私有项目及其测量值无法独立复现,因此性能结果仍然是用户报告的结果。
 
-## Evidence
+## 证据
 
-![Authorized user feedback reporting a LoopX C++ algorithm run lasting more than 13 hours with improved precision and retained evidence](../../assets/showcases/user-feedback/cpp-accuracy-13h-user-report.jpg)
+![经批准的用户反馈:一次持续超过 13 小时、精度提升且保留证据的 LoopX C++ 算法运行](../../assets/showcases/user-feedback/cpp-accuracy-13h-user-report.jpg)
 
-*Source: an owner-approved message excerpt from the LoopX public Lark developer
-group. Runtime and outcome are user-reported.*
+*来源:来自 LoopX 公共 Lark 开发者群、经所有者批准的消息摘录。运行时长与结果是用户报告的。*
 
-![Authorized follow-up explaining that LoopX replan triggered public research and found a code-memory MCP](../../assets/showcases/user-feedback/cpp-accuracy-public-research-user-report.jpg)
+![经批准的后续说明:LoopX replan 触发公开研究并发现了 code-memory MCP](../../assets/showcases/user-feedback/cpp-accuracy-public-research-user-report.jpg)
 
-*Source: an owner-approved follow-up message excerpt from the same LoopX public
-Lark developer group, describing the public-research transition.*
+*来源:来自同一个 LoopX 公共 Lark 开发者群、经所有者批准的后续消息摘录,描述公开研究的转变。*
 
-## Evidence Boundary
+## 证据边界
 
-The screenshots are owner-approved message excerpts from the LoopX public Lark
-developer group and are stored as local repository assets. The project
-repository, raw run state, prompts, experiment data, and performance
-measurements remain private. The MCP repository is public and independently
-inspectable; it does not independently prove the reported precision gain.
+截图是来自 LoopX 公共 Lark 开发者群、经所有者批准的消息摘录,作为本地仓库资产保存。项目仓库、原始运行状态、提示词、实验数据和性能测量仍然私有。MCP 仓库公开且可独立检查;它并不独立证明所报告的精度提升。

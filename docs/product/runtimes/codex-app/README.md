@@ -1,6 +1,8 @@
 # Codex App
 
-- [Control-plane hook/cache experiment](codex-app-control-plane-hook-cache.md)
+> [English](README.md)
 
-The stable host command contract remains under
-[`docs/reference/protocols/`](../../../reference/protocols/codex-app-host-command-registry-v0.md).
+- [控制面 hook/缓存实验](codex-app-control-plane-hook-cache.md)
+
+稳定的 host 命令契约位于
+[`docs/reference/protocols/`](../../../reference/protocols/codex-app-host-command-registry-v0.md)。

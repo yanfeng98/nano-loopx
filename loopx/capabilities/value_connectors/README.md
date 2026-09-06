@@ -1,35 +1,35 @@
-# Value Connectors
+# Value Connectors 能力介绍
 
-Value connectors turn external channels into reusable LoopX control-plane
-inputs. The first shipped path focuses on public GitHub metadata because it is
-useful immediately, does not require private data, and can be run by users after
-installing LoopX locally.
+> [English](README.md)
 
-## Quick Start
+Value connectors 把外部渠道变成可复用的 LoopX 控制面输入。首条落地路径聚焦
+公开 GitHub 元数据,因为它立即可用、不要求私有数据,用户本地安装 LoopX 后即可
+运行。
 
-Install LoopX from the repository checkout:
+## 快速开始
+
+从仓库 checkout 安装 LoopX:
 
 ```bash
 python3 -m pip install -e .
 ```
 
-When you are testing directly from an uninstalled checkout, replace `loopx`
-below with `./scripts/loopx` so the command uses the checkout code instead of an
-older local release on `PATH`.
+从未安装的 checkout 直接测试时,把下文中的 `loopx` 换成 `./scripts/loopx`,
+让命令使用 checkout 代码,而不是 `PATH` 上旧的本地版本。
 
-Check connector starter availability:
+检查 connector 起步可用性:
 
 ```bash
 loopx value-connectors install-check --format json
 ```
 
-Give a newly connected agent the read-first connector source map:
+给新接入的 Agent 提供只读优先的 connector source map:
 
 ```bash
 loopx value-connectors source-map --format json
 ```
 
-Check the X/browser connector profile:
+检查 X/浏览器 connector profile:
 
 ```bash
 loopx value-connectors install-check \
@@ -37,7 +37,7 @@ loopx value-connectors install-check \
   --format json
 ```
 
-Probe a public GitHub issue or PR without network access:
+在无网络访问的情况下探测公开 GitHub issue 或 PR:
 
 ```bash
 loopx value-connectors github-public-probe \
@@ -45,7 +45,7 @@ loopx value-connectors github-public-probe \
   --format json
 ```
 
-Probe body-free public metadata:
+探测无正文的公开元数据:
 
 ```bash
 loopx value-connectors github-public-probe \
@@ -54,7 +54,7 @@ loopx value-connectors github-public-probe \
   --format json
 ```
 
-Monitor whether a public maintainer replied after an approved LoopX comment:
+监控经批准的 LoopX 评论后公开维护者是否回复:
 
 ```bash
 loopx value-connectors github-reply-monitor \
@@ -64,71 +64,61 @@ loopx value-connectors github-reply-monitor \
   --format json
 ```
 
-The probe is intentionally metadata-only. It does not read issue bodies,
-comment bodies, timelines, raw provider payloads, auth material, or local paths,
-and it cannot post comments, send messages, create accounts, or publish.
-The reply monitor follows the same boundary: it only captures comment author,
-association, timestamp, and URL metadata, then emits either
-`prepare_public_triage_note` or `wait_no_bump`.
+该 probe 刻意只做元数据。它不读取 issue 正文、评论正文、时间线、原始 provider
+载荷、认证材料或本地路径,也不能发评论、发消息、开账号或发布。reply monitor
+遵循同样的边界:它只捕获评论作者、关联关系、时间戳与 URL 元数据,然后发出
+`prepare_public_triage_note` 或 `wait_no_bump`。
 
-## Ownership And Compatibility
+## 所有权与兼容性
 
-`value-connectors` is the compatibility facade for existing connector commands
-and packet schemas. It owns shared install checks, source mapping, and gated
-call planning, but it does not own new user outcomes. Each profile declares the
-outcome capability that serves callers; implementations move there one proven
-profile at a time while these CLI commands stay stable.
+`value-connectors` 是既有 connector 命令与 packet schema 的兼容门面。它拥有
+共享安装检查、信源映射与 gated 调用规划,但不拥有新的用户结果。每个 profile
+声明服务调用方的结果能力;实现随被验证的 profile 逐个迁移过去,而这里 CLI 命令
+保持稳定。
 
-The first completed migrations are the public GitHub probe/reply monitor and
-the `social_browser_x` profile. GitHub implementation and protocol ownership
-live under `issue-fix`; the social source, install, and content-ops trial
-contracts live under `content-ops`. Existing `loopx value-connectors ...`
-commands delegate to those providers.
+第一批完成的迁移是公开 GitHub probe/reply monitor 与 `social_browser_x` profile。
+GitHub 实现与协议所有权位于 `issue-fix` 之下;social 信源、安装与 content-ops
+试用契约位于 `content-ops` 之下。既有 `loopx value-connectors ...` 命令委托给
+那些 provider。
 
 ## Connector Profiles
 
-| Connector | Outcome capability | Binding | User can run now | External write behavior |
+| Connector | 结果能力 | 绑定 | 用户现在可运行 | 外部写入行为 |
 | --- | --- | --- | --- | --- |
-| `github_public_channel` | `issue-fix` | migrated | yes | none |
-| `github_public_reply_monitor` | `issue-fix` | migrated | yes | none |
-| `content_ops_public_handle` | `content-ops` | native | public-handle observation | none |
-| `social_browser_x` | `content-ops` | migrated | install-check, public-handle packet, and gated plan | exact profile/post/reply gate required |
-| `agent_reach_ops_source_map` | `content-ops` | mapped | `loopx value-connectors source-map --connector agent_reach_ops_source_map --format json`; [profile note](docs/agent-reach-ops-source-map.md) | publish/audit record required for every external write |
-| `finance_market_snapshot` | none | migrated to standalone extension | migration packet only; no Finance execution | none |
-| `botmail_identity` | `content-ops` | mapped | install-check only | exact send gate required |
-| `community_channel` | `content-ops` | mapped | install-check and plan | exact account/message gate required |
-| `community_discussion_public_sources` | `periodic-report` | extension package `loopx-community-discussion` | `loopx-community-discussion scan --owner <owner> --repo <repo> --format json` | none (digest delivery is a separate exact-gated external write) |
+| `github_public_channel` | `issue-fix` | migrated | 是 | 无 |
+| `github_public_reply_monitor` | `issue-fix` | migrated | 是 | 无 |
+| `content_ops_public_handle` | `content-ops` | native | public-handle 观测 | 无 |
+| `social_browser_x` | `content-ops` | migrated | install-check、public-handle packet 与 gated plan | 需要精确 profile/发布/回复 gate |
+| `agent_reach_ops_source_map` | `content-ops` | mapped | `loopx value-connectors source-map --connector agent_reach_ops_source_map --format json`; [profile 说明](docs/agent-reach-ops-source-map.md) | 每次外部写入都需要 publish/audit 记录 |
+| `finance_market_snapshot` | 无 | 迁移至独立 extension | 仅迁移 packet;无 Finance 执行 | 无 |
+| `botmail_identity` | `content-ops` | mapped | 仅 install-check | 需要精确发送 gate |
+| `community_channel` | `content-ops` | mapped | install-check 与 plan | 需要精确账号/消息 gate |
+| `community_discussion_public_sources` | `periodic-report` | extension 包 `loopx-community-discussion` | `loopx-community-discussion scan --owner <owner> --repo <repo> --format json` | 无(摘要投递是独立的精确 gated 外部写入) |
 
-`migrated` means the implementation module is owned by the outcome capability.
-`native` means the command already lived there. `mapped` records the intended
-owner without pretending that the implementation has moved.
+`migrated` 表示实现模块已由结果能力拥有。`native` 表示命令本来就位于那里。
+`mapped` 记录预期所有者,而不假装实现已经移动。
 
-`finance_market_snapshot` is retained only as an upgrade migration id. Its
-`source-map`, `install-check`, and legacy `plan --connector-id` packets point
-agents to the independently packaged `loopx-finance-value-discovery` extension
-and never perform Finance work. See the
-[migration packet](docs/finance-market-snapshot-probe.md). The old id must not be
-used for new integrations.
+`finance_market_snapshot` 仅被保留为升级迁移 id。它的 `source-map`、
+`install-check` 与旧式 `plan --connector-id` packets 会把 Agent 指向独立打包的
+`loopx-finance-value-discovery` extension,绝不执行 Finance 工作。参见
+[迁移 packet](docs/finance-market-snapshot-probe.md)。不得再把旧 id 用于新集成。
 
-## Why This Is Not Just A Plan
+## 为什么这不只是一个计划
 
-The `plan` command is the safety layer, but `github-public-probe` is a real
-starter connector. It lets a user convert public channel URLs into compact
-LoopX metadata and then decide whether to monitor, draft a reply, request
-approval, or stop.
+`plan` 命令是安全层,但 `github-public-probe` 是真实的起步 connector。它让用户把
+公开渠道 URL 转换为紧凑的 LoopX 元数据,再决定是否监控、起草回复、请求批准或
+停止。
 
-`social_browser_x` is intentionally one step more gated. It depends on
-ego-browser for a logged-in browser session, media uploads, profile maintenance,
-posting, and reply monitoring, but LoopX still owns the reusable control-plane
-packet:
+`social_browser_x` 有意多一层 gating。它依赖 ego-browser 提供已登录浏览器会话、
+媒体上传、profile 维护、发帖与回复监控,但 LoopX 仍拥有可复用的控制面 packet:
 
-- observe public handles as metadata-only source items;
-- plan account/profile work before touching the browser;
-- require exact approval for every public post, reply, image, link, and mention;
-- record a money, cost, demand, or capability metric plus a kill condition;
-- monitor replies as compact signals instead of copying raw timelines.
+- 把公开 handle 作为纯元数据信源条目观测;
+- 在触碰浏览器之前规划账号/profile 工作;
+- 对每次公开发帖、回复、图片、链接与提及要求精确批准;
+- 记录一个资金、成本、需求或能力指标,加上一个 kill 条件;
+- 把回复监控为紧凑信号,而不是复制原始时间线。
 
-Example X public-handle packet:
+X public-handle packet 示例:
 
 ```bash
 loopx content-ops observe-public-handle \
@@ -138,7 +128,7 @@ loopx content-ops observe-public-handle \
   --format json
 ```
 
-Example gated X publish plan:
+gated X 发布 plan 示例:
 
 ```bash
 loopx value-connectors plan \
@@ -155,37 +145,32 @@ loopx value-connectors plan \
   --format json
 ```
 
-Future connectors should follow the same sequence:
+未来 connectors 应遵循同样的序列:
 
 ```text
 install-check -> metadata probe -> value connector plan -> approval gate -> host connector execution
 ```
 
-LoopX owns the compact control packet and value metric. Host products or user
-connectors own account login, private reads, external sends, and production
-actions.
+LoopX 拥有紧凑控制 packet 与价值指标。宿主产品或用户 connectors 拥有账号登录、
+私有读取、外部发送与生产动作。
 
 ## Agent-Reach Ops Source Map
 
-`loopx value-connectors source-map --format json` gives a newly connected agent
-the current read-first connector catalog without requiring it to read internal
-docs. It includes implemented or field-proven source profiles such as public
-GitHub metadata probes, GitHub reply monitors, content-ops public handles,
-browser-backed X research, and Agent-Reach source routing. It also names
-action-gated profiles such as botmail and
-community replies so agents do not treat "can send" as "can freely read/write".
+`loopx value-connectors source-map --format json` 让新接入的 Agent 无需阅读内部
+文档即可拿到当前只读优先的 connector 目录。它包含已实现或经现场验证的信源
+profile,例如公开 GitHub 元数据 probe、GitHub 回复监控、content-ops public
+handles、浏览器类 X 研究,以及 Agent-Reach 信源路由。它还点名行动受限的 profile,
+如 botmail 与社区回复,以免 Agent 把"可以发送"当成"可以自由读写"。
 
-`agent_reach_ops_source_map` is one profile in that packet. Agent-Reach is used
-as a source router: first run `agent-reach doctor --json`, then collect
-read-only signals from available routes such as GitHub, public web/RSS, V2EX,
-or Bilibili. LoopX stores compact evidence cards, maturity scores, the ops
-brief, draft packet, publish/audit record, and monitor state.
+`agent_reach_ops_source_map` 是该 packet 中的一个 profile。Agent-Reach 被用作
+信源路由器:先运行 `agent-reach doctor --json`,再从 GitHub、公开 web/RSS、V2EX
+或 Bilibili 等可用路由收集只读信号。LoopX 存储紧凑 evidence cards、成熟度评分、
+ops brief、草稿 packet、publish/audit 记录与监控状态。
 
-This profile is intentionally source-first and action-gated. Broad posting
-discretion does not remove the need to record exact body, channel/account,
-time, source refs, and stop conditions. See the
-[Agent-Reach ops source-map profile](docs/agent-reach-ops-source-map.md).
+该 profile 刻意信源优先、行动受限。广泛发帖的酌情权并不免除记录精确正文、
+渠道/账号、时间、信源引用与停止条件的义务。参见
+[Agent-Reach ops source-map profile](docs/agent-reach-ops-source-map.md)。
 
-## Protocol
+## 协议
 
-See [`value_connector_plan_v0`](../../../docs/reference/protocols/value-connector-plan-v0.md).
+参见 [`value_connector_plan_v0`](../../../docs/reference/protocols/value-connector-plan-v0.md)。

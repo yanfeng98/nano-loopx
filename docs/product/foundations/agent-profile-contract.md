@@ -1,30 +1,25 @@
-# Agent Profile Contract
+# Agent 配置契约
 
-`agent_profile_v1` is an optional registry-owned description of a recurring
-LoopX peer. It gives prompt generation and task selection a compact capability
-and scope hint without assigning durable rank.
+> [English](agent-profile-contract.md)
 
-Every registered identity has the same runtime authority. Claims, task leases,
-goal/write boundaries, capability gates, typed continuation policy, and
-repository policy decide what a peer may do. A profile cannot make an agent the
-default leader, reviewer, merger, or owner of another peer's work.
+`agent_profile_v1` 是对周期性 LoopX 对等方的可选注册表专属描述。它给提示生成与任务选择提供一个紧凑的能力与范围提示,而不分配持久排名。
 
-## Layering
+每个注册身份拥有相同的运行时权威。Claim、任务租约、goal/写入边界、能力 gate、类型化延续策略与仓库策略决定对等方可做什么。配置不能让一个 agent 成为默认领导者、评审者、合并者或其他对等方工作的 owner。
 
-Keep these concepts separate:
+## 分层
 
-| Layer | Question answered | Source of truth |
+保持这些概念分离:
+
+| 层 | 回答的问题 | 真相源 |
 | --- | --- | --- |
-| `agent_profile_v1` | What work is this peer usually useful for? | `coordination.agent_profiles` |
-| `agent_member_v1` | What should status or a review packet show now? | Registry, quota, todos, and run history |
-| `claimed_by` / `task_lease_v0` | Who owns this exact todo? | Active-state todo metadata and lease records |
-| Task/repository policy | Does this task require isolation, review, or a merge gate? | Todo metadata, goal boundary, and repository policy |
+| `agent_profile_v1` | 这个对等方通常对什么工作有用? | `coordination.agent_profiles` |
+| `agent_member_v1` | 状态或评审包现在应展示什么? | 注册表、配额、todo 与运行历史 |
+| `claimed_by` / `task_lease_v0` | 谁拥有这个精确 todo? | Active 状态 todo 元数据与租约记录 |
+| 任务/仓库策略 | 此任务是否需要隔离、评审或合并 gate? | Todo 元数据、goal 边界与仓库策略 |
 
-Profile matching is advisory. It must not override a user gate, quota state,
-required capability, protected write scope, workspace guard, or another peer's
-claim or lease.
+配置匹配是建议性的。它不得覆盖用户 gate、配额 state、必需能力、受保护写入范围、工作区护栏或其他对等方的认领或租约。
 
-## Registry Shape
+## 注册表形态
 
 ```json
 {
@@ -55,8 +50,7 @@ claim or lease.
 }
 ```
 
-Profiles are written through the same validated registry path as other goal
-coordination settings:
+配置通过与其他 goal 协调设置相同的校验注册表路径写入:
 
 ```bash
 loopx configure-goal --goal-id <goal-id> \
@@ -64,27 +58,22 @@ loopx configure-goal --goal-id <goal-id> \
   --execute
 ```
 
-Use `--clear-agent-profile <agent-id>` to remove one profile. The command
-rejects unregistered peers, unknown fields, hierarchy roles, invalid task
-classes, and unsafe action-kind globs before writing the registry.
+用 `--clear-agent-profile <agent-id>` 移除一个配置。命令在写入注册表之前拒绝未注册对等方、未知字段、层级角色、无效任务类别与不安全 action-kind glob。
 
-`profile_role` is a human-readable functional label. It is advisory and must
-not use hierarchy labels such as `primary-agent` or `side-agent`.
+`profile_role` 是人类可读的功能标签。它是建议性的,不得使用 `primary-agent` 或 `side-agent` 等层级标签。
 
-Do not put these in a profile:
+不要把这些放进配置:
 
-- a parent, leader, or default reviewer identity;
-- identity-level merge permission;
-- identity-level workspace isolation rules;
-- an implicit handoff target.
+- 父级、领导者或默认评审者身份;
+- 身份级合并权限;
+- 身份级工作区隔离规则;
+- 隐式交接目标。
 
-Those rules vary by task and repository. Encoding them in identity recreates
-durable hierarchy and makes the same peer behave incorrectly when it changes
-tasks.
+这些规则随任务与仓库而异。把它们编码进身份会重建持久层级,并让同一对等方在换任务时行为错误。
 
-## Prompt Generation
+## 提示生成
 
-The common path resolves the registered profile automatically:
+通用路径自动解析已注册配置:
 
 ```bash
 loopx heartbeat-prompt --thin \
@@ -92,54 +81,38 @@ loopx heartbeat-prompt --thin \
   --agent-id codex-product
 ```
 
-The prompt may include the profile's scope summary, task classes, and action
-preferences. It still tells the peer to claim or lease work, follow the current
-task policy, and run `quota should-run` before delivery. `--agent-scope` remains
-an explicit temporary override for detached validation or one-off automation.
+提示可以包含配置的范围摘要、任务类别与动作偏好。它仍会告诉对等方认领或租约工作、遵循当前任务策略,并在交付前运行 `quota should-run`。`--agent-scope` 仍是用于分离校验或一次性自动化的显式临时覆盖。
 
-If profiles are configured and the requested registered peer has no profile,
-prompt generation may continue with peer identity only. Missing advisory
-metadata is not an authority failure.
+如果已配置配置,但请求的已注册对等方没有配置,提示生成可以只用对等方身份继续。缺失建议元数据不是权威失败。
 
-## Selection Rules
+## 选择规则
 
-Profile-backed selection may:
+配置支撑的选择可以:
 
-1. prefer current-agent claims, then unclaimed eligible todos;
-2. rank matching task classes or action kinds higher;
-3. avoid mismatched action kinds when another eligible peer or unclaimed task
-   is available;
-4. project a concrete reassignment request when only other-peer claims remain.
+1. 优先当前 agent 的认领,然后未认领的可执行 todo;
+2. 把匹配的任务类别或动作类型排得更高;
+3. 当有另一个可执行对等方或未认领任务可用时,避免不匹配的动作类型;
+4. 当只剩其他对等方认领时,投影一个具体的重新分配请求。
 
-The preference rank is applied inside the existing claim bucket. A current
-peer claim remains ahead of an unclaimed todo even when the unclaimed todo is a
-better profile match. An explicit active-next todo also keeps its existing
-route. Without a valid profile, candidate ordering is unchanged.
+偏好排名在现有认领桶内应用。当前对等方认领仍领先于未认领 todo,即使未认领 todo 是更好的配置匹配。显式的 active-next todo 也保持现有路由。没有有效配置时,候选排序不变。
 
-Selection must then enforce capability gates, task leases, workspace guards,
-write scope, and continuation policy. A profile preference never transfers a
-claim and never turns other-peer work into an executable candidate.
+选择随后必须执行能力 gate、任务租约、工作区护栏、写入范围与延续策略。配置偏好从不转移认领,也从不把其他对等方的工作变成可执行候选。
 
-## Workspace, Review, And Completion
+## 工作区、评审与完成
 
-Workspace isolation is derived from the selected task and repository policy.
-A repository-writing task may require an independent worktree for any peer;
-read-only and monitor-only tasks do not require isolation merely because of an
-identity label.
+工作区隔离从所选任务与仓库策略派生。一个写仓库的任务可能需要对任何对等方使用独立 worktree;只读与仅 monitor 的任务不因身份标签而需要隔离。
 
-Completion is also task-scoped:
+完成也是任务范围内的:
 
-- direct validated completion uses the repository's normal merge policy;
-- `independent_handoff` creates a non-blocking successor;
-- `same_agent_non_delivery` keeps a same-peer continuation.
+- 直接验证完成使用仓库的正常合并策略;
+- `independent_handoff` 创建非阻碍后继;
+- `same_agent_non_delivery` 保持同一对等方延续。
 
-Review is an `action_kind` over an ordinary independent handoff. No profile
-supplies an implicit reviewer; `excluded_agents` is available only when the
-task needs executor separation.
+评审是普通独立交接上的一个 `action_kind`。没有配置提供隐式评审者;`excluded_agents` 仅在任务需要执行者分离时可用。
 
-## Projection
+## 投影
 
-`agent_member_v1` is a read-only observation, not an authority record:
+`agent_member_v1` 是只读观察,不是权威记录:
 
 ```json
 {
@@ -154,21 +127,16 @@ task needs executor separation.
 }
 ```
 
-Dashboards may render this projection. Writes still go through LoopX todo,
-gate, lease, quota, reward, and refresh commands.
+Dashboard 可以渲染此投影。写入仍通过 LoopX todo、gate、租约、配额、reward 与 refresh 命令。
 
-## Migration
+## 迁移
 
-The v0.1-to-peer migration treats `agent_profile_v0` as legacy input. After the
-host updates its installed automation and acknowledges the stable migration id,
-LoopX atomically:
+v0.1 到对等方迁移把 `agent_profile_v0` 视为遗留输入。在 host 更新其已安装自动化并确认稳定迁移 id 后,LoopX 原子地:
 
-1. removes goal-level leader and default handoff fields;
-2. canonicalizes `registered_agents` to peer ids;
-3. upgrades profiles to `agent_profile_v1`;
-4. removes hierarchy roles plus identity-level workspace, review, and handoff
-   policy;
-5. records `completed_migrations.peer_agent_runtime_v1`.
+1. 移除 goal 级领导与默认交接字段;
+2. 把 `registered_agents` 规范化到对等方 id;
+3. 把配置升级为 `agent_profile_v1`;
+4. 移除层级角色加身份级工作区、评审与交接策略;
+5. 记录 `completed_migrations.peer_agent_runtime_v1`。
 
-The completion command is idempotent. Once the marker is written, quota does
-not ask for that migration again.
+完成命令是幂等的。一旦标记写入,配额不再要求该迁移。

@@ -1,60 +1,37 @@
-# LoopX Name And Marks
+# LoopX 名称与标识
 
-This is lightweight community guidance for using the LoopX name, logos, and
-other project identifiers. For practical examples aimed at open-source
-projects and commercial products, see the [Brand Guide For External Use](brand-guide.md).
-This page is not legal advice.
+> [English](trademarks.md)
 
-The repository does not claim that `LoopX` or its logos are registered
-trademarks in any jurisdiction, and this document does not determine a legal
-owner. Any future registration or ownership statement requires a separate,
-explicit decision by the relevant legal holder based on jurisdiction and
-actual use.
+这是关于使用 LoopX 名称、logos 与其他项目标识的轻量社区指引。面向开源项目与商业产品的实用示例见 [外部使用品牌指南](brand-guide.md)。本页不是法律建议。
 
-## Descriptive Use
+仓库不声称 `LoopX` 或其 logos 在任一司法管辖区是注册商标，本文档也不确定法定 owner。任何未来的注册或所有权声明都需要相关法律持有人基于司法管辖区与实际使用另行显式决策。
 
-You may use the LoopX name to identify the project accurately, including:
+## 描述性使用
 
-- discussing, reviewing, teaching, or criticizing LoopX;
-- saying that software works with, extends, or is built on LoopX;
-- describing a modified distribution as a fork of LoopX, while giving it a
-  distinct primary name;
-- linking to the official repository or showing an unmodified project mark to
-  identify the project in that link.
+您可以使用 LoopX 名称准确标识项目，包括：
 
-These uses should be truthful and should not imply sponsorship, certification,
-or endorsement by the LoopX project or its maintainers.
+- 讨论、评审、教学或批评 LoopX；
+- 说明软件与 LoopX 协作、扩展 LoopX 或构建于 LoopX；
+- 把修改版分发描述为 LoopX 的分叉，同时给它一个不同的主名称；
+- 链接到官方仓库，或展示未修改的项目标识以在该链接中识别项目。
 
-## Avoid Confusing Use
+这些使用应当真实，且不应暗示 LoopX 项目或其 maintainer 的赞助、认证或背书。
 
-Please do not use the LoopX name or marks:
+## 避免混淆性使用
 
-- as the primary name of an unrelated product, company, hosted service,
-  package, domain, or social account;
-- in a way that makes a modified distribution look like an official LoopX
-  release;
-- with terms such as "official", "certified", or "approved" without explicit
-  maintainer permission;
-- in a confusingly similar logo or visual identity that obscures who operates
-  or maintains the offering.
+请不要以以下方式使用 LoopX 名称或标识：
 
-Forks must retain the notices required by the applicable software license and
-may accurately state their relationship to LoopX. A materially modified
-distribution should use its own primary name and make the lack of official
-project endorsement clear.
+- 作为无关产品、公司、托管服务、包、域名或社交账号的主名称；
+- 以让修改版分发看起来像官方 LoopX 发布的方式；
+- 未经显式 maintainer 许可，搭配"official"、"certified"或"approved"等字眼；
+- 用与其混淆相似的 logo 或视觉身份，遮挡了运营或维护该提供的实体。
 
-## Copyright License And Project Identity
+分叉必须保留适用软件许可证要求的声明，并可以准确陈述与 LoopX 的关系。实质修改的分发应使用自己的主名称，并清楚表明没有官方项目背书。
 
-The [Apache License 2.0](../../LICENSE) grants copyright and patent permissions for
-the code and documentation subject to its terms. Historical MIT terms are
-preserved in [LICENSE-MIT](../../LICENSE-MIT). Neither software license grants
-permission to misrepresent the source of a distribution or imply project
-endorsement.
+## 版权许可与项目身份
 
-For a proposed use that may look official, open a GitHub issue before launch.
-Do not put credentials, private evidence, or embargoed security details in that
-issue. Ask a maintainer for a private contact path without including the
-sensitive details.
+[Apache License 2.0](../../LICENSE) 在其条款下授予代码与文档的版权与专利权益。历史 MIT 条款保留在 [LICENSE-MIT](../../LICENSE-MIT)。任一软件许可证都不授予错误陈述分发来源或暗示项目背书的权限。
 
-Changes to this guidance require maintainer review under
-[Governance](../../.github/GOVERNANCE.md).
+对于可能看似官方的提议用途，请在发布前开一个 GitHub issue。不要在该 issue 中放凭据、私有 evidence 或受限安全详情。向 maintainer 请求私有联系路径，而不要包含敏感详情。
+
+本指引的变更需要按 [Governance](../../.github/GOVERNANCE.md) 经 maintainer 评审。

@@ -1,118 +1,82 @@
-# Dreaming Exploration Lane
+# Dreaming 探索泳道
 
-LoopX should eventually support a separate dreaming / exploration lane
-for long-running projects. This lane is not the same as the project agent that
-is actively shipping work. Its job is to spend low-pressure background time on
-cross-run learning, option discovery, and refactor warnings.
+> [English](dreaming-exploration-lane.md)
 
-## Why This Exists
+LoopX 最终应当支持一条独立的 dreaming / 探索泳道，服务于长程项目。这条泳道与正在积极交付工作的 project agent 不是一回事。它的职责是在低压力的后台时间里做跨 run 学习、选项发现与 refactor 警告。
 
-Project agents are optimized for the current task:
+## 为什么存在
 
-- preserve local context,
-- execute the next bounded change,
-- avoid scope creep,
-- respect active worktree and delivery pressure.
+Project agent 针对当前任务做了优化：
 
-That makes them a poor fit for broad exploration. The same agent that is trying
-to land a fix should not also be asked to freely rethink architecture, search
-for alternatives, or propose large refactors. Those activities are valuable,
-but they need a separate lane with different permissions and output rules.
+- 保留本地上下文，
+- 执行下一个有边界的变更，
+- 避免范围蔓延，
+- 尊重活跃 worktree 与交付压力。
 
-Recent agent-platform and research signals point in the same direction:
+这让它们不适合做广泛探索。同一个正在落地修复的 agent 不应同时被要求自由地重新思考架构、寻找替代方案或提出大型 refactor。这些活动有价值，但它们需要一条拥有不同权限与输出规则的独立泳道。
 
-- Anthropic's Managed Agents dreaming feature frames dreaming as scheduled
-  review of previous sessions and memory stores, extracting patterns and
-  curating memory so agents improve between sessions.
-- Auto-Dreamer frames the same idea as offline memory consolidation: separate
-  fast per-session acquisition from slower cross-session abstraction, pruning,
-  and replacement.
-- Agent-memory surveys identify continual consolidation, trustworthy
-  reflection, learned forgetting, and privacy governance as open engineering
-  problems for autonomous agents.
+近期 agent 平台与研究的信号指向同一方向：
 
-LoopX should adopt the useful shape, not the hype: dreaming is a
-governed background lane for consolidation and proposals, not autonomous
-permission to rewrite project truth.
+- Anthropic 的 Managed Agents dreaming 功能把 dreaming 定义为对先前 session 与 memory store 的定时回顾，从中提取模式并整理 memory，让 agent 在 session 之间得到改善。
+- Auto-Dreamer 把同样的想法表达为离线 memory consolidation：把快速的单 session 采集与较慢的跨 session 抽象、裁剪与替换分开。
+- Agent-memory 综述把持续整合、可信反思、习得性遗忘与隐私治理列为自主 agent 的开放工程问题。
 
-## Priority
+LoopX 应当采纳有用的形态，而不是炒作：dreaming 是一条受治理的后台泳道，用于整合与提案，而不是改写项目 truth 的自主许可。
 
-Priority: **P1 after the operator gate and reward loop are stable**.
+## 优先级
 
-This lane should not block v0.1 bootstrap, registry sync, status contract,
-operator dashboard, or project-local refresh. It becomes important once several
-real projects are connected and LoopX has enough run history for
-cross-project learning to be useful.
+优先级：**在 operator gate 与 reward loop 稳定之后列为 P1**。
 
-## Role
+这条泳道不应阻塞 v0.1 bootstrap、registry sync、status 契约、operator dashboard 或项目本地刷新。当多个真实项目接入、LoopX 积累的 run 历史足以让跨项目学习产生价值时，它才变得重要。
 
-The dreaming / exploration agent can act as:
+## 角色
 
-- **Explorer**: search alternatives, compare designs, read adjacent docs,
-  inspect slow-moving background questions, and prepare options.
-- **Memory consolidator**: compress repeated run lessons into project-local
-  playbooks, proposed skill updates, or active-state suggestions.
-- **Refactor applicant**: identify when repeated local fixes suggest a larger
-  refactor, but file it as an application for review rather than making the
-  change directly.
-- **Warning agent**: flag risks that busy project agents may normalize away:
-  duplicated state, stale docs, unsafe public/private boundary drift,
-  recurring validation failures, or accumulating local-only glue.
+dreaming / 探索 agent 可以扮演：
 
-## Permissions
+- **Explorer（探索者）**：搜索替代方案、比较设计、阅读相邻文档、审视进展缓慢的背景问题，并准备选项。
+- **Memory consolidator（记忆整合者）**：把反复出现的 run 经验压缩为项目本地 playbook、建议的 skill 更新或活跃状态建议。
+- **Refactor applicant（重构申请者）**：识别反复出现的本地修复何时暗示更大的 refactor，但把它作为申请提交评审，而不是直接做出变更。
+- **Warning agent（警告 agent）**：标记忙碌 project agent 可能忽略掉的风险：重复状态、过期文档、不安全的 public/private 边界漂移、反复出现的验证失败，或不断累积的本地专用胶水。
 
-Default permissions are intentionally narrow:
+## 权限
 
-- read project state, run history, public docs, and explicit private local
-  state only when the owner project allows it;
-- do not mutate project files by default;
-- do not append human reward or controller opt-in;
-- do not rewrite active project truth without an operator gate;
-- never publish private evidence into public docs or examples.
+默认权限刻意收窄：
 
-The output of dreaming is a proposal, warning, or candidate patch plan. The
-operator or an eligible peer decides whether it becomes normal project work.
+- 读取项目状态、run 历史、公开文档，并且只有在 owner 项目允许时才读显式私有的本地状态；
+- 默认不修改项目文件；
+- 不追加 human reward 或 controller opt-in；
+- 未经 operator gate 不重写活跃项目 truth；
+- 绝不把私有 evidence 发布到公开文档或示例中。
 
-## Relationship To Replanning
+dreaming 的输出是提案、警告或候选 patch 方案。由 operator 或符合条件的 peer 决定它是否成为正常项目工作。
 
-Dreaming and autonomous replanning are control-plane planning lanes. They are
-allowed to repair the execution track, summarize cross-run patterns, and create
-reviewable options. They must not silently become the task policy that decides
-how the project agent solves the current implementation problem.
+## 与 Replan 的关系
 
-Use this boundary:
+Dreaming 与自主 replan 都是控制面规划泳道。它们可以修复执行轨道、总结跨 run 模式、创建可评审选项。它们不得悄悄变成决定 project agent 如何解决当前实现问题的任务策略。
 
-| Lane | Output authority | Typical output | Promotion path |
+使用这条边界：
+
+| 泳道 | 输出 authority | 典型输出 | 晋升路径 |
 | --- | --- | --- | --- |
-| Delivery agent policy | Executes within the current authorized boundary. | Implementation plan, debug strategy, validation choice, bounded patch. | Writes validated work events and active-state updates after delivery. |
-| Autonomous replan | Bounded control-plane obligation when execution is stuck or stale. | Split/retire/add todo, request blocker writeback, ask for operator decision, name next validation command and stop condition. | Writes control-plane state only after validation, or routes to user/controller gate. |
-| Dreaming / exploration | Advisory proposal by default. | Refactor warning, memory consolidation, option comparison, archive suggestion, risk note. | Enters operator/controller review before becoming normal delivery work or active project truth. |
+| Delivery agent policy（交付 agent 策略） | 在当前授权边界内执行。 | 实现方案、调试策略、验证选择、有边界 patch。 | 交付后写入已验证工作事件与活跃状态更新。 |
+| Autonomous replan（自主 replan） | 执行停滞或过期时的有界控制面义务。 | Split/retire/add todo、请求 blocker 写回、询问 operator 决策、命名下一个验证命令与停止条件。 | 只在验证后写入控制面状态，或路由到 user/controller gate。 |
+| Dreaming / exploration（dreaming / 探索） | 默认为建议性提案。 | Refactor 警告、memory consolidation、选项对比、归档建议、风险说明。 | 进入 operator/controller 评审，之后才能成为正常交付工作或活跃项目 truth。 |
 
-The question for any planning output is whether it is `authority` or
-`proposal`. Guard and freshness outputs can be authority-like control signals;
-dreaming outputs are proposals unless a later operator/controller decision
-promotes them. This keeps LoopX from becoming a second brittle agent
-while still letting it maintain the long-horizon execution track.
+任何规划输出的问题是：它是 `authority` 还是 `proposal`。Guard 与 freshness 输出可以像 authority 一样的控制信号；dreaming 输出是提案，除非后续 operator/controller 决策晋升它们。这让 LoopX 不会成为第二个脆弱的 agent，同时仍能维护长程执行轨道。
 
-For periodic autonomous replan, keep the ownership split explicit:
+对于周期性自主 replan，保持所有权划分清晰：
 
-| Layer | Responsibility |
+| 层 | 职责 |
 | --- | --- |
-| LoopX | Detect that a periodic review is due from compact run history, state freshness, quota, and boundary facts; emit the obligation, stop condition, and compact guidance vocabulary; record the later replan acknowledgement. |
-| Agent loop | Read the obligation during preflight, route the current turn into a bounded replan segment, inject current state into the model/executor, run validated todo writes, and spend only after writeback. |
-| Model / executor | Decide semantically which work to keep, split, add, retire, or escalate to a user/controller decision; explain the tradeoff and choose the next bounded slice. |
+| LoopX | 从紧凑 run 历史、状态新鲜度、quota 与边界事实检测周期评审到期；发出义务、停止条件与紧凑指导词表；记录后续 replan 确认。 |
+| Agent loop | 在 preflight 期间读取义务，把当前 Turn 路由进有边界的 replan 片段，向模型/执行器注入当前状态，运行经过验证的 todo 写入，并只在写回后 spend。 |
+| 模型 / 执行器 | 语义上决定保留、拆分、新增、退役哪些工作，或升级为 user/controller 决策；解释权衡并选择下一个有界切片。 |
 
-The v0 implementation may compute the periodic-review trigger synchronously in
-`status` / `quota` because that is deterministic control-plane projection. If
-the review becomes more expensive or semantic, move it to a server/dreaming
-planning lane as an advisory proposal. The server may run that proposal in
-parallel with delivery observation, but promotion and execution should remain
-client-serial through the normal agent loop, `quota should-run`, and
-goal-boundary checks.
+v0 实现可以在 `status` / `quota` 中同步计算周期评审触发器，因为那是确定性的控制面投影。如果评审变得更昂贵或更语义化，把它移到 server/dreaming 规划泳道作为建议性提案。Server 可以与交付观察并行运行该提案，但晋升与执行应通过正常 agent loop、`quota should-run` 与 goal-boundary 检查保持 client-serial。
 
-## Run Record Shape
+## Run Record 形态
 
-Dreaming runs should be visible but not mixed with delivery runs:
+Dreaming run 应可见，但不应与交付 run 混在一起：
 
 ```json
 {
@@ -131,32 +95,29 @@ Dreaming runs should be visible but not mixed with delivery runs:
 }
 ```
 
-Candidate classifications:
+候选分类：
 
 - `dreaming_exploration_proposal`
 - `dreaming_memory_consolidation`
 - `dreaming_refactor_warning`
 - `dreaming_archive_suggestion`
 
-These should normally enter `waiting_on=user_or_controller` with
-`operator_question`, not `waiting_on=codex`, because the lane is advisory by
-default.
+这些通常应以 `waiting_on=user_or_controller` 配合 `operator_question` 进入，而不是 `waiting_on=codex`，因为该泳道默认是建议性的。
 
-## UI Implication
+## UI 影响
 
-The dashboard should show dreaming output as a separate lane or badge:
+dashboard 应以独立泳道或徽章显示 dreaming 输出：
 
 ```text
 Goal
-  Operator gate: approve / reject / defer proposal
-  Delivery lane: latest project-agent run
-  Dreaming lane: refactor warning or memory consolidation proposal
+  Operator gate: 批准 / 拒绝 / 推迟提案
+  Delivery lane: 最新 project-agent run
+  Dreaming lane: refactor 警告或 memory consolidation 提案
 ```
 
-This keeps project-agent work clean while still giving the user a central place
-to review broader learning and refactor requests.
+这让 project-agent 工作保持干净，同时给用户一个集中评审更广泛学习与 refactor 请求的地方。
 
-`loopx status` should expose the proposal plus a compact lane badge:
+`loopx status` 应暴露提案加一个紧凑徽章：
 
 ```json
 {
@@ -184,39 +145,28 @@ to review broader learning and refactor requests.
 }
 ```
 
-The badge intentionally carries routing facts, not the full explanation. The
-full rationale stays in `dreaming_proposal` and the run artifact, while
-dashboards and heartbeat consumers can render a separate Dreaming lane without
-mistaking the advisory proposal for delivery work.
+徽章有意只携带路由事实，而不是完整说明。完整理由保留在 `dreaming_proposal` 与 run artifact 中，而 dashboard 与 heartbeat 消费方可以渲染独立 Dreaming 泳道，不会把建议性提案误认为交付工作。
 
-## First Implementation Slice
+## 首个实现切片
 
-The first useful slice is documentation and status schema, not an autonomous
-agent:
+第一个有用的切片是文档与 status schema，而不是自主 agent：
 
-1. Add public vocabulary for dreaming classifications and proposal fields.
-2. Let `loopx status` surface dreaming proposals as operator gates.
-3. Add a local-only command or script that reads recent run history and emits a
-   dry-run proposal without writing project files.
-4. Only after real proposals prove useful, add scheduled heartbeats or
-   automation.
+1. 为 dreaming 分类与提案字段添加公开词表。
+2. 让 `loopx status` 把 dreaming 提案呈现为 operator gates。
+3. 添加一个本地命令或脚本，读取近期 run 历史并输出 dry-run 提案，而不写项目文件。
+4. 只有在真实提案证明有用之后，才添加定时 heartbeat 或自动化。
 
-The local-only entry point is:
+本地入口点是：
 
 ```bash
 loopx dreaming dry-run --goal-id <goal-id> --limit 20
 ```
 
-This command reads compact run history through the selected registry/runtime
-root and returns an advisory `run_record_preview`. It does not append runtime
-history, mutate active state, grant an `agent_command`, or spend quota. The
-preview is meant for operator/controller review before any proposal is promoted
-into ordinary delivery work.
+该命令通过选定的 registry/runtime root 读取紧凑 run 历史，并返回一个建议性的 `run_record_preview`。它不追加 runtime 历史、不修改活跃状态、不授予 `agent_command`，也不 spend quota。该预览用于 operator/controller 评审，之后任何提案才会被晋升为普通交付工作。
 
-## Server-Managed Planning Semantics
+## Server 管理的规划语义
 
-A future LoopX server may schedule dreaming/planning work, but the
-server-owned lane keeps the same authority boundary as the CLI dry run:
+未来的 LoopX server 可以调度 dreaming/规划工作，但 server 拥有的泳道保持与 CLI dry run 相同的 authority 边界：
 
 ```json
 {
@@ -239,18 +189,11 @@ server-owned lane keeps the same authority boundary as the CLI dry run:
 }
 ```
 
-The server may rank candidate todos, propose evidence probes, and emit refactor
-or memory-consolidation warnings. It may not execute a protected action, read
-private material, mutate active state, append delivery history, or spend
-delivery quota until the proposal is promoted through the normal operator,
-quota, and goal-boundary path. This keeps dreaming useful for long-horizon
-product taste while preventing it from becoming a second hidden project agent.
+Server 可以排序候选 todos、提出 evidence probes、发出 refactor 或 memory-consolidation 警告。在提案通过正常 operator、quota 与 goal-boundary 路径被晋升之前，它不得执行受保护动作、读取私有资料、修改活跃状态、追加交付历史或 spend 交付配额。这让 dreaming 对长程产品品味有用，同时防止它成为第二个隐藏 project agent。
 
-Acceptance criterion: a project can receive a dreaming proposal without the
-project agent being interrupted, and the user can approve, reject, or defer it
-from LoopX.
+验收标准：一个项目可以在不打断 project agent 的情况下收到 dreaming 提案，并且用户可以从 LoopX 批准、拒绝或推迟它。
 
-## References
+## 参考
 
 - Anthropic, "New in Claude Managed Agents: dreaming, outcomes, and
   multiagent orchestration":

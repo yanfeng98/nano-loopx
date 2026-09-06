@@ -1,11 +1,12 @@
-# Integration Guide
+# 集成指南
 
-LoopX should be used as a shared local base, not copied into every
-project.
+> [English](integration.md)
 
-## Local Base
+LoopX 应作为共享本地基座使用，而不是复制进每个项目。
 
-Clone or symlink one copy:
+## 本地基座
+
+克隆或符号链接一份：
 
 ```bash
 git clone <repo-url> ~/loopx
@@ -13,45 +14,39 @@ git clone <repo-url> ~/loopx
 loopx doctor
 ```
 
-The installer publishes the current checkout as a local release snapshot and
-links that snapshot into `~/.local/bin/loopx`. It also installs a
-`loopx-canary` wrapper that points at the live checkout for selected
-gray-rollout goal controllers. This keeps default automations stable while
-allowing one canary goal to validate prompt/runtime changes before promotion.
-The installer adds the bin directory to the current shell profile when it is
-missing from `PATH`, and installs a snapshot of the `loopx-project` Codex
-skill into `~/.codex/skills` so future project agents use the same connection
-workflow. Use `loopx doctor` from any project folder to inspect the
-resolved command path, symlink target, release snapshot, canary wrapper,
-installed skill delivery-hint state, wrapper script, and Python import health.
+安装器把当前 checkout 发布为本地发布快照，并把该快照链接到 `~/.local/bin/loopx`。
+它还安装一个 `loopx-canary` wrapper，为选定的灰度上线 goal controller 指向活
+checkout。这让默认自动化保持稳定，同时允许一个 canary goal 在晋升前验证
+prompt/运行时变更。安装器在 bin 目录缺失于 `PATH` 时把其加入当前 shell profile，
+并在 `~/.codex/skills` 安装 `loopx-project` Codex skill 的快照，
+使未来项目 Agent 使用同一连接工作流。在任何项目文件夹用 `loopx doctor` 检查
+解析的命令路径、符号链接目标、发布快照、canary wrapper、已安装 skill 的
+delivery-hint 状态、wrapper 脚本与 Python 导入健康。
 
-## Global Skill Policy
+## 全局 Skill 策略
 
-LoopX product behavior belongs in installed global Codex skills, not in
-one repository's `AGENTS.md`. Keep the global skills narrow and versioned:
-they should teach LoopX connection, quota/state/todo writeback,
-self-repair, and generic product contracts such as todo succession. Project
-state, benchmark-specific choices, private material, and one-off operator
-decisions stay in the registry, active state, run history, or project docs.
-When a recurring behavior should improve every future worker, update the repo
-skill source and run `scripts/install-local.sh`; when it applies only to this
-repo's contribution hygiene, keep it in `AGENTS.md`.
+LoopX 产品行为属于已安装的全局 Codex skills，而不是某个仓库的 `AGENTS.md`。
+保持全局 skills 窄且版本化：它们应教 LoopX 连接、quota/state/todo writeback、
+自修复与 todo succession 等通用产品契约。项目状态、benchmark 特定选择、私有材料
+与一次性 operator 决策留在 registry、active state、run history 或项目文档。
+当一个循环行为应改进每个未来 worker 时，更新仓库 skill 源并运行
+`scripts/install-local.sh`；当它只适用于本仓库的贡献卫生时，留在 `AGENTS.md`。
 
-Gray rollout flow:
+灰度上线流程：
 
 ```bash
-# Generate a heartbeat body for a canary goal controller only.
+# 只为 canary goal controller 生成 heartbeat 任务体。
 loopx-canary heartbeat-prompt \
   --brief \
   --cli-bin loopx-canary \
   --goal-id <CANARY_GOAL_ID>
 
-# After canary observation looks healthy, promote the checkout to default.
+# canary 观察看起来健康后，把 checkout 晋升为默认。
 ~/loopx/scripts/install-local.sh
 loopx doctor
 ```
 
-Then projects can call:
+然后项目可以调用：
 
 ```bash
 loopx --registry <private-registry> registry
@@ -61,13 +56,11 @@ loopx --registry <private-registry> check --scan-root <project-root>
 loopx doctor
 ```
 
-## Lark Or Feishu Reply Cards
+## Lark 或飞书回复卡片
 
-Chat gateways that turn LoopX work into Lark or Feishu replies should keep
-message rendering separate from message sending.
-The implementation is owned by the explicitly enabled Lark extension under
-`loopx.extensions.lark.presentation.message_card`; core does not retain a
-compatibility import for provider-owned presentation code:
+把 LoopX 工作变成 Lark 或飞书回复的聊天网关应把消息渲染与消息发送分开。
+实现归显式启用的 Lark extension 所有：`loopx.extensions.lark.presentation.message_card`；
+核心不为 provider 拥有的展示代码保留兼容导入：
 
 ```python
 from loopx.extensions.lark.presentation.message_card import build_lark_markdown_reply_card
@@ -79,14 +72,13 @@ card = build_lark_markdown_reply_card(
 )
 ```
 
-The helper only builds JSON-compatible card content and extracts a reply
-`message_id` from CLI output. It does not call Lark, Feishu, or any external
-write API. A gateway can pass the returned payload to its own approved sender
-after the relevant LoopX gate permits the write.
+Helper 只构建 JSON 兼容卡片内容并从 CLI 输出提取回复 `message_id`。
+它不调用 Lark、飞书或任何外部写 API。网关可以在相关 LoopX gate 允许该写后，
+把返回 payload 传给自己的已批准发送器。
 
-## One-Command Project Connect
+## 一键项目连接
 
-For a new project, start with:
+对新项目，从以下开始：
 
 ```bash
 cd /path/to/project
@@ -96,13 +88,10 @@ loopx bootstrap \
   --goal-doc GOAL.md
 ```
 
-`loopx connect` is an alias for the same operation. The command is
-safe to rerun: by default it keeps an existing state file and existing registry
-entry. If the goal only needs an additional write boundary after connection,
-prefer the incremental migration path:
+`loopx connect` 是同一操作的别名。命令可安全重跑：默认它保留现有状态文件与现有
+registry 条目。如果目标在连接后只需要额外写边界，优先增量迁移路径：
 
-An integration provider that already qualified the project bridge can own the
-one-time connection check explicitly:
+已经验证项目 bridge 的集成 provider 可以显式拥有一站式连接检查：
 
 ```bash
 loopx connect \
@@ -111,12 +100,10 @@ loopx connect \
   --onboarding-connection-validation provider-prevalidated
 ```
 
-The default remains `agent`, which may create a `loopx check` onboarding Todo
-for generic adapters. `provider-prevalidated` records provider ownership in the
-registry and omits that agent Todo; it does not run validation, grant tools, or
-expand the provider's authority. Use it only when the caller has already
-validated the connection. Repository scanning and connection validation remain
-separate controls.
+默认保持 `agent`，它可能为通用 adapter 创建一个 `loopx check` onboarding Todo。
+`provider-prevalidated` 在 registry 记录 provider 归属并省略该 Agent Todo；
+它不运行验证、不授予工具、不扩大 provider 权威。只在调用方已验证连接时使用它。
+仓库扫描与连接验证仍是独立控制。
 
 ```bash
 loopx configure-goal \
@@ -125,19 +112,18 @@ loopx configure-goal \
   --execute
 ```
 
-Pass `--force` only when you intentionally want to replace the registry entry or
-active state. If you need a force reconnect but want to keep the current todo
-projection, add `--preserve-todos`.
+只在刻意想替换 registry 条目或 active state 时传 `--force`。
+如果需强制重连但想保留当前 todo 投影，加 `--preserve-todos`。
 
-The default files are:
+默认文件是：
 
 ```text
 .loopx/registry.json
 .codex/goals/<goal-id>/ACTIVE_GOAL_STATE.md
 ```
 
-The generated registry entry also includes an `execution_profile`. This is the
-source-level delivery contract for the project, not a one-off heartbeat hint:
+生成的 registry 条目还包含 `execution_profile`。这是项目的源码级 delivery 契约，
+不是一次性的 heartbeat 提示：
 
 ```json
 {
@@ -182,19 +168,17 @@ source-level delivery contract for the project, not a one-off heartbeat hint:
 }
 ```
 
-`loopx status`, `quota should-run`, and `review-packet --handoff-only`
-all read this same profile through `project_asset`. When recent follow-through
-keeps shrinking into test-only, single-surface, or unknown-scale runs, the
-handoff delivery contract is generated from the profile: the next agent must
-expand to the declared minimum scale with a real artifact, targeted validation,
-and state writeback, or report a blocker before spending quota. Override the
-profile only when a project has a deliberate different floor; do not patch
-automation prompts to compensate for a weak connection contract.
+`loopx status`、`quota should-run` 与 `review-packet --handoff-only`
+都通过 `project_asset` 读取同一 profile。当近期 follow-through 一直缩成
+test-only、single-surface 或 unknown-scale 运行，handoff delivery 契约从
+profile 生成：下一个 Agent 必须扩展到声明的最小 scale，
+带真实 artifact、目标验证与状态写回，或在花配额前报告 blocker。
+只在项目有刻意不同下限时才覆盖 profile；不要修补自动化提示来补偿薄连接契约。
 
-## Multiple Goals In One Repository
+## 一个仓库多个目标
 
-One repository may hold a main lane, a side bypass, and other independent goals
-at the same time. Connect each lane with a distinct stable `goal_id`:
+一个仓库可以同时持有一条主 lane、一条侧绕过与其他独立目标。
+用不同稳定 `goal_id` 连接每条 lane：
 
 ```bash
 cd /path/to/project
@@ -211,15 +195,13 @@ loopx connect \
   --adapter-status connected-read-only
 ```
 
-Both entries live in the same local `.loopx/registry.json`, but each goal
-must own its own ignored active state under
-`.codex/goals/<goal-id>/ACTIVE_GOAL_STATE.md`.
-Sharing the same `state_file` across two goal ids is treated as a registry
-health error because it lets one lane overwrite or summarize the other's state.
-Do not commit the live `ACTIVE_GOAL_STATE.md`; publish a sanitized template or
-compact projection instead when a public example is needed.
+两个条目住在同一本地 `.loopx/registry.json`，但每个目标必须在
+`.codex/goals/<goal-id>/ACTIVE_GOAL_STATE.md` 下拥有自己的忽略 active state。
+在两个目标 id 间共享同一 `state_file` 被视为 registry 健康错误，
+因为它让一条 lane 覆盖或摘要另一条的状态。不要提交活动
+`ACTIVE_GOAL_STATE.md`；需要公共示例时发布脱敏模板或紧凑投影。
 
-Use `--goal-id` on every status-changing command:
+在每个改状态的命令上使用 `--goal-id`：
 
 ```bash
 loopx read-only-map --goal-id main-control
@@ -227,23 +209,20 @@ loopx read-only-map --goal-id side-bypass --dry-run
 loopx quota should-run --goal-id side-bypass
 ```
 
-`read-only-map` is goal-aware for same-repo setups. In addition to the generic
-project inventory, it reports whether the selected goal has a local project
-registry, a `.codex/goals/<goal-id>/` state directory, and the declared active
-state file. A missing side-lane state directory produces
-`project_goal_state_dir_not_detected:<goal-id>` plus the legacy
-`project_local_goal_state_not_detected` risk, while a healthy main lane in the
-same repo does not mask that problem.
+`read-only-map` 对同仓库设置是 goal 感知的。除通用项目清单外，
+它还报告所选目标是否有本地项目 registry、`.codex/goals/<goal-id>/` 状态目录与
+声明的 active state 文件。缺失侧 lane 状态目录产生
+`project_goal_state_dir_not_detected:<goal-id>` 加遗留
+`project_local_goal_state_not_detected` 风险，而同仓库健康主 lane 不掩盖该问题。
 
-If `--goal-doc` is provided, the document path is recorded as a primary
-authority source. The receiving Codex should inspect that document first before
-choosing a next action.
+如果提供 `--goal-doc`，文档路径记录为主要权威来源。接收的 Codex 在选择下一个
+动作前应首先检查该文档。
 
-If another Codex session should perform the connection from a project folder
-and a goal document, use [new-project-codex-prompt.md](operations/new-project-codex-prompt.md)
-as the handoff prompt.
+如果另一个 Codex 会话应从项目文件夹与 goal 文档执行连接，
+用 [new-project-codex-prompt.md](operations/new-project-codex-prompt.md) 作为
+handoff 提示。
 
-You can generate that handoff prompt:
+你可以生成该 handoff 提示：
 
 ```bash
 loopx new-project-prompt \
@@ -251,135 +230,118 @@ loopx new-project-prompt \
   --goal-doc /path/to/project/GOAL.md
 ```
 
-If the connected project should later run through a recurring Codex App
-heartbeat, generate the heartbeat task body instead of hand-copying the quota
-guard and spend protocol:
+如果已连接项目之后应通过循环 Codex App heartbeat 运行，生成 heartbeat 任务体，
+而不是手抄 quota guard 与 spend 协议：
 
 ```bash
 loopx heartbeat-prompt \
   --goal-id project-goal
 ```
 
-For connected goals, omit `--active-state`; the CLI resolves the active state
-from the registry goal `state_file`. Keep `--active-state` only as an explicit
-override for detached state files, migration checks, or compatibility tests.
+对已连接目标省略 `--active-state`；CLI 从 registry goal `state_file` 解析
+active state。只把 `--active-state` 保留为分离状态文件、迁移检查或兼容测试的
+显式覆盖。
 
-For live Codex App automations, use the thin form as the local machine-default
-dispatcher when the target Codex agent can inspect LoopX state and CLI
-output itself:
+对即时 Codex App 自动化，当目标 Codex Agent 能自己检查 LoopX 状态与 CLI 输出时，
+用薄形式作为本地机器默认调度器：
 
 ```bash
 loopx heartbeat-prompt --thin \
   --goal-id project-goal
 ```
 
-Use the compact form after reviewing the full contract when the installed
-prompt should carry more lifecycle detail inline:
+在评审完整契约后、当已安装提示应内联更多生命周期细节时，用紧凑形式：
 
 ```bash
 loopx heartbeat-prompt --compact \
   --goal-id project-goal
 ```
 
-If an installed automation still needs to be smaller, use the brief body:
+如果已安装自动化仍需要更小，使用精简任务体：
 
 ```bash
 loopx heartbeat-prompt --brief \
   --goal-id project-goal
 ```
 
-Copy the generated task body into the heartbeat automation. The timer only
-wakes Codex; the task body asks LoopX whether the goal should spend
-delivery compute on that tick. The thin body keeps the Codex thread as a
-replaceable worker: every wakeup should re-read registry/global quota truth,
-active state, status/run history, repo state, and project signals instead of
-depending on a stale long prompt. The compact body preserves the quota, gate,
-blocker-push, recommendation, steering-audit, writeback, refresh, and spend
-lifecycle inline without copying the full audit prompt into every run context.
-The brief body is for installed automations that should carry only the
-preflight/guard, core invariants, and spend accounting while delegating detailed
-branches back to the generated contracts.
+把生成的任务体复制进 heartbeat 自动化。定时器只唤醒 Codex；任务体问 LoopX
+该目标是否应在该 tick 花 delivery 计算。薄任务体让 Codex 线程保持可替换 worker：
+每次唤醒都应重读 registry/全局 quota 真相、active state、status/run history、
+repo 状态与项目信号，而不是依赖过期的长提示。紧凑任务体内联保留 quota、gate、
+blocker-push、推荐、steering-audit、writeback、refresh 与 spend 生命周期，
+而不用把完整审计提示复制进每 run 上下文。精简任务体用于应只携带预检/guard、
+核心不变量与 spend 记账的已安装自动化，同时把细节分支委托回生成的契约。
 
-The Codex App visible goal text can stay short, such as
-`按 ACTIVE_GOAL_STATE.md，基于 LoopX 体系，推进项目`. It is only a label for
-the human and the executor. The recurring automation prompt should use the
-generated heartbeat body above, so every project shares the same quota, gate,
-steering-audit, writeback, refresh, and spend lifecycle.
-Project-specific behavior should live in the registry, active-state sections,
-adapter output, or narrow boundary rules. Do not hand-edit one-off automation
-prompt branches for a single project; when a lifecycle rule is broadly useful,
-add it to `loopx heartbeat-prompt` and its smoke contract.
-The quota guard's `heartbeat_recommendation` covers the common onboarding
-cases: `run_first_read_only_map` for a newly connected read-only goal, and
-`mapped_noop_if_unchanged` for an already mapped goal with no new instruction,
-owner evidence, agent todo, stale source, or safe handoff.
-The same guard's `execution_obligation` is the worker contract: when
-`must_attempt_work=true`, a heartbeat should attempt one bounded segment even
-if `heartbeat_recommendation.notify=DONT_NOTIFY`; notification is not an
-execution gate. A quiet no-op needs an explicit `must_attempt_work=false`
-contract such as verified `mapped_noop_if_unchanged`.
-That lifecycle treats routine public commit, push, and PR creation as
-autonomous after validation and a clean public/private boundary scan; private or
-company-internal material, credentials, destructive git, production actions, and
-repo rules that explicitly require review still stop on a gate.
+Codex App 可见目标文本可以保持短，如
+`按 ACTIVE_GOAL_STATE.md，基于 LoopX 体系，推进项目`。它只是给人类与执行者的
+标签。循环自动化提示应使用上面生成的 heartbeat 任务体，使每个项目共享同一
+quota、gate、steering-audit、writeback、refresh 与 spend 生命周期。
+项目特定行为应住在 registry、active-state 区块、adapter 输出或窄边界规则。
+不要为单个项目手工编辑一次性自动化提示分支；当一条生命周期规则通用有用时，
+把它加入 `loopx heartbeat-prompt` 与其 smoke 契约。
+quota guard 的 `heartbeat_recommendation` 覆盖常见上手情形：新连接的只读目标用
+`run_first_read_only_map`，而已映射且无新指令、owner 证据、agent todo、过期来源或
+安全 handoff 的目标用 `mapped_noop_if_unchanged`。
+同一 guard 的 `execution_obligation` 是 worker 契约：当 `must_attempt_work=true`，
+heartbeat 应尝试一个有界片段，即使 `heartbeat_recommendation.notify=DONT_NOTIFY`；
+通知不是执行 gate。Quiet no-op 需要显式 `must_attempt_work=false` 契约，
+如验证的 `mapped_noop_if_unchanged`。
+该生命周期在验证与干净公共/私有边界扫描后把常规公共 commit、push 与 PR 创建
+当作自主的；私有或公司内部材料、凭据、破坏性 git、生产动作与明确要求评审的
+仓库规则仍在 gate 停下。
 
-In most real projects these files should be private. If they contain current
-work state or local evidence, add them to `.gitignore`:
+在大多数真实项目中这些文件应私有。如果它们包含当前工作状态或本地证据，
+把它们加入 `.gitignore`：
 
 ```gitignore
 .loopx/
 .codex/goals/
 ```
 
-## Project Adapter
+## 项目 Adapter
 
-A project adapter should be thin and project-specific. It may read:
+项目 adapter 应薄且项目特定。它可以读取：
 
-- active goal state,
-- git status,
-- test or experiment status,
-- cheap health checks,
-- project-specific guards.
+- 活跃目标状态，
+- git status，
+- 测试或实验状态，
+- 廉价健康检查，
+- 项目特定 guard。
 
-It should output:
+它应输出：
 
-- `classification`,
-- exactly one `recommended_action` for the local control loop,
-- relevant warnings,
-- hard guards,
-- optional run log paths.
+- `classification`，
+- 本地控制循环的确切一个 `recommended_action`，
+- 相关警告，
+- 硬 guard，
+- 可选 run 日志路径。
 
-`recommended_action` is local project state, not a public artifact by default:
-it may include private project refs such as todo ids, branch names, local
-aliases, or operator-private routing labels. It must not include AK/SK values,
-tokens, auth headers, passwords, or inline credentials. Public/export sinks
-must redact or omit private routing refs before rendering shareable surfaces.
+`recommended_action` 默认是本地项目状态，不是公共产物：它可以包含私有项目引用，
+如 todo id、分支名、本地别名或 operator 私有路由标签。它不得包含 AK/SK 值、
+令牌、认证头、密码或内联凭据。公共/导出槽在渲染可分享面前必须脱敏或省略私有
+路由引用。
 
-By default it should be read-only. Launching jobs, stopping jobs, syncing docs,
-or editing production state requires explicit user approval.
+默认应只读。启动作业、停止作业、同步文档或编辑生产状态需要显式用户批准。
 
-The bootstrap command does not create a domain adapter. It creates the minimum
-registry and state contract so the first adapter can be added deliberately.
+Bootstrap 命令不创建领域 adapter。它创建最小 registry 与状态契约，
+使第一个 adapter 可以刻意添加。
 
-For a large project, prefer a read-only adapter map before any writes. The map
-should identify authority sources, work clusters, validation surfaces, proposed
-peer task scopes, boundary findings, and a short claim/decision packet. See
-[complex-project-readonly-adapter.md](integrations/complex-project-readonly-adapter.md).
+对大项目，在任何写之前优先只读 adapter 映射。映射应识别权威来源、工作簇、
+验证面、提议的 peer 任务作用域、边界发现与简短 claim/决策 packet。见
+[complex-project-readonly-adapter.md](integrations/complex-project-readonly-adapter.md)。
 
-## Controller / Sub-Agent Coordination
+## Controller / Sub-Agent 协调
 
-Some Codex goal runs should use multiple child workers. LoopX should keep that
-task-scoped parallelism explicit:
+一些 Codex goal run 应使用多个子 worker。LoopX 应保持该任务作用域并行显式：
 
-- child runs declare `work_scope` before acting;
-- overlapping write scopes require task-coordinator arbitration;
-- children default to read-only unless the registry grants a write scope;
-- child final reports include changed files, validation, residual risk, and
-  next handoff;
-- the temporary task coordinator aggregates accepted bundle evidence, while
-  merge and state writeback still follow explicit task/repository policy.
+- 子 run 行动前声明 `work_scope`；
+- 重叠写作用域需要任务协调者仲裁；
+- 除非 registry 授予写作用域，子 worker 默认只读；
+- 子最终报告包含变更文件、验证、残余风险与下一个 handoff；
+- 临时任务协调者汇总被接受 bundle 证据，而 merge 与状态写回仍遵循显式
+  任务/仓库策略。
 
-Minimal registry fields for this pattern are:
+该模式的最小 registry 字段是：
 
 ```json
 {
@@ -399,90 +361,72 @@ Minimal registry fields for this pattern are:
 }
 ```
 
-When `spawn_policy.mode=multi_subagent`, status exposes
-`project_asset.orchestration` and quota exposes `goal_boundary.orchestration`.
-This makes the selected execution mode visible to dashboards and heartbeat
-dispatchers instead of relying on prompt text.
+当 `spawn_policy.mode=multi_subagent` 时，status 暴露
+`project_asset.orchestration`，quota 暴露 `goal_boundary.orchestration`。
+这让所选执行模式对 dashboard 与 heartbeat 调度器可见，而不是依赖提示文本。
 
-`spawn_policy` governs ephemeral child capacity only. Registering multiple
-durable peers does not auto-elect a coordinator and does not project their
-claimed lanes to another peer. Hosts that can activate durable peer runtimes
-must separately opt in with
-`loopx configure-goal --goal-id <goal> --peer-task-coordinator <registered-agent>`
-and report `--available-capability peer_agent_activation` at quota time. Clear
-the selection with `--clear-peer-task-coordinator`; neither setting widens Todo
-ownership or repository authority.
+`spawn_policy` 只管理临时子容量。注册多个持久 peer 不会自动选举协调者，
+也不会把其声明 lane 投影给另一个 peer。能激活持久 peer 运行时的 host 必须单独
+用 `loopx configure-goal --goal-id <goal> --peer-task-coordinator <registered-agent>`
+opt in，并在 quota 时报告 `--available-capability peer_agent_activation`。
+用 `--clear-peer-task-coordinator` 清除选择；任一设置都扩大 Todo 归属或仓库权威。
 
-These fields are a public contract, not a runtime lock manager. The current
-lightweight runtime surface uses todo `claimed_by` as a soft owner written under
-the active-state CLI lock. Claim ids must be listed in
-`coordination.registered_agents`; those identities are peers. Task claims,
-boundaries, capabilities, typed continuation, and repository policy determine
-authority. Repository-writing peers use isolated worktrees when the selected
-task requires it. Small AGENTS-eligible validated changes may self-merge with
-explicit evidence; broader or higher-risk work uses an explicit
-`independent_handoff` with `action_kind=review`, optionally excluding the author
-when executor separation is required. Soft claims do not expire. The legacy
-bootstrap option `--claim-ttl-minutes` is accepted but ignored; use the optional
-`loopx task-lease` CLI when a concrete contention case needs TTL, overlap
-checks, transfer, and compare-and-swap behavior. Hard leases remain keyed by
-`(goal_id, todo_id)`, so unrelated todos under the same goal can still run in
-parallel when scopes permit.
+这些字段是公共契约，不是运行时锁管理器。当前轻量运行时面使用 todo
+`claimed_by` 作为 active-state CLI 锁下写入的软 owner。Claim id 必须列在
+`coordination.registered_agents`；那些身份是对等 peer。任务声明、边界、能力、
+typed 延续与仓库策略决定权威。写仓库的 peer 在所选任务要求时使用隔离 worktree。
+小的 AGENTS 合格验证变更可以带显式证据 self-merge；更广或更高风险的工作用显式
+`independent_handoff` 且 `action_kind=review`，需要执行者分离时可选择排除作者。
+软声明不设过期。遗留 bootstrap 选项 `--claim-ttl-minutes` 被接受但忽略；
+当具体争用情形需要 TTL、重叠检查、转移与 compare-and-swap 行为时，
+使用可选 `loopx task-lease` CLI。硬租约仍按 `(goal_id, todo_id)` 键控，
+因此同目标下的无关 todos 在作用域允许时仍可并行。
 
-## Shared Runtime
+## 共享运行时
 
-All adapters should save compact run history under:
+所有 adapter 应在以下位置保存紧凑 run history：
 
 ```text
 ~/.codex/loopx/goals/<goal-id>/runs/index.jsonl
 ```
 
-This gives the app, CLI, heartbeats, and future UI one place to inspect goal
-history.
+这给 App、CLI、heartbeat 与未来 UI 一个检查目标历史的地方。
 
-Project-local registries should also sync into the shared global registry:
+项目本地 registry 也应同步进共享全局 registry：
 
 ```text
 ~/.codex/loopx/registry.global.json
 ```
 
-`loopx connect` and `loopx refresh-state` do this automatically.
-The global registry is local-private because it contains project paths, but it
-strips raw authority-source details and keeps only enough information for
-multi-project status. If a command is run outside any project registry, Goal
-Harness falls back to the global registry when it exists.
+`loopx connect` 与 `loopx refresh-state` 自动完成。全局 registry 是本地私有的，
+因为它包含项目路径，但它剥离原始权威来源细节并只保留多项目 status 所需信息。
+如果命令在任何项目 registry 外运行，Goal Harness 在存在全局 registry 时回退到它。
 
-Use the explicit sync command only for diagnosis or recovery:
+只在诊断或恢复时使用显式同步命令：
 
 ```bash
 loopx sync-global
 ```
 
-If a controller updates `ACTIVE_GOAL_STATE.md`, a progress ledger, or an
-external planning section without running a project adapter, append a
-state-only refresh run so status and dashboards do not keep showing the older
-adapter run:
+如果 controller 更新 `ACTIVE_GOAL_STATE.md`、进度 ledger 或外部规划区块
+而不运行项目 adapter，追加 state-only refresh run，使 status 与 dashboard
+不继续显示较旧 adapter run：
 
 ```bash
 loopx refresh-state --goal-id project-goal
 ```
 
-The command reads the registered state file, writes a private JSON/Markdown
-refresh payload under the shared runtime root, and appends a compact
-`state_refreshed` index record. The compact index should contain only
-public-safe classification, action, health-check, and artifact pointers; raw
-evidence belongs in the project-local state file or private runtime payload.
-When `--recommended-action` is omitted, the command derives the compact action
-from the first public-safe item in the active state's `## Next Action`, joining
-wrapped continuation lines and falling back to a generic refresh action if that
-item contains private-looking content.
-If a `refresh-state` text field is rejected as private-looking, the CLI names
-the field and suggests using a compact public-safe alias/summary there while
-keeping raw local paths, private URLs, task bodies, and logs in evidence or
-private payloads.
-When the state refresh is also the compact record for a validated progress
-artifact, add explicit delivery hints so handoff readiness does not have to
-infer scale from a classification name:
+命令读取注册的状态文件，在共享运行时根下写私有 JSON/Markdown 刷新 payload，
+并追加紧凑 `state_refreshed` 索引记录。紧凑索引只应包含 public-safe 分类、动作、
+健康检查与产物指针；原始证据属于项目本地状态文件或私有运行时 payload。
+当省略 `--recommended-action` 时，命令从 active state 的 `## Next Action`
+第一个 public-safe 条目派生紧凑动作，连接换行续行，并在该条目包含私有外观内容时
+回退到通用刷新动作。
+如果 `refresh-state` 文本字段被拒绝为私有外观，CLI 点名该字段，
+并建议在该处使用紧凑 public-safe 别名/摘要，同时把原始本地路径、私有 URL、
+任务正文与日志留在证据或私有 payload。
+当状态刷新也是验证过进度产物的紧凑记录时，添加显式 delivery 提示，
+使 handoff 就绪不必从分类名推断 scale：
 
 ```bash
 loopx refresh-state \
@@ -492,49 +436,43 @@ loopx refresh-state \
   --delivery-outcome outcome_progress
 ```
 
-Use `--delivery-batch-scale` for `test_only`, `single_surface`,
-`multi_surface`, or `implementation`. For agent-facing `refresh-state` calls,
-`single_segment` and `bounded_segment` are accepted as input aliases for
-`single_surface`; the recorded run still stores the canonical `single_surface`
-value. `--delivery-outcome` is a structured enum, not a classification string:
+`--delivery-batch-scale` 用于 `test_only`、`single_surface`、`multi_surface`
+或 `implementation`。对 Agent 面向的 `refresh-state` 调用，
+`single_segment` 与 `bounded_segment` 被接受为 `single_surface` 的输入别名；
+记录的 run 仍存储 canonical `single_surface` 值。`--delivery-outcome`
+是结构化枚举，不是分类字符串：
 
-| Value | Meaning |
+| 值 | 含义 |
 | --- | --- |
-| `surface_only` | Contract, docs, smoke, setup, or preparation moved, but the primary product/case result did not. |
-| `outcome_gap` | The run should have advanced the primary result, but ended with a concrete blocker or missing outcome. |
-| `outcome_progress` | The primary result has materially advanced, but the stage is not fully complete. |
-| `primary_goal_outcome` | The selected stage's primary result is complete, validated, and written back. |
+| `surface_only` | 契约、文档、smoke、设置或准备移动了，但主要产品/用例结果没有。 |
+| `outcome_gap` | 该 run 本应推进主要结果，但以具体 blocker 或缺失结果结束。 |
+| `outcome_progress` | 主要结果已实质推进，但阶段未完全完成。 |
+| `primary_goal_outcome` | 所选阶段主要结果完成、验证并写回。 |
 
-This keeps quota guards, review packets, and dashboards truthful after a
-coherent artifact without exposing raw evidence. Do not encode this decision in
-`classification`; classification is for human indexing, while delivery outcome
-is the machine decision signal.
+这让 quota guard、review packet 与 dashboard 在一个连贯产物后保持真实，
+而无需暴露原始证据。不要把这个决策编码进 `classification`；
+classification 供人类索引，而 delivery outcome 是机器决策信号。
 
-For a newly connected read-only project, append a generic map run before
-building a custom adapter:
+对新连接的只读项目，在构建自定义 adapter 前追加通用映射 run：
 
 ```bash
 loopx read-only-map --goal-id project-goal
 ```
 
-The command accepts goals whose adapter kind is `read_only_project_map_v0` or a
-compatible `*_read_only_map_v0` variant, and whose adapter status is connected
-for read-only work. It inspects only registry metadata, the active state
-sections, and a bounded file-existence inventory. The compact run index records
-`classification=read_only_project_map`, local-control-plane
-`recommended_action`, artifact availability, map counts, and compact
-`residual_risks`; raw project evidence stays in the local private runtime
-payload, while public/export sinks redact local-private references before
-rendering shareable views.
+命令接受 adapter kind 为 `read_only_project_map_v0` 或兼容
+`*_read_only_map_v0` 变体、且 adapter status 为已连接只读工作的目标。
+它只检查 registry 元数据、active state 区块与有界文件存在性清单。
+紧凑 run 索引记录 `classification=read_only_project_map`、本地控制面
+`recommended_action`、产物可用性、映射计数与紧凑 `residual_risks`；
+原始项目证据留在本地私有运行时 payload，而公共/导出槽在渲染可分享视图前
+脱敏本地私有引用。
 
-For planned high-complexity adapters, `read-only-map --dry-run` is allowed as
-the opt-in preview path. It returns `opt_in_required=true` and appends nothing,
-so a controller can inspect the bounded map shape before moving the adapter to
-`read-only-map-ready`, `connected-read-only`, or `connected`. Running the same
-command without `--dry-run` still fails until that opt-in status change happens.
+对计划中的高复杂度 adapter，`read-only-map --dry-run` 允许作为 opt-in 预览路径。
+它返回 `opt_in_required=true` 且不追加任何内容，因此 controller 可在把 adapter
+移到 `read-only-map-ready`、`connected-read-only` 或 `connected` 之前检查有界映射
+形状。不带 `--dry-run` 运行同一命令直到该 opt-in 状态变化仍会失败。
 
-Record the operator's answer as a durable gate decision before treating the
-handoff as approved:
+在把 handoff 当作已批准前，把 operator 的回答记录为持久 gate 决策：
 
 ```bash
 loopx operator-gate \
@@ -544,42 +482,35 @@ loopx operator-gate \
   --dry-run
 ```
 
-The dry-run writes nothing. A real append creates an `operator_gate_approved`,
-`operator_gate_rejected`, or `operator_gate_deferred` compact run with JSON and
-Markdown artifacts. Approval makes the goal Codex-ready and exposes the
-approved `agent_command`; reject/defer keeps the goal gated with the recorded
-reason. This records operator gate decisions separately from `human_reward`,
-which remains reserved for judging an exact run or route outcome.
+Dry-run 不写任何东西。真实追加创建 `operator_gate_approved`、
+`operator_gate_rejected` 或 `operator_gate_deferred` 紧凑 run，带 JSON 与
+Markdown 产物。批准使目标 Codex-ready 并暴露已批准的 `agent_command`；
+拒绝/延迟保持目标 gate 并带记录理由。这把 operator gate 决策独立于
+`human_reward` 记录，后者保留用于判断确切 run 或路线结局。
 
-After approval, use the minimal handoff form when the only remaining action is
-to relay the target project-agent instruction:
+批准后，当唯余行动是转发目标项目 Agent 指令时，使用最小 handoff 形式：
 
 ```bash
 loopx review-packet --goal-id project-goal --handoff-only
 ```
 
-This is still read-only packaging. It strips the human decision wrapper from
-markdown output so the receiving agent sees only the goal guard, forwarding
-condition, execution boundary, stop condition, and command. It does not append a
-gate decision, refresh state, spend quota, grant write-control, or authorize
-production action.
+这仍是只读打包。它从 Markdown 输出剥离人类决策包装，
+使接收 Agent 只看到目标 guard、转发条件、执行边界、停止条件与命令。
+它不追加 gate 决策、刷新状态、花 quota、授予 write-control 或授权生产动作。
 
-If a runtime directory belongs to an old goal that is no longer in the registry,
-preview archive cleanup before changing anything:
+如果运行时目录属于不再在 registry 中的旧目标，在改动前先预览归档清理：
 
 ```bash
 loopx archive-runtime --goal-id old-experiment-goal
 ```
 
-The command defaults to dry-run. After review, pass `--execute` to move the
-directory into `<runtime-root>/archived-goals/`. Goals still present in the
-registry are protected by default; archiving one requires the explicit
-`--allow-registered` flag.
+命令默认 dry-run。评审后传 `--execute` 把目录移到
+`<runtime-root>/archived-goals/`。仍在 registry 中的目标默认受保护；
+归档一个需要显式 `--allow-registered` 标志。
 
-## Human Reward Overlays
+## 人类奖励 Overlay
 
-When an operator judges a run, append a compact reward overlay instead of
-editing the run JSON by hand:
+当 operator 判断一个 run 时，追加紧凑奖励 overlay，而不要手工编辑 run JSON：
 
 ```bash
 loopx reward \
@@ -590,27 +521,22 @@ loopx reward \
   --follow-up "promote to the next longer-window check"
 ```
 
-By default the command attaches feedback to the latest compact run for the
-goal. Pass `--run-generated-at <timestamp>` to target an older run. The writer
-appends a JSONL overlay to the same `index.jsonl`; it does not mutate private
-run payloads. `loopx status` exports only the compact `human_reward`
-fields, so raw evidence should stay in private artifacts.
+默认命令把反馈附着到目标最新紧凑 run。传 `--run-generated-at <timestamp>`
+定位更旧 run。Writer 把 JSONL overlay 追加到同一 `index.jsonl`；
+它不改私有 run payload。`loopx status` 只导出紧凑 `human_reward` 字段，
+所以原始证据应留在私有产物。
 
-`loopx reward --dry-run` and the real append response both include two
-coordination fields:
+`loopx reward --dry-run` 与真实追加响应都包含两个协调字段：
 
-- `active_state_summary`: a short Chinese summary Codex can copy into the
-  active goal state after the operator judgment is recorded.
-- `project_agent_visibility`: the standard way another project agent should
-  find the reward, including the `loopx history --goal-id ... --limit 3`
-  command.
+- `active_state_summary`：operator 判断记录后 Codex 可复制进 active goal state
+  的简短中文摘要。
+- `project_agent_visibility`：另一个项目 Agent 找到奖励的标准方式，
+  包括 `loopx history --goal-id ... --limit 3` 命令。
 
-The run-bound `human_reward` overlay remains the source of truth. Active state
-is only the human-readable pointer and next-action summary; a dashboard Review
-Packet is only an immediate handoff artifact.
+Run 绑定的 `human_reward` overlay 保持真相源。Active state 只是人类可读指针与
+下一动作摘要；dashboard Review Packet 只是即时 handoff 产物。
 
-For explicit user corrections, add a compact lesson to the same run-bound
-overlay instead of creating a separate memory store:
+对显式用户纠正，向同一 run 绑定 overlay 添加紧凑教训，而不是创建单独记忆存储：
 
 ```bash
 loopx reward \
@@ -625,17 +551,14 @@ loopx reward \
   --write-active-state-summary
 ```
 
-The lesson is advisory. `loopx status` exposes it under `human_reward`, and
-`loopx quota should-run` warns when a future `recommended_action` appears to
-contradict the lesson. It does not authorize writes, launch benchmarks, or
-replace formal todo/Next Action updates.
+教训是建议性的。`loopx status` 在 `human_reward` 下暴露它，
+`loopx quota should-run` 在未来 `recommended_action` 似乎与教训矛盾时警告。
+它不授权写、不启动 benchmark、不替代正式 todo/Next Action 更新。
 
-The Markdown output includes a `Write Effect` section that summarizes the
-selected run, run-overlay write or preview state, active-state writeback state,
-and the project-agent history lookup before the detailed reward fields.
+Markdown 输出包含 `Write Effect` 区块，在详细奖励字段前汇总所选 run、
+run-overlay 写或预览状态、active-state 写回状态与项目 Agent 历史查找。
 
-When the operator has explicitly approved recording the reward, Codex can close
-the durable loop in one CLI call:
+当 operator 显式批准记录奖励时，Codex 可以用一次 CLI 调用闭合持久 loop：
 
 ```bash
 loopx reward \
@@ -647,77 +570,69 @@ loopx reward \
   --write-active-state-summary
 ```
 
-The state write is opt-in. With `--dry-run --write-active-state-summary`, the
-command reports `active_state_update.would_write=true` but does not append the
-reward overlay or edit the active state. Without `--write-active-state-summary`,
-the command records only the run-bound reward overlay.
+状态写是 opt-in。用 `--dry-run --write-active-state-summary`，命令报告
+`active_state_update.would_write=true` 但不追加奖励 overlay 也不编辑 active state。
+不加 `--write-active-state-summary`，命令只记录 run 绑定奖励 overlay。
 
-## First-Screen Status
+## 首屏 Status
 
-Use `loopx status` as the entrypoint for the next controller tick or UI
-refresh:
+用 `loopx status` 作为下一次 controller tick 或 UI 刷新的入口：
 
 ```bash
 loopx --format json status
 loopx status --scan-path README.md --scan-path docs/
 ```
 
-The default contract scan uses the LoopX install root, so running status
-from a private project directory does not accidentally scan local `.local`
-state. Pass `--scan-root` or `--scan-path` for a project only when that path is
-intended to be public-safe.
+默认契约扫描使用 LoopX 安装根，因此从私有项目目录运行 status 不会意外扫描本地
+`.local` 状态。只有当路径意图 public-safe 时，才为项目传 `--scan-root` 或
+`--scan-path`。
 
-For the React dashboard, serve that same status contract over loopback HTTP:
+对 React dashboard，通过 loopback HTTP 提供同一 status 契约：
 
 ```bash
 loopx serve-status --global-registry --port 8766 --limit 80
 ```
 
-Then load `http://127.0.0.1:8766/status.json` from the dashboard source
-control. `--global-registry` keeps the multi-project dashboard on the shared
-registry even when the server is launched from a project checkout. For
-project-local debugging, omit the flag or pass an explicit project
-`--registry`. The command binds to `127.0.0.1` by default and is meant for
-local operator dashboards, not public hosting.
+然后从 dashboard 源码控制加载 `http://127.0.0.1:8766/status.json`。
+`--global-registry` 即使在项目 checkout 内启动服务器也保持多项目 dashboard 在
+共享 registry 上。对项目本地调试，省略该标志或传显式项目 `--registry`。
+命令默认绑定 `127.0.0.1`，用于本地 operator dashboard，
+不用于公共托管。
 
-The same loopback server exposes `POST /reward/dry-run` so the dashboard can
-validate a selected goal/run reward draft. The dry-run response is compact and
-does not append to `index.jsonl`; it returns a `preview_id` for the exact
-goal/run/reward payload and current raw index count.
+同一 loopback server 暴露 `POST /reward/dry-run`，使 dashboard 验证所选
+goal/run 奖励草稿。Dry-run 响应紧凑，不追加 `index.jsonl`；
+它为确切 goal/run/reward payload 与当前原始 index 计数返回 `preview_id`。
 
-Direct dashboard reward submission is an explicit opt-in capability. Start the
-status server with `--enable-reward-write-api` to expose `POST /reward/append`
-on loopback only. The dashboard can then submit the dry-run `preview_id`; a
-successful append writes one run-bound `human_reward` overlay and refreshes
-status, so future project agents can discover the feedback through
-`loopx status` or `loopx history`.
+直接 dashboard 奖励提交是显式 opt-in 能力。用 `--enable-reward-write-api`
+启动 status server，只在 loopback 暴露 `POST /reward/append`。Dashboard 随后
+可以提交 dry-run `preview_id`；成功追加写入一个 run 绑定 `human_reward` overlay
+并刷新 status，使未来项目 Agent 通过 `loopx status` 或 `loopx history` 发现反馈。
 
-The status command combines contract health and run history into an attention
-queue. Each queue item says which goal needs attention, who it is waiting on,
-how severe the item is, and exactly one recommended action.
+Status 命令把契约健康与 run history 组合成 attention queue。每个队列条目说明
+哪个目标需要关注、它在等谁、条目多严重，以及一个推荐动作。
 
-For dashboards, heartbeat summaries, or any script that reads JSON output, use
-the [status data contract](status-data-contract.md).
+对 dashboard、heartbeat 摘要或任何读取 JSON 输出的脚本，
+使用 [status 数据契约](status-data-contract.md)。
 
-Keep adapter output sanitized before it enters the compact index. The status
-queue is meant for control-plane display, not for raw private evidence.
+Adapter 输出在进入紧凑索引前保持脱敏。Status 队列用于控制面显示，
+不用作原始私有证据。
 
-## Public Repo vs Project Repo
+## 公共仓库 vs 项目仓库
 
-Put generic code here:
+通用代码放这里：
 
-- registry and history readers,
-- contract checker,
-- generic schema and docs,
-- sanitized adapter examples,
-- peer task and ephemeral worker lifecycle examples.
+- registry 与 history 读取器，
+- 契约检查器，
+- 通用 schema 与文档，
+- 脱敏 adapter 示例，
+- peer 任务与临时 worker 生命周期示例。
 
-Keep in the project repo:
+项目仓库保留：
 
-- project-specific adapter code,
-- active goal state,
-- private registry,
-- domain-specific health checks.
+- 项目特定 adapter 代码，
+- 活跃目标状态，
+- 私有 registry，
+- 领域特定健康检查。
 
-This split lets many local projects share one stable LoopX base while
-keeping their real evidence and safety policies local.
+这个拆分让许多本地项目共享一个稳定 LoopX 基座，
+同时把真实证据与安全策略留在本地。

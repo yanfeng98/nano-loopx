@@ -1,117 +1,107 @@
-# Session Runtime Control-Plane Adapter
+# Session Runtime 控制面适配器
 
-Status: public-safe architecture target + read-only projection contract v0.
+> [English](session-runtime-control-plane-adapter.md)
 
-LoopX should be able to sit beside an existing agent host without
-becoming that host. The target role is a long-horizon task control plane:
-turn session-level execution facts into goal-level state that is recoverable,
-auditable, gated, attention-ranked, and reusable across sessions.
+状态:公开安全架构目标 + 只读投影契约 v0。
 
-## Layer Boundary
+LoopX 应当能够与现有 agent 宿主并存,而无需变成该宿主。目标角色是长周期任务
+控制面:把会话级执行事实变成 goal 级状态,使其可恢复、可审计、受 gate、按注意力
+排序并可跨会话复用。
 
-An agent host owns the execution plane:
+## 层级边界
 
-- agent definitions and runtime configuration;
-- environment and session lifecycle;
-- append-only session events;
-- tool and sandbox execution;
-- host authentication, rate limits, billing, trace, and audit;
-- raw transcripts, raw logs, and raw tool outputs.
+agent 宿主拥有执行平面:
 
-LoopX owns the goal-level control projection:
+- agent 定义与 runtime 配置;
+- 环境与会话生命周期;
+- 仅追加的会话事件;
+- 工具与沙箱执行;
+- 宿主认证、速率限制、计费、trace 与审计;
+- 原始转录、原始日志与原始工具输出。
 
-- `goal_state`: objective, non-goals, authority sources, current boundary;
-- `run_projection`: compact session/outcome summary with pointers to source
-  facts;
-- `operator_gate`: cross-session owner/controller decisions;
-- `human_reward`: human judgment on a route or run result, separate from a
-  task scorer;
-- `work_lane_contract`: advancement, monitor, blocker, and user-gate routing;
-- `quota_decision`: whether the goal should spend the next automatic agent
-  turn;
-- `handoff_packet`: the approved next action for a project agent;
-- `dreaming_proposal`: background exploration that remains advisory until
-  promoted.
+LoopX 拥有 goal 级控制投影:
 
-A product surface owns the frontstage user experience: task cards, approvals,
-progress, recovery entry points, and collaboration views. LoopX should
-explain why a card exists, whether it may run, which gate blocks it, and how it
-recovers after approval; it should not become the default end-user console.
+- `goal_state`:目标、非目标、权威来源、当前边界;
+- `run_projection`:指向来源事实的紧凑会话/结果摘要;
+- `operator_gate`:跨会话的 owner/控制器决策;
+- `human_reward`:对路由或运行结果的人类判断,与任务评分器分开;
+- `work_lane_contract`:推进、监视、阻止与 user-gate 路由;
+- `quota_decision`:goal 是否应消耗下一轮自动 agent Turn;
+- `handoff_packet`:给项目 agent 的已批准下一动作;
+- `dreaming_proposal`:在晋升之前保持建议性的背景探索。
 
-## Core Principle
+产品界面拥有前台用户体验:任务卡片、审批、进度、恢复入口与协作视图。LoopX 应
+解释卡片为何存在、是否可以运行、哪个 gate 阻止它以及批准后如何恢复;它不应
+成为默认的最终用户控制台。
 
-The host session log is the raw fact source. LoopX run history is a
-compact control projection. A projection may reference host ids such as session,
-event, tool call, artifact, approval, or outcome ids, but it must not copy full
-transcripts, credentials, raw logs, private traces, or sandbox internals into
-LoopX state.
+## 核心原则
 
-This avoids a second event store. If the host says a session completed and
-LoopX says a goal is still blocked, the projection must explain the
-reconcile rule: missing gate, missing validation, failed outcome, stale
-artifact, or human decision not yet recorded.
+宿主会话日志是原始事实来源。LoopX 运行历史是紧凑控制投影。投影可以引用宿主
+id,例如会话、事件、工具调用、artifact、审批或结果 id,但绝不能把完整转录、
+凭证、原始日志、私有 trace 或沙箱内部复制进 LoopX 状态。
 
-## Adapter Phases
+这避免了第二个事件存储。如果宿主说会话已完成,而 LoopX 说 goal 仍被阻止,
+投影必须解释对账规则:缺失 gate、缺失验证、结果失败、过期 artifact 或尚未记录
+的人类决策。
 
-### Phase 1: Read-Only Projection
+## 适配器阶段
 
-Input: compact host summaries for sessions, events, outcomes, approvals, and
-artifacts.
+### 阶段 1:只读投影
 
-Output: a LoopX attention item with:
+输入:会话、事件、结果、审批与 artifact 的紧凑宿主摘要。
+
+输出:一个 LoopX 关注条目,包含:
 
 - `waiting_on`;
 - `next_action`;
-- first open user todo;
-- first executable agent todo;
-- latest validation or blocker;
-- gate state;
-- compact source pointers.
+- 第一个未解决的 user todo;
+- 第一个可执行的 agent todo;
+- 最新验证或阻止项;
+- gate 状态;
+- 紧凑来源指针。
 
-This phase must not write back to the host, alter runtime behavior, or launch a
-session. The first useful demo is a long-running task first screen that answers
-four questions:
+该阶段绝不能写回宿主、改变 runtime 行为或启动会话。第一个有用的 demo 是一个
+长时运行任务首屏,回答四个问题:
 
-1. Who or what is the goal waiting on?
-2. Can the agent continue now?
-3. What gate or evidence is required before continuing?
-4. What did the most recent run validate or block?
+1. goal 正在等待谁或什么?
+2. agent 现在可以继续吗?
+3. 继续之前需要什么 gate 或证据?
+4. 最近一次运行验证或阻止了什么?
 
-### Phase 2: Controlled Writeback
+### 阶段 2:受控写回
 
-After the read-only projection proves useful, LoopX may map compact
-control events back to host metadata or events. The stable boundary is
+在只读投影被证明有用之后,LoopX 可以把紧凑控制事件映射回宿主元数据或事件。
+稳定边界是
 [`session_runtime_controlled_writeback_v0`](../reference/protocols/session-runtime-controlled-writeback-v0.md):
 
-- operator gate requested/resolved;
-- human reward or route judgment;
-- handoff packet accepted;
-- quota decision as a scheduler hint, not billing;
-- artifact pointer or run projection pointer.
+- 操作员 gate 已请求/已解决;
+- 人类奖励或路由判断;
+- 交接包已接受;
+- 作为 scheduler 提示的配额决策,而不是计费;
+- artifact 指针或运行投影指针。
 
-Writeback must remain compact and reversible. It should not copy raw evidence
-or turn LoopX into the host's permission system.
+写回必须保持紧凑且可逆。它不应复制原始证据,也不应把 LoopX 变成宿主的权限
+系统。
 
-### Phase 3: Product Surface Integration
+### 阶段 3:产品界面集成
 
-The product surface should display LoopX projections instead of asking
-users to read the LoopX dashboard directly. LoopX remains the
-reliability and governance layer behind the product view.
+产品界面应展示 LoopX 投影,而不是要求用户直接阅读 LoopX Dashboard。LoopX 仍然
+是产品视图背后的可靠性与治理层。
 
-## Non-Goals
+## 非目标
 
-LoopX should not:
+LoopX 不应:
 
-- reimplement the host's agent loop or model strategy;
-- reimplement the host's event store;
-- run tools or sandboxes directly when the host already owns them;
-- replace host authentication, billing, rate limits, or trace;
-- become the product frontstage for ordinary end users;
-- store raw transcripts, private traces, credentials, or raw benchmark logs.
+- 重新实现宿主的 agent 循环或模型策略;
+- 重新实现宿主的会话事件存储;
+- 在宿主已经拥有工具或沙箱时直接运行它们;
+- 替代宿主认证、计费、速率限制或 trace;
+- 成为普通终端用户的产品前台;
+- 存储原始转录、私有 trace、凭证或原始 benchmark 日志。
 
-## First Public Contract
+## 首个公开契约
 
-A minimal read-only adapter contract can be shaped as:
+一个最小的只读适配器契约可以表示为:
 
 ```json
 {
@@ -137,79 +127,70 @@ A minimal read-only adapter contract can be shaped as:
 }
 ```
 
-The public fixture should prove only projection semantics. Private source ids,
-raw event bodies, exact host URLs, raw logs, credentials, and local paths stay
-outside the repository.
+公开 fixture 应只验证投影语义。私有来源 id、原始事件消息体、确切宿主 URL、
+原始日志、凭证与本地路径都留在仓库之外。
 
-The current v0 implementation is a pure builder,
-`loopx.session_runtime.build_session_runtime_readonly_projection(...)`.
-It accepts compact session, event, outcome, gate, artifact, and decision-result
-summaries, then returns:
+当前 v0 实现是一个纯构建器,
+`loopx.session_runtime.build_session_runtime_readonly_projection(...)`。它接受
+紧凑的会话、事件、结果、gate、artifact 与决策结果摘要,然后返回:
 
-- `first_screen`: waiting owner, user action, agent action, validation, blocker,
-  and recommended next step;
-- `attention_item`: a compact dashboard/status item with source pointers;
-- `work_lane_contract`: `user_gate`, `advancement_task`, `blocker`, or
+- `first_screen`:等待中的 owner、用户动作、agent 动作、验证、阻止项与建议
+  下一步;
+- `attention_item`:带来源指针的紧凑 Dashboard/状态条目;
+- `work_lane_contract`:`user_gate`、`advancement_task`、`blocker` 或
   `monitor`;
-- `reconcile_rule`: the rule that host logs remain raw facts while LoopX stores
-  only compact control projection.
+- `reconcile_rule`:宿主日志保持原始事实、LoopX 只存储紧凑控制投影的规则。
 
-### Raw-Material Key Classification
+### 原材料键分类
 
-The builder never reads input values to decide whether they are raw material;
-it classifies input key names with a typed, word-level rule. Keys are split
-into words on `_`, `-`, and camelCase and matched as exact keys, whole words,
-or exact word sequences, never as substrings. Every key lands in one of three
-states:
+构建器从不读取输入值来判断它们是否为原材料;它用类型化的词级规则对输入键名
+分类。键按 `_`、`-` 与 camelCase 拆分为词,并按精确键、整词或精确词序列匹配,
+绝不做子串匹配。每个键落入三种状态之一:
 
-| State | Effect | Examples |
+| 状态 | 效果 | 示例 |
 | --- | --- | --- |
-| compact | allowed | keys the projection reads (`status`, `summary`, `next_action`), timestamps, pointer/count suffixes only when no raw evidence is present (`catalog_id`, `login_at`), explicit safe collisions (`trace_id`, `message_id`, `log_count`), usage metrics (`token_count`, `max_tokens`) |
-| raw material | `raw_material_detected`, `agent_can_continue=false`, category recorded in `raw_material_categories`; its value is never copied | `credential` (`api_key`, `access_token`, `password`, `secret_id`, `api_key_id`), `transcript` (`message`, `raw_transcript`, `messages`, `prompt`, `body`, `transcript_id`), `log` (`log_path`, `stack_trace`), `local_path` (`file_path`), `raw_output` (`stdout_tail`, `diff`, `raw_id`) |
-| unclassified | reported in `unclassified_key_names` (bounded), never blocks | `backlog`, `changelog`, `logical_clock` |
+| compact(紧凑) | 允许 | 投影读取的键(`status`、`summary`、`next_action`)、时间戳,仅在没有原始证据时的指针/计数后缀(`catalog_id`、`login_at`)、显式安全碰撞(`trace_id`、`message_id`、`log_count`)、用量指标(`token_count`、`max_tokens`) |
+| raw material(原材料) | `raw_material_detected`、`agent_can_continue=false`,类别记录在 `raw_material_categories` 中;其值绝不复制 | `credential`(`api_key`、`access_token`、`password`、`secret_id`、`api_key_id`)、`transcript`(`message`、`raw_transcript`、`messages`、`prompt`、`body`、`transcript_id`)、`log`(`log_path`、`stack_trace`)、`local_path`(`file_path`)、`raw_output`(`stdout_tail`、`diff`、`raw_id`) |
+| unclassified(未分类) | 在 `unclassified_key_names`(有界)中报告,从不阻止 | `backlog`、`changelog`、`logical_clock` |
 
-The word `token` is a credential only in auth forms (`token`, `access_token`,
-`auth_token`, `api_token`, `bearer_token`, `refresh_token`, `id_token`); count
-forms such as `tokens_used` are compact, but a raw-material word or phrase in
-the same key takes precedence over both metric and pointer shortcuts
-(`tokens_password`, `raw_tokens`, `secret_id`, and `api_key_id` are raw).
-`trace_id` is an explicitly safe pointer; `trace`, `stack_trace`, and
-`trace_path` are logs. `log_count`, `prompt_tokens`, and `prompt_token_count`
-are explicitly safe aggregates and `conversation_id` is an explicitly safe
-pointer. Transcript evidence otherwise matches the exact key `message` and the
-whole words `messages`, `prompt`, `prompts`, and `conversation`: `prompt_id`,
-`prompt_text`, and `conversation_ref` stay raw, `message_count` and
-`message_ref` are compact pointers, and `message_text` is reported as
-unclassified rather than guessed either way. `log`
-matches only as a whole word, so `catalog_id`, `login_at`, and `changelog` are
-not flagged.
+词 `token` 只在认证形式中才是凭证(`token`、`access_token`、`auth_token`、
+`api_token`、`bearer_token`、`refresh_token`、`id_token`);`tokens_used` 这类
+计数形式是紧凑的,但同一键中的原材料词或短语优先于指标与指针捷径
+(`tokens_password`、`raw_tokens`、`secret_id` 与 `api_key_id` 都是原材料)。
+`trace_id` 是显式安全指针;`trace`、`stack_trace` 与 `trace_path` 属日志。
+`log_count`、`prompt_tokens` 与 `prompt_token_count` 是显式安全聚合,
+`conversation_id` 是显式安全指针。其余情况,转录证据按精确键 `message` 与整词
+`messages`、`prompt`、`prompts`、`conversation` 匹配:`prompt_id`、
+`prompt_text` 与 `conversation_ref` 保持原材料,`message_count` 与
+`message_ref` 是紧凑指针,而 `message_text` 报告为未分类,而不做任何方向的
+猜测。`log` 只按整词匹配,因此 `catalog_id`、`login_at` 与 `changelog` 不会被
+标记。
 
-Run:
+运行:
 
 ```bash
 python3 examples/session_runtime/session-runtime-readonly-projection-smoke.py
 ```
 
-OpenViking-style issue-fix memory is covered by the public specialization
-[`openviking_session_memory_adapter_v0`](../reference/protocols/openviking-session-memory-adapter-v0.md).
-That adapter keeps per-goal and per-issue session memory as compact refs and
-retrieval gates only: no live OpenViking retrieval, memory writeback, issue or
-comment body read, raw trajectory, or raw tool-output ingest is authorized by
-the public fixture. Validate it with:
+OpenViking 式 issue-fix 记忆由公开特化版
+[`openviking_session_memory_adapter_v0`](../reference/protocols/openviking-session-memory-adapter-v0.md)
+覆盖。该适配器只以紧凑引用与检索 gate 形式保存按 goal 与按 issue 的会话记忆:
+公开 fixture 不授权任何实时 OpenViking 检索、记忆写回、issue 或评论正文读取、
+原始轨迹或原始工具输出摄取。用以下命令验证:
 
 ```bash
 python3 examples/openviking-session-memory-adapter-smoke.py
 ```
 
-## Metrics
+## 指标
 
-The integration is valuable if it improves:
+该集成如果提升了以下方面就有价值:
 
-- interrupted task recovery rate;
-- duplicate compute avoided;
-- owner gates preserved across sessions;
-- cross-session handoff success;
-- stale projection detection;
-- time from "task is blocked" to "the right owner sees the blocker".
+- 中断任务恢复率;
+- 避免的重复计算;
+- 跨会话保留的 owner gate;
+- 跨会话交接成功;
+- 过期投影检测;
+- 从"任务被阻止"到"正确的 owner 看到阻止项"的时间。
 
-These metrics are goal-control metrics, not model-quality scores.
+这些指标是 goal 控制指标,不是模型质量分数。

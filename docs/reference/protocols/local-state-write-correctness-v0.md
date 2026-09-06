@@ -1,73 +1,56 @@
-# Local State Write Correctness v0
+# 本地状态写入正确性 v0
+> [English](local-state-write-correctness-v0.md)
 
-Status: public-safe protocol draft for LoopX local state writes.
+状态：LoopX 本地状态写入的公开安全协议草稿。
 
-LoopX still keeps Markdown active state as the human and agent work surface.
-This contract defines the correctness envelope for any write that changes that
-local state or a derived local control-plane artifact. It is not a new storage
-backend. It is the common packet shape that lets future implementations add
-stronger locks, idempotent retries, optimistic revision checks, and lease
-projection without changing each writer independently.
+LoopX 仍把 Markdown active state 保持为人与 agent 工作界面。本契约定义任何改变该本地状态或派生本地控制面工件的写入的正确性信封。它不是新存储后端。它是通用包形状，使未来实现可以增加更强锁、幂等重试、乐观修订检查与 lease 投影，而无需分别改每个写者。
 
-## Scope
+## 范围
 
-This protocol applies to local LoopX writes such as:
+本协议适用于本地 LoopX 写入，例如：
 
-- active-state todo add, update, complete, supersede, and archive operations;
-- `refresh-state` writes that update route, progress, or next action;
-- event-store append operations that later project into active state;
-- review packet or dashboard writeback that records compact local evidence.
+- active-state todo 添加、更新、完成、接替与归档操作；
+- 更新路由、进度或下一动作的 `refresh-state` 写入；
+- 后来投影进 active state 的 event-store 追加操作；
+- 记录紧凑本地证据的评审包或 dashboard writeback。
 
-It does not grant permission to read private material, publish externally, run
-production actions, bypass human gates, or mutate a remote service. Those remain
-separate boundary decisions.
+它不授予读取私有物料、外部发布、运行生产动作、绕过人类关卡或修改远程服务的权限。那些仍是独立边界决策。
 
-## Correctness Model
+## 正确性模型
 
-Every local write should be describable as one `write_intent`:
+每个本地写入应可描述为一个 `write_intent`：
 
-| Field | Meaning |
+| 字段 | 含义 |
 | --- | --- |
-| `write_id` | Stable id for this requested logical write. |
-| `goal_id` | The goal boundary. A writer must not lock or revise unrelated goals. |
-| `writer_id` | Registered agent, CLI command, or adapter issuing the write. |
-| `write_class` | Compact operation family such as `todo_update`, `refresh_state`, or `event_append`. |
-| `target_refs` | Goal-local refs such as `todo_id`, `run_id`, or `state_file`. |
-| `idempotency_key` | Deterministic retry key. Replaying the same key must not duplicate the logical effect. |
-| `expected_revision` | Optional optimistic revision/CAS token read before the write. |
-| `lease_ref` | Optional per-todo or per-goal lease that explains why the writer may proceed. |
+| `write_id` | 本次请求逻辑写入的稳定 id。 |
+| `goal_id` | Goal 边界。写者不得锁定或修订无关 goal。 |
+| `writer_id` | 发起写入的已注册 agent、CLI 命令或适配器。 |
+| `write_class` | 紧凑操作家族，如 `todo_update`、`refresh_state` 或 `event_append`。 |
+| `target_refs` | Goal 局部引用，如 `todo_id`、`run_id` 或 `state_file`。 |
+| `idempotency_key` | 确定性重试键。重放同一键不得重复逻辑效果。 |
+| `expected_revision` | 写入前读取的可选乐观修订/CAS token。 |
+| `lease_ref` | 解释写者为何可以继续的可选每 todo 或每 goal lease。 |
 
-The lock boundary is per goal by default. A narrower per-todo lock is allowed
-when the write touches only one todo and the writer can prove that no section
-ordering, archive compaction, or shared summary update is affected.
+锁边界默认按 goal。当写入只触及一个 todo，且写者能证明不受节排序、归档压缩或共享摘要更新影响时，允许更窄的每 todo 锁。
 
-## Required Phases
+## 必需相位
 
-1. `prepare`: resolve `goal_id`, target refs, current revision, and boundary
-   policy. No write happens here.
-2. `preview`: produce a compact patch summary and safety result.
-3. `apply`: acquire the lock, re-read the revision, reject or merge on mismatch,
-   then write atomically.
-4. `record`: emit compact evidence with applied/skipped/rejected/failed status.
-5. `project`: expose the latest revision, lock boundary, and relevant lease
-   state in status/review packets without copying raw private state.
+1. `prepare`：解析 `goal_id`、target refs、当前修订与边界策略。此处不发生写入。
+2. `preview`：产出紧凑补丁摘要与安全结果。
+3. `apply`：获取锁、重读修订，不匹配则拒绝或合并，然后原子写入。
+4. `record`：发出带 applied/skipped/rejected/failed 状态的紧凑证据。
+5. `project`：在 status/review 包中暴露最新修订、锁边界与相关 lease 状态，而不复制原始私有状态。
 
-## Conflict Semantics
+## 冲突语义
 
-- Same `idempotency_key` and same intended effect: return `skipped_duplicate`
-  or `already_applied`.
-- Same target but different idempotency key while lock is held: wait or return
-  `lock_busy`.
-- `expected_revision` mismatch: fail closed with `revision_conflict`, unless
-  the writer can recompute a non-overlapping patch from the fresh revision.
-- Lease expired or held by a different writer: fail closed with
-  `lease_conflict`; do not silently clear another agent's claim.
-- Unsafe payload: reject with `boundary_rejected` and write no local state.
-- Dry-run preview without mutation: return `preview_only` and include the same
-  write intent, lock boundary, revision, and expected write scopes that a real
-  apply would need.
+- 同一 `idempotency_key` 且意图效果相同：返回 `skipped_duplicate` 或 `already_applied`。
+- 锁持有期间同一目标但不同幂等键：等待或返回 `lock_busy`。
+- `expected_revision` 不匹配：失效关闭为 `revision_conflict`，除非写者可以从新修订重算非重叠补丁。
+- Lease 过期或被不同写者持有：失效关闭为 `lease_conflict`；不静默清除另一个 agent 的 claim。
+- 载荷不安全：以 `boundary_rejected` 拒绝且不写本地状态。
+- 无变更的 dry-run 预览：返回 `preview_only`，并包含真实 apply 所需的同一 write intent、锁边界、修订与预期写 scope。
 
-## Example Packet
+## 示例包
 
 ```json
 {
@@ -133,27 +116,21 @@ ordering, archive compaction, or shared summary update is affected.
 }
 ```
 
-## Acceptance Checks
+## 验收检查
 
-A local-state writer is compatible with this protocol when:
+一个本地状态写者在本协议下兼容，当：
 
-1. it can produce or internally derive a `write_intent` before mutation;
-2. retries with the same `idempotency_key` cannot duplicate todos, evidence, or
-   events;
-3. lock scope is at most per goal unless the operation is proven single-todo and
-   order-independent;
-4. optimistic revision mismatch fails closed or recomputes from the fresh state;
-5. lease projection never lets one agent silently steal another agent's claim;
-6. public status/review packets expose compact revision and lease state without
-   raw local files, private paths, credentials, raw logs, or raw transcripts;
-7. every destructive or external effect remains behind a separate explicit gate.
+1. 它能在变更前产生或内部推导 `write_intent`；
+2. 同一 `idempotency_key` 的重试不能重复 todos、证据或事件；
+3. 锁 scope 至多为按 goal，除非操作被证明为单 todo 且顺序无关；
+4. 乐观修订不匹配失效关闭，或从新鲜状态重算；
+5. lease 投影绝不使一个 agent 静默窃取另一个 agent 的 claim；
+6. 公开 status/review 包在不含原始本地文件、私有路径、凭据、原始日志或原始 transcript 的情况下暴露紧凑修订与 lease 状态；
+7. 每个破坏性或外部效果仍保持在单独的显式关卡之后。
 
-## Runtime Promotion Gate
+## 运行时提升关卡
 
-The current implementation target is preview-first. A follow-up patch that
-changes real write behavior must carry a small promotion gate before it enforces
-hard idempotency, revision checks, or lease conflicts on the canonical write
-path. The gate is a public-safe fixture contract, not a permission grant.
+当前实现目标是预览优先。一个改变真实写入行为的后续补丁，必须携带一个小提升关卡，才能对规范写入路径强制硬幂等、修订检查或 lease 冲突。阶段关卡是公开安全 fixture 契约，不是权限授予。
 
 ```json
 {
@@ -180,17 +157,8 @@ path. The gate is a public-safe fixture contract, not a permission grant.
 }
 ```
 
-`allowed_to_change_write_behavior=false` means the patch may add fixtures,
-projection, or shadow-validation scaffolding, but must not reject or rewrite a
-previously accepted real write. A later enforcement patch may flip that field
-only when the corresponding writer has the required conflict fixtures and its
-rollback behavior is documented. This keeps the rollout small: first prove the
-contract on one writer, then tighten behavior in a separate validated step.
+`allowed_to_change_write_behavior=false` 意为补丁可以增加 fixture、投影或影子验证脚手架，但不得拒绝或改写先前已接受的真实写入。后续强制补丁只有在对应写者具有所需冲突 fixture 且其回滚行为已文档化时才能翻转该字段。这使推出保持小：先在单个写者上证明契约，再在单独验证步骤中收紧行为。
 
-## Rollout Notes
+## 推出说明
 
-The first implementation step should be non-destructive: add protocol docs and
-fixture smokes, then adapt one existing writer to emit or validate the compact
-shape in dry-run. Only after parity is proven should LoopX tighten the runtime
-write path with hard idempotency keys, optimistic revision/CAS, or per-goal
-lock metadata.
+首个实现步骤应是非破坏性的：添加协议文档与 fixture smokes，然后适配一个既有写者在 dry-run 中发出或验证紧凑形状。只有在一致性证明之后，LoopX 才应以硬幂等键、乐观修订/CAS 或按 goal 锁元数据收紧运行时写入路径。

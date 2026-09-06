@@ -1,102 +1,76 @@
 # cs_notes_explore_capability_map_v0
+> [English](cs-notes-explore-capability-map-v0.md)
 
-Status: public-safe selection map v0.
+状态：公开安全选择图 v0。
 
-This map records the reusable exploration capabilities selected from a
-CS-Notes read-only mechanism scan. It is a capability map, not an import of
-CS-Notes material, private queues, drafts, or source bodies. The selected
-patterns are useful because they turn "go look around" into bounded,
-observable, and gated product work.
+本图记录从 CS-Notes 只读机制扫描中选出的可复用探索能力。它是 capability 图，不是对 CS-Notes 物料、私有队列、草稿或源正文的导入。所选模式之所以有用，是因为它们把「去看一看」变成有界、可观测且具关卡的产品工作。
 
-## Boundary
+## 边界
 
-The scan used only generic mechanism surfaces: skill contracts, snippet
-entrypoints, README-style workflow notes, and deterministic helper-script
-interfaces. It intentionally excludes private local state, raw material queues,
-auth configuration, platform session artifacts, personal drafts, and raw source
-content.
+该扫描只使用通用机制界面：skill 契约、snippet 入口点、README 式工作流笔记与确定性辅助脚本接口。它有意排除私有本地状态、原始物料队列、认证配置、平台会话工件、个人草稿与原始源内容。
 
-A pattern is eligible for LoopX only when it is:
+一个模式只有在满足以下条件才符合 LoopX 资格：
 
-- source-agnostic enough to work for GitHub, browser, chat, paper, or document
-  connectors;
-- explicit about read status, access route, and fallback;
-- safe to represent as compact metadata before any private source body is read;
-- able to produce a small artifact or validation result;
-- useful to a repo issue-fix, content-ops, experiment, or general connector
-  workflow without copying CS-Notes-specific prose.
+- 足够来源无关，可用于 GitHub、浏览器、聊天、论文或文档 connector；
+- 明确说明读状态、访问路由与回退；
+- 在读取任何私有源正文之前可以安全地表示为紧凑元数据；
+- 能够产出小工件或验证结果；
+- 对仓库 issue-fix、content-ops、实验或通用 connector 工作流有用，而不复制 CS-Notes 特定措辞。
 
-## Selected Capabilities
+## 已选能力
 
-| Capability | What To Reuse | LoopX Target | First Product Slice |
+| 能力 | 复用内容 | LoopX 目标 | 首个产品切片 |
 | --- | --- | --- | --- |
-| `material_intake_profile_v0` | Intent profiles, source lanes, S/A/B/Unread decisions, and deep/quick/background/carryover routing. | Connector discovery and content-ops signal ranking. | Add an `exploration_plan_packet_v0` fixture that records chosen lanes, read status, evidence quality, and next safe source action. |
-| `trusted_source_scan_plan_v0` | A scan plan is not a read result: it records source route, access level, fallback, and the template for later writeback. | Browser/chat/document connector preflight. | Teach connector trials to emit route/access/fallback before any live source read. |
-| `pre_tick_gate_v0` | Cheap read-only signals produce one recommended action, gates, guards, and validation expectations. | Heartbeat and quota preflight for long-running agents. | Add a preflight packet that distinguishes status-only ticks from delivery ticks. |
-| `todo_triage_index_v0` | Legacy tasks become structured categories: agent-runnable, user/environment blocked, stale material flow, merged workflow, or completed. | Repo issue fix and deferred-todo visibility. | Build a fixture that maps imported issue/todo rows into LoopX user/agent/deferred lanes. |
-| `snippet_registry_contract_v0` | Reusable scripts and prompts must have a named entrypoint, trigger scenario, boundary note, and validation command. | Capability catalog and connector pack governance. | Add catalog fields for entrypoint, boundary, validation, and public-safety class. |
-| `guarded_heartbeat_visibility_v0` | Prefer user-visible automation; use headless fallback only with idle guards and visibility caveats. | Project heartbeat prompt and connector monitor UX. | Surface transport mode and visibility risk in heartbeat/status packets. |
+| `material_intake_profile_v0` | 意图 profile、来源 lane、S/A/B/Unread 决策与 deep/quick/background/carryover 路由。 | Connector 发现与 content-ops 信号排序。 | 增加一个 `exploration_plan_packet_v0` fixture，记录所选 lane、读状态、证据质量与下一个安全来源动作。 |
+| `trusted_source_scan_plan_v0` | 扫描计划不是读取结果：它记录来源路由、访问级别、回退与稍后 writeback 的模板。 | 浏览器/聊天/文档 connector 预检。 | 让 connector 试点在任何实时来源读取前输出 route/access/fallback。 |
+| `pre_tick_gate_v0` | 廉价只读信号产出一个推荐动作、gauntlet、guard 与验证期望。 | 长程 agent 的 heartbeat 与配额 preflight。 | 增加一个 preflight 包，区分仅状态 tick 与投递 tick。 |
+| `todo_triage_index_v0` | 遗留任务变成结构化类别：agent 可运行、用户/环境阻塞、过期物料流、合并工作流或已完成。 | 仓库 issue fix 与 deferred-todo 可见性。 | 构建一个把导入的 issue/todo 行映射到 LoopX user/agent/deferred lane 的 fixture。 |
+| `snippet_registry_contract_v0` | 可复用脚本与 prompt 必须有命名入口点、触发场景、边界说明与验证命令。 | Capability 目录与 connector 包治理。 | 为入口点、边界、验证与公开安全类别增加目录字段。 |
+| `guarded_heartbeat_visibility_v0` | 更偏好用户可见的自动化；仅在有空闲 guard 与可见性提示时使用 headless 回退。 | 项目 heartbeat prompt 与 connector 监控 UX。 | 在 heartbeat/status 包中呈现传输模式与可见性风险。 |
 
-## Scenario Fit
+## 场景适配
 
-Repo issue fix:
+仓库 issue fix：
 
-- `todo_triage_index_v0` can turn GitHub issues, review comments, and stale
-  local todos into one compact runnable set with explicit user gates.
-- `trusted_source_scan_plan_v0` prevents an agent from treating a linked issue,
-  external doc, or repo as read before it actually inspected the source.
+- `todo_triage_index_v0` 可以把 GitHub issue、评审评论与过期本地 todo 变成一个紧凑可运行集，并带显式用户关卡。
+- `trusted_source_scan_plan_v0` 防止 agent 在真正检查来源之前，就把一个链接 issue、外部文档或仓库当作已读取。
 
-Self-media and creator operations:
+自媒体与创作者运维：
 
-- `material_intake_profile_v0` matches the connector-to-information-to-anchor
-  workflow: first choose source lanes, then rank evidence, then promote only
-  public-safe anchors into drafts.
-- `trusted_source_scan_plan_v0` and `snippet_registry_contract_v0` keep
-  browser/chat connectors metadata-bounded until owner review allows more.
+- `material_intake_profile_v0` 契合 connector-信息-锚点工作流：先选来源 lane，再对证据排序，然后只把公开安全锚点提升进草稿。
+- `trusted_source_scan_plan_v0` 与 `snippet_registry_contract_v0` 使浏览器/聊天 connector 在 owner 评审允许更多之前保持元数据有界。
 
-Experiment and other vertical state surfaces:
+实验与其他垂直状态界面：
 
-- `pre_tick_gate_v0` and `todo_triage_index_v0` are reusable for ML experiment
-  lanes: pending runs, result availability, failed environment checks, and
-  human interpretation gates can all be represented before a full experiment
-  state surface exists.
-- `snippet_registry_contract_v0` gives each vertical pack a minimal "how to
-  run, what it reads, what it writes, how to validate" contract.
+- `pre_tick_gate_v0` 与 `todo_triage_index_v0` 可复用于 ML 实验 lane：待处理运行、结果可用性、失败的环境检查与人类解读关卡都可以在完整实验状态界面存在之前表示。
+- `snippet_registry_contract_v0` 为每个垂直包提供一份最小的「如何运行、读取什么、写入什么、如何验证」契约。
 
-## Not Imported
+## 未导入
 
-These are useful in CS-Notes but should not be copied into LoopX as-is:
+这些在 CS-Notes 中有用，但不应原样复制进 LoopX：
 
-- exact learning-material queues or personal priority text;
-- platform auth setup, session artifacts, private connector configuration, or
-  local automation service files;
-- raw writing drafts, raw chat/source bodies, screenshots, or private
-  evidence;
-- the full text of CS-Notes skills when a small generic packet contract is
-  enough;
-- source-specific ranking biases that only make sense for one person's career
-  roadmap.
+- 精确的学习物料队列或个人优先级文本；
+- 平台认证设置、会话工件、私有 connector 配置或本地自动化服务文件；
+- 原始写作草稿、原始聊天/源正文、截图或私有证据；
+- 当一个小型通用包契约已足够时的 CS-Notes skill 全文；
+- 只对单个人职业路线图有意义的来源特定排序偏好。
 
-## Recommended Next Step
+## 推荐下一步
 
-Implement `exploration_plan_packet_v0` first. The initial fixture entrypoint is
-now:
+先实现 `exploration_plan_packet_v0`。初始 fixture 入口点现在是：
 
 ```bash
 loopx content-ops exploration-plan --format json
 ```
 
-It combines the strongest parts of `material_intake_profile_v0` and
-`trusted_source_scan_plan_v0`:
+它结合了 `material_intake_profile_v0` 与 `trusted_source_scan_plan_v0` 最强的部分：
 
-- selected source lanes;
-- access/read status;
-- route and fallback;
-- evidence quality;
-- candidate promotion target;
-- user gate when the next read would cross a private boundary;
-- validation that no source body, credential, local path, or external write was
-  captured.
+- 所选来源 lane；
+- 访问/读状态；
+- 路由与回退；
+- 证据质量；
+- 候选提升目标；
+- 当下一次读取将越入私有边界时的用户关卡；
+- 验证未捕获任何源正文、凭据、本地路径或外部写入。
 
-That packet is the common substrate for repo issue discovery, content-ops
-signal intake, and future experiment state surfaces.
+该包是仓库 issue 发现、content-ops 信号摄取与未来实验状态界面的公共基座。

@@ -1,117 +1,105 @@
-# Creator-Ops Feedback And Boundary Contract
+# 创作者-操作者反馈与边界契约
 
-This contract describes how a public-safe creator-operator showcase should turn
-non-technical user feedback into visible LoopX state.
+> [English](creator-ops-feedback-boundary-contract.md)
 
-It is a product contract for demos and future frontends. It is not a social
-platform crawler, publishing tool, private memory store, or claim about real
-creator performance.
+这个契约描述了公开安全的创作者-操作者案例展示应如何把非技术用户的反馈转化为可见的 LoopX 状态。
 
-## Purpose
+它是为 demo 与未来前端制定的产品契约。它不是社交平台爬虫、发布工具、私有记忆库,也不是关于真实创作者表现的声明。
 
-A creator-operator should be able to answer four questions without reading
-prompts, traces, or logs:
+## 目的
 
-- what changed since the last run;
-- what is waiting for human judgment;
-- what can safely continue while the gated route waits;
-- how my feedback changes the next agent move.
+一位创作者-操作者在不需要阅读提示、轨迹或日志的情况下,应该能回答四个问题:
 
-LoopX should make that feedback visible as structured state instead of
-letting it disappear into chat history.
+- 自上次运行以来发生了什么变化;
+- 什么在等待人类判断;
+- 在关卡化的路线等待时,什么可以安全继续;
+- 我的反馈如何改变 agent 的下一步动作。
 
-## Feedback Classes
+LoopX 应把这种反馈变成可见的结构化状态,而不是让它消失在聊天历史里。
 
-| Feedback class | Example user phrase | Control-plane effect |
+## 反馈类别
+
+| 反馈类别 | 示例用户用语 | 控制面效果 |
 | --- | --- | --- |
-| `gate_decision` | "Publish after I review tone." | Updates a user gate with the decision, stop condition, and owner judgment. |
-| `preference_hint` | "This is too salesy." | Records a planning preference for future ranking, drafting, or revision. |
-| `todo_update` | "Revise this angle first." | Creates or reprioritizes an agent todo. |
-| `boundary_correction` | "Do not use this source." | Marks a source or material item as disallowed and creates cleanup work. |
-| `reward_signal` | "This direction is useful." | Records a compact positive signal tied to the run and rationale. |
-| `product_improvement_note` | "I cannot tell what is blocked." | Creates a product/docs/UI improvement todo, not project truth. |
+| `gate_decision` | "我审查语调后再发布。" | 用决定、停止条件与所有者判断更新用户关卡。 |
+| `preference_hint` | "这个太销售腔了。" | 为未来的排序、起草或修订记录一条规划偏好。 |
+| `todo_update` | "先修这个角度。" | 创建或重新排序一个 agent todo。 |
+| `boundary_correction` | "不要使用这个来源。" | 把来源或素材条目标记为禁用,并创建清理工作。 |
+| `reward_signal` | "这个方向有用。" | 记录一条绑定到该运行与理由的紧凑正向信号。 |
+| `product_improvement_note` | "我看不出什么被阻塞了。" | 创建产品/文档/UI 改进 todo,而不是项目事实。 |
 
-The classes are intentionally separate. A preference is not a permission gate.
-A positive reward is not approval to publish. A boundary correction overrides
-the affected route until the state is repaired.
+这些类别刻意保持分离。偏好不是权限关卡。正向 reward 不是发布批准。边界修正会覆盖受影响的路线,直到状态被修复。
 
-## Source Status
+## 来源状态
 
-Every topic, insight, draft, and material-library item should carry a source
-status:
+每个主题、洞察、草稿与素材库条目都应带有来源状态:
 
-| Source status | Meaning | Public showcase rule |
+| 来源状态 | 含义 | 公开案例展示规则 |
 | --- | --- | --- |
-| `synthetic_demo` | Fake data created for the demo. | Safe for public docs when labeled. |
-| `public_source_summary` | A summary rewritten from public material. | Safe only when attribution and terms are respected. |
-| `private_user_material` | User notes, drafts, or preferences. | Never render in public examples. |
-| `unpublished_draft` | Draft work that has not been approved. | Keep behind a publish gate. |
-| `needs_review` | Source status is uncertain. | Treat as blocked for public or publishing use. |
-| `forbidden_public_surface` | User or policy rejected public use. | Remove from public demo and future render paths. |
+| `synthetic_demo` | 为 demo 创建的假数据。 | 标注后可在公共文档中使用。 |
+| `public_source_summary` | 从公开材料改写而成的摘要。 | 仅在尊重归属与条款时安全。 |
+| `private_user_material` | 用户笔记、草稿或偏好。 | 绝不在公开示例中渲染。 |
+| `unpublished_draft` | 尚未批准的草稿工作。 | 保持在发布关卡之后。 |
+| `needs_review` | 来源状态不确定。 | 对公开或发布用途按阻塞处理。 |
+| `forbidden_public_surface` | 用户或策略拒绝了公开使用。 | 从公共 demo 与未来渲染路径中移除。 |
 
-For the public repository, the default should be `synthetic_demo`.
+对于公共仓库,默认应该是 `synthetic_demo`。
 
-## No-Autopublish Gate
+## 不自动发布关卡
 
-Publishing is a hard user gate:
+发布是一个硬性用户关卡:
 
-- default state is no publish;
-- source policy and tone approval must be explicit;
-- private or uncertain material cannot be used to publish;
-- safe side work may continue only when it is independent of the gate.
+- 默认为不发布;
+- 来源策略与语调批准必须明确;
+- 私有或不确定的素材不能用于发布;
+- 只有当安全旁路工作独立于该关卡时,它才可以继续。
 
-Good side work includes organizing synthetic material, preparing questions,
-splitting todos, improving source-status labels, and making the next decision
-easier for the user.
+好的旁路工作包括:整理合成素材、准备问题、拆分 todos、改进来源状态标签,以及让用户的下一步决定更容易。
 
-## Write Mapping
+## 写入映射
 
-| Input | Allowed write | Forbidden write |
+| 输入 | 允许写入 | 禁止写入 |
 | --- | --- | --- |
-| Gate decision | user gate state, run history summary | hidden publish approval |
-| Preference hint | preference note, todo ranking rationale | hard safety decision |
-| Todo update | new or reordered agent todo | silent plan mutation |
-| Boundary correction | source status update, cleanup todo, blocker note | continued use of rejected material |
-| Reward signal | compact run-bound signal with reason | unbounded personal profile |
-| Product improvement note | contributor/product todo | fabricated project evidence |
+| 关卡决定 | 用户关卡状态、运行历史摘要 | 隐藏的发布批准 |
+| 偏好提示 | 偏好说明、todo 排序理由 | 硬性安全决定 |
+| Todo 更新 | 新增或重排的 agent todo | 静默修改计划 |
+| 边界修正 | 来源状态更新、清理 todo、blocker 说明 | 继续使用被拒绝素材 |
+| Reward 信号 | 带理由的紧凑运行绑定信号 | 无界个人档案 |
+| 产品改进说明 | 贡献者/产品 todo | 捏造的项目证据 |
 
-Every write should preserve the source of the feedback in compact form: user
-answer, synthetic fixture, public summary, or product observation.
+每次写入都应以紧凑形式保留反馈来源:用户回答、合成 fixture、公开摘要或产品观察。
 
-## Replan Rules
+## Replan 规则
 
-After feedback, the next plan should show:
+反馈之后,下一份计划应展示:
 
-- the changed todo or gate;
-- the blocked route, if any;
-- the safe side path, if any;
-- the validation expected before the next writeback.
+- 变化过的 todo 或关卡;
+- 被阻塞的路线(如有);
+- 安全旁路(如有);
+- 下次回写之前期望的验证。
 
-If the feedback is ambiguous, ask a concrete question or create a user gate.
-Do not turn ambiguity into hidden memory.
+如果反馈不明确,问一个具体问题或创建用户关卡。不要把模糊性变成隐藏记忆。
 
-## Frontend Expectations
+## 前端预期
 
-A non-technical operator surface should render feedback as choices with visible
-effects. For example:
+非技术操作者界面应把反馈渲染成带可见效果的选择。例如:
 
-| Button | Visible effect |
+| 按钮 | 可见效果 |
 | --- | --- |
-| This angle is useful | Adds a reward signal and preference hint. |
-| Too salesy | Adds a revision todo and style preference. |
-| Do not use this source | Adds a boundary correction and cleanup todo. |
-| Publish after tone review | Keeps publishing gated until tone review is done. |
+| 这个角度有用 | 添加一条 reward 信号与偏好提示。 |
+| 太销售腔了 | 添加一条修订 todo 与风格偏好。 |
+| 不要使用这个来源 | 添加一条边界修正与清理 todo。 |
+| 语调审查后发布 | 在语调审查完成前保持发布关卡化。 |
 
-The UI should show the resulting state change before the next automatic run
-spends compute.
+UI 应在下一次自动运行消耗算力之前展示由此产生的状态变更。
 
-## Acceptance Criteria
+## 验收标准
 
-A creator-ops demo satisfies this contract when:
+当以下条件满足时,创作者-操作者 demo 符合本契约:
 
-- all public data is synthetic or clearly public-safe;
-- no feedback is stored only as invisible chat context;
-- publishing remains explicitly gated;
-- boundary corrections stop affected work until repaired;
-- safe side work is separate from publish-gated work;
-- the catalog can link this contract beside the case page and storyboard.
+- 所有公共数据都是合成的或明确公开安全的;
+- 没有反馈只被存成不可见的聊天上下文;
+- 发布始终明确保持关卡化;
+- 边界修正会停止受影响的工作,直到修复;
+- 安全旁路工作与发布关卡化工作分离;
+- 目录可以把本契约与案例页和 storyboard 一起链接。

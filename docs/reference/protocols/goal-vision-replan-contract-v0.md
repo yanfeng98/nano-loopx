@@ -1,61 +1,49 @@
 # goal_vision_replan_contract_v0
+> [English](goal-vision-replan-contract-v0.md)
 
-`goal_vision_replan_contract_v0` defines the small per-agent contract that
-connects bounded agent vision, autonomous replan, dreaming proposals, and
-goal-routing projection. It is a kernel contract, not an auto-research preset.
+`goal_vision_replan_contract_v0` 定义连接有界 agent vision、自主 replan、dreaming 建议与 goal 路由投影的小型每 agent 契约。它是内核契约，不是 auto-research preset。
 
-The purpose is to keep both the user layer and the product preset thin:
+目的是保持用户层与产品 preset 都薄：
 
-- the user supplies intent and small overrides;
-- the preset supplies domain defaults and handoff hints;
-- the kernel owns bounded per-agent vision, replan state transitions, and the
-  read/write protocol used by quota and status.
+- 用户提供意图与小量覆盖；
+- preset 提供领域默认值与交接提示；
+- 内核拥有有界每 agent vision、replan 状态转换与 quota 和 status 使用的读/写协议。
 
-Every vision packet and checkpoint is scoped by `agent_id`. Goal-level
-projection may aggregate the resulting gaps, but it must not let one role's
-vision drift or missing closeout satisfy, block, or wake another role.
+每个 vision 包与检查点按 `agent_id` 作用域。Goal 级投影可以聚合所得缺口，但它不得让一个角色的 vision 漂移或缺失 closeout 满足、阻塞或唤醒另一角色。
 
-## Ownership Boundary
+## 所有权边界
 
-| Layer | Owns | Must Not Own |
+| 层 | 拥有 | 不拥有 |
 | --- | --- | --- |
-| User | Objective, optional role overrides, and optional data/eval entrypoint. | Vision state-machine transitions, replan recovery policy, quota routing, or raw agent scratchpads. |
-| Preset | Domain roles, handoff hints, metric/evidence adapters, and compact default acceptance text. | Long-lived replan mechanics, pane-local tick policy, generic successor routing, or product-specific forks of the kernel state machine. |
-| Kernel | CLI-enforced vision budgets, vision/replan state transitions, goal-route projection, todo/evidence/status protocol, and compact default prompts. | Domain-specific research logic, benchmark scoring, support triage semantics, or sales workflow semantics. |
+| 用户 | 目标、可选角色覆盖与可选数据/评估入口点。 | Vision 状态机转换、replan 恢复策略、quota 路由或原始 agent 草稿。 |
+| Preset | 领域角色、交接提示、指标/证据适配器与紧凑默认验收文本。 | 持久化 replan 机制、pane 级 tick 策略、通用 successor 路由或内核状态机的产品特定分叉。 |
+| 内核 | CLI 强制的 vision 预算、vision/replan 状态转换、goal 路由投影、todo/evidence/status 协议与紧凑默认 prompt。 | 领域特定研究逻辑、benchmark 评分、支持分类语义或销售工作流语义。 |
 
-`loopx/quota.py` should consume the final `goal_route_projection` or
-`goal_frontier_projection`. It should not grow per-agent vision storage,
-budgeting, dreaming, or product-specific replan logic.
+`loopx/quota.py` 应消费最终 `goal_route_projection` 或 `goal_frontier_projection`。它不应增长每 agent vision 存储、预算、dreaming 或产品特定 replan 逻辑。
 
-## CLI Budget
+## CLI 预算
 
-Per-agent vision is an executable control-plane field, so the CLI/write API must
-enforce a hard size budget before the state reaches quota, status, or a visible
-agent pane. Long reasoning belongs in evidence artifacts or design docs.
+每 agent vision 是可执行控制面字段，因此 CLI/写 API 必须在状态到达 quota、status 或可见 agent pane 前强制硬大小预算。长推理属于证据工件或设计文档。
 
-| Field | Max chars | Purpose |
+| 字段 | 最大字符 | 用途 |
 | --- | ---: | --- |
-| `vision_summary` | 420 | Current role-specific direction and success shape. |
-| `role_scope` | 280 | What this agent owns and must not own. |
-| `acceptance_summary` | 420 | Compact completion contract for this agent. |
-| `advancement_policy` | 32 | `as_needed` or `repeat_until_closed`. |
-| `replan_trigger_summary` | 240 | Why the latest replan is required. |
-| `dreaming_policy` | 240 | Whether advisory dreaming can propose a patch. |
-| `last_patch_summary` | 240 | What changed in the latest bounded vision patch. |
-| `total_agent_vision` | 1200 | Aggregate budget for one agent's active vision packet. |
+| `vision_summary` | 420 | 当前角色特定方向与成功形状。 |
+| `role_scope` | 280 | 该 agent 拥有且不得拥有什么。 |
+| `acceptance_summary` | 420 | 该 agent 的紧凑完成契约。 |
+| `advancement_policy` | 32 | `as_needed` 或 `repeat_until_closed`。 |
+| `replan_trigger_summary` | 240 | 为何需要最新 replan。 |
+| `dreaming_policy` | 240 | 咨询性 dreaming 是否可以建议补丁。 |
+| `last_patch_summary` | 240 | 最新有界 vision 补丁改变了什么。 |
+| `total_agent_vision` | 1200 | 一个 agent 活动 vision 包的聚合预算。 |
 
-Required write-path behavior:
+必需写路径行为：
 
-1. Reject over-budget writes with `vision_budget_exceeded`, including the
-   current character count, field limit, and a compact suggested replacement
-   when the offending field is known.
-2. Do not silently truncate fields; truncation hides control-plane intent.
-3. Store verbose rationale as evidence and reference it by id.
-4. Keep the latest bounded packet visible in status/quota so agents can reason
-   without reading private scratchpads or chat history.
+1. 以 `vision_budget_exceeded` 拒绝超预算写入，包括当前字符数、字段限制，以及已知违规字段时的紧凑建议替换。
+2. 不静默截断字段；截断隐藏控制面意图。
+3. 把冗长理由存储为证据并按 id 引用。
+4. 让最新有界包在 status/quota 中可见，使 agent 无需读取私有草稿或聊天历史即可推理。
 
-The normal lightweight CLI write boundary is `loopx refresh-state` with inline
-vision patch fields:
+正常轻量 CLI 写边界是带内联 vision 补丁字段的 `loopx refresh-state`：
 
 ```bash
 loopx refresh-state \
@@ -67,39 +55,15 @@ loopx refresh-state \
   --vision-replan-trigger "<why the frontier is insufficient>"
 ```
 
-`advancement_policy` is a small machine-readable frontier rule, not a domain
-label. It defaults to `as_needed`, which preserves bounded external waits only
-when the wait belongs to the current vision, current blocked Todo, or its
-explicit successor lineage. An unrelated deferred Todo or historical ACK
-cannot suppress an acceptance gap. Use `repeat_until_closed` for campaigns,
-iterative research, sweepers, and other visions whose open acceptance requires
-another advancement iteration whenever the runnable advancement frontier is
-empty. In that mode, monitor observations remain useful evidence but cannot
-satisfy advancement continuation by themselves. A fresh evidence-linked vision
-path outcome, new concrete blocker, coverage-backed terminal result, or a
-closed/superseding vision resolves the duty.
+`advancement_policy` 是小机器可读前沿规则，不是领域标签。它默认为 `as_needed`，只在该等待属于当前 vision、当前阻塞 Todo 或其一显式 successor 血统时保留有界外部等待。无关的推迟 Todo 或历史 ACK 不能抑制验收缺口。对 campaigns、迭代研究、清扫器与其他开放验收在可运行推进前沿为空时需要另一次推进迭代的 vision，使用 `repeat_until_closed`。该模式下，monitor 观察保持有用证据，但不能单独满足推进继续。新鲜证据链接的 vision 路径结局、新具体 blocker、覆盖背书终态结果或关闭/取代的 vision 解决该义务。
 
-For machine-generated or multi-field patches, the same command also accepts
-`--agent-vision-json <packet.json>`. The two forms are mutually exclusive and
-both pass through the same budget validation. When a vision-derived replan duty
-is open, a valid packet counts only when it carries a fresh evidence-linked path
-outcome accepted by the shared semantic write gate. An invalid, over-budget, or
-pathless packet fails instead of recording a partial closure. A matching typed
-semantic ACK settles the vision-derived duty even while the original acceptance
-gap remains visible in the source projection.
+对于机器生成或多字段补丁，同一命令还接受 `--agent-vision-json <packet.json>`。两种形式互斥，且都经过同一预算验证。当 vision 派生 replan 义务开放时，有效包只在其携带被共享语义写 gate 接受的新鲜证据链接路径结局时计数。无效、超预算或无路径包失败，而不是记录部分关闭。匹配的类型化语义 ACK 结清 vision 派生义务，即使原始验收缺口在源投影中保持可见。
 
-Inline vision writes require `--agent-id`. JSON packets must also resolve to
-the same `agent_id` as the refresh run. This keeps `research-executor`,
-`evaluator-promoter`, and other roles from overwriting or satisfying each
-other's active vision.
+内联 vision 写入要求 `--agent-id`。JSON 包还必须解析为与 refresh 运行相同的 `agent_id`。这防止 `research-executor`、`evaluator-promoter` 与其他角色覆盖或满足彼此的 active vision。
 
-### Path Delta
+### 路径增量
 
-A machine-generated vision packet may include one optional
-`goal_path_delta_v0`. It makes a bounded loop's look-back explicit without
-adding more inline CLI flags or expanding the heartbeat prompt. The packet is
-written through the existing `--agent-vision-json` boundary and is retained in
-the same agent-scoped run-history and shared-runtime vision projection:
+机器生成的 vision 包可以包含一个可选 `goal_path_delta_v0`。它使有界 loop 的回看显式，而不增加更多内联 CLI 标志或展开 heartbeat prompt。包通过既有 `--agent-vision-json` 边界写入，并保留在同一 agent 作用域 run 历史与共享运行时 vision 投影中：
 
 ```json
 {
@@ -116,45 +80,17 @@ the same agent-scoped run-history and shared-runtime vision projection:
 }
 ```
 
-`outcome` is one of `continue`, `replan`, `wait`, `no_change`, `ask_human`, or
-`stop`. `prior_assumption` and `observed_reality` are required when the object
-is present, together with at least one `retained`, `changed`, or `stopped`
-item. The remaining optional lists preserve unresolved questions and
-public-safe evidence ids. The enclosing
-vision packet's `agent_id` records who made the comparison; `evidence_refs`
-point to evidence instead of copying long rationale or raw artifacts.
+`outcome` 是 `continue`、`replan`、`wait`、`no_change`、`ask_human` 或 `stop` 之一。对象存在时 `prior_assumption` 与 `observed_reality` 必需，连同至少一个 `retained`、`changed` 或 `stopped` 项。剩余可选列表保留未解决疑问与公开安全证据 id。外包 vision 包的 `agent_id` 记录谁做了对比；`evidence_refs` 指向证据而不复制长理由或原始工件。
 
-The path delta shares the existing 1,200-character `total_agent_vision` budget.
-Scalar fields are bounded to 180-220 characters; keep/change/stop lists accept
-at most three 120-character items, unresolved questions at most two
-140-character items, and evidence refs at most four 140-character items. The
-write path rejects excess data instead of silently truncating it. This is a
-compact audit/read model, not a second planner or a new state machine. An
-honest `no_change` remains valid when the observed reality does not justify a
-different path.
+路径增量共享既有 1,200 字符 `total_agent_vision` 预算。标量字段限 180-220 字符；keep/change/stop 列表至多三个 120 字符项、未解决疑问至多两个 140 字符项、证据引用至多四个 140 字符项。写路径拒绝超额数据，而非静默截断。这是紧凑审计/读模型，不是第二规划器或新状态机。观察现实不证明不同路径时，诚实的 `no_change` 仍有效。
 
-`state` is a lower `snake_case` lifecycle token. Domain-specific states remain
-extensible and are treated as open. The write path canonicalizes closure aliases
-such as `closed`, `satisfied`, and `vision_satisfied` to `vision_closed`, and
-`closed_no_followup` to `no_followup`. Quota/status use the same centralized
-closure predicate when reading older persisted packets, so a legacy alias cannot
-silently reopen a satisfied vision. Prose or malformed state values fail at the
-write boundary with an actionable error.
+`state` 是更低层 `snake_case` 生命周期 token。领域特定状态保持可扩展并视为开放。写路径把 `closed`、`satisfied` 与 `vision_satisfied` 等关闭别名规范化为 `vision_closed`，把 `closed_no_followup` 规范化为 `no_followup`。Quota/status 读取旧持久化包时使用同一中央关闭谓词，因此遗留别名不能静默重新打开已满足 vision。散文或畸形状态值在写边界以可行动错误失败。
 
-When a valid packet includes `replan_trigger_summary`, status/quota projects it
-as `goal_frontier_projection.acceptance_gaps[]`. If no runnable advancement
-frontier remains, that gap is evaluated before monitor quiet skip and can
-produce `autonomous_replan_required`. This is the intended self-discovery path:
-an agent records the bounded reason the current vision is still incomplete, and
-LoopX turns that reason into the next replan obligation without relying on chat
-memory or owner reminders.
+有效包包含 `replan_trigger_summary` 时，status/quota 把它投影为 `goal_frontier_projection.acceptance_gaps[]`。若无剩余可运行推进前沿，该缺口在 monitor 静默跳过前被评估，可以产生 `autonomous_replan_required`。这是预期的自发现路径：agent 记录当前 vision 仍不完整的有界原因，LoopX 把该原因变成下一 replan 义务，而不依赖聊天记忆或 owner 提醒。
 
-## Vision Checkpoint
+## Vision 检查点
 
-`refresh-state` always emits a per-agent `vision_checkpoint_v0`, and defaults
-to the `semantic_closeout` delivery boundary. A material delivery outcome or a
-durable `## Next Action` update at that boundary requires an explicit vision
-decision:
+`refresh-state` 总是发出每 agent `vision_checkpoint_v0`，并默认为 `semantic_closeout` 投递边界。该边界的物化投递结局或持久化 `## Next Action` 更新要求显式 vision 决策：
 
 ```json
 {
@@ -171,10 +107,7 @@ decision:
 }
 ```
 
-One explicit exception exists for in-flight delivery. When quota admits an
-open advancement Todo for normal delivery, its settlement guidance may add the
-boundary below. After a resulting `delivery_outcome=outcome_progress`, the next
-heartbeat separately prefers that same Todo while its typed facts stay valid:
+进行中投递存在一个显式例外。Quota 准入开放推进 Todo 正常投递时，其结算指引可以添加下面的边界。在所得 `delivery_outcome=outcome_progress` 之后，下一 heartbeat 在其类型化事实保持有效期间单独优先该同一 Todo：
 
 ```bash
 loopx refresh-state \
@@ -186,177 +119,65 @@ loopx refresh-state \
   ...
 ```
 
-This boundary is valid only for the selected agent-bound or unclaimed open
-advancement Todo while it is still in flight. It rejects Todo completion, a
-durable Next Action update, autonomous replan writeback, and any outcome other
-than `outcome_progress`. Its checkpoint has `decision=not_required`,
-`required=false`, and a typed
-`in_flight_continuation` trigger carrying the Todo id. The next quota decision
-can therefore preserve causal ownership without manufacturing another vision
-decision merely because the scheduler woke up. Agents must start from
-`interaction_contract.cli_channel.next_cli_actions[0]` and preserve its
-projected boundary and identity flags; reconstructing a generic
-`semantic_closeout` command discards that continuity contract.
+该边界只在所选 agent 绑定或未认领开放推进 Todo 仍在飞行中时有效。它拒绝 Todo 完成、持久化 Next Action 更新、自主 replan writeback 与 `outcome_progress` 之外的任何结局。其检查点有 `decision=not_required`、`required=false` 与携带 Todo id 的类型化 `in_flight_continuation` 触发。下一 quota 决策因此可以保留因果所有权，而不因 scheduler 唤醒就制造另一个 vision 决策。Agent 必须从 `interaction_contract.cli_channel.next_cli_actions[0]` 开始并保留其投影边界与身份标志；重建通用 `semantic_closeout` 命令会丢弃该连续性契约。
 
-Omitting `--delivery-boundary` remains strict `semantic_closeout`. Todo
-completion, `outcome_gap`, `primary_goal_outcome`, durable route changes,
-replan, and terminal/no-follow-up decisions must use that boundary. This is a
-vision/Todo domain transition, not a lighter Effect Program or settlement:
-validation, durable writeback, receipts, and quota accounting still run on
-every heartbeat.
+省略 `--delivery-boundary` 保持严格 `semantic_closeout`。Todo 完成、`outcome_gap`、`primary_goal_outcome`、持久化路由变更、replan 与终态/no-follow-up 决策必须使用该边界。这是 vision/Todo 领域转换，不是更轻的 Effect Program 或结算：验证、持久化 writeback、回执与配额记账仍在每个 heartbeat 上运行。
 
-Valid checkpoint decisions are:
+有效检查点决策：
 
-- `patched`: the refresh wrote a bounded `agent_vision` packet for the same
-  `agent_id`;
-- `unchanged_with_reason`: an already persisted current per-agent vision still
-  applies, with a compact public-safe reason. A reason cannot create the first
-  vision baseline; without one, the checkpoint remains `missing_required` and
-  requires `write_vision_patch`. TypeScript binds the decision to that vision's
-  exact `generated_at` revision through `continuity_basis`;
-- `missing_required`: the turn was material but did not make a per-agent vision
-  decision; and
-- `not_required`: no material closeout trigger was present, including a valid
-  typed in-flight continuation.
+- `patched`：refresh 为同一 `agent_id` 写入了有界 `agent_vision` 包；
+- `unchanged_with_reason`：已持久化的当前每 agent vision 仍适用，带紧凑公开安全原因。原因不能创建首个 vision 基线；无基线时检查点保持 `missing_required` 并要求 `write_vision_patch`。TypeScript 通过 `continuity_basis` 把决策绑定到该 vision 的精确 `generated_at` 修订；
+- `missing_required`：Turn 是物化的，但没有做出每 agent vision 决策；以及
+- `not_required`：无物化 closeout 触发，包括有效类型化 in-flight 继续。
 
-`missing_required` is not a chat reminder. Status keeps it in compact run
-history, quota filters it by current `agent_id`, and goal-frontier projection
-turns it into `acceptance_gaps[]`. If the current agent has no runnable
-advancement frontier, that gap can trigger `autonomous_replan_required`.
-For the same `agent_id`, a newer satisfied checkpoint with `patched` or
-`unchanged_with_reason` supersedes older
-`missing_required` checkpoints; `not_required` does not.
+`missing_required` 不是聊天提醒。Status 把它保留在紧凑 run 历史中，quota 按当前 `agent_id` 过滤它，goal-frontier 投影把它变成 `acceptance_gaps[]`。若当前 agent 无可运行推进前沿，该缺口可以触发 `autonomous_replan_required`。对同一 `agent_id`，带 `patched` 或 `unchanged_with_reason` 的更新满足检查点取代旧 `missing_required` 检查点；`not_required` 不取代。
 
-A satisfied checkpoint is protocol-complete, but a material closeout also has
-to qualify its relationship to the final outcome. A patched checkpoint must
-name the active `acceptance_summary`, attach public-safe
-`goal_path_delta_v0.evidence_refs`, and record one of these decisions:
+满足的检查点协议完整，但物化 closeout 还要界定其与最终结局的关系。Patched 检查点必须指名活动 `acceptance_summary`、附加公开安全 `goal_path_delta_v0.evidence_refs`，并记录以下决策之一：
 
-- `continue` or `no_change` when the new evidence supports the final-outcome
-  path and the delivery did not report `outcome_gap`; or
-- `replan` when the evidence contradicts or leaves the path open. The typed
-  path outcome is itself the vision decision; it does not rely on a legacy
-  autonomous-replan ACK flag.
+- 新证据支持最终结局路径且投递未报 `outcome_gap` 时的 `continue` 或 `no_change`；或
+- 证据反驳或使路径保持开放时的 `replan`。类型化路径结局本身就是 vision 决策；它不依赖遗留 autonomous-replan ACK 标志。
 
-An `unchanged_with_reason` checkpoint may reuse that evidence-linked path only
-when its typed `continuity_basis` matches the exact current vision revision and
-the persisted path already carries the acceptance claim, evidence refs, and a
-legal path outcome. A missing or mismatched basis, an evidence-free prior path,
-or a newly missing checkpoint opens a new outcome gap. This closes the accepted
-revision without suppressing a later material vision/checkpoint change.
+`unchanged_with_reason` 检查点只在其类型化 `continuity_basis` 匹配精确当前 vision 修订、且持久化路径已携带验收主张、证据引用与合法路径结局时可复用该证据链接路径。缺失或不匹配 basis、无证据先验路径或新近缺失检查点打开新结局缺口。这关闭被接受的修订，而不抑制后续物化 vision/检查点变更。
 
-An older path delta, an unchanged-with-reason decision, or an unrelated
-runnable todo does not qualify the material closeout. Quota projects
-`vision_outcome_checkpoint_required` ahead of ordinary runnable work until a
-fresh evidence-linked continuation or replan is recorded. The same rule
-applies when a same-agent advancement todo was completed after the latest
-qualifying checkpoint. Todo completion is therefore the checkpoint timing
-signal, not proof that the final acceptance contract is done; the evidence
-decides whether to continue, replan/supersede, or close.
+更旧路径增量、unchanged-with-reason 决策或无关可运行 todo 不使物化 closeout 合格。Quota 在记录新鲜证据链接继续或 replan 前，把 `vision_outcome_checkpoint_required` 投影在普通可运行工作之前。同一规则适用于同 agent 推进 todo 在最新合格检查点后被完成时。因此 Todo 完成是检查点时序信号，不是最终验收契约已完成的证明；证据决定的是继续、replan/接替还是关闭。
 
-Checkpoint packets, context-delivery receipts, manual evidence reads, and
-historical autonomous-replan ACKs are protocol records, not semantic completion
-proof. A future monitor schedule is also not completion proof; it only says
-when to poll. If evidence, successor state, blocker state, or a superseding
-vision packet still shows the vision is unmet, the acceptance gap remains
-authoritative and quota must continue to project replan work. The write-time
-gate derives that same obligation from the goal-frontier reducer, so a
-maintenance classification or an ACK for an earlier periodic duty cannot bypass
-a newly rotated vision duty.
+检查点包、上下文投递回执、手动证据读取与历史 autonomous-replan ACK 是协议记录，不是语义完成证明。未来 monitor 计划也不是完成证明；它只说何时轮询。若证据、successor 状态、blocker 状态或接替 vision 包仍显示 vision 未满足，验收缺口保持权威，quota 必须继续投影 replan 工作。写时 gate 从 goal-frontier reducer 派生同一义务，因此维护分类或更早周期义务的 ACK 不能绕过新轮换的 vision 义务。
 
-### Semantic History Continuity
+### 语义历史连续性
 
-`run_history.goals[].latest_runs` is a strictly bounded recency drill-down. It
-must not grow beyond its requested display limit to preserve older control
-records. Long-lived goal semantics instead use `goal_semantic_history_v0`, a
-per-agent read model whose size grows with participating agents rather than
-heartbeat count.
+`run_history.goals[].latest_runs` 是严格有界的近时下钻。它不得超出请求的显示限制增长，以保留更早控制记录。长程 goal 语义改用 `goal_semantic_history_v0`，一种每 agent 读模型，其大小随参与 agent 而非 heartbeat 数增长。
 
-Each agent lane independently selects the latest active vision (or explicit
-retirement), latest checkpoint, latest outcome-relevant checkpoint, latest
-autonomous-replan ACK, and latest material milestone. The goal also retains the
-latest compact human reward as the owner-correction slot. Repeated quota spend,
-monitor polling, promotion readiness, and ordinary refresh rows do not consume
-these semantic slots.
+每个 agent lane 独立选择最新活动 vision（或显式退役）、最新检查点、最新结局相关检查点、最新 autonomous-replan ACK 与最新物化里程碑。goal 还保留最新紧凑人类奖励作为 owner 修正槽。重复配额花费、monitor 轮询、提升就绪与普通 refresh 行不消耗这些语义槽。
 
-The outcome-checkpoint slot retains its same-run qualification vision. A newer
-plain refresh may become the latest general checkpoint, but it cannot hide the
-older material checkpoint or borrow a later path delta. Likewise, another
-agent's qualified checkpoint cannot satisfy the selected lane. Goal-frontier
-readers prefer this semantic context and fall back to `latest_runs` only for
-older status payloads that do not carry the new read model.
+结局检查点槽保留其同 run 合格 vision。更新的普通 refresh 可能成为最新通用检查点，但不能隐藏更早物化检查点，也不能借用后续路径增量。同样，另一 agent 的合格检查点不能满足所选 lane。Goal-frontier 读取器优先该语义上下文，只在承载新读模型的旧 status 载荷缺失时才回退到 `latest_runs`。
 
-Agent-scoped status keeps only the selected agent's semantic lane plus the
-compact owner-correction slot on the hot path. Whole-goal, all-agent history
-remains available through unscoped status/history diagnostics. This keeps
-final-outcome continuity authoritative without turning a long heartbeat thread
-into an ever-growing CLI payload.
+Agent 作用域 status 热路径只保留所选 agent 的语义 lane 加紧凑 owner 修正槽。Whole-goal、全 agent 历史可通过无作用域 status/history 诊断获得。这使最终结局连续性保持权威，而不把长 heartbeat 线程变成不断增长的 CLI 载荷。
 
-## Vision Continuation Audit
+## Vision 继续审计
 
-Every selected todo is a bounded step toward the active per-agent vision, not a
-replacement for that vision. Before an agent records `todo complete`, a
-no-follow-up rationale, `--vision-unchanged-reason`, or an autonomous replan
-ACK, it must audit the current evidence against the active
-`acceptance_summary`:
+每个所选 todo 是活动每 agent vision 的有界步骤，不是该 vision 的替代。Agent 记录 `todo complete`、no-follow-up 理由、`--vision-unchanged-reason` 或自主 replan ACK 前，必须对照活动 `acceptance_summary` 审计当前证据：
 
-1. Derive the explicit requirements from the active vision, current todo,
-   user correction, and protected scope.
-2. Name the authoritative evidence for each requirement: changed files,
-   public-safe evidence records, public web research findings, evaluation
-   outputs, successor state, blocker state, or a superseding vision packet.
-3. Treat weak, indirect, stale, or protocol-only evidence as incomplete.
-4. Before external research, inspect the selected goal's registry-declared
-   `topic_authority` and `project_materials`, preferring the host-projected
-   replan coverage ledger, `agent_material_frontier`, and projected required
-   reads. Use role, freshness, revision,
-   boundary, gate status, and conflict rule to select permitted references.
-   Registration guides discovery; it neither grants access nor proves acceptance.
-5. If projected evidence and permitted registry references remain weak, and the
-   acceptance question depends on public facts, run bounded public web research
-   from primary or authoritative sources and write back the confirmed/refuted
-   finding.
-6. If any requirement remains unproven, keep the vision active by creating a
-   successor todo or writing a compact `--vision-replan-trigger`.
+1. 从活动 vision、当前 todo、用户修正与受保护 scope 推导显式要求。
+2. 为每项要求指名权威证据：变更文件、公开安全证据记录、公开 web 研究发现、评估输出、successor 状态、blocker 状态或接替 vision 包。
+3. 把弱、间接、过期或仅协议证据视为不完整。
+4. 外部研究前，检查所选 goal 的 registry 声明 `topic_authority` 与 `project_materials`，优先 host 投影的 replan 覆盖 ledger、`agent_material_frontier` 与投影的必需读取。使用角色、新鲜度、修订、边界、gate 状态与冲突规则选择允许引用。注册指引发现；它既不授予访问也不证明验收。
+5. 若投影证据与允许 registry 引用仍弱，且验收问题依赖公开事实，从主要或权威来源运行有界公开 web 研究，并写回 confirmed/refuted 发现。
+6. 若任何要求仍未证明，通过创建 successor todo 或写紧凑 `--vision-replan-trigger` 使 vision 保持活动。
 
-Quota/status expose this as `vision_continuation_audit_v0` in the CLI payload
-and `interaction_contract`. This mirrors the `/goal` continuation rule: goal
-state persists across turns until evidence proves the requested end state. It
-prevents a role from declaring success merely because it consumed the currently
-selected todo, recorded a checkpoint, or observed that another lane is quiet.
+Quota/status 在 CLI 载荷与 `interaction_contract` 中把它暴露为 `vision_continuation_audit_v0`。这镜像 `/goal` 继续规则：goal 状态跨 Turn 持续，直到证据证明请求的终态。它防止角色仅因消费了当前所选 todo、记录了检查点或观察到另一 lane 安静就宣布成功。
 
-A typed progress observation with `result_class=no_followup` is coverage
-evidence, not Todo lifecycle settlement. A writeback may use its
-`coverage_backed_no_followup` outcome only when the same packet closes the
-agent vision with `state=no_followup` and records `path_delta.outcome=stop`.
-If a completed advancement Todo still lacks a successor, the agent must first
-settle that Todo through `loopx todo complete --no-follow-up` (or add/link a
-successor). A semantic ACK cannot replace this durable continuation, and the
-repair path must not invent a human gate without a real external authority.
+带 `result_class=no_followup` 的类型化进展观察是覆盖证据，不是 Todo 生命周期结算。writeback 只在该包以 `state=no_followup` 关闭 agent vision 并记录 `path_delta.outcome=stop` 时可使用其 `coverage_backed_no_followup` 结局。若完成的推进 Todo 仍缺 successor，agent 必须先经 `loopx todo complete --no-follow-up` 结算该 Todo（或添加/链接 successor）。语义 ACK 不能替代该持久化继续，且修复路径不得在没有真实外部权限时发明人类 gate。
 
-The audit also exposes a compact deterministic `vision_gap_judge_v0`
-instruction packet for the agent. It borrows the strict done-judge stance used
-by autonomous goal loops without calling an LLM: the agent is told to compare
-the active vision `acceptance_summary` with the host-projected coverage ledger,
-then permitted registry-declared material references. The agent-scoped
-`loopx evidence-log` remains an operator diagnostic, not a mandatory model ritual.
-Bounded public web research is the next
-fallback when those sources are missing or stale and the gap depends on public
-facts. `done=true` is only valid
-when the response or state clearly provides one of these outcomes:
+审计还为 agent 暴露紧凑确定性 `vision_gap_judge_v0` 指令包。它借鉴自主 goal loop 使用的严格 done-judge 立场而不调用 LLM：agent 被告知把活动 vision `acceptance_summary` 与 host 投影覆盖 ledger、然后允许的 registry 声明物料引用对比。Agent 作用域 `loopx evidence-log` 保持操作员诊断，而非强制模型仪式。当那些来源缺失或过期且缺口依赖公开事实时，有界公开 web 研究是下一回退。`done=true` 只在响应或状态明确提供以下结局之一时有效：
 
-- explicit completion with authoritative evidence;
-- final deliverable or evaluation output satisfying the acceptance summary;
-- a projected blocker/user gate that makes the goal unachievable without input;
-- a superseding vision or no-follow-up rationale that explicitly closes the
-  frontier.
+- 带权威证据的显式完成；
+- 满足验收摘要的最终交付物或评估输出；
+- 使 goal 在无输入时不可达的投影 blocker/用户 gate；
+- 显式关闭前沿的接替 vision 或 no-follow-up 理由。
 
-Otherwise the judge remains `continue` and quota should keep projecting either
-the runnable successor or the replan trigger. This is intentionally stricter
-than todo lifecycle status: a completed todo is only evidence input, not the
-judge result.
+否则 judge 保持 `continue`，quota 应继续投影可运行 successor 或 replan 触发。这有意比 todo 生命周期状态更严格：完成的 todo 只是证据输入，不是 judge 结果。
 
-## State Machine
+## 状态机
 
 ```mermaid
 stateDiagram-v2
@@ -374,73 +195,46 @@ stateDiagram-v2
   ActiveVision --> Retired: acceptance done or no-follow-up recorded
 ```
 
-| State | Meaning | Required Exit Evidence |
+| 状态 | 含义 | 必需退出证据 |
 | --- | --- | --- |
-| `Unset` | No per-agent vision packet exists. | Goal configuration or preset seed. |
-| `DraftVision` | A bounded packet is being prepared. | CLI budget validation and acceptance text. |
-| `ActiveVision` | Agents may use the packet for lane-local work. | Progress, evidence, replan trigger, or retirement. |
-| `VisionDriftDetected` | Current vision no longer explains the frontier. | Concrete trigger, not vague "needs planning". |
-| `DreamProposal` | Advisory planning suggests a patch. | Explicit proposal id and public-safe summary. |
-| `ReplanRequired` | The next bounded work is replan, not quiet wait. | Replan obligation in goal-route/frontier projection. |
-| `ReplanDrafted` | A concrete route/todo/acceptance delta exists. | Bounded patch packet. |
-| `VisionPatchProposed` | The patch is ready to apply. | Budget check and local-state write correctness. |
-| `Superseded` | Another route replaces this packet. | `superseded_by` or successor id. |
-| `Retired` | The route is complete or intentionally closed. | Acceptance evidence or no-follow-up evidence. |
+| `Unset` | 无每 agent vision 包存在。 | Goal 配置或 preset 种子。 |
+| `DraftVision` | 有界包正在准备。 | CLI 预算验证与验收文本。 |
+| `ActiveVision` | Agent 可以按包做 lane 局部工作。 | 进展、证据、replan 触发或退役。 |
+| `VisionDriftDetected` | 当前 vision 不再解释前沿。 | 具体触发，而非模糊「需要规划」。 |
+| `DreamProposal` | 咨询性规划建议补丁。 | 显式建议 id 与公开安全摘要。 |
+| `ReplanRequired` | 下一有界工作是 replan，而非安静等待。 | goal 路由/前沿投影中的 replan 义务。 |
+| `ReplanDrafted` | 存在具体路由/todo/验收增量。 | 有界补丁包。 |
+| `VisionPatchProposed` | 补丁已就绪可应用。 | 预算检查与本地状态写正确性。 |
+| `Superseded` | 另一路由取代此包。 | `superseded_by` 或 successor id。 |
+| `Retired` | 路由完成或有意关闭。 | 验收证据或 no-follow-up 证据。 |
 
-The canonical stored close states are `vision_closed`, `retired`,
-`retired_or_superseded`, `superseded`, and `no_followup`. A state such as
-`completed_current_slice` intentionally remains open because completing one
-slice is not evidence that the per-agent vision acceptance is satisfied.
+规范存储关闭状态是 `vision_closed`、`retired`、`retired_or_superseded`、`superseded` 与 `no_followup`。`completed_current_slice` 这类状态有意保持开放，因为完成一个切片不是每 agent vision 验收满足的证据。
 
-These close states do not all have the same succession meaning.
-`vision_closed` means the current bounded stage passed its acceptance; while
-the registry goal remains `active` (including `active-*` variants), quota must
-project `vision_successor_required` and run a bounded replan before ordinary
-advancement or monitor quiet. The agent must write the next bounded vision, or
-choose the explicit terminal lane semantics `retired`, `superseded`, or
-`no_followup`. A completed/archived registry goal does not need a successor
-vision. This keeps stage completion from silently terminating a long-horizon
-goal.
+这些关闭状态并非都有相同继任含义。`vision_closed` 意为当前有界阶段通过其验收；而 registry goal 保持 `active`（包括 `active-*` 变体）时，quota 必须投影 `vision_successor_required` 并在普通推进或 monitor 安静前运行有界 replan。Agent 必须写下一个有界 vision，或选择显式终态 lane 语义 `retired`、`superseded` 或 `no_followup`。已完成/归档 registry goal 不需要 successor vision。这防止阶段完成静默终止长程 goal。
 
-### Exact blocked-successor wait
+### 精确阻塞 successor 等待
 
-An open agent vision does not need another replan when the lane already has an
-exact current-agent or unclaimed advancement successor whose supported
-`resume_when` condition is projected as `resume_ready=false`. When there is no
-other selectable advancement, quota/status expose
-`goal_vision_wait_state_v0` with the waiting todo id, `resume_when`, compact
-`resume_condition`, and `automatic_resume=true`. The ordinary
-`vision_acceptance_gap` is deferred while that read model is active, so the
-agent can remain quiet instead of inventing duplicate successor work.
+当 lane 已有精确当前 agent 或未认领推进 successor，其支持 `resume_when` 条件被投影为 `resume_ready=false` 时，开放 agent vision 不需要另一次 replan。无其他可选推进时，quota/status 暴露带等待 todo id、`resume_when`、紧凑 `resume_condition` 与 `automatic_resume=true` 的 `goal_vision_wait_state_v0`。该读模型活动期间普通 `vision_acceptance_gap` 被推迟，使 agent 可以保持安静，而不是发明重复 successor 工作。
 
-This is a read model, not a stored vision or todo lifecycle state. When the
-condition becomes ready, normal open-todo or deferred-successor routing resumes
-automatically and the active vision remains available for acceptance auditing.
-It cannot suppress `vision_checkpoint_missing`, `vision_successor_required`, a
-resume condition that lacks exact projected evidence, or the dedicated repair
-for an advancement todo incorrectly gated by a standing continuous monitor.
+这是读模型，不是存储的 vision 或 todo 生命周期状态。条件就绪时，普通开放 todo 或推迟 successor 路由自动恢复，活动 vision 保持可用于验收审计。它不能抑制 `vision_checkpoint_missing`、`vision_successor_required`、缺乏精确投影证据的恢复条件，或对被常驻连续 monitor 错误关卡的推进 todo 的专门修复。
 
-## Replan Triggers
+## Replan 触发
 
-A replan trigger is goal-level and should be evaluated before lane-local quiet
-or agent-scope wait decisions:
+Replan 触发是 goal 级的，应在 lane 局部安静或 agent 作用域等待决策前评估：
 
-- normalized progress shows no remaining advancement frontier;
-- monitor-only lanes have no material transition and acceptance remains open;
-- a cleared handoff has no successor or no-follow-up rationale;
-- the current agent lane has a long selectable todo chain, such as 15 or more
-  advancement todos or roughly 20 open todos with advancement work still present;
-- a periodic autonomous replan obligation is due;
-- the user objective or acceptance contract changed;
-- an approved dreaming proposal requires a delivery route.
+- 规范化进展显示无剩余推进前沿；
+- 纯 monitor lane 无物化转换且验收保持开放；
+- 已清理交接无 successor 或 no-follow-up 理由；
+- 当前 agent lane 有长可选 todo 链，如 15 个以上推进 todos 或约 20 个开放 todos 且仍有推进工作；
+- 周期性自主 replan 义务到期；
+- 用户目标或验收契约变更；
+- 已批准的 dreaming 建议需要投递路由。
 
-The replan decision must not be disturbed by monitor quiet skip, scoped gate
-waiting, or a single agent having no runnable todo. Those may explain local
-lane state, but they cannot erase a required goal-level replan.
+Replan 决策不得被 monitor 静默跳过、作用域 gate 等待或单个 agent 无可运行 todo 干扰。那些可以解释局部 lane 状态，但不能抹除必需的 goal 级 replan。
 
-## Replan Output
+## Replan 输出
 
-A valid replan writes at least one bounded delta:
+有效 replan 至少写一个有界增量：
 
 ```json
 {
@@ -472,132 +266,63 @@ A valid replan writes at least one bounded delta:
 }
 ```
 
-An acknowledgement without an obligation-accepted typed semantic delta is
-`replan_noop` and must not clear the obligation. Depending on the obligation,
-accepted outcomes can be a new evidence-backed surface, hypothesis, or probe
-family; a runnable successor; a new concrete blocker; coverage-backed
-exploration exhaustion or no-follow-up; or a fresh evidence-linked vision path
-outcome. A typed `goal_vision_patch` repair delta is the vision-derived ACK that
-settles vision successor/checkpoint gaps even when the original acceptance gap
-remains visible in the source projection. `refresh-state` does not treat
-classification prose,
-`--autonomous-replan-recorded`, or a caller-supplied repair kind as proof. New
-writebacks use `typed_progress_observation_v0`: changed surface, hypothesis, or
-probe identifiers are compared with the obligation baseline; a successor id
-must resolve to a current runnable advancement Todo; blockers must be new and
-evidence-backed; terminal results require coverage scope and evidence. A
-vision-derived duty accepts only its declared vision outcomes. Historical
-repair ACKs are not accepted by the semantic replan reducer; they remain inert
-history rather than a compatibility closure path.
+无义务接受类型化语义增量的确认是 `replan_noop`，不得结清义务。视义务而定，接受的结局可以是新证据支撑的界面、假设或 probe 家族；可运行 successor；新具体 blocker；覆盖背书的探索耗尽或 no-follow-up；或新鲜证据链接的 vision 路径结局。类型化 `goal_vision_patch` 修复增量是结清 vision successor/检查点缺口的 vision 派生 ACK，即使原始验收缺口在源投影中保持可见。`refresh-state` 不把分类散文、`--autonomous-replan-recorded` 或调用方提供的修复种类当作证明。新 writeback 使用 `typed_progress_observation_v0`：变更界面、假设或 probe 标识与义务基线对比；successor id 必须解析为当前可运行推进 Todo；blockers 必须新且证据背书；终态结果要求覆盖 scope 与证据。Vision 派生义务只接受其声明的 vision 结局。历史修复 ACK 不被语义 replan reducer 接受；它们保持惰性历史，而非兼容关闭路径。
 
-The compact `autonomous_replan_ack` projection preserves the aggregate
-`fresh_vision_path_outcome` in `semantic_delta` and, when that outcome is
-present in the validated `outcomes` list, adds the same run's
-`agent_vision.path_delta.outcome` as top-level `path_disposition`. Only
-`continue`, `no_change`, and `replan` are projected. The field is additive and
-observational: it does not alter settlement, and it is omitted for non-vision,
-legacy, or invalid path packets. Consumers should inspect `outcomes` rather
-than only `satisfying_outcomes`, because one accepted ACK may combine a vision
-path observation with a different obligation-satisfying outcome.
+紧凑 `autonomous_replan_ack` 投影在 `semantic_delta` 中保留聚合 `fresh_vision_path_outcome`，且该结局位于已验证 `outcomes` 列表时，把同一 run 的 `agent_vision.path_delta.outcome` 作为顶层 `path_disposition` 添加。只有 `continue`、`no_change` 与 `replan` 被投影。该字段是增量和观察性的：它不改变结算，且对非 vision、遗留或无效路径包省略。消费者应检查 `outcomes` 而非仅 `satisfying_outcomes`，因为一个接受 ACK 可能把一个 vision 路径观察与不同义务满足结局结合。
 
-### Bad Case: ACK Hidden By Scheduler Accounting
+### 坏例：被 Scheduler 记账隐藏的 ACK
 
-Observed failure: a monitor-only lane correctly projected
-`autonomous_replan_required`, then a worker recorded a replan ACK with a
-frontier delta. The next quota check became quiet, but a later neutral spend or
-accounting run replaced the latest status record. Because quota only saw the
-latest run, the same monitor lane was projected as `autonomous_replan_required`
-again, causing a scheduler/replan loop.
+观察到的失败：一个纯 monitor lane 正确投影 `autonomous_replan_required`，随后 worker 记录带前沿增量的 replan ACK。下一次 quota 检查变安静，但后续中性花费或记账 run 替换了最新 status 记录。因为 quota 只看到最新 run，同一 monitor lane 又被投影为 `autonomous_replan_required`，造成 scheduler/replan 循环。
 
-Root cause: replan ACK state was treated as latest-run detail instead of a
-durable goal-frontier projection. Scheduler/accounting records are useful
-history, but they are not material frontier changes.
+根因：replan ACK 状态被当作最新 run 详情，而非持久化 goal-frontier 投影。Scheduler/记账记录是有用历史，但不是物化前沿变更。
 
-Repair rule: status must project the newest durable replan ACK across neutral
-accounting and monitor-poll runs until a real material transition appears.
-Quota then consumes that compact projection and does not duplicate the history
-scan or let scheduler backoff override the replan state machine.
+修复规则：status 必须跨中性记账与 monitor 轮询 run 投影最新持久化 replan ACK，直到真实物化迁移出现。Quota 随后消费该紧凑投影，不重复历史扫描，也不让 scheduler 退避覆盖 replan 状态机。
 
-## Projection Contract
+## 投影契约
 
-Status, quota, diagnose, and visible multi-agent panes should expose the same
-compact goal-route facts:
+Status、quota、diagnose 与可见多 agent pane 应暴露同一紧凑 goal 路由事实：
 
-- `normalized_progress`: how far the goal has moved relative to acceptance;
-- `remaining_frontier`: runnable or replanable next edges;
-- `monitor_only_lanes`: lanes that are waiting without advancement;
-- `deferred_successors`: successors blocked by handoff, resume, or gate;
-- `acceptance_gaps`: missing evidence or contract fields;
-- `autonomy_blockers`: concrete blockers to autonomous progress;
-- `vision_budget`: current character usage and any rejected overage reason.
+- `normalized_progress`：goal 相对验收移动了多少；
+- `remaining_frontier`：可运行或可 replan 的下一边缘；
+- `monitor_only_lanes`：无推进的等待 lane；
+- `deferred_successors`：被交接、恢复或 gate 阻塞的 successors；
+- `acceptance_gaps`：缺失证据或契约字段；
+- `autonomy_blockers`：对自主进展的具体 blockers；
+- `vision_budget`：当前字符用量与任何拒绝的超额原因。
 
-These fields are projections. Writeback still goes through LoopX write APIs,
-not through dashboards, Lark mirrors, or chat text.
+这些字段是投影。Writeback 仍经 LoopX 写 API，而非 dashboard、Lark 镜像或聊天文本。
 
-When quota requires an autonomous replan, the host projects the current agent's
-recent public-safe evidence ledger into `replan_context_v0`; a weak
-protocol-following model does not need to discover and execute a separate read
-ritual. A todo-specific evidence read remains useful as drill-down, but its
-receipt proves only context access. If projected evidence is empty, stale, or
-contradictory, the agent may use bounded public-safe search and write back
-source references with the typed observation.
+Quota 需要自主 replan 时，host 把当前 agent 的近期公开安全证据 ledger 投影进 `replan_context_v0`；弱的协议遵循模型不需要发现并执行单独读仪式。Todo 特定证据读取仍有用作下钻，但其回执只证明上下文访问。投影证据为空、过期或矛盾时，agent 可以使用有界公开安全搜索，并把来源引用随类型化观察写回。
 
-## Write / Correction Mechanism
+## 写/修正机制
 
-Vision correction is a normal state-machine transition, not only a
-self-repair fallback. Agents should write a bounded vision patch when:
+Vision 修正是正常状态机迁移，不只是自修复回退。Agent 应在以下情况写有界 vision 补丁：
 
-- a normal progress turn changes the role's acceptance target;
-- a user correction narrows or redirects the goal;
-- a replan discovers that the current frontier no longer satisfies the
-  acceptance summary;
-- a monitor-only lane should remain a watch lane but needs an explicit
-  continuation or expiry condition, including explicit monitor successors and
-  a watch ACK; or
-- a product bottleneck is real but no current todo/frontier projection exposes
-  it.
+- 正常进展 Turn 改变了角色的验收目标；
+- 用户修正收窄或重定向 goal；
+- replan 发现当前前沿不再满足验收摘要；
+- 纯 monitor lane 应保持 watch lane，但需要显式继续或过期条件，包括显式 monitor successors 与 watch ACK；或
+- 产品瓶颈真实，但当前 todo/frontier 投影不暴露它。
 
-The inline flags keep the common path small. A role can update only the fields
-it knows: inline writes merge those fields into that agent's latest active
-vision, preserving omitted durable mainline fields and the current state. A
-todo, PR, capability, or monitor wait should normally update its own todo plus
-`replan_trigger_summary` or `last_patch_summary`; it must not replace the
-role's broader `vision_summary` merely because that dependency is current.
+内联标志保持普通路径小。角色可以只更新它知道的字段：内联写入把这些字段合并进该 agent 的最新活动 vision，保留省略的持久化主线字段与当前状态。Todo、PR、capability 或 monitor 等待通常应更新自身 todo 加 `replan_trigger_summary` 或 `last_patch_summary`；它不得仅因该依赖是当前的就替换角色更宽 `vision_summary`。
 
-JSON packets are complete generated updates. When satisfying a current
-vision-derived replan obligation, changing an existing `vision_summary`,
-`role_scope`, `acceptance_summary`, or `advancement_policy` requires a
-`goal_path_delta_v0` with `outcome=replan`, regardless of whether the update
-arrived through JSON or inline flags. This keeps a real mainline change
-possible while making the prior assumption, observed reality, and
-retained/changed/stopped route machine-auditable. Unchanged full packets,
-non-replan inline edits, and initial baselines do not need a path delta.
+JSON 包是完整生成更新。满足当前 vision 派生 replan 义务时，改变既有 `vision_summary`、`role_scope`、`acceptance_summary` 或 `advancement_policy` 需要带 `outcome=replan` 的 `goal_path_delta_v0`，无论更新经 JSON 还是内联标志到达。这使真实主线变更可行，同时让先前假设、观察现实与 retained/changed/stopped 路由机器可审计。未变更完整包、非 replan 内联编辑与初始基线不需要路径增量。
 
-When no patch is needed, the agent should still close a required checkpoint with
-`--vision-unchanged-reason`. That reason is per-agent and must explain why the
-existing acceptance and route still cover the material closeout.
+无需补丁时，agent 仍应用 `--vision-unchanged-reason` 关闭必需检查点。该原因按 agent，必须解释既有验收与路由为何仍覆盖物化 closeout。
 
-## Acceptance
+## 验收
 
-A change satisfies this contract only when:
+一项变更只有满足以下条件才符合本契约：
 
-- per-agent vision fields are rejected or compacted at the CLI/write boundary;
-- inline vision writes require a concrete `--agent-id`;
-- material `refresh-state` closeouts emit a per-agent `vision_checkpoint_v0`;
-- missing per-agent checkpoints can become agent-scoped replan gaps instead of
-  global goal-level noise;
-- quota/status and `interaction_contract` expose a
-  `vision_continuation_audit_v0` before todo closeout, no-follow-up,
-  `--vision-unchanged-reason`, or typed replan writeback;
-- ordinary `refresh-state` calls can write bounded vision corrections without a
-  separate self-repair-only path;
-- replan state is decided from goal-level projection before local quiet/wait
-  classifications;
-- replan can clear an obligation only by writing a typed semantic delta accepted
-  against the current goal-frontier obligation;
-- durable replan ACKs survive neutral scheduler/accounting runs until material
-  frontier state changes;
-- `quota.py` consumes the resulting projection instead of storing vision logic;
-- auto-research remains a thin preset over the reusable kernel; and
-- public docs and smokes cover the budget, state machine, and `quota.py`
-  boundary without private material.
+- 每 agent vision 字段在 CLI/写边界被拒绝或压缩；
+- 内联 vision 写入要求具体 `--agent-id`；
+- 物化 `refresh-state` closeout 发出每 agent `vision_checkpoint_v0`；
+- 缺失每 agent 检查点可以成为 agent 作用域 replan 缺口，而非全局 goal 级噪声；
+- quota/status 与 `interaction_contract` 在 todo closeout、no-follow-up、`--vision-unchanged-reason` 或类型化 replan writeback 前暴露 `vision_continuation_audit_v0`；
+- 普通 `refresh-state` 调用可写有界 vision 修正，而无需单独自修复路径；
+- replan 状态在局部安静/等待分类之前从 goal 级投影决定；
+- replan 只能通过写当前 goal-frontier 义务接受的类型化语义增量结清义务；
+- 持久化 replan ACK 在物化前沿状态变更前存活中性 scheduler/记账 run；
+- `quota.py` 消费所得投影，而非存储 vision 逻辑；
+- auto-research 保持可复用内核之上的薄 preset；并且
+- 公开文档与 smokes 在无私有物料的情况下覆盖预算、状态机与 `quota.py` 边界。

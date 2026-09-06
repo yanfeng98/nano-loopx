@@ -1,4 +1,5 @@
 # 第 11 讲：扩展层、Explore 与 Multi-Agent 产品
+> [English](11-extension-layer.md)
 
 > **本讲结论：** Extension 交付可选 provider、domain facts、capability 或 presentation；
 > 它复用同一份 goal、todo、quota、scheduler、evidence 与 handoff contract，不创建第二个

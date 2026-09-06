@@ -1,106 +1,86 @@
-# Status Data Contract
+# Status 数据契约
 
-`loopx --format json status` is the stable first-screen data contract for
-agents, heartbeat jobs, dashboards, and local UI experiments.
+> [English](status-data-contract.md)
 
-The command is an export: it reads the registry, compact run indexes, and the
-public/private contract check, then emits one JSON object. It does not inspect
-private run payloads beyond compact index fields and does not mutate files.
-The export is agent-facing machine state. A dashboard should consume this
-contract and translate it into a human operator view rather than treating raw
-CLI fields as product copy.
-In particular, first-screen dashboards should translate raw machine fields such
-as `single_surface`, `focus_wait`, `quota_slot_spent`, or concurrency snippets
-into the operator's language before presenting them as primary copy. The
-machine tokens may remain in drill-down views, logs, or packets where exact
-debuggability matters.
+`loopx --format json status` 是给 Agent、heartbeat 作业、dashboard 与本地 UI
+实验的稳定首屏数据契约。
 
-When a command is run outside a project-local `.loopx/registry.json`,
-the CLI falls back to the shared local global registry at
-`~/.codex/loopx/registry.global.json` if it exists. That registry is
-maintained automatically by `connect` and `refresh-state` so each project agent
-can update its own local state while dashboards still see the multi-project
-view.
+该命令是导出：它读取 registry、紧凑 run 索引与公共/私有契约检查，
+然后发出一个 JSON 对象。它不检查紧凑索引字段之外的私有 run payload，也不改动文件。
+导出是 Agent 面向的机器状态。Dashboard 应消费该契约并翻译成人类 operator 视图，
+而不是把原始 CLI 字段当作产品文案。
+特别是，首屏 dashboard 应在把原始机器字段（如 `single_surface`、`focus_wait`、
+`quota_slot_spent` 或并发片段）作为主要文案前，把它们翻译成 operator 语言。
+机器令牌可以保留在下钻视图、日志或需要精确可调试性的 packet 中。
 
-For local dashboards, the same JSON shape can be served over loopback HTTP:
+当命令在项目本地 `.loopx/registry.json` 外运行时，CLI 在存在时回退到
+`~/.codex/loopx/registry.global.json` 的共享本地全局 registry。
+该 registry 由 `connect` 与 `refresh-state` 自动维护，因此每个项目 Agent
+可以更新自己的本地状态，而 dashboard 仍看到多项目视图。
+
+对本地 dashboard，同一 JSON 形状可以经 loopback HTTP 提供：
 
 ```bash
 loopx serve-status --global-registry --port 8766 --limit 80
 ```
 
-The default endpoint in that example is `http://127.0.0.1:8766/status.json`.
-`--global-registry` is the canonical multi-project dashboard mode: it serves
-the shared global registry even when launched from inside a project checkout,
-avoiding a project-local registry scope warning. For project-local debugging,
-omit `--global-registry` or pass the project registry explicitly. The server is
-intended for local dashboard development and includes CORS headers so a Vite app
-on another localhost port can fetch it.
-The disposable `loopx demo` path intentionally uses a project-local
-server on `127.0.0.1:8765`; it does not sync the temporary demo into the shared
-global registry.
+该示例中的默认端点是 `http://127.0.0.1:8766/status.json`。
+`--global-registry` 是 canonical 多项目 dashboard 模式：即使从项目 checkout
+内启动，它也提供共享全局 registry，避免项目本地 registry 范围警告。
+对项目本地调试，省略 `--global-registry` 或显式传项目 registry。服务器用于本地
+dashboard 开发，并包含 CORS 头，因此另一个 localhost 端口上的 Vite App 可以获取它。
+一次性 `loopx demo` 路径刻意在 `127.0.0.1:8765` 使用项目本地服务器；
+它不把临时 demo 同步进共享全局 registry。
 
-Each project-backed `attention_queue.items[]` row may include a read-only
-`goal_channel_projection` object with
-`schema_version=goal_channel_projection_v0`. This is the dashboard/frontstage
-projection of the same status item: current decision frame, user and agent
-todos, quota, soft claims, compact run events, source warnings, and an explicit
-truth contract. It is not a write API. Dashboards may render it as a channel
-card or timeline, but project truth still comes from the registry, active
-state, quota guard, and append-only run history.
+每个项目支撑的 `attention_queue.items[]` 行可以包含只读 `goal_channel_projection`
+对象，`schema_version=goal_channel_projection_v0`。这是同一 status 条目的
+dashboard/frontstage 投影：当前决策框架、用户与 Agent todos、quota、软声明、
+紧凑 run 事件、来源警告与显式真相契约。它不是写 API。Dashboard 可以把它渲染为
+通道卡片或时间线，但项目真相仍来自 registry、active state、quota guard 与
+仅追加 run history。
 
-Rows may also include an optional `task_graph_projection` object with
-`schema_version=task_graph_projection_v0`. The default `status` hot path omits
-this graph to preserve the dashboard interface budget; callers that need the
-graph can request it with `loopx --format json status --include-task-graph`, or
-use a full review packet. This is a compact graph-shaped view over existing
-todos, gates, leases, run ids, and event-ledger state. It is read-only and
-exists only to show dependency, validation, repair, audit, continuation, and
-handoff relationships that are hard to scan in a flat todo list. It must not
-introduce a second scheduler, graph write API, hidden lease store, or alternate
-task truth.
-The protocol is defined in
-[`docs/reference/protocols/task-graph-projection-v0.md`](reference/protocols/task-graph-projection-v0.md);
-consumers should ignore the field when absent.
+行还可以包含可选 `task_graph_projection` 对象，
+`schema_version=task_graph_projection_v0`。默认 `status` 热路径省略该图以保留
+dashboard 接口预算；需要图的调用方可以用
+`loopx --format json status --include-task-graph` 请求，或使用完整 review packet。
+这是现有 todos、gates、leases、run ids 与事件 ledger 状态的紧凑图视图。
+它只读，且只用于显示在平面 todo 列表中难扫描的依赖、验证、修复、审计、延续与
+handoff 关系。它不得引入第二个 scheduler、图写 API、隐藏租约存储或替代任务真相。
+协议定义在
+[`docs/reference/protocols/task-graph-projection-v0.md`](reference/protocols/task-graph-projection-v0.md)；
+消费方应在缺失时忽略该字段。
 
-Rows may also include an optional `openviking_session_memory_adapter` object
-with `schema_version=openviking_session_memory_adapter_v0`. This is a
-public-safe session-runtime specialization for OpenViking-style issue memory:
-compact issue refs, session refs, memory refs, retrieval gates, status
-projection, and evidence projection. It is read-only and must not perform live
-OpenViking retrieval, write memory, read issue/comment bodies, ingest raw tool
-outputs or trajectories, or publish external issue comments/PRs. The protocol
-is defined in
-[`docs/reference/protocols/openviking-session-memory-adapter-v0.md`](reference/protocols/openviking-session-memory-adapter-v0.md);
-consumers should ignore the field when absent.
+行还可以包含可选 `openviking_session_memory_adapter` 对象，
+`schema_version=openviking_session_memory_adapter_v0`。这是给 OpenViking 风格
+issue memory 的 public-safe 会话运行时特化：紧凑 issue refs、session refs、
+memory refs、检索 gate、status 投影与证据投影。它只读，不得执行 live OpenViking
+检索、写 memory、读 issue/comment 正文、摄入原始工具输出或轨迹，
+或发布外部 issue comments/PRs。协议定义在
+[`docs/reference/protocols/openviking-session-memory-adapter-v0.md`](reference/protocols/openviking-session-memory-adapter-v0.md)；
+消费方应在缺失时忽略该字段。
 
-Rows may also include an optional `local_agent_launch_plan` object with
-`schema_version=local_agent_launch_plan_v1`. This is a dry-run preview over
-configured agents, role assignments, non-executable launch preview rows,
-status projection, evidence projection, and future gates. It is read-only and
-must not start local workers, call external agent services, expose shell
-commands, write LoopX state, or grant host authority. The protocol is defined
-in
-[`docs/reference/protocols/local-agent-launch-plan-v1.md`](reference/protocols/local-agent-launch-plan-v1.md);
-consumers should ignore the field when absent.
+行还可以包含可选 `local_agent_launch_plan` 对象，
+`schema_version=local_agent_launch_plan_v1`。这是对已配置 Agent、角色分配、
+非可执行启动预览行、status 投影、证据投影与未来 gate 的 dry-run 预览。
+它只读，不得启动本地 worker、调用外部 Agent 服务、暴露 shell 命令、写 LoopX
+状态或授予 host 权威。协议定义在
+[`docs/reference/protocols/local-agent-launch-plan-v1.md`](reference/protocols/local-agent-launch-plan-v1.md)；
+消费方应在缺失时忽略该字段。
 
-Loopback status exports include `status_contract.schema_version`. The dashboard
-uses that small protocol marker to detect when `127.0.0.1:8766` is still served
-by an older daemon or release snapshot after the checkout has moved forward. If
-the field is absent or below the dashboard's expected version, the product UI
-should warn the operator and point to the safe reload path:
-`scripts/macos-dashboard-launchagent.sh restart`.
+Loopback status 导出包含 `status_contract.schema_version`。Dashboard 用该小协议
+标记检测 checkout 推进后 `127.0.0.1:8766` 是否仍由更旧 daemon 或发布快照提供。
+如果字段缺失或低于 dashboard 期望版本，产品 UI 应警告 operator
+并指向安全重载路径：`scripts/macos-dashboard-launchagent.sh restart`。
 
-The same local server exposes `POST /reward/dry-run` for dashboard reward
-validation. It accepts the selected `goal_id`, `run_generated_at`, compact
-reward fields, and public-safe summary text, then returns a compact validation
-result with `appended=false`. It also returns the same coordination fields as
-the CLI: `active_state_summary` and `project_agent_visibility`. It does not
-mutate the run index and does not return private artifact paths.
+同一本地 server 为 dashboard 奖励验证暴露 `POST /reward/dry-run`。
+它接受所选 `goal_id`、`run_generated_at`、紧凑奖励字段与 public-safe 摘要文本，
+然后返回 `appended=false` 的紧凑验证结果。它还返回与 CLI 相同的协调字段：
+`active_state_summary` 与 `project_agent_visibility`。它不改 run 索引，
+也不返回私有产物路径。
 
-When status is served over loopback HTTP, `/status.json` also includes an
-optional `local_dashboard_api` capability block. CLI status exports may omit it
-because they are plain read-only snapshots. The block is the dashboard's machine
-contract for local write affordances:
+当 status 经 loopback HTTP 提供时，`/status.json` 还包含可选 `local_dashboard_api`
+能力块。CLI status 导出可以省略它，因为它们是纯只读快照。该块是 dashboard 的
+本地写便利能力机器契约：
 
 ```json
 {
@@ -116,50 +96,41 @@ contract for local write affordances:
 }
 ```
 
-The deprecated dashboard diagnostics route uses a TanStack Query-backed local
-status reader at
-`/deprecated/frontstage/ops?statusUrl=<relative-or-loopback>`. The old
-`/frontstage?mode=ops` form redirects to that namespace. Showcase mode still
-ignores `statusUrl`; only the explicit deprecated diagnostics route may fetch a
-status feed.
-The query layer validates `status_contract.schema_version` before trusting a
-loopback feed. If the feed is below the dashboard's expected schema version,
-the route shows stale-daemon repair copy using `status_contract.reload_hint`
-instead of silently rendering an old protocol.
+已弃用的 dashboard 诊断路由在
+`/deprecated/frontstage/ops?statusUrl=<relative-or-loopback>` 使用 TanStack
+Query 支撑的本地 status 读取器。旧 `/frontstage?mode=ops` 形式重定向到该命名空间。
+Showcase 模式仍忽略 `statusUrl`；只有显式的已弃用诊断路由可以获取 status 流。
+查询层在信任 loopback 流前验证 `status_contract.schema_version`。如果流低于
+dashboard 期望 schema 版本，路由用 `status_contract.reload_hint` 显示过期
+daemon 修复文案，而不是静默渲染旧协议。
 
-The same frontstage query layer projects `local_dashboard_api` as capabilities,
-not browser authority. It may show that reward dry-run or control-plane dry-run
-URLs are advertised, but write affordances stay disabled unless the feed is
-relative or loopback, the matching URL is present, and the corresponding
-`*_write_enabled` flag is true. The frontstage must remain read-only by default;
-any future write UI must still use preview-locked local APIs and keep CLI/event
-ledger state as the source of truth.
+同一 frontstage 查询层把 `local_dashboard_api` 投影为能力，而不是浏览器权威。
+它可以显示宣传了 reward dry-run 或控制面 dry-run URL，但除非流是相对或
+loopback、匹配 URL 存在且对应 `*_write_enabled` 标志为 true，
+写便利能力保持禁用。Frontstage 默认必须保持只读；任何未来写 UI 仍必须使用
+预览锁定的本地 API，并把 CLI/事件 ledger 状态保持为真相源。
 
-The control-plane settings write path follows the same opt-in rule as reward
-append. By default `serve-status` validates dashboard setting drafts through
-`POST /control-plane/configure-goal/dry-run` but does not expose an apply
-capability. Starting the loopback server with
-`--enable-control-plane-write-api` exposes
-`POST /control-plane/configure-goal/apply`; the dashboard should enable Apply
-only when `local_dashboard_api.control_plane_write_enabled=true` and the apply
-URL is present. Apply requests must reuse the fresh `preview_id` from the
-dry-run response.
+控制面设置写路径遵循与奖励追加相同的 opt-in 规则。默认 `serve-status`
+通过 `POST /control-plane/configure-goal/dry-run` 验证 dashboard 设置草稿，
+但不暴露 apply 能力。用 `--enable-control-plane-write-api` 启动 loopback server
+暴露 `POST /control-plane/configure-goal/apply`；Dashboard 应只在
+`local_dashboard_api.control_plane_write_enabled=true` 且 apply URL 存在时启用
+Apply。Apply 请求必须复用 dry-run 响应中的新鲜 `preview_id`。
 
-Control-plane setting drafts may use `multi_subagent_feature="enabled"` to opt
-into bounded child-agent orchestration, or `"off"` to keep the default
-single-agent mode. This is a product wrapper over the registry `spawn_policy`;
-dashboard surfaces should prefer it over exposing raw `orchestration_mode` plus
-`spawn_allowed` toggles.
+控制面设置草稿可以用 `multi_subagent_feature="enabled"` opt in 有界子 Agent
+编排，或 `"off"` 保持默认单 Agent 模式。这是 registry `spawn_policy` 的产品
+包装；dashboard 面应优先它，而不是暴露原始 `orchestration_mode` 加
+`spawn_allowed` 开光。
 
-## Command
+## 命令
 
 ```bash
 loopx --format json status > goal-status.json
 ```
 
-By default, `status` scans the LoopX install root for public/private
-contract health. Use narrow scan paths only when you intentionally want the
-status export to check a specific public-safe project surface:
+默认 `status` 扫描 LoopX 安装根的公共/私有契约健康。
+只有当你刻意想要 status 导出检查某个特定 public-safe 项目面时，
+才使用窄扫描路径：
 
 ```bash
 loopx --format json status \
@@ -168,127 +139,93 @@ loopx --format json status \
   --scan-path examples/
 ```
 
-For compute allocation, `loopx quota status` and
-`loopx quota plan` derive an agent-facing grouping from this same status
-payload. `loopx --registry "$HOME/.codex/loopx/registry.global.json"
-quota should-run --goal-id <goal-id>` derives a per-goal automation guard from
-that grouping for project heartbeats. These are read-only views, not a separate
-source of truth. Scripts should treat `summary.next_automatic_turn` in the
-quota-plan JSON as advisory and still respect the displayed health, operator,
-and evidence gates.
-The per-goal guard also emits `heartbeat_recommendation`, a compact executor
-hint for generic lifecycle cases such as first read-only map runs and quiet
-mapped no-ops. Project-specific policy should still come from the registry,
-active state, adapter output, or boundary rules rather than ad hoc scheduler
-prompt branches.
-Registry entries may also declare compact `control_plane` settings. These
-settings are per-goal policy, not global prompt text. By default
-`control_plane.self_repair.enabled=false`; only registry-enabled goals can turn
-health or waiting-projection stalls into a `quota should-run` self-repair
-machine contract.
-When the selected attention item is project-asset backed, the per-goal guard
-also carries compact `handoff_readiness` with `handoff_status` and
-`post_handoff_run_seen`. Heartbeat jobs can therefore tell whether the selected
-goal is still waiting for a target run or has already seen post-handoff work
-without parsing the full status payload.
-For replan, the guard carries a host-built `replan_context_v0` and the compact
-`replan_action_packet_v0`. The context projects a bounded coverage ledger from
-the agent-scoped evidence history, an uncovered frontier, and a delivery
-receipt. The acting model therefore chooses a direction from delivered context;
-it does not have to discover and execute an evidence-log command as a protocol
-preflight. `loopx evidence-log --goal-id <goal-id> --agent-id <agent-id> --thin`
-remains the cold-path diagnostic chronology, and its read receipt remains useful
-for observability, but a read or legacy ACK cannot close a replan obligation.
-Closure requires a typed semantic delta accepted against the current obligation:
-a new surface, hypothesis, probe family, state-grounded runnable successor,
-fresh evidence-linked vision path, concrete new blocker, or coverage-backed
-terminal result. A runnable successor is recorded by one `todo add` carrying
-the exact `replan_obligation_id`; the Todo write is the receipt and returns the
-fine-grained turn boundary, so no second ACK command is required. The same
-goal-frontier reducer is used by quota and
-`refresh-state`, so a vision/frontier-derived obligation cannot be bypassed by a
-maintenance classification or an ACK for an older obligation.
+对计算分配，`loopx quota status` 与 `loopx quota plan` 从该同一 status payload
+派生 Agent 面向分组。`loopx --registry "$HOME/.codex/loopx/registry.global.json"
+quota should-run --goal-id <goal-id>` 从该分组为项目 heartbeat 派生每目标自动化
+guard。这些是只读视图，不是独立真相源。脚本应把 quota-plan JSON 中的
+`summary.next_automatic_turn` 当作建议，并仍尊重显示的健康、operator 与证据 gate。
+每目标 guard 还发出 `heartbeat_recommendation`，一个针对首次只读映射运行与
+安静映射 no-op 等通用生命周期情形的紧凑执行者提示。项目特定策略仍应来自 registry、
+active state、adapter 输出或边界规则，而不是临时的 scheduler 提示分支。
+Registry 条目还可以声明紧凑 `control_plane` 设置。这些设置是每目标策略，
+不是全局提示文本。默认 `control_plane.self_repair.enabled=false`；
+只有 registry 启用的目标能变健康或等待投影停滞为 `quota should-run` 自修复
+机器契约。
+当所选 attention 条目由 project asset 支撑时，每目标 guard 还携带紧凑
+`handoff_readiness`，带 `handoff_status` 与 `post_handoff_run_seen`。
+Heartbeat 作业因此能说出所选目标仍在等待目标 run，还是已见过 post-handoff 工作，
+而无需解析完整 status payload。
+对 replan，guard 携带 host 构建的 `replan_context_v0` 与紧凑
+`replan_action_packet_v0`。上下文从 Agent 作用域证据历史投影有界覆盖 ledger、
+未覆盖边界与 delivery 收据。执行模型因此从已交付上下文选择方向；
+它不必发现并执行证据日志命令作为协议预检。
+`loopx evidence-log --goal-id <goal-id> --agent-id <agent-id> --thin`
+仍是冷路径诊断年表，其读收据对可观测性有用，但读或遗留 ACK 不能关闭 replan
+义务。关闭需要针对当前义务接受的 typed 语义 delta：新面、假设、探针族、
+有状态根基的可运行 successor、新鲜证据链接的 vision 路径、具体新 blocker 或
+覆盖支撑的终态结果。可运行 successor 由一次携带确切 `replan_obligation_id` 的
+`todo add` 记录；Todo 写是收据并返回细粒度 turn 边界，因此不需要第二个 ACK
+命令。同一 goal-frontier reducer 被 quota 与 `refresh-state` 使用，
+所以 vision/边界派生义务不能被维护分类或旧义务的 ACK 绕过。
 
-For a turn-scoped executable settlement,
-`interaction_contract.cli_channel.replan_settlement_contract` keeps that
-semantic obligation separate from the Turn's causal settlement identity. It
-projects exactly one `settlement_binding`. When the quota receipt already owns
-a selected Todo, refresh and spend use only `--todo-id`; the replan obligation
-remains the semantic target discharged by that Todo-bound writeback and must
-not be added as a second settlement flag. A Todo-less replan instead binds the
-obligation directly with `--replan-obligation-id`. Both paths retain the same
-typed semantic-delta validation and ordered refresh-then-spend chain. Reads
-without a turn identity stay compact and do not project an executable
-settlement contract or spend action.
+对 turn 作用域可执行结算，`interaction_contract.cli_channel.replan_settlement_contract`
+把该语义义务与该 Turn 的因果结算身份分开。它恰投影一个 `settlement_binding`。
+当 quota 收据已拥有所选 Todo，refresh 与 spend 只使用 `--todo-id`；
+replan 义务保持为由该 Todo 绑定 writeback 清偿的语义目标，
+且不得作为第二个结算标志添加。无 Todo replan 则直接用
+`--replan-obligation-id` 绑定义务。两条路径保留相同 typed 语义 delta 验证与
+有序 refresh-then-spend 链。无 turn 身份的读保持紧凑，不投影可执行结算契约或
+spend 动作。
 
-The same guard may include `work_lane_contract`. Schema
-`work_lane_contract_v1` is the compatibility drill-down for monitor versus
-advancement routing under the guard's first-class `interaction_contract`. It
-distinguishes `lane=continuous_monitor` from `lane=advancement_task`, carries
-the next lane, and exposes one `obligation` string such as
-`advance_unless_material_monitor_transition`. Agent todo items
-may include `task_class=advancement_task` or
-`task_class=continuous_monitor`, plus optional `action_kind` such as
-`run_eval`, `validate`, `rebuild`, `writeback`, `monitor`, or `poll`. Explicit
-`task_class` is authoritative for the todo item itself; recognized generic
-`action_kind` can infer the lane when `task_class` is absent; legacy todo text
-is only a compatibility fallback. The selected goal's
-`next_action`/`recommended_action` can still promote an otherwise monitor-only
-todo set back to `lane=advancement_task` when it names an executable chain such
-as collecting repeats, rebuilding labels, rerunning a scorer, or validating an
-eval gate. Hidden open todos are treated as advancement work rather than as
-monitor-only work, so a truncated top-N todo projection cannot accidentally
-silence an executable backlog.
-For a dependency-observation projection with open agent todos, the guard sets
-`next_lane=advancement_task`, `must_attempt_work=true`, and
-`reason_codes=["dependency_observation", "open_agent_todo"]` only when at least
-one open todo is advancement-class work. If all visible open todos are
-monitor-class and no open todo is hidden, the guard sets
-`obligation=quiet_until_material_monitor_transition` and
-`must_attempt_work=false`. One narrow exception prevents long autonomous
-projects from stalling after finishing their last visible delivery todo: when
-the current `next_action`/`recommended_action` explicitly points at an
-advancement-class executable chain, monitor-only todos are promoted to
-`lane=advancement_task` with
-`obligation=materialize_advancement_todo_or_blocker`. That obligation requires
-the worker to create a concrete advancement todo or write a blocker instead of
-quietly waiting on monitors. The heartbeat recommendation may say
-`follow_work_lane_contract` or `monitor_quiet_until_material_transition`, but it
-should not restate the lane semantics; unchanged monitor polls remain quiet
-no-spend checks with `should_run=false` and
-`effective_action=monitor_quiet_skip`, while a material dependency-state
-transition may be written back once when it changes the selected goal decision.
-When final agent-scope projection selects a non-execution wait such as
-`effective_action=agent_scope_wait`, the exposed `work_lane_contract` must also
-be non-executing (`must_attempt_work=false`) even if a goal-level next action
-would otherwise derive an advancement obligation. The original goal-level lane
-may remain as compact deferred diagnostic context, but executors must not treat
-it as a competing obligation.
-`handoff_readiness.handoff_interface_budget` declares the machine-readable
-budget for the minimal project-agent handoff: `mode=project_agent_handoff`,
-`max_lines=16`, and `max_chars=1800`. `loopx review-packet
---handoff-only --format json` returns the same contract plus live `line_count`,
-`char_count`, and `within_budget`, so a short heartbeat can reject handoff
-bloat without carrying this rule in prompt text.
-For spend accounting, status derives `spent_slots` from compact
-`quota_slot_spent` runtime events in the current quota window. The registry
-remains the policy source for compute share and window size, not the spend
-ledger.
-`quota_slot_spent` is status-neutral accounting: it must remain visible in run
-history for quota audit, but status and attention queues should use the latest
-non-accounting run as the current work state.
-More generally, status should expose projections over the append-only event
-ledger rather than acting as the ledger itself. Work classifications, human
-reward overlays, operator-gate resume contracts, quota spend rows, evidence
-polls, blocker writebacks, and artifact validations should remain auditable as
-events; dashboards and heartbeat prompts consume compact projections of those
-events for current-state decisions.
-In lane terms, `next_automatic_turn` may only name the first eligible goal;
-operator-gated, focus-waiting, waiting, throttled, paused, and health-blocked
-goals must stay out of the eligible lane even when they have a high
-`quota.compute`.
+同一 guard 可以包含 `work_lane_contract`。Schema `work_lane_contract_v1`
+是 guard 一等 `interaction_contract` 下 monitor 与推进路由的兼容下钻。
+它区分 `lane=continuous_monitor` 与 `lane=advancement_task`，携带下一 lane，
+并暴露一个 `obligation` 字符串，如 `advance_unless_material_monitor_transition`。
+Agent todo 条目可以包含 `task_class=advancement_task` 或
+`task_class=continuous_monitor`，加可选 `action_kind`，如 `run_eval`、`validate`、
+`rebuild`、`writeback`、`monitor` 或 `poll`。显式 `task_class` 对 todo 条目本身
+权威；`task_class` 缺失时识别出的通用 `action_kind` 可以推断 lane；
+遗留 todo 文本只是兼容 fallback。所选目标的 `next_action`/`recommended_action`
+在点名可执行链（如收集重复、重建标签、重跑 scorer 或验证 eval gate）时，
+仍可以把否则 monitor-only 的 todo 集提升回 `lane=advancement_task`。
+隐藏开放 todos 当作推进工作而非 monitor-only 工作，因此截断的 top-N todo 投影
+不能意外静默可执行积压。
+对带开放 Agent todos 的依赖观察投影，guard 只在至少一个开放 todo 是推进类工作时
+设置 `next_lane=advancement_task`、`must_attempt_work=true` 与
+`reason_codes=["dependency_observation", "open_agent_todo"]`。
+如果所有可见开放 todos 都是 monitor 类且没有隐藏开放 todo，guard 设置
+`obligation=quiet_until_material_monitor_transition` 与 `must_attempt_work=false`。
+一个窄例外防止长自主项目在完成最后一个可见 delivery todo 后停滞：当前
+`next_action`/`recommended_action` 显式指向推进类可执行链时，
+monitor-only todos 被提升为 `lane=advancement_task`，
+`obligation=materialize_advancement_todo_or_blocker`。该义务要求 worker
+创建具体推进 todo 或写 blocker，而不是安静等待 monitor。Heartbeat 推荐可以说
+`follow_work_lane_contract` 或 `monitor_quiet_until_material_transition`，
+但不应复述 lane 语义；未变化 monitor 轮询保持
+`should_run=false` 与 `effective_action=monitor_quiet_skip` 的安静无 spend 检查，
+而实质依赖状态转移在改变所选目标决策时可以写回一次。
+当最终 Agent 作用域投影选择 `effective_action=agent_scope_wait` 等非执行等待时，
+暴露的 `work_lane_contract` 也必须是不可执行的（`must_attempt_work=false`），
+即使目标级下一动作否则会派生推进义务。原始目标级 lane 可以保持紧凑延迟诊断
+上下文，但执行者不得把它当作竞争义务。
+`handoff_readiness.handoff_interface_budget` 声明最小项目 Agent handoff 的机器可读
+预算：`mode=project_agent_handoff`、`max_lines=16` 与 `max_chars=1800`。
+`loopx review-packet --handoff-only --format json` 返回同一契约加实时
+`line_count`、`char_count` 与 `within_budget`，使短 heartbeat 无需在提示文本携带
+该规则即可拒绝 handoff 膨胀。
+对 spend 记账，status 从当前 quota 窗口内的紧凑 `quota_slot_spent` 运行时事件
+派生 `spent_slots`。Registry 保持为计算份额与窗口大小的策略源，而非 spend ledger。
+`quota_slot_spent` 是 status 中性记账：它必须在 run history 中保持可审计，
+但 status 与 attention queue 应使用最新非记账 run 作为当前工作状态。
+更一般地，status 应暴露仅追加事件 ledger 上的投影，而不是充当 ledger 本身。
+工作分类、人类奖励 overlay、operator-gate 恢复契约、quota spend 行、证据轮询、
+blocker 写回与产物验证应保持为事件可审计；dashboard 与 heartbeat 提示消费这些
+事件的紧凑投影做当前状态决策。
+按 lane 说，`next_automatic_turn` 只能点名第一个合格目标；operator-gated、
+focus-waiting、waiting、throttled、paused 与 health-blocked 目标必须留在合格
+lane 外，即使它们有高 `quota.compute`。
 
-## Top-Level Shape
+## 顶层形状
 
 ```json
 {
@@ -486,46 +423,38 @@ goals must stay out of the eligible lane even when they have a high
 }
 ```
 
-By default `loopx status` is the multi-goal dashboard/control-plane view.
-`loopx status --goal-id <goal-id>` keeps global health fields such as
-`global_registry`, while its `contract` projection contains only global errors
-plus errors owned by the selected goal. It also focuses goal-scoped sections
-such as `attention_queue`, `run_history`, `event_ledger_summary`,
-`usage_summary`, and `todo_index` on the requested goal. Use
-`loopx diagnose --goal-id <goal-id>` when an agent needs the richer reasoning
-packet for one goal.
+默认 `loopx status` 是多目标 dashboard/控制面视图。`loopx status --goal-id <goal-id>`
+保留 `global_registry` 等全局健康字段，而其 `contract` 投影只包含全局错误
+加归所选目标所有的错误。它还把 `attention_queue`、`run_history`、
+`event_ledger_summary`、`usage_summary` 与 `todo_index` 等 goal 作用域区块聚焦到
+请求目标。Agent 需要单目标更丰富推理 packet 时用
+`loopx diagnose --goal-id <goal-id>`。
 
-Consumers should treat unknown fields as additive. Required fields for a
-first-screen UI are `ok`, `contract`, and `attention_queue`.
-`status_contract`, `event_ledger_summary`, `promotion_readiness_summary`,
-`promotion_gate`, `decision_freshness_summary`, and `usage_summary` are optional and should be
-treated as compact protocol or run-history projections, not as the ledger
-itself, authoritative billing telemetry, or a release operation source.
-`usage_summary` carries aggregate token/cost/duration when runs report a typed
-`run_usage_v0` usage row, but it remains a run-history proxy, not billing of
-record. Malformed, negative, or non-finite usage fails closed at ingest/read rather than
-appearing as zeros. A missing `status_contract` means an older status producer;
-loopback dashboards should surface that as a daemon freshness warning rather
-than silently hiding newer panels.
+消费方应把未知字段当作附加的。首屏 UI 的必需字段是 `ok`、`contract` 与
+`attention_queue`。`status_contract`、`event_ledger_summary`、
+`promotion_readiness_summary`、`promotion_gate`、`decision_freshness_summary`
+与 `usage_summary` 是可选的，应视为紧凑协议或 run-history 投影，
+而不是 ledger 本身、权威计费遥测或发布操作源。`usage_summary` 在 run 报告 typed
+`run_usage_v0` 使用行时携带聚合 token/成本/时长，但它仍是 run-history 代理，
+不是计费记录。畸形、负或非有限 usage 在摄入/读取时 fail closed，
+而不是显示为零。缺失 `status_contract` 表示更旧 status producer；
+loopback dashboard 应把它作为 daemon 新鲜度警告显示，
+而不是静默隐藏较新面板。
 
-## Interface Budget Cadence
+## 接口预算 Cadence
 
-When a run-history record includes `interface_budget_cadence`,
-`loopx status` projects a compact copy under
-`attention_queue.items[].project_asset.interface_budget_cadence`. For the
-selected goal, `quota should-run` also mirrors the same object at top level as
-`interface_budget_cadence`.
+当 run-history 记录包含 `interface_budget_cadence` 时，`loopx status`
+在 `attention_queue.items[].project_asset.interface_budget_cadence` 投影其紧凑副本。
+对所选目标，`quota should-run` 还在顶层镜像同一对象为
+`interface_budget_cadence`。
 
-This field is a restraint signal for heartbeat workers, not a dashboard feature
-request. It records the latest clean hot-path budget check, the tightest
-headroom observed, and when the next check is due. Fresh clean checks can
-support a quiet skip for the ongoing interface-budget guard only while the
-tightest metric still has positive headroom; overdue, out-of-budget, or
-zero-headroom checks should prompt `python3
-examples/control_plane/hot-path-interface-budget-smoke.py` or an equivalent explicit
-drift-check run.
+该字段是 heartbeat worker 的约束信号，不是 dashboard 功能请求。
+它记录最新干净热路径预算检查、观察到的最紧余量，与下次检查到期时间。
+新鲜干净检查只有在最紧指标仍有正余量时才能支持接口预算 guard 的安静跳过；
+过期、超预算或零余量检查应提示运行 `python3
+examples/control_plane/hot-path-interface-budget-smoke.py` 或等效显式漂移检查。
 
-Stable fields:
+稳定字段：
 
 - `checked_at`
 - `freshness_hours`
@@ -539,24 +468,20 @@ Stable fields:
 - `headroom_remaining`
 - `recommendation`
 
-## Promotion Gate JSON
+## 晋升 Gate JSON
 
-`loopx promotion-gate --format json` is the compact machine-readable
-gate for local release promotion. It reads the same append-only readiness event
-as `doctor`, `status`, and `install-local.sh`, then returns a small operation
-result that scripts can assert without parsing installer stderr.
+`loopx promotion-gate --format json` 是本地发布晋升的紧凑机器可读 gate。
+它读取与 `doctor`、`status` 与 `install-local.sh` 相同的仅追加就绪事件，
+然后返回小操作结果，脚本可以断言而无需解析安装器 stderr。
 
-This command is read-only and non-blocking. `can_promote=false` means the
-installer should warn before promotion, not that the CLI refuses to install.
-The warning remains a human-facing guardrail; automation should use
-`gate_state`, `can_promote`, `should_warn`, and `readiness.freshness_status` as
-the stable fields.
-`loopx status --format json` embeds the same compact result under
-`promotion_gate`, so dashboard panels, installer smoke, and CLI gate checks
-consume one state contract instead of re-deriving release-readiness state
-separately.
+该命令只读且非阻塞。`can_promote=false` 表示安装器应在晋升前警告，
+而不是 CLI 拒绝安装。警告保持人类面向护栏；自动化应使用 `gate_state`、
+`can_promote`、`should_warn` 与 `readiness.freshness_status` 作为稳定字段。
+`loopx status --format json` 在 `promotion_gate` 下嵌入同一紧凑结果，
+因此 dashboard 面板、安装器 smoke 与 CLI gate 检查消费一个状态契约，
+而不单独重新派生发布就绪状态。
 
-After the release checks pass, the canary uses the explicit write boundary:
+发布检查通过后，canary 使用显式写边界：
 
 ```bash
 loopx promotion-readiness record \
@@ -564,11 +489,10 @@ loopx promotion-readiness record \
   --execute
 ```
 
-Without `--execute`, this command only previews the runtime-level append. The
-canary supplies `skipped` only for an explicit dashboard omission; dependency
-failures on a present dashboard source must not be recorded as `passed`.
+不带 `--execute`，该命令只预览运行时级追加。Canary 只在显式 dashboard 省略时
+提供 `skipped`；存在 dashboard 来源时依赖失败不得记录为 `passed`。
 
-Fresh shape:
+新鲜形状：
 
 ```json
 {
@@ -597,7 +521,7 @@ Fresh shape:
 }
 ```
 
-Missing or stale shape:
+缺失或过期形状：
 
 ```json
 {
@@ -616,36 +540,32 @@ Missing or stale shape:
 }
 ```
 
-`warning_message` is intentionally human-facing and may change. It exists so
-`scripts/install-local.sh` can keep its operator warning, but automation should
-prefer the structured fields above.
+`warning_message` 刻意人类面向且可能变化。它存在让
+`scripts/install-local.sh` 保留 operator 警告，但自动化应优先上面的结构化字段。
 
-## Global Registry Health
+## 全局 Registry 健康
 
-`global_registry` is the local multi-project health surface. It checks the
-shared `registry.global.json` even when the current command is pointed at a
-project-local registry, so dashboard users can see registry scope problems
-before they turn into ghost projects.
+`global_registry` 是本地多项目健康面。即使当前命令指向项目本地 registry，
+它也检查共享 `registry.global.json`，使 dashboard 用户能在 registry 范围问题
+变成幽灵项目之前看到它们。
 
-Health findings are compact and local-only. They may include local filesystem
-paths in a developer machine export, so do not publish a raw local status JSON
-outside the machine.
+健康发现紧凑且仅本地。它们可以在开发机导出中包含本地文件系统路径，
+所以在机器外不要发布原始本地 status JSON。
 
-Registry boundary should be checked with:
+Registry 边界应用以下检查：
 
 ```bash
 loopx registry-boundary --path <registry.json> --require-gitignored
 ```
 
-The shared `registry.global.json` is classified as `shared_local_registry` and
-must not be pushed. Project `.loopx/registry.json` files are
-`project_local_private_registry`. Generated public-safe registry projections are
-still runtime artifacts by default: they can be useful for review or handoff,
-but `github_push_allowed=false` unless the file is an explicitly authored
-example fixture under `examples/`. Dashboard/status JSON should therefore treat
-registry data as a local control-plane view, not as a repository artifact.
+共享 `registry.global.json` 分类为 `shared_local_registry` 且不得 push。
+项目 `.loopx/registry.json` 文件是 `project_local_private_registry`。
+生成的 public-safe registry 投影默认仍是运行时产物：它们对评审或 handoff 有用，
+但除非文件是 `examples/` 下显式编写的示例 fixture，
+`github_push_allowed=false`。Dashboard/status JSON 因此应把 registry 数据当作
+本地控制面视图，而不是仓库产物。
 
-Finding shape:
+发现形状：
 
 ```json
 {
@@ -658,73 +578,60 @@ Finding shape:
 }
 ```
 
-Current finding kinds:
+当前发现种类：
 
-- `duplicate_goal_id`: the global registry contains more than one entry for the
-  same goal id; this is high severity because routing is ambiguous.
-- `source_registry_missing`: a global entry points at a source registry that no
-  longer exists.
-- `stale_source_registry`: the source registry changed after the last recorded
-  `synced_at`, so the global entry may be stale.
-- `state_file_missing`: the goal's declared active state file no longer exists.
-- `state_file_not_declared`: the global entry has no durable active state file.
-- `current_registry_scope_excludes_global_goals`: informational reminder that a
-  project-local registry view excludes goals that are present in the shared
-  global registry.
+- `duplicate_goal_id`：全局 registry 对同一目标 id 包含多个条目；
+  这是高严重度，因为路由有歧义。
+- `source_registry_missing`：全局条目指向一个不再存在的来源 registry。
+- `stale_source_registry`：来源 registry 在最后记录的 `synced_at` 后变化，
+  因此全局条目可能过期。
+- `state_file_missing`：目标声明的 active state 文件不再存在。
+- `state_file_not_declared`：全局条目没有持久 active state 文件。
+- `current_registry_scope_excludes_global_goals`：信息性提醒——项目本地 registry
+  视图排除了共享全局 registry 中存在的目标。
 
-High and action findings are also lifted into `attention_queue.items` with
-`source=global_registry`; informational scope findings stay in the global
-registry panel so local project views are not noisy. Source-registry provenance
-findings (`source_registry_missing` / `stale_source_registry`) are collapsed into
-the live quota-backed queue item for the same `goal_id` when one exists, under
-`global_registry_shadow_findings`, so stale source shadows do not become a second
-quota health blocker while the fact remains visible in `global_registry.findings`.
+高与 action 发现也被提升进 `attention_queue.items`，`source=global_registry`；
+信息性范围发现留在全局 registry 面板，使本地项目视图不嘈杂。来源 registry
+出处发现（`source_registry_missing` / `stale_source_registry`）在存在时被塌缩进
+同一 `goal_id` 的 live quota-backed 队列条目，位于
+`global_registry_shadow_findings`，因此过期来源影子不会成为第二个 quota 健康
+blocker，同时该事实在 `global_registry.findings` 中保持可见。
 
-## Contract Health
+## 契约健康
 
-`contract.ok=false` means the UI should show a blocking health state before
-encouraging more adapter work.
+`contract.ok=false` 表示 UI 在鼓励更多 adapter 工作前应显示阻塞健康状态。
 
-The summary counters are intentionally small:
+摘要计数器刻意小：
 
-- `errors`: boundary or registry problems that should block progress.
-- `warnings`: non-blocking issues worth showing in a secondary health panel.
-- `checks`: successful observations, useful for audit trails.
+- `errors`：应阻塞进度的边界或 registry 问题。
+- `warnings`：值得在次级健康面板显示的非阻塞问题。
+- `checks`：成功观察，对审计轨迹有用。
 
-`error_diagnostics` is the source of truth for error ownership. Each row has a
-stable `code`, a human-readable `message`, and either `scope=global` or
-`scope=goal` with a `goal_id`; a finding shared by a known subset may use
-`scope=goals` with `goal_ids`. Registry parse failures, ambiguous goal identity,
-registry boundary violations, and public-boundary violations are global.
-Goal-entry, active-state, and todo contract failures are owned by the goal or
-known goal set that produced them.
+`error_diagnostics` 是错误归属的真相源。每行有稳定 `code`、人类可读 `message`，
+以及 `scope=global` 或带 `goal_id` 的 `scope=goal`；已知子集共享的发现可以用
+`scope=goals` 加 `goal_ids`。Registry 解析失败、歧义目标身份、registry 边界违规与
+公共边界违规是全局的。Goal 条目、active-state 与 todo 契约失败归产生它们的
+目标或已知目标集所有。
 
-`errors`, `global_errors`, and `goal_errors` are compatibility projections
-derived from those structured diagnostics; consumers must not infer ownership
-from message prefixes. `warnings` and `checks` remain short strings. Checks
-should be concrete enough to support an operator decision without exposing
-local paths or private evidence. They must be public-safe before a project
-exposes this export outside the local machine.
+`errors`、`global_errors` 与 `goal_errors` 是从那些结构化诊断派生的兼容投影；
+消费方不得从消息前缀推断归属。`warnings` 与 `checks` 保持短字符串。
+Checks 应足够具体支持 operator 决策，而不暴露本地路径或私有证据。
+项目在本地机器外暴露该导出前，它们必须 public-safe。
 
 ## Attention Queue
 
-The attention queue is sorted by LoopX status logic. A UI should render
-it as the primary worklist.
+Attention queue 按 LoopX status 逻辑排序。UI 应把它渲染为主要工作列表。
 
-Counters:
+计数器：
 
-- `item_count`: all visible queue items.
-- `needs_user_or_controller`: items waiting on either a human user or a target
-  controller.
-- `needs_controller`: subset waiting on a target controller or adapter
-  connection.
-- `needs_codex`: items ready for a Codex action.
-- `watching_external_evidence`: items that should be monitored but not acted on
-  until outside evidence changes.
-- `watching_monitor`: monitor-only items that remain visible without implying
-  immediate Codex work.
+- `item_count`：所有可见队列条目。
+- `needs_user_or_controller`：等待人类用户或目标 controller 的条目。
+- `needs_controller`：等待目标 controller 或 adapter 连接的子集。
+- `needs_codex`：准备好接受 Codex 动作的条目。
+- `watching_external_evidence`：应监控但直到外部证据变化才行动的条目。
+- `watching_monitor`：保持可见而不暗示立即 Codex 工作的 monitor-only 条目。
 
-Item shape:
+条目形状：
 
 ```json
 {
@@ -806,925 +713,686 @@ Item shape:
 }
 ```
 
-Item fields:
+条目字段：
 
-- `goal_id`: stable goal identifier from registry or runtime.
-- `status`: adapter classification or derived status.
-- `lifecycle_phase`: derived state-interaction phase for first-screen
-  visualization.
-- `lifecycle_flags`: all compact phases that apply to the latest state.
-- `waiting_on`: `user_or_controller`, `controller`, `codex`,
-  `external_evidence`, or `monitor_signal`.
-- `severity`: `high`, `action`, or `watch`.
-- `recommended_action`: exactly one next action.
-- `project_asset`: a compact control-plane projection derived from the same
-  item. It must carry `owner`, `gate`, `support_mode`, `next_action`, and
-  `stop_condition`, and may include compact `user_todos`, `agent_todos`, `quota`, and
-  `latest_validation` summaries. Registry-backed project assets also include
-  `execution_profile`, the project-level delivery floor created by
-  `loopx connect`, and `orchestration`, the compact projection of
-  registry `spawn_policy` with `mode`, `spawn_allowed`, `max_children`, and
-  optional `allowed_domains`. They may also include `control_plane`, the
-  compact per-goal policy projection for settings such as self-repair, and
-  `stale_latest_run_warning`, a compact warning that the current active-state
-  file appears newer or different from the latest run's captured state
-  projection. This warning is a repair hint, not a scheduler gate: consumers
-  should run `refresh-state` before trusting latest-run-derived routing, while
-  quota eligibility still comes from the quota guard. When orchestration mode
-  is `multi_subagent`, project assets may also include `subagent_activity`, a
-  compact child-run projection derived from run history. It records child run
-  ids, roles, state, parent links, public-safe scope summaries, and quota-spend
-  counts for observation only; it is not a lock service or write arbiter.
-  This is the first-screen project asset surface for
-  agents and dashboards; it lets consumers avoid reconstructing owner, gate,
-  support mode, next action, stop condition, todo counts, compute state, and
-  latest validation from scattered fields. It also keeps delivery-floor and
-  orchestration policy close to the project asset instead of forcing agents to
-  infer them from history.
-  `support_mode` is a compact product-mode label: `read_only_observer`,
-  `decision_support`, `reward_capture`, or `selective_assist`. It describes the
-  current operator/agent relationship; it is not a permission bit and does not
-  override `gate`, `quota`, or `agent_command`. When an approved
-  `agent_command` is present and public-safe, `project_asset.next_safe_command`
-  may repeat that command so first-screen dashboards and handoff packets can
-  show the next executable local step without scanning top-level queue fields.
-  Advisory dreaming outputs may include both `dreaming_proposal` and
-  `dreaming_lane_badge`. The proposal carries compact rationale and promotion
-  requirements; the badge carries only routing facts for UI/heartbeat
-  consumers: `lane=dreaming`, `advisory=true`,
-  `interrupts_delivery=false`, `review_required=true`,
-  `execution_allowed=false`, `delivery_spend_allowed=false`, and
-  `promoted_to_delivery=false`. Consumers should render the badge as a
-  separate Dreaming lane or secondary badge and must not treat it as delivery
-  authorization.
-  Markdown renderers should
-  include the first unfinished user and agent todo here when available, so
-  hot-path readers do not need to scan the detailed todo sections. The richer
-  top-level `user_todos`, `agent_todos`, and `quota` fields remain available
-  for detailed views.
-- `goal_boundary.peer_task_coordination`: optional quota-only coordination
-  authority. It appears only when the registry explicitly selects a
-  `coordinator_agent_id`. Registered peers are otherwise independent; child
-  spawn policy never implies registered-peer coordination authority. A blocked
-  explicit bundle never displaces the coordinator's own runnable Todo; with no
-  local fallback it projects `interaction_contract.mode=peer_coordination_blocked`
-  so schedulers stop until a material coordination input changes.
-- Current routing authority: consumers should choose the current owner, gate,
-  waiting party, and next action from `attention_queue.items` and its
-  `project_asset`. `run_history.latest_runs` is an evidence and drill-down
-  surface; it may be limited by status command limits or filters, so consumers
-  must not use it as the sole source for deciding whether a gate is still
-  pending or already approved.
-- `handoff_readiness`: optional project-asset consistency and follow-through
-  summary. `ready=true` means the current queue item is Codex-runnable under the
-  same source, quota, next-action, stop-condition, and public-safety checks.
-  `handoff_status=ready_waiting_for_run` means a handoff is ready or approved
-  but no later non-accounting run has appeared in the compact history window.
-  `handoff_status=post_handoff_run_seen` means a later non-neutral run exists;
-  `post_handoff_latest_run` identifies that latest seen run by timestamp and
-  classification, and `delivery_batch_scale` labels whether the observed
-  delivery is test-only, single-surface, multi-surface, implementation-shaped,
-  or still unknown. Delivery scale and outcome come only from explicit typed
-  fields. Classification names, health text, recommendations, and the mere
-  presence of evidence objects never establish delivery semantics.
-  `delivery_turn_kind` comes from an explicit kind, the explicit outcome, or
-  a scoped typed blocker observation accepted by the existing settlement
-  predicate. `outcome_gap` alone does not prove blocker writeback.
-  `post_handoff_recent_runs` is a compact newest-first slice of recent
-  post-handoff work runs. `post_handoff_small_scale_streak` counts only leading
-  explicit `test_only` / `single_surface` scales; unknown breaks the streak.
-  Explicit `delivery_outcome` values are `outcome_progress`, `surface_only`,
-  `outcome_gap`, and `primary_goal_outcome`. Missing or invalid historical
-  semantics stay unknown. A missing outcome with no configured floor retains
-  the internal `not_configured` sentinel and is omitted from the compact run.
-  Legacy outcome-marker/hint lists retain floor-configuration compatibility,
-  but their words no longer classify runs. With that floor configured,
-  `post_handoff_outcome_gap_streak` counts only consecutive explicit
-  `surface_only` / `outcome_gap` outcomes; unknown breaks the streak.
-  Follow-through obligations require typed fields, never narrative inference.
-  New delivery claims use the existing writer enum fields; state-only refresh
-  without a delivery claim remains legal. This deliberately changes decisions
-  previously inferred from old untyped labels without rewriting run history.
-  `quota_slot_spent` events do not count as post-handoff work.
-- `operator_question`: optional human-facing gate to show in the LoopX
-  operator view. This is the canonical place for user/controller judgment.
-- `agent_command`: optional command or instruction for the target project agent
-  after the operator gate is approved. Dashboard consumers should not treat it
-  as approval by itself.
-- `quota`: optional compact compute-quota state. It should summarize the
-  compute share (`1.0`, `0.5`, `0.3`, or `0`), eligibility, recent spend, and
-  a public-safe reason without exposing private evidence. See
-  [quota-allocation.md](quota-allocation.md).
-- `control_plane`: optional compact registry policy for this goal. Current
-  settings include `self_repair.enabled`,
-  `self_repair.allow_health_blocker_repair`, and
-  `self_repair.allow_waiting_projection_repair`. Missing settings mean default
-  off, so ordinary goals remain in their existing skip/wait lanes.
-- `user_todos`: optional checkbox summary parsed from the active state's
-  `## User Todo ...` / `## Owner Review Reading Queue` section. Dashboard
-  consumers should render the first unfinished item as the human-facing next
-  step, while keeping `recommended_action` as routing context. The compact
-  `project_asset.user_todos` projection keeps legacy `next` / `next_index`
-  fields and may also include up to three unfinished `items` for thin workers
-  that need more than the first open todo.
-- `agent_todos`: optional checkbox summary parsed from `## Agent Todo`,
-  `## Codex Todo`, or `## Project Agent Todo`. Agent-facing consumers may use
-  it to choose implementation work after gates and quota allow execution; it is
-  not a user approval signal. Status, quota, and review-packet projections
-  should preserve up to three unfinished agent todo items so short heartbeats do
-  not confuse "first visible item" with the whole backlog. Todo summaries also
-  expose `first_executable_items` for advancement-class work and
-  `monitor_open_items` for continuous-monitor work; executable items are the
-  primary action surface, while monitor items are supplemental context that
-  should not consume the selected goal's advancement slot unless they record a
-  material transition or blocker.
-- `issue_meta_surface`: optional public-safe issue/PR anchor projection parsed
-  from an active-state `## Issue Meta Surface` section and mirrored under
-  `project_asset.issue_meta_surface`. Schema `issue_meta_surface_v0` carries a
-  bounded list of compact `issue_meta_surface_item_v0` rows with
-  `repo_handle`, `issue_handle`, GitHub-style `labels`, `owner_route`,
-  `related_code_hint`, `validation_surface`, `promotion_target`, `status`, and
-  `freshness`. It is a scenario state surface for issue/PR solver anchors, not
-  a command to read private source, publish comments, or open PRs.
-- `capability_gate`: optional per-goal quota projection derived from visible
-  executable agent todos that declare `required_capabilities`. When
-  `action=run`, the gate projects `runnable_candidates` and
-  `blocked_candidates`; `decision_owner=agent` means the agent chooses the
-  actual todo from the runnable set during its steering audit. The gate must
-  not rewrite `recommended_action` into a single selected todo.
-  `required_capabilities` means a prerequisite for directly executing that
-  todo, not the capability the todo is trying to build. A todo may separately
-  declare `target_capabilities` for capabilities it is developing, repairing,
-  materializing, or parity-checking. Target capabilities are not hard gates. If
-  a target bridge such as `benchmark_runner` is absent, the candidate may still
-  appear in `runnable_candidates` with `capability_repair_mode=true`,
-  `capability_action=repair_bridge`, and `missing_target_capabilities` on the
-  candidate. When no visible executable candidate is runnable, the gate owns
-  the decision and returns `repair_bridge`, `ask_owner`, or `skip` with
-  concrete missing capability details.
-- `project_asset.todo_projection_gap`: optional explicit gap object emitted
-  when status cannot project `user_todos` and/or `agent_todos` for a connected
-  project. This means "the first-screen todo state is unknown", not "there are
-  zero todos". Consumers should surface the missing roles and ask for a
-  parseable active-state todo section or state-file repair before treating the
-  project asset as first-screen complete.
-- Todo summaries use `schema_version=todo_summary_v0`; parsed todo items use
-  `schema_version=todo_item_v0`. The source active state can remain ordinary
-  Markdown checkboxes, but status/quota/dashboard consumers should prefer the
-  structured item fields when present: `todo_id`, `role`, `status`,
-  `priority`, `title`, `archive_state`, `source_section`, `index`, `text`,
-  `task_class`, `action_kind`, `note`, `evidence`, `reason`, `completed_at`,
-  `updated_at`, `superseded_by`, and `claimed_by`. Todo summaries may also
-  expose `claimed_open_count` and `unclaimed_open_count` so dashboards and
-  heartbeat dispatchers can show soft ownership without inferring a lock.
-  `claimed_by` is a visibility hint written through the todo CLI, not a lease
-  or permission grant; claim ids must be registered on the goal's coordination
-  contract, and agents must still obey quota, gates, write-scope checks, and
-  their automation/handoff scope. `todo_id` is first-class when written by the
-  todo CLI; legacy Markdown without metadata still gets a parser-derived
-  compatibility id from the current item text and section, and the first
-  lifecycle command materializes that id back into metadata.
-  The first open item is still available through `first_open_items` for older
-  heartbeats. Frontstage consumers should not treat that top-N scheduler view
-  as the whole backlog. Todo summaries may also project visibility lanes:
-  `unclaimed_priority_open_items` for priority-ranked unclaimed candidates,
-  `claimed_open_items` for claimed work that may be outside the top-N,
-  `claimed_advancement_open_items` for claimed executable delivery work, and
-  `claimed_monitor_open_items` for claimed continuous-monitor work. Agent-aware
-  quota/status projections may further include
-  `current_agent_claimed_open_items`,
-  `current_agent_claimed_advancement_items`,
-  `current_agent_claimed_monitor_items`, and `claimed_by_others_items`.
-  The scheduler can still select from a narrower executable candidate set; the
-  dashboard/frontstage uses these lanes to keep ownership visible. Visibility
-  lanes may be wider than scheduler lanes, but remain bounded; the default
-  agent-facing cap is 16 items per lane. Consumers should use the corresponding
-  counts to indicate when more claimed work exists than is expanded in the
-  current payload, and richer frontstage views should use a future
-  paged/filtered projection instead of forcing larger heartbeat payloads.
-  The canonical todo drill-down contract is
-  `docs/reference/protocols/todo-detail-cold-path-v0.md`: hot-path summaries
-  may carry only a compact `todo_detail_ref_v0` pointer for one selected item,
-  while full notes, evidence summaries, related lifecycle references, and page
-  tokens stay in `todo_detail_cold_path_v0` cold-path responses. Status,
-  quota, heartbeat, and handoff payloads must not inline full todo detail in
-  order to make hidden backlog visible.
-  When claimed lanes exceed the cap, producers should avoid raw top-N
-  truncation. Sort by priority and source position, group by `claimed_by`, take
-  a fair per-claimant slice, then fill remaining slots from the sorted
-  remainder. Agent-scoped projections should then order focus as
-  current-agent claimed items, unclaimed items, and lower-weight other-agent
-  claimed items. Other-agent claims are visibility context and last-resort
-  candidates; they are not a hard lock, but they also should not outrank the
-  current agent's own claimed work or unclaimed work.
-  Deferred todos are projected after sorted open todo lanes through
-  `deferred_items` and, when a machine-readable resume condition is satisfied,
-  `deferred_resume_candidates`. This is a gate-resume lane, not no-candidate
-  evidence and not executable backlog. The default deferred visibility cap is
-  eight items. Parsed deferred items may include `resume_when`,
-  `resume_condition`, and `resume_ready`; consumers should not merge these into
-  `first_open_items` or executable backlog until a lifecycle command reopens or
-  supersedes the todo. Agent-scoped quota may further split ready candidates
-  into `current_agent_deferred_resume_candidates`,
-  `unclaimed_deferred_resume_candidates`, and
-  `other_agent_deferred_resume_candidates`, where only the first two can wake
-  the current peer before an agent-scoped no-candidate wait is allowed.
-  Open todos may also carry `resume_when`; status should attach
-  `resume_condition` / `resume_ready` but keep the item out of executable
-  backlog until `resume_ready=true`. A `monitor_changed:<todo_id>` condition
-  additionally carries `resume_monitor_generation`, while the target monitor
-  carries monotonic `material_change_generation`; readiness requires the
-  latter to be strictly greater. This lets agents see not-yet-unlocked
-  successors without accidentally selecting them as current work or waking on
-  an unchanged/replayed monitor result.
-  Optional future fields such as `created_at`, lease TTLs, dependencies, or
-  evidence links should extend this item shape rather than inventing another
-  todo surface.
-- Agent-scoped quota payloads may include
-  `agent_todo_summary.claim_scope` with
-  `schema_version=agent_claim_scope_v0`. The quota guard should select
-  current-agent claimed todos before unclaimed todos, then expose other-agent
-  claimed todos as lower-weight candidates. Compatibility payloads may still
-  include `blocked_claimed_items`, but new consumers should prefer
-  `other_agent_claimed_items` and `other_agent_claimed_open_count`. This is
-  claim-aware routing, not a hard lease: every peer can inspect the goal-wide
-  backlog, while claims, task policy, capabilities, and boundaries determine
-  what it may execute. A current-agent claimed todo may be selected even when
-  the active state's global `Next Action` names another peer's lane; that is not
-  a state projection mismatch.
-- Agent-scoped quota payloads also expose the versioned `task_scope` enum
-  `goal_all_read_claimed_run_global_read_v0`. It means the peer may
-  read all ordinary todos in the current goal, may consider its own claimed or
-  an eligible unclaimed candidate, must claim before execution, and may execute
-  only its claimed eligible todo. Other-agent claims are diagnostic only.
-  Cross-goal reads stay outside goal-local routing and require an explicit
-  read-only global-manager inventory such as `loopx global-summary`; they never
-  grant cross-goal execution. Existing goal, agent, and cold-path command
-  fields supply the binding parameters without duplicating them. TurnEnvelope
-  retains this compact enum so the model sees the same boundary as the full
-  quota decision.
-- `dependency_blockers`: optional compact summary of unfinished user todos from
-  other current attention-queue goals. This lets dashboards and heartbeat
-  dispatchers show sibling/project dependency gates separately from the current
-  goal's own `user_todos`; it is visibility context only and must not by itself
-  change the current goal's quota or owner decision.
-- Local active-state file paths are intentionally omitted from queue items.
-  They are useful debug/source metadata, but the public-safe status queue should
-  identify work by `goal_id`, project asset state, and compact todos instead of
-  exposing machine-specific paths.
-- `source`: `contract`, `registry`, `run_history`, or `latest_run`.
-- `controller_stage`: optional compact controller-readiness classification from
-  the latest run.
-- `missing_gates`: optional public-safe gate ids that explain why a goal cannot
-  advance to the next controller stage yet.
-- `next_handoff_condition`: optional public-safe condition for advancing the
-  controller handoff.
+- `goal_id`：来自 registry 或运行时的稳定目标标识符。
+- `status`：adapter 分类或派生状态。
+- `lifecycle_phase`：用于首屏可视化的派生 state 交互阶段。
+- `lifecycle_flags`：适用于最新状态的所有紧凑阶段。
+- `waiting_on`：`user_or_controller`、`controller`、`codex`、`external_evidence`
+  或 `monitor_signal`。
+- `severity`：`high`、`action` 或 `watch`。
+- `recommended_action`：恰好一个下一动作。
+- `project_asset`：从同一条目派生的紧凑控制面投影。它必须携带 `owner`、`gate`、
+  `support_mode`、`next_action` 与 `stop_condition`，并可以包含紧凑 `user_todos`、
+  `agent_todos`、`quota` 与 `latest_validation` 摘要。Registry 支撑的项目资产还包含
+  `execution_profile`（`loopx connect` 创建的项目级 delivery floor）与
+  `orchestration`（registry `spawn_policy` 的紧凑投影，带 `mode`、`spawn_allowed`、
+  `max_children` 与可选 `allowed_domains`）。它们还可以包含 `control_plane`
+  （self-repair 等设置的紧凑每目标策略投影）与 `stale_latest_run_warning`
+  （当前 active-state 文件看起来比最新 run 捕获的状态投影更新或不同）。
+  该警告是修复提示，不是 scheduler gate：消费方应在信任 latest-run 派生路由前
+  运行 `refresh-state`，而 quota 资格仍来自 quota guard。当编排模式是
+  `multi_subagent` 时，项目资产还可以包含 `subagent_activity`，从 run history
+  派生的紧凑子 run 投影。它记录子 run id、角色、状态、父链接、public-safe 作用域
+  摘要与 quota-spend 计数，仅供观察；它不是锁服务或写仲裁器。
+  这是 Agents 与 dashboard 的首屏项目资产面；它让消费方避免从分散字段重建
+  owner、gate、support mode、下一动作、停止条件、todo 计数、计算状态与最新验证。
+  它还让 delivery-floor 与编排策略贴近项目资产，而不强迫 Agent 从历史推断。
+  `support_mode` 是紧凑产品模式标签：`read_only_observer`、`decision_support`、
+  `reward_capture` 或 `selective_assist`。它描述当前 operator/Agent 关系；
+  不是权限位，也不覆盖 `gate`、`quota` 或 `agent_command`。当已批准的
+  `agent_command` 存在且 public-safe 时，`project_asset.next_safe_command`
+  可以重复该命令，使首屏 dashboard 与 handoff packet 无需扫描顶层队列字段
+  即可显示下一个可执行本地步骤。
+  建议性 dreaming 输出可以包含 `dreaming_proposal` 与 `dreaming_lane_badge`。
+  proposal 携带紧凑理由与晋升要求；badge 只为 UI/heartbeat 消费方携带路由事实：
+  `lane=dreaming`、`advisory=true`、`interrupts_delivery=false`、
+  `review_required=true`、`execution_allowed=false`、
+  `delivery_spend_allowed=false` 与 `promoted_to_delivery=false`。
+  消费方应把 badge 渲染为单独 Dreaming lane 或次级徽章，
+  且不得把它当作 delivery 授权。
+  Markdown 渲染器应在可用时把第一个未完成的用户与 Agent todo 包含在这里，
+  使热路径读者无需扫描详细 todo 区块。更丰富的顶层 `user_todos`、`agent_todos`
+  与 `quota` 字段保持供详细视图。
+- `goal_boundary.peer_task_coordination`：可选 quota-only 协调权威。
+  它只在 registry 显式选择 `coordinator_agent_id` 时出现。已注册 peers
+  否则独立；子 spawn 策略不暗示已注册 peer 协调权威。被阻塞的显式 bundle
+  不取代协调者自己的可运行 Todo；无本地 fallback 时它投影
+  `interaction_contract.mode=peer_coordination_blocked`，
+  使 scheduler 直到实质协调输入变化才停止。
+- 当前路由权威：消费方应从 `attention_queue.items` 及其 `project_asset` 选择
+  当前 owner、gate、等待方与下一动作。`run_history.latest_runs` 是证据与下钻面；
+  它可能受 status 命令上限或过滤器限制，所以消费方不得用它作为判断 gate
+  仍待决或已批准的单独来源。
+- `handoff_readiness`：可选项目资产一致性与 follow-through 摘要。`ready=true`
+  表示当前队列条目在同一来源、quota、next-action、stop-condition 与公共安全检查下
+  可被 Codex 运行。`handoff_status=ready_waiting_for_run` 表示 handoff 就绪或
+  已批准，但紧凑历史窗口内没有出现后续非记账 run。
+  `handoff_status=post_handoff_run_seen` 表示存在较新非中性 run；
+  `post_handoff_latest_run` 按时间戳与分类识别该最新已见 run，
+  而 `delivery_batch_scale` 标记观察到的 delivery 是 test-only、single-surface、
+  multi-surface、implementation 形状还是未知。Delivery scale 与 outcome 只来自
+  显式 typed 字段。分类名、健康文本、推荐与证据对象的存在性绝不建立 delivery
+  语义。`delivery_turn_kind` 来自显式 kind、显式 outcome 或被现有结算谓词接受的
+  作用域 typed blocker 观察。`outcome_gap` 单独不证明 blocker writeback。
+  `post_handoff_recent_runs` 是最近 post-handoff 工作 run 的紧凑最新优先切片。
+  `post_handoff_small_scale_streak` 只计开头显式 `test_only` / `single_surface`
+  scale；unknown 打断连续段。显式 `delivery_outcome` 值是 `outcome_progress`、
+  `surface_only`、`outcome_gap` 与 `primary_goal_outcome`。缺失或无效历史语义保持
+  unknown。无 floor 配置时缺失 outcome 保留内部 `not_configured` 哨兵，
+  并从紧凑 run 省略。遗留 outcome-marker/hint 列表保留 floor 配置兼容性，
+  但其词不再分类 run。配置该 floor 后，`post_handoff_outcome_gap_streak`
+  只计连续显式 `surface_only` / `outcome_gap` outcome；unknown 打断连续段。
+  Follow-through 义务需要 typed 字段，从不叙事推断。新 delivery 声明使用现有
+  writer 枚举字段；不带 delivery 声明的 state-only refresh 保持合法。这刻意改变
+  以前从旧未类型标签推断的决策，而不重写 run history。`quota_slot_spent` 事件
+  不算 post-handoff 工作。
+- `operator_question`：可选的、要在 LoopX operator 视图显示的人类面向 gate。
+  这是用户/controller 判断的 canonical 位置。
+- `agent_command`：operator gate 获批后目标项目 Agent 的可选命令或指令。
+  Dashboard 消费方不应单独把它当作批准。
+- `quota`：可选紧凑计算配额状态。它应摘要计算份额（`1.0`、`0.5`、`0.3` 或 `0`）、
+  资格、近期 spend 与 public-safe 理由，而不暴露私有证据。见
+  [quota-allocation.md](quota-allocation.md)。
+- `control_plane`：该目标的可选紧凑 registry 策略。当前设置包括
+  `self_repair.enabled`、`self_repair.allow_health_blocker_repair` 与
+  `self_repair.allow_waiting_projection_repair`。缺失设置表示默认关闭，
+  因此普通目标保持在现有 skip/wait lane。
+- `user_todos`：从 active state 的 `## User Todo ...` /
+  `## Owner Review Reading Queue` 区块解析的可选复选框摘要。Dashboard 消费方应把
+  第一个未完成条目渲染为人类面向下一步，同时把 `recommended_action` 保持为路由
+  上下文。紧凑 `project_asset.user_todos` 投影保留遗留 `next` / `next_index`
+  字段，还可以包含至多三个未完成 `items` 供需要超过第一个开放 todo 的薄 worker。
+- `agent_todos`：从 `## Agent Todo`、`## Codex Todo` 或 `## Project Agent Todo`
+  解析的可选复选框摘要。Agent 面向消费方可以在 gate 与 quota 允许执行后用它选择
+  实现工作；它不是用户批准信号。Status、quota 与 review-packet 投影应保留至多
+  三个未完成 agent todo 条目，使短 heartbeat 不把"第一个可见条目"与整个积压混淆。
+  Todo 摘要还暴露推进类工作的 `first_executable_items` 与持续 monitor 工作的
+  `monitor_open_items`；可执行条目是主动作面，而 monitor 条目是补充上下文，
+  除非记录实质转移或 blocker，否则不应消耗所选目标的推进槽位。
+- `issue_meta_surface`：从 active-state `## Issue Meta Surface` 区块解析并镜像到
+  `project_asset.issue_meta_surface` 的可选 public-safe issue/PR 锚点投影。
+  Schema `issue_meta_surface_v0` 携带有界紧凑 `issue_meta_surface_item_v0` 行列表，
+  带 `repo_handle`、`issue_handle`、GitHub 风格 `labels`、`owner_route`、
+  `related_code_hint`、`validation_surface`、`promotion_target`、`status` 与
+  `freshness`。它是 issue/PR 求解器锚点的场景状态面，
+  不是读私有来源、发布评论或打开 PR 的命令。
+- `capability_gate`：从声明显式 `required_capabilities` 的可见可执行 agent todos
+  派生的可选每目标 quota 投影。当 `action=run` 时，gate 投影
+  `runnable_candidates` 与 `blocked_candidates`；`decision_owner=agent`
+  表示 Agent 在 steering audit 期间从可运行集选择实际 todo。Gate 不得把
+  `recommended_action` 重写为单一所选 todo。`required_capabilities`
+  表示直接执行该 todo 的前置条件，而不是 todo 试图构建的能力。Todo 可以单独声明
+  它开发、修复、物化或 parity 检查的能力的 `target_capabilities`。
+  目标能力不是硬 gate。如果目标 bridge（如 `benchmark_runner`）缺失，
+  候选仍可出现在 `runnable_candidates`，带 `capability_repair_mode=true`、
+  `capability_action=repair_bridge` 与候选上 `missing_target_capabilities`。
+  当没有可见可执行候选可运行，gate 拥有决策并返回 `repair_bridge`、`ask_owner`
+  或 `skip`，带具体缺失能力细节。
+- `project_asset.todo_projection_gap`：status 无法为已连接项目投影 `user_todos`
+  与/或 `agent_todos` 时发出的可选显式缺口对象。这表示"首屏 todo 状态未知"，
+  不是"零 todos"。消费方应在把项目资产视为首屏完整前表露缺失角色，
+  并请求可解析的 active-state todo 区块或状态文件修复。
+- Todo 摘要使用 `schema_version=todo_summary_v0`；解析的 todo 条目使用
+  `schema_version=todo_item_v0`。来源 active state 可以保持普通 Markdown 复选框，
+  但 status/quota/dashboard 消费方应在存在时优先结构化条目字段：`todo_id`、
+  `role`、`status`、`priority`、`title`、`archive_state`、`source_section`、
+  `index`、`text`、`task_class`、`action_kind`、`note`、`evidence`、`reason`、
+  `completed_at`、`updated_at`、`superseded_by` 与 `claimed_by`。Todo 摘要还可以暴露
+  `claimed_open_count` 与 `unclaimed_open_count`，使 dashboard 与 heartbeat 调度器
+  显示软归属而不推断锁。`claimed_by` 是通过 todo CLI 写入的可见性提示，
+  不是租约或权限授予；claim id 必须在目标的 coordination 契约上注册，
+  且 Agent 仍必须遵守 quota、gate、写作用域检查与其自动化/handoff 作用域。
+  `todo_id` 由 todo CLI 写入时一等；无元数据的遗留 Markdown 仍从当前条目文本
+  与区块获得解析器派生兼容 id，第一个生命周期命令把该 id 物化回元数据。
+  第一个开放条目仍可通过 `first_open_items` 供更旧 heartbeat。Frontstage 消费方
+  不应把该 top-N scheduler 视图当作整个积压。Todo 摘要还可以投影可见性 lane：
+  按优先级排序的未声明候选 `unclaimed_priority_open_items`、
+  可能在 top-N 外的已声明工作 `claimed_open_items`、已声明可执行 delivery 工作
+  `claimed_advancement_open_items` 与已声明持续 monitor 工作
+  `claimed_monitor_open_items`。Agent 感知 quota/status 投影可以进一步包含
+  `current_agent_claimed_open_items`、`current_agent_claimed_advancement_items`、
+  `current_agent_claimed_monitor_items` 与 `claimed_by_others_items`。
+  Scheduler 仍可以从更窄可执行候选集选择；dashboard/frontstage 用这些 lane 保持
+  归属可见。可见性 lane 可以宽于 scheduler lane，但保持有界；默认 Agent 面上限
+  是每 lane 16 条。消费方应用对应计数指示当前 payload 中扩展的已声明工作
+  多于显示，而更丰富 frontstage 视图应使用未来分页/过滤投影，
+  而不是强迫更大 heartbeat payload。
+  Canonical todo 下钻契约是 `docs/reference/protocols/todo-detail-cold-path-v0.md`：
+  热路径摘要可以只为单个选定条目携带紧凑 `todo_detail_ref_v0` 指针，
+  而完整笔记、证据摘要、相关生命周期引用与页令牌留在 `todo_detail_cold_path_v0`
+  冷路径响应。Status、quota、heartbeat 与 handoff payload 不得为让隐藏积压可见
+  而内联完整 todo 细节。
+  当已声明 lane 超过上限时，生产者应避免原始 top-N 截断。按优先级与来源位置排序，
+  按 `claimed_by` 分组，取每 claimant 公平切片，然后用排序余量填补剩余槽位。
+  Agent 作用域投影随后应把聚焦排序为当前 Agent 已声明条目、未声明条目与较低权重
+  其他 Agent 已声明条目。其他 Agent 声明是可见性上下文与最后候选；
+  它们不是硬锁，但也不应胜过当前 Agent 自己的已声明工作或未声明工作。
+  延迟 todos 在排序开放 todo lane 后，经 `deferred_items` 与（满足机器可读恢复
+  条件时）`deferred_resume_candidates` 投影。这是 gate-resume lane，
+  不是无候选证据也不是可执行积压。默认延迟可见性上限是 8 条。解析的延迟条目
+  可以包含 `resume_when`、`resume_condition` 与 `resume_ready`；消费方在生命周期
+  命令重新打开或替代该 todo 前不得把它们并入 `first_open_items` 或可执行积压。
+  Agent 作用域 quota 可以把就绪候选进一步分成
+  `current_agent_deferred_resume_candidates`、`unclaimed_deferred_resume_candidates`
+  与 `other_agent_deferred_resume_candidates`，其中只有前两个能在允许 Agent 作用域
+  无候选等待前唤醒当前 peer。
+  开放 todos 也可以携带 `resume_when`；status 应附 `resume_condition` /
+  `resume_ready`，但把条目留在可执行积压外直到 `resume_ready=true`。
+  `monitor_changed:<todo_id>` 条件还携带 `resume_monitor_generation`，
+  而目标 monitor 携带单调 `material_change_generation`；就绪要求后者严格更大。
+  这让 Agent 看到尚未解锁的 successors，而不会误选为当前工作或在未变化/重放
+  monitor 结果上唤醒。
+  未来可选字段如 `created_at`、租约 TTL、依赖或证据链接应扩展该条目形状，
+  而不是发明另一个 todo 面。
+- Agent 作用域 quota payload 可以包含 `agent_todo_summary.claim_scope`，
+  `schema_version=agent_claim_scope_v0`。Quota guard 应先选当前 Agent 声明的 todos，
+  再选未声明 todos，然后暴露其他 Agent 声明的 todos 为较低权重候选。兼容 payload
+  仍可包含 `blocked_claimed_items`，但新消费者应优先 `other_agent_claimed_items`
+  与 `other_agent_claimed_open_count`。这是 claim 感知路由，不是硬租约：
+  每个 peer 可以检查目标级积压，而声明、任务策略、能力与边界决定它可以执行什么。
+  即使 active state 全局 `Next Action` 点名另一个 peer 的 lane，当前 Agent 声明的
+  todo 仍可被选中；那不是状态投影不匹配。
+- Agent 作用域 quota payload 还暴露版本化 `task_scope` 枚举
+  `goal_all_read_claimed_run_global_read_v0`。它表示 peer 可以读取当前目标的所有
+  普通 todo、可以考虑自己的声明或合格未声明候选、执行前必须声明，
+  且只能执行其声明的合格 todo。其他 Agent 声明仅诊断。跨目标读保持目标本地路由外，
+  需要显式只读 global-manager 清单（如 `loopx global-summary`）；
+  它们从不授予跨目标执行。现有 goal、agent 与冷路径命令字段提供绑定参数，
+  而不复制它们。TurnEnvelope 保留该紧凑枚举，使模型看到与完整 quota 决策相同的
+  边界。
+- `dependency_blockers`：来自其他当前 attention-queue 目标的未完成用户 todos 的
+  可选紧凑摘要。这让 dashboard 与 heartbeat 调度器把兄弟/项目依赖 gate 与当前目标
+  自己的 `user_todos` 分开显示；它只是可见性上下文，不得单独改变当前目标的 quota
+  或 owner 决策。
+- 本地 active-state 文件路径被刻意从队列条目省略。它们是有用调试/来源元数据，
+  但 public-safe status 队列应用 `goal_id`、项目资产状态与紧凑 todos 识别工作，
+  而不是暴露机器特定路径。
+- `source`：`contract`、`registry`、`run_history` 或 `latest_run`。
+- `controller_stage`：来自最新 run 的可选紧凑 controller 就绪分类。
+- `missing_gates`：可选的 public-safe gate id，说明目标为何还不能推进到下一
+  controller 阶段。
+- `next_handoff_condition`：推进 controller handoff 的可选 public-safe 条件。
 
-`status=unregistered_runtime_goal` is emitted when runtime has an actionable
-goal that is not present in the registry. Dashboard consumers should show this
-as controller work: register the goal if it is active, or archive the runtime
-record if it is old. Watch-only legacy records remain visible in run history
-without entering the queue.
+`status=unregistered_runtime_goal` 在运行时拥有一个不在 registry 中的可执行目标时
+发出。Dashboard 消费方应把它显示为 controller 工作：目标活跃则注册它，
+目标陈旧则归档运行时记录。Watch-only 遗留记录保持 run history 可见而不进队列。
 
-`status=state_refreshed` is emitted for registered goals when the latest compact
-run came from `loopx refresh-state`. Dashboard consumers should show it
-as Codex-ready work: the controller state changed, and the next agent turn
-should inspect the refreshed active state before continuing.
-If the refresh command was run without `--recommended-action`, the compact
-`recommended_action` should be the first local control-plane item from the
-refreshed active state's `## Next Action`, including wrapped continuation
-lines; only when that durable section is absent should it fall back to the first
-open Agent Todo, and finally to a generic refresh notice. This field may carry
-stable local routing references such as todo ids, branch names, agent ids, PR
-refs, or private-material pointers because it serves the individual operator's
-local loop. It must not carry credentials, auth headers, or inline secrets.
-Public/export sinks are responsible for redacting or omitting local/private
-references before rendering shareable surfaces. The record includes
-`recommended_action_source` (`explicit_arg`, `active_state_next_action`,
-`agent_todo_fallback`, or `default_refresh_action`) so consumers can distinguish
-run guidance from durable-state projection and last-resort compatibility
-fallback.
-`--recommended-action` describes the appended run record; it does not rewrite
-the active state's durable `## Next Action`. To intentionally change that
-durable route in a multi-agent goal, a registered peer must run
+`status=state_refreshed` 在最新紧凑 run 来自 `loopx refresh-state` 时对注册目标
+发出。Dashboard 消费方应把它显示为 Codex-ready 工作：controller 状态已变，
+下一个 Agent turn 应在继续前检查刷新后的 active state。
+如果刷新命令未带 `--recommended-action` 运行，紧凑 `recommended_action` 应是
+刷新 active state `## Next Action` 的第一个本地控制面条目，包括换行续行；
+只有该持久区块缺失时才回退到第一个开放 Agent Todo，最后到通用刷新通知。该字段
+可以携带稳定本地路由引用，如 todo id、分支名、agent id、PR refs 或私有材料指针，
+因为它服务单 operator 的本地 loop。它不得携带凭据、认证头或内联秘密。
+公共/导出槽负责在渲染可分享面前脱敏或省略本地/私有引用。记录包含
+`recommended_action_source`（`explicit_arg`、`active_state_next_action`、
+`agent_todo_fallback` 或 `default_refresh_action`），使消费方区分 run 指导、
+持久状态投影与最后手段兼容 fallback。
+`--recommended-action` 描述追加的 run 记录；它不重写 active state 的持久
+`## Next Action`。在多 Agent 目标中刻意改变该持久路线时，注册 peer 必须运行
 `refresh-state --agent-id <registered-peer> --progress-scope goal --next-action
-<local control-plane action>`. Status projections may expose both
-`active_state_next_action` and
-`latest_run_recommended_action`; when they differ, `next_action_projection_warning`
-marks the drift instead of silently choosing one as the only truth.
-Executable dispatch should use `agent_lane_next_action` / todo projection rather
-than treating shared `## Next Action` as a per-agent work item.
+<local control-plane action>`。Status 投影可以暴露
+`active_state_next_action` 与 `latest_run_recommended_action` 两者；
+当它们不同时，`next_action_projection_warning` 标记漂移，
+而不是静默选一个作为唯一真相。可执行分发应使用
+`agent_lane_next_action` / todo 投影，而不是把共享 `## Next Action` 当作每 Agent
+工作条目。
 
-In a multi-agent goal, `refresh-state` requires an explicit `--agent-id`; text
-or todo-title inference is not a valid identity source. When a refresh is
-scoped with `--agent-id` and no `--progress-scope`, the run records
-`progress_scope=agent_lane`. This is a lane note, not a project-level status
-transition: status/quota keep selecting the latest non-agent-lane run for the
-goal-level `status` and `recommended_action`, while exposing the lane note as
-`agent_lane_recommendation` on the attention item and project asset. A
-goal-level refresh in a multi-agent goal must use a registered peer with
-`--progress-scope goal`.
-Use agent-lane scope for a peer-local recommendation that should not replace the
-durable goal route.
+在多 Agent 目标中，`refresh-state` 需要显式 `--agent-id`；文本或 todo 标题推断
+不是有效身份来源。当 refresh 以 `--agent-id` 作用域且无 `--progress-scope` 时，
+run 记录 `progress_scope=agent_lane`。这是 lane 笔记，不是项目级 status 转移：
+status/quota 继续为目标级 `status` 与 `recommended_action` 选择最新非 Agent lane
+run，同时把 lane 笔记作为 attention 条目与项目资产上的
+`agent_lane_recommendation` 暴露。多 Agent 目标中的目标级 refresh 必须使用
+注册 peer 且带 `--progress-scope goal`。Agent lane 作用域用于不应替代持久目标
+路线的 peer 本地推荐。
 
-If a peer self-merged slice materially advanced the public product or case
-path, that peer or another registered peer should also write a project-level
-refresh with the matching `delivery_outcome=outcome_progress` (or skip the
-extra project-level sync entirely). A later `surface_only` project-level sync
-will become the latest non-agent-lane run, so quota may correctly ask for
-follow-through even though the peer-lane note recorded real progress.
+如果 peer self-merged 切片实质推进公共产品或用例路径，该 peer 或另一个注册 peer
+还应写匹配 `delivery_outcome=outcome_progress` 的项目级 refresh（或跳过额外的项目级
+同步）。后来的 `surface_only` 项目级同步会成为最新非 Agent lane run，
+所以 quota 可能正确要求 follow-through，即使 peer lane 笔记记录了真实进度。
 
-For registered `connected`, `connected-read-only`, and `pre-tick-runnable`
-adapters, custom compact progress classifications that are not blocker, gate,
-or watch classifications also remain Codex-ready. This lets a controller record
-a validated progress run before quota accounting without forcing an extra
-state-only refresh solely to make `quota spend-slot` eligible.
+对注册的 `connected`、`connected-read-only` 与 `pre-tick-runnable` adapter，
+不是 blocker、gate 或 watch 分类的自定义紧凑进度分类也保持 Codex-ready。
+这让 controller 在 quota 记账前记录验证进度 run，而不必仅为使
+`quota spend-slot` 合格而强制额外 state-only refresh。
 
-### Autonomous Backlog Candidates
+### 自主积压候选
 
-`attention_queue.autonomous_backlog_candidates` is an optional compact list of
-unfinished `advancement_task` agent todos from current queue items where
-`waiting_on=codex` and the goal quota is `eligible`. Monitor-class todos are
-intentionally excluded from this backlog so dependency/readiness observation
-cannot crowd out implementation, planning, or blocker-writeback candidates.
-`attention_queue.autonomous_monitor_candidates` may separately expose compact
-`continuous_monitor` todos from `waiting_on=codex` or
-`waiting_on=monitor_signal` queue items so heartbeat dispatchers still see the
-current watch surfaces without treating them as primary advancement work.
-Both candidate surfaces preserve `action_kind` when the agent registered one
-with the todo CLI.
+`attention_queue.autonomous_backlog_candidates` 是来自当前队列条目中
+`waiting_on=codex` 且目标 quota 为 `eligible` 的未完成 `advancement_task`
+Agent todos 的可选紧凑列表。Monitor 类 todos 被刻意排除在该积压外，
+使依赖/就绪观察不能挤掉实现、规划或 blocker 写回候选。
+`attention_queue.autonomous_monitor_candidates` 可以单独从
+`waiting_on=codex` 或 `waiting_on=monitor_signal` 队列条目暴露紧凑
+`continuous_monitor` todos，使 heartbeat 调度器仍看到当前 watch 面，
+而不把它们当作主要推进工作。两个候选面都在 Agent 用 todo CLI 注册时保留
+`action_kind`。
 
-Both lists are candidate surfaces only: consumers must still obey the selected
-goal's quota, `goal_boundary`, owner/gate, public/private boundary, and
-validation/writeback rules before spending a turn.
+两个列表只是候选面：消费方在花一个 turn 前仍必须遵守所选目标的 quota、
+`goal_boundary`、owner/gate、公共/私有边界与验证/writeback 规则。
 
-`quota should-run` includes `goal_boundary.orchestration` when the selected goal
-has registry `spawn_policy` or project-asset orchestration state. Consumers use
-that boundary to decide whether the next bounded turn should stay in default
-single-worker mode or may launch child workers under the declared limits.
+`quota should-run` 在所选目标有 registry `spawn_policy` 或项目资产编排状态时包含
+`goal_boundary.orchestration`。消费方用该边界决定下一个有界 turn 应保持默认单
+worker 模式，还是可以在声明上限下启动子 worker。
 
-Registry entries may override first-screen attention with optional public-safe
-fields: `waiting_on`, `attention_status`, `recommended_action`,
-`operator_question`, and `next_handoff_condition`. Status respects this before
-classifying the latest run, so a goal with a fresh `state_refreshed` record can
-still remain in `waiting_on=user_or_controller` when the active state says a
-human or target controller decision is the real next gate. This is intended for
-state-truth corrections, not for granting project-agent execution. Global
-registry sync preserves an existing attention override when a different later
-source for the same goal omits these fields, so a controller-authored gate is
-not accidentally lost during ordinary project sync. When the same source
-registry syncs again and omits these fields, that source is treated as
-authoritative and the stale override is cleared. A syncing registry entry can
-also set `clear_attention_override=true` to clear an override explicitly.
+Registry 条目可以用可选 public-safe 字段覆盖首屏关注：`waiting_on`、
+`attention_status`、`recommended_action`、`operator_question` 与
+`next_handoff_condition`。Status 在分类最新 run 前尊重它，因此带新鲜
+`state_refreshed` 记录的目标在 active state 说人类或目标 controller 决策是真实
+下一 gate 时仍可保持 `waiting_on=user_or_controller`。这用于状态真相纠正，
+不是授予项目 Agent 执行。全局 registry 同步在不同后续来源为同一目标省略这些
+字段时保留现有 attention 覆盖，因此 controller 编写的 gate 不会在普通项目同步期间
+意外丢失。当同一来源 registry 再次同步且省略这些字段，该来源被视为权威，
+过期覆盖被清除。同步 registry 条目也可以设置 `clear_attention_override=true`
+显式清除覆盖。
 
-Todo extraction is independent of attention overrides. A goal can stay in the
-operator lane because the registry says `waiting_on=user_or_controller`, while
-the active state exposes a more concrete user checklist. This is the preferred
-shape for complex project review: keep `recommended_action` short enough to
-route the queue, and put ordered user work in checkbox sections the dashboard
-can summarize. This routing text belongs to the user's local control plane: it
-may include private project refs, but it must not include AK/SK values, tokens,
-auth headers, passwords, or inline credentials.
+Todo 提取独立于 attention 覆盖。目标可以因为 registry 说
+`waiting_on=user_or_controller` 而留在 operator lane，同时 active state 暴露更具体
+用户清单。这是复杂项目评审的优选形状：让 `recommended_action` 短到足以路由队列，
+并把有序用户工作放在 dashboard 可以摘要的复选框区块。该路由文本属于用户的本地控制面：
+它可以包含私有项目引用，但不得包含 AK/SK 值、令牌、认证头、密码或内联凭据。
 
-For registered planned high-complexity goals with a compatible
-`*_read_only_map_v0` adapter and no run yet, status keeps the queue item in
-`waiting_on=user_or_controller`, emits an `operator_question` for the Goal
-Harness operator view, and puts the dry-run preview in `agent_command`. The
-preview should report `opt_in_required=true` and append nothing; dashboard
-consumers must not treat the command as controller opt-in or a durable map run.
-The human-readable Markdown status view may also render an
-`operator_gate_dry_run` helper before `agent_command`; that helper is a
-user-owned gate recording preview, not a JSON contract field or project-agent
-command.
-Executor-facing guards are stricter than status display: `quota should-run`
-must keep these planned items at `should_run=false`, `state=operator_gate`, and
-must not include `agent_command` until an approved operator-gate run makes the
-goal eligible. This keeps a preview command from becoming an automatic project
-agent handoff. When the quota payload includes `agent_todo_summary`, the target
-project agent can use it as the safe follow-up checklist for its own next action
-instead of re-reading chat history. When the quota payload includes
-`safe_bypass_allowed=true`, that permission only covers independent read-only
-steering or analysis from the active state's priority stack; it still must not
-execute the gated preview command, adapter work, write-control, or production
-actions. When the payload also includes `gate_prompt`, `operator_question`,
-`user_todo_summary`, or `agent_todo_summary`, the executor should ask that
-concrete gate in the visible thread with `NOTIFY` unless the same unresolved
-gate was already asked recently; the guard should not collapse a user decision
-into a silent skip.
-When a goal has `coordination.registered_agents`, identity-aware heartbeat
-prompts should call `quota should-run --agent-id <registered-agent>`. If an
-old installed prompt omits that flag, the quota payload should include
-`decision=automation_prompt_upgrade`,
-`effective_action=automation_prompt_upgrade_required`,
-`automation_prompt_upgrade.required=true`, `blocks_should_run=true`, and
-example `heartbeat-prompt --agent-id ... --agent-scope ...` commands. Executors
-should treat this as a prompt-upgrade action, not as delivery permission, a
-quiet no-op, or a new operator gate. `should_run`, `normal_delivery_allowed`,
-and `interaction_contract.agent_channel.delivery_allowed` must stay `false`
-until the automation reruns `quota should-run` with a registered `--agent-id`.
-When v0.1 hierarchy fields are still present, the same object also carries a
-stable `migration_id`, `host_update_idempotency_key`, and `completion_command`.
-The host may retry regeneration and automation update with that same id; the
-registry cutover happens only after the host update succeeds and the completion
-command acknowledges that exact id. Completion removes the hierarchy fields,
-records `coordination.completed_migrations.peer_agent_runtime_v1`, and is an
-idempotent no-op when repeated with the completed id. Once that marker exists,
-`quota should-run` must never project this registry migration again. This is a
-stable, retryable migration until acknowledgment, not a recurring notification
-and not permission to update an automation more than once under different keys.
-The selected identity is part of the turn envelope. Follow-up lifecycle
-commands that interpret or account for the same turn, including scoped
-`refresh-state` and `quota spend-slot`, should preserve the same `--agent-id`
-when the subcommand supports it. A spend preview that drops the identity may
-correctly show `automation_prompt_upgrade_required` for an unscoped automation,
-but that is an accounting/projection mismatch for the scoped turn, not evidence
-that the earlier peer guard was invalid.
-An accountable `refresh-state` normally records the current checkout as
-`delivery_workspace`. When implementation and validation happened in an
-independent worktree but registry/state projection must run from another
-checkout, pass `--delivery-workspace-path <delivery-worktree>`. LoopX validates
-the referenced checkout against the peer-isolation policy and persists only its
-credential-free repository identity and workspace class, never the local path.
-An explicit canonical checkout is rejected for peer delivery, so this causal
-override cannot turn non-isolated work into an accountable delivery.
-For registered agent-scoped turns, `quota should-run --agent-id` may include
-`agent_lane_next_action.schema_version=agent_lane_next_action_v0`. This is a
-read-only derived pointer to the current agent's selected advancement slice,
-chosen from runnable capability candidates first and then the agent-scoped
-executable todo summary. It may point to a current-agent claimed todo even when
-the active state's global `Next Action` is still owned by another route; the
-field must therefore carry `preserves_goal_next_action=true` and must not be
-treated as a project-level status overwrite. `status --agent-id` may reuse the
-same quota-derived object as item/project-asset observation data; consumers must
-render it as an agent-lane pointer, not as `recommended_action` replacement.
-Human markdown should label this pointer as the current agent's todo and mark
-co-displayed global agent todo rows as goal-wide, so `--agent-id` is not
-mistaken for a filter that replaces the goal-wide queue.
-When more than one already-admitted advancement todo remains runnable, the
-same guard also includes `action_portfolio.schema_version=
-quota_action_portfolio_v2`. `primary` is the ordered recommendation, while
-`suggested_actions` is the single canonical bounded convenience view: it carries
-the recommendation plus at most two ordered, agent-scoped, capability-ready
-alternatives and labels them `recommended` or `alternative`. The portfolio does
-not duplicate those candidates under a second fallback view.
-`selection_policy.candidate_scope=current_authoritative_eligible_todos` keeps
-the legal choice boundary separate from the displayed suggestions;
-`suggestions_exhaustive=false` makes that distinction machine-readable.
-`selection_policy.decision_owner=agent` and
-`recommendation_role=default_not_binding` make the priority order advisory at
-this boundary rather than silently binding the first Todo.
+对注册的计划高复杂度目标，兼容 `*_read_only_map_v0` adapter 且无 run 时，
+status 保持队列条目 `waiting_on=user_or_controller`，为 Goal Harness operator 视图
+发出 `operator_question`，并把 dry-run 预览放入 `agent_command`。预览应报告
+`opt_in_required=true` 且不追加任何内容；dashboard 消费方不得把该命令当作
+controller opt-in 或持久映射 run。人类可读 Markdown status 视图还可以在
+`agent_command` 前渲染 `operator_gate_dry_run` helper；该 helper 是用户拥有的
+gate 记录预览，不是 JSON 契约字段或项目 Agent 命令。
+执行者面向 guard 比 status 显示更严格：`quota should-run` 必须保持这些计划条目为
+`should_run=false`、`state=operator_gate`，且在批准的 operator-gate run 使目标合格前
+不得包含 `agent_command`。这防止预览命令变成自动项目 Agent handoff。
+当 quota payload 包含 `agent_todo_summary` 时，目标项目 Agent 可以用它作为自己
+下一动作的安全后续清单，而不是重读聊天历史。当 quota payload 包含
+`safe_bypass_allowed=true`，该权限只覆盖从 active state 优先级栈的独立只读
+steering 或分析；它仍不得执行被 gate 的预览命令、adapter 工作、write-control 或
+生产动作。当 payload 还包含 `gate_prompt`、`operator_question`、
+`user_todo_summary` 或 `agent_todo_summary`，执行者应在可见线程用 `NOTIFY`
+问具体 gate，除非同一未决 gate 最近已被问过；guard 不得把用户决策塌缩成静默跳过。
+当目标有 `coordination.registered_agents`，身份感知 heartbeat 提示应调用
+`quota should-run --agent-id <registered-agent>`。如果旧已安装提示省略该标志，
+quota payload 应包含 `decision=automation_prompt_upgrade`、
+`effective_action=automation_prompt_upgrade_required`、
+`automation_prompt_upgrade.required=true`、`blocks_should_run=true` 与示例
+`heartbeat-prompt --agent-id ... --agent-scope ...` 命令。执行者应把它当作提示升级
+动作，而不是 delivery 权限、quiet no-op 或新 operator gate。`should_run`、
+`normal_delivery_allowed` 与 `interaction_contract.agent_channel.delivery_allowed`
+必须保持 `false`，直到自动化以注册 `--agent-id` 重跑 `quota should-run`。
+当 v0.1 层级字段仍存在，同一对象还携带稳定 `migration_id`、
+`host_update_idempotency_key` 与 `completion_command`。Host 可以用同一 id 重试
+重新生成与自动化更新；registry 切换只在 host 更新成功且完成命令确认确切 id 后发生。
+完成移除层级字段，记录 `coordination.completed_migrations.peer_agent_runtime_v1`，
+并用已完成 id 重复时是幂等 no-op。一旦该标记存在，`quota should-run` 绝不投影该
+registry 迁移。这是直到确认的稳定、可重试迁移，不是循环通知，
+也不是用不同键多次更新自动化的权限。
+所选身份是 turn envelope 的一部分。解释或记账同一 turn 的后续生命周期命令，
+包括作用域 `refresh-state` 与 `quota spend-slot`，在子命令支持时应保留相同
+`--agent-id`。掉身份的 spend 预览可以对无作用域自动化正确显示
+`automation_prompt_upgrade_required`，但那是作用域 turn 的记账/投影不匹配，
+不是早期 peer guard 无效的证据。
+可问责 `refresh-state` 通常把当前 checkout 记录为 `delivery_workspace`。
+当实现与验证在独立 worktree 发生，但 registry/状态投影必须从另一 checkout 运行时，
+传 `--delivery-workspace-path <delivery-worktree>`。LoopX 对照 peer 隔离策略验证
+引用的 checkout，并只持久其无凭据仓库身份与工作区类别，永不包括本地路径。
+显式 canonical checkout 对 peer delivery 被拒绝，因此该因果覆盖不能把非隔离
+工作变成可问责 delivery。
+对注册 Agent 作用域 turn，`quota should-run --agent-id` 可以包含
+`agent_lane_next_action.schema_version=agent_lane_next_action_v0`。这是当前 Agent
+所选推进切片的只读派生指针，先选自可运行能力候选，然后从 Agent 作用域可执行
+todo 摘要。即使 active state 全局 `Next Action` 仍由另一路线拥有，
+它也可以指向当前 Agent 声明的 todo；因此该字段必须携带
+`preserves_goal_next_action=true`，且不得当作项目级 status 覆盖。
+`status --agent-id` 可以复用同一 quota 派生对象作为条目/项目资产观察数据；
+消费方必须把它渲染为 Agent lane 指针，而不是 `recommended_action` 替代品。
+人类 Markdown 应把该指针标为当前 Agent 的 todo，并把并排显示的全局 Agent todo 行
+标为目标级，使 `--agent-id` 不被误认为替代目标级队列的过滤器。
+当多个已准入推进 todo 保持可运行，同一 guard 还包含
+`action_portfolio.schema_version=quota_action_portfolio_v2`。`primary`
+是有序推荐，而 `suggested_actions` 是单一 canonical 有界便利视图：它携带推荐加
+至多两个有序、Agent 作用域、能力就绪替代，并标记它们为 `recommended` 或
+`alternative`。Portfolio 不在第二 fallback 视图下复制那些候选。
+`selection_policy.candidate_scope=current_authoritative_eligible_todos`
+把合法选择边界与显示建议分开；`suggestions_exhaustive=false`
+让该区别机器可读。`selection_policy.decision_owner=agent` 与
+`recommendation_role=default_not_binding` 使该边界的优先级排序建议性，
+而不是静默绑定第一个 Todo。
 
-Version 2 adds the optional `continuation_hint` field to each
-`suggested_actions[]` item so an agent can see the candidate's next execution
-boundary without joining the compact packet back to the full Todo summary.
-All v1 selection, ordering, identity, and permission semantics remain
-unchanged. The default producer now emits only v2; `quota should-run`, compact
-CLI output, TurnEnvelope, and the model-free `loopx turn` controller all carry
-or consume that version. The compact CLI projection separately reports
-`suggested_action_details.schema_version=
-quota_cli_action_portfolio_compaction_v1` and inlines `todo_id`,
-`selection_role`, `priority`, `action_kind`, `text`, and `continuation_hint`.
-Hosts that match schema versions exactly must upgrade their portfolio decoder
-before consuming the new default. There is no v1 dual-emission or downgrade
-negotiation; an unknown version must fail closed rather than silently treating
-the recommendation as delivery authority. Consumers that already ignore
-unknown additive item fields still need to accept the explicit v2 version.
+版本 2 为每个 `suggested_actions[]` 条目添加可选 `continuation_hint` 字段，
+使 Agent 无需把紧凑 packet 接回完整 Todo 摘要即可看到候选的下一个执行边界。
+所有 v1 选择、排序、身份与权限语义保持不变。默认生产者现在只发出 v2；
+`quota should-run`、紧凑 CLI 输出、TurnEnvelope 与无模型 `loopx turn` controller
+都携带或消费该版本。紧凑 CLI 投影单独报告
+`suggested_action_details.schema_version=quota_cli_action_portfolio_compaction_v1`
+并内联 `todo_id`、`selection_role`、`priority`、`action_kind`、`text` 与
+`continuation_hint`。精确匹配 schema 版本的 host 必须在消费新默认前升级其 portfolio
+解码器。没有 v1 双发或降级协商；未知版本必须 fail closed，
+而不是静默把推荐当作 delivery 权威。已忽略未知附加条目字段的消费方仍需要接受
+显式 v2 版本。
 
-The first quota response sets `selection_required=true` and exposes one typed
-`selection_command.command_args_template` with a `{todo_id}` placeholder plus a
-shared bound `route_prefix` and compact `candidate_discovery_args` for the
-authoritative open agent queue. Its
-heartbeat receipt has no settlement identity, so direct delivery and spend fail
-closed. The template is deliberately independent of the bounded suggestions:
-the agent may discover and request any currently projected, agent-scoped,
-capability-ready Todo. That request is a pending selection, not a committed
-receipt identity. Quota first re-runs current lane arbitration and eligibility;
-a newly due hard-priority monitor, blocking user gate, or other preemption
-defers the request and keeps the receipt identity-less. A qualified request does
-not need to have appeared in the bounded suggestions. Only the upgraded response
-restores delivery and its settlement plan. If there is only one admitted action,
-no portfolio selection phase is added.
+第一次 quota 响应设置 `selection_required=true`，并暴露一个 typed
+`selection_command.command_args_template`，带 `{todo_id}` 占位符加共享绑定
+`route_prefix` 与权威开放 Agent 队列的紧凑 `candidate_discovery_args`。
+其 heartbeat 收据没有结算身份，所以直接 delivery 与 spend fail closed。
+模板刻意独立于有界建议：Agent 可以发现并请求任何当前投影的、Agent 作用域、
+能力就绪 Todo。该请求是待决选择，不是已提交的收据身份。Quota 首先重跑当前 lane
+仲裁与资格；新到期的高优先级 monitor、阻塞用户 gate 或其他抢占会推迟请求，
+并让收据保持无身份。合格请求不必出现在有界建议中。只有升级后的响应恢复 delivery
+及其结算计划。如果只有一个已准入动作，不添加 portfolio 选择阶段。
 
-When selected work has meaningful typed lineage, waiting, sibling, or
-goal-acceptance context, the same default guard may also include
-`planning_horizon.schema_version=quota_planning_horizon_v0`. It is a bounded
-read-only projection: at most five Todo items, eight typed relations, two
-acceptance gaps, and three attention ids. `source_context_todo_count` covers
-open plus deferred source Todos; omission and text-truncation counters make an
-incomplete slice explicit. `successor` remains `lineage_only`, while
-`resumes_when` and `unblocks` retain their existing typed lifecycle semantics.
-The horizon does not make another Todo executable and does not change the
-selected Todo. Consumers must use the existing explicit selection re-entry for
-another runnable action and follow `detail_refs` before treating an incomplete
-horizon as exhaustive.
+当所选工作有意义的 typed 谱系、等待、兄弟或目标接受上下文时，同一默认 guard
+还可以包含 `planning_horizon.schema_version=quota_planning_horizon_v0`。
+它是有界只读投影：至多 5 个 Todo 条目、8 个 typed 关系、2 个接受缺口与
+3 个 attention id。`source_context_todo_count` 覆盖开放加延迟来源 Todos；
+省略与文本截断计数器让不完整切片显式。`successor` 保持 `lineage_only`，
+而 `resumes_when` 与 `unblocks` 保留现有 typed 生命周期语义。Horizon 不让
+另一个 Todo 可执行，也不改变所选 Todo。消费方必须用现有显式选择重入选另一个
+可运行动作，并在把不完整 horizon 当作穷举前遵循 `detail_refs`。
 
-`action_portfolio`, `planning_horizon`, and the explicit agent-Todo detail lens
-derive from one `todo_planning_inventory_v0`. `planning_state` and `claim_state`
-are orthogonal: runnable unclaimed work carries
-`claim_required_before_work=true`, while work claimed by another agent is not
-silently made executable. `quota should-run --include-detail agent-todos`
-exposes the larger bounded `todo_planning_inventory_detail_v0` projection;
-`item_detail_ref=$.agent_todo_summary` avoids copying full Todo payloads. Its
-completeness counters remain authoritative for omissions. Consumers that need
-the complete open source follow `detail_refs.full_todo_list` rather than
-assuming either bounded projection is exhaustive.
+`action_portfolio`、`planning_horizon` 与显式 Agent Todo 细节透镜都派生自一个
+`todo_planning_inventory_v0`。`planning_state` 与 `claim_state` 正交：
+可运行未声明工作携带 `claim_required_before_work=true`，而其他 Agent 声明的工作
+不被静默变为可执行。`quota should-run --include-detail agent-todos`
+暴露更大的有界 `todo_planning_inventory_detail_v0` 投影；
+`item_detail_ref=$.agent_todo_summary` 避免复制完整 Todo payload。
+其完整性计数器对省略保持权威。需要完整开放来源的消费方遵循
+`detail_refs.full_todo_list`，而不是假设任一有界投影穷举。
 
-Correctly typed future work is handled earlier. A higher-priority
-`continuous_monitor` with a valid future `next_due_at` is not executable; quota
-selects the next ready advancement todo and records the future monitor under
-`action_portfolio.unavailable_higher_priority` with
-`availability_reason=scheduled_for_future`. Legacy state that labels such work
-as `advancement_task` cannot be reclassified from phrases such as “Monday” or
-“after the window opens”; explicit `task_class` remains authoritative. The
-portfolio still exposes bounded alternatives for that compatibility case, so
-the agent can bind a different ready action without replaying the entire cold
-diagnostic packet.
-The same scoped guard may include
-`goal_route_hint.schema_version=goal_route_hint_v0`. This is a goal-level
-read-path synthesis over the current `agent_lane_next_action`,
-`agent_scope_frontier`, and compact per-agent todo lanes. It carries
-`preserves_goal_next_action=true` and `goal_next_action_mutation=none` so hosts
-can explain the lane decision without mutating shared `## Next Action` or
-collapsing other agents' queues into the current agent's route.
-Within a candidate source, selection is ordered by current-agent claim first,
-then `capability_repair_mode=true`, then priority/index. A repair-mode item
-therefore stays visible as the suggested agent-lane slice even when an older
-ordinary runnable P0 todo appears earlier in the active state; otherwise a todo
-that exists to build the missing capability can be starved by work that depends
-on that capability becoming reliable.
-For any registered peer, `quota should-run` also enforces the workspace
-boundary when the selected task writes repository state. If the guard is being
-run from a non-git directory, from an unrelated git worktree, or from a checkout
-that does not satisfy the task/repository isolation policy, the payload should include
-`workspace_guard.schema_version=agent_workspace_guard_v1`,
-`workspace_guard.action=move_to_independent_worktree`,
-`workspace_repair_allowed=true`, `normal_delivery_allowed=false`, and
-`effective_action=agent_workspace_repair`. The interaction contract should
-use `mode=agent_workspace_repair`, require the peer to create or switch to
-an independent worktree/branch, and require rerunning `quota should-run` with
-the same `--agent-id` before repository edits. This preflight does not spend
-quota; `quota spend-slot` should fail closed until the guard is rerun from the
-independent worktree.
-Workspace and boundary guards must bind to the final work-lane `selected_todo`
-after due-monitor, capability-fallback, and scoped-gate routing. They must not
-inherit repository or write-scope semantics from an unrelated first executable
-backlog item; in particular, a selected read-only continuous monitor stays
-monitor work even when a separate repository repair is also runnable.
-If the selected todo declares `task_repository`, the guard should also project
-that credential-free identity with
-`workspace_guard.repository_source=selected_todo.task_repository`; otherwise
-`repository_source=goal.repo`. A matching repository identity is necessary but
-not sufficient: the current checkout must still be a linked worktree rather
-than that repository's canonical checkout. `task_repository` is not a write
-scope or permission grant.
-Dashboard and Review Packet consumers should project `workspace_guard` as an
-agent-channel workspace repair, not as an operator or user gate. The first
-screen can render the current workspace class, required workspace class, repair
-action, and whether normal delivery is allowed. It should not ask the user to
-approve the move, mark the selected todo as blocked by the user, or hide open
-same-scope work. If a peer is also looking at a todo claimed by another peer,
-the packet should explain both boundaries separately: the workspace guard
-requires moving to an independent worktree, while the claim boundary requires
-choosing an in-scope current-agent or unclaimed todo, transferring the claim, or
-creating an explicit successor.
-When the payload includes `notify_user_on_open_todo=true`, the open
-`user_todo_summary` is the current blocker-push surface even if there is no
-operator gate. This is intended for `focus_wait`, `waiting`,
-and `external_evidence` lanes where a short user/owner answer can unlock
-progress or stop repeated meaningless polling. Executors should list at most
-three open todos, include
-`open_todo_notify_reason`, skip implementation work, and skip quota spend for
-that blocker-push turn. When the payload also includes
-`open_todo_notification_policy=repeat_until_resolved`, the
-executor should repeat the notification until the todo is done, deferred, or
-replaced. A `user_gate_notification_cooldown_v0` packet with
-`notification_suppressed=true` is the narrow exception: the gate and open-count
-remain visible, while `interaction_contract.user_channel` becomes
-`action_required=false`, `notify=DONT_NOTIFY` until the bounded reminder window
-or a material gate/host change. Other blocker-push
-cases may still be de-duplicated when the same blocker was surfaced recently.
+正确 typed 的未来工作被提前处理。有有效未来 `next_due_at` 的更高优先级
+`continuous_monitor` 不可执行；quota 选择下一个就绪推进 todo，
+并把未来 monitor 记录在 `action_portfolio.unavailable_higher_priority` 下，
+`availability_reason=scheduled_for_future`。把这类工作标为 `advancement_task` 的
+遗留状态不能从"Monday"或"after the window opens"等短语重新分类；显式
+`task_class` 保持权威。Portfolio 仍为该兼容情形暴露有界替代，
+使 Agent 无需重放整个冷诊断 packet 即可绑定另一个就绪动作。
+同一作用域 guard 可以包含 `goal_route_hint.schema_version=goal_route_hint_v0`。
+这是对当前 `agent_lane_next_action`、`agent_scope_frontier` 与紧凑每 Agent todo
+lane 的目标级读路径综合。它携带 `preserves_goal_next_action=true` 与
+`goal_next_action_mutation=none`，使 host 能解释 lane 决策，
+而不改动共享 `## Next Action`，也不把其他 Agent 的队列塌缩进当前 Agent 路线。
+在候选来源内，选择先按当前 Agent 声明排序，然后 `capability_repair_mode=true`，
+然后优先级/索引。因此修复模式条目在更旧普通可运行 P0 todo 更早出现在 active state
+时，仍保持为建议的 Agent lane 切片；否则一个旨在构建缺失能力的 todo 可以被依赖
+该能力可靠的工作饿死。
+对任何注册 peer，所选任务写仓库状态时 `quota should-run` 还强制工作区边界。
+如果 guard 从非 git 目录、无关 git worktree 或不满任务/仓库隔离策略的 checkout
+运行，payload 应包含 `workspace_guard.schema_version=agent_workspace_guard_v1`、
+`workspace_guard.action=move_to_independent_worktree`、
+`workspace_repair_allowed=true`、`normal_delivery_allowed=false` 与
+`effective_action=agent_workspace_repair`。交互契约应使用 `mode=agent_workspace_repair`，
+要求 peer 创建或切换到独立 worktree/分支，并在仓库编辑前用相同 `--agent-id`
+重跑 `quota should-run`。该预检不花 quota；`quota spend-slot` 应在 guard 从独立
+worktree 重跑前 fail closed。
+Workspace 与边界 guard 必须绑定到 due-monitor、能力 fallback 与作用域 gate 路由后的
+最终 work-lane `selected_todo`。它们不得从不相关的第一个可执行积压条目继承仓库或
+写作用域语义；特别是所选只读持续 monitor 保持 monitor 工作，即使独立仓库修复也可
+运行。
+如果所选 todo 声明 `task_repository`，guard 还应投影该无凭据身份为
+`workspace_guard.repository_source=selected_todo.task_repository`；否则
+`repository_source=goal.repo`。匹配的仓库身份是必要不充分条件：当前 checkout
+仍必须是链接 worktree，而不是该仓库的 canonical checkout。`task_repository`
+不是写作用域或权限授予。
+Dashboard 与 Review Packet 消费方应把 `workspace_guard` 投影为 Agent 通道工作区
+修复，而不是 operator 或用户 gate。首屏可以渲染当前工作区类别、所需工作区类别、
+修复动作与普通 delivery 是否允许。它不应要求用户批准移动、把所选 todo 标记为用户
+阻塞，或隐藏开放同作用域工作。如果 peer 也在看另一个 peer 声明的 todo，
+packet 应分别解释两个边界：工作区 guard 要求移到独立 worktree，
+而声明边界要求选择作用域内当前 Agent 或未声明 todo、转移声明或创建显式 successor。
+当 payload 包含 `notify_user_on_open_todo=true`，开放的 `user_todo_summary`
+是当前 blocker-push 面，即使没有 operator gate。这用于 `focus_wait`、`waiting`
+与 `external_evidence` lane，简短 user/owner 回答可以解锁进度或停止重复无意义轮询。
+执行者应列出至多三个开放 todos，包含 `open_todo_notify_reason`，
+跳过实现工作，并为该 blocker-push turn 跳过 quota spend。当 payload 还包含
+`open_todo_notification_policy=repeat_until_resolved`，执行者应重复通知直到 todo
+完成、延迟或被替换。`notification_suppressed=true` 的 `user_gate_notification_cooldown_v0`
+packet 是窄例外：gate 与开放计数保持可见，而 `interaction_contract.user_channel`
+变为 `action_required=false`、`notify=DONT_NOTIFY`，直到有界提醒窗口或实质
+gate/host 变化。其他 blocker-push 情形在相同 blocker 最近被表露时仍可去重。
 
-The suppression decision also removes `actions` and `non_blocking` from the
-final user channel, so a remaining `user_action` cannot re-promote the same
-contract to `NOTIFY`. Provider sinks must deduplicate delivery by gate identity
-plus material state generation, with an additional reminder generation only
-for an explicitly due reminder window; presentation text is not delivery
-identity.
-Eligible monitor-only no-transition polls keep open user todos in
-`user_todo_summary`, but do not force repeated notification or set
-`requires_user_action=true`; they should surface as a quiet
-`monitor_quiet_skip` rather than an executable run.
-When the payload includes `external_evidence_observation`, the goal is waiting
-on an external monitor that still requires a read-only observation contract.
-This is not prompt-specific advice: `quota should-run` should also set
-`effective_action=external_evidence_observe` and
-`execution_obligation.kind=external_evidence_observation_required`. Executors
-must check for a concrete observable handle or compact writeback surface, such
-as a thread id, automation id, job id, lock/result marker, or result path. If no
-handle exists, the correct action is a compact blocker or launch-readiness
-writeback, not a quiet no-op and not benchmark execution.
-When the payload includes `heartbeat_recommendation`, executors should follow
-that generic lifecycle hint before inventing local automation behavior:
-`run_first_read_only_map` runs and saves one real read-only map before spending
-once, while `mapped_noop_if_unchanged` returns a quiet no-op without another
-dry-run or quota spend if no new instruction, evidence, todo, stale source, or
-safe handoff exists.
-When the payload includes `stale_latest_run_warning`, the current active-state
-projection has moved ahead of the latest run-history snapshot. Executors should
-repair the control-plane projection with a fresh state refresh before relying on
-latest-run status, review packets, or handoff fields, but the warning alone does
-not authorize production actions or override `should_run`.
-When the payload includes `backlog_hygiene_warning`, the active state has
-multiple public-safe durable follow-up items in `Next Action` or
-`Operating Lessons` while the active `Agent Todo` checklist has no open item.
-Executors should mirror the durable follow-up work into concrete Agent Todo
-checkboxes before heartbeat scheduling relies on those narrative sections. The
-warning is a checklist hygiene signal only: it does not change quota eligibility,
-grant write or production permission, or make a quiet no-op valid when
-`execution_obligation.must_attempt_work=true`.
-When the payload includes `completed_todo_archive_warning`, the active
-`Agent Todo` checklist has accumulated too many completed entries for the
-dashboard/status surface to keep current open work visible. Executors should
-move older completed entries into a dedicated `Completed Work Archive` section
-and keep only current open work plus a small recent-done tail under active
-`Agent Todo`. The warning's `archive_command_template` includes the projected
-`default_archive_keep_count` as `--max-active-done`, so the copyable command and
-the warning's recent-done tail contract stay aligned. Archive sections are
-intentionally ignored by active todo parsing.
-This warning is a checklist hygiene signal only: it does not change quota
-eligibility, grant write or production permission, or supersede open user/agent
-todo blockers. It also does not mark an open todo complete; executors should
-use `loopx todo complete`, `todo update`, or `todo supersede` for
-structured lifecycle transitions by `todo_id`.
-When the payload includes `autonomous_replan_obligation`, the active state's
-current `Next Action` or `Operating Lessons`, or the recent public run history,
-carries public-safe evidence that the controller may be stuck in a
-periodic-review threshold, no-progress streak, repeated-action loop, phase
-transition, backlog mismatch, evidence contradiction, or two repeated public
-monitor/no-progress run records. Historical progress entries and completed
-todos are intentionally not active-state trigger sources. Executors should
-treat the object as a machine-readable planning contract, not prompt advice:
-inspect `triggers`, apply the compact `todo_actions` as split/add/retire
-guidance, write the selected todo/vision/blocker delta, and stop at
-`stop_condition`. Validation remains part of the normal delivery evidence or
-PR review path, not a command projected to the runtime agent. The default stall
-threshold is 2 consecutive stalled turns or
-public run records. A `quota_monitor_poll` record is status-neutral for latest
-dashboard state, but it is still public stalled-run evidence for this specific
-replan detector. For eligible goals,
-`heartbeat_recommendation.recommended_mode` may become
-`autonomous_replan_required`, and `execution_obligation.kind` may become
-`autonomous_replan_required` with `must_attempt_work=true`, even when open user
-todos remain visible, as long as the selected slice stays outside private,
-destructive, production, or owner-only authority and honors `stop_condition`.
-An open typed `user_action` remains a non-blocking notice even when no agent
-todo is currently runnable; it must not force `waiting_on=controller`. When two
-bounded stalls leave that agent frontier empty, the obligation requires one
-typed semantic outcome. When the bounded frontier already owns a
-concrete typed target, the interaction contract projects a claimed `todo add`
-with `--replan-obligation-id <exact-id>`, `--action-kind`, and a stable
-`--target-key` or Explore node ref. That one mutation atomically records the
-runnable successor and its causal obligation; it returns
-`host_action=end_current_heartbeat`, and the successor runs on the next
-heartbeat. A generic planning instruction is never compiled into a Todo. When
-no executable target is known, the packet instead requires a typed semantic or
-coverage-backed terminal writeback. No second repair-ACK write is required.
-The user reminder stays visible throughout this replan path.
-This is intended to keep monitor-only work from consuming the primary
-executable backlog, not to bypass real gates.
-`quota should-run` and `status --agent-id` may also expose
-`goal_frontier_projection.schema_version=goal_frontier_projection_v0`. This
-projection is owned by `loopx.control_plane.goals.goal_frontier`: it is a
-compact per-goal progress/frontier view, not another quota sub-state. When it contains
-`autonomous_replan_decision`, that decision is made before lane-local
-`monitor_quiet_skip`, `agent_scope_wait`, or `agent_scope_exhausted` projection,
-so those local no-candidate states cannot mask a required bounded replan.
-The payload includes `interaction_contract.schema_version =
-loopx_interaction_contract_v0`, which is the primary user/agent/CLI
-protocol for a selected goal. It groups the current turn into a stable
-`mode` such as `bounded_delivery`, `user_gate`, `user_todo_blocker_push`,
-`external_evidence_observation`, `monitor_quiet_skip`, `autonomous_replan`,
-`outcome_floor_recovery`, `mapped_noop_if_unchanged`, or `quota_throttled`.
-Its `user_channel` says whether to interrupt the user and why;
-`agent_channel` says whether Codex must attempt work, whether delivery is
-allowed, whether quiet no-op is allowed, and the primary action; `cli_channel`
-says which CLI transitions and spend policy apply. Executors should read
-`interaction_contract` first, with
-`interaction_contract.agent_channel.primary_action` as the only executable
-action entrypoint for the current turn. Optional
-`agent_channel.resolution_trace.summary` is diagnostic: it compactly records
-the source signal matched by `primary_action` and whether drift was detected. Existing
-`state_action_projection_warning` / `next_action_projection_warning` fields
-carry any writeback review guidance. The trace is not an independent
-next-action authority and does not imply automatic active-state writeback.
-`execution_obligation`,
-`heartbeat_recommendation`, `work_lane_contract`,
-`external_evidence_observation`, `goal_boundary`, and
-`protocol_action_packet` remain compatibility and drill-down fields under that
-contract, not competing sources of truth.
-The same payload includes `scheduler_hint.schema_version=scheduler_hint_v0`.
-This is the scheduling contract for host runtimes, not a delivery permission:
-Codex App can back off its automation cadence for long waits, while Codex CLI
-TUI and Claude Code loops can run one final quota/replan check after repeated
-unchanged polls, then exit/stop only if the guard is still unchanged. Cadence
-changes, final checks, and loop self-stop never spend quota. Host schedulers
-apply `recommended_interval_minutes` as the next target interval and multiply
-subsequent unchanged intervals by `unchanged_poll_backoff_multiplier` until
-`max_interval_minutes`; `example_progression_minutes` exposes the compact
-human-readable sequence. The hint also includes a compact `reset_policy`:
-hosts compare `reset_token` between polls and clear the unchanged/backoff
-streak when that token changes, or when a user reply, new/reassigned todo,
-resolved gate, or material transition makes the goal actionable again. The
-token is derived from scheduler action plus identity/profile inputs, while the
-hot path carries only action fields plus a short `identity_signature`; the
-profile signature, reset-condition summary, and full stateful-backoff policy are
-available from `scheduler_hint.cold_path_detail` when callers request
-`loopx quota should-run --include-detail scheduler`. The reset moves Codex
-App/local cadence back to the current profile's initial interval before
-unchanged backoff resumes, and does not spend quota.
-Codex App heartbeats should use `automation_update` only when
-`codex_app.stateful_backoff.apply_needed=true` and
-`codex_app.recommended_rrule` is present. If that update succeeds, the agent
-must run `codex_app.ack_hint.cli_args`;
-current payloads use `quota scheduler-ack-current` so LoopX re-reads the latest
-hint, then persists `reset_token`, `identity_signature`, `progression_index`,
-and `last_applied_rrule` under the runtime root. When the same identity repeats,
-LoopX advances the progression after the applied interval has elapsed, until
-the max interval. An immediate post-ACK readback remains on the acknowledged
-RRULE so repeated reconciliation converges rather than oscillates. When the reset token
-changes, the next projected RRULE returns to
-`reset_policy.codex_app_initial_rrule`. If the current desired RRULE is already
-applied, `recommended_rrule` is omitted and the host update should be skipped.
-When that matching readback still needs a reset-token/identity binding,
-`ack_needed=true`; run the bound ack directly. Otherwise no scheduler action
-is needed.
-For CLI payloads, `ack_hint.cli_args` begins with the registry and effective
-runtime-root binding used by the originating `should-run` call. Consumers must
-preserve that prefix so the ACK cannot split scheduler state between project
-and shared registries.
-`scheduler-ack` only records the applied host cadence; the next RRULE, if any,
-is projected by a future `quota should-run`, not by the ack response.
-The payload also includes `execution_obligation`, which is the compatibility
-entry point for older workers deciding whether a quiet no-op is allowed.
-`heartbeat_recommendation.notify` is only a user-facing notification policy. It
-must not be interpreted as an execution gate. `heartbeat_recommendation.
-agent_must_attempt` mirrors `execution_obligation.must_attempt_work` as a
-single-field shortcut so thin heartbeat prompts can key work obligation off
-one boolean instead of parsing notify semantics. If
-`autonomous_replan_required`, `heartbeat_recommendation.notify` is `NOTIFY`:
-replan turns are machine execution contracts and must not be projected as
-`DONT_NOTIFY`, which agents can misread as permission for a quiet no-op. If
-`execution_obligation.kind=external_evidence_observation_required`, ordinary
-delivery is still blocked, but the worker must perform one read-only
-observation or write a compact missing-handle blocker before it may stop. If
-`execution_obligation.must_attempt_work=true`, the worker should choose one
-bounded segment under `work_lane_contract` when present, otherwise under
-`effective_action` / `goal_boundary`, validate it, write durable state/events,
-and spend once after delivery even when `notify=DONT_NOTIFY`. A quiet no-op
-requires `execution_obligation.must_attempt_work=false` and no blocker-push
-notification such as `notify_user_on_open_todo=true`; when both are present,
-notify the user and do not spend. Verified `mapped_noop_if_unchanged` remains a
-quiet no-op case.
-The guard also emits `protocol_action_packet.schema_version =
-protocol_action_packet_v0`, a compact rule-only packet for executor and future
-LLM-router experiments. It distills the same quota guard into one primary actor,
-user/agent action requirement, quiet-noop allowance, execution lane, and a short
-`llm=no_api` marker inside a single `summary` string so the hot path stays
-within interface budget. The detailed spend policy remains in
-`heartbeat_recommendation.spend_policy`. This packet is not a new source of
-authority and does not authorize model/API use; it is the deterministic baseline
-that an optional Codex/LLM summarizer must beat on payload shrinkage and
-user/agent action clarity before direct LLM API wiring is added. When an open
-todo uses the common `[P*] short title: details` shape, the packet uses the
-short title as the action label so long progress notes do not re-enter the hot
-path.
-If open user todos coexist with executable agent work, the packet keeps the
-primary actor as `agent` but adds `user_action_pending=true` plus a compact
-`user_action` label. This preserves the owner-visible blocker without
-mislabeling that owner todo as `agent_action`.
-When a registry-enabled goal has `control_plane.self_repair.enabled=true`,
-`quota should-run` may return `decision=self_repair`,
-`self_repair_allowed=true`, `stall_self_repair`, and an `effective_action` such
-as `control_plane_health_repair` or `control_plane_projection_repair`. This is
-the machine-readable stall-repair contract for short heartbeats: repair the
-control-plane projection or write back the concrete blocker, validate, record a
-durable event, then spend once. Goals without that registry policy must not get
-this lane by default.
-When the payload includes `decision_freshness_warning`, the goal may still be
-eligible, but sampled reward/gate state for that same goal is stale or has newer
-events after it. Executors should not reuse that old decision as authority until
-they re-read the current registry, ACTIVE_GOAL_STATE, quota, policy, and run
-status at the decision point. This warning is a guardrail for decision reuse,
-not a repository rewind or a replacement for `should_run`.
-If the payload's `handoff_readiness.post_handoff_outcome_gap_streak` has reached
-the `project_asset.execution_profile.outcome_floor.surface_streak_threshold`,
-`quota should-run` should also enforce the handoff contract by returning
-`should_run=true`, `state=focus_wait`, `blocked_action_scope=delivery_outcome_floor`,
-`safe_bypass_allowed=true`, `safe_bypass_kind=outcome_floor_recovery`,
-`recovery_delivery_allowed=true`, `effective_action=outcome_floor_recovery`,
-`decision=safe_bypass_recovery`, and
-`heartbeat_recommendation.recommended_mode=outcome_floor_recovery` when the
-floor declares a concrete `must_advance` target. In this shape `should_run`
-means there is a Codex-actionable turn, while `normal_delivery_allowed=false`
-explains that ordinary delivery is blocked. Executors should treat
-`effective_action=outcome_floor_recovery` as recovery permission, spend only
-after validated ranker/cross-domain evidence or concrete blocker writeback, and
-avoid continuing a surface-only loop or waiting passively.
-The status export should apply the same quota guard to `attention_queue.items[]`
-and `project_asset.quota`, while preserving `handoff_readiness` run evidence:
-`codex_ready` may become false, but `post_handoff_latest_run`,
-`post_handoff_recent_runs`, and `post_handoff_outcome_gap_streak` should remain
-visible for dashboards and handoff packets.
+抑制决策还从最终用户通道移除 `actions` 与 `non_blocking`，
+因此遗留 `user_action` 不能把同一契约重新提升为 `NOTIFY`。Provider sink
+必须按 gate 身份加实质状态世代去重 delivery，只在显式到期的提醒窗口加额外提醒
+世代；展示文本不是 delivery 身份。
+合格 monitor-only 无转移轮询把开放用户 todos 保持在 `user_todo_summary`，
+但不得强制重复通知或设置 `requires_user_action=true`；它们应表露为安静
+`monitor_quiet_skip`，而不是可执行 run。
+当 payload 包含 `external_evidence_observation`，目标等待仍需要只读观察契约的外部
+monitor。这不是提示特定建议：`quota should-run` 还应设置
+`effective_action=external_evidence_observe` 与
+`execution_obligation.kind=external_evidence_observation_required`。执行者必须
+检查具体可观察 handle 或紧凑 writeback 面，如线程 id、自动化 id、作业 id、
+锁/结果标记或结果路径。如果无 handle，正确动作是紧凑 blocker 或启动就绪
+writeback，不是 quiet no-op 也不是 benchmark 执行。
+当 payload 包含 `heartbeat_recommendation`，执行者应在发明本地自动化行为前遵循
+该通用生命周期提示：`run_first_read_only_map` 在花一次前运行并保存一次真实只读
+映射，而 `mapped_noop_if_unchanged` 在无新指令、证据、todo、过期来源或安全 handoff
+时返回 quiet no-op，不再 dry-run 或 quota spend。
+当 payload 包含 `stale_latest_run_warning`，当前 active-state 投影已超前于最新
+run-history 快照。执行者应在依赖 latest-run status、review packet 或 handoff 字段前
+用新鲜状态刷新修复控制面投影，但该警告单独不授权生产动作，也不覆盖 `should_run`。
+当 payload 包含 `backlog_hygiene_warning`，active state 在
+`Next Action` 或 `Operating Lessons` 中有多个 public-safe 持久后续条目，
+而活跃 `Agent Todo` 清单无开放条目。执行者应在 heartbeat 调度依赖那些叙事区块前
+把持久后续工作镜像进具体 Agent Todo 复选框。该警告只是清单卫生信号：
+它不改变 quota 资格、不授予写或生产权限，也不在
+`execution_obligation.must_attempt_work=true` 时使 quiet no-op 合法。
+当 payload 包含 `completed_todo_archive_warning`，活跃 `Agent Todo` 清单积累了
+太多已完成条目，使 dashboard/status 面无法保持当前开放工作可见。执行者应把更旧
+已完成条目移入专用 `Completed Work Archive` 区块，并只在活跃 `Agent Todo` 下保持
+当前开放工作加少量近期完成尾部。警告的 `archive_command_template` 把投影的
+`default_archive_keep_count` 包含为 `--max-active-done`，使可复制命令与警告的
+近期完成尾契约保持对齐。归档区块被活跃 todo 解析刻意忽略。
+该警告只是清单卫生信号：它不改变 quota 资格、不授予写或生产权限，
+也不替代开放用户/Agent todo blocker。它也不把开放 todo 标记完成；
+执行者应用 `loopx todo complete`、`todo update` 或 `todo supersede` 做按 `todo_id`
+的结构化生命周期转移。
+当 payload 包含 `autonomous_replan_obligation`，active state 的当前 `Next Action`
+或 `Operating Lessons`，或近期公共 run history，携带 public-safe 证据表明 controller
+可能卡在周期评审阈值、无进展连续段、重复动作循环、阶段转移、积压不匹配、
+证据矛盾或两次重复公共 monitor/无进展 run 记录。历史进度条目与已完成 todos
+被刻意排除在 active-state 触发源外。执行者应把该对象当作机器可读规划契约，
+而不是提示建议：检查 `triggers`，把紧凑 `todo_actions` 应用为 split/add/retire
+指导，写所选 todo/vision/blocker delta，并停在 `stop_condition`。验证保持正常
+delivery 证据或 PR 评审路径的一部分，不是投影给运行时 Agent 的命令。默认停滞阈值
+是 2 个连续停滞 turn 或公共 run 记录。`quota_monitor_poll` 记录对最新 dashboard
+状态是 status 中性，但它对该特定 replan 检测器仍是公共停滞 run 证据。对合格目标，
+`heartbeat_recommendation.recommended_mode` 可以变为
+`autonomous_replan_required`，`execution_obligation.kind` 可以变为
+`autonomous_replan_required` 且 `must_attempt_work=true`，
+即使开放用户 todos 保持可见，只要所选切片留在私有、破坏性、生产或仅 owner 权威外
+并遵守 `stop_condition`。开放 typed `user_action` 即使无当前可运行 Agent todo仍
+保持非阻塞通知；它不得强制 `waiting_on=controller`。当两次有界停滞留下空 Agent
+边界，义务要求一个 typed 语义结局。当有界边界已拥有具体 typed 目标时，
+交互契约投影带 `--replan-obligation-id <exact-id>`、`--action-kind` 与稳定
+`--target-key` 或 Explore 节点引用的声明 `todo add`。该一次变更原子记录可运行
+successor 及其因果义务；它返回 `host_action=end_current_heartbeat`，
+successor 在下一次 heartbeat 运行。通用规划指令从不被编译成 Todo。
+当无已知可执行目标时，packet 反而要求 typed 语义或覆盖支撑的终态 writeback。
+不需要第二个修复 ACK 写。用户提醒在该 replan 路径全程保持可见。
+这是让 monitor-only 工作不消耗主要可执行积压，而不是绕过真实 gate。
 
-Review Packet source-of-truth rule:
+`quota should-run` 与 `status --agent-id` 还可以暴露
+`goal_frontier_projection.schema_version=goal_frontier_projection_v0`。
+该投影归 `loopx.control_plane.goals.goal_frontier` 所有：它是紧凑每目标进度/边界
+视图，不是另一个 quota 子状态。当它包含 `autonomous_replan_decision`，
+该决策在 lane 本地 `monitor_quiet_skip`、`agent_scope_wait` 或
+`agent_scope_exhausted` 投影前做出，使那些本地无候选状态不能掩盖必需的
+有界 replan。
+payload 包含 `interaction_contract.schema_version = loopx_interaction_contract_v0`，
+它是所选目标的主要用户/Agent/CLI 协议。它把当前 turn 分组为稳定 `mode`，
+如 `bounded_delivery`、`user_gate`、`user_todo_blocker_push`、
+`external_evidence_observation`、`monitor_quiet_skip`、`autonomous_replan`、
+`outcome_floor_recovery`、`mapped_noop_if_unchanged` 或 `quota_throttled`。
+其 `user_channel` 说明是否打断用户及原因；`agent_channel` 说明 Codex 是否必须
+尝试工作、delivery 是否允许、quiet no-op 是否允许，以及主动作；`cli_channel`
+说明哪些 CLI 转移与 spend 策略适用。执行者应先读 `interaction_contract`，
+把 `interaction_contract.agent_channel.primary_action` 作为当前 turn 唯一可执行
+动作入口。可选 `agent_channel.resolution_trace.summary` 是诊断：
+它紧凑记录 `primary_action` 匹配的源信号及是否检测到漂移。现有
+`state_action_projection_warning` / `next_action_projection_warning` 字段携带任何
+writeback 评审指导。Trace 不是独立 next-action 权威，也不暗示自动 active-state
+writeback。`execution_obligation`、`heartbeat_recommendation`、
+`work_lane_contract`、`external_evidence_observation`、`goal_boundary` 与
+`protocol_action_packet` 保持该契约下的兼容与下钻字段，不是竞争真相源。
 
-- the dashboard/operator view owns the human decision;
-- the copied Review Packet is a bridge from that decision surface to a local
-  operator preview and a target project-agent instruction;
-- `loopx review-packet --goal-id <goal-id>` may generate the same
-  packet from the status contract for CLI-facing agents, but it is still a
-  read-only packaging command;
-- when status includes same-goal `decision_freshness_summary` items that require
-  rebase, the full Review Packet should render a compact human-visible
-  freshness warning before the operator approves or relays work; this warning
-  stays out of the minimized handoff-only text so the project agent still
-  receives a small current instruction;
-- `loopx review-packet --goal-id <goal-id> --handoff-only` is the
-  copy-minimal form for an already selected or approved target-agent relay: it
-  prints only the `project_agent_handoff` text in markdown output, while JSON
-  output returns a minimized handoff payload instead of the full operator
-  packet. To keep the hot path compact, handoff-only JSON does not expose a separate
-  `handoff_followthrough_summary` prose field; that prose remains available in
-  the full Review Packet and embedded handoff text;
-- project-agent handoff commands redact local absolute registry/runtime paths
-  before they enter `project_agent_command`, `project_agent_handoff`, or
-  `handoff_text`;
-- project-agent handoff text is an interface-budgeted hot-path artifact: it
-  should stay within 16 lines and 1800 characters, include at most one command
-  block, and carry only the target goal guard, minimal-context rule, source
-  label, optional compact post-handoff delivery scale, optional delivery
-  contract, forwarding/execution boundary, command, and stop condition;
-- `handoff_delivery_contract` is optional structured guidance derived from the
-  current `handoff_readiness` plus `project_asset.execution_profile`, not a
-  target-specific hack. When repeated small-scale follow-through reaches the
-  profile's `degradation_policy.small_scale_streak_threshold`, packets may set
-  `mode=expand_after_repeated_small_delivery` and ask the target agent to run
-  one coherent batch at the profile's `minimum_scale` with the declared
-  `must_include` surfaces, or report a blocker without spending quota. When
-  implementation-shaped runs are still only forecast/runbook/queue/field
-  propagation and `post_handoff_outcome_gap_streak` reaches the profile's
-  `outcome_floor.surface_streak_threshold`, packets may instead set
-  `mode=expand_after_surface_progress_loop` and require the next delivery to
-  advance the declared outcome floor, or report a blocker without spend;
-- handoff-only output must not carry the full Review Packet, human decision
-  section, local operator-gate preview, operator decision payload fields, raw
-  `run_history`, or `latest_runs` cold-path evidence;
-- the local `operator_gate_dry_run` preview belongs to the user or controller,
-  not the target project agent;
-- the project-agent command is the after-approval dry-run path for controller
-  gates, or the quota guard for connected-delivery Codex goals. Connected
-  delivery handoffs may authorize bounded write-scope delivery after
-  `should_run=true`; they must still stop for unapproved scopes, production
-  actions, destructive git, private material, or surface-only loops.
+同一 payload 包含 `scheduler_hint.schema_version=scheduler_hint_v0`。
+这是 host 运行时的调度契约，不是 delivery 权限：Codex App 可以为长等待退避其
+自动化 cadence，而 Codex CLI TUI 与 Claude Code loop 可以在重复未变化轮询后运行
+一次最终 quota/replan 检查，然后只在 guard 仍未变化时退出/停止。Cadence 变更、
+最终检查与 loop 自停从不花 quota。Host scheduler 把
+`recommended_interval_minutes` 应用为下一个目标间隔，并把后续未变间隔乘以
+`unchanged_poll_backoff_multiplier` 直到 `max_interval_minutes`；
+`example_progression_minutes` 暴露紧凑人类可读序列。Hint 还包含紧凑
+`reset_policy`：host 在轮询间比较 `reset_token`，并在该 token 变化、
+或用户回复、新/重分配 todo、已解决 gate 或实质转移使目标再次可执行时清除
+未变化/退避连续段。Token 由 scheduler 动作加身份/profile 输入派生，
+而热路径只携带动作字段加短 `identity_signature`；profile 签名、reset 条件摘要与
+完整 stateful-backoff 策略在调用方请求
+`loopx quota should-run --include-detail scheduler` 时从
+`scheduler_hint.cold_path_detail` 可用。Reset 在未变化退避恢复前把 Codex
+App/本地 cadence 回到当前 profile 初始间隔，且不花 quota。
+Codex App heartbeat 只在 `codex_app.stateful_backoff.apply_needed=true` 且
+`codex_app.recommended_rrule` 存在时使用 `automation_update`。如果该更新成功，
+Agent 必须运行 `codex_app.ack_hint.cli_args`；当前 payload 用
+`quota scheduler-ack-current`，让 LoopX 重读最新 hint，然后在运行时根下持久化
+`reset_token`、`identity_signature`、`progression_index` 与
+`last_applied_rrule`。同一身份重复时，LoopX 在已应用间隔流逝后推进 progression，
+直到最大间隔。即时 post-ACK 读回保持在被确认 RRULE 上，使重复调和收敛而非振荡。
+当 reset token 变化时，下一个投影 RRULE 回到 `reset_policy.codex_app_initial_rrule`。
+如果当前期望 RRULE 已应用，`recommended_rrule` 被省略且应跳过 host 更新。
+当该匹配读回仍需要 reset-token/identity 绑定时，`ack_needed=true`；
+直接运行绑定 ack。否则无需 scheduler 动作。
+对 CLI payload，`ack_hint.cli_args` 以源 `should-run` 调用使用的 registry 与有效
+runtime-root 绑定开始。消费方必须保留该前缀，使 ACK 不能在项目与共享 registry
+间拆分 scheduler 状态。`scheduler-ack` 只记录已应用的 host cadence；
+下一个 RRULE（如果有）由未来 `quota should-run` 投影，而不是 ack 响应。
+payload 还包含 `execution_obligation`，这是旧 worker 决定 quiet no-op 是否允许的
+兼容入口。`heartbeat_recommendation.notify` 只是用户面向通知策略。它不得被解释为
+执行 gate。`heartbeat_recommendation.agent_must_attempt` 把
+`execution_obligation.must_attempt_work` 镜像为单字段快捷方式，
+使薄 heartbeat 提示可以基于一个布尔而非解析 notify 语义来挂起工作义务。如果
+`autonomous_replan_required`，`heartbeat_recommendation.notify` 是 `NOTIFY`：
+replan turn 是机器执行契约，不得投影为 `DONT_NOTIFY`（Agent 可能误读为 quiet
+no-op 权限）。如果 `execution_obligation.kind=external_evidence_observation_required`，
+普通 delivery 仍阻塞，但 worker 在可以停止前必须执行一次只读观察或写紧凑
+缺失 handle blocker。如果 `execution_obligation.must_attempt_work=true`，
+worker 应在 `work_lane_contract` 存在时于其下选择一个有界片段，否则在
+`effective_action` / `goal_boundary` 下选择，验证它、写持久状态/事件，
+并在 delivery 后花一次，即使 `notify=DONT_NOTIFY`。Quiet no-op 需要
+`execution_obligation.must_attempt_work=false` 且无
+`notify_user_on_open_todo=true` 等 blocker-push 通知；两者都存在时，
+通知用户且不 spend。验证 `mapped_noop_if_unchanged` 保持 quiet no-op 情形。
+guard 还发出 `protocol_action_packet.schema_version = protocol_action_packet_v0`，
+一个给执行者与未来 LLM-router 实验的紧凑仅规则 packet。它把同一 quota guard
+蒸馏为单个主 actor、用户/Agent 动作要求、quiet-noop 允许、执行 lane，
+在单一 `summary` 字符串内加短 `llm=no_api` 标记，使热路径留在接口预算内。
+详细 spend 策略留在 `heartbeat_recommendation.spend_policy`。该 packet 不是新权威
+源，也不授权模型/API 使用；它是可选 Codex/LLM 摘要器必须在 payload 缩小与
+用户/Agent 动作清晰度上胜出的确定性基线。当开放 todo 使用常见
+`[P*] short title: details` 形状时，packet 用短标题作为动作标签，
+使长进度笔记不再进入热路径。
+如果开放用户 todos 与可执行 Agent 工作共存，packet 保持主 actor 为 `agent`，
+但加 `user_action_pending=true` 加紧凑 `user_action` 标签。这保留 owner 可见
+blocker，而不把那个 owner todo 误标为 `agent_action`。
+当 registry 启用目标有 `control_plane.self_repair.enabled=true`，
+`quota should-run` 可以返回 `decision=self_repair`、`self_repair_allowed=true`、
+`stall_self_repair` 与 `effective_action`，如 `control_plane_health_repair` 或
+`control_plane_projection_repair`。这是短 heartbeat 的机器可读停滞修复契约：
+修复控制面投影或写回具体 blocker、验证、记录持久事件，然后花一次。
+没有该 registry 策略的目标默认不得获得该 lane。
+当 payload 包含 `decision_freshness_warning`，目标仍可合格，但该目标采样的
+reward/gate 状态过期或其后有更新事件。执行者在决策点重读当前 registry、
+ACTIVE_GOAL_STATE、quota、策略与 run status 前不得把旧决策当作权威复用。
+该警告是决策复用护栏，不是仓库回卷，也不是 `should_run` 的替代。
+如果 payload 的 `handoff_readiness.post_handoff_outcome_gap_streak` 达到
+`project_asset.execution_profile.outcome_floor.surface_streak_threshold`，
+`quota should-run` 在 floor 声明具体 `must_advance` 目标时还应强制 handoff 契约，
+返回 `should_run=true`、`state=focus_wait`、
+`blocked_action_scope=delivery_outcome_floor`、`safe_bypass_allowed=true`、
+`safe_bypass_kind=outcome_floor_recovery`、`recovery_delivery_allowed=true`、
+`effective_action=outcome_floor_recovery`、`decision=safe_bypass_recovery` 与
+`heartbeat_recommendation.recommended_mode=outcome_floor_recovery`。
+该形状中 `should_run` 表示存在 Codex 可执行 turn，而 `normal_delivery_allowed=false`
+说明普通 delivery 被阻塞。执行者应把 `effective_action=outcome_floor_recovery`
+当作恢复权限，只在验证 ranker/cross-domain 证据或具体 blocker writeback 后 spend，
+并避免继续 surface-only loop 或被动等待。
+Status 导出应对 `attention_queue.items[]` 与 `project_asset.quota` 应用同一 quota
+guard，同时保留 `handoff_readiness` run 证据：`codex_ready` 可以变 false，
+但 `post_handoff_latest_run`、`post_handoff_recent_runs` 与
+`post_handoff_outcome_gap_streak` 应保持 dashboard 与 handoff packet 可见。
 
-For controller opt-in packets, the operator question must appear before any
-local gate preview, and the local gate preview must appear before any
-project-agent command. A dashboard, script, or agent must not infer approval,
-reward, write-control, or a real map run from the presence of a copied packet,
-review URL, selected `goal_id`, or `agent_command`.
+Review Packet 真相源规则：
 
-The project-agent section of a Review Packet should be short and operational:
-name the current context source, the forwarding condition, the execution
-boundary, and the stop condition before showing any command. The context source
-rule keeps agent handoffs from bloating: the packet carries only the minimal
-current instruction; if the target agent needs more context, it reads the
-current active state, status, history, and command output instead of rebuilding
-truth from old chats or old packets. For controller opt-in, that means the
-section is only forwarded after an explicit human/controller agreement, the
-agent only runs the read-only or dry-run project path, and it must stop if it
-needs a real approval, write-control, run-history append, production action, or
-if the command fails. This keeps the packet easy for target agents to follow
-while preserving the dashboard as the human decision surface and the archival
-evidence trail as the cold path.
+- dashboard/operator 视图拥有人类决策；
+- 复制的 Review Packet 是从该决策面到本地 operator 预览与目标项目 Agent 指令的
+  桥；
+- `loopx review-packet --goal-id <goal-id>` 可以从 status 契约为 CLI 面向 Agent
+  生成同一 packet，但它仍是只读打包命令；
+- 当 status 包含需要 rebase 的同目标 `decision_freshness_summary` 条目时，
+  完整 Review Packet 应在 operator 批准或转发工作前渲染紧凑人类可见新鲜度警告；
+  该警告留在最小化 handoff-only 文本外，使项目 Agent 仍收到小当前指令；
+- `loopx review-packet --goal-id <goal-id> --handoff-only` 是给已选或已批准
+  目标 Agent 转发的复制最小形式：它在 Markdown 输出只打印
+  `project_agent_handoff` 文本，而 JSON 输出返回最小化 handoff payload 而非完整
+  operator packet。为保持热路径紧凑，handoff-only JSON 不暴露单独
+  `handoff_followthrough_summary` 散文字段；该散文在完整 Review Packet 与嵌入
+  handoff 文本中仍可用；
+- 项目 Agent handoff 命令在进入 `project_agent_command`、
+  `project_agent_handoff` 或 `handoff_text` 前脱敏本地绝对 registry/runtime 路径；
+- 项目 Agent handoff 文本是接口预算的热路径产物：它应保持在 16 行与 1800 字符内，
+  至多包含一个命令块，并只携带目标 goal guard、最小上下文规则、来源标签、
+  可选的紧凑 post-handoff delivery scale、可选 delivery 契约、转发/执行边界、
+  命令与停止条件；
+- `handoff_delivery_contract` 是从当前 `handoff_readiness` 加
+  `project_asset.execution_profile` 派生的可选结构化指导，不是目标特定 hack。
+  当重复小规模 follow-through 达到 profile 的
+  `degradation_policy.small_scale_streak_threshold`，packet 可以设置
+  `mode=expand_after_repeated_small_delivery`，要求目标 Agent 以 profile
+  `minimum_scale` 运行一个连贯批量，带声明的 `must_include` 面，
+  或不花 quota 报告 blocker。当 implementation 形状 run 仍只是
+  forecast/runbook/queue/field 传播且
+  `post_handoff_outcome_gap_streak` 达到 profile 的
+  `outcome_floor.surface_streak_threshold`，packet 可以改设置
+  `mode=expand_after_surface_progress_loop` 并要求下次 delivery 推进声明的
+  outcome floor，或不 spend 报告 blocker；
+- handoff-only 输出不得携带完整 Review Packet、人类决策区块、本地 operator-gate
+  预览、operator 决策 payload 字段、原始 `run_history` 或 `latest_runs` 冷路径证据；
+- 本地 `operator_gate_dry_run` 预览属于用户或 controller，不是目标项目 Agent；
+- 项目 Agent 命令是 controller gate 的批准后 dry-run 路径，或已连接 delivery
+  Codex 目标的 quota guard。已连接 delivery handoff 可以在 `should_run=true` 后
+  授权有界写作用域 delivery；它们仍必须为未批准作用域、生产动作、破坏性 git、
+  私有材料或 surface-only loop 停下。
 
-For focus-wait packets, the Review Packet should surface the first open
-owner/user todo as the unlock condition, not as ordinary delivery work. The
-human section should explain why the project is quiet, who can unblock it, and
-which evidence is needed before delivery resumes. The project-agent section
-must not present a safe-local delivery path; it should only point to status or
-history inspection and tell the target agent to keep `focus_wait` until new
-owner evidence, a clean baseline, or external eval changes the state.
-Dashboard action packets and first-screen cards should follow the same rule:
-label the item as `Focus wait` / owner blocker, show the first open owner/user
-todo as the unlock condition, and make the copy affordance status/history-only
-rather than an approved handoff or read-only map delivery path.
+对 controller opt-in packet，operator 问题必须出现在任何本地 gate 预览前，
+而本地 gate 预览必须出现在任何项目 Agent 命令前。Dashboard、脚本或 Agent
+不得从复制的 packet、评审 URL、所选 `goal_id` 或 `agent_command` 的存在推断
+批准、奖励、write-control 或真实 map run。
 
-`status=read_only_project_map` is emitted when the latest compact run came from
-`loopx read-only-map`. Dashboard consumers should show it as Codex-ready
-work with a map-specific badge or drill-down: the project is connected and has
-a read-only map run, but the next useful action still needs a controller or
-agent to use that map. Compact run records may include a public-safe
-`project_map` object:
+Review Packet 的项目 Agent 区块应短且可操作：在显示任何命令前点名当前上下文
+来源、转发条件、执行边界与停止条件。上下文来源规则保持 Agent handoff 不膨胀：
+packet 只携带最小当前指令；目标 Agent 需要更多上下文时，它读取当前 active state、
+status、history 与命令输出，而不是从旧聊天或旧 packet 重建真相。对 controller
+opt-in，那意味着区块只在显式人类/controller 同意后转发，Agent 只运行只读或
+dry-run 项目路径，并在需要真实批准、write-control、run-history 追加、生产动作或
+命令失败时停止。这让目标 Agent 容易遵循 packet，同时保留 dashboard 作为人类决策面
+与档案证据轨迹作为冷路径。
+
+对 focus-wait packet，Review Packet 应把第一个开放 owner/user todo 表露为解锁
+条件，而不是普通 delivery 工作。人类区块应说明项目为何安静、谁可以解锁它、
+delivery 恢复前需要哪些证据。项目 Agent 区块不得呈现安全本地 delivery 路径；
+它应只指向 status 或 history 检查，并告诉目标 Agent 保持 `focus_wait`，
+直到新 owner 证据、干净基线或外部 eval 改变状态。
+Dashboard 动作 packet 与首屏卡片应遵循同一规则：把条目标为 `Focus wait` /
+owner blocker，把第一个开放 owner/user todo 显示为解锁条件，
+并让复制便利只是 status/history，而不是已批准 handoff 或只读映射 delivery 路径。
+
+`status=read_only_project_map` 在最新紧凑 run 来自 `loopx read-only-map` 时发出。
+Dashboard 消费方应把它显示为带映射特定徽章或下钻的 Codex-ready 工作：项目已连接
+且有只读映射 run，但下一个有用动作仍需要 controller 或 Agent 使用该映射。
+紧凑 run 记录可以包含 public-safe `project_map` 对象：
 
 ```json
 {
@@ -1749,41 +1417,33 @@ agent to use that map. Compact run records may include a public-safe
 }
 ```
 
-The full run payload may also include `residual_risks`, a compact public-safe
-list such as `planned_adapter_requires_controller_opt_in` or
-`project_local_goal_state_not_detected`. If an optional authority registry is
-declared, missing registry files, missing default entries, deprecated sources,
-or medium/high conflict risk are reported with stable `authority_registry_*`
-labels. Project agents should relay that list directly rather than inventing a
-free-form risk summary.
+完整 run payload 还可以包含 `residual_risks`，紧凑 public-safe 列表，
+如 `planned_adapter_requires_controller_opt_in` 或
+`project_local_goal_state_not_detected`。如果声明了可选权威注册表，缺失 registry
+文件、缺失默认条目、过期来源或中/高冲突风险以稳定 `authority_registry_*` 标签
+报告。项目 Agent 应直接转达该列表，而不是发明自由形式风险摘要。
 
-For same-repo multi-goal projects, `project_registry_exists`,
-`goal_state_dir_exists`, and `active_state_file_exists` are goal-scoped health
-signals. A project can have both `main-control` and `side-bypass` in the same
-repo, but each selected `goal_id` should have its own
-`.codex/goals/<goal-id>/` directory. If that directory is missing, the map
-reports `project_goal_state_dir_not_detected:<goal-id>` and the legacy
-`project_local_goal_state_not_detected` risk even when another goal in the same
-repo is healthy.
+对同仓库多目标项目，`project_registry_exists`、`goal_state_dir_exists` 与
+`active_state_file_exists` 是 goal 作用域健康信号。项目可以同仓库既有
+`main-control` 也有 `side-bypass`，但每个所选 `goal_id` 应有自己的
+`.codex/goals/<goal-id>/` 目录。如果该目录缺失，映射报告
+`project_goal_state_dir_not_detected:<goal-id>` 与遗留
+`project_local_goal_state_not_detected` 风险，即使同仓库另一目标健康。
 
-The CLI cleanup path is `loopx archive-runtime --goal-id <goal-id>`. It
-defaults to dry-run and requires `--execute` before moving the runtime directory
-under `<runtime-root>/archived-goals/`.
+CLI 清理路径是 `loopx archive-runtime --goal-id <goal-id>`。它默认 dry-run，
+要求 `--execute` 才把运行时目录移到 `<runtime-root>/archived-goals/` 下。
 
 ## Run History
 
-`run_history` is a compact, public-safe drill-down surface for the dashboard.
-It mirrors the compact run index, but strips local artifact paths. UIs should
-show artifact availability with `json_exists` and `markdown_exists` instead of
-linking directly to local files.
+`run_history` 是给 dashboard 的紧凑、public-safe 下钻面。它镜像紧凑 run 索引，
+但剥离本地产物路径。UI 应以 `json_exists` 与 `markdown_exists` 显示产物可用性，
+而不是直接链接本地文件。
 
-On the `status`, `quota should-run`, and `history` read paths, relative
-`common_runtime_root` values, relative `--runtime-root` overrides, and relative
-run-index artifact paths are resolved against the project root that owns the
-selected registry, not the caller's current working directory. This keeps
-those read surfaces stable when they are invoked from an independent worktree.
+在 `status`、`quota should-run` 与 `history` 读路径上，相对 `common_runtime_root`
+值、相对 `--runtime-root` 覆盖与相对 run-index 产物路径按拥有所选 registry 的
+项目根解析，而不是调用者当前工作目录。这让那些读面从独立 worktree 调用时保持稳定。
 
-Goal shape:
+Goal 形状：
 
 ```json
 {
@@ -1860,27 +1520,21 @@ Goal shape:
 }
 ```
 
-`authority_registry` on the goal comes from the registry and stays visible even
-when the latest run is an operator gate or reward overlay rather than a fresh
-project map. Dashboard consumers should translate it into one human-facing line
-such as "default entries 3/3, topic 8, materials 6, owner review 1, risk low"
-before asking for operator decisions. Material details stay project-local:
-public status exposes compact counts for material roles, repository links,
-owner-review gaps, stale sources, and current authorities instead of URLs,
-repository roots, product configs, or raw review notes.
-The Markdown status renderer should expose the same compact context as an
-`authority_material` line on attention-queue items, so agent-facing handoffs
-see freshness and owner-review pressure without needing internal material
-links or source text.
+Goal 上的 `authority_registry` 来自 registry，即使最新 run 是 operator gate 或
+reward overlay 而非新鲜项目映射也保持可见。Dashboard 消费方应在请求 operator
+决策前把它翻译成一行人类面向文本，如"default entries 3/3, topic 8, materials 6,
+owner review 1, risk low"。材料细节留在项目本地：公共 status 暴露材料角色、
+仓库链接、owner 评审缺口、过期来源与当前权威的紧凑计数，而不是 URL、仓库根、
+产品配置或原始评审笔记。Markdown status 渲染器应在 attention 队列条目上以
+`authority_material` 行暴露同一紧凑上下文，使 Agent 面向 handoff 看到新鲜度与
+owner 评审压力，而无需内部材料链接或来源文本。
 
-`quota` on the goal comes from the registry and defaults to `compute=1.0` when
-not declared. In v0.1, status derives only a compact product state from hard
-gates and attention ownership: `eligible`, `focus_wait`, `throttled`,
-`waiting`, `operator_gate`, `paused`, or `blocked_health`. It is not a
-permission signal and does not replace human reward, operator gates, write
-approval, or production-action authorization.
+Goal 上的 `quota` 来自 registry，未声明时默认 `compute=1.0`。在 v0.1 中，
+status 从硬 gate 与 attention 归属只派生紧凑产品状态：`eligible`、`focus_wait`、
+`throttled`、`waiting`、`operator_gate`、`paused` 或 `blocked_health`。
+它不是权限信号，不替代人类奖励、operator gate、写批准或生产动作授权。
 
-Run shape:
+Run 形状：
 
 ```json
 {
@@ -1948,67 +1602,57 @@ Run shape:
 }
 ```
 
-Optional compact fields such as `active_task_count`, `active_priorities`, and
-`cache_check` may appear when an adapter records them. Experiment-controller
-adapters may also include compact `controller_readiness` and `human_reward`
-summaries.
+`active_task_count`、`active_priorities` 与 `cache_check` 等可选紧凑字段可以在
+adapter 记录时出现。实验 controller adapter 还可以包含紧凑 `controller_readiness`
+与 `human_reward` 摘要。
 
-`lifecycle_phase` is derived by the status layer so the dashboard can separate
-state interaction stages from adapter-specific classifications:
+`lifecycle_phase` 由 status 层派生，使 dashboard 把状态交互阶段与 adapter 特定
+分类分开：
 
-- `connected`: the goal is registered with a connected adapter but has no run.
-- `mapped`: the latest run is a generic `read_only_project_map`.
-- `refreshed`: the latest run is a state-only `state_refreshed` update.
-- `adapter_inspected`: a project adapter produced a compact run.
-- `reward_judged`: a human reward overlay is attached to the run.
-- `operator_approved`: an operator gate was approved and the approved
-  `agent_command` may be handed to the target project agent.
-- `operator_gated`: an operator gate was rejected or deferred, so the goal stays
-  gated.
-- `controller_gated`: controller readiness evidence is present, but the goal is
-  still missing a gate such as human reward or comparable evidence.
-- `controller_ready`: decision-advisor or write-controller readiness is present.
-- `planned`, `registered`, and `run_recorded`: fallback phases for goals that
-  are not yet connected or have an unclassified run.
+- `connected`：目标注册了已连接 adapter 但无 run。
+- `mapped`：最新 run 是通用 `read_only_project_map`。
+- `refreshed`：最新 run 是状态-only `state_refreshed` 更新。
+- `adapter_inspected`：项目 adapter 产生了紧凑 run。
+- `reward_judged`：人类奖励 overlay 附着到 run。
+- `operator_approved`：operator gate 获批，已批准的 `agent_command` 可以交给目标
+  项目 Agent。
+- `operator_gated`：operator gate 被拒绝或延迟，目标保持 gate。
+- `controller_gated`：存在 controller 就绪证据，但目标仍缺人类奖励或可比较证据
+  等 gate。
+- `controller_ready`：存在 decision-advisor 或 write-controller 就绪。
+- `planned`、`registered` 与 `run_recorded`：尚未连接或无分类 run 目标的 fallback
+  阶段。
 
-`lifecycle_flags` may contain more than one phase. For example, a run can be
-both `adapter_inspected` and `reward_judged`, both `adapter_inspected` and
-`operator_approved`, or both `adapter_inspected` and `controller_gated`. UIs
-should show the primary phase first and use flags as secondary badges.
-When a Codex-owned goal carries `lifecycle_phase=focus_wait` or a
-`continuation_boundary` flag, quota should surface `state=focus_wait` instead
-of `eligible`. This keeps compute quota separate from delivery focus: the goal
-can remain healthy and visible while automatic turns wait for new evidence,
-owner input, external eval, or a clean baseline.
-Quota may also use `state=focus_wait` when post-handoff delivery has repeatedly
-missed the declared outcome floor. In that case `blocked_action_scope` should
-identify `delivery_outcome_floor`, and the target agent should either return
-with outcome-scale evidence or report a blocker without spending another slot.
-When the floor declares `must_advance`, the quota payload should split ordinary
-delivery from recovery delivery with `normal_delivery_allowed=false`,
-`recovery_delivery_allowed=true`, `should_run=true`, and
-`effective_action=outcome_floor_recovery`
-so dashboard and heartbeat consumers do not mistake the recovery lane for a
-quiet skip.
+`lifecycle_flags` 可以包含多个阶段。例如 run 可以同时是 `adapter_inspected` 与
+`reward_judged`、`adapter_inspected` 与 `operator_approved`，或 `adapter_inspected`
+与 `controller_gated`。UI 应先显示主阶段，并把 flags 用作次级徽章。
+当 Codex 拥有的目标携带 `lifecycle_phase=focus_wait` 或 `continuation_boundary`
+标志，quota 应表露 `state=focus_wait` 而非 `eligible`。这让计算配额与 delivery
+focus 分开：目标可以保持健康可见，而自动 turn 等待新证据、owner 输入、外部 eval
+或干净基线。
+Quota 也可以在 post-handoff delivery 反复错过声明 outcome floor 时使用
+`state=focus_wait`。那时 `blocked_action_scope` 应识别
+`delivery_outcome_floor`，目标 Agent 应带着 outcome 规模证据返回，
+或在不再花一个槽位的情况下报告 blocker。当 floor 声明 `must_advance`，
+quota payload 应用 `normal_delivery_allowed=false`、`recovery_delivery_allowed=true`、
+`should_run=true` 与 `effective_action=outcome_floor_recovery`
+把普通 delivery 与恢复 delivery 分开，使 dashboard 与 heartbeat 消费方不把恢复
+lane 误认为安静跳过。
 
-For `controller_readiness`, the status export keeps only controller-stage
-booleans, missing gate names, operator-facing review text, next handoff
-condition, and compact gate rows with `id`, `ok`, and `review`. For
-`human_reward`, the status export keeps only `recorded_at`, `decision`,
-`reward`, `reason_summary`, and `follow_up`. For `operator_gate`, the status
-export keeps only `recorded_at`, `gate`, `decision`, `operator_question`,
-`reason_summary`, `follow_up`, and `agent_command`. Operator-gate runs may also
-include a compact `operator_gate_resume_contract` with
-`version=operator_gate_resume_contract_v0`, `gate_id`, `created_state_ref`,
-`latest_state_ref`, `operator_decision`, freshness/precondition checks, rebase
-result, resulting action, and validation-after-resume text. This contract is
-the public checkpointed-decision surface. Its rebase is scoped to the approval /
-resume decision point only; it is not a repo/worktree rollback, restore, or
-time-travel mechanism. Richer evidence belongs in private run payloads.
+对 `controller_readiness`，status 导出只保留 controller-stage 布尔、缺失 gate 名、
+operator 面向评审文本、下一 handoff 条件与带 `id`、`ok` 与 `review` 的紧凑 gate
+行。对 `human_reward`，status 导出只保留 `recorded_at`、`decision`、`reward`、
+`reason_summary` 与 `follow_up`。对 `operator_gate`，status 导出只保留
+`recorded_at`、`gate`、`decision`、`operator_question`、`reason_summary`、
+`follow_up` 与 `agent_command`。Operator-gate run 还可以包含紧凑
+`operator_gate_resume_contract`，带 `version=operator_gate_resume_contract_v0`、
+`gate_id`、`created_state_ref`、`latest_state_ref`、`operator_decision`、
+新鲜度/前置条件检查、rebase 结果、结果动作与 resume 后验证文本。
+该契约是公共 checkpointed-decision 面。其 rebase 只作用域到批准/恢复决策点；
+它不是仓库/worktree 回滚、恢复或时移机制。更丰富证据属于私有 run payload。
 
-Operator gate decisions answer "may the project agent cross this gate?" and are
-separate from reward signals. Use them for approvals such as read-only map
-opt-in:
+Operator gate 决策回答"项目 Agent 可以跨这个 gate 吗？"，并与奖励信号分开。
+用于 read-only map opt-in 等批准：
 
 ```bash
 loopx operator-gate \
@@ -2017,19 +1661,16 @@ loopx operator-gate \
   --reason-summary "同意先执行 read-only map opt-in"
 ```
 
-The dry-run form appends nothing. A real append writes an
-`operator_gate_approved`, `operator_gate_rejected`, or
-`operator_gate_deferred` compact run. Approved gates are surfaced as
-Codex-ready with the approved `agent_command`; rejected/deferred gates stay in
-the user/controller lane with the recorded reason. The approved command is not a
-time-travel replay of the old checkpoint: at the approval/resume decision point,
-the target turn must re-read current registry, `ACTIVE_GOAL_STATE`, quota, repo
-dirty/ref snapshot, policy, and run status. That check decides whether the
-approved action is still valid now; it must not carry the whole repository state
-back to the old gate. Quota spend, eval/experiment launches, production writes,
-or external messages belong after the fresh approved resume.
+Dry-run 形式不追加任何内容。真实追加写 `operator_gate_approved`、
+`operator_gate_rejected` 或 `operator_gate_deferred` 紧凑 run。已批准 gate
+作为带已批准 `agent_command` 的 Codex-ready 表露；拒绝/延迟 gate 留在
+用户/controller lane，带记录理由。已批准命令不是旧 checkpoint 的时移重放：
+在批准/恢复决策点，目标 turn 必须重读当前 registry、`ACTIVE_GOAL_STATE`、
+quota、repo dirty/ref 快照、策略与 run status。该检查决定批准动作现在是否仍有效；
+它不得把整个仓库状态带回旧 gate。Quota spend、eval/实验启动、生产写或外部消息
+属于新鲜批准的恢复之后。
 
-Operators can append `human_reward` with the CLI:
+Operator 可以用 CLI 追加 `human_reward`：
 
 ```bash
 loopx reward \
@@ -2039,12 +1680,11 @@ loopx reward \
   --reason-summary "comparable validation improved and the route is worth extending"
 ```
 
-The command appends a compact overlay row to the goal's `index.jsonl`. History
-loading merges later rows with the same run key, so feedback can be added
-without rewriting the original run JSON or Markdown payload.
+命令向目标的 `index.jsonl` 追加紧凑 overlay 行。历史加载合并具有相同 run key 的
+后续行，因此可以添加反馈而不重写原始 run JSON 或 Markdown payload。
 
-When the operator feedback is a route, priority, benchmark-protocol, safety, or
-operating-rule correction, the overlay may also include a compact lesson:
+当 operator 反馈是路线、优先级、benchmark 协议、安全或运维规则纠正时，
+overlay 也可以包含紧凑教训：
 
 ```bash
 loopx reward \
@@ -2058,13 +1698,12 @@ loopx reward \
   --lesson-prefer "validate driver repair first"
 ```
 
-`human_reward.lesson` is a warning/rebase signal, not write-control. Status
-exports the compact lesson, and `quota should-run` may emit
-`reward_lesson_projection_warning` when the current `recommended_action`
-overlaps a recent lesson's `avoid` phrase. Agents should then update the
-affected todo or Next Action before continuing.
+`human_reward.lesson` 是警告/rebase 信号，不是 write-control。Status 导出紧凑
+教训，而 `quota should-run` 在当前 `recommended_action` 与近期教训的 `avoid`
+短语重叠时发出 `reward_lesson_projection_warning`。Agent 随后应在继续前更新
+受影响的 todo 或 Next Action。
 
-Both dry-run and append responses include:
+Dry-run 与追加响应都包含：
 
 ```json
 {
@@ -2078,23 +1717,19 @@ Both dry-run and append responses include:
 }
 ```
 
-Agents should treat `history_command` as the standard visibility path. Active
-state can repeat the summary and next action for context, but it is not the
-durable reward store.
+Agent 应把 `history_command` 当作标准可见性路径。Active state 可以为上下文重复
+摘要与下一动作，但它不是持久奖励存储。
 
-When `loopx status` renders Markdown, a latest run with `human_reward`
-should expand the compact reward fields under `Run History` and repeat the same
-project-agent history lookup. This keeps the dashboard as the operator surface
-while making CLI status sufficient for project agents that only need to notice
-and inspect a recorded reward.
+当 `loopx status` 渲染 Markdown 时，带 `human_reward` 的最新 run 应在
+`Run History` 下展开紧凑奖励字段，并重复同一项目 Agent 历史查找。
+这让 dashboard 保持 operator 面，同时使 CLI status 对只需要注意到并检查已记录
+奖励的项目 Agent 足够。
 
-The Markdown response should also show a short `Write Effect` section near the
-top so the operator can see the selected run, whether the overlay was actually
-appended or only previewed, whether active-state writeback would happen, and
-the one project-agent history lookup.
+Markdown 响应还应在顶部附近显示短 `Write Effect` 区块，使 operator 看到所选 run、
+overlay 是实际追加还是只预览、active-state writeback 是否会发生，以及唯一项目
+Agent 历史查找。
 
-The CLI can also preview or perform the active-state summary write when the
-operator explicitly asks for it:
+当 operator 显式要求时，CLI 也可以预览或执行 active-state 摘要写：
 
 ```bash
 loopx reward \
@@ -2105,7 +1740,7 @@ loopx reward \
   --write-active-state-summary
 ```
 
-That response includes `active_state_update`, for example:
+该响应包含 `active_state_update`，例如：
 
 ```json
 {
@@ -2119,384 +1754,292 @@ That response includes `active_state_update`, for example:
 }
 ```
 
-The loopback dashboard write path is opt-in. By default `serve-status` exposes
-only `POST /reward/dry-run`; when started with `--enable-reward-write-api` on a
-loopback host, it also exposes `POST /reward/append`. The append request must
-reuse the `preview_id` returned by the dry-run response, so a changed payload,
-changed selected run, or changed raw index count forces the operator to preview
-again. The compact browser response does not expose index paths, state file
-paths, or raw private evidence.
+Loopback dashboard 写路径是 opt-in。默认 `serve-status` 只暴露
+`POST /reward/dry-run`；在 loopback host 上以 `--enable-reward-write-api` 启动时，
+它还暴露 `POST /reward/append`。Append 请求必须复用 dry-run 响应返回的
+`preview_id`，因此变化的 payload、变化的所选 run 或变化的原始 index 计数迫使
+operator 再次预览。紧凑浏览器响应不暴露索引路径、状态文件路径或原始私有证据。
 
-## Event Ledger Summary
+## 事件 Ledger 摘要
 
-`event_ledger_summary` is an optional dashboard-friendly projection over the
-compact run index. It makes the durable-execution contract visible without
-requiring a dashboard or heartbeat prompt to read the full run history.
+`event_ledger_summary` 是紧凑 run 索引上的可选 dashboard 友好投影。
+它让持久执行契约可见，而无须 dashboard 或 heartbeat 提示读取完整 run history。
 
-The summary classifies sampled run records into:
+摘要把采样 run 记录分类为：
 
-- `accounting`: quota and spend rows such as `quota_slot_spent`;
-- `decision`: operator gates, resume contracts, deferrals, approvals, and
-  `human_reward` overlays;
-- `evidence`: eval, metric, CI, deploy, artifact, blocker, failure/done, or
-  read-only evidence-poll observations;
-- `state`: state refresh and other compact state-projection rows;
-- `work`: remaining bounded delivery or implementation progress rows.
+- `accounting`：`quota_slot_spent` 等 quota 与 spend 行；
+- `decision`：operator gate、恢复契约、延迟、批准与 `human_reward` overlays；
+- `evidence`：eval、metric、CI、deploy、artifact、blocker、失败/done 或只读
+  证据轮询观察；
+- `state`：状态刷新与其他紧凑状态投影行；
+- `work`：其余有界 delivery 或实现进度行。
 
-The summary reports 24h/7d totals and per-goal counts by event class. It must
-not replace append-only run, reward, quota, validation, artifact, blocker, or
-evidence events.
-Each per-goal row may also include `latest_event_class` and `latest_event_at`,
-which are compact routing hints for the dashboard, not replacements for the
-latest run record.
+摘要报告 24h/7d 总数与每目标按事件类别的计数。它不得替代仅追加 run、奖励、
+quota、验证、产物、blocker 或证据事件。每个每目标行还可以包含
+`latest_event_class` 与 `latest_event_at`，它们是 dashboard 的紧凑路由提示，
+不是最新 run 记录的替代。
 
-## Promotion Readiness Summary
+## 晋升就绪摘要
 
-`promotion_readiness_summary` is an optional release-control projection over the
-runtime release ledger, with legacy Goal run-history events retained as a
-read-compatible fallback only when the runtime ledger has no valid readiness
-event. It finds the latest
-`canary_promotion_readiness_smoke_group` event and reports whether that evidence
-is fresh enough to trust before promoting a live checkout into the default local
-release snapshot. New evidence is runtime-scoped because release readiness is
-shared by every Goal using that local installation; it does not require or
-mutate a project Goal.
+`promotion_readiness_summary` 是运行时发布 ledger 上的可选发布控制投影，
+只在运行时 ledger 没有有效就绪事件时保留遗留 Goal run-history 事件作为读兼容
+fallback。它找到最新 `canary_promotion_readiness_smoke_group` 事件，
+报告在把 live checkout 晋升为默认本地发布快照前该证据是否足够新鲜可信。
+新证据是运行时作用域的，因为发布就绪被使用该本地安装的每个 Goal 共享；
+它不需要也不改动项目 Goal。
 
-The summary reports:
+摘要报告：
 
-- `freshness_status`: `fresh`, `stale`, `missing`, or `unknown`.
-- `freshness_window_hours`: the freshness window, currently 24 hours.
-- `is_fresh` and `requires_readiness_run`: compact guards for installers,
-  dashboards, and heartbeat jobs.
-- `age_seconds` / `age_hours`: evidence age when the event timestamp is
-  parseable.
-- `json_exists` / `markdown_exists`: whether the latest evidence artifacts still
-  exist.
-- `dashboard_readiness`: `passed` or `skipped` for runtime-level evidence, so a
-  deliberate omission is never indistinguishable from a successful check.
+- `freshness_status`：`fresh`、`stale`、`missing` 或 `unknown`。
+- `freshness_window_hours`：新鲜度窗口，当前为 24 小时。
+- `is_fresh` 与 `requires_readiness_run`：给安装器、dashboard 与 heartbeat 作业的
+  紧凑 guard。
+- `age_seconds` / `age_hours`：事件时间戳可解析时的证据年龄。
+- `json_exists` / `markdown_exists`：最新证据产物是否仍存在。
+- `dashboard_readiness`：运行时级证据的 `passed` 或 `skipped`，
+  刻意省略与成功检查永不无区别。
 
-This projection does not promote anything and does not replace the append-only
-release artifact under the LoopX runtime root.
-`scripts/install-local.sh` consumes the same readiness fact only to print a
-non-blocking warning; operators should still run `loopx doctor` or the
-canary-promotion readiness smoke for exact local release evidence.
+该投影不晋升任何东西，也不替代 LoopX 运行时根下的仅追加发布产物。
+`scripts/install-local.sh` 消费同一就绪事实只打印非阻塞警告；operator 仍应运行
+`loopx doctor` 或 canary-promotion readiness smoke 获取确切本地发布证据。
 
-## Decision Freshness Summary
+## 决策新鲜度摘要
 
-`decision_freshness_summary` is an optional checkpointed-decision projection over
-the sampled run history. It exists because a chat thread is not the source of
-truth for long-running control decisions: the durable source is the append-only
-run history and event ledger. A Codex thread may remember an old approval or
-reward, but before spending quota, launching work, or mutating external state it
-must rebase that decision point against the latest registry, active state,
-quota, policy, and run-status facts.
+`decision_freshness_summary` 是采样 run history 上的可选 checkpointed-decision
+投影。它存在是因为聊天线程不是长时控制决策的真相源：持久源是仅追加 run history
+与事件 ledger。Codex 线程可能记住旧批准或奖励，但在花配额、启动工作或改动外部状态
+前，它必须对照最新 registry、active state、quota、策略与 run-status 事实重新基准
+那个决策点。
 
-The summary treats compact `human_reward`, `operator_gate`, operator-gate resume
-contracts, and reward/gate-like classifications as checkpointed decisions. For
-each sampled decision it reports:
+摘要把紧凑 `human_reward`、`operator_gate`、operator-gate 恢复契约与
+reward/gate 类分类当作 checkpointed decisions。对每个采样决策它报告：
 
-- `freshness_state`: `fresh`, `rebase_required`, or
-  `stale_rebase_required`.
-- `stale_by_age`: whether the decision is older than the freshness window.
-- `newer_event_count_7d` and `newer_event_classes_7d`: newer sampled events for
-  the same goal inside the seven-day window.
-- `requires_decision_point_rebase`: whether the worker should refresh current
-  control-plane state before reusing the old decision.
+- `freshness_state`：`fresh`、`rebase_required` 或 `stale_rebase_required`。
+- `stale_by_age`：决策是否早于新鲜度窗口。
+- `newer_event_count_7d` 与 `newer_event_classes_7d`：七天窗口内同目标的
+  更新采样事件。
+- `requires_decision_point_rebase`：worker 在复用旧决策前是否应刷新当前控制面状态。
 
-This is a decision-point rebase helper, not a repository reset or time-travel
-mechanism. Newer events mean the worker should reinterpret the old reward or
-gate in the current state; they do not roll the project back to the old chat
-context. If `status --limit` omits older runs, the summary may miss a stale
-decision, so consumers should treat it as an operational warning surface and
-drill into the project history for exact replay when needed.
-`quota should-run` consumes this projection for the selected goal as
-`decision_freshness_warning` whenever a sampled decision has
-`requires_decision_point_rebase=true`. That warning is deliberately additive:
-it does not flip `should_run`, but it tells the worker that any old reward or
-gate it plans to reuse must be rebound to the current control-plane state first.
-Dashboard project/detail and share surfaces should render non-empty same-goal
-items as a compact Chinese operator warning before approval or relay, explicitly
-clarifying that decision-point rebase means rereading current control-plane state,
-not rolling the repository or project back to the old chat context.
+这是决策点 re-base helper，不是仓库重置或时移机制。更新事件意味着 worker 应在
+当前状态重新解释旧奖励或 gate；它们不把项目滚回旧聊天上下文。如果
+`status --limit` 省略更旧 run，摘要可能漏掉过期决策，因此消费方应把它当作
+操作警告面，并在需要时下钻项目历史做确切重放。
+`quota should-run` 在采样决策具有 `requires_decision_point_rebase=true` 时，
+为所选目标将该投影消费为 `decision_freshness_warning`。该警告刻意附加：
+它不翻转 `should_run`，但告诉 worker 它计划复用的任何旧奖励或 gate 必须先重新
+绑定到当前控制面状态。Dashboard 项目/细节与分享面应在批准或转发前把非空同目标条目
+渲染为紧凑中文 operator 警告，明确说明 decision-point rebase 意为重读当前控制面
+状态，而不是把仓库或项目滚回旧聊天上下文。
 
-`quota should-run` also consumes `promotion_readiness_summary` as
-`promotion_readiness_warning` when the sampled canary promotion-readiness
-evidence is missing, stale, or unknown. The warning is a release-readiness guard
-surface, not a scheduling decision: it does not flip `should_run`, but it lets a
-heartbeat worker report that the release snapshot should not be promoted until
-fresh canary promotion-readiness evidence is written to the shared runtime
-release ledger. This keeps release readiness in queryable control-plane
-state instead of relying on dashboard prose, `doctor` output, or a chat thread.
-The warning message names the writeback command,
-`python3 examples/canary/canary-promotion-readiness-smoke.py`. A run with
-`--no-write-evidence` validates the canary without refreshing this durable
-projection and cannot clear the warning.
+`quota should-run` 还把 `promotion_readiness_summary` 在采样 canary
+promotion-readiness 证据缺失、过期或未知时消费为 `promotion_readiness_warning`。
+该警告是发布就绪 guard 面，不是调度决策：它不翻转 `should_run`，
+但让 heartbeat worker 报告在新鲜 canary promotion-readiness 证据写入共享运行时
+发布 ledger 前不应晋升发布快照。这使发布就绪留在可查询控制面状态，
+而不是依赖 dashboard 散文、`doctor` 输出或聊天线程。警告消息点名写回命令
+`python3 examples/canary/canary-promotion-readiness-smoke.py`。带
+`--no-write-evidence` 的 run 验证 canary 而不刷新该持久投影，无法清除警告。
 
-## Usage Summary
+## Usage 摘要
 
-`usage_summary` is an optional dashboard-friendly proxy derived from the same
-compact run history. When a run carries a typed `run_usage_v0` usage row, the
-summary aggregates input/output token counts and, when measured, cache tokens,
-estimated cost, and wall-time duration for the goal; runs that report nothing
-contribute nothing. It remains a proxy, not billing telemetry: it still excludes
-raw thread logs, local project paths, private artifact contents, or anything that
-would require reading a Codex session transcript. Only aggregate numeric usage is
-captured. There is no second usage ledger — run history plus this typed row is
-the single source of truth.
+`usage_summary` 是同一紧凑 run history 派生的可选 dashboard 友好代理。
+当 run 携带 typed `run_usage_v0` usage 行，摘要聚合目标的输入/输出 token 计数，
+以及测得时的 cache tokens、估计成本与墙钟时长；未报告的 run 不贡献任何内容。
+它仍是代理，不是计费遥测：它仍排除原始线程日志、本地项目路径、私有产物内容，
+或任何需要读取 Codex 会话转录的内容。只捕获聚合数字 usage。没有第二个 usage
+ledger——run history 加该 typed 行是单一真相源。
 
-Hosts and writers ingest usage through
-`loopx.control_plane.quota.usage_collector.ingest_usage_into_run_record`, wired
-into `write_reserved_run_artifacts` and into the `refresh-state` run-write
-path. The first shipped measurement source is the Codex CLI session rollout:
-`loopx refresh-state --usage-codex-session <rollout.jsonl>` reads only the
-newest aggregate `token_count` totals, the model id, the session id, and event
-timestamps — never prompts, completions, or tool output. The session must be
-bound explicitly; there is no automatic session discovery, because guessing a
-concurrent session risks attributing one session's spend to another run. A
-host that measures usage itself can instead pass one finished per-run
-measurement with `--usage-json`. Without either flag, usage stays unknown.
+Host 与 writer 通过
+`loopx.control_plane.quota.usage_collector.ingest_usage_into_run_record` 摄入
+usage，接入 `write_reserved_run_artifacts` 与 `refresh-state` run 写路径。
+第一个随附测量源是 Codex CLI 会话上线：`loopx refresh-state --usage-codex-session
+<rollout.jsonl>` 只读取最新聚合 `token_count` 总计、模型 id、会话 id 与事件时间戳
+——从不是提示、补全或工具输出。会话必须显式绑定；没有自动会话发现，
+因为猜测并发会话冒把一个会话的 spend 归到另一个 run。自行测量 usage 的 host
+可以改传一个完成的每 run 测量，用 `--usage-json`。不带任一标志，usage 保持 unknown。
 
-Cumulative host snapshots are converted to non-negative deltas at that
-producer boundary, and the run index append is the single commit point: each
-session's delta basis is reconstructed from its own already-booked rows
-(telescoping absolute + delta sums per session id), not from a second state
-file, so a crash or retry can never leave the basis behind the ledger.
-Baselines are per session and each observation is bound to
-`usage.source_snapshot_id`, so interleaved sessions never rebase against each
-other: a returning session books only its own increment instead of re-booking
-its full cumulative total. Basis read and row append happen under a per-goal
-usage booking lock, so concurrent refreshes cannot fund two deltas from one
-stale basis. Replaying the same snapshot identity with an identical
-observation is an idempotent zero delta; the same identity carrying any
-different counter or binding label fails closed instead of silently zeroing
-real usage. A new session starts a fresh absolute observation rather than a
-bogus reset error. Missing optional measurements stay omitted (unknown)
-rather than zero-filled. Malformed, negative, non-finite (`NaN`/`Infinity`,
-rejected at the typed builder, at the strict-JSON `--usage-json` boundary,
-and again at durable serialization, which forbids non-standard JSON
-constants), reset, or out-of-order observations fail closed with a typed
-`UsageRowError`; they are never clamped or silently dropped, and a failed
-usage observation blocks the whole refresh append. Rollout parsing tolerates
-only a torn final line (concurrent-write noise); a malformed line with valid
-events after it fails closed instead of booking a stale cumulative snapshot.
-Quota/attempt accounting rows are not reinterpreted as token or dollar usage.
+累计 host 快照在该 producer 边界转换为非负 delta，而 run 索引追加是单一提交点：
+每个会话的 delta 基从其自己已记账行重建（每会话 id 的 telescoping absolute + delta
+和），而不是从第二状态文件，因此崩溃或重试永远不会把基留在 ledger 之后。
+基线按会话，每个观察绑定 `usage.source_snapshot_id`，所以交错会话永不互相重新
+基准：返回的会话只记账自己的增量，而不是重记账其完整累计总计。基读取与行追加在
+每目标 usage 记账锁下进行，因此并发刷新不能从过期基资助两个 delta。
+用相同快照身份重放相同观察是幂等零 delta；同一身份携带任何不同计数器或绑定标签
+则 fail closed，而不是静默清零真实 usage。新会话以新鲜绝对观察开始，
+而不是错误的重置错误。缺失可选测量保持省略（unknown），而不是零填充。
+畸形、负、非有限（`NaN`/`Infinity`，在 typed builder、严格 JSON `--usage-json`
+边界与禁止非标准 JSON 常量的持久序列化处被拒）、重置或乱序观察以 typed
+`UsageRowError` fail closed；它们永不 clamp 或静默丢弃，失败的 usage 观察阻塞
+整个 refresh 追加。Rollout 解析只容忍撕裂的最后一行（并发写噪声）；
+其后带有效事件的畸形行 fail closed，而不是记账过期累计快照。
+Quota/attempt 记账行不被重新解释为 token 或美元 usage。
 
-The typed compact usage row currently reports:
+Typed 紧凑 usage 行当前报告：
 
-- `schema_version`: must be `run_usage_v0`
-- `measurement_kind`: `absolute` or `delta`
-- `source_snapshot_id`: stable host/runtime snapshot identity for idempotent
-  replay
-- `input_tokens` / `output_tokens`: required non-negative whole numbers
-- `cache_tokens` / `cost_usd` / `duration_ms`: optional; omitted when unmeasured
-- `provider` / `model`: public-safe runtime labels
+- `schema_version`：必须是 `run_usage_v0`
+- `measurement_kind`：`absolute` 或 `delta`
+- `source_snapshot_id`：稳定 host/runtime 快照身份，供幂等重放
+- `input_tokens` / `output_tokens`：必需非负整数
+- `cache_tokens` / `cost_usd` / `duration_ms`：可选；未测量时省略
+- `provider` / `model`：public-safe 运行时标签
 
-The summary currently reports:
+摘要当前报告：
 
-- `runs_24h` / `runs_7d`: observed compact run records in the current status
-  sample.
-- `quota_spend_slots_24h` / `quota_spend_slots_7d`: slots from
-  `quota_slot_spent` events in that sample.
-- `automation_run_count_24h` / `automation_run_count_7d`: quota spend events
-  whose compact `quota_event.source` is `heartbeat`, `automation`, or `cron`.
-  If the compact run index does not retain a source, `quota_slot_spent` is
-  counted as an automation/spend proxy rather than dropped.
-- `progress_signal_run_count_24h` / `progress_signal_run_count_7d`: compact
-  run records that look like actual project or adapter progress rather than
-  accounting/bookkeeping. This proxy excludes `quota_slot_spent` and
-  `state_refreshed`, so dashboards can spot automation loops that keep spending
-  or refreshing state without producing a fresh delivery, validation, mapping,
-  blocker, or gate signal.
-- `input_tokens_24h` / `input_tokens_7d`, `output_tokens_24h` /
-  `output_tokens_7d`, `cache_tokens_24h` / `cache_tokens_7d`: aggregate token
-  counts for runs that report a typed `run_usage_v0` block. Metric fields are
-  omitted for a window (or optional metric) with no measured sample; a 24h field
-  can be absent while the corresponding 7d field remains present.
-- `cost_usd_24h` / `cost_usd_7d`: aggregate estimated cost in USD, rounded to
-  six decimals, computed by the reporting runtime when measured.
-- `duration_ms_24h` / `duration_ms_7d`: aggregate wall-time in milliseconds when
-  measured.
-- `project_share_24h`: per-goal share of observed 24h runs, rounded to three
-  decimals.
+- `runs_24h` / `runs_7d`：当前 status 样本中的观察紧凑 run 记录。
+- `quota_spend_slots_24h` / `quota_spend_slots_7d`：该样本中来自
+  `quota_slot_spent` 事件的槽位。
+- `automation_run_count_24h` / `automation_run_count_7d`：紧凑
+  `quota_event.source` 为 `heartbeat`、`automation` 或 `cron` 的 quota spend 事件。
+  如果紧凑 run 索引不保留来源，`quota_slot_spent` 计为自动化/spend 代理，
+  而不是丢弃。
+- `progress_signal_run_count_24h` / `progress_signal_run_count_7d`：看起来像真实项目
+  或 adapter 进度而非记账/簿记的紧凑 run 记录。该代理排除 `quota_slot_spent` 与
+  `state_refreshed`，使 dashboard 发现一直花费或刷新状态而没有新 delivery、验证、
+  映射、blocker 或 gate 信号的自动化 loop。
+- `input_tokens_24h` / `input_tokens_7d`、`output_tokens_24h` /
+  `output_tokens_7d`、`cache_tokens_24h` / `cache_tokens_7d`：报告 typed
+  `run_usage_v0` 块 run 的聚合 token 计数。窗口（或可选指标）无测量样本时省略
+  指标字段；24h 字段可以缺失而对应 7d 字段保持存在。
+- `cost_usd_24h` / `cost_usd_7d`：测得时由报告运行时计算的聚合估计成本（美元），
+  四舍五入到六位小数。
+- `duration_ms_24h` / `duration_ms_7d`：测得时的聚合墙钟毫秒。
+- `project_share_24h`：观察 24h run 的每目标份额，保留三位小数。
 
-Because `status --limit` can bound the recent run sample, consumers should
-display `sample_run_count` and treat these values as operational signals for
-finding busy project lines, not as precise historical accounting.
-The markdown status renderer includes the same totals plus the top sampled
-goals so heartbeat operators can notice low-progress loops without opening the
-full JSON payload.
+因为 `status --limit` 可以限制近期 run 样本，消费方应显示 `sample_run_count`，
+并把这些值当作发现忙碌项目线的操作信号，而不是精确历史记账。
+Markdown status 渲染器包含相同总计加顶部采样目标，使 heartbeat operator
+无需打开完整 JSON payload 即可注意到低进度 loop。
 
-## Display Model
+## 显示模型
 
-A first useful UI can be built from the export alone:
+一个有用的首个 UI 可以只从该导出构建：
 
-- Header: operator actions and selected-action sharing should be above
-  auxiliary source controls, metrics, and raw drill-down, because the
-  dashboard is a user decision surface rather than an agent CLI mirror.
-- Metrics: `ok`, `goal_count`, `run_count`, and contract summary.
-- Canonical home: the default dashboard route should render a Chinese-first
-  control-plane home over the shared global status source when available. It
-  should emphasize project cards, each project's top four todos with per-item
-  status, true user todos, agent-priority todos, quota/guard state, and latest
-  evidence before raw drill-down. This is a browser presentation over the
-  status export, not a new status source.
-- Detailed ops view: `?view=ops` may render the older debugging workbench with
-  raw queue filters, selected-goal details, reward drafts, and run-history
-  panels. The legacy `view=share` value may remain as a compatibility alias
-  for the canonical home, but non-ops views should not be treated as separate
-  durable modes.
-- Usage snapshot: optional `usage_summary` proxy metrics for observed 24h/7d
-  runs, quota spend slots, automation run count, progress-signal run count, and
-  busiest goals by current sample share.
-- Promotion readiness ops panel: optional `promotion_readiness_summary` status
-  showing whether the latest canary promotion-readiness evidence is fresh,
-  stale, missing, or unknown before a release snapshot is promoted.
-- Promotion gate ops panel: optional `promotion_gate` status showing the compact
-  `can_promote` / `should_warn` release-promotion decision derived from that
-  same readiness event; dashboard code should display it, not recompute it.
-- Decision freshness ops panel: optional `decision_freshness_summary` metrics
-  for global decision count, stale count, rebase-required count, fresh count,
-  and top affected goals. The panel is a routing warning for old reward/gate
-  reuse; exact replay and event ordering remain in append-only run history.
-- Compute quota summary: goals eligible for the next agent turn, focus-waiting
-  goals, throttled goals, waiting goals, paused goals, and operator-gated goals
-  should be visible on the first screen once quota fields are present.
-  Automation cadence should be treated as execution detail, not the only
-  priority signal.
-- User action summary: first-screen cards should derive from the same selected
-  operator decision and reward-default logic, grouping reward gates, controller
-  opt-ins, evidence watches, Codex handoffs, and blocking health items before
-  raw goal detail. Cards may show the matching safe CLI path label or command
-  plus the reward-draft decision/reward hint, but those are affordances over
-  the agent-facing status export, not browser-side writes. The dashboard can
-  derive local action-kind filters from these cards, such as reward,
-  controller, Codex, evidence, and health, without adding new status fields.
-  Persisting that focus in a URL search parameter is dashboard UI state; it
-  does not change the status contract or durable goal truth.
-- Selected goal detail: the dashboard may persist the selected `goal_id` in
-  URL search state so a review link can reopen the same run-history detail.
-  This selected-goal state is not part of the status export and must not be
-  treated as an approval, reward, or controller signal.
-- Review link: the dashboard may copy a browser URL that includes local
-  `actionKind`, selected `goalId`, source `statusUrl`, `lane`, `severity`, and
-  optional `view=ops` search state. That link is a user review affordance over
-  this export; it must not add fields to the status contract or mutate goal
-  runtime state.
-- Review Packet: the dashboard should expose one canonical copy affordance for
-  the selected action card rather than separate link, reply, handoff, and agent
-  prompt buttons. The packet may include the review link, Chinese
-  agree/disagree/reason/next-step prompt, project-agent instructions, safe local
-  path, reward/default hint, and local dry-run preview. For reward actions, the
-  project-agent section should point to the run history lookup, not ask the
-  target project agent to append or dry-run user reward on the user's behalf.
-  For controller opt-in actions, the packet must keep this order: human
-  question, user/controller-owned local gate dry-run preview, then
-  project-agent dry-run instruction. The dashboard/operator view owns the human
-  decision; the project-agent command is only the after-approval dry-run
-  execution path. For an approved Codex action carrying `agent_command`, the
-  copy affordance should switch to handoff-only content: no human gate wrapper,
-  only the target goal guard, forwarding condition, execution boundary, stop
-  condition, and command.
-  It is still browser UI state and must not be parsed as durable reward,
-  approval, controller opt-in, or write-control.
-- Goal directory: all `run_history.goals`, grouped mentally by `domain` and
-  enriched with matching attention items and lifecycle phase badges when a
-  goal needs action.
-- User review map: counts for connected, mapped, refreshed,
-  adapter-inspected, reward-judged, and controller-ready goals, written as
-  operator-facing states rather than raw adapter statuses. Goals with
-  controller evidence but missing gates should be shown as controller-gated,
-  not controller-ready.
-- Primary queue: `attention_queue.items`.
-- First-screen action cards: when a queue item carries `operator_question`, show
-  that question as the primary operator prompt before `recommended_action`.
-  `recommended_action` remains context; `agent_command` is displayed as the safe
-  target-agent command only after the operator question has been answered.
-  When a Codex-owned queue item has `quota.state=focus_wait`, show it as a
-  focus-wait owner blocker even if `waiting_on=codex`: the card should say why
-  it is quiet, who or what can unblock it, which evidence is needed, and that
-  the copy packet is only for status/history inspection.
-- Queue gate hints: show `controller_stage`, `missing_gates`, and
-  `next_handoff_condition` directly in queue rows so an operator can see why a
-  watched goal is not ready yet without opening the full run payload.
-- User lane: items with `waiting_on=user_or_controller` or `controller`.
-- Codex lane: items with `waiting_on=codex`.
-- Watch lane: items with `waiting_on=external_evidence` or
-  `waiting_on=monitor_signal`.
-- Dreaming lane/badge: items with
-  `project_asset.dreaming_lane_badge.schema_version=dreaming_lane_badge_v0`.
-  These items are advisory review surfaces; delivery lanes continue to follow
-  quota and current owner/gate routing.
-- Health panel: contract `errors`, `warnings`, and `checks`.
-- Run detail panel: selected goal from the attention queue, compact
-  classifications, authority coverage, controller readiness, health checks,
-  reward signals, and artifact availability.
-- Reward CLI draft: selected goal plus latest compact run timestamp should be
-  enough to generate a local `loopx reward --dry-run` command. Draft
-  fields should default from the selected operator decision and missing gates,
-  while remaining editable before validation. The dashboard should append
-  feedback only when the live loopback status server explicitly exposes the
-  reward write API.
-- Reward dry-run check: when the dashboard is loaded from a loopback status
-  server, it may validate the same draft through `POST /reward/dry-run` and
-  display the compact result, including the Chinese active-state summary and
-  project-agent history command. The response includes `preview_id`.
-- Reward append: when the same loopback server is started with
-  `--enable-reward-write-api`, the dashboard may send that exact preview to
-  `POST /reward/append`. A successful append writes one run-bound
-  `human_reward` overlay, refreshes status, and makes the next project-agent
-  automation able to see the feedback through `loopx status` or
-  `loopx history`.
-- Reward source of truth: durable user reward belongs in a run-bound
-  `human_reward` overlay appended through `loopx reward`. Active goal
-  state can summarize that such a reward was recorded, and the Review Packet can
-  be forwarded to another project agent for immediate coordination through the
-  returned history lookup, but neither replaces the compact run overlay as the
-  multi-agent reward signal.
-- Operator decision: selected goal detail should translate `waiting_on`,
-  `severity`, `lifecycle_phase`, `missing_gates`, and `recommended_action`
-  into a human stance such as review/authorize, let Codex continue, wait for
-  evidence, or fix health first. Raw classifications remain drill-down
-  details.
-- Safe CLI path: selected goal detail should also show the next safe local
-  command class for that stance: status/history inspection, read-only-map or
-  refresh-state dry-run, or reward dry-run through the Reward CLI Draft. This
-  is a dashboard-to-agent bridge; it must not imply browser-side approval,
-  reward append, or write-controller execution.
+- 头部：operator 动作与所选动作分享应在辅助源控制、指标与原始下钻之上，
+  因为 dashboard 是用户决策面，而不是 Agent CLI 镜像。
+- 指标：`ok`、`goal_count`、`run_count` 与契约摘要。
+- Canonical 首页：默认 dashboard 路由应在可用时渲染共享全局 status 源上的
+  中文优先控制面首页。它应强调项目卡片、每个项目顶部的四个 todos 及逐条目状态、
+  真实用户 todos、Agent 优先级 todos、quota/guard 状态与最新证据，然后才是原始
+  下钻。这是 status 导出上的浏览器呈现，不是新 status 源。
+- 详细 ops 视图：`?view=ops` 可以渲染更旧调试工作台，带原始队列过滤器、
+  所选目标细节、奖励草稿与 run-history 面板。遗留 `view=share` 值可以保持
+  canonical 首页的兼容别名，但非 ops 视图不应被当作独立持久模式。
+- Usage 快照：观察 24h/7d run、quota spend 槽位、自动化 run 计数、
+  进度信号 run 计数与按当前样本份额最忙目标的可选 `usage_summary` 代理指标。
+- 晋升就绪 ops 面板：可选 `promotion_readiness_summary` 状态，在发布快照晋升前
+  显示最新 canary promotion-readiness 证据是 fresh、stale、missing 还是 unknown。
+- 晋升 gate ops 面板：可选 `promotion_gate` 状态，显示从同一就绪事件派生的紧凑
+  `can_promote` / `should_warn` 发布晋升决策；dashboard 代码应显示它，
+  而不是重算它。
+- 决策新鲜度 ops 面板：可选 `decision_freshness_summary` 指标，用于全局决策数、
+  过期数、需重新基准数、新鲜数与顶部受影响目标。该面板是旧奖励/gate 复用的路由
+  警告；确切重放与事件顺序仍在仅追加 run history。
+- 计算配额摘要：合格接受下一个 Agent turn 的目标、focus-waiting、throttled、
+  waiting、paused 与 operator-gated 目标在 quota 字段存在时应在首屏可见。
+  自动化 cadence 应被视为执行细节，而不是唯一优先级信号。
+- 用户动作摘要：首屏卡片应从同一所选 operator 决策与奖励默认逻辑派生，
+  在原始 goal 细节前分组奖励 gate、controller opt-in、证据关注、Codex handoff
+  与阻塞健康条目。卡片可以显示匹配的安全 CLI 路径标签或命令加奖励草稿
+  decision/reward 提示，但那些是 Agent 面向 status 导出上的便利能力，
+  不是浏览器侧写。Dashboard 可以从这些卡片派生本地 action-kind 过滤器，
+  如 reward、controller、Codex、evidence 与 health，而无需新 status 字段。
+  把该焦点持久化到 URL 搜索参数是 dashboard UI 状态；它不改变 status 契约或
+  持久目标真相。
+- 所选目标细节：dashboard 可以把所选 `goal_id` 持久化到 URL 搜索状态，
+  使评审链接可以重开同一 run-history 细节。该所选目标状态不是 status 导出的一部分，
+  不得当作批准、奖励或 controller 信号。
+- 评审链接：dashboard 可以复制包含本地 `actionKind`、所选 `goalId`、来源
+  `statusUrl`、`lane`、`severity` 与可选 `view=ops` 搜索状态的浏览器 URL。
+  该链接是该导出上的用户评审便利能力；它不得向 status 契约加字段，
+  也不得改动目标运行时状态。
+- Review Packet：dashboard 应为所选动作卡片暴露单一 canonical 复制便利能力，
+  而不是单独的链接、回复、handoff 与 Agent 提示按钮。packet 可以包含评审链接、
+  中文同意/不同意/理由/下一步提示、项目 Agent 指令、安全本地路径、奖励/默认提示与
+  本地 dry-run 预览。对奖励动作，项目 Agent 区块应指向 run history 查找，
+  而不是要求目标项目 Agent 代用户追加或 dry-run 用户奖励。对 controller opt-in
+  动作，packet 必须保持该顺序：人类问题、用户/controller 拥有的本地 gate dry-run
+  预览，然后项目 Agent dry-run 指令。dashboard/operator 视图拥有人类决策；
+  项目 Agent 命令只是批准后 dry-run 执行路径。对携带 `agent_command` 的已批准
+  Codex 动作，复制便利能力应切换到 handoff-only 内容：无人类 gate 包装，
+  只有目标 goal guard、转发条件、执行边界、停止条件与命令。
+  它仍是浏览器 UI 状态，不得解析为持久奖励、批准、controller opt-in 或
+  write-control。
+- Goal 目录：所有 `run_history.goals`，按 `domain` 心智分组，并在目标需要动作时
+  用匹配 attention 条目与生命周期阶段徽章丰富。
+- 用户评审映射：connected、mapped、refreshed、adapter-inspected、reward-judged
+  与 controller-ready 目标计数，写为 operator 面向状态而非原始 adapter 状态。
+  有 controller 证据但缺 gate 的目标应显示为 controller-gated，不是 controller-ready。
+- 主队列：`attention_queue.items`。
+- 首屏动作卡片：当队列条目携带 `operator_question`，把它显示为主要 operator 提示，
+  优先于 `recommended_action`。`recommended_action` 保持上下文；
+  `agent_command` 只在 operator 问题被回答后显示为安全目标 Agent 命令。
+  当 Codex 拥有的队列条目有 `quota.state=focus_wait`，即使 `waiting_on=codex`
+  也把它显示为 focus-wait owner blocker：卡片应说明它为何安静、谁或什么可以解锁它、
+  需要哪些证据、复制 packet 仅用于 status/history 检查。
+- 队列 gate 提示：直接在队列行显示 `controller_stage`、`missing_gates` 与
+  `next_handoff_condition`，使 operator 无需打开完整 run payload 即可看到
+  被关注目标为何未就绪。
+- 用户 lane：`waiting_on=user_or_controller` 或 `controller` 条目。
+- Codex lane：`waiting_on=codex` 条目。
+- Watch lane：`waiting_on=external_evidence` 或 `waiting_on=monitor_signal` 条目。
+- Dreaming lane/badge：带 `project_asset.dreaming_lane_badge.schema_version=
+  dreaming_lane_badge_v0` 的条目。这些条目是建议性评审面；delivery lane 继续遵循
+  quota 与当前 owner/gate 路由。
+- 健康面板：契约 `errors`、`warnings` 与 `checks`。
+- Run 细节面板：来自 attention queue 的所选目标、紧凑分类、权威覆盖、
+  controller 就绪、健康检查、奖励信号与产物可用性。
+- 奖励 CLI 草稿：所选目标加最新紧凑 run 时间戳应足以生成本地
+  `loopx reward --dry-run` 命令。草稿字段应从所选 operator 决策与缺失 gate 默认，
+  同时在验证前保持可编辑。Dashboard 只在实时 loopback status server 显式暴露
+  奖励写 API 时追加反馈。
+- 奖励 dry-run 检查：当 dashboard 从 loopback status server 加载时，
+  它可以通过 `POST /reward/dry-run` 验证同一草稿并显示紧凑结果，
+  包括中文 active-state 摘要与项目 Agent history 命令。响应包含 `preview_id`。
+- 奖励追加：当同一 loopback server 以 `--enable-reward-write-api` 启动时，
+  dashboard 可以把确切预览发送到 `POST /reward/append`。成功追加写一个 run 绑定
+  `human_reward` overlay、刷新 status，并使下一个项目 Agent 自动化能通过
+  `loopx status` 或 `loopx history` 看到反馈。
+- 奖励真相源：持久用户奖励属于通过 `loopx reward` 追加的 run 绑定
+  `human_reward` overlay。Active goal state 可以摘要记录了这样的奖励，
+  Review Packet 可以通过返回的历史查找转发给另一个项目 Agent 做即时协调，
+  但二者都不替代多 Agent 奖励信号的紧凑 run overlay。
+- Operator 决策：所选目标细节应把 `waiting_on`、`severity`、`lifecycle_phase`、
+  `missing_gates` 与 `recommended_action` 翻译为人类立场，如评审/授权、
+  让 Codex 继续、等待证据或先修健康。原始分类保持下钻细节。
+- 安全 CLI 路径：所选目标细节还应显示该立场的下一个安全本地命令类别：
+  status/history 检查、read-only-map 或 refresh-state dry-run，
+  或通过 Reward CLI Draft 的 reward dry-run。这是 dashboard 到 Agent 的桥；
+  它不得暗示浏览器侧批准、奖励追加或写 controller 执行。
 
-Browser-side reward append is outside the default status server behavior. If a
-local server enables it, it must follow the explicit opt-in boundary in
-[dashboard-reward-write-boundary.md](reference/contracts/dashboard-reward-write-boundary.md).
+浏览器侧奖励追加在默认 status server 行为之外。如果本地 server 启用它，
+必须遵循 [dashboard-reward-write-boundary.md](reference/contracts/dashboard-reward-write-boundary.md)
+中的显式 opt-in 边界。
 
-Suggested badge mapping:
+建议徽章映射：
 
-- `severity=high`: blocking.
-- `severity=action`: needs a decision or bounded work segment.
-- `severity=watch`: no immediate action; wait for evidence or a material
-  monitor transition.
+- `severity=high`：阻塞。
+- `severity=action`：需要决策或有界工作片段。
+- `severity=watch`：无立即动作；等待证据或实质 monitor 转移。
 
-## Static Dashboard Demo
+## 静态 Dashboard 演示
 
-The repository includes a no-dependency renderer that turns any status JSON
-export into a static HTML dashboard:
+仓库包含一个零依赖渲染器，把任何 status JSON 导出变成静态 HTML dashboard：
 
 ```bash
 loopx --format json status > /tmp/goal-status.json
 python3 examples/render-status-dashboard.py /tmp/goal-status.json /tmp/goal-status.html
 ```
 
-The generated page groups queue items into user/controller, Codex-ready, and
-external-evidence lanes. It is a small demo for local inspection and UI
-prototyping; it is not the product dashboard.
+生成页把队列条目分组进用户/controller、Codex-ready 与外部证据 lane。
+它是本地检查与 UI 原型的小演示；不是产品 dashboard。
 
-The official dashboard direction is a React/Vite control-plane app that can
-render this same JSON contract with typed routes, filters, tables, charts, and
-drill-down pages. See
-[dashboard-frontend-selection.md](product/roadmaps/dashboard-frontend-selection.md).
+官方 dashboard 方向是 React/Vite 控制面 App，可以用 typed 路由、过滤器、表格、
+图表与下钻页渲染同一 JSON 契约。见
+[dashboard-frontend-selection.md](product/roadmaps/dashboard-frontend-selection.md)。
 
-## Adapter Responsibilities
+## Adapter 责任
 
-Adapters should write compact run index records that include:
+Adapter 应写包含以下内容的紧凑 run 索引记录：
 
 - `generated_at`
 - `goal_id`
@@ -2505,49 +2048,41 @@ Adapters should write compact run index records that include:
 - `json_path`
 - `markdown_path`
 
-Project adapters may add compact public-safe fields such as `health_check`,
-`active_task_count`, `active_priorities`, or a compact `human_reward` summary.
-Raw logs, prompts, private metrics, workspace paths, and internal document
-links belong in private run payloads, not in compact index records.
+项目 adapter 可以添加 `health_check`、`active_task_count`、`active_priorities`
+或紧凑 `human_reward` 摘要等紧凑 public-safe 字段。原始日志、提示、私有指标、
+工作区路径与内部文档链接属于私有 run payload，不属紧凑索引记录。
 
-Benchmark status snapshots may include
-`runs[].observable_handle_policy` with
-`schema_version=benchmark_observable_handle_policy_v0`. This is an additive,
-public-safe lifecycle projection for one-shot benchmark schedulers. Consumers
-may use it to decide whether a run should continue polling, unload/disable a
-local `launchd` label, or write a precise missing-handle blocker before any
-rerun. It must be derived from compact artifacts, pid liveness, and run labels
-only; it must not expose raw logs, task text, trajectories, scheduler payloads,
-or local paths. Snapshots may also include
-`runs[].process_polling.schema_version=benchmark_process_polling_v0` to make
-the polling boundary explicit. That object records that polling used the
-private pid file and compact artifacts only; it must keep
-`process_table_read=false`, `cmdline_read=false`, `argv_read=false`, and
-`raw_process_payload_recorded=false` so benchmark task prompts embedded in
-worker argv cannot leak into status, rollout logs, chat summaries, or
-control-plane projections.
+Benchmark status 快照可以包含 `runs[].observable_handle_policy`，
+`schema_version=benchmark_observable_handle_policy_v0`。这是一次性 benchmark
+scheduler 的附加 public-safe 生命周期投影。消费方可以用它决定 run 应继续轮询、
+卸载/禁用本地 `launchd` 标签，或在任何重跑前写精确缺失 handle blocker。
+它必须只从紧凑产物、pid 存活性与 run 标签派生；不得暴露原始日志、任务文本、
+轨迹、scheduler payload 或本地路径。快照还可以包含
+`runs[].process_polling.schema_version=benchmark_process_polling_v0` 使轮询边界
+显式。该对象记录轮询只使用私有 pid 文件与紧凑产物；它必须保持
+`process_table_read=false`、`cmdline_read=false`、`argv_read=false` 与
+`raw_process_payload_recorded=false`，因此嵌入 worker argv 的 benchmark 任务提示
+不能泄漏进 status、上线日志、聊天摘要或控制面投影。
 
-## Boundary
+## 边界
 
-The JSON export is safe to feed to a local dashboard only if the registry ids,
-adapter classifications, and recommended actions are sanitized. Before sharing
-an export publicly, verify that it contains no:
+只有 registry id、adapter 分类与推荐动作脱敏后，JSON 导出才安全喂给本地
+dashboard。公开分享导出前，验证它不含：
 
-- local absolute user paths,
-- private document links,
-- credentials,
-- raw production logs,
-- internal task ids,
-- private metric values.
+- 本地绝对用户路径，
+- 私有文档链接，
+- 凭据，
+- 原始生产日志，
+- 内部任务 id，
+- 私有指标值。
 
-The public examples under `examples/` are sanitized and can be used for demos.
+`examples/` 下的公共示例已脱敏，可用于演示。
 
-## Compatibility Rules
+## 兼容规则
 
-- Additive fields are allowed.
-- Existing field meanings should remain stable across minor versions.
-- Consumers should ignore unknown fields.
-- Consumers should handle missing `attention_queue.items` as an empty queue.
-- Consumers should handle missing `run_history` as unavailable.
-- Consumers should treat `contract.ok=false` as a stronger signal than an empty
-  attention queue.
+- 允许附加字段。
+- 现有字段含义应在小版本间保持稳定。
+- 消费方应忽略未知字段。
+- 消费方应把缺失的 `attention_queue.items` 当作空队列处理。
+- 消费方应把缺失的 `run_history` 当作不可用处理。
+- 消费方应把 `contract.ok=false` 当作比空 attention queue 更强的信号。

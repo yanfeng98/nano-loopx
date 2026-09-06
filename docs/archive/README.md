@@ -1,19 +1,19 @@
-# Archive
+# 归档
 
-This folder keeps historical records that are useful for maintainers but should
-not compete with current product documentation.
+> [English](README.md)
 
-Use this folder for:
+本目录保存对维护者有用、但不应与当前产品文档竞争的历史记录。
 
-- dated readiness manifests;
-- incident reports;
-- superseded decision records;
-- historical release notes that no longer define current behavior.
+本目录用于:
 
-Current archive groups:
+- 带日期的发布就绪清单;
+- 事件(incident)记录;
+- 已被取代的决策记录;
+- 不再定义当前行为的旧版发布说明。
 
-- [Release readiness](release-readiness/)
-- [Incidents](incidents/)
+当前归档分组:
 
-Do not put raw private logs, trajectories, credentials, internal-only links, or
-unredacted benchmark artifacts here.
+- [发布就绪](release-readiness/)
+- [事件记录](incidents/)
+
+不要在这里存放原始私有日志、轨迹、凭据、内部链接或未经脱敏的 benchmark 产物。

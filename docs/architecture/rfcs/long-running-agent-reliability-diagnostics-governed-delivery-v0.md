@@ -1,646 +1,543 @@
-# RFC: Long-Running Agent Reliability Diagnostics and Governed Delivery v0
+# RFC：长程 Agent 可靠性诊断与治理交付 v0
 
-| Field | Value |
+| 字段 | 值 |
 |---|---|
-| Status | Draft, product direction and delivery contract |
-| Date | 2026-08-16 |
-| Authors | LoopX maintainers |
-| Scope | Observer-first reliability diagnostics, bounded governed delivery, benchmark qualification, and repeatable enterprise deployment |
+| 状态 | Draft，产品方向与交付合同 |
+| 日期 | 2026-08-16 |
+| 作者 | LoopX maintainers |
+| 范围 | Observer-first 可靠性诊断、有界治理交付、benchmark qualification 与可重复企业部署 |
 | Source baseline | LoopX `66492032e` |
 
-> Language note: the
-> [Chinese version](./long-running-agent-reliability-diagnostics-governed-delivery-v0.zh-CN.md)
-> and this English version are semantic mirrors. A material difference between
-> them is a defect.
+> 语言说明：本中文版与
+> [English version](./long-running-agent-reliability-diagnostics-governed-delivery-v0.md)
+> 互为语义镜像；两者出现实质差异即为缺陷。
 
-## 1. Decision Summary
+## 1. 决策摘要
 
-LoopX should establish a narrow product and commercial entry point for teams
-that already run agent workflows for hours or days but cannot yet justify
-handing those workflows to a full semantic control plane.
+LoopX 应为这样一类团队建立一个收窄的产品与商业入口：它们已经让 Agent workflow
+持续运行数小时或数天，但还无法证明应该把 workflow 交给完整的语义控制面。
 
-The entry point is **Long-Running Agent Reliability Diagnostics and Governed
-Delivery**. It begins with a shadow observer that can explain stages, stalls,
-repetition, recovery, evidence completeness, human attention, and final
-outcomes without changing the agent's prompts, tools, scheduler, continuation,
-or authority. A customer can obtain useful diagnostics before asking its
-agents to follow the LoopX skill or state lifecycle.
+这个入口是 **长程 Agent 可靠性诊断与治理交付**。第一步是 shadow observer：它可以解释
+阶段、stall、重复、恢复、证据完整度、人工注意力和最终结果，但不改变 Agent 的 prompt、
+工具、scheduler、continuation 或 authority。客户不必先要求 Agent 遵循 LoopX skill 或
+state lifecycle，也可以先获得有用诊断。
 
-Control expands only after evidence and explicit authorization:
+控制权只能在有证据和显式授权后逐级扩大：
 
-1. reproduce the native workflow and record a matched baseline;
-2. attach a non-influencing shadow observer and prove treatment integrity;
-3. surface recommendations to an operator without granting execution power;
-4. govern only pre-agreed checkpoints, gates, and recovery seams;
-5. adopt the complete Semantic Control Plane only where the additional
-   lifecycle contract has demonstrated value.
+1. 复现原生 workflow，记录 matched baseline；
+2. 接入不影响执行的 shadow observer，并证明 treatment integrity；
+3. 向 operator 呈现建议，但不授予执行权；
+4. 只治理预先约定的 checkpoint、gate 与 recovery seam；
+5. 只有额外 lifecycle contract 已证明价值的部分，才采用完整 Semantic Control Plane。
 
-This is not a claim that LoopX already has paid product-market fit. It is a
-product direction, research contract, and delivery discipline for discovering
-repeatable value without turning every customer into a custom kernel fork.
+本文不宣称 LoopX 已经拥有付费 PMF。它是一份产品方向、研究合同和交付纪律，用于发现可重复
+价值，同时避免把每个客户都变成一个定制 kernel fork。
 
-## 2. Concrete Example
+## 2. 具体示例
 
-A software team has a repository agent that runs for six hours. The final patch
-sometimes passes, but operators cannot see which stage it is in, whether it has
-repeated the same probe, what evidence will survive a crash, or whether another
-hour of execution is likely to help. The team currently watches logs and sends
-manual nudges. It does not want a new planner to change the agent's behavior
-during the first evaluation.
+某软件团队有一个运行六小时的仓库 Agent。最终 patch 有时能通过，但 operator 看不到它正处于
+哪个阶段、是否重复了同一 probe、崩溃后哪些证据还能保留，以及再运行一小时是否仍可能有收益。
+团队目前靠盯日志和手动催促维持运行；第一次评估时，它并不希望新 planner 改变 Agent 行为。
 
-The first LoopX engagement does not replace that agent loop. It:
+第一次 LoopX engagement 不替换该 Agent loop，而是：
 
-- pins the native harness, model, task, permissions, and budget;
-- reads supported harness and runner events through a read-only adapter;
-- normalizes stages, progress observations, recovery events, evidence
-  references, costs, and operator interventions into a separate diagnostic
-  ledger;
-- produces a stage timeline, stall and repetition findings, recovery rehearsal,
-  evidence-completeness report, and final reliability receipt;
-- compares the observer run with the matched native baseline;
-- proves that the observer did not inject context, schedule work, retry, stop,
-  resume, gate, or otherwise change execution.
+- 固定原生 harness、model、task、权限与预算；
+- 通过只读 adapter 读取受支持的 harness 与 runner event；
+- 将阶段、progress observation、recovery event、evidence ref、成本和 operator intervention
+  归一化到独立 diagnostic ledger；
+- 产出阶段 timeline、stall 与重复结论、恢复演练、evidence completeness report 和最终
+  reliability receipt；
+- 将 observer run 与匹配的原生 baseline 比较；
+- 证明 observer 没有注入 context、调度工作、retry、stop、resume、gate 或以其他方式改变执行。
 
-If the result shows a costly repeated failure, a later governed arm may let
-LoopX request a human decision at one checkpoint or restore one failed run from
-an accepted receipt. That authority is a new, explicit treatment. It is not a
-silent upgrade of observation.
+如果结果显示某个重复故障代价很高，后续 governed arm 可以允许 LoopX 在一个 checkpoint 请求
+human decision，或根据 accepted receipt 恢复一次失败运行。该 authority 是新的、显式的
+treatment，而不是 observation 的静默升级。
 
-The sellable result is not “LoopX was installed.” It is a bounded answer to
-three questions:
+可售卖的结果不是“安装了 LoopX”，而是对三个问题给出有边界的回答：
 
-1. Where and why does the long-running workflow lose reliability?
-2. Can the team observe and recover it with acceptable overhead and less human
-   attention?
-3. Which, if any, control seams deserve authority in a governed deployment?
+1. 长程 workflow 在哪里、为什么失去可靠性？
+2. 团队能否以可接受 overhead 和更少人工注意力观察、恢复它？
+3. 哪些 control seam——如果存在——值得进入 governed deployment？
 
-## 3. Reliability Integration Levels
+## 3. 可靠性集成等级
 
-The product must distinguish observation, advice, and authority. A dashboard
-or process called a “supervisor” does not gain control merely because it can
-see the worker.
+产品必须区分 observation、advice 与 authority。一个 dashboard 或名为“supervisor”的进程，
+不会因为看得到 worker 就获得控制权。
 
-| Level | Contract | May write | May influence agent execution | Highest direct claim |
+| 等级 | 合同 | 可以写什么 | 能否影响 Agent 执行 | 最高直接 claim |
 |---|---|---|---|---|
-| L0 — Native baseline | Existing harness with no LoopX treatment | Native artifacts only | Native behavior only | Benchmark or workflow baseline |
-| L1 — Shadow Observer | One-way event intake and independent diagnostic projection | LoopX-owned diagnostic observations, evidence pointers, and receipts | **No** prompt injection, scheduling, retry, stop, resume, gate, tool, or worker-state mutation | Observability, failure attribution, evidence completeness, and measured overhead |
-| L2 — Advisory Supervisor | L1 plus typed recommendations shown to an operator | Recommendations and operator disposition receipts | No direct influence; a human may separately apply or decline a recommendation | Recommendation quality and human-attention value |
-| L3 — Governed Seams | Explicit authority at named checkpoints, gates, recovery, or handoff boundaries | Accepted commands and receipts inside the granted scope | Yes, but only at predeclared seams and within the customer's authority envelope | Causal effect of the governed treatment under matched conditions |
-| L4 — Semantic Control Plane | Goal, Todo, evidence, acceptance, quota, recovery, handoff, and replan lifecycle | Canonical LoopX control state | Yes, within the full selected profile and retained human authority | Repeatable governed long-horizon operation |
+| L0 — Native baseline | 现有 harness，无 LoopX treatment | 仅原生产物 | 仅原生行为 | Benchmark 或 workflow baseline |
+| L1 — Shadow Observer | 单向 event intake 与独立 diagnostic projection | LoopX 自有 diagnostic observation、evidence pointer 与 receipt | **不能**注入 prompt，也不能 scheduling、retry、stop、resume、gate、调用工具或修改 worker state | Observability、failure attribution、evidence completeness 与实测 overhead |
+| L2 — Advisory Supervisor | L1 加上展示给 operator 的 typed recommendation | Recommendation 与 operator disposition receipt | 不能直接影响；human 可另行采纳或拒绝建议 | Recommendation quality 与 human-attention value |
+| L3 — Governed Seams | 在具名 checkpoint、gate、recovery 或 handoff boundary 上拥有显式 authority | 授权范围内的 accepted command 与 receipt | 可以，但只限预声明 seam 和客户 authority envelope | Matched 条件下 governed treatment 的因果效果 |
+| L4 — Semantic Control Plane | Goal、Todo、evidence、acceptance、quota、recovery、handoff 与 replan lifecycle | Canonical LoopX control state | 可以，但受完整 selected profile 与保留的人类 authority 约束 | 可重复的 governed long-horizon operation |
 
 ```mermaid
 flowchart LR
-  H["Native harness and agent loop"] --> E["Supported runner and harness events"]
+  H["Native harness 与 Agent loop"] --> E["Supported runner 与 harness event"]
   E --> O["L1 shadow observer"]
-  O --> D["Independent diagnostic ledger"]
-  D --> P["Operator projection and reliability receipt"]
-  O -. "no command, prompt, scheduler, or worker-state path" .-> H
-  P --> A["Optional L2 advice"]
-  A --> G["Explicitly authorized L3 seam"]
-  G -->|"typed command and receipt"| H
+  O --> D["独立 diagnostic ledger"]
+  D --> P["Operator projection 与 reliability receipt"]
+  O -. "不存在 command、prompt、scheduler 或 worker-state path" .-> H
+  P --> A["可选 L2 advice"]
+  A --> G["显式授权的 L3 seam"]
+  G -->|"typed command 与 receipt"| H
 ```
 
-The dashed edge is an asserted absence, not a data path. L1 qualification must
-prove that the observer has no outbound execution capability. L3 introduces a
-new reviewed path rather than enabling that edge implicitly.
+虚线表达的是一条被断言不存在的边，而不是 data path。L1 qualification 必须证明 observer
+不具备 outbound execution capability。L3 会引入一条新 reviewed path，而不是隐式打开该虚线。
 
-### 3.1 L1 non-interference is a machine contract
+### 3.1 L1 non-interference 是机器合同
 
-L1 is not “best-effort passive.” Its adapter and deployment must prove:
+L1 不是“尽量被动”。其 adapter 和 deployment 必须证明：
 
-- event flow is one-way from the harness or runner into the observer;
-- diagnostic state is not part of the worker's context, memory, scheduler
-  inputs, tool results, or completion decision;
-- no control command endpoint is configured;
-- observer failure cannot pause or fail the worker;
-- observation backpressure is bounded and measured;
-- timestamps, event loss, sampling, and unsupported fields are visible;
-- protected task content, raw trajectories, credentials, and private workspace
-  data do not enter public projections.
+- event 只能从 harness 或 runner 单向流入 observer；
+- diagnostic state 不进入 worker context、memory、scheduler input、tool result 或 completion decision；
+- 没有配置任何 control command endpoint；
+- observer 失败不能暂停或导致 worker 失败；
+- observation backpressure 有界且可计量；
+- timestamp、event loss、sampling 和 unsupported field 均可见；
+- protected task content、raw trajectory、credential 和 private workspace data
+  不进入 public projection。
 
-An L1 run with an undeclared callback, prompt change, scheduler hook, or wider
-permission envelope is not passive evidence. It is quarantined or reclassified
-as a treatment arm.
+L1 run 如果出现未声明 callback、prompt change、scheduler hook 或更宽 permission envelope，
+就不属于 passive evidence，必须 quarantine 或重新分类为 treatment arm。
 
-### 3.2 L2 advice is not governance authority
+### 3.2 L2 建议不是治理 authority
 
-L2 may say “this work appears materially repetitive” or “a recovery rehearsal
-is recommended.” It may not perform the recovery, terminate the worker, or
-write a gate decision. The operator's response is recorded separately with
-attention time and outcome. This preserves the distinction between a useful
-diagnostic product and a hidden autonomous manager.
+L2 可以说“这段工作似乎发生了物质等价重复”或“建议进行 recovery rehearsal”，但不能实际执行
+恢复、终止 worker 或写入 gate decision。Operator response 与 attention time、outcome 分开记录。
+这样才能区分真正有用的 diagnostic product 与隐藏的 autonomous manager。
 
-### 3.3 L3 authority is seam-scoped
+### 3.3 L3 authority 只属于 seam
 
-L3 begins with one or a few seams that already have a real failure cost and an
-acceptance owner. Examples include a review checkpoint, a crash-recovery
-boundary, an explicit human approval, or a verifier-backed completion seam.
-The engagement must name the command, preconditions, idempotency identity,
-receipt, rollback, and action that remains outside LoopX authority.
+L3 从一个或少数已有真实失败成本、且有 acceptance owner 的 seam 开始，例如 review checkpoint、
+crash-recovery boundary、显式 human approval 或 verifier-backed completion seam。Engagement 必须
+说明 command、precondition、idempotency identity、receipt、rollback，以及仍不属于 LoopX
+authority 的 action。
 
-## 4. ICP, Buyers, Users, and Failure Modes
+## 4. ICP、Buyer、User 与 Failure Mode
 
 ### 4.1 Ideal customer profile
 
-The initial ICP is a team that already has a real long-running agent workflow,
-an outcome owner, and repeated operational pain. The strongest early segments
-are:
+初始 ICP 是已经拥有真实长程 Agent workflow、outcome owner 和重复运营痛点的团队。最强的早期
+segment 包括：
 
-- software engineering, SRE, security, and IT operations teams whose work
-  spans repositories, environments, reviews, and multiple hours or days;
-- AI platform and agent-infrastructure teams operating heterogeneous Codex,
-  Claude Code, shell, or custom harnesses;
-- AI4S, bioinformatics, robotics, and research teams that need experiment
-  lineage, negative-result retention, recovery, and human checkpoints;
-- regulated or audit-sensitive teams that need evidence and authority
-  boundaries before increasing autonomy.
+- 工作跨 repo、environment、review 和数小时或数天的软件工程、SRE、安全与 IT operations 团队；
+- 运行异构 Codex、Claude Code、shell 或 custom harness 的 AI platform 与 agent-infrastructure 团队；
+- 需要 experiment lineage、negative-result retention、recovery 与 human checkpoint 的 AI4S、
+  bioinformatics、robotics 与研究团队；
+- 在增加 autonomy 前需要 evidence 和 authority boundary 的受监管或 audit-sensitive 团队。
 
-The workflow must be valuable enough that failure, repetition, manual watching,
-or unrecoverable state has a measurable cost. A short chatbot exchange or a
-one-shot tool call is not the target.
+Workflow 必须足够有价值，使失败、重复、人工盯盘或不可恢复状态具备可测成本。短 chatbot exchange
+或 one-shot tool call 不属于目标。
 
-### 4.2 Buyer and operating roles
+### 4.2 Buyer 与运营角色
 
-- The **economic buyer** may be a head of engineering, AI platform leader,
-  research platform leader, security leader, or workflow owner accountable for
-  delivery capacity and risk.
-- The **outcome owner** defines the native result and acceptance criteria. No
-  formal pilot starts without one.
-- The **operator** currently watches runs, intervenes, reviews evidence, or
-  restores failures. Operator attention is a measured cost, not free labor.
-- The **platform and security owners** approve deployment, data, identity,
-  retention, and authority boundaries.
-- LoopX FDE and product engineering own the supported adapter, deployment,
-  evaluation, and reusable assets; they do not become the customer's permanent
-  workflow operator.
+- **Economic buyer** 可以是 head of engineering、AI platform leader、research platform leader、
+  security leader，或对交付 capacity 与 risk 负责的 workflow owner。
+- **Outcome owner** 定义 native result 与 acceptance criteria；没有该角色，不启动正式 pilot。
+- **Operator** 当前负责盯盘、干预、review evidence 或恢复失败。Operator attention 是被测成本，
+  不是免费劳动力。
+- **Platform 与 security owner** 批准 deployment、data、identity、retention 和 authority boundary。
+- LoopX FDE 与产品工程负责 supported adapter、deployment、evaluation 和 reusable asset，
+  但不会成为客户永久的 workflow operator。
 
-### 4.3 Typical failure modes
+### 4.3 典型 failure mode
 
-- stages and remaining work are invisible until the run ends;
-- the worker repeats materially equivalent probes or maintenance loops;
-- a crash loses useful state or requires manual context reconstruction;
-- continuation after interruption replays completed work or crosses an old
-  decision boundary;
-- evidence exists in raw logs but cannot support review, audit, or handoff;
-- humans poll continuously because the system cannot distinguish healthy work,
-  waiting, stall, and exhaustion;
-- approvals and operator nudges are not tied to a durable scope or receipt;
-- one harness-specific fix cannot be reused across another workflow or host;
-- governance adds enough protocol, latency, or model confusion to reduce the
-  native task outcome.
+- run 结束前，阶段与剩余工作不可见；
+- worker 重复物质等价的 probe 或 maintenance loop；
+- crash 丢失有效状态，或需要人工重建 context；
+- interruption 后的 continuation 重做已完成工作，或越过旧 decision boundary；
+- evidence 存在于 raw log 中，却无法支持 review、audit 或 handoff；
+- 系统不能区分健康工作、等待、stall 和 exhaustion，导致 human 持续 polling；
+- approval 与 operator nudge 没有绑定 durable scope 或 receipt；
+- 一个 harness-specific fix 无法在另一 workflow 或 host 复用；
+- governance 增加的 protocol、latency 或模型困惑足以降低 native task outcome。
 
-### 4.4 Explicit non-goals
+### 4.4 明确非目标
 
-- replacing the customer's model, runtime, sandbox, benchmark, or domain
-  workflow by default;
-- requiring full LoopX skill or state-lifecycle adoption in the diagnostic
-  phase;
-- claiming task uplift from an L1 observer;
-- using raw logs or keyword heuristics as authoritative progress or failure
-  truth;
-- selling generic monitoring dashboards without a baseline, acceptance, or
-  reliability decision;
-- promising autonomous department replacement or unaudited outcome pricing;
-- building a customer-specific LoopX kernel or accepting indefinite free PoCs;
-- treating stars, demos, control-plane calls, or agent runtime as PMF.
+- 默认替换客户的 model、runtime、sandbox、benchmark 或 domain workflow；
+- 在 diagnostic phase 要求完整采用 LoopX skill 或 state lifecycle；
+- 根据 L1 observer 宣称 task uplift；
+- 把 raw log 或 keyword heuristic 当作 authoritative progress/failure truth；
+- 销售没有 baseline、acceptance 或 reliability decision 的 generic monitoring dashboard；
+- 承诺 autonomous department replacement 或不可审计的 outcome pricing；
+- 构建 customer-specific LoopX kernel，或接受无限期免费 PoC；
+- 把 star、demo、control-plane call 或 agent runtime 当作 PMF。
 
-## 5. Customer Journey and Stop/Go Gates
+## 5. 客户旅程与 Stop/Go Gate
 
-### 5.1 Discovery and baseline
+### 5.1 Discovery 与 baseline
 
-The engagement starts by selecting one bounded workflow, one outcome owner,
-and one matched baseline contract. Discovery records:
+Engagement 先选择一个 bounded workflow、一个 outcome owner 和一个 matched baseline contract。
+Discovery 记录：
 
-- native task outcome and acceptance owner;
-- pinned harness, model, tools, permissions, environment, and budget;
-- current failure and recovery process;
-- operator interventions and attention minutes;
-- data classification, retention, deployment, and authority boundaries;
-- the decision the diagnostic result will enable.
+- native task outcome 与 acceptance owner；
+- 固定的 harness、model、tool、permission、environment 与 budget；
+- 当前 failure 与 recovery process；
+- operator intervention 与 attention minute；
+- data classification、retention、deployment 与 authority boundary；
+- diagnostic result 将支持的具体 decision。
 
-**Stop gate:** no pilot when the workflow lacks an outcome owner, a reproducible
-or reconstructable baseline, a fixed budget, a measurable acceptance result,
-or permission to observe the required events.
+**Stop gate：** workflow 缺少 outcome owner、可复现或可重建 baseline、固定预算、可测 acceptance
+result，或无权观察必要 event 时，不进入 pilot。
 
 ### 5.2 Passive diagnostic
 
-Deploy L1 in shadow mode. Validate adapter fidelity and non-interference before
-interpreting the findings. The output is a diagnostic packet containing:
+以 shadow mode 部署 L1。在解释发现前，先验证 adapter fidelity 与 non-interference。输出为
+diagnostic packet，包含：
 
-- stage and progress timeline;
-- typed stall, repetition, recovery, and failure attribution;
-- evidence and handoff completeness;
-- cost, wall-clock, and attention accounting;
-- event-loss and unsupported-signal disclosure;
-- candidate governed seams, each tied to observed cost and a rollback path;
-- a final receipt with no claim beyond the collected evidence.
+- stage 与 progress timeline；
+- typed stall、repetition、recovery 与 failure attribution；
+- evidence 与 handoff completeness；
+- cost、wall-clock 与 attention accounting；
+- event-loss 与 unsupported-signal disclosure；
+- candidate governed seam，每个都绑定已观察成本与 rollback path；
+- 不超出所收集证据的 final receipt。
 
-**Stop or remain passive:** if event fidelity is insufficient, overhead exceeds
-the agreed budget, private-data boundaries cannot be met, or findings do not
-change an operator decision, do not add authority to create artificial value.
+**停止或保持 passive：** event fidelity 不足、overhead 超过约定预算、无法满足 private-data
+boundary，或发现无法改变 operator decision 时，不得为了制造价值而增加 authority。
 
-### 5.3 Advisory or governed pilot
+### 5.3 Advisory 或 governed pilot
 
-The customer may select L2 recommendations or one bounded L3 seam. The pilot
-registers the new treatment, authority envelope, expected benefit, negative
-transfer threshold, rollback, and matched comparison before execution.
+客户可以选择 L2 recommendation 或一个 bounded L3 seam。Pilot 在执行前登记新 treatment、
+authority envelope、expected benefit、negative-transfer threshold、rollback 与 matched comparison。
 
-**Stop gate:** do not enter L3 without an explicit authority owner, a tested
-fail-closed command/receipt path, a native outcome metric, and a baseline that
-can detect harm. Advice that a human executes remains L2 assisted evidence and
-must not be reported as autonomous uplift.
+**Stop gate：** 没有显式 authority owner、经过测试的 fail-closed command/receipt path、native
+outcome metric 和能发现 harm 的 baseline 时，不进入 L3。由 human 执行的建议仍属于 L2 assisted
+evidence，不能报告成 autonomous uplift。
 
 ### 5.4 Acceptance
 
-Acceptance compares predeclared metrics under the fixed budget. A successful
-pilot must show the native outcome and governance cost together. It cannot pass
-because the dashboard is attractive or because LoopX produced many events.
+Acceptance 在固定预算下比较预声明指标。成功 pilot 必须同时呈现 native outcome 与 governance
+cost；不能因为 dashboard 好看或 LoopX 生成了很多 event 就通过。
 
-The acceptance packet includes:
+Acceptance packet 包含：
 
-- matched baseline and treatment identities;
-- native outcome and uncertainty or case-level results;
-- efficiency, recovery, attention, evidence, overhead, and negative-transfer
-  results;
-- treatment-integrity and data-boundary receipts;
-- deployment and rollback evidence;
-- reusable-asset inventory and customer-only work disclosure;
-- accepted next level, remain-passive decision, or no-follow-up.
+- matched baseline 与 treatment identity；
+- native outcome 与 uncertainty 或 case-level result；
+- efficiency、recovery、attention、evidence、overhead 与 negative-transfer result；
+- treatment-integrity 与 data-boundary receipt；
+- deployment 与 rollback evidence；
+- reusable-asset inventory 与 customer-only work disclosure；
+- accepted next level、remain-passive decision 或 no-follow-up。
 
-### 5.5 Repeatable deployment and ongoing service
+### 5.5 Repeatable deployment 与 ongoing service
 
-Only accepted seams move into a versioned deployment pack. Ongoing service may
-provide managed history, replay, governance, migration, support, and SLA, but
-the workflow stays on a supported Harness and extension boundary. A second
-deployment must reuse the adapter, policy, eval, or dashboard contract rather
-than reopen the kernel.
+只有验收通过的 seam 才进入 versioned deployment pack。Ongoing service 可提供 managed history、
+replay、governance、migration、support 与 SLA，但 workflow 必须保持在 supported Harness 与
+extension boundary 上。第二次部署必须复用 adapter、policy、eval 或 dashboard contract，
+而不是再次打开 kernel。
 
-**Stop gate:** do not call the motion repeatable when there is no plausible
-second use, operation still depends on the original FDE, upgrades require a
-customer fork, or recurring value disappears after initial delivery.
+**Stop gate：** 没有可信的第二次使用、运行仍依赖原 FDE、upgrade 需要 customer fork，或 initial
+delivery 后 recurring value 消失时，不得把该 motion 称为 repeatable。
 
-## 6. Reference Offer: Two-to-Four-Week Reliability Pilot
+## 6. 参考 Offer：两到四周 Reliability Pilot
 
-This reference contract defines scope, not price or a promise of benefit.
+该参考合同定义 scope，不定义价格，也不承诺收益。
 
-### Week 0 / pre-start qualification
+### Week 0 / 启动前 qualification
 
-- name the workflow, buyer, outcome owner, operator, and data owner;
-- pin baseline identity, task strata, budget, and primary metrics;
-- approve the observer data envelope and deployment route;
-- reject the engagement if the discovery stop gates are not met.
+- 确认 workflow、buyer、outcome owner、operator 与 data owner；
+- 固定 baseline identity、task strata、budget 与 primary metric；
+- 批准 observer data envelope 与 deployment route；
+- discovery stop gate 不满足时拒绝 engagement。
 
-### Week 1 / baseline and adapter fidelity
+### Week 1 / baseline 与 adapter fidelity
 
-- reproduce or reconstruct the native baseline;
-- connect one supported read-only adapter;
-- prove event coverage, clock semantics, loss behavior, and non-interference;
-- establish the initial operator-attention and recovery baseline.
+- 复现或重建 native baseline；
+- 连接一个 supported read-only adapter；
+- 证明 event coverage、clock semantic、loss behavior 与 non-interference；
+- 建立初始 operator-attention 与 recovery baseline。
 
 ### Week 2 / passive diagnostic
 
-- run L1 under the matched envelope;
-- deliver stage, stall/repetition, recovery, evidence, and overhead analysis;
-- review candidate seams and decide remain-passive, stop, or enter a bounded
-  treatment.
+- 在 matched envelope 下运行 L1；
+- 交付 stage、stall/repetition、recovery、evidence 与 overhead analysis；
+- review candidate seam，并决定 remain-passive、stop 或进入 bounded treatment。
 
-### Weeks 3–4 / optional governed seam and acceptance
+### Weeks 3–4 / 可选 governed seam 与 acceptance
 
-- qualify one L2 or L3 treatment when authorized;
-- run the predeclared comparison and rollback rehearsal;
-- deliver the acceptance packet, reusable assets, runbook, and handover;
-- record a no-follow-up decision when the governed treatment is not justified.
+- 在获得授权时 qualify 一个 L2 或 L3 treatment；
+- 运行预声明 comparison 与 rollback rehearsal；
+- 交付 acceptance packet、reusable asset、runbook 与 handover；
+- governed treatment 不成立时记录 no-follow-up decision。
 
-The pilot excludes open-ended workflow redesign, unrelated model tuning,
-unbounded integrations, production writes outside the declared authority,
-leaderboard submission, and a customer-only kernel fork.
+Pilot 不包括 open-ended workflow redesign、无关 model tuning、无限 integration、超出已声明 authority
+的 production write、leaderboard submission 或 customer-only kernel fork。
 
-## 7. Evaluation and Benchmark Contract
+## 7. Evaluation 与 Benchmark Contract
 
-### 7.1 Matched arms
+### 7.1 Matched arm
 
-The product evaluation reuses the benchmark program's arm taxonomy:
+产品 evaluation 复用 benchmark program 的 arm taxonomy：
 
-1. **Native baseline** — no LoopX observation or control.
-2. **Passive LoopX / L1** — identical worker decision surface plus independent
-   observation and settlement.
-3. **Governed LoopX / L3 or L4** — a declared profile may affect named seams.
-4. **Mechanism ablation** — one mechanism differs from its governed parent.
+1. **Native baseline** — 没有 LoopX observation 或 control。
+2. **Passive LoopX / L1** — worker decision surface 不变，只增加独立 observation 与 settlement。
+3. **Governed LoopX / L3 或 L4** — 已声明 profile 可以影响具名 seam。
+4. **Mechanism ablation** — 与 governed parent 相比，只有一个 mechanism 不同。
 
-L2 assisted studies are reported separately because human action is part of
-the treatment. A replay or historical baseline may support discovery when a
-live repeated workflow is unavailable, but it is weaker evidence and cannot be
-presented as a matched causal comparison.
+L2 assisted study 单独报告，因为 human action 属于 treatment。当无法实时重复 workflow 时，replay
+或历史 baseline 可以支持 discovery，但证据更弱，不能包装成 matched causal comparison。
 
-### 7.2 Required measurements
+### 7.2 必测指标
 
-Every acceptance plan selects primary metrics before execution and reports all
-applicable guardrails:
+每份 acceptance plan 都要在执行前选择 primary metric，并报告所有适用 guardrail：
 
-| Dimension | Required evidence |
+| 维度 | 必需 evidence |
 |---|---|
-| Native task outcome | Benchmark-native score/pass, customer acceptance result, quality result, or other workflow-owned outcome |
-| Tokens, cost, and wall clock | Raw totals, difference from matched baseline, time to first material delta, and time to final outcome |
-| Recovery | Eligible failures, successful recoveries, recovery rate, time to recovery, repeated work, and state/evidence loss |
-| Human attention | Intervention count, attention minutes, response latency, false escalation, and interventions that changed the outcome or authority |
-| Evidence completeness | Required evidence present, lineage intact, unsupported or missing signals, and review/handoff readiness |
-| Governance overhead | Control calls, observer CPU/I/O, latency, storage, model-context tax, and operational complexity, kept separate rather than collapsed into one percentage |
-| Negative transfer | Native-outcome regression, added time/cost, false stall or gate, prevented valid continuation, model confusion, or new harness failure |
+| Native task outcome | Benchmark-native score/pass、客户 acceptance result、quality result 或其他 workflow-owned outcome |
+| Token、cost 与 wall clock | Raw total、相对 matched baseline 的差值、time to first material delta 与 time to final outcome |
+| Recovery | Eligible failure、successful recovery、recovery rate、time to recovery、重复工作与 state/evidence loss |
+| Human attention | Intervention count、attention minute、response latency、false escalation，以及真正改变 outcome 或 authority 的 intervention |
+| Evidence completeness | Required evidence 是否存在、lineage 是否完整、unsupported/missing signal 与 review/handoff readiness |
+| Governance overhead | Control call、observer CPU/I/O、latency、storage、model-context tax 与 operational complexity；必须分解报告，不能压成一个百分比 |
+| Negative transfer | Native-outcome regression、额外 time/cost、false stall/gate、阻止有效 continuation、model confusion 或新 harness failure |
 
-Thresholds are workflow-specific and must be registered before the pilot. A
-high native outcome with unacceptable attention or recovery cost may fail the
-business case. Better observability with unchanged outcome may pass an L1
-diagnostic acceptance, but it does not pass an L3 uplift claim.
+Threshold 必须按 workflow 在 pilot 前登记。Native outcome 高但 attention 或 recovery cost 不可接受，
+仍可能不成立商业 case。Observability 改善而 outcome 不变，可以通过 L1 diagnostic acceptance，
+但不能通过 L3 uplift claim。
 
-### 7.3 Relationship to the C0–C4 evidence ladder
+### 7.3 与 C0–C4 evidence ladder 的关系
 
-- **C0** qualifies native reproduction and adapter fidelity.
-- **C1** is the target for L1: reliable observation without changing worker
-  decisions or official outcomes.
-- **C2** is required for a causal claim about an L3/L4 treatment within one
-  pinned benchmark or workflow family.
-- **C3** demonstrates that the same typed mechanism direction transfers across
-  materially different benchmark families.
-- **C4** adds model-behavior and state-machine qualification, overhead and
-  authority budgets, and a non-benchmark product canary before a default or
-  shipped product promotion.
+- **C0** 验证 native reproduction 与 adapter fidelity。
+- **C1** 是 L1 的目标：不改变 worker decision 或 official outcome 的可靠 observation。
+- **C2** 是对单一 pinned benchmark/workflow family 中 L3/L4 treatment 提出因果 claim 的必要条件。
+- **C3** 证明相同 typed mechanism direction 可以跨物质不同的 benchmark family 迁移。
+- **C4** 在改变 default 或进入 shipped promotion 前，增加 model-behavior、state-machine qualification、
+  overhead/authority budget 与 non-benchmark product canary。
 
-The portfolio in the
-[Long-Horizon Harness Benchmark and Research Program](./long-horizon-harness-benchmark-research-program-v0.md)
-provides complementary environments: LHTB is especially useful for stall,
-repetition, and recovery dynamics; DeepSWE for repository delivery and
-interruption recovery; ALE for heterogeneous professional workflows and
-operator surfaces. Each benchmark retains its own runner, verifier, metric,
-and publication rules. LoopX does not turn them into one commercial score.
+[长程 Harness Benchmark 与研究计划](./long-horizon-harness-benchmark-research-program-v0.zh-CN.md)
+中的 portfolio 提供互补环境：LHTB 特别适合 stall、repetition 与 recovery dynamic；DeepSWE 适合
+repository delivery 与 interruption recovery；ALE 适合异构 professional workflow 与 operator
+surface。每个 benchmark 保留自己的 runner、verifier、metric 与 publication rule；LoopX 不把它们
+压成一个商业分数。
 
-### 7.4 Treatment integrity for observer mode
+### 7.4 Observer mode 的 treatment integrity
 
-L1 needs a first-class integrity receipt. At minimum it records:
+L1 需要 first-class integrity receipt，至少记录：
 
-- pinned worker, model, task, environment, tools, and budget;
-- adapter and observer revision;
-- event sources and fields consumed;
-- configured outbound control endpoints, which must be empty;
-- whether any observation entered worker context or scheduling inputs;
-- observer resource use, dropped events, and clock uncertainty;
-- disposition: `eligible`, `quarantined`, or `invalid`, with reason codes.
+- 固定的 worker、model、task、environment、tool 与 budget；
+- adapter 与 observer revision；
+- 消费的 event source 与 field；
+- 已配置 outbound control endpoint，必须为空；
+- 是否有 observation 进入 worker context 或 scheduling input；
+- observer resource use、dropped event 与 clock uncertainty；
+- `eligible`、`quarantined` 或 `invalid` disposition 及 reason code。
 
-This receipt makes “between LoopX and no LoopX” a testable product mode rather
-than a marketing phrase.
+该 receipt 让“介于 LoopX 和 no LoopX 之间”成为可测试的产品模式，而不是营销措辞。
 
-## 8. Reusable Assets From Every FDE Engagement
+## 8. 每次 FDE Engagement 必须沉淀的 Reusable Asset
 
-Every engagement must leave a versioned, documented asset set. Customer-only
-configuration may remain private, but the product contract and reusable
-mechanics cannot remain in one engineer's notebook.
+每次 engagement 都必须留下 versioned、documented asset set。Customer-only configuration 可以
+保持私有，但产品合同与可复用机制不能只留在某个工程师的笔记里。
 
-| Asset | Minimum reusable content | Reuse gate |
+| Asset | 最小 reusable content | Reuse gate |
 |---|---|---|
-| Adapter | Versioned event and identity mapping, loss/clock semantics, privacy boundary, fixture, and conformance check | A second compatible workflow or host can use the contract without kernel changes |
-| Deployment pack | Local/private/BYOC profile, configuration schema, install/upgrade/rollback, health check, and support bundle | Reinstall and rollback do not require the original FDE |
-| Policy pack | Named observer/advisory/governed profile, authority envelope, retention, alert/gate rules, and safe defaults | Policy is data/configuration over supported contracts, not customer code in core |
-| Eval pack | Baseline manifest, tasks or public-safe task descriptors, metrics, integrity audit, reducer, and acceptance template | The same evaluation can compare a future release without rewriting expected truth |
-| Dashboard and receipt | Stable projection, stage/failure/attention views, evidence lineage, treatment identity, and export | A reviewer can reconstruct the decision without raw private logs |
+| Adapter | Versioned event/identity mapping、loss/clock semantic、privacy boundary、fixture 与 conformance check | 第二个兼容 workflow 或 host 无需 kernel change 即可复用合同 |
+| Deployment pack | Local/private/BYOC profile、configuration schema、install/upgrade/rollback、health check 与 support bundle | Reinstall/rollback 不依赖原 FDE |
+| Policy pack | 具名 observer/advisory/governed profile、authority envelope、retention、alert/gate rule 与 safe default | Policy 是 supported contract 上的数据/config，不是 core 中的 customer code |
+| Eval pack | Baseline manifest、task 或 public-safe task descriptor、metric、integrity audit、reducer 与 acceptance template | 同一 evaluation 能比较未来 release，而不重写 expected truth |
+| Dashboard 与 receipt | Stable projection、stage/failure/attention view、evidence lineage、treatment identity 与 export | Reviewer 无需 raw private log 即可重建 decision |
 
-The engagement must report reusable work, customer-only work, deferred
-generalization, and the next plausible reuse path. It must not create:
+Engagement 必须报告 reusable work、customer-only work、deferred generalization 与下一条可信 reuse
+path。不得产生：
 
-- an indefinite free or boundaryless proof of concept;
-- a customer-specific kernel fork;
-- a one-off dashboard that parses private source files or raw logs;
-- a policy encoded only in prose;
-- a private eval whose expected result is derived from the implementation;
-- a permanent dependency on the original delivery engineer.
+- 无限期免费或无边界 proof of concept；
+- customer-specific kernel fork；
+- 解析 private source file 或 raw log 的 one-off dashboard；
+- 只编码在 prose 中的 policy；
+- expected result 从 implementation 推导出来的 private eval；
+- 对原 delivery engineer 的永久依赖。
 
-## 9. Open and Paid Boundary
+## 9. 开源与付费边界
 
-The open core remains sufficient to inspect, operate, and leave the system.
-Commercial value comes from packaging, operation, organizational controls, and
-accountable delivery rather than closing the meaning of customer state.
+Open core 必须足以检查、操作并离开系统。商业价值来自 packaging、operation、organizational
+control 与 accountable delivery，而不是关闭 customer state 的语义。
 
-### Open and local-first
+### Open 与 local-first
 
-- durable goal, Todo, evidence, acceptance, authority, handoff, recovery,
-  quota, and replan schemas and semantic protocols;
-- local control-plane core, CLI, exports, and public-safe projections;
-- provider-neutral adapter and capability contracts;
-- a usable self-host path and versioned state migration contract;
-- local benchmark/evaluation primitives and integrity receipt schemas.
+- durable goal、Todo、evidence、acceptance、authority、handoff、recovery、quota 与 replan schema
+  及 semantic protocol；
+- local control-plane core、CLI、export 与 public-safe projection；
+- provider-neutral adapter 与 capability contract；
+- 可用的 self-host path 与 versioned state migration contract；
+- local benchmark/evaluation primitive 与 integrity receipt schema。
 
-### Paid or managed
+### Paid 或 managed
 
-- supported Enterprise Harness distributions and certified adapters;
-- private, air-gapped, or BYOC deployment and managed upgrades;
-- enterprise connectors and domain packs;
-- RBAC, SSO, policy administration, audit, residency, deletion, and signed
-  exports;
-- hosted or managed history, retention, replay, alerts, review queues, and
-  recovery operations;
-- SLA, incident response, migration, backup/restore, support, and training;
-- Managed Semantic Control Plane and accountable, bounded FDE delivery.
+- supported Enterprise Harness distribution 与 certified adapter；
+- private、air-gapped 或 BYOC deployment 与 managed upgrade；
+- enterprise connector 与 domain pack；
+- RBAC、SSO、policy administration、audit、residency、deletion 与 signed export；
+- hosted/managed history、retention、replay、alert、review queue 与 recovery operation；
+- SLA、incident response、migration、backup/restore、support 与 training；
+- Managed Semantic Control Plane 与 accountable、bounded FDE delivery。
 
-Customers retain exportable identities, state meaning, evidence lineage, and a
-local or self-hosted exit path. Hosting does not grant LoopX or the provider
-permission to read private workspaces, approve gates, publish, merge, or make
-production changes.
+客户保留可导出的 identity、state meaning、evidence lineage 与 local/self-hosted exit path。Hosting
+不会授予 LoopX 或 provider 读取 private workspace、批准 gate、publish、merge 或 production change
+的权限。
 
-## 10. Relationship to Current LoopX Architecture
+## 10. 与当前 LoopX 架构的关系
 
 ### 10.1 Operator surface
 
-L1 and L2 consume explicit public-safe projections. The operator surface may
-show stages, evidence refs, recovery state, cost, attention, and diagnostic
-findings. It must not parse one customer's private source document, inline raw
-trajectories, or render write controls in L1. A visible recommendation is not
-an accepted gate or command.
+L1 和 L2 消费显式 public-safe projection。Operator surface 可以展示 stage、evidence ref、recovery
+state、cost、attention 与 diagnostic finding，但不能解析某个客户的 private source document、
+inline raw trajectory，也不能在 L1 渲染 write control。可见 recommendation 不等于 accepted gate
+或 command。
 
 ### 10.2 Shared goal authority
 
-L1 has no shared goal authority. It may observe a stale-marked projection or
-store diagnostic receipts under an independent namespace, but it cannot claim
-work or mutate the canonical aggregate. L3/L4 coordination requires explicit
-per-goal opt-in and the same command, precondition, idempotency, receipt, and
-provider boundaries defined by the shared-goal authority RFC. A storage or
-messaging provider never becomes LoopX authority.
+L1 没有 shared goal authority。它可以观察带 stale 标记的 projection，或在独立 namespace 存储
+diagnostic receipt，但不能 claim work 或修改 canonical aggregate。L3/L4 coordination 需要显式
+per-goal opt-in，并遵守 shared-goal authority RFC 定义的 command、precondition、idempotency、
+receipt 与 provider boundary。Storage 或 messaging provider 永远不会成为 LoopX authority。
 
-### 10.3 Python canonical and TypeScript draft
+### 10.3 Python canonical 与 TypeScript draft
 
-Python remains the canonical control-plane implementation during the current
-TypeScript parity experiment. This RFC defines language-neutral product and
-receipt contracts; it does not promote the TypeScript draft or create a second
-authority. A TypeScript operator or observer may consume read-only projections
-after parity qualification. Write paths and decision kernels remain on their
-current canonical owner until their migration gate passes.
+在当前 TypeScript parity experiment 期间，Python 仍是 canonical control-plane implementation。
+本文定义 language-neutral product/receipt contract，不 promote TypeScript draft，也不创建第二
+authority。TypeScript operator/observer 可以在 parity qualification 后消费 read-only projection；
+write path 与 decision kernel 在各自 migration gate 通过前，仍属于当前 canonical owner。
 
-### 10.4 Benchmark research and product delivery
+### 10.4 Benchmark research 与产品交付
 
-The benchmark RFC owns experiment identity, native truth, C0–C4 claims, and
-publication discipline. This RFC owns the customer journey, sellable offer,
-authority ladder, FDE asset contract, and product promotion gates. A benchmark
-result can qualify a mechanism; a field engagement must still prove customer
-acceptance, deployment reuse, privacy, and operational supportability.
+Benchmark RFC 拥有 experiment identity、native truth、C0–C4 claim 与 publication discipline。
+本文拥有 customer journey、sellable offer、authority ladder、FDE asset contract 与产品 promotion
+gate。Benchmark result 可以 qualify mechanism；field engagement 仍必须证明 customer acceptance、
+deployment reuse、privacy 与 operational supportability。
 
-### 10.5 Ecosystem and runtime boundary
+### 10.5 Ecosystem 与 runtime boundary
 
-The observer should attach through supported runner events, host adapters, or
-provider-neutral projections. It does not absorb the customer's runtime. A
-partner integration remains factual adoption evidence, not proof of recurrence
-or willingness to pay.
+Observer 应通过 supported runner event、host adapter 或 provider-neutral projection 接入，而不是
+吸收客户 runtime。Partner integration 属于事实 adoption evidence，不等于 recurrence 或 willingness
+to pay 的证明。
 
-## 11. Risks and Failure Containment
+## 11. 风险与 Failure Containment
 
-- **Authority creep:** a passive observer quietly starts changing prompts or
-  continuation. Mitigation: one-way architecture, empty command envelope, and
-  treatment-integrity receipts.
-- **False diagnosis:** incomplete events create false stall or failure labels.
-  Mitigation: typed source coverage, unknown states, confidence/eligibility
-  disposition, and no write authority in L1.
-- **Protocol tax and negative transfer:** governance consumes enough latency,
-  tokens, or attention to harm the native task. Mitigation: matched budget,
-  decomposed overhead, native outcome guardrail, and rollback.
-- **Surveillance and privacy:** observation accumulates private content beyond
-  the operational need. Mitigation: metadata-first projections, minimization,
-  explicit retention/deletion, scoped evidence pointers, and local/BYOC modes.
-- **Services trap:** every success depends on custom engineering. Mitigation:
-  mandatory reusable assets, second-use gate, no kernel fork, and separate
-  accounting for software, delivery, and ongoing operations.
-- **Benchmark overfitting:** a control rule improves one verifier but harms real
-  workflows. Mitigation: C0–C4 ladder, cross-family evidence, negative results,
-  and non-benchmark canary.
-- **Proof theater:** dashboards, calls, stars, or a single demo replace outcome
-  evidence. Mitigation: predeclared native metrics and explicit claim levels.
-- **Premature managed authority:** hosted operation expands before isolation,
-  restore, deletion, and on-call economics are proven. Mitigation: observer and
-  private/BYOC first; explicit promotion gate.
+- **Authority creep：** passive observer 静默开始改变 prompt 或 continuation。缓解方式：one-way
+  architecture、empty command envelope 与 treatment-integrity receipt。
+- **False diagnosis：** 不完整 event 导致错误 stall/failure label。缓解方式：typed source coverage、
+  unknown state、confidence/eligibility disposition，以及 L1 无 write authority。
+- **Protocol tax 与 negative transfer：** governance 消耗的 latency、token 或 attention 足以伤害
+  native task。缓解方式：matched budget、overhead 分解、native outcome guardrail 与 rollback。
+- **Surveillance 与 privacy：** observation 收集了超出运营需要的 private content。缓解方式：
+  metadata-first projection、minimization、显式 retention/deletion、scoped evidence pointer 与
+  local/BYOC mode。
+- **Services trap：** 每个成功都依赖 custom engineering。缓解方式：强制 reusable asset、second-use
+  gate、禁止 kernel fork，并分别核算 software、delivery 与 ongoing operation。
+- **Benchmark overfitting：** control rule 改善一个 verifier，却伤害真实 workflow。缓解方式：C0–C4
+  ladder、cross-family evidence、negative result 与 non-benchmark canary。
+- **Proof theater：** dashboard、call、star 或单次 demo 替代 outcome evidence。缓解方式：预声明 native
+  metric 与显式 claim level。
+- **Premature managed authority：** isolation、restore、deletion 与 on-call economics 尚未证明，
+  hosted operation 就扩大 authority。缓解方式：observer 与 private/BYOC first，以及显式 promotion gate。
 
-## 12. Roadmap and Promotion Criteria
+## 12. Roadmap 与 Promotion Criteria
 
-### P0 — Contract and shadow-observer prototype
+### P0 — Contract 与 shadow-observer prototype
 
-Deliver one provider-neutral observer envelope, integrity receipt, compact
-diagnostic projection, and deterministic fixture for one real harness event
-source. Prove the no-outbound-control invariant and bounded failure behavior.
+交付一个 provider-neutral observer envelope、integrity receipt、compact diagnostic projection，
+以及针对一个真实 harness event source 的 deterministic fixture。证明 no-outbound-control invariant
+与 bounded failure behavior。
 
-**Exit:** C0 adapter fidelity plus an eligible C1 observer run; public/private
-boundary and overhead are reported; no production authority exists.
+**Exit：** C0 adapter fidelity 加一条 eligible C1 observer run；报告 public/private boundary 与
+overhead；不存在 production authority。
 
-**Checkpoint (2026-09):** the contract half of P0 exists as the default-off
-built-in capability `reliability-diagnostics` with the extension provider
-`dsh-session-events` in `packages/dsh-loopx-plugin`: provider-neutral
-envelope and stats records, integrity receipt, read-only diagnostic
-projection, a deterministic DSH-shaped fixture, and producer-side
-public-safety rejection before the first ledger append. Still open before P0
-exit: an eligible C1 observer run on a real `dsh` session, the reported
-overhead measurement, and the ledger retention and deletion profile from
-decision 4 below.
+**Checkpoint（2026-09）：** P0 的 contract 部分已以默认关闭的 built-in capability
+`reliability-diagnostics` 与 extension provider `dsh-session-events`（位于
+`packages/dsh-loopx-plugin`）落地：provider-neutral envelope 与 stats record、integrity receipt、
+read-only diagnostic projection、deterministic DSH-shaped fixture，以及首次写入 ledger 之前的
+producer 侧 public-safety 拒绝。P0 exit 之前仍未完成：在真实 `dsh` session 上的 eligible C1
+observer run、overhead 测量报告，以及下文 decision 4 的 ledger retention 与 deletion profile。
 
 ### P1 — Benchmark-qualified diagnostic pilot
 
-Run matched native and L1 arms on at least one suitable benchmark family and
-one non-benchmark rehearsal. Establish stage, stall/repetition, recovery,
-evidence, attention, and overhead measures. Negative and null results remain
-visible.
+在至少一个合适 benchmark family 和一个 non-benchmark rehearsal 上运行 matched native/L1 arm。
+建立 stage、stall/repetition、recovery、evidence、attention 与 overhead measure；negative/null result
+必须保留可见。
 
-**Exit:** repeated C1 evidence, a useful diagnostic decision, an operator
-receipt, and no unexplained outcome difference between baseline and passive
-arms.
+**Exit：** repeated C1 evidence、一个有用的 diagnostic decision、operator receipt，并且 baseline 与
+passive arm 之间没有无法解释的 outcome 差异。
 
 ### P2 — Bounded governed seam
 
-Select one evidence-backed seam with an outcome owner. Implement the typed
-command/receipt/rollback path and compare it with the matched parent profile.
+选择一个 evidence-backed 且有 outcome owner 的 seam。实现 typed command/receipt/rollback path，
+并与 matched parent profile 比较。
 
-**Exit:** scoped C2 evidence or an honest no-follow-up; model-behavior and
-state-machine qualification; no authority, privacy, or native-outcome
-regression beyond the predeclared guardrail.
+**Exit：** scoped C2 evidence 或诚实 no-follow-up；通过 model-behavior 与 state-machine qualification；
+没有超出预声明 guardrail 的 authority、privacy 或 native-outcome regression。
 
 ### P3 — Repeatable delivery
 
-Complete the reference pilot with a versioned adapter, deployment pack, policy
-pack, eval pack, and dashboard/receipt. Reuse at least one material asset on a
-second workflow or compatible deployment without a kernel fork.
+用 versioned adapter、deployment pack、policy pack、eval pack 与 dashboard/receipt 完成参考 pilot。
+至少在第二个 workflow 或兼容 deployment 上复用一项 material asset，且不 fork kernel。
 
-**Exit:** customer acceptance, handover, upgrade/rollback, second-use evidence,
-and separate accounting for reusable and customer-only work. One successful
-engagement is still not PMF.
+**Exit：** customer acceptance、handover、upgrade/rollback、second-use evidence，并分别核算 reusable
+与 customer-only work。一次成功 engagement 仍然不是 PMF。
 
 ### P4 — Shipped product direction
 
-Promote from Incubation only when the supported distribution, operator
-surface, data/authority boundaries, and recurring operation have survived
-independent use. At least one governed mechanism needs C4 evidence; observer
-mode needs stable conformance across supported adapters; managed forms need
-verified export, restore, deletion, tenancy, support, and incident response.
+只有 supported distribution、operator surface、data/authority boundary 与 recurring operation 经受
+独立使用后，才从 Incubation promote。至少一个 governed mechanism 需要 C4 evidence；observer mode
+需要在 supported adapter 之间具备稳定 conformance；managed form 需要验证 export、restore、
+deletion、tenancy、support 与 incident response。
 
-**Exit:** maintainers can name the shipped contract, supported profiles,
-acceptance and rollback, repeated deployment path, owner, support boundary, and
-evidence that use continues after the initial FDE. Promotion is a repository
-decision, not a sales narrative.
+**Exit：** maintainer 能明确 shipped contract、supported profile、acceptance/rollback、repeated
+deployment path、owner、support boundary，以及 initial FDE 离开后仍持续使用的 evidence。Promotion
+是 repository decision，不是销售叙事。
 
-## 13. Product Stop/Go Rules
+## 13. 产品 Stop/Go 规则
 
-A prospective engagement does not enter a formal pilot when any of these are
-missing:
+潜在 engagement 缺少以下任一项时，不进入正式 pilot：
 
-- an accountable outcome owner;
-- a native outcome and matched or explicitly weaker baseline;
-- fixed budget and predeclared acceptance criteria;
-- an approved data, authority, and rollback envelope;
-- a bounded delivery scope and handover;
-- a plausible second reuse path for the resulting assets.
+- accountable outcome owner；
+- native outcome 与 matched baseline，或被显式标为更弱的 baseline；
+- fixed budget 与预声明 acceptance criteria；
+- 获批的 data、authority 与 rollback envelope；
+- bounded delivery scope 与 handover；
+- 产出 asset 的可信 second reuse path。
 
-The program stops or remains passive when observation is not decision-useful,
-negative transfer exceeds the guardrail, authority cannot be made explicit, or
-the only path to success is custom kernel work.
+Observation 对 decision 无用、negative transfer 超过 guardrail、authority 无法显式化，或唯一成功
+路径是 custom kernel work 时，program 必须停止或保持 passive。
 
-Stars, one demo, one passing task, one internal deployment, control-plane call
-volume, or an attractive dashboard are not PMF. Evidence of paid recurrence,
-accepted outcomes, reuse, managed advantage, and sustainable delivery is
-required before making a stronger commercial claim.
+Star、一次 demo、一个 passing task、一次内部部署、control-plane call volume 或好看的 dashboard 都
+不是 PMF。提出更强 commercial claim 前，必须有 paid recurrence、accepted outcome、reuse、managed
+advantage 与 sustainable delivery evidence。
 
-## 14. Owner Decisions Still Required
+## 14. 仍需 Owner 决策
 
-1. Which initial ICP and reference workflow should receive the first product
-   pilot: software delivery, security/SRE, or research/AI4S?
-2. Which event source and harness should define the P0 shadow-observer
-   conformance fixture?
-   **Decided (2026-09): DeepSeek Harness (`dsh`) session events.** LoopX
-   already ships a typed `dsh` Turn host and a same-session plugin whose
-   read-only `session/event`, `agent/status`, `agent/error`, and
-   `session/disposed` hooks let the observer be proven non-interfering inside
-   an existing packaged boundary. Pi remains the comparison candidate; the
-   harness-selection evaluation shared with the Desktop Execution Frontends
-   RFC is a follow-up deliverable and will be recorded here.
-3. Should the first two-to-four-week offer stop at L1 diagnostics by default,
-   or include an optional L2 advisory week before any L3 seam?
-4. Which data-retention, deletion, and support profiles belong in the first
-   local/private/BYOC deployment pack?
-5. Which benchmark family and non-benchmark canary are required for the first
-   promotion packet?
-6. Who owns product acceptance, delivery reuse, and support readiness when the
-   direction moves from Incubation toward Shipped?
+1. 首个产品 pilot 应选择哪个 initial ICP 与 reference workflow：software delivery、security/SRE，
+   还是 research/AI4S？
+2. 哪个 event source 与 harness 应定义 P0 shadow-observer conformance fixture？
+   **已决定（2026-09）：DeepSeek Harness（`dsh`）session events。** LoopX 已有 typed `dsh`
+   Turn host 与 same-session plugin，其只读 `session/event`、`agent/status`、`agent/error`、
+   `session/disposed` hook 让 observer 能在既有打包边界内被证明 non-interfering。Pi 仍是
+   对比候选；与 Desktop Execution Frontends RFC 共享的 harness 选型评估是后续交付物，结论将记录在此。
+3. 第一份两到四周 offer 默认应停在 L1 diagnostic，还是在进入任何 L3 seam 前增加可选 L2 advisory week？
+4. 第一份 local/private/BYOC deployment pack 应包含哪些 data-retention、deletion 与 support profile？
+5. 第一份 promotion packet 必须使用哪个 benchmark family 与 non-benchmark canary？
+6. 当方向从 Incubation 走向 Shipped，谁负责 product acceptance、delivery reuse 与 support readiness？
 
-## 15. Relationship to Existing Documents
+## 15. 与现有文档的关系
 
-- [Commercialization and SaaS Opportunity Assessment](../../product/roadmaps/saas-opportunity-assessment.md)
-  defines the broader open/paid thesis, product ladder, and FDE discipline.
-  This RFC narrows that strategy into an observer-first offer and promotion
-  contract.
-- [Long-Horizon Harness Benchmark and Research Program](./long-horizon-harness-benchmark-research-program-v0.md)
-  owns benchmark truth, matched arms, C0–C4 evidence, and research integrity.
+- [商业化与 SaaS 机会评估](../../product/roadmaps/saas-opportunity-assessment.zh-CN.md)
+  定义更广的 open/paid thesis、product ladder 与 FDE discipline。本文将其收窄为 observer-first
+  offer 与 promotion contract。
+- [长程 Harness Benchmark 与研究计划](./long-horizon-harness-benchmark-research-program-v0.zh-CN.md)
+  拥有 benchmark truth、matched arm、C0–C4 evidence 与 research integrity。
 - [Agent Management Observability MVP](../../product/surfaces/agent-management-observability-mvp.md)
-  defines the read-only projection posture reused by L1/L2 operator surfaces.
-- [Desktop Execution Frontends](./desktop-execution-frontends-v0.md) defines
-  Mode B, the Managed Agent Runtime in which LoopX Desktop launches and
-  supervises Pi or `dsh`. The L1 shadow observer is the passive diagnostic
-  layer under that mode's Desktop-owned runtime supervisor: its integrity
-  receipt and read-only projection are inputs the supervisor may project, and
-  the observer acquires none of the supervisor's authority.
-- [Shared Goal Authority and State Provider](./shared-goal-authority-state-provider-v0.md)
-  defines the authority/provider boundary required only when L3/L4 uses shared
-  coordination.
-- [TypeScript Control-Plane Migration](./typescript-control-plane-migration-v0.md)
-  keeps Python canonical while TypeScript candidates qualify through parity.
-- [Ecosystem Adoption and Derivatives](../../community/ecosystem-adoption.md)
-  records factual public adoption; it does not substitute for product outcome
-  or commercial evidence.
+  定义 L1/L2 operator surface 复用的 read-only projection posture。
+- [Desktop Execution Frontends](./desktop-execution-frontends-v0.zh-CN.md) 定义 Mode B，即由 LoopX
+  Desktop 启动并监督 Pi 或 `dsh` 的 Managed Agent Runtime。L1 shadow observer 是该模式下
+  Desktop-owned runtime supervisor 之下的被动诊断层：其 integrity receipt 与 read-only projection
+  是 supervisor 可以投影的输入，observer 本身不获得 supervisor 的任何 authority。
+- [Shared Goal Authority 与 State Provider](./shared-goal-authority-state-provider-v0.zh-CN.md)
+  定义只有在 L3/L4 使用 shared coordination 时才需要的 authority/provider boundary。
+- [TypeScript Control-Plane Migration](./typescript-control-plane-migration-v0.zh-CN.md)
+  在 TypeScript candidate 通过 parity qualification 期间，维持 Python canonical。
+- [Ecosystem Adoption and Derivatives](../../community/ecosystem-adoption.zh-CN.md)
+  记录事实性的 public adoption，不能替代 product outcome 或 commercial evidence。

@@ -1,190 +1,169 @@
-# Agent Management Observability MVP
+# Agent 管理可观测性 MVP
 
-This note turns `agent_management_projection_v0` into a concrete first product
-slice for the LoopX dashboard. It is intentionally an observability MVP, not a
-new scheduler, dispatcher, task database, or browser write path.
+> [English](agent-management-observability-mvp.md)
 
-## Decision
+本说明把 `agent_management_projection_v0` 变成 LoopX dashboard 的第一个具体产品切片。它刻意是可观测性 MVP，而不是新 scheduler、dispatcher、任务数据库或浏览器写路径。
 
-Use the mature agent-console direction for the real ops surface, and keep the
-LoopX dark showcase direction for public narrative pages.
+## 决策
 
-The MVP should feel like a dense operator console: rows, narrow badges,
-timestamps, evidence links, and stable filters. The dark showcase style can
-explain the same model on the public frontstage, but it should not be the
-default for live multi-agent operation because live operation needs scanning
-more than motion.
+为真实 ops surface 使用成熟的 agent-console 方向，并把 LoopX 暗色 showcase 方向留给公开叙事页面。
 
-## Source Inspiration And Reuse Boundary
+MVP 应像密集 operator 控制台：行、窄徽章、时间戳、evidence 链接与稳定过滤器。暗色 showcase 风格可以在公开 frontstage 解释同一模型，但它不应成为实时多 agent 操作的默认，因为实时操作需要扫读胜过动效。
 
-The closest public reference is NousResearch Hermes Agent:
+## 灵感来源与复用边界
 
-- Hermes Kanban documentation:
+最接近的公开参考是 NousResearch Hermes Agent：
+
+- Hermes Kanban 文档：
   <https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/kanban.md>
-- Hermes delegation documentation:
+- Hermes delegation 文档：
   <https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/delegation.md>
-- Hermes license:
+- Hermes license：
   <https://github.com/NousResearch/hermes-agent/blob/main/LICENSE>
 
-Hermes Agent is published under MIT license, so UI code can be considered for
-reuse in a later implementation PR if it is actually public, attribution is
-kept where required, and the copied code is isolated to presentation. This MVP
-does not copy Hermes source code.
+Hermes Agent 以 MIT license 发布，所以如果 UI 代码确实公开、需要的归属保持、且复制代码隔离在呈现层，可以把它作为后面实现 PR 的复用候选。本 MVP 不复制 Hermes 源码。
 
-The useful ideas to borrow are:
+值得借鉴的想法是：
 
-- dense task/agent rows;
-- visible assignee, status, workspace, timestamp, and liveness;
-- event-tail and attempt-history affordances;
-- comments or handoff notes as inspectable context;
-- fresh-context delegation as a warning against hidden inherited assumptions.
+- 密集的任务/agent 行；
+- 可见的 assignee、status、workspace、timestamp 与 liveness；
+- 事件尾部与尝试历史辅助；
+- 作为可检查上下文的 comments 或 handoff 说明；
+- fresh-context delegation 作为对隐藏继承假设的警告。
 
-The ideas not to borrow into LoopX runtime are:
+不该借进 LoopX runtime 的想法：
 
-- a second durable task database;
-- automatic dispatch, cancel, reclaim, or retry;
-- worker profile runtime;
-- workspace allocation runtime;
-- browser writes that bypass LoopX CLI/API boundaries.
+- 第二个持久任务数据库；
+- 自动 dispatch、cancel、reclaim 或 retry；
+- worker 档案 runtime；
+- workspace 分配 runtime；
+- 绕过 LoopX CLI/API 边界的浏览器写入。
 
-LoopX already has the durable work unit: `todo_id` inside `goal_id`. The
-dashboard may render a todo as a task-like card for familiarity, but product
-and runtime names should keep `todo` or `work item` to avoid implying a second
-state machine.
+LoopX 已有持久工作单元：`goal_id` 内的 `todo_id`。Dashboard 可以把 todo 渲染成任务式卡片以增加熟悉感，但产品与 runtime 名称应保持 `todo` 或 `work item`，避免暗示第二套状态机。
 
 ## MVP Surface
 
-Add an explicit Agent Management section to Personal Workspace after the
-projection exists. The deprecated `/deprecated/frontstage/ops` route may keep
-rendering the old projection for diagnostics, but must not receive the product
-implementation.
+投影存在后，在 Personal Workspace 添加显式 Agent Management 区块。已弃用的 `/deprecated/frontstage/ops` 路由可以继续为诊断渲染旧投影，但不得接收产品实现。
 
-The first screen should answer five questions:
+首屏应回答五个问题：
 
-1. Which registered agents are active for this goal?
-2. What is each agent currently claimed on?
-3. Is the agent running, waiting, blocked, monitoring, stale, or unknown?
-4. What evidence or handoff makes the next step reviewable?
-5. What quota, cadence, or workspace hint should the operator notice?
+1. 哪些注册 agent 对此 goal 活跃？
+2. 每个 agent 当前 claim 在什么上？
+3. Agent 在运行、等待、阻塞、监控、过期还是未知？
+4. 什么 evidence 或 handoff 让下一步可评审？
+5. Operator 应注意什么 quota、cadence 或 workspace 提示？
 
-## Agent Row
+## Agent 行
 
-Each row should map one `agent_management_projection_v0.agents[]` item into a
-compact row or card.
+每行应把一条 `agent_management_projection_v0.agents[]` 项映射为紧凑行或卡片。
 
-Required visible fields:
+必需可见字段：
 
-- agent id and role;
-- state badge;
-- current todo title and priority;
-- claim owner or "unclaimed";
-- next action, one or two lines;
-- last activity time;
-- evidence/handoff link count;
-- quota or scheduler hint when it changes operator behavior.
+- agent id 与角色；
+- 状态徽章；
+- 当前 todo 标题与优先级；
+- claim owner 或"未认领"；
+- 下一动作，一两行；
+- 最后活动时间；
+- evidence/handoff 链接数；
+- 改变 operator 行为时的 quota 或 scheduler 提示。
 
-Optional expandable fields:
+可选可展开字段：
 
-- required write scopes;
-- workspace hint;
-- stale claim hint;
-- recent event tail;
-- blocked-on decision;
-- related user todo count.
+- 必需写范围；
+- workspace 提示；
+- 过期 claim 提示；
+- 近期事件尾部；
+- 阻塞于的决策；
+- 相关 user todo 数量。
 
-## Status Badges
+## 状态徽章
 
-Use a small, stable badge set:
+使用小型、稳定的徽章集：
 
-| State | Meaning | Operator posture |
+| 状态 | 含义 | Operator 姿态 |
 | --- | --- | --- |
-| `running` | LoopX expects the agent to keep working. | Watch evidence and quota. |
-| `waiting` | The lane is eligible later or waiting for another state transition. | No immediate action. |
-| `blocked` | Work cannot proceed without a blocker resolution. | Inspect blocker and decide if it is user-facing. |
-| `monitoring` | This is a continuous monitor lane. | Show only material transitions. |
-| `scope_wait` | The current item is outside the agent lane or write scope. | Check assignment or handoff. |
-| `stale` | The claim lacks fresh activity evidence. | Inspect evidence; do not auto-reclaim. |
-| `unknown` | Projection is missing enough data. | Show source warning. |
+| `running` | LoopX 预期 agent 继续工作。 | 观察 evidence 与 quota。 |
+| `waiting` | 泳道稍后合格或等待另一状态转变。 | 无需立即动作。 |
+| `blocked` | 无 blocker 解决就无法推进。 | 检查 blocker 并决定是否面向用户。 |
+| `monitoring` | 这是持续监控泳道。 | 只显示实质转变。 |
+| `scope_wait` | 当前条目在 agent 泳道或写范围之外。 | 检查指派或 handoff。 |
+| `stale` | Claim 缺乏新鲜活动 evidence。 | 检查 evidence；不要自动 reclaim。 |
+| `unknown` | 投影缺少足够数据。 | 显示 source warning。 |
 
-These badges are read-only. They do not perform lifecycle transitions.
+这些徽章只读。它们不执行生命周期转变。
 
-## Evidence And Handoff Links
+## Evidence 与 Handoff 链接
 
-Evidence links should be visible but thin:
+Evidence 链接应可见但纤细：
 
-- latest run or refresh-state record;
-- linked docs or protocol files;
-- validation command labels;
-- handoff note ids;
-- review packet refs;
-- public-safe source warnings.
+- 最新 run 或 refresh-state 记录；
+- 关联文档或协议文件；
+- 验证命令标签；
+- handoff 说明 id；
+- review packet 引用；
+- public-safe source warnings。
 
-Do not inline raw logs, raw trajectories, private documents, local absolute
-paths, credentials, or status JSON blobs. The row should show that evidence
-exists and let the operator drill into safe refs.
+不要内联原始日志、原始轨迹、私有文档、本地绝对路径、凭据或 status JSON blob。行应显示 evidence 存在并让 operator 下钻到安全引用。
 
-Handoff notes should render as typed attachments to todos/history/evidence:
+Handoff 说明应渲染为 todos/历史/evidence 的类型化附件：
 
-- from agent;
-- to agent;
-- intent;
-- unresolved decision count;
-- suggested next action;
-- evidence refs.
+- 来自 agent；
+- 发送到 agent；
+- 意图；
+- 未解决决策数；
+- 建议下一动作；
+- evidence 引用。
 
-They are not a chat stream and they are not approval.
+它们不是聊天流，也不是批准。
 
-## Quota, Cadence, And Workspace Hints
+## Quota、Cadence 与 Workspace 提示
 
-The agent row should show quota/cadence only when it changes the operator's
-decision:
+Agent 行应只在 quota/cadence 改变 operator 决策时显示：
 
-- eligible now;
-- throttled or waiting;
-- no-spend monitor poll;
-- scheduler backoff applied;
-- stale due to missing activity evidence.
+- 现在合格；
+- 被限流或等待；
+- no-spend monitor 轮询；
+- 应用了 scheduler backoff；
+- 因缺失活动 evidence 而过期。
 
-Workspace hints are display-only:
+Workspace 提示仅显示：
 
-- `canonical_checkout`;
-- `worktree`;
-- `external`;
-- `unknown`.
+- `canonical_checkout`；
+- `worktree`；
+- `external`；
+- `unknown`。
 
-Hosted or public surfaces should avoid local absolute paths. Local loopback ops
-surfaces may show a path only when the status payload already exposes it and
-the surface is explicitly local/operator-only.
+托管或公开 surface 应避免本地绝对路径。本地 loopback ops surface 只有在 status 载荷已暴露路径且 surface 显式本地/仅 operator 时才能显示路径。
 
-## Read-Only Operator Actions
+## 只读 Operator 动作
 
-The MVP may expose read-only actions:
+MVP 可以暴露只读动作：
 
-- copy review packet command;
-- copy status/quota command;
-- open safe evidence ref;
-- filter by agent, state, or priority;
-- collapse monitor rows;
-- highlight stale or blocked rows;
-- switch between table and lane view.
+- 复制 review packet 命令；
+- 复制 status/quota 命令；
+- 打开安全 evidence 引用；
+- 按 agent、状态或优先级过滤；
+- 折叠监控行；
+- 高亮过期或阻塞行；
+- 在表格与泳道视图间切换。
 
-The MVP must not expose:
+MVP 不得暴露：
 
-- claim/reclaim;
-- cancel;
-- dispatch;
-- unblock;
-- priority mutation;
-- workspace creation;
-- reward append;
-- external production action.
+- claim/reclaim；
+- cancel；
+- dispatch；
+- unblock；
+- 优先级变更；
+- workspace 创建；
+- reward 追加；
+- 外部生产动作。
 
-Future write actions must be introduced behind a separate capability gate and
-must call typed LoopX CLI/API transitions.
+未来写动作必须经独立 capability gate 引入，并调用类型化 LoopX CLI/API 转变。
 
-## Implementation Shape
+## 实现形态
 
-Prefer a thin projection adapter over a new runtime model:
+偏好薄的投影 adapter，而不是新 runtime 模型：
 
 ```text
 loopx status/review-packet/evidence ledger
@@ -193,45 +172,29 @@ loopx status/review-packet/evidence ledger
   -> rows/cards/timeline
 ```
 
-The dashboard should tolerate the projection being absent. If absent, show the
-current ops dashboard and a source warning; do not block the rest of the page.
+Dashboard 应容忍投影缺失。缺失时，显示当前 ops dashboard 与 source warning；不要阻塞页面其余部分。
 
-The first frontend PR should be allowed to build only a fixture-backed read
-model plus browser-visible anchors. Live status consumption can follow after
-the fixture validates the interaction model.
+第一个前端 PR 应被允许只构建 fixture 支撑的读模型加浏览器可见锚点。实时 status 消费可以在夹具验证交互模型之后跟进。
 
-## Acceptance Checks
+## 验收检查
 
-The first implementation should prove:
+第一个实现应证明：
 
-- the surface consumes `agent_management_projection_v0` when present;
-- the dashboard still works when the projection is absent;
-- no browser write affordance is rendered;
-- `todo_id` remains the displayed work-item identity;
-- stale claim is a warning only;
-- evidence and handoff links render as refs, not raw logs;
-- public fixtures contain no credentials, private docs, raw trajectories, or
-  local absolute paths;
-- copied or adapted external UI code carries a license/attribution note, or the
-  implementation is native LoopX code.
+- surface 在投影存在时消费 `agent_management_projection_v0`；
+- 投影缺失时 dashboard 仍工作；
+- 不渲染任何浏览器写辅助；
+- `todo_id` 保持为显示的工作项身份；
+- 过期 claim 只是警告；
+- evidence 与 handoff 链接渲染为引用，而不是原始日志；
+- 公开夹具不含凭据、私有文档、原始轨迹或本地绝对路径；
+- 复制或改编的外部 UI 代码带 license/归属说明，或实现是 LoopX 原生代码。
 
-## Implemented Slice
+## 已实现切片
 
-`apps/presentation/dashboard` now renders the read-only Agent Management panel from
-`agent_management_projection_v0` when live status exposes it. The panel shows
-agent rows, current todos, evidence refs, typed handoff notes, quota hints, and
-display-only workspace/stale-claim warnings. These hints do not expose reclaim,
-cancel, dispatch, unblock, or workspace-write actions.
+`apps/presentation/dashboard` 现在在实时 status 暴露时从 `agent_management_projection_v0` 渲染只读 Agent Management 面板。面板显示 agent 行、当前 todos、evidence 引用、类型化 handoff 说明、quota 提示与仅显示的 workspace/过期 claim 警告。这些提示不暴露 reclaim、cancel、dispatch、unblock 或 workspace 写动作。
 
-The bundled dashboard example is refreshed from a public-safe live LoopX
-`loopx-meta` agent slice by
-`examples/control_plane/export-agent-management-status-example.py`. It keeps
-real agent ids, todo ids, states, and timestamps where safe, redacts private
-local text, and does not invent workspace or handoff fields when the live
-projection does not have them. The synthetic smoke still covers workspace,
-handoff, and stale-claim rendering as a contract fixture.
+捆绑 dashboard 示例由 `examples/control_plane/export-agent-management-status-example.py` 从 public-safe 实时 LoopX `loopx-meta` agent 切片刷新。它在安全处保留真实 agent id、todo id、状态与时间戳，脱敏私有本地文本，并在实时投影没有这些字段时不杜撰 workspace 或 handoff 字段。合成 smoke 仍覆盖 workspace、handoff 与过期 claim 渲染，作为契约夹具。
 
-## Next Slice
+## 下一个切片
 
-Add filters for agent state, claim freshness, and workspace kind after the panel
-has enough real operator use to justify more controls.
+在面板积累足够真实 operator 使用后，添加 agent 状态、claim 新鲜度与 workspace 种类的过滤器。

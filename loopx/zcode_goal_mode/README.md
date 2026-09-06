@@ -1,47 +1,46 @@
-# ZCode goal mode
+# ZCode Goal 模式
 
-LoopX adapter for [ZCode](https://zcode.z.ai/) — a terminal coding agent
-supporting [skills](https://zcode.z.ai/en/docs/skill), [Goal Mode](https://zcode.z.ai/en/docs/goal),
-and [Automations](https://zcode.z.ai/en/docs/automations).
+> [English](README.md)
 
-## What this surface is
+[ZCode](https://zcode.z.ai/) 的 LoopX 适配器 —— 一个终端编码 agent，支持
+[skills](https://zcode.z.ai/en/docs/skill)、[Goal Mode](https://zcode.z.ai/en/docs/goal)
+与 [Automations](https://zcode.z.ai/en/docs/automations)。
 
-ZCode discovers user skills from `~/.zcode/skills/<skill-name>/SKILL.md`.
-While ZCode provides native Goal Mode and Automations, LoopX currently
-integrates through the managed `$loopx` skill facade. In this mode, the loop
-driver is the agent's own turn loop gated by LoopX quota — every continuation
-enters through `quota should-run`, and a stop decision ends the session loop.
+## 该表面是什么
 
-Direct machine binding to ZCode native Goal Mode or Automations is not yet
-integrated and will be supported through dedicated provider contracts in the
-future.
+ZCode 从 `~/.zcode/skills/<skill-name>/SKILL.md` 发现用户 skills。虽然 ZCode
+提供原生 Goal Mode 与 Automations，LoopX 目前通过受管的 `$loopx` skill 门面集成。
+在该模式下，循环驱动是 agent 自己的、由 LoopX quota 管辖的 Turn 循环——每次延续
+都经过 `quota should-run` 进入，一个停止决策结束会话循环。
 
-## Install
+与 ZCode 原生 Goal Mode 或 Automations 的直接机器绑定尚未集成，未来将通过专用
+provider 契约支持。
+
+## 安装
 
 ```bash
 loopx slash-commands --install --surface zcode
 ```
 
-Writes the managed LoopX skill facades (`loopx`, `loopx-global-*`, …) into
-`ZCODE_HOME/skills` (default `~/.zcode/skills`; override with `ZCODE_HOME`).
-Managed files carry the `loopx-managed-slash-command` marker and are refreshed by
-rerunning the installer; user-owned files are never overwritten.
+把受管 LoopX skill 门面（`loopx`、`loopx-global-*`、…）写入
+`ZCODE_HOME/skills`（默认 `~/.zcode/skills`；用 `ZCODE_HOME` 覆盖）。受管文件携带
+`loopx-managed-slash-command` 标记，并在重跑安装器时刷新；用户自有文件绝不覆盖。
 
-After installation, refresh or read back installed skills in ZCode via Settings → Skills.
+安装后，在 ZCode 中通过 设置 → Skills 刷新或回读已安装 skills。
 
-## Use
+## 使用
 
-From a ZCode session in a connected project, invoke the `$loopx` skill (or type
-`/loopx <complex task>`). The facade instructs the agent to run:
+在已连接项目的 ZCode 会话中调用 `$loopx` skill（或键入 `/loopx <复杂任务>`）。
+门面指示 agent 运行：
 
 ```bash
 loopx start-goal --guided --project . --slash-command-arguments="<task>" --host-surface zcode
 ```
 
-After todo writeback, carry the generated heartbeat task body as the session
-objective and start every following turn with `quota should-run`.
+todo 写回后，把生成的心跳 task body 作为会话 objective，每个后续 Turn 都从
+`quota should-run` 开始。
 
-## Layout
+## 布局
 
-- `__init__.py` — host facts: install surface id, skills root resolution, and
-  the env override used by the installer and the activation packet.
+- `__init__.py` —— 宿主事实：安装表面 id、skills 根解析，以及安装器与激活 packet
+  使用的环境变量覆盖。

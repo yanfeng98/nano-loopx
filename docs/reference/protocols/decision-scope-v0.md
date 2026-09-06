@@ -1,79 +1,64 @@
 # Decision Scope v0
+> [English](decision-scope-v0.md)
 
-Status: public-safe protocol contract for scoped user/controller decisions.
+状态：面向作用域化用户/controller 决策的公开安全协议契约。
 
-User gates are not global booleans. A user or controller decision should say
-which authority is still needed, and an agent action should say which authority
-it depends on. LoopX can then decide whether the selected action is blocked,
-whether a safe fallback may continue, or whether the projection itself needs
-repair.
+用户 gate 不是全局布尔值。用户或 controller 决策应说明仍需要哪些权限，agent 动作应说明它依赖哪些权限。LoopX 随后可以决定所选动作是否被阻塞、安全回退是否可以继续，或投影本身是否需要修复。
 
-This contract turns the interaction catalog's Decision Scope Model into a
-machine-facing schema. It does not implement the runtime migration by itself;
-CLI/state/status/quota consumers should use this shape as the migration target.
+本契约把 interaction catalog 的 Decision Scope Model 变成面向机器的 schema。它不自行实现运行时迁移；CLI/state/status/quota 消费者应把该形状作为迁移目标。
 
-## Fields
+## 字段
 
 ### `decision_scope`
 
-Attached to a user todo, operator gate, or controller decision.
+附加到用户 todo、operator gate 或 controller 决策。
 
-| Field | Required | Meaning |
+| 字段 | 必需 | 含义 |
 | --- | --- | --- |
-| `kind` | yes | `private_read`, `write_scope`, `resource`, `production`, `public_claim`, `direction`, or `other`. |
-| `granularity` | yes | `action`, `lane`, `goal`, `project`, or `global`. |
-| `scope_key` | yes | Public-safe key that names the blocked authority, path, lane, resource, or decision. |
-| `decision_id` | no | Stable todo/gate/run id when the decision already exists. |
-| `expires_at` | no | Optional ISO timestamp for temporary authority. |
-| `reason_summary` | no | Public-safe one-line reason shown in status/UI. |
+| `kind` | 是 | `private_read`、`write_scope`、`resource`、`production`、`public_claim`、`direction` 或 `other`。 |
+| `granularity` | 是 | `action`、`lane`、`goal`、`project` 或 `global`。 |
+| `scope_key` | 是 | 指名被阻塞权限、路径、lane、资源或决策的公开安全键。 |
+| `decision_id` | 否 | 决策已存在时的稳定 todo/gate/run id。 |
+| `expires_at` | 否 | 临时权限的可选 ISO 时间戳。 |
+| `reason_summary` | 否 | 在 status/UI 中显示的公开安全单行原因。 |
 
 ### `required_decision_scopes`
 
-Attached to an agent todo, next action, handoff packet, or candidate runtime
-action. Each item uses the same `kind`, `granularity`, and `scope_key` fields
-as `decision_scope`.
+附加到 agent todo、下一动作、交接包或候选运行时动作。每项使用与 `decision_scope` 相同的 `kind`、`granularity` 与 `scope_key` 字段。
 
-An action is covered by a gate when at least one unresolved decision scope
-matches or dominates one of its required scopes. Dominance is intentionally
-small in v0:
+当一个未解决的决策作用域匹配或支配其必需作用域之一时，动作即被 gate 覆盖。v0 中支配刻意保持小：
 
-- same `kind` and same `scope_key`;
-- same `kind` and broader `granularity` over the same goal/project boundary;
-- explicit `scope_key="*"` only when the owner/controller recorded it.
+- 相同 `kind` 与相同 `scope_key`；
+- 相同 `kind`，且在同一 goal/project 边界上具有更宽的 `granularity`；
+- 仅当 owner/controller 记录时才使用显式 `scope_key="*"`。
 
-If the relation is ambiguous, status/quota must repair projection or ask the
-user/controller; it must not infer permission from prose.
+关系模糊时，status/quota 必须修复投影或询问用户/controller；它不得从散文推断权限。
 
-### Markdown metadata compact form
+### Markdown 元数据紧凑形式
 
-Todo metadata stores decision scopes as a compact public-safe token instead of
-inline JSON:
+Todo 元数据把决策作用域存储为紧凑公开安全 token，而非内联 JSON：
 
 ```md
 <!-- loopx:todo decision_scope=direction:action:benchmark_target_choice -->
 <!-- loopx:todo required_decision_scopes=direction:action:benchmark_target_choice -->
 ```
 
-The token is `kind:granularity:scope_key`. `decision_scope` is singular on a
-user gate; `required_decision_scopes` may contain a comma-separated list on an
-agent todo. Status/quota normalize those tokens back into
-`decision_scope_v0` objects before evaluating gate coverage.
+token 格式为 `kind:granularity:scope_key`。`decision_scope` 在用户 gate 上是单数；`required_decision_scopes` 在 agent todo 上可含逗号分隔列表。Status/quota 在评估 gate 覆盖前把这些 token 规范化为 `decision_scope_v0` 对象。
 
 ### `safety_class`
 
-Attached to agent work candidates and selected actions.
+附加到 agent 工作候选与所选动作。
 
-| Value | Meaning |
+| 值 | 含义 |
 | --- | --- |
-| `read_only` | May inspect public/local allowed state without mutation. |
-| `local_write` | Mutates repository or LoopX state within the current write boundary. |
-| `external_run` | Launches or advances external compute, benchmark, CI, or hosted runtime work. |
-| `protected_write` | Writes protected state, production systems, private materials, public submissions, or external authority surfaces. |
+| `read_only` | 可在不修改的状态下检查公开/本地允许状态。 |
+| `local_write` | 在当前写边界内修改仓库或 LoopX 状态。 |
+| `external_run` | 启动或推进外部计算、benchmark、CI 或托管运行时工作。 |
+| `protected_write` | 写受保护状态、生产系统、私有物料、公开提交或外部权限界面。 |
 
-`safety_class` does not grant permission. It lets LoopX choose the correct gate
-comparison and notification behavior.
+`safety_class` 不授予权限。它让 LoopX 选择正确的 gate 比较与通知行为。
 
-## Minimal Shape
+## 最小形状
 
 ```json
 {
@@ -108,108 +93,70 @@ comparison and notification behavior.
 }
 ```
 
-## Status And Quota Rules
+## Status 与 Quota 规则
 
-Status and quota should read decision scopes in this order:
+Status 与 quota 应按此顺序读取决策作用域：
 
-1. explicit `decision_scope`, `required_decision_scopes`, and `safety_class`;
-2. structured todo fields such as `task_class`, `required_write_scopes`, and
-   action kind;
-3. compatibility inference from legacy title/body text;
-4. projection repair when no confident relation exists.
+1. 显式 `decision_scope`、`required_decision_scopes` 与 `safety_class`；
+2. 结构化 todo 字段，如 `task_class`、`required_write_scopes` 与动作种类；
+3. 遗留标题/正文文本的兼容推断；
+4. 无自信关系时进行投影修复。
 
-Markdown text inference is a lint, not gate truth. A legacy `Next Action`
-regex may detect suspicious prose and create a projection-gap warning, but it
-must not override an explicit `interaction_contract`, structured todo fields,
-or an open runnable agent todo.
+Markdown 文本推断是 lint，不是 gate 真相。遗留 `Next Action` 正则可能检测可疑措辞并创建投影缺口警告，但它不得覆盖显式 `interaction_contract`、结构化 todo 字段或一个开放可运行 agent todo。
 
-LLM-assisted interpretation belongs only in cold-path authoring helpers or
-repair proposals. It may suggest a structured decision scope, but it must not
-decide delivery gates, spend policy, write permission, or safe fallback at
-runtime.
+LLM 辅助解读只适合冷路径编写 helper 或修复建议。它可以建议结构化决策作用域，但不得在运行时决定投递 gate、花费策略、写权限或安全回退。
 
-## Approval Consumption Lifecycle
+## 批准消费生命周期
 
-`loopx todo complete` resolves authority only for an explicitly linked
-`user_gate`:
+`loopx todo complete` 只为显式关联的 `user_gate` 解析权限：
 
-1. the completed todo has `task_class=user_gate`, a normalized
-   `decision_scope`, and `unblocks_todo_id=<target>`;
-2. the target is an agent todo whose `required_decision_scopes` contain scopes
-   covered by that gate;
-3. completion removes only the covered requirements and preserves every
-   uncovered scope;
-4. the transition returns a public-safe `todo_decision_scope_resolution_v0`
-   receipt with resolved and remaining scopes.
+1. 已完成的 todo 具有 `task_class=user_gate`、规范化 `decision_scope` 与 `unblocks_todo_id=<target>`；
+2. 目标是 agent todo，其 `required_decision_scopes` 包含该 gate 覆盖的作用域；
+3. 完成只移除已覆盖要求并保留每个未覆盖作用域；
+4. 转换返回带已解析与剩余作用域的公开安全 `todo_decision_scope_resolution_v0` 回执。
 
-This consumption also applies when the target todo is already `open`, such as
-publication performed immediately after approval. A completed `user_action`
-may still use the exact unblock relation for compatibility, but it does not
-consume decision authority. `todo supersede` records replacement or rejection;
-it never implies approval and therefore never consumes a required scope.
+当目标 todo 已经是 `open` 时（例如批准后立即发布），该消费同样适用。已完成的 `user_action` 仍可为兼容使用精确 unblock 关系，但它不消费决策权限。`todo supersede` 记录替换或拒绝；它绝不暗示批准，因此绝不消费必需作用域。
 
-## Standing Approval Receipts
+## 常驻批准回执
 
-Some owner decisions are operating policies rather than one-action gates.
-LoopX projects such a decision as `standing_decision_authority_v0` only when
-all of these conditions hold:
+有些 owner 决策是运营策略，而非单动作关卡。LoopX 只有在以下条件全部成立时才把该决策投影为 `standing_decision_authority_v0`：
 
-- the source item is a completed `user_gate`, not a `user_action`;
-- it carries a normalized `decision_scope` and an explicit
-  `decision_outcome=approve|reject|cancel`;
-- its granularity is `goal`, `project`, or `global`;
-- it has explicit `blocks_agent` or `global_gate=true` ownership; and
-- it has no `unblocks_todo_id`, which remains the one-action consumption path.
+- 来源项是已完成的 `user_gate`，而非 `user_action`；
+- 它携带规范化 `decision_scope` 与显式 `decision_outcome=approve|reject|cancel`；
+- 其 granularity 是 `goal`、`project` 或 `global`；
+- 它具有显式 `blocks_agent` 或 `global_gate=true` 所有权；并且
+- 它没有 `unblocks_todo_id`，后者仍是单动作消费路径。
 
-The latest receipt for the exact scope and owner identity wins. `approve`
-activates it; a later `reject` or `cancel` revokes it. Archive compaction keeps
-standing receipts in the active User Todo section so status and quota do not
-lose authority when ordinary completed work is archived.
+精确作用域与 owner 身份的最新回执胜出。`approve` 激活它；后续 `reject` 或 `cancel` 撤销它。归档压缩把常驻回执保留在活动 User Todo 小节中，使 status 与 quota 不会在普通完成工作被归档时丢失权限。
 
-A standing receipt does not make work implicitly privileged. The selected
-agent todo must still declare a covered `required_decision_scope`; quota
-filters receipts to the current agent lane before required-scope consistency
-is evaluated. A newer open gate may still block the exact work through normal
-gate routing. Chat prose, completed `user_action` items, inferred intent, and
-unscoped multi-agent decisions never grant standing authority.
+常驻回执不使工作隐含特权。所选 agent todo 仍须声明覆盖的 `required_decision_scope`；quota 在评估必需作用域一致性前把回执过滤到当前 agent lane。更新的开放 gate 仍可通过普通 gate 路由阻塞精确工作。聊天散文、已完成的 `user_action` 项、推断意图与无作用域的多 agent 决策从不授予常驻权限。
 
-## Migration Phases
+## 迁移阶段
 
-1. **Contract only:** document this schema and keep current behavior unchanged.
-2. **State authoring:** teach todo/gate write paths to accept and preserve
-   `decision_scope` and `required_decision_scopes`. `safety_class` remains a
-   later authoring field.
-3. **Projection:** surface the fields in status, quota, review packets, and
-   frontstage local ops mode.
-4. **Hot path:** make status/quota prefer structured scope relation over text
-   inference.
-5. **Lint fallback:** keep regex and optional LLM proposals as projection-gap
-   repair helpers, not runtime authority.
+1. **仅契约：** 文档化本 schema，保持当前行为不变。
+2. **状态编写：** 教 todo/gate 写路径接受并保留 `decision_scope` 与 `required_decision_scopes`。`safety_class` 仍是后续编写字段。
+3. **投影：** 在 status、quota、评审包与 frontstage 本地运维模式中暴露这些字段。
+4. **热路径：** 让 status/quota 优先使用结构化作用域关系，而非文本推断。
+5. **Lint 回退：** 保持正则与可选 LLM 建议作为投影缺口修复 helper，而非运行时权限。
 
-## Failure Semantics
+## 失败语义
 
-- Missing structured fields on legacy state: fall back to compatibility lint
-  and emit a projection-gap repair hint.
-- Conflicting structured fields: fail closed with a concrete blocker.
-- User todo requires action but has no concrete payload: report
-  `具体 user todo 未投影，需修复 LoopX 状态投影`.
-- Action claims no gate but requires protected write: block and repair scope.
-- Safe fallback exists outside the gate scope: notify the concrete gate, run
-  the independent fallback, validate, write back, and spend once.
+- 遗留状态缺结构化字段：回退到兼容 lint 并发出投影缺口修复提示。
+- 结构化字段冲突：以具体 blocker 失效关闭。
+- 用户 todo 需要动作但无具体载荷：报告「具体 user todo 未投影，需修复 LoopX 状态投影」。
+- 动作声称无 gate 但需要受保护写入：阻塞并修复作用域。
+- 安全回退存在于 gate 作用域之外：通知具体 gate、运行独立回退、验证、writeback 并花费一次。
 
-## Acceptance Checks
+## 验收检查
 
-A decision-scope implementation is acceptable when:
+一个决策作用域实现在以下条件下可接受：
 
-1. structured fields can be authored without hand-editing Markdown;
-2. status and quota expose the computed scope relation;
-3. explicit fields outrank title/body regex inference;
-4. ambiguous scope fails closed instead of guessing;
-5. safe fallback continues only when its required scopes are independent; and
-6. completing an exactly linked user gate consumes only its covered required
-   scopes while superseding it consumes none;
-7. a broad completed user gate becomes reusable only through an explicit,
-   agent-compatible standing receipt, and later reject/cancel revokes it;
-8. compacting completed todos does not erase active standing authority; and
-9. legacy regex/LLM assistance remains a cold-path repair signal, not runtime
-   gate truth.
+1. 无需手改 Markdown 即可编写结构化字段；
+2. status 与 quota 暴露计算出的作用域关系；
+3. 显式字段优先于标题/正文正则推断；
+4. 歧义作用域失效关闭而非猜测；
+5. 安全回退仅在其必需作用域独立时继续；并且
+6. 完成精确关联的用户 gate 只消费其覆盖的必需作用域，而接替它则一个都不消费；
+7. 宽泛的已完成用户 gate 只有通过显式、agent 兼容的常驻回执才可复用，后续 reject/cancel 会撤销它；
+8. 压缩完成 todos 不会抹除活动常驻权限；并且
+9. 遗留正则/LLM 辅助保持为冷路径修复信号，而非运行时 gate 真相。

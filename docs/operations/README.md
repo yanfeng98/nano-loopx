@@ -1,27 +1,28 @@
-# Operations
+# 运维
 
-These documents help operators and agents run, recover, and govern long-lived
-goals.
+> [English](README.md)
 
-## Start And Continue
+这些文档帮助 operator 与 Agent 运行、恢复和治理长寿命目标。
 
-- [Getting started](../guides/getting-started.md)
-- [Project agent todo contract](../project-agent-todo-contract.md)
-- [Quota allocation](../quota-allocation.md)
-- [Heartbeat automation prompt](../heartbeat-automation-prompt.md)
-- [Long-task cadence policy](long-task-cadence-policy.md)
+## 启动与继续
+
+- [快速上手](../guides/getting-started.md)
+- [项目 Agent todo 契约](../project-agent-todo-contract.md)
+- [配额分配](../quota-allocation.md)
+- [Heartbeat 自动化提示](../heartbeat-automation-prompt.md)
+- [长任务 cadence 策略](long-task-cadence-policy.md)
 - [Attention queue](attention-queue.md)
 
-## Authority And Setup
+## 权威与设置
 
-- [Authority source registration](authority-source-registration.md)
-- [New-project Codex prompt](new-project-codex-prompt.md)
-- [Integration guide](../integration.md)
-- [Status data contract](../status-data-contract.md)
+- [权威来源注册](authority-source-registration.md)
+- [新项目 Codex 提示](new-project-codex-prompt.md)
+- [集成指南](../integration.md)
+- [Status 数据契约](../status-data-contract.md)
 
-## Maintainer And Triage
+## 维护者与分类
 
-- [PR and issue labels](pr-issue-labels.md)
+- [PR 与 issue 标签](pr-issue-labels.md)
 
-Runtime-specific adapters belong under
-[`docs/integrations/`](../integrations/README.md).
+运行时特定的 adapter 属于
+[`docs/integrations/`](../integrations/README.md)。

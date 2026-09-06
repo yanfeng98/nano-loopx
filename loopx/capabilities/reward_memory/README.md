@@ -1,25 +1,20 @@
-# Reward Memory Architecture v0
+# Reward Memory Architecture v0（中文版）
 
-[中文版](README.zh-CN.md)
+[English](README.md)
 
-LoopX separates feedback evidence, policy content, and action authority so a
-useful judgment does not silently become a universal personal profile or create
-permissions that the actor never held. Feedback from a verified repository
-owner or core contributor may still derive durable policy content inside that
-actor's independently verified repository scope. The distinction is between
-inferring what the contributor wants and inventing what the contributor is
-authorized to permit.
+Reward Memory 的核心边界是把反馈证据、策略内容和动作 authority 分开。一条有价值的
+判断可以沉淀成后续策略，但不能因此变成跨场景的个人画像，也不能创造反馈者原本没有的
+权限。经过验证的仓库 owner 或核心贡献者反馈，可以在其独立验证过的仓库作用域内推导出
+持久策略。这里需要区分的是“贡献者希望系统怎么做”和“贡献者有权允许系统做什么”。
 
-This contract defines five memory classes, guarded precedence, and the
-pilot/meta delegation boundary. Stage 1 adds the corpus registry and health
-read model. Stage 2 adds the stateless candidate/review seam. Stage 3 adds
-explicit recall/application. The minimal ingest loop only composes those seams
-into one corpus-owner-authorized provider write and exact readback. It adds no
-second memory store, candidate scheduler, semantic router, evaluation harness,
-or rollout. The opt-in runtime hooks reuse these seams at module-owned
-boundaries; they do not create a background learner.
+这份合同定义五类一等记忆、带护栏的优先级和 pilot/meta 分工；Stage 1 增加 corpus
+registry 与健康状态 read model；Stage 2 增加无状态 candidate/review 薄缝；Stage 3 增加
+显式 recall/application。最简 ingest 闭环只把这些既有薄缝串成一次 corpus-owner 授权的
+provider 写入与精确读回；它不新增第二套 memory store、候选调度器、后台 recall、
+语义路由器、评测框架或 rollout。可选 runtime hook 只在模块自有边界复用这些薄缝，
+不会变成后台学习器。
 
-The machine-readable contract is available through:
+机器可读合同通过下面的命令查看：
 
 ```bash
 loopx reward-memory architecture --format json
@@ -27,13 +22,13 @@ loopx reward-memory candidate-review --case issue-fix-verified-contributor --dec
 loopx reward-memory ingest-event --input full-public-fixture.json --format json
 ```
 
-## Experimental activation
+## 实验能力的开启方式
 
-Reward Memory is a provider-neutral, default-off experimental goal capability.
-It is enabled for named registered agent lanes, not for a whole LoopX install:
+Reward Memory 是 provider-neutral、默认关闭的 goal 级实验能力。它按已登记 agent lane
+显式开启，而不是对整套 LoopX 全局开启：
 
 ```bash
-# Preview first; add --execute only after checking the boundary change.
+# 先 preview；确认边界变化后再追加 --execute。
 loopx configure-goal --goal-id <goal> \
   --reward-memory-config .loopx/config/reward-memory/experiment.json \
   --reward-memory-agent <registered-agent>
@@ -42,19 +37,17 @@ loopx reward-memory experiment-status \
   --goal-id <goal> --agent-id <registered-agent> --format json
 ```
 
-The registry retains only `enabled`, `experimental`, an ignored repo-relative
-config pointer, and the explicit agent allowlist. Provider-specific choices
-therefore stay local and private. OpenViking is the first provider used by the
-Issue Fix pilot, but it is not a global LoopX feature flag or mandatory
-dependency; another provider can satisfy the same binding contract.
+Registry 只保存 `enabled`、`experimental`、一个指向 repo 内 ignored config 的相对路径，
+以及显式 agent allowlist，因此 provider 选择留在本地私有配置里。OpenViking 是 Issue Fix
+pilot 当前使用的首个 provider，但不是 LoopX 的全局 feature flag 或强制依赖；任何满足
+同一 binding contract 的 provider 都可以替换它。
 
-Config v1 declares one `project_provider_binding`, its exact per-corpus scope
-references, the project corpus set, module-owned surfaces, and an automation
-policy. A surface explicitly lists its compatible `corpus_ids`, selects one
-`ingest_corpus_id`, and owns its `recall_profile`. LoopX never discovers routes
-by scanning all corpora. Corpora assigned to one surface must have the same
-memory class, authority, privacy, freshness, and lifecycle. Scope digests and
-provider/corpus identity are still checked independently for every corpus.
+Config v1 只登记一次 `project_provider_binding`，同时列出每个 corpus 的精确 provider
+scope、项目 corpus 集合、模块自有 surface 和 automation policy。每个 surface 显式列出
+兼容的 `corpus_ids`，指定唯一 `ingest_corpus_id`，并拥有自己的 `recall_profile`。LoopX
+不会通过扫描全部 corpus 猜路由。同一 surface 下的 corpus 必须具有相同 memory class、
+authority、privacy、freshness 和 lifecycle；每个 corpus 的 scope digest、provider identity
+和 corpus identity 仍逐一精确校验。
 
 ```json
 {
@@ -91,37 +84,30 @@ provider/corpus identity are still checked independently for every corpus.
 }
 ```
 
-The abbreviated corpus and standing-policy objects above represent the full
-existing record contracts. `experiment-status` reports the v1 config schema,
-corpus/surface counts, recall-profile ids, and the effective automatic policy
-without exposing scope refs. Agent-scoped `quota should-run` and `status
---agent-id` resolve that policy through the same invoked registry and config
-reader; they do not copy automation flags into registry summaries. Their compact
-`config_runtime_route` names the registry role and project/shared runtime scope,
-and marks exact config readback without exposing either local path. The runtime accepts only
-`reward_memory_experiment_config_v1`; local ignored configs must be migrated
-explicitly before rollout. Setting a flag only authorizes a compatible runtime
-hook; it does not create a scheduler, infer a query, widen authority, or bypass
-the exact surface/corpus guards.
+上例省略的 corpus 和 standing policy 字段仍使用既有完整记录 contract。
+`experiment-status` 会报告 v1 config schema、corpus/surface 数量、recall profile id 和生效的
+automatic policy，但不会泄露 scope ref。Agent-scoped `quota should-run` 与
+`status --agent-id` 使用同一个 invoked registry 和 config reader 解析该 policy，不会把
+automation flag 手工复制进 registry summary。它们输出的紧凑 `config_runtime_route` 只说明
+registry role、project/shared runtime scope 和精确配置读回状态，不暴露本地路径。运行时只接受
+`reward_memory_experiment_config_v1`；本地 ignored config 必须在 rollout 前显式迁移。打开
+flag 只授权兼容的 runtime hook；它不会新建 scheduler、替模型推导 query、扩大 authority
+或绕过精确 surface/corpus guard。
 
-`automatic_recall=true` lets a predeclared module boundary call the shared
-runtime hook. The module still supplies its surface query, current-artifact
-checks, and reasoning callback. The hook follows the configured corpus order,
-stops at the first exact readback hit, allows exactly one query at a
-`function_boundary` or at most three at a bounded-agentic boundary, and emits
-provider-call telemetry plus an application receipt. A provider or application
-failure preserves the module's base output and is never a user gate.
+`automatic_recall=true` 允许已声明的模块边界调用通用 runtime hook。Surface query、当前
+artifact 校验和推理回调仍由模块提供。Hook 按配置的 corpus 顺序读取，遇到第一个精确
+读回命中即停止；`function_boundary` 必须只有一个 query，bounded-agentic 边界最多三个，
+并输出 provider call telemetry 与 application receipt。Provider 或 application 失败时保留
+模块原始输出，而且永远不形成 user gate。
 
-`automatic_ingest=true` lets a module pass one already-distilled compact event
-to the configured adapter and ingest corpus. The adapter and standing policy
-remain responsible for exact actor/project/surface/action scope. The shared
-hook reuses deterministic candidate identity, activation, provider sync, exact
-readback, and an ingest receipt. It does not collect chats, parse tool logs,
-store raw content, or infer new authority. Repeated events remain idempotent.
-Both flags default to false, and the explicit `ingest-event` command remains an
-explicit operator/caller path rather than a compatibility fallback.
+`automatic_ingest=true` 允许模块把一条已经提炼好的紧凑事件交给已配置 adapter 与 ingest
+corpus。精确 actor/project/surface/action scope 仍由 adapter 和 standing policy 校验；通用
+hook 只复用确定性的 candidate identity、activation、provider sync、精确读回与 ingest
+receipt。它不采集聊天、不解析 tool log、不保存 raw content，也不推导新 authority；重复
+事件保持幂等。两个 flag 默认都是 false；显式 `ingest-event` 命令继续是调用方主动路径，
+不是旧配置兼容 fallback。
 
-An allowlisted agent supplies only the compact event at runtime:
+Allowlist 内的 agent 在运行时只提交紧凑事件：
 
 ```bash
 loopx reward-memory ingest-event \
@@ -129,106 +115,88 @@ loopx reward-memory ingest-event \
   --input compact-event.json --execute --format json
 ```
 
-Real provider writes require this configured goal-and-agent route. The legacy
-full-packet form remains available only as a no-write evaluation fixture.
-Config loading alone does not capture feedback or authenticate a provider.
-Automatic hooks run only when both the flag and a real module-owned callsite
-are present. Issue Fix currently has two independently configured recall
-callsites: `reviewer_artifact.summary` applies a concise reviewer-facing
-summary, while `reviewer_notification.before_send` may apply one verified
-structured hard-policy delivery window immediately before the existing
-secondary sink. The latter reuses the sink's queue/dedupe/readback path and is
-unrestricted when neither recalled nor explicit sink policy exists; it is not
-a generic router. Other surfaces remain explicit until separately wired and
-verified. Issue Fix continues normally when the experiment is disabled,
-unavailable, rejected by guards, or fails exact readback. Invalid or non-v1
-configuration resolves unavailable with both automatic flags false.
+真实 provider 写入必须经过这条 goal + agent 配置路由。原有 full-packet 形式只保留为
+no-write 评测夹具。仅加载配置不会采集反馈或代替 provider 认证；只有 flag 已开且存在经过
+验证的模块真实调用点时，automatic hook 才运行。Issue Fix 当前有两个彼此独立配置的
+recall 调用点：`reviewer_artifact.summary` 应用简短 reviewer-facing 摘要；
+`reviewer_notification.before_send` 在现有二级 sink 即将执行前，只允许应用一条经过验证的
+结构化 hard-policy 发送时窗。后者复用 sink 的 queue、去重和读回路径；召回策略与显式 sink
+策略都不存在时默认不限制时间，也不是通用路由器。其他 surface 在分别接线和验证前仍走
+显式调用。实验关闭、provider 不可用、guard 拒绝或精确读回失败时，Issue Fix 都继续正常
+工作。非 v1 或无效配置会以 unavailable fail-open，并把两个 automatic flag 置为 false。
 
-## Five first-class classes
+## 五类一等记忆
 
-| Class | Source and scope | Authority and use | Lifecycle |
+| 类别 | 来源与作用域 | Authority 与用途 | 生命周期 |
 | --- | --- | --- | --- |
-| `run_bound_reward` | Explicit human judgment attached to one exact goal/run. | Evidence about that outcome only. Future influence requires compact candidate derivation and an activation policy; the overlay itself is not a standing instruction. | Append-only overlay; corrections and revocations append references instead of rewriting the judged run. |
-| `hard_policy` | Explicit user/repository/operator authority, or policy content inferred from verified owner/core-contributor evidence and bound to an existing project/action authority scope. | Constraint or veto inside the verified scope. Reasoning may infer policy meaning from rewards, preferences, current-artifact-verified experience, selected options, accepted/rejected outcomes, and maintainer corrections; it may not infer credentials, new publish/production scope, or cross-user/repository authority. | Active records retain actor, evidence, scope, and derivation provenance until superseded, revoked, or expired; temporary or weakly reinforced inference should expire or return to review. |
-| `soft_preference` | Explicit feedback, selected options, or later reviewed candidates scoped to a workspace/project and module-owned surface. | Advisory ranking or rewrite only. It cannot grant publish, merge, write, credential, or production authority. | Durable only after explicit review; editable, rejectable, supersedable, revocable, and retireable. |
-| `procedural_experience` | Revision-stamped trajectories, distilled experiences, maintainer corrections, accepted/rejected changes, and reviewed architectural learning, with repository/module/revision/applicability scope. | Advisory diagnosis, scope, routing, or validation guidance only after current-artifact verification. A training/evaluation case is evidence, not an executable instruction. Retrieval alone has zero patch authority. | Trajectories may be add-only; distilled or architectural experiences are supersedable. New source truth can stale, quarantine, refute, or retire them. |
-| `working_context` | Either fresh execution state (`fresh_execution_context`) or a revisioned session-continuation summary (`session_working_memory`). | Supports only the current execution/session continuation. Neither subtype becomes reusable policy or grants action authority. Fresh source-of-truth reads outrank recalled material. | `fresh_execution_context` already exists in LoopX registry/state/todo/quota/checkout observations and is reused, not rebuilt. Session context remains bound to its session/archive revision. |
+| `run_bound_reward` | 人对某个精确 goal/run 给出的显式评价。 | 只描述该次结果。若要影响后续行为，必须先形成紧凑候选并经过 activation policy；reward overlay 本身不是长期指令。 | Overlay 只追加；修正和撤销通过引用追加，不回写被评价的原始 run。 |
+| `hard_policy` | 显式的用户、仓库或 operator authority，或者从已验证的 owner/核心贡献者证据中推导、并绑定到既有 project/action authority scope 的策略内容。 | 在已验证作用域内形成约束或否决。模型可以从 reward、preference、经过当前 artifact 验证的 experience、选项选择、接受/拒绝结果和 maintainer correction 中推导策略含义；不能推导 credential、新的 publish/production scope 或跨用户、跨仓库 authority。 | Active record 保留 actor、evidence、scope 和 derivation provenance，直到被 supersede、revoke 或 expire。临时或证据较弱的推导应当过期或回到 review。 |
+| `soft_preference` | 显式反馈、用户选择，或者后续经过 review 的候选；作用域绑定到 workspace/project 和模块自有 surface。 | 只用于 advisory ranking 或 rewrite，不能授予 publish、merge、write、credential 或 production authority。 | 只有经过显式 review 才能持久化；支持 edit、reject、supersede、revoke 和 retire。 |
+| `procedural_experience` | 带 revision 的 trajectory、distilled experience、maintainer correction、接受/拒绝变更和经过 review 的架构经验；同时带 repository/module/revision/applicability scope。 | 只有经过当前 artifact 验证，才能作为诊断、范围判断、路由或验证建议。训练/评测 case 是证据，不是可执行指令；单次 retrieval 对 patch 没有 authority。 | Trajectory 可以只追加；distilled 或 architectural experience 支持 supersede。新的 source truth 可以把旧经验标记为 stale、quarantine、refute 或 retire。 |
+| `working_context` | 包含 fresh execution state（`fresh_execution_context`）和带 revision 的 session continuation 摘要（`session_working_memory`）。 | 只服务当前执行或 session 延续，不能自动升级成可复用 policy，也不能授予动作 authority。当前 source-of-truth 读取始终高于 recall 内容。 | `fresh_execution_context` 已存在于 LoopX 的 registry/state/todo/quota/checkout observation 中，本设计直接复用。Session context 继续绑定对应 session/archive revision。 |
 
-Every durable record must name `source`, `scope`, `authority`, `confidence`,
-`lifecycle_state`, `supersession`, `revocation`, `expiry`, and `privacy` in
-addition to the class. Confidence describes evidence quality; it never
-increases authority. Confidence is `low`, `medium`, or `high` with a required
-basis; source names kind/ref/actor/time, scope names user/workspace,
-project/repository, module/surface, and revision/time boundaries. Lifecycle
-records state plus supersession, revocation, expiry, and retirement references.
-Privacy names visibility, retention class, and whether raw content was captured.
+每条持久记录除了类别，还必须包含 `source`、`scope`、`authority`、`confidence`、
+`lifecycle_state`、`supersession`、`revocation`、`expiry` 和 `privacy`。
+`confidence` 只表示证据质量，不会提高 authority。它取 `low`、`medium` 或 `high`，
+并附带判断依据。`source` 记录 kind/ref/actor/time；`scope` 记录 user/workspace、
+project/repository、module/surface 和 revision/time 边界；lifecycle 记录当前状态及
+supersession、revocation、expiry、retirement 引用；privacy 记录可见范围、保留类别和
+是否捕获 raw content。
 
-## Policy content versus authority
+## 策略内容与 authority
 
-Hard policy has two independent questions:
+Hard policy 包含两个相互独立的问题：
 
-1. **What is the policy?** LoopX may infer compact policy content from explicit
-   feedback, reviewed preferences, current-artifact-verified experience,
-   selected options, repeated accepted or rejected outcomes, and maintainer
-   corrections.
-2. **Where does that policy have force?** Actor identity and repository/action
-   authority must come from an independently verified source. Memory confidence
-   cannot create or widen that scope.
+1. **策略内容是什么？** LoopX 可以从显式反馈、经过 review 的 preference、经过当前
+   artifact 验证的 experience、选项选择、重复的接受/拒绝结果和 maintainer
+   correction 中推导紧凑策略。
+2. **策略在哪个范围内生效？** Actor identity 和 repository/action authority 必须来自
+   独立验证的来源。Memory confidence 不能创造或扩大作用域。
 
-For a verified repository owner or core contributor, an unambiguous inferred
-policy may become active without asking the same question after every run when
-all of these hold: actor and authority scope are verified, provenance is
-compact and inspectable, no higher-authority source conflicts, and the record
-is reversible through edit, supersede, revoke, retire, or expiry. Ambiguous
-meaning, unclear scope, identity uncertainty, or a conflict returns the item to
-review. Inference never creates credentials, external-write capability,
-production permission, cross-agent authority, or authority in another
-repository.
+当仓库 owner 或核心贡献者身份已经验证，一条含义明确的推导策略可以直接进入 active，
+无需在每次 run 后重复询问，但需要同时满足以下条件：actor 与 authority scope 已验证；
+provenance 紧凑且可检查；不存在更高 authority 的冲突来源；记录可以通过 edit、
+supersede、revoke、retire 或 expiry 逆转。含义含糊、作用域不清、身份不确定或存在冲突
+时，候选回到 review。推导过程不能创造 credential、external-write capability、
+production permission、cross-agent authority，也不能扩展到另一个仓库。
 
-Inference may derive a reusable boundary or gate policy, but it cannot fabricate
-the current state transition of a concrete operator gate or authority
-checkpoint. A current approve/reject/consume receipt still comes from that
-gate's source of truth.
+系统可以推导可复用的边界或 gate policy，但不能编造某个具体 operator gate 或
+authority checkpoint 的当前状态迁移。一次 approve、reject 或 consume receipt 仍然必须
+来自该 gate 自己的 source of truth。
 
-## Guarded precedence and model reasoning
+## 带护栏的优先级与模型推理
 
-The following order is a safety and attention envelope, not an exhaustive
-decision table:
+下面的顺序定义安全与注意力边界，不是一张穷举式决策表：
 
-1. explicit action authority and privacy boundaries;
-2. active in-scope hard policy;
-3. fresh working context and current source of truth;
-4. current-artifact-verified procedural experience;
-5. active in-scope soft preference;
-6. run-bound reward as evidence only.
+1. 显式 action authority 与 privacy boundary；
+2. 当前有效、作用域匹配的 hard policy；
+3. fresh working context 与当前 source of truth；
+4. 经过当前 artifact 验证的 procedural experience；
+5. 当前有效、作用域匹配的 soft preference；
+6. 只作为证据的 run-bound reward。
 
-Deterministic code should reject illegal states: unverified authority, wrong
-project or surface, revoked/expired material, privacy violations, unresolved
-same-authority conflicts, and missing current-artifact verification. Within the
-remaining allowed action set, the model keeps responsibility for interpreting
-feedback, judging relevance and evidence sufficiency, balancing trade-offs,
-and deciding to apply, ignore, or seek more evidence. Its compact receipt names
-the reasoning summary, memory references, artifact verification, and
-authority/scope check.
+确定性代码负责拒绝非法状态：authority 未验证、project/surface 不匹配、材料已
+revoked/expired、privacy 违规、同级 authority 冲突未解决，或者缺少当前 artifact
+验证。进入合法动作集合后，模型继续负责理解反馈含义、判断相关性与证据充分性、权衡
+取舍，并决定 apply、ignore 或 seek more evidence。紧凑 receipt 需要记录 reasoning
+summary、memory reference、artifact verification 和 authority/scope check。
 
-Prefer explicit provenance when evidence is otherwise equal, but do not turn
-that preference into a hard-coded router that suppresses useful inference. Raw
-chat, transcripts, tool logs, credentials, and local paths are not
-reward-memory records.
+当证据质量接近时，优先使用 provenance 更明确的记录；这条偏好不能演化成压制有效
+推理的 hard-coded router。Raw chat、transcript、tool log、credential 和本地路径都不是
+Reward Memory record。
 
-`loopx reward-memory route-check` is a deterministic regression fixture for
-obvious safety/escalation conditions such as PR #3237. It is not the live Issue
-Fix decision engine and does not replace model reasoning.
+`loopx reward-memory route-check` 是确定性回归夹具，用于覆盖 PR #3237 一类明显的
+安全或升级条件。它不是线上 Issue Fix 决策引擎，也不替代模型推理。
 
-## Architecture layers and reuse
+## 架构分层与能力复用
 
 ```mermaid
 flowchart TD
-  OV["OpenViking memory substrate<br/>AGFS source truth, index, scoped retrieval,<br/>preferences, trajectories, experiences, session memory"]
-  CTX["Existing LoopX fresh execution context<br/>registry, active state, todo/quota, checkout, bounded observations"]
-  CORE["LoopX reward-memory core<br/>classes, scope/authority, corpus health,<br/>candidate and activation decisions"]
-  IF["Issue Fix adapter<br/>run outcome and maintainer feedback in;<br/>routing/validation influence receipt out"]
-  OTHER["Later module adapters<br/>same core contract, module-owned surfaces"]
+  OV["OpenViking memory 底座<br/>AGFS source truth、索引、作用域检索、<br/>preference、trajectory、experience、session memory"]
+  CTX["现有 LoopX fresh execution context<br/>registry、active state、todo/quota、checkout、受限 observation"]
+  CORE["LoopX Reward Memory core<br/>类别、scope/authority、corpus health、<br/>candidate 与 activation decision"]
+  IF["Issue Fix adapter<br/>输入 run outcome 与 maintainer feedback；<br/>输出 routing/validation influence receipt"]
+  OTHER["后续模块 adapter<br/>复用同一 core contract，保留模块自有 surface"]
 
   OV --> CORE
   CTX --> CORE
@@ -236,373 +204,308 @@ flowchart TD
   CORE --> OTHER
 ```
 
-OpenViking owns memory storage, indexing, scoped retrieval, and session-memory
-building blocks. LoopX owns action semantics: class, scope, authority,
-lifecycle, candidate derivation, activation, and application receipts. The
-Issue Fix adapter maps issue/PR evidence into the shared core and consumes its
-decisions; it must not grow a parallel memory store, policy schema, or ranking
-pipeline. Other modules join only after this reuse seam is proven.
+OpenViking 负责 memory storage、index、scoped retrieval 和 session-memory 基础能力。
+LoopX 负责动作语义：class、scope、authority、lifecycle、candidate derivation、
+activation 和 application receipt。Issue Fix adapter 把 issue/PR evidence 映射到共享
+core，再消费 core 返回的决策；它不能新增平行的 memory store、policy schema 或 ranking
+pipeline。其他模块只在这条复用路径被证明后接入。
 
-### Issue Fix as the first adapter
+### Issue Fix 是首个 adapter
 
-Issue Fix contributes only domain mapping:
+Issue Fix 只增加领域映射：
 
-- exact run reward, maintainer correction, selected fix direction, and durable
-  issue/PR outcome become compact inputs to the shared candidate contract;
-- repository identity, contributor role, current checkout, issue/PR state, and
-  active LoopX gates supply current authority and execution context;
-- OpenViking supplies scoped preference or experience retrieval when the
-  module asks for it;
-- the shared core returns apply, ignore, seek-evidence, or review, together
-  with a compact influence receipt;
-- Issue Fix still verifies any recalled technical claim against current code
-  and tests before it can affect a patch.
+- 精确 run reward、maintainer correction、选定的修复方向和持久 issue/PR outcome，
+  转成共享 candidate contract 的紧凑输入；
+- repository identity、contributor role、当前 checkout、issue/PR state 和 active LoopX
+  gate，提供当前 authority 与 execution context；
+- 模块显式请求时，由 OpenViking 提供作用域匹配的 preference 或 experience retrieval；
+- 共享 core 返回 apply、ignore、seek-evidence 或 review，并附带紧凑 influence receipt；
+- recalled technical claim 仍需在当前代码与测试中验证，才能影响 patch。
 
-The adapter does not own candidate lifecycle, contributor-policy semantics,
-retrieval health, or provider persistence. Those stay reusable core concerns.
-This keeps the issue-fix scenario valuable without letting it define the whole
-memory product.
+Candidate lifecycle、contributor-policy semantics、retrieval health 和 provider
+persistence 归共享 core 所有，不由 adapter 重复实现。Issue Fix 可以充分发挥场景价值，
+但不会反过来把整个 memory 产品做成 Issue Fix 特化方案。
 
-## Implemented Stage-2 seam
+## 已实现的 Stage 2 薄缝
 
-Stage 2 accepts a model-proposed compact candidate: target class, content
-summary, source actor and evidence reference, workspace/project/surface scope,
-reasoning summary, confidence, and any requested action scopes. The model owns
-interpretation and the proposed policy meaning. Deterministic code only checks
-the public-safe shape, scope binding, raw-content boundary, source freshness,
-unresolved conflicts, current-artifact proof where required, and authority
-checkpoint.
+Stage 2 接收模型提出的紧凑候选：target class、content summary、source actor 与 evidence
+reference、workspace/project/surface scope、reasoning summary、confidence，以及请求影响的
+action scopes。候选的含义、策略内容和权衡继续由模型推理；确定性代码只检查公共安全
+shape、scope binding、raw-content boundary、source freshness、未解决冲突、必要的当前
+artifact proof 和 authority checkpoint。
 
-For `hard_policy`, the checkpoint must independently bind the same actor, role,
-project, and action scopes. A verified core-contributor correction can
-therefore produce an activation-ready policy candidate directly, but only for
-the subset of action scopes already present in that checkpoint. An unverified,
-mismatched, or wider request remains inspectable as `guard_blocked`; an
-attempted `accept` or `edit` becomes `no_write` instead of gaining authority.
-Advisory preference and experience candidates cannot request action authority.
+对于 `hard_policy`，checkpoint 必须独立绑定同一个 actor、role、project 和 action
+scopes。因此，经过验证的核心贡献者 correction 可以直接形成 activation-ready policy
+candidate，但只能约束 checkpoint 已有 action scope 的子集。checkpoint 未验证、actor 或
+project 不一致、或者候选要求更大 scope 时，候选仍可检视，但状态为 `guard_blocked`；此时
+即使请求 `accept` 或 `edit`，有效决策也会收敛为 `no_write`，不会扩大 authority。
+Advisory preference 与 experience candidate 不允许请求 action authority。
 
-The review contract exposes five decisions:
+Review contract 暴露五个一等决策：
 
-- `accept` emits an active record;
-- `edit` emits a revised candidate linked to the prior candidate;
-- `reject` closes the candidate as rejected;
-- `retire` closes an already active reviewed record;
-- `no_write` records that no provider write should occur.
+- `accept`：产出 active record；
+- `edit`：产出带 prior-candidate lineage 的修订候选；
+- `reject`：关闭并拒绝候选；
+- `retire`：关闭一个已经 active 的 reviewed record；
+- `no_write`：明确记录本次不应写 provider。
 
-These are decision records, not persistence operations. `accept` and `retire`
-only return a next-step instruction for the caller to use the declared corpus
-write authority and verify readback. The seam itself writes no LoopX state,
-OpenViking corpus, index, receipt, or external system. It also does not ingest
-raw chat or tool transcripts.
+这些只是 decision record，不是 persistence 操作。`accept` 与 `retire` 只返回下一步提示：
+调用方必须使用 corpus 声明的 write authority，再完成 readback 验证。薄缝自身不写 LoopX
+state、OpenViking corpus、index、receipt 或外部系统，也不摄取 raw chat 或 tool transcript。
 
-`issue_fix_reward_memory_candidate_adapter_v0` is deliberately a field-mapping
-adapter. It maps a compact issue reference, repository revision, module-owned
-surface, contributor evidence, and model reasoning into
-`reward_memory_candidate_v0`; all guards and lifecycle decisions remain in the
-shared core. This is the first reuse proof, not an Issue Fix-specific memory
-implementation.
+`issue_fix_reward_memory_candidate_adapter_v0` 刻意保持为字段映射 adapter：把紧凑 issue
+reference、repository revision、模块自有 surface、contributor evidence 和模型 reasoning
+映射到 `reward_memory_candidate_v0`。所有 guard 与 lifecycle decision 仍由共享 core 所有。
+这是第一条复用证据，不是 Issue Fix 专用 memory 实现。
 
-## Minimal ingest loop
+## 最简写入闭环
 
-`loopx reward-memory ingest-event` is a thin atomic orchestration, not another
-memory product layer. The configured experiment explicitly selects an adapter.
-`issue_fix_maintainer_feedback` remains the Issue Fix compatibility adapter;
-`scoped_feedback` accepts a generic `scoped_feedback_reward_memory_event_v0`
-for any module-qualified surface. Both adapters only map strict compact fields
-into the same `reward_memory_candidate_v0`; neither owns a second lifecycle,
-store, scheduler, recall path, or semantic router. LoopX neither retains raw
-feedback bodies nor uses keywords to decide which feedback deserves memory.
-The model or calling module first distils an event containing only a source
-reference, verified actor/role, exact workspace/project/surface/revision,
-compact summary, reasoning, and current-artifact evidence.
+`loopx reward-memory ingest-event` 是一条薄的原子编排，而不是新的 memory 产品层。配置好的
+实验显式选择 adapter。`issue_fix_maintainer_feedback` 继续作为 Issue Fix 兼容适配器；
+`scoped_feedback` 则接受通用的 `scoped_feedback_reward_memory_event_v0`，可用于任意模块限定
+surface。两者都只把严格、紧凑的字段映射到同一个 `reward_memory_candidate_v0`，不拥有第二套
+lifecycle、store、scheduler、recall path 或 semantic router。LoopX 不读取或保存原始 feedback
+body，也不会根据关键词自动判断“哪条反馈值得记忆”。模型或调用模块先把材料压缩成只包含
+source ref、已验证 actor/role、精确 workspace/project/surface/revision、内容摘要、reasoning
+和当前 artifact 证据的 event。
 
-A `reward_memory_standing_policy_v0` predeclares the corpus owner, reviewer,
-authority source, exact project/surfaces, one memory class, source kinds,
-verified actor roles, and action scopes. This replaces per-comment approval
-with one approval of an exact boundary. It cannot create credentials,
-repository write authority, publish/production scope, or cross-project
-authority. Out-of-scope, conflicted, stale, raw, or unmodelled input is
-`guard_blocked` before any provider call.
+一个 `reward_memory_standing_policy_v0` 预先声明 corpus owner、reviewer、authority source、
+精确 project/surface、唯一 memory class、允许的 source kind、已验证 actor role 和 action
+scope。它把“每条 comment 重复审批”收敛成“一次批准精确边界”；它不能创造 credential、
+仓库写权限、publish/production scope 或跨项目 authority。任何越界、冲突、非 current source
+或 raw/unmodelled 字段都会在 provider 调用前 `guard_blocked`。
 
-The command then composes deterministic `candidate_ref` deduplication, standing
-policy acceptance, active-envelope construction, declared-provider `sync`, and
-one exact-corpus/surface function-boundary recall. A
-`reward_memory_ingest_receipt_v0` reports `activated` and
-`memory_available_for_recall=true` only when resource ref, candidate ref, and
-canonical content digest all match. Provider unavailability, pending commit,
-or readback mismatch fails open and does not block the caller's normal work.
-`observed_at` is the immutable first-observed event timestamp and must be reused
-on retries. The provider target binds both standing-policy and candidate
-digests so a policy revision cannot silently reuse an older activation.
-`--execute` is off by default; dry-run returns only `planned`. Execute also
-requires the goal id and allowlisted agent id, so a caller cannot bypass the
-default-off experiment policy by supplying a provider binding directly.
+同一命令按顺序执行：确定性 `candidate_ref` 去重、standing-policy accept、active envelope、
+声明 provider 的 `sync`、同一 exact corpus/surface 的 function-boundary recall，以及
+resource ref、candidate ref、canonical content digest 三重读回校验。只有三项都一致时，
+`reward_memory_ingest_receipt_v0` 才返回 `activated` 和
+`memory_available_for_recall=true`。Provider 不可用、commit pending 或读回不一致都 fail open，
+不阻塞调用方的正常工作。`observed_at` 是事件第一次被观察到的不可变时间，retry 必须复用它；
+provider target 同时绑定 standing-policy 与 candidate digest，避免策略换版误复用旧激活。
+`--execute` 缺省关闭，dry-run 只返回 `planned`。Execute 还必须同时提供 goal id 和 allowlist
+内 agent id，调用方不能通过直接传 provider binding 绕过默认关闭的实验策略。
 
-The caller still explicitly invokes its existing Stage-3 function-boundary
-recall hook. Issue Fix keeps `run_issue_fix_patch_planning_reward_memory`; other
-modules use their own surface-owned hook. The model decides apply, ignore, or
-refute and reuses the shared application receipt. The ingest seam adds no
-deterministic semantic routing or background scheduler.
+调用方仍然显式调用自己现有的 Stage 3 function-boundary recall hook。Issue Fix 保留
+`run_issue_fix_patch_planning_reward_memory`，其他模块使用各自 surface 所有的 hook。模型决定
+apply、ignore 或 refute，并复用共享 application receipt；ingest seam 不增加确定性语义路由
+或后台 scheduler。
 
-## OpenViking alignment
+## 与 OpenViking 的对齐关系
 
-The five classes are provider-neutral, but the Stage-0 boundary was checked
-against OpenViking's current public architecture and code:
+五类记忆保持 provider-neutral；Stage 0 的边界已经结合 OpenViking 当前公开架构和代码
+进行校验：
 
-- OpenViking is a context database, not an action-authority system. AGFS
-  content is its source of truth; the vector index stores retrieval references.
-- OpenViking `preferences` can supply reviewed `soft_preference` candidates.
-  They never become permission.
-- OpenViking `trajectories` are add-only operation contracts distilled from one
-  execution. OpenViking `experiences` are upserted, executable-looking
-  generalizations that may explicitly `supersede` an older experience. Both map
-  to advisory `procedural_experience`, subject to current-revision verification.
-- OpenViking `cases` explicitly define a task and rubric for training or
-  evaluation; they are not experience instructions and cannot be injected as
-  policy.
-- OpenViking Working Memory is a seven-section archive overview used for
-  session continuation. It maps to `working_context/session_working_memory`,
-  not long-term policy. LoopX's fresh registry/todo/checkout observations map to
-  the separate `fresh_execution_context` subtype.
-- OpenViking `soul.md` or another provider record may contain policy evidence,
-  but it becomes LoopX `hard_policy` only when the actor and repository/action
-  authority scope are independently verified. The content may be inferred; the
-  authority may not.
-- Account, user, peer, session, and repository-revision boundaries remain part
-  of scope and privacy. A peer label does not grant cross-user or cross-agent
-  authority.
+- OpenViking 是 context database，不是 action-authority system。AGFS content 是
+  source of truth，vector index 保存 retrieval reference。
+- OpenViking `preferences` 可以提供经过 review 的 `soft_preference` 候选，但不会转成
+  permission。
+- OpenViking `trajectories` 是从一次执行中提炼的只追加 operation contract；
+  `experiences` 是支持 upsert、看起来可以执行的泛化经验，也可以显式 `supersede` 旧
+  experience。两者都映射成 advisory `procedural_experience`，使用前需要验证当前
+  revision。
+- OpenViking `cases` 显式定义训练或评测任务与 rubric，不是 experience instruction，
+  也不能作为 policy 注入。
+- OpenViking Working Memory 是用于 session continuation 的七段式 archive overview，
+  映射到 `working_context/session_working_memory`，不属于长期 policy。LoopX 当前的
+  registry/todo/checkout observation 映射到另一个 subtype：
+  `fresh_execution_context`。
+- OpenViking `soul.md` 或其他 provider record 可以包含 policy evidence；只有 actor 与
+  repository/action authority scope 被独立验证后，内容才能成为 LoopX `hard_policy`。
+  内容可以推导，authority 不能推导。
+- Account、user、peer、session 和 repository-revision boundary 始终属于 scope 与
+  privacy。Peer label 不授予 cross-user 或 cross-agent authority。
 
-Provider health is intentionally decomposed into `corpus_present`,
-`index_present`, `retrieval_query_succeeded`, `result_readback_verified`, and
-`memory_applied_with_receipt`. These states must not be collapsed. In
-particular, the current OpenViking Codex auto-recall path configures the
-`experiences` quota to zero, so an experience corpus can exist without being
-automatically recalled. Stage 1 owns that inventory and health proof; Stage 0
-does not claim it.
+Provider health 拆成 `corpus_present`、`index_present`、
+`retrieval_query_succeeded`、`result_readback_verified` 和
+`memory_applied_with_receipt`，这些状态不能合并。当前 OpenViking Codex auto-recall path
+把 `experiences` quota 配置为 0，因此 experience corpus 可以存在，但不会自动 recall。
+Stage 1 负责 inventory 与 health proof；Stage 0 不声明这项能力已经可用。
 
-Grounding references: OpenViking
-[architecture](https://docs.openviking.ai/en/concepts/01-architecture),
-[session management](https://docs.openviking.ai/en/concepts/08-session),
-[multi-tenant and peer isolation](https://docs.openviking.ai/en/concepts/11-multi-tenant),
-and source revision
-[`ba46491`](https://github.com/volcengine/OpenViking/tree/ba46491af0a79467ea268ef370e35b68f86abf73).
+公开依据包括 OpenViking
+[架构](https://docs.openviking.ai/en/concepts/01-architecture)、
+[Session Management](https://docs.openviking.ai/en/concepts/08-session)、
+[Multi-Tenant and Peer Isolation](https://docs.openviking.ai/en/concepts/11-multi-tenant)，
+以及源码 revision
+[`ba46491`](https://github.com/volcengine/OpenViking/tree/ba46491af0a79467ea268ef370e35b68f86abf73)。
 
-## Pilot/meta delegation
+## Pilot/meta 分工
 
-The pilot may take a fix only when behavior is a confirmed bug, scope is one
-bounded surface, the change does not alter a semantic contract or place
-product-specific policy in a generic boundary, reproduction and validation are
-named, edge-case complexity is low or medium, and all relevant evidence is
-present. Meta design review is required for by-design or uncertain semantics,
-a semantic-contract change, cross-surface change, generic-boundary leakage, or
-high edge-case complexity.
+Pilot 只有在以下条件同时成立时才能直接接手 fix：行为已经确认是 bug；范围限定在一个
+surface；变更不会修改 semantic contract，也不会把产品特定 policy 放进通用边界；
+reproduction 与 validation 已明确；edge-case complexity 为 low 或 medium；相关证据
+完整。以下情况需要 meta design review：by-design 或语义不确定；semantic-contract
+change；跨 surface 变更；generic-boundary leakage；edge-case complexity 为 high。
 
-Evidence requirements are relevance-gated instead of using a blanket
-"core-component" rule: effect evidence is always required; UX evidence is
-required for a user-visible behavior change; performance evidence is required
-for a hot-path or storage-behavior change; benchmark evidence is required only
-when retrieval or memory quality is claimed. Missing required evidence without
-a meta trigger produces `hold_for_evidence`. This allows a bounded bug inside a
-core module to remain pilot-sized while still escalating a deceptively small
-change that alters a public or storage contract.
+证据要求按照相关性启用，不使用笼统的“core-component”规则：effect evidence 始终必需；
+用户可见行为变化需要 UX evidence；hot path 或 storage behavior 变化需要 performance
+evidence；只有声明 retrieval 或 memory quality 时才需要 benchmark evidence。缺少必需
+证据、同时又没有 meta trigger 时，结果是 `hold_for_evidence`。这样既允许 core module
+内部的受限 bug 保持 pilot scope，也能升级那些表面很小、实际修改公开或存储合同的变更。
 
-This is guarded routing, not cross-agent authority. The live agent still
-reasons about semantics and evidence inside the guards. The meta lane does not
-edit or claim the pilot's todos, and the pilot cannot bypass the design gate
-with a memory hit.
+这是一套 guarded routing，不产生 cross-agent authority。Live agent 继续在护栏内推理
+语义与证据。Meta lane 不编辑或认领 pilot todo，pilot 也不能凭一次 memory hit 绕过
+design gate。
 
-## PR #3237 regression
+## PR #3237 回归样例
 
-[OpenViking PR #3237](https://github.com/volcengine/OpenViking/pull/3237) is the
-negative regression. It tried to make generic directory listing reflect
-session-specific activity across backend and Web Studio surfaces even though
-the maintained directory-mtime behavior was by design. The resulting patch
-changed a generic filesystem/session contract for one product-specific edge
-case, crossed backend and Web Studio surfaces, and added metadata reads on a
-listing/storage path. It lacked product-effect, UX, and performance evidence.
-Benchmark evidence is not required by this regression because it made no
-retrieval or memory-quality claim.
+[OpenViking PR #3237](https://github.com/volcengine/OpenViking/pull/3237) 是当前的负向回归
+样例。它尝试让通用 directory listing 跨 backend 与 Web Studio surface 反映
+session-specific activity，但维护中的 directory-mtime 行为原本就是 by design。该 patch
+为了一个产品特定 edge case 修改通用 filesystem/session contract，跨越 backend 与 Web
+Studio，并在 listing/storage path 增加 metadata read；同时缺少 product-effect、UX 和
+performance evidence。因为它没有声明 retrieval 或 memory-quality 收益，所以不需要
+benchmark evidence。
 
-The stable expectation is `meta_design_gate`, not `pilot_fix`. Meta may narrow
-the product behavior to a session-specific presentation boundary or close the
-change; a prior memory result cannot authorize the generic-layer patch.
+稳定预期是 `meta_design_gate`，不是 `pilot_fix`。Meta 可以把产品行为收窄到
+session-specific presentation boundary，也可以关闭这项变更；已有 memory result 不能
+授权 generic-layer patch。
 
 ```bash
 loopx reward-memory route-check --case pr-3237 --format json
 ```
 
-## Staged ownership
+## 分阶段职责
 
-- Stage 0: this classification, precedence, and delegation contract.
-- Stage 1: the implemented provider-neutral
-  [corpus registry and health contract](../../../docs/reference/protocols/reward-memory-corpus-registry-v0.md),
-  including ownership, authority, freshness, retirement, scope isolation, and
-  retrieval-health distinctions. Its `fresh_execution_context` entry describes
-  an existing LoopX capability; it is not a request for another context system.
-- Stage 2: the implemented stateless candidate and activation-decision seam
-  over existing LoopX/OpenViking evidence. It adds no second store, scheduler,
-  automatic recall, or raw-content retention. Issue Fix is the first adapter
-  and reuses the generic record/decision shape.
-- Stage 3: the implemented opt-in cross-module recall/application seam. Model
-  reasoning stays inside deterministic scope, authority, privacy, freshness,
-  and conflict guards; Issue Fix patch planning and the non-Issue-Fix semantic
-  preference module share the same core and compact application receipt. The
-  minimal ingest seam reuses Stages 2/3 and the declared provider to atomically
-  write and exactly read back compact events inside a standing-policy boundary;
-  it does not choose the event, corpus, or consumer module.
-- Stage 4: evaluation harness and release gate.
-- Stage 5: bounded cross-module dogfood, optional post-outcome utility
-  attribution, and operator edit/retire controls.
+- Stage 0：五类记忆、优先级和分工合同。
+- Stage 1：已实现的 provider-neutral
+  [corpus registry 与 health contract](../../../docs/reference/protocols/reward-memory-corpus-registry-v0.md)，覆盖 ownership、
+  authority、freshness、retirement、scope isolation 和 retrieval-health 区分。其中的
+  `fresh_execution_context` 描述 LoopX 已有能力，不要求建设另一套 context system。
+- Stage 2：已实现的无状态 candidate 与 activation-decision seam，建立在现有
+  LoopX/OpenViking evidence 之上。不新增第二套 store、scheduler、automatic recall 或
+  raw-content retention；Issue Fix 是首个 adapter，复用通用 record/decision shape。
+- Stage 3：已实现 opt-in cross-module recall/application seam。模型在确定性的
+  scope、authority、privacy、freshness 和 conflict guard 内推理；Issue Fix 的
+  patch planning 与非 Issue-Fix 的 semantic preference 模块复用同一核心和紧凑
+  application receipt。最简 ingest seam 复用 Stage 2/3 与声明 provider，把 standing-policy
+  范围内的紧凑事件原子写入并精确读回；不自动选择事件、corpus 或模块。
+- Stage 4：evaluation harness 与 release gate。
+- Stage 5：受限的 cross-module dogfood、可选 post-outcome utility attribution，
+  以及 operator edit/retire control。
 
-Later stages must extend this contract rather than collapsing these classes,
-duplicating existing context/provider capabilities, or turning provider
-availability into a user gate. Stage 1 remains a stateless read model and
-performs no provider or external write.
+后续阶段必须在这份合同上扩展，不能合并五类记忆、重复建设 context/provider 能力，也
+不能把 provider availability 变成 user gate。Stage 1 继续保持 stateless read model，
+不执行 provider 或 external write。
 
-## Stage 3 recall and application seam
+## Stage 3 recall 与 application seam
 
-Stage 3 accepts only an explicit `reward_memory_recall_request_v0` naming one
-registered corpus and one module-owned surface. The request carries a matching
-read-authority checkpoint and current freshness/conflict observations. A
-project, surface, authority, revision, lifecycle, or provider-binding mismatch
-stops before the provider is called. This is deterministic safety validation,
-not a semantic router.
+Stage 3 只接受显式的 `reward_memory_recall_request_v0`：调用方必须准确指定一个已登记
+corpus 和一个 module-owned surface，同时提供匹配的 read-authority checkpoint、当前
+freshness 与 conflict observation。project、surface、authority、revision、lifecycle 或
+provider binding 任一不匹配，都会在调用 provider 前停止。这里是确定性安全校验，不是
+确定性语义路由器。
 
-The caller/model owns the query and interpretation. `function_boundary` allows
-one query at a named function boundary. `bounded_agentic_search` allows at most
-three caller/model-authored queries. LoopX does not choose a module, infer a
-corpus from similarity, scan every corpus, schedule a later recall, or grant
-action authority from a hit.
+查询与解释仍由调用模块/模型负责。`function_boundary` 只允许在命名函数边界执行一次
+查询；`bounded_agentic_search` 最多允许三次由调用方/模型给出的查询。LoopX 不会按
+similarity 自行选择模块或 corpus，也不会扫描全部 corpus、调度后续 recall，或从命中
+结果推导新的 action authority。
 
-An accepted `reward_memory_candidate_review_v0` may be wrapped as a
-`reward_memory_active_record_v0`; only the declared corpus owner may persist
-that envelope. Recall accepts only active envelopes from the exact selected
-corpus and surface. Private summaries remain transient in-process. Public
-packets expose opaque provider references and compact lineage; application
-receipts contain hashed memory references, the model-owned reasoning summary,
-and current-artifact verification, never raw provider content.
+通过 review 的 `reward_memory_candidate_review_v0` 可以封装成
+`reward_memory_active_record_v0`，但只有 corpus 声明的 owner 可以执行持久化。Recall
+只接受准确 corpus 与 surface 下的 active envelope。私有 summary 仅在进程内交给模型；
+公共 packet 只保留 opaque provider ref 与紧凑 lineage。Application receipt 保存哈希
+memory ref、模型给出的 reasoning summary 和 current-artifact verification，不保存原始
+provider content。
 
-Provider unavailability returns setup guidance and preserves the base output.
-It is an agent/runtime condition, not a user gate. Invalid or failed model
-application also preserves the base output. An `applied` receipt requires both
-attribution to an item returned by this recall and current-artifact
-verification. Issue Fix uses the fixed `issue_fix.patch_planning` surface;
-`semantic_preference` is the second, non-Issue-Fix module consumer.
-An OpenViking binding whose scope is under `/peers/<peer>/` must carry that
-exact `actor_peer_id`. LoopX forwards it only to scoped provider operations and
-never infers an actor identity from an arbitrary target URI.
+Provider 不可用时，seam 返回 setup guidance 并保留原输出；这是 agent/runtime 条件，
+不会自动变成 user gate。模型 application 无效或异常也 fail open。只有同时归因到本次
+召回项并验证当前 artifact，才能产生 `applied` receipt。Issue Fix 使用固定的
+`issue_fix.patch_planning` surface；`semantic_preference` 是第二个非 Issue-Fix consumer。
+当 OpenViking binding 的 scope 位于 `/peers/<peer>/` 下时，必须显式携带完全一致的
+`actor_peer_id`。LoopX 只将它传给 scoped provider 操作，不会从任意目标 URI 推导或冒用
+actor 身份。
 
-## Stage 4 evaluation and release gate
+## Stage 4 评估与发布门禁
 
-Stage 4 is one bounded contract suite over the existing shared core. It does
-not add another evaluator, store, provider, scheduler, or semantic router:
+Stage 4 只在现有共享核心之上增加一套受限 contract suite，不新增另一套 evaluator、
+store、provider、scheduler 或 semantic router：
 
 ```bash
 loopx reward-memory evaluate --format json
 ```
 
-The runner executes the real candidate, recall, application, Issue Fix adapter,
-and route-guard code for eight cases: compact/restart survival; project and
-module isolation; supersede/revoke rejection; stale-source rejection;
-multi-person authority matching; gate non-override; verified candidate-ranking
-influence; and protection against a large patch for the PR #3237 edge case.
+Runner 会直接执行真实的 candidate、recall、application、Issue Fix adapter 与 route guard
+代码，覆盖八类 case：compact/restart 后存活；project/module scope isolation；
+supersede/revoke 拒绝；stale source 拒绝；多人 authority 匹配；gate 不被覆盖；在验证当前
+artifact 后影响 candidate ranking；以及避免为 PR #3237 这类 edge case 生成大 patch。
 
-`evaluation.py` owns case orchestration, assertions, metrics, and the release
-gate. Reusable setup and provider doubles live in `evaluation_fixtures.py` with
-neutral fixture identities; OpenViking appears there only through the explicitly
-named PR #3237 Issue Fix regression fixture. Project identity is fixture data,
-not evaluator policy.
+`evaluation.py` 只负责 case 编排、断言、指标与 release gate。可复用的 setup 和 provider
+double 放在 `evaluation_fixtures.py`，并使用中性的 fixture identity；OpenViking 只出现在
+显式命名的 PR #3237 Issue Fix 回归 fixture 中。项目身份属于 fixture data，不属于
+evaluator policy。
 
-`reward_memory_evaluation_v0` reports task outcome plus exact local runner
-latency, public evidence bytes, model-token count, provider/storage writes,
-false applications, maintainer interruptions, and user gates. Zero model tokens
-means this deterministic contract suite did not invoke a model; it is not a
-token-cost estimate for later dogfood. The release gate passes only when every
-case passes and all write, false-application, interruption, and user-gate counts
-remain zero.
+`reward_memory_evaluation_v0` 同时汇报 task outcome、真实本地 runner latency、公共证据
+字节数、model token 数、provider/storage write、false application、maintainer interruption
+与 user gate。model token 为零表示这套确定性 contract suite 没有调用模型，不代表后续
+dogfood 的 token 成本估算。只有全部 case 通过，且 write、false application、
+interruption 和 user gate 计数均为零，release gate 才能通过。
 
-A pass yields `ready_for_bounded_dogfood`, not production release. It proves
-core contract invariants only, does not claim semantic uplift, and does not
-authorize production rollout. Stage 5 must use a corpus-owner-approved record,
-exact provider readback, and real module outcomes before making an uplift claim.
+通过后的状态是 `ready_for_bounded_dogfood`，不是 production release。它只证明 core
+contract invariant，不声明 semantic uplift，也不授权 production rollout。Stage 5 必须
+使用经 corpus owner 批准的 record、精确 provider readback 和真实模块结果，才能讨论收益。
 
-## Stage 5 dogfood receipts, utility attribution, and operator controls
+## Stage 5 dogfood receipt、utility attribution 与 operator control
 
-Stage 5 adds one thin evidence layer over the Stage 3 application receipt. It
-does not add a store, scheduler, semantic router, automatic recall path, or
-ranking behavior. A caller supplies a compact real-module observation whose
-artifact reference matches the application receipt:
+Stage 5 只在 Stage 3 application receipt 上增加一层薄的证据合同，不新增 store、scheduler、
+语义路由器、automatic recall 或 ranking behavior。调用方传入紧凑的真实模块 observation，
+其中 artifact reference 必须与 application receipt 一致：
 
 ```bash
 loopx reward-memory dogfood-evaluate \
   --input compact-observations.json --format json
 ```
 
-`reward_memory_dogfood_receipt_v1` records `application_disposition` as
-`applied`, `not_applied`, or `refuted`. This is application coverage, not a
-causal utility judgment. An applied or refuted disposition is invalid unless
-the selected provider result was read back exactly and the current artifact
-was verified. The receipt retains the opaque digest `application_receipt_id`
-for the exact Stage 3 application receipt, plus only opaque or hashed memory
-references, a compact verified outcome reference and summary, latency,
-model-token and provider-call counts, intervention count, and optional compact
-bot feedback.
-It retains no raw provider content and grants no new action authority.
+`reward_memory_dogfood_receipt_v1` 用 `application_disposition` 记录 `applied`、
+`not_applied` 或 `refuted`。它表示 application coverage，不是因果 utility 判断。
+`applied` 或 `refuted` 必须同时满足精确 provider result readback 与 current-artifact
+verification。Receipt 保留精确 Stage 3 application receipt 的 opaque digest
+`application_receipt_id`，以及 opaque/hashed memory ref、紧凑的已验证 outcome ref 与摘要、
+latency、model token、provider call、intervention count，以及可选的紧凑 bot feedback；
+不保留 raw provider content，也不授予新的 action authority。
 
-The former `reward_memory_dogfood_receipt_v0` used `hit`, `miss`, and `refute`
-for this same application-coverage distinction. In particular, its `hit`
-never established that a memory was `helpful`. The v1 receipt supersedes that
-ambiguous naming instead of silently changing the v0 contract.
+旧的 `reward_memory_dogfood_receipt_v0` 曾用 `hit`、`miss`、`refute` 表示同一组
+application coverage；其中 `hit` 从未证明 memory 是 `helpful`。v1 通过替代这组有歧义的
+命名来修复合同，而不是悄悄改变 v0 语义。
 
-Post-outcome utility is a separate `memory_utility_observation_v0` with one of
-`helpful`, `harmful`, `neutral`, or `unknown`. The optional evaluator is
-default-off and proposal-only. LoopX validates its proposal against separately
-trusted agent, project, corpus, and surface scope; the verified outcome ref;
-and the retrieval and policy snapshot refs supplied by the execution boundary.
-Snapshot freshness is owned by the execution or provider adapter that supplies
-the trusted attribution context. When a compatible application receipt also
-carries snapshot refs, the validator cross-checks them exactly. A stale or
-mismatched evaluator echo is rejected. `applied` plus a successful outcome
-remains `unknown` without independent attribution evidence. When several
-memories are involved, attribution defaults to `set`; set-level credit is never
-copied to individual items.
+Post-outcome utility 使用独立的 `memory_utility_observation_v0`，标签只能是
+`helpful`、`harmful`、`neutral` 或 `unknown`。可选 evaluator 默认关闭，只能提出
+proposal。LoopX 会用独立可信的 agent、project、corpus、surface scope，已验证 outcome
+ref，以及执行边界提供的 retrieval/policy snapshot ref 校验 proposal。Snapshot freshness
+由提供可信 attribution context 的执行边界或 provider adapter 负责；如果兼容的 application
+receipt 也携带 snapshot ref，validator 会做精确交叉检查。过期或不匹配的 evaluator echo
+会被拒绝。没有独立 attribution evidence 时，即使 `applied` 且 outcome 成功也必须保持
+`unknown`。涉及多条 memory 时，attribution 默认是 `set`，不能把 set-level credit
+复制给单个 item。
 
-Evidence basis is typed rather than inferred from prose. `owner_correction`,
-`controlled_replay`, and `deterministic_effect` are stronger bases and require
-at least one opaque `evidence_ref` in the evaluator proposal, even when the
-label remains `unknown`. `evaluator_inference` is weaker and `insufficient` is
-lineage-only. Stage 1 preserves that typed distinction; the Stage 2 reducer
-owns precedence between weak and strong observations.
+Evidence basis 必须类型化，不能从自然语言推断。`owner_correction`、
+`controlled_replay` 与 `deterministic_effect` 属于较强证据，evaluator proposal
+至少要带一个 opaque `evidence_ref`，即使 label 仍是 `unknown` 也不能省略。
+`evaluator_inference` 较弱，`insufficient` 只表示存在 lineage。Stage 1 保留这组类型差异；
+弱证据与强证据之间的 precedence 由 Stage 2 reducer 负责。
 
-The public observation contains only opaque references, canonical memory
-digests, typed reason codes, evaluator/version identity, and compact public-safe
-evidence. URLs, local paths, raw-content fields, and any proposal to grant
-action authority or perform a write are rejected. Provider adapters must digest
-exact private provider references before constructing this public contract. An
-absent, timed-out, or malformed evaluator fails open: the main result,
-application settlement, and dogfood readiness remain unchanged. The attribution
-subject, evidence, evaluator identity, and evaluation version produce a stable
-observation id for replay identity. A different judgment under the same key is
-a conflicting delivery, not additional support; a correction must cite new
-evidence or advance the evaluation version. Utility-attribution Stage 1 does not
-persist or reduce observations and therefore does not yet claim
-duplicate-delivery no-op behavior. The Stage 5 batch rejects duplicate
-`application_receipt_id` values and counts each application settlement once.
-The settlement `receipt_id` deliberately excludes evaluator status and
-`observation_id`; utility retries and new evidence use the observation identity
-instead. A new utility observation for the same settlement belongs in the later
-append-only utility ledger and must not duplicate disposition or cost metrics.
+公共 observation 只包含 opaque ref、canonical memory digest、类型化 reason code、
+evaluator/version identity 和紧凑的 public-safe evidence；URL、本地路径、raw-content
+字段，以及任何授予 action authority 或执行 write 的 proposal 都会被拒绝。Provider
+adapter 必须先把精确私有 provider ref 转成 digest，再构造这份公共合同。
+Evaluator 缺失、超时或输出畸形时 fail open：main result、application settlement 与
+dogfood readiness 都不改变。归因对象、证据、evaluator identity 与 evaluation version
+共同生成稳定 observation id，供 replay 对齐；同一键下出现不同判断属于冲突 delivery，
+不能算作额外 support，修正判断必须提供新 evidence 或提升 evaluation version。
+Utility-attribution Stage 1 不持久化也不归约 observation，因此尚不声明 duplicate
+delivery 是 no-op。Stage 5 batch 会拒绝重复的 `application_receipt_id`，每条 application
+settlement 只计数一次。Settlement `receipt_id` 会刻意排除 evaluator status 与
+`observation_id`，utility retry 和新 evidence 改用 observation identity 区分。同一
+settlement 的新 utility observation 应进入后续 append-only utility ledger，不能重复累计
+disposition 或 cost metric。
 
-`reward_memory_dogfood_batch_v1` becomes
-`ready_for_bounded_issue_fix_pilot` only when the Stage 4 gate still passes and
-the bounded batch contains at least one Issue Fix result, two distinct LoopX
-domain results, all three `applied`/`not_applied`/`refuted` application
-dispositions, and both operator controls. Utility observations do not affect
-this readiness decision. This is a trial-readiness statement; semantic uplift
-and production rollout remain false. The Stage 2 reducer and projection,
-ranking influence, and OpenViking writeback are outside this implementation.
+只有 Stage 4 gate 仍然通过，并且受限 batch 同时包含至少一个 Issue Fix 结果、两个不同的
+LoopX domain 结果、`applied`/`not_applied`/`refuted` 三类 application disposition，以及
+edit/retire 两类 operator control，`reward_memory_dogfood_batch_v1` 才会进入
+`ready_for_bounded_issue_fix_pilot`。Utility observation 不参与 readiness 判断。这只是
+试用就绪声明，semantic uplift 与 production rollout 仍然为 false；Stage 2 reducer 与
+projection、ranking influence，以及 OpenViking writeback 都不属于本次实现。
 
-The edit/retire control is similarly narrow:
+Edit/retire control 同样保持克制：
 
 ```bash
 loopx reward-memory operator-control \
@@ -612,10 +515,9 @@ loopx reward-memory operator-control \
   --format json
 ```
 
-An edit checkpoint must match the corpus owner; a retirement checkpoint must
-match `maintenance.retirement_authority`. Both checkpoints are also bound to
-the exact corpus, project, and action. Edit produces a replacement
-candidate linked to the active record. Retire produces a retired decision.
-Neither command writes provider state. The declared corpus owner still performs
-the write and exact readback, so operator control cannot silently become a
-publish, production, or cross-project authority expansion.
+Edit checkpoint 必须匹配 corpus owner；retire checkpoint 必须匹配
+`maintenance.retirement_authority`；两者还必须绑定到准确的 corpus、project 与 action。
+Edit 生成一个引用旧 active record 的 replacement
+candidate，retire 生成 retired decision。两个命令都不写 provider state；真正的 write 与
+精确 readback 仍由声明的 corpus owner 执行，因此 operator control 不会悄悄扩大成
+publish、production 或跨项目 authority。

@@ -1,52 +1,35 @@
-# File Lock Acquisition v0
+# 文件锁获取 v0
+> [English](file-lock-acquisition-v0.md)
 
-LoopX uses sibling kernel-lock files to serialize local read-modify-write
-operations: POSIX uses `flock`, while Windows uses an `msvcrt` byte-range lock.
-The kernel lock, not the file's existence, determines ownership. Operators and
-automation must never delete a lock file to recover a waiter.
+LoopX 使用同级内核锁文件来串行化本地读-改-写操作：POSIX 使用 `flock`，Windows 使用 `msvcrt` 字节区间锁。决定所有权的是内核锁，而不是文件是否存在。操作员与自动化流程绝不能通过删除锁文件来恢复等待者。
 
-## Acquisition Policies
+## 获取策略
 
-| Policy | Deadline | Timeout behavior |
+| 策略 | 截止时间 | 超时行为 |
 | --- | ---: | --- |
-| `mutation` | 5 seconds | Stop the command and require holder inspection before a manual retry. |
-| `monitor` | 1 second | Stop the poll; do not tight-loop. Retry only on a later scheduled poll after inspection. |
-| `single_flight` | no wait | Return an ordinary duplicate/no-op result without recording an incident. |
+| `mutation` | 5 秒 | 停止命令，并在手动重试前要求检查持有者。 |
+| `monitor` | 1 秒 | 停止轮询；不要紧密循环。仅在后续计划的轮询并进行检查后重试。 |
+| `single_flight` | 不等待 | 返回普通重复/空操作结果，不记录 incident。 |
 
-`exclusive_file_lock` uses `LOCK_EX | LOCK_NB`, a monotonic deadline, and a
-bounded sleep between attempts. A deadline raises
-`LockAcquireTimeoutError` with `error_code=lock_acquire_timeout`. The former
-unbounded `LOCK_EX` wait is not part of this contract.
+`exclusive_file_lock` 使用 `LOCK_EX | LOCK_NB`、单调截止时间，以及各次尝试之间受限的睡眠。超过截止时间将抛出 `LockAcquireTimeoutError`，且 `error_code=lock_acquire_timeout`。此前无界的 `LOCK_EX` 等待不属于本契约。
 
-## Holder And Incident Records
+## 持有者与 Incident 记录
 
-After acquisition, the holder writes public-safe JSON to the POSIX `*.lock`
-file or atomically overwrites the Windows `*.lock.holder.json` sidecar:
+获取后，持有者将公开安全的 JSON 写入 POSIX 的 `*.lock` 文件，或原子覆盖 Windows 的 `*.lock.holder.json` sidecar：
 
-- stable hashed `lock_id` (never an absolute target path);
-- PID, agent id, operation, policy, and acquisition time;
-- release time after a normal exit.
+- 稳定的哈希 `lock_id`（绝不使用目标绝对路径）；
+- PID、agent id、操作、策略与获取时间；
+- 正常退出后的释放时间。
 
-Windows metadata is separate because a byte-range lock prevents another file
-handle from reading the locked byte. POSIX retains the existing single-file
-contract, where advisory metadata and `flock` share `*.lock`. In both cases the
-kernel lock, not the metadata file's existence, is authoritative.
+Windows 元数据单独存放，因为字节区间锁会阻止另一个文件句柄读取被锁字节。POSIX 保留现有单文件契约，其中 advisory 元数据与 `flock` 共享 `*.lock`。两种情况下，内核锁（而非元数据文件是否存在）都是权威。
 
-A timeout appends one `file_lock_incident_v0` row to the sibling
-`*.lock.incidents.jsonl` channel. That append uses `O_APPEND` directly and does
-not acquire the blocked lock. The row contains holder and waiter identities,
-wait duration, policy, and an `operator_action`. Failure to append an incident
-does not hide or delay the typed timeout.
+超时会向同级 `*.lock.incidents.jsonl` 通道追加一行 `file_lock_incident_v0`。该追加直接使用 `O_APPEND`，不获取被阻塞的锁。行内包含持有者与等待者身份、等待时长、策略与 `operator_action`。追加 incident 失败不会隐藏或延迟类型化超时。
 
-## Operator Recovery
+## 操作员恢复
 
-1. Inspect the recorded holder PID, agent, operation, and acquisition time.
-2. Confirm that the process is still present and actually stalled.
-3. Terminate the process only after that confirmation and within the operator's
-   existing authority.
-4. Retry according to the policy after the process exits. Do not delete the
-   lock file; a later owner will overwrite the holder sidecar.
+1. 检查记录中的持有者 PID、agent、操作与获取时间。
+2. 确认进程仍存在且确实停住。
+3. 仅在该确认之后，且在操作员现有权限范围内终止进程。
+4. 进程退出后按策略重试。不要删除锁文件；后续持有者会覆盖持有者 sidecar。
 
-An absent PID or stale metadata is evidence to investigate, not permission to
-remove a lock file. The kernel releases `flock` or `msvcrt` ownership when its
-process or file descriptor exits.
+PID 缺失或元数据过期是待调查的证据，不是删除锁文件的许可。内核会在其进程或文件描述符退出时释放 `flock` 或 `msvcrt` 所有权。

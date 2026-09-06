@@ -1,28 +1,22 @@
-# Beginner Loop Presets
+# 入门 Loop 预设
 
-This note maps lightweight public loop-engineering starter patterns onto
-LoopX-native onboarding. The goal is not to copy another starter runtime. The
-goal is to give new users a one-command path into the parts of LoopX that are
-already valuable: agent-agnostic execution, team-agent lanes, durable todo
-state, scheduler and quota guards, compact evidence, and human review gates.
+> [English](beginner-loop-presets.md)
 
-## Product Bet
+本笔记把轻量的公开 loop 工程入门模式映射到 LoopX 原生接入。目标不是复制另一个入门运行时。目标是给新用户一条单命令路径,直达 LoopX 已经有价值的部分:与 agent 无关的执行、团队 agent 车道、持久 todo state、调度器与配额护栏、紧凑 evidence 以及人工评审 gate。
 
-LoopX should absorb the packaging pattern, not the source of truth.
+## 产品押注
 
-New users should see a small menu of useful presets. Each preset should compile
-to existing LoopX state, todos, scheduler hints, and agent instructions instead
-of creating a second `STATE.md` runtime or a separate loop ledger. The first
-run should be safe and easy to explain. Advanced presets can be powerful, but
-they must be opt-in and visibly gated.
+LoopX 应吸收打包模式,而不是吸收真相源。
 
-The current thin entry point is:
+新用户应看到一个小而有用的预设菜单。每个预设应编译为现有 LoopX state、todo、调度器提示与 agent 指令,而不是创建第二个 `STATE.md` 运行时或单独的 loop 台账。首次运行应安全且易解释。高级预设可以强大,但它们必须是选择加入且可见 gate。
+
+当前薄入口是:
 
 ```bash
 loopx preset list
 ```
 
-For one preset card:
+对于单个预设卡片:
 
 ```bash
 loopx preset show daily-triage
@@ -32,102 +26,85 @@ loopx preset show ci-sweeper
 loopx preset show dependency-sweeper
 ```
 
-These commands are read-only. They render `/loopx ...`, `start-goal`,
-`quota should-run`, and `heartbeat-prompt` command packets; they do not write
-registry state, install automations, edit docs, or create PRs.
+这些命令是只读的。它们渲染 `/loopx ...`、`start-goal`、`quota should-run` 与 `heartbeat-prompt` 命令包;它们不写入注册表 state、不安装自动化、不编辑文档、不创建 PR。
 
-To check whether a project is ready for useful recurring loops, use the
-read-only score report:
+要检查项目是否准备好运行有用的周期 Loop,使用只读评分报告:
 
 ```bash
 loopx ready-score --goal-id <goal-id> --agent-id <agent-id>
 ```
 
-The score aggregates existing `doctor`, `status`, `quota`, scheduler, todo, and
-evidence signals. It may render a badge preview, but it does not write README
-badges or change project state.
+该评分聚合现有 `doctor`、`status`、`quota`、调度器、todo 与 evidence 信号。它可以渲染徽章预览,但不写入 README 徽章,也不更改项目 state。
 
-## Recommendation Matrix
+## 推荐矩阵
 
-| Pattern | User value | LoopX default | Recommendation |
+| 模式 | 用户价值 | LoopX 默认 | 推荐 |
 | --- | --- | --- | --- |
-| Daily triage | Gives a repo owner a regular project digest without asking them to read every issue, PR, or status file. | L1 report-only. Read status, active todos, open gates, stale signals, and next actions. No code edits. | Absorb now as the first beginner preset. It demonstrates LoopX state, scheduler, quota, and no-surprise writeback with low risk. |
-| Changelog draft | Turns recent merged work into a release-note draft and gives maintainers something immediately useful. | L1 draft-only. Answer who should upgrade, what the release solves, whether it is breaking, how to verify it, and who contributed; then preserve PR-backed product groups and optional-capability lifecycle guidance. No publish action. | Absorb now as a low-risk showcase preset. It is easy to demo and helps README readers understand concrete output. |
-| PR watch | Keeps a PR from stalling by watching review, CI, and merge blockers. | L1 watch by default; L2 only after explicit opt-in. No auto-merge. | Absorb as an early preset, but present it as review assistance, not autonomous merging. |
-| Issue triage | Converts noisy issue queues into priority, labels, and next-response suggestions. | L1 propose-only. Suggest labels, owners, duplicates, and next replies. No external write unless explicitly approved. | Absorb after Daily Triage because it shares most read-only plumbing and is friendly to public OSS repos. |
-| CI sweeper | Fixes obvious broken checks and removes boring maintainer toil. | L2 opt-in. Worktree-only patches, verifier required, cost cap required, human review before merge. | Include as a high-value advanced preset. Do not make it a beginner default, but do not bury it; it is one of the clearest ROI stories once gates are visible. |
-| Dependency sweeper | Handles safe dependency bumps, patch releases, and recurring update noise. | L2 opt-in. Patch/minor policy, denylist, verifier, cost cap, and human review before merge. | Include as a high-value advanced preset after CI Sweeper. Start with policy design and dry-run/report mode before auto-fix. |
-| Post-merge cleanup | Finds follow-up debt after merged work. | L1 scan first; L2 small patch only after explicit scope. | Defer from the first public menu. It is useful, but less legible for new users than CI or release notes. |
-| Ready score | Tells users whether their repo is ready to run useful loops. | Read-only report. Derive from existing LoopX signals: install, goal connection, agent identity, scheduler, quota, todos, gates, evidence, and write scope. | Absorb now as a supporting command or section in guided start. Avoid badge writeback until the score model is stable. |
-| Cost estimate | Helps users decide cadence and maturity level before enabling automation. | Advisory only. Use static preset assumptions plus live quota/scheduler hints; never claim precise billing. | Absorb with guided presets. Use L1/L2/L3 language, but keep estimates coarse and conservative. |
-| Starter templates | Reduces first-run friction. | Generate LoopX-native todos, heartbeat prompt, and first-run command packet. Do not create a parallel source of truth. | Absorb only as thin preset output. Templates should explain the LoopX state kernel rather than hide it. |
+| 每日分诊 | 让仓库 owner 定期获得项目摘要,而无需阅读每个 issue、PR 或状态文件。 | L1 仅报告。读取状态、active todo、打开 gate、陈旧信号与下一步动作。不编辑代码。 | 现在吸收为首个入门预设。它以低风险演示了 LoopX state、调度器、配额与无惊喜写回。 |
+| Changelog 草稿 | 把最近合并的工作转化为发布说明草稿,给维护者即时有用的东西。 | L1 仅草稿。回答谁应升级、发布解决了什么、是否破坏性、如何验证、谁贡献了;然后保留 PR 支撑的产品分组与可选能力生命周期指引。不发布。 | 现在吸收为低风险展示预设。它易于演示,并帮助 README 读者理解具体输出。 |
+| PR 关注 | 通过关注评审、CI 与合并阻碍防止 PR 停滞。 | 默认 L1 关注;仅显式选择加入后 L2。不自动合并。 | 吸收为早期预设,但把它展示为评审辅助,而非自主合并。 |
+| Issue 分诊 | 把嘈杂的 issue 队列转化为优先级、标签与下一次回复建议。 | L1 仅提议。建议标签、owner、重复与下一次回复。除非明确批准,否则不外部写入。 | 在每日分诊后吸收,因为它共享大部分只读管道,且对公开 OSS 仓库友好。 |
+| CI 清扫器 | 修复显而易见的损坏检查,移除无聊的维护者苦差。 | L2 选择加入。仅 worktree 补丁、必需 verifier、必需成本上限、合并前人工评审。 | 作为高价值高级预设包含。不要把它做成入门默认,但也不要埋没它;一旦 gate 可见,它是最清晰的 ROI 故事之一。 |
+| 依赖清扫器 | 处理安全依赖升级、补丁发布与周期更新噪音。 | L2 选择加入。补丁/minor 策略、拒绝列表、verifier、成本上限、合并前人工评审。 | 在 CI 清扫器之后作为高价值高级预设包含。先从策略设计与 dry-run/报告模式开始,再自动修复。 |
+| 合并后清理 | 在合并工作后寻找后续债。 | L1 先扫描;仅显式范围后 L2 小补丁。 | 从首个公开菜单推迟。它有用,但对新用户不如 CI 或发布说明易理解。 |
+| 就绪评分 | 告知用户其仓库是否准备好运行有用的 Loop。 | 只读报告。从现有 LoopX 信号派生:安装、goal 连接、agent 身份、调度器、配额、todo、gate、evidence 与写入范围。 | 现在吸收为引导式开始中的支撑命令或部分。在评分模型稳定前避免徽章写回。 |
+| 成本估算 | 帮助用户在启用自动化前决定节奏与成熟度。 | 仅建议。使用静态预设假设加实时 quota/调度提示;绝不断言精确计费。 | 与引导式预设一起吸收。使用 L1/L2/L3 语言,但保持估算粗放且保守。 |
+| 入门模板 | 减少首次运行摩擦。 | 生成 LoopX 原生 todo、心跳提示与首次运行命令包。不要创建并行真相源。 | 仅作为薄预设输出吸收。模板应解释 LoopX state 内核,而不是隐藏它。 |
 
-## Preset Tiers
+## 预设层级
 
-### Tier 1: Beginner defaults
+### 第一层:入门默认
 
-These are safe enough for a first public quickstart:
+这些足够安全,可用于首个公开快速开始:
 
 - Daily Triage L1
 - Changelog Draft L1
 - PR Watch L1
 
-They should be marketed as "turn the loop on, get a useful report, stay in
-control." They should not require users to understand worktrees, verifier
-agents, or merge policy before seeing value.
+它们应被营销为"打开 Loop,获得有用报告,保持掌控"。在见到价值之前,它们不应要求用户理解 worktree、verifier agent 或合并策略。
 
-### Tier 2: High-value opt-in
+### 第二层:高价值选择加入
 
-These should be visible but not default:
+这些应可见但非默认:
 
 - CI Sweeper L2
 - Dependency Sweeper L2
 
-The user-facing promise should be "LoopX can draft bounded fixes when the
-guardrails are explicit." The required guardrails are:
+面向用户的承诺应是"当护栏显式时,LoopX 可以起草有界修复"。必需的护栏是:
 
-- isolated git worktree;
-- explicit denylist and allowed update policy;
-- verifier or focused smoke before the patch is considered ready;
-- token/cadence cap;
-- human review before push, merge, publish, or dependency rollout;
-- escalation after repeated failure or unchanged error signatures.
+- 隔离 git worktree;
+- 显式拒绝列表与允许更新策略;
+- 补丁被视为就绪前通过 verifier 或聚焦 smoke;
+- token/节奏上限;
+- push、merge、publish 或依赖上线前人工评审;
+- 重复失败或未变化的错误签名后升级。
 
-The picker exposes both as `advanced_opt_in` cards. Their default output is a
-dry-run or policy report first; a patch lane starts only after explicit owner
-opt-in and stays inside an isolated `codex/` worktree.
+选择器把两者暴露为 `advanced_opt_in` 卡片。它们的默认输出先是 dry-run 或策略报告;补丁车道仅在显式 owner 选择加入后开始,并保持在隔离的 `codex/` worktree 内。
 
-### Tier 3: Later expansion
+### 第三层:后期扩展
 
-These should wait until the first presets prove the route:
+这些应等待首批预设证明路由:
 
-- Post-Merge Cleanup;
-- richer starter packs;
-- external connector write actions;
-- unattended L3 modes.
+- 合并后清理;
+- 更丰富的入门包;
+- 外部 connector 写动作;
+- 无人值守 L3 模式。
 
-They are useful, but they raise the support burden before the product has
-earned beginner trust.
+它们有用,但会在产品赢得入门信任之前增加支持负担。
 
-## README Implication
+## README 含义
 
-The README should eventually use a three-layer shape:
+README 最终应使用三层形态:
 
-1. First screen: one sentence, three beginner presets, and a safety promise.
-2. Quickstart: real LoopX commands that create or inspect actual LoopX state.
-3. Deep sections: agent-agnostic control plane, team-agent lanes, lightweight
-   state kernel, scheduler/quota, evidence gates, and L2 opt-in presets.
+1. 首屏:一句话、三个入门预设与一个安全承诺。
+2. 快速开始:创建或检查真实 LoopX state 的真实 LoopX 命令。
+3. 深层部分:与 agent 无关的控制面、团队 agent 车道、轻量 state 内核、调度器/配额、evidence gate 与 L2 选择加入预设。
 
-This keeps the front door simple without reducing LoopX to a template
-collection. README and README.zh-CN first-screen edits should be previewed for
-owner review before commit because they change the main public presentation.
+这让前门保持简单,而不把 LoopX 矮化为模板集合。README 与 README.zh-CN 首屏编辑应先预览供 owner 评审再提交,因为它们改变主要公开呈现。
 
-## Non-Goals
+## 非目标
 
-- Do not copy a separate `STATE.md` source of truth into LoopX onboarding.
-- Do not imply auto-fix, auto-merge, publish, or dependency rollout on the
-  beginner path.
-- Do not hide gates behind friendly copy. The point of LoopX is that gates,
-  todos, evidence, and cost stay inspectable.
-- Do not add broad starter scaffolding before the thin preset picker proves
-  which routes users actually select.
+- 不要把单独的 `STATE.md` 真相源复制进 LoopX 接入。
+- 不要在入门路径上暗示自动修复、自动合并、发布或依赖上线。
+- 不要用友好文案隐藏 gate。LoopX 的意义在于 gate、todo、evidence 与成本保持可检查。
+- 在薄预设选择器证明用户实际选择哪些路由之前,不要添加宽泛的入门脚手架。

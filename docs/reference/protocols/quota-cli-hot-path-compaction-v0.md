@@ -1,107 +1,39 @@
-# Quota CLI Hot-Path Compaction v0
+# 配额 CLI 热路径压缩 v0
+> [English](quota-cli-hot-path-compaction-v0.md)
 
-`quota_cli_hot_path_compaction_v0` bounds the default agent-facing
-`quota should-run` projection without changing the decision computed by the
-quota control plane. The full decision is built first. CLI-only projection then
-retains action authority on the hot path and moves repeated diagnostic detail
-behind explicit `--include-detail` selectors.
+`quota_cli_hot_path_compaction_v0` 在不改变配额控制面所计算决策的前提下，界定默认面向 agent 的 `quota should-run` 投影。完整决策先构建。仅 CLI 的投影随后在热路径保留动作权限，并把重复的诊断细节移到显式 `--include-detail` 选择器之后。
 
-## Ownership Boundary
+## 所有权边界
 
-The quota control plane owns decision, precedence, scheduler, interaction,
-selected-todo, and user-action semantics. `cli_projection.py` owns only the
-serialized view consumed by agents. A compactor must not become a second
-decision owner or recompute any route.
+配额控制面拥有决策、优先级、scheduler、交互、所选 todo 与用户动作语义。`cli_projection.py` 只拥有供 agent 消费的序列化视图。压缩器不得成为第二个决策所有者，也不得重算任何路由。
 
-The default projection retains:
+默认投影保留：
 
-- `decision`, `should_run`, `effective_action`, and `recommended_action`;
-- selected todo, bounded `action_portfolio`, read-only `planning_horizon`, and
-  execution obligation;
-- interaction mode, user channel, and executable agent/CLI actions;
-- scheduler action and autonomous-replan authority;
-- the compact vision decision, trigger kinds, required reads, and judge result;
-- warning kinds, counts, stable identities, and cold-path references.
+- `decision`、`should_run`、`effective_action` 与 `recommended_action`；
+- 所选 todo、有界 `action_portfolio`、只读 `planning_horizon` 与执行义务；
+- 交互模式、用户 channel 与可执行 agent/CLI 动作；
+- scheduler 动作与自主重规划权限；
+- 紧凑 vision 决策、触发种类、必需读取与 judge 结果；
+- 警告种类、计数、稳定身份与冷路径引用。
 
-`action_portfolio` is not diagnostic candidate noise. It is retained in the
-default packet because it carries the executable fallback rule when the
-selected primary becomes unavailable at its real call site. Compaction may
-remove the larger todo/capability candidate lists only after preserving this
-bounded portfolio unchanged.
+`action_portfolio` 不是诊断性候选噪声。它保留在默认包中，因为当所选主动作在其真实调用点不可用时，它携带可执行回退规则。压缩只有在原样保留这一有界组合之后，才可以移除更大的 todo/capability 候选列表。
 
-The `turn_envelope_action_dimensions_v2` base/head migration has a JSON-only,
-bounded growth allowance for this additive portfolio. The allowance applies
-only while a v0/v1 baseline migrates to v2, remains a review signal, and still
-fails above 1,280 characters/bytes, 36 lines, or 896 compact characters. Once
-v2 is the baseline, the ordinary hot-path growth limits apply again.
+`turn_envelope_action_dimensions_v2` base/head 迁移对此增量组合有一个仅限 JSON 的有界增长配额。该配额只在 v0/v1 基线迁移到 v2 期间适用，始终作为评审信号，并且在超过 1,280 字符/字节、36 行或 896 个紧凑字符时仍然失败。一旦 v2 成为基线，普通热路径增长限制重新生效。
 
-`quota_planning_horizon_v0` is likewise action-bearing context rather than
-diagnostic noise. The compact path preserves its bounded Todo chain, typed
-relations, attention ids, completeness counters, and cold-path refs unchanged.
-Its `turn_envelope_action_dimensions_v3` migration receives one JSON-only
-allowance of 3,200 characters/bytes, 84 lines, or 2,800 compact characters.
-That allowance applies only to `none -> quota_planning_horizon_v0` together
-with v0/v1/v2 action coverage moving to v3. Once v3 is the baseline, ordinary
-growth limits resume. The horizon remains read-only and never replaces
-`selected_todo` or explicit action-portfolio selection.
+`quota_planning_horizon_v0` 同样是承载动作的上下文而非诊断噪声。紧凑路径原样保留其有界 Todo 链、类型化关系、attention id、完整性计数器与冷路径引用。其 `turn_envelope_action_dimensions_v3` 迁移获得一次仅限 JSON 的配额：3,200 字符/字节、84 行或 2,800 个紧凑字符。该配额只适用于 `none -> quota_planning_horizon_v0`，连同 v0/v1/v2 动作覆盖移入 v3。一旦 v3 成为基线，普通增长限制恢复。该 horizon 保持只读，从不取代 `selected_todo` 或显式 action-portfolio 选择。
 
-The hot-path horizon and `--include-detail agent-todos` share the same
-TypeScript-owned `todo_planning_inventory_v0`; they are not aliases. The former
-actively discloses at most five strategic items. The latter adds the larger
-`todo_planning_inventory_detail_v0` lens, including planning state, claim state,
-typed relations, and completeness, while referring to the existing Todo
-summary for repeated item details. A concrete `todo list --goal-id ... --role
-agent --status open --agent-id ...` command remains the complete source read.
-Inventory overflow must become explicit incompleteness, not a quota failure or
-an unbounded default packet.
+热路径 horizon 与 `--include-detail agent-todos` 共享同一个 TypeScript 拥有的 `todo_planning_inventory_v0`；它们不是别名。前者最多主动披露五个策略项。后者增加更大的 `todo_planning_inventory_detail_v0` lens，包括规划状态、claim 状态、类型化关系与完整性，同时在重复 item 细节上引用现有 Todo 摘要。具体命令 `todo list --goal-id ... --role agent --status open --agent-id ...` 仍是完整来源读取。库存溢出必须变成显式的不完整，而不是配额失败或无界默认包。
 
-The additive `none -> todo_planning_inventory_detail_v0` migration has a
-JSON-only allowance of 1,280 characters/bytes, 36 lines, and 1,024 compact
-characters. It applies only when the probe observes that exact schema change on
-the explicit detail variants. Unknown schemas and larger growth fail closed;
-once v0 is in the base, ordinary cold-path limits resume.
+增量式 `none -> todo_planning_inventory_detail_v0` 迁移有一个仅限 JSON 的配额：1,280 字符/字节、36 行与 1,024 个紧凑字符。它只在该 probe 在显式 detail 变体上观察到这一精确 schema 变更时适用。未知 schema 与更大增长失效关闭；一旦 v0 进入 base，普通冷路径限制恢复。
 
-Repeated vision audits use `$.vision_continuation_audit` as the canonical
-projection. Candidate lists and peer action lists retain counts and point to
-`--include-detail agent-todos`. The complete vision audit is available through
-`--include-detail vision`; `--include-detail all` restores every supported
-detail section.
+重复 vision 审计使用 `$.vision_continuation_audit` 作为权威投影。候选清单与对等动作清单保留计数，并指向 `--include-detail agent-todos`。完整 vision 审计可通过 `--include-detail vision` 获得；`--include-detail all` 恢复每个受支持的 detail 小节。
 
-## Qualification Contract
+## 资格契约
 
-Deterministic tests own exact full-versus-compact parity, cold-path restoration,
-schema shape, and the character budget. The real-scale regression must exceed
-the default budget before compaction and remain within it afterward.
+确定性测试拥有完整与紧凑的精确一致性、冷路径恢复、schema 形状与字符预算。真实规模回归必须在压缩前超过默认预算，并在其后保持在预算之内。
 
-Model qualification is one-arm and actual-default. The shipped
-`actual_default_model_behavior_portfolio_v0` sends the CLI hot-path projection,
-not the unprojected in-memory decision, to the Doubao actor. Its independent
-source oracle must still observe the expected selected todo, user gate,
-execution obligation, scheduler route, and vision/replan behavior on every
-repeat. The planning-horizon scenario additionally starts from fixed typed
-facts, validates the complete strategic relation chain independently of the
-producer, and requires bounded model readback of the horizon before selected
-work. Removing the horizon, breaking a middle relation, or drifting both the
-producer and compact packet fails before provider spend. A dedicated
-compaction-regression scenario must exceed the JSON hot-path
-budget before projection, fit within the budget afterward, preserve the exact
-source-derived semantic contract, and preserve the model's route. Two additional
-over-budget scenarios repeat clean selected-work and blocking-gate contracts
-under omitted diagnostic noise. Bounded contrast results require those pairs to
-remain invariant, while blocking versus non-blocking user action and selected
-work versus required vision replan remain distinguishable. Exact helper
-traversal, omitted counts, warning references, deduplication, and peer-route
-shape remain deterministic projection-test responsibilities. The old full
-packet is not retained as a permanent second product contract; paired mode is
-reserved for explicit differential diagnosis.
+模型资格是单臂且实际默认的。交付的 `actual_default_model_behavior_portfolio_v0` 把 CLI 热路径投影——而非未投影的内存中决策——发送给 Doubao actor。其独立来源 oracle 仍须在每次重复中观察到预期所选 todo、用户关卡、执行义务、scheduler 路由与 vision/重规划行为。planning-horizon 场景另外从固定类型化事实出发，独立于生产者验证完整策略关系链，并要求模型在所选工作之前对 horizon 进行有界回读。移除 horizon、破坏中间关系或同时偏移生产者和紧凑包都会在 provider 花费之前失败。一个专门的压缩回归场景必须在投影前超过 JSON 热路径预算、之后保持在预算内、保留精确的源生语义契约并保留模型路由。两个额外的超预算场景在省略诊断噪声的情况下重复干净所选工作与阻塞关卡契约。有界对比结果要求这些配对保持不变，而阻塞与非阻塞用户动作、所选工作与必需 vision 重规划仍可区分。精确 helper 遍历、省略计数、警告引用、去重与对等路由形状仍是确定性投影测试的职责。旧完整包不作为永久第二产品契约保留；配对模式保留给显式差异诊断。
 
-The portfolio also includes a future-primary scenario: a typed P0 monitor whose
-window is not due remains visible as unavailable higher-priority work while the
-actual-default model must execute the selected ready fallback. This qualifies
-model obedience to the projection; deterministic tests separately cover the
-legacy case where a sticky primary survives and the packet must still expose
-fallback actions.
+该组合还包含一个未来主动作场景：一个窗口未到的类型化 P0 monitor 仍以不可用的更高优先级工作可见，而实际默认模型必须执行所选的就绪回退。这界定了模型对投影的服从性；确定性测试分别覆盖遗留情况：粘性主动作存活时，包仍必须暴露回退动作。
 
-Live receipts may retain only bounded scenario outcomes and digests. Packets,
-prompts, raw model responses, credentials, and conversations remain outside the
-repository.
+实时回执只可保留有界场景结果与摘要。包、prompt、原始模型响应、凭据与对话保持在仓库之外。

@@ -1,105 +1,85 @@
-# Auto-Research Product Metrics
+# Auto-Research 产品指标
 
-This note defines the user-facing metrics for LoopX auto research. These are
-not implementation counters. They should help a maintainer, research lead, or
-operator answer a product question:
+> [English](auto-research-product-metrics.md)
 
-> Did the agent network create useful research progress under a protected
-> evaluator, with less human coordination cost than a manual loop?
+本说明定义 LoopX 自动研究（auto research）的用户面向指标。这些不是实现计数器。它们应帮助 maintainer、研究负责人或 operator 回答一个产品问题：
 
-The source of truth is the public-safe LoopX graph: `research_contract_v0`,
-todo claims, `research_hypothesis_v0`, `research_evidence_event_v0`,
-promotion/retirement candidates, user gates, and rollout events. Raw logs,
-private paths, protected evaluator bodies, and local transcripts are not metric
-inputs.
+> Agent 网络是否在受保护评估器下创造了有用研究进展，同时比手动 loop 用更少的人类协调成本？
 
-## Metrics That Matter
+事实源是 public-safe LoopX graph：`research_contract_v0`、todo claims、`research_hypothesis_v0`、`research_evidence_event_v0`、晋升/退役候选、user gates 与 rollout 事件。原始日志、私有路径、受保护评估器正文与本地 transcript 不是指标输入。
 
-| Metric | Product question | Primary source | Good movement |
+## 有意义的指标
+
+| 指标 | 产品问题 | 主要来源 | 好的动向 |
 | --- | --- | --- | --- |
-| Time to first scored attempt | How quickly did the system turn a research contract into real evaluator feedback? | first `research_evidence_event_v0` with `eval_status=scored` on the dev split | Lower time without weakening boundary checks |
-| Useful hypotheses per active day | How much reusable search did the agent network produce? | hypotheses with scored evidence, retired negative evidence, or resumable retry evidence | More useful hypotheses, not more raw attempts |
-| Held-out lift | Did the best candidate improve outside the iteration split? | best held-out metric compared with contract baseline and direction | Higher lift with clean protected boundary |
-| Negative-evidence reuse | Did failed directions save future work? | contradicted/retired hypotheses referenced by later hypotheses, frontier pruning, or narrator summary | More explicit reuse of clean negative evidence |
-| Retry recovery rate | Do incomplete attempts become useful instead of disappearing? | `needs_retry` evidence followed by scored, retired, or clearly blocked status | More retries closed with evidence |
-| Human promotion decisions required | How much judgment did the user need to spend before a result was promotable? | promotion gates, user todos, review packets, reward overlays | Fewer ambiguous gates; every required gate is concrete |
+| 首次评分尝试时间 | 系统多快把一个研究契约变成真实评估器反馈？ | dev split 上第一个 `eval_status=scored` 的 `research_evidence_event_v0` | 时间更短且不削弱边界检查 |
+| 每个活跃日的有用假设 | Agent 网络产出了多少可复用搜索？ | 带已评分 evidence、已退役负向 evidence 或可恢复重试 evidence 的假设 | 更多有用假设，而不是更多原始尝试 |
+| 留出提升 | 最佳候选是否在迭代 split 之外改进？ | 最佳留出指标与该契约基线与方向比较 | 干净受保护边界下的更高提升 |
+| 负向 evidence 复用 | 失败方向是否省下了未来工作？ | 被后来假设引用、frontier 剪枝或 narrator 摘要引用的被反驳/退役假设 | 更显式地复用干净负向 evidence |
+| 重试恢复率 | 未完成的尝试是否变成有用结果而不是消失？ | `needs_retry` evidence 后接 scored、retired 或明确 blocked 状态 | 更多重试带 evidence 闭合 |
+| 所需人类晋升决策 | 结果可晋升前用户需要花多少判断？ | 晋升 gates、user todos、review packets、reward 覆盖层 | 更少含糊 gate；每个必需 gate 都具体 |
 
-These metrics are run-level and product-level. A single k-NN showcase may
-highlight held-out lift and time to first scored attempt. A longer autonomous
-research run should also report negative-evidence reuse, retry recovery, and
-human promotion decisions required.
+这些指标是 run 级与产品级。单个 k-NN showcase 可以突出留出提升与首次评分尝试时间。更长的自主研究 run 还应报告负向 evidence 复用、重试恢复与所需人类晋升决策。
 
-## Metric Definitions
+## 指标定义
 
-### Time To First Scored Attempt
+### 首次评分尝试时间
 
-Start time is the first durable source record for the run:
+开始时间是 run 的首个持久来源记录：
 
-- `research_contract_v0` creation when available;
-- otherwise the first todo-backed `research_hypothesis_v0` for that goal.
+- 可得时的 `research_contract_v0` 创建；
+- 否则是该项目 goal 的首个 todo 支撑的 `research_hypothesis_v0`。
 
-End time is the earliest `research_evidence_event_v0` for the run where:
+结束时间是该 run 最早的 `research_evidence_event_v0`，满足：
 
-- `split=dev`;
-- `eval_status=scored`;
-- `protected_scope_clean=true`;
-- `raw_logs_recorded=false`;
-- `private_artifacts_recorded=false`.
+- `split=dev`；
+- `eval_status=scored`；
+- `protected_scope_clean=true`；
+- `raw_logs_recorded=false`；
+- `private_artifacts_recorded=false`。
 
-This is not "time to first command." A command that only scaffolds files,
-prints a frontier, or fails before the evaluator is not a scored attempt.
+这不是"首个命令时间"。只搭文件、打印 frontier 或在评估器之前失败的命令不是评分尝试。
 
-### Useful Hypotheses Per Active Day
+### 每个活跃日的有用假设
 
-A hypothesis is useful when it leaves one of these reusable outcomes:
+一个假设留下以下可复用结果之一时有用：
 
-- **Supported:** dev evidence improves under the contract metric direction.
-- **Promotable:** dev and held-out evidence improve with a clean boundary.
-- **Retired cleanly:** a regression, guardrail failure, or exactness failure is
-  captured as negative evidence that future agents can see.
-- **Resumable retry:** an inconclusive attempt preserves branch or artifact
-  refs and a clear retry/retire policy.
+- **被支持（Supported）：** dev evidence 在契约指标方向上改善。
+- **可晋升（Promotable）：** dev 与留出 evidence 都改善，且边界干净。
+- **干净退役（Retired cleanly）：** 回归、guardrail 失败或精确性失败被捕获为未来 agent 可见的负向 evidence。
+- **可恢复重试（Resumable retry）：** 不确定尝试保留分支或 artifact 引用，并有清晰的重试/退役策略。
 
-Do not count every generated idea. Do not count duplicate hypotheses that
-repeat the same mechanism without new evidence.
+不要计数每个生成的念头。不要计数没有新 evidence 却重复同一机制的重复假设。
 
-### Held-Out Lift
+### 留出提升
 
-Held-out lift is the strongest user-value metric for optimization-style auto
-research:
+留出提升是优化式自动研究最强的用户价值指标：
 
 ```text
 held_out_lift = best_holdout_metric - baseline_metric
 ```
 
-For maximize metrics, positive lift is good. For minimize metrics, invert the
-sign or report the relative reduction. A held-out result is product-worthy only
-when it is paired with:
+对 maximize 指标，正向提升是好的。对 minimize 指标，反转符号或报告相对减少。留出结果只有在以下配对时才值得作为产品成果：
 
-- matching dev evidence;
-- a clean editable/protected boundary;
-- the promotion policy required by the research contract;
-- an explicit statement of what was promoted and what was not.
+- 匹配的 dev evidence；
+- 干净的 editable/protected 边界；
+- 研究契约要求的晋升策略；
+- 对晋升了什么、没晋升什么的显式陈述。
 
-### Negative-Evidence Reuse
+### 负向 evidence 复用
 
-Negative evidence has product value when it prevents repeated waste. Count it
-only when later state uses it:
+负向 evidence 在防止重复浪费时有产品价值。只在后续状态使用它时才计数：
 
-- a later hypothesis cites the retired/contradicted hypothesis as a source ref;
-- a frontier projection prunes or deprioritizes the same mechanism family;
-- a product narrator explains why a visible branch was retired;
-- a retry policy chooses retire instead of relaunch because the evidence is
-  already decisive.
+- 后来假设把退役的/被反驳的假设作为来源引用；
+- frontier 投影剪枝或降权同一机制家族；
+- 产品 narrator 解释一个可见分支为何退役；
+- 重试策略因 evidence 已经决定性地选择退役而不是重新启动。
 
-The value statement should read like: "two exactness-breaking approximation
-paths were retired and kept out of the next frontier," not "two failure rows
-exist."
+价值陈述应读作："两个破坏精确性的近似路径被退役，并从下一个 frontier 排除"，而不是"存在两行失败"。
 
-### Retry Recovery Rate
+### 重试恢复率
 
-Retry recovery rate measures whether LoopX keeps incomplete work from turning
-into silent loss:
+重试恢复率度量 LoopX 是否阻止未完成工作变成无声损失：
 
 ```text
 retry_recovery_rate =
@@ -107,78 +87,63 @@ retry_recovery_rate =
   / total_needs_retry_attempts
 ```
 
-Recovered retries may become scored evidence, clean retirement evidence, or a
-concrete blocker. They should not remain as vague "try again later" notes.
+恢复的重试可以变成已评分 evidence、干净退役 evidence 或具体 blocker。它们不应停留为含糊的"以后再试"说明。
 
-### Human Promotion Decisions Required
+### 所需人类晋升决策
 
-Auto research still needs human judgment at promotion boundaries. The product
-metric is not "zero humans." It is whether the human decision is small,
-concrete, and valuable:
+自动研究在晋升边界仍需要人类判断。产品指标不是"零人类"。而是人类决策是否小、具体、有价值：
 
-- Is the gate about promotion, private boundary, novelty, cost, or publication?
-- Is the question concrete enough to answer in one decision?
-- Does the gate unblock a specific hypothesis or result?
-- Did the agent preserve safe non-gated work while waiting?
+- Gate 关乎晋升、私有边界、新颖性、成本还是发布？
+- 问题是否具体到一次决策就能回答？
+- Gate 是否解锁特定假设或结果？
+- Agent 在等待时是否保留安全非 gate 工作？
 
-Report both count and quality. One crisp promotion gate is better than three
-ambiguous approval pings.
+同时报告数量与质量。一个干脆的晋升 gate 好过三个含糊的批准 ping。
 
-## What Not To Use As Product Metrics
+## 不应作为产品指标的指标
 
-Avoid metrics that mostly prove implementation activity:
+避免大多只证明实现活动的指标：
 
-- number of files touched;
-- number of docs pages or UI panels;
-- number of smoke tests;
-- number of CLI commands printed;
-- number of agents spawned;
-- number of rows in a dashboard.
+- 触及的文件数；
+- 文档页或 UI 面板数；
+- smoke 测试数；
+- 打印的 CLI 命令数；
+- 生成的 agent 数；
+- dashboard 行数。
 
-Those can be validation or engineering health signals. They are not user value
-unless tied to a research outcome, a shorter decision path, or less repeated
-work.
+这些可以是验证或工程健康信号。除非绑定研究结果、更短决策路径或更少重复工作，它们不是用户价值。
 
-## Product Board Shape
+## 产品板形态
 
-The product board should present metrics in this order:
+产品板应按此顺序呈现指标：
 
-1. **Run value:** best held-out lift, promoted hypothesis, and boundary status.
-2. **Search progress:** useful hypotheses per active day and first scored
-   attempt time.
-3. **Reuse:** retired directions and negative-evidence reuse.
-4. **Recovery:** retry recovery rate and remaining retry blockers.
-5. **Human attention:** promotion decisions required and unresolved gates.
+1. **Run 价值：** 最佳留出提升、已晋升假设与边界状态。
+2. **搜索进展：** 每个活跃日有用假设与首次评分尝试时间。
+3. **复用：** 已退役方向与负向 evidence 复用。
+4. **恢复：** 重试恢复率与剩余重试 blockers。
+5. **人类注意力：** 所需晋升决策与未解决 gates。
 
-The board may also show implementation health below the fold, but it should not
-lead with it.
+板可以在折叠下方显示实现健康，但不应以此开头。
 
-## Public-Safe Extraction
+## Public-Safe 提取
 
-Metric extraction should read only public-safe projections:
+指标提取应只读取 public-safe 投影：
 
-- `research_evidence_graph_v0` for best dev/held-out metrics, negative
-  evidence, and retry counts;
-- `decentralized_research_frontier_v0` for currently runnable, blocked,
-  promotion, and retirement candidates;
-- `research_evidence_graph_v0` for any future public case page inputs;
-- `loopx_rollout_event_v0` summaries for timestamps and lifecycle transitions;
-- user/operator gates after they have been compacted into public-safe gate
-  labels and todo ids.
+- 用 `research_evidence_graph_v0` 获取最佳 dev/留出指标、负向 evidence 与重试计数；
+- 用 `decentralized_research_frontier_v0` 获取当前可运行、被阻塞、晋升与退役候选；
+- 用 `research_evidence_graph_v0` 获取任何未来公开案例页输入；
+- 用 `loopx_rollout_event_v0` 摘要获取时间戳与生命周期转变；
+- 用压缩成 public-safe gate 标签与 todo id 之后的 user/operator gates。
 
-Do not parse raw evaluator logs, raw benchmark traces, private source docs,
-local filesystem paths, or chat transcripts to compute product metrics.
+不要解析原始评估器日志、原始 benchmark 轨迹、私有来源文档、本地文件系统路径或聊天 transcript 来计算产品指标。
 
-## Acceptance Checks
+## 验收检查
 
-A product metric packet is acceptable when:
+产品指标 packet 在以下情况可接受：
 
-- every metric names the source record type it can be recomputed from;
-- held-out lift is separated from dev-only progress;
-- negative evidence is counted only when reused or made visible to future
-  frontier selection;
-- retry recovery distinguishes scored, retired, blocked, and still-open
-  attempts;
-- human promotion decisions are concrete gates, not generic approval status;
-- all examples are public-safe and avoid local paths, credentials, private
-  links, raw logs, and protected evaluator details.
+- 每个指标都命名可以重算它的来源记录类型；
+- 留出提升与仅 dev 进展分开；
+- 负向 evidence 只在被复用或对未来 frontier 选择可见时计数；
+- 重试恢复区分 scored、retired、blocked 与仍打开尝试；
+- 人类晋升决策是具体 gates，而不是泛化批准状态；
+- 所有示例 public-safe，避免本地路径、凭据、私有链接、原始日志与受保护评估器细节。

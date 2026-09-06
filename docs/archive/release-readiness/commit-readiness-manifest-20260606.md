@@ -1,81 +1,69 @@
-# Commit Readiness Manifest - 2026-06-06
+# 提交就绪清单 - 2026-06-06
 
-Status: current public dirty-tree readiness map. Use this file to review and
-stage the present LoopX checkout before canary promotion, commit, push,
-or PR creation. It supersedes the closed 2026-06-03 historical snapshot for the
-current tree only.
+> [English](commit-readiness-manifest-20260606.md)
 
-This manifest is not approval to publish private material. It is a grouping and
-validation map for the public LoopX changes currently visible in
-`git status --short`.
+状态:当前公开脏树就绪地图。在 canary 晋升、提交、推送或 PR 创建之前,使用
+本文件审阅并暂存当前的 LoopX checkout。它就当前树而言取代已关闭的 2026-06-03
+历史快照。
 
-## Steering Audit
+本清单不是发布私有材料的批准。它是对 `git status --short` 中当前可见的公开
+LoopX 变更的分组与验证地图。
 
-Chosen slice: turn the large public dirty tree into release-review batches.
+## Steering 审计
 
-Candidates considered:
+选定切片:把大型公开脏树整理成发布审阅批次。
 
-- P0/P1 commit-readiness manifest for the dirty tree: chosen because the tree
-  now spans promotion-gate, dashboard, quota/state, docs, and smoke surfaces;
-  without grouping, later commit or canary promotion would be harder to review.
-- P1 add another promotion-gate fixture: deferred because the structured gate
-  path now has JSON, status, dashboard, installer, grouped demo-readiness, and
-  no-write contract coverage.
-- P1 dashboard polish: deferred until the current product-hardening batches are
-  staged or intentionally kept together.
+考虑过的候选:
 
-No-progress self-stop check: not triggered. Recent eligible turns produced
-validated artifacts, new grouped smoke coverage, state writeback, and contract
-docs rather than repeated status-only checks.
+- 脏树的 P0/P1 提交就绪清单:选定,因为现在的树横跨晋升 gate、dashboard、
+  quota/state、docs 与 smoke surface;不分组的话,以后的提交或 canary 晋升会
+  更难审阅。
+- P1 再添加一个晋升 gate fixture:推迟,因为结构化 gate 路径现在已有 JSON、
+  status、dashboard、installer、分组 demo 就绪与 no-write 契约覆盖。
+- P1 dashboard 打磨:推迟,直到当前产品加固批次被暂存或有意保持在一起。
 
-## Staging Decision - 2026-06-06T05:34:28+08:00
+无进展自停检查:未触发。近期合格 turn 产生了验证过的工件、新的分组 smoke
+覆盖、状态写回与契约文档,而不是重复的状态检查。
 
-Decision: do not stage Batch 1 as whole files in this heartbeat.
+## 暂存决策 - 2026-06-06T05:34:28+08:00
 
-Reason: the first review batch is product-coherent, but several required files
-are not hunk-isolated. Whole-file staging would silently mix release-promotion
-readiness with other current dirty-tree surfaces:
+决策:本 heartbeat 中不要把 Batch 1 作为整文件暂存。
 
-- `loopx/status.py` includes promotion-gate projections, but also
-  dependency blockers, autonomous backlog candidates, event-ledger summaries,
-  decision freshness, quota/handoff helpers, and status contract changes.
-- `README.md`, `docs/status-data-contract.md`,
-  `examples/control_plane/status-markdown-smoke.py`, and `examples/status.example.json`
-  carry promotion-gate documentation or fixtures alongside broader
-  control-plane and status-contract updates.
-- `apps/dashboard/src/views/dashboard-page.tsx` is not part of Batch 1, but it
-  consumes related status fields and makes a pure Batch 1 review boundary harder
-  to validate by whole-file staging.
+原因:第一个审阅批次产品上是连贯的,但若干必需文件没有 hunk 隔离。整文件暂存
+会静默混淆发布晋升就绪与当前脏树的其他 surface:
 
-Publication blocker: the current dirty tree should not be staged as Batch 1
-with plain `git add <file>` because that would erase the manifest's review
-boundary. The safe paths are:
+- `loopx/status.py` 包含晋升 gate 投影,但也包含依赖 blocker、自主 backlog
+  候选、事件 ledger 摘要、决策新鲜度、quota/handoff 助手与 status 契约变更。
+- `README.md`、`docs/status-data-contract.md`、
+  `examples/control_plane/status-markdown-smoke.py` 与 `examples/status.example.json`
+  在更广的控制面与 status 契约更新之外,还携带晋升 gate 文档或 fixture。
+- `apps/dashboard/src/views/dashboard-page.tsx` 不属于 Batch 1,但它消费相关
+  status 字段,使得通过整文件暂存验证纯 Batch 1 审阅边界更难。
 
-1. stage a larger combined release-readiness product-hardening batch covering
-   the shared Batch 1, Batch 2, and Batch 4 status/dashboard surfaces after the
-   minimum final validation passes; or
-2. add a hunk-level staging map for the shared files above, then stage only the
-   promotion-gate hunks plus their exact tests/docs.
+发布阻塞:当前脏树不应以普通 `git add <file>` 暂存为 Batch 1,因为那会抹掉清单
+的审阅边界。安全路径是:
 
-No files were staged by this decision. The Git index remains available for a
-clean follow-up staging pass.
+1. 在最低最终验证通过后,暂存一个更大的组合发布就绪产品加固批次,覆盖共享的
+   Batch 1、Batch 2 与 Batch 4 status/dashboard surface;或
+2. 为上述共享文件添加 hunk 级暂存地图,然后只暂存晋升 gate hunks 及其精确的
+   测试/文档。
 
-Validation after this decision: `python3 examples/promotion-gate-smoke.py`,
-`python3 examples/control_plane/status-markdown-smoke.py`, `loopx-canary check`, and
-`git diff --check` passed.
+本决策没有暂存任何文件。Git index 保持可用,便于后续干净的暂存流程。
 
-## Hunk-Level Staging Map - 2026-06-06T05:38:30+08:00
+本决策后的验证:`python3 examples/promotion-gate-smoke.py`、
+`python3 examples/control_plane/status-markdown-smoke.py`、`loopx-canary check`
+与 `git diff --check` 通过。
 
-Goal: make the next staging pass executable without losing the review boundary.
+## Hunk 级暂存地图 - 2026-06-06T05:38:30+08:00
 
-Preferred staging strategy: do not stage Batch 1 as whole files. Either stage a
-larger combined release-readiness batch, or apply the hunk map below and then
-stage only the exact release-promotion hunks.
+目标:让下一次暂存流程在不丢失审阅边界的情况下可执行。
 
-### Whole-File Stage Candidates
+首选暂存策略:不要把 Batch 1 作为整文件暂存。要么暂存更大的组合发布就绪批次,
+要么应用下方 hunk 地图,然后只暂存精确的发布晋升 hunks。
 
-These files are narrow enough to stage whole-file for the release-readiness
-batch:
+### 整文件暂存候选
+
+这些文件足够窄,可为发布就绪批次整体暂存:
 
 - `loopx/promotion_gate.py`
 - `examples/promotion-gate-smoke.py`
@@ -85,92 +73,83 @@ batch:
 - `examples/dashboard-promotion-readiness-browser-smoke.mjs`
 - `examples/dashboard-promotion-gate-warning-status.json`
 
-These files are also release-readiness candidates, but review whether the
-larger combined batch includes dashboard/demo readiness before staging:
+这些文件也是发布就绪候选,但暂存前先审阅更大的组合批次是否包含
+dashboard/demo 就绪:
 
 - `apps/dashboard/smoke/usage-progress-smoke.ts`
 - `examples/dashboard-demo-readiness-smoke.py`
 - `examples/install-local-smoke.py`
 - `scripts/install-local.sh`
 
-### Shared-File Hunk Anchors
+### 共享文件的 Hunk 锚点
 
-Use `git add -p` or an equivalent cached patch. Do not whole-file stage these
-unless choosing the larger combined release-readiness batch.
+使用 `git add -p` 或等价的缓存 patch。除非选择更大的组合发布就绪批次,否则不要
+整文件暂存这些文件。
 
 - `loopx/cli.py`
-  - stage the `.promotion_gate` import;
-  - stage the `promotion-gate` subparser definition;
-  - stage the `if args.command == "promotion-gate"` handler;
-  - avoid unrelated review-packet, todo, heartbeat, or global-registry hunks.
+  - 暂存 `.promotion_gate` 导入;
+  - 暂存 `promotion-gate` 子解析器定义;
+  - 暂存 `if args.command == "promotion-gate"` 处理器;
+  - 避免无关的 review-packet、todo、heartbeat 或 global-registry hunks。
 - `loopx/doctor.py`
-  - stage `PROMOTION_READINESS_CLASSIFICATIONS`,
-    `PROMOTION_READINESS_FRESHNESS_HOURS`,
-    `add_promotion_readiness_freshness()`, and
-    `latest_promotion_readiness_event()`;
-  - stage the `release_provenance.promotion_readiness` collection/rendering
-    hunks;
-  - avoid unrelated install wrapper or PATH diagnostics unless the combined
-    release-readiness batch intentionally includes them.
+  - 暂存 `PROMOTION_READINESS_CLASSIFICATIONS`、
+    `PROMOTION_READINESS_FRESHNESS_HOURS`、
+    `add_promotion_readiness_freshness()` 与 `latest_promotion_readiness_event()`;
+  - 暂存 `release_provenance.promotion_readiness` 收集/渲染 hunks;
+  - 避免无关的 install wrapper 或 PATH 诊断,除非组合发布就绪批次有意包含
+    它们。
 - `loopx/status.py`
-  - stage promotion-readiness imports from `doctor.py` and the
-    `build_promotion_gate` import;
-  - stage `PROMOTION_READINESS_PROXY_NOTE`;
-  - stage `build_promotion_readiness_summary()`;
-  - stage `collect_status()` hunks that add `promotion_readiness_summary` and
-    `promotion_gate`;
-  - stage `render_status_markdown()` hunks that render
-    `## Promotion Readiness Summary` and `## Promotion Gate`;
-  - avoid dependency-blocker, autonomous-backlog, event-ledger,
-    decision-freshness, and handoff-outcome hunks unless using the larger
-    combined release-readiness batch.
+  - 暂存来自 `doctor.py` 的 promotion-readiness 导入与 `build_promotion_gate`
+    导入;
+  - 暂存 `PROMOTION_READINESS_PROXY_NOTE`;
+  - 暂存 `build_promotion_readiness_summary()`;
+  - 暂存 `collect_status()` 中添加 `promotion_readiness_summary` 与
+    `promotion_gate` 的 hunks;
+  - 暂存 `render_status_markdown()` 中渲染 `## Promotion Readiness Summary` 与
+    `## Promotion Gate` 的 hunks;
+  - 避免依赖 blocker、自主 backlog、事件 ledger、决策新鲜度与 handoff-outcome
+    hunks,除非使用更大的组合发布就绪批次。
 - `README.md`
-  - stage install/canary-promotion readiness instructions;
-  - stage `promotion-gate --format json` operator guidance;
-  - stage dashboard demo-readiness references only if the batch also includes
-    dashboard readiness files;
-  - avoid the broad README rewrite hunks unless choosing the combined batch.
+  - 暂存 install/canary-promotion 就绪说明;
+  - 暂存 `promotion-gate --format json` 操作员指引;
+  - 仅当批次也包含 dashboard 就绪文件时,暂存 dashboard demo 就绪引用;
+  - 避免广泛的 README 重写 hunks,除非选择组合批次。
 - `docs/status-data-contract.md`
-  - stage optional top-level fields for `promotion_readiness_summary` and
-    `promotion_gate`;
-  - stage the `Promotion Gate JSON` section;
-  - stage the `Promotion Readiness Summary` section and quota-guard warning
-    paragraph;
-  - avoid unrelated top-4 todo, dependency blocker, operator gate, or freshness
-    contract hunks unless choosing the combined batch.
+  - 暂存 `promotion_readiness_summary` 与 `promotion_gate` 的可选顶层字段;
+  - 暂存 `Promotion Gate JSON` 小节;
+  - 暂存 `Promotion Readiness Summary` 小节与 quota 防护警告段落;
+  - 避免无关的 top-4 todo、依赖 blocker、operator gate 或新鲜度契约 hunks,
+    除非选择组合批次。
 - `examples/control_plane/status-markdown-smoke.py`
-  - stage the import for `build_promotion_readiness_summary`;
-  - stage `assert_promotion_readiness_summary_markdown()`;
-  - stage `assert_promotion_gate_summary_markdown()`;
-  - stage `assert_promotion_readiness_full_scan_fallback()`;
-  - stage `assert_promotion_readiness_warning_in_quota_guard()`;
-  - stage the matching `main()` calls;
-  - avoid connected-delivery outcome-floor and other queue/handoff assertions
-    unless choosing the combined batch.
+  - 暂存 `build_promotion_readiness_summary` 的导入;
+  - 暂存 `assert_promotion_readiness_summary_markdown()`;
+  - 暂存 `assert_promotion_gate_summary_markdown()`;
+  - 暂存 `assert_promotion_readiness_full_scan_fallback()`;
+  - 暂存 `assert_promotion_readiness_warning_in_quota_guard()`;
+  - 暂存匹配的 `main()` 调用;
+  - 避免 connected-delivery outcome-floor 与其他 queue/handoff 断言,除非选择
+    组合批次。
 - `examples/status.example.json`
-  - stage only the `promotion_readiness_summary` and `promotion_gate` top-level
-    JSON blocks plus directly required optional-field references.
+  - 只暂存 `promotion_readiness_summary` 与 `promotion_gate` 顶层 JSON 块以及
+    直接需要的可选字段引用。
 - `apps/dashboard/src/data/status.ts`
-  - stage `promotionReadinessSummarySchema`, `promotionGateSchema`,
-    top-level `promotion_readiness_summary` / `promotion_gate`, and their
-    exported types;
-  - avoid event-ledger, decision-freshness, dependency-blocker, and handoff
-    schema hunks unless choosing the combined batch.
+  - 暂存 `promotionReadinessSummarySchema`、`promotionGateSchema`、顶层
+    `promotion_readiness_summary` / `promotion_gate` 与其导出类型;
+  - 避免事件 ledger、决策新鲜度、依赖 blocker 与 handoff schema hunks,除非
+    选择组合批次。
 - `apps/dashboard/src/views/dashboard-page.tsx`
-  - stage promotion-readiness and promotion-gate imports/types;
-  - stage the ops panel insertions for `PromotionReadinessSummaryPanel` and
-    `PromotionGatePanel`;
-  - stage the two panel components and their variant helpers;
-  - avoid unrelated home-control-plane, top-4 todo, dependency blocker,
-    decision-freshness, and handoff UI hunks unless choosing the combined
-    batch.
+  - 暂存 promotion-readiness 与 promotion-gate 导入/类型;
+  - 暂存 ops 面板中 `PromotionReadinessSummaryPanel` 与 `PromotionGatePanel`
+    的插入;
+  - 暂存两个面板组件及其变体助手;
+  - 避免无关的 home-control-plane、top-4 todo、依赖 blocker、决策新鲜度与
+    handoff UI hunks,除非选择组合批次。
 
-### Recommended Next Staging Pass
+### 推荐的下一暂存流程
 
-The lower-conflict path is a larger combined release-readiness batch covering
-Batch 1 plus the dependent dashboard/status contract pieces from Batch 2 and
-Batch 4. That batch should stage whole files only after the minimum final
-validation passes:
+冲突较小的路径是一个更大的组合发布就绪批次,覆盖 Batch 1 加上 Batch 2 与
+Batch 4 中依赖的 dashboard/status 契约部件。该批次应在最低最终验证通过后才整
+文件暂存:
 
 ```bash
 python3 examples/run-smokes.py
@@ -181,90 +160,78 @@ loopx-canary check
 git diff --check
 ```
 
-If that validation passes and no private-boundary issue appears, stage the
-combined release-readiness batch or write back the exact file/hunk that blocks
-staging.
+如果验证通过且没有私有边界问题,就暂存组合发布就绪批次,或写回阻塞暂存的精确
+文件/hunk。
 
-Validation after adding this map: `python3 examples/promotion-gate-smoke.py`,
-`python3 examples/control_plane/status-markdown-smoke.py`, `loopx-canary check`, and
-`git diff --check` passed.
+添加本地图后的验证:`python3 examples/promotion-gate-smoke.py`、
+`python3 examples/control_plane/status-markdown-smoke.py`、`loopx-canary check`
+与 `git diff --check` 通过。
 
-## Staging Applied - 2026-06-06T05:43:51+08:00
+## 已应用的暂存 - 2026-06-06T05:43:51+08:00
 
-Decision: stage the larger combined release-readiness product-hardening batch
-with an explicit file list after the minimum final validation passed.
+决策:最低最终验证通过后,以显式文件列表暂存更大的组合发布就绪产品加固批次。
 
-Reason: the exact promotion-gate-only hunk path is available, but the current
-dirty tree is already a coherent release-readiness hardening set spanning
-promotion gate, dashboard/demo availability, status contracts, quota/heartbeat
-handoff, decision freshness, and public validation smokes. Keeping these hunks
-split would add review overhead without reducing the validated product risk.
+原因:精确的 promotion-gate-only hunk 路径可用,但当前脏树已经是一个连贯的发布
+就绪加固集,横跨晋升 gate、dashboard/demo 可用性、status 契约、quota/heartbeat
+handoff、决策新鲜度与公开验证 smokes。把这些 hunks 保持拆分会增加审阅开销,而
+不降低已验证的产品风险。
 
-Validation before staging:
+暂存前验证:
 
-- `python3 examples/run-smokes.py`: passed with 31 smoke scripts.
+- `python3 examples/run-smokes.py`:通过,31 个 smoke 脚本。
 - `python3 examples/canary/canary-promotion-readiness-smoke.py --no-write-evidence`:
-  passed.
-- `npm --prefix apps/dashboard run smoke:demo-readiness`: passed, including
-  browser smokes.
-- `npm --prefix apps/dashboard run build`: passed with the existing Vite
-  chunk-size warning.
-- `loopx-canary check`: passed; public boundary scan clean.
-- `git diff --check`: passed.
+  通过。
+- `npm --prefix apps/dashboard run smoke:demo-readiness`:通过,包括 browser
+  smokes。
+- `npm --prefix apps/dashboard run build`:通过,带现有的 Vite chunk-size 警告。
+- `loopx-canary check`:通过;公开边界扫描干净。
+- `git diff --check`:通过。
 
-Staging rule: use the explicit `git status --short` file list from this
-decision point, not `git add .`.
+暂存规则:使用该决策点的显式 `git status --short` 文件列表,而不是 `git add .`。
 
-Staging result: applied with the explicit file list at
-2026-06-06T05:44:53+08:00. The Git index now contains 63 staged files for this
-combined release-readiness product-hardening batch. `git diff --cached --check`
-and `git diff --check` passed after staging; `git status --short` showed only
-staged entries for the release-readiness batch.
+暂存结果:于 2026-06-06T05:44:53+08:00 以显式文件列表应用。Git index 现在为该
+组合发布就绪产品加固批次包含 63 个已暂存文件。暂存后 `git diff --cached --check`
+与 `git diff --check` 通过;`git status --short` 只显示发布就绪批次的已暂存条目。
 
-## Commit Decision - 2026-06-06T05:47:20+08:00
+## 提交决策 - 2026-06-06T05:47:20+08:00
 
-Decision: create a public commit for the staged combined release-readiness
-product-hardening batch on branch `codex/release-readiness-hardening`.
+决策:在分支 `codex/release-readiness-hardening` 上为已暂存的组合发布就绪产品
+加固批次创建一个公开提交。
 
-Rationale: the staged batch has passed the full minimum validation, the public
-boundary scan is clean, and the active goal boundary permits routine public-safe
-repo publication after validation. The branch was created from the current
-local `main`, which was already ahead of `origin/main`; this decision does not
-push or open a PR yet.
+理由:已暂存批次通过了完整最低验证,公开边界扫描干净,且活动目标边界允许验证后
+的常规 public-safe 仓库发布。该分支从当前本地 `main` 创建,本地 `main` 已领先
+于 `origin/main`;本决策尚未推送或打开 PR。
 
-Commit-scope guard: do not add unstaged runtime outputs, `.loopx/`,
-`.local/`, generated dashboard `dist/`, private project evidence, credentials,
-or production identifiers.
+提交作用域防护:不要添加未暂存的 runtime 输出、`.loopx/`、`.local/`、生成的
+dashboard `dist/`、私有项目证据、凭据或生产标识符。
 
-## Publication Decision - 2026-06-06T05:52:18+08:00
+## 发布决策 - 2026-06-06T05:52:18+08:00
 
-Decision: push branch `codex/release-readiness-hardening` and open a draft PR.
+决策:推送分支 `codex/release-readiness-hardening` 并打开一个 draft PR。
 
-Result:
+结果:
 
-- branch pushed to `origin/codex/release-readiness-hardening`;
-- draft PR: https://github.com/huangruiteng/loopx/pull/1;
-- PR title: `[codex] Harden release readiness control plane`.
+- 分支已推送到 `origin/codex/release-readiness-hardening`;
+- draft PR:https://github.com/huangruiteng/loopx/pull/1;
+- PR 标题:`[codex] Harden release readiness control plane`。
 
-Publication note: the draft PR is intentionally stacked on the current local
-`main` lineage. Relative to `origin/main`, it includes 10 commits: 9 local
-predecessor commits around handoff/delivery-scale control-plane hardening plus
-`6fd9270 Harden release readiness control plane`. No rebase or history rewrite
-was performed.
+发布备注:draft PR 有意叠在当前本地 `main` 谱系上。相对 `origin/main`,它包含
+10 个提交:9 个围绕 handoff/delivery-scale 控制面加固的本地前驱提交,外加
+`6fd9270 Harden release readiness control plane`。没有执行 rebase 或历史重写。
 
-## Batch 1 - Promotion Gate And Release Readiness
+## Batch 1 - 晋升 Gate 与发布就绪
 
-Purpose: make release-promotion readiness a shared structured contract instead
-of installer stderr prose or chat memory.
+目的:把发布晋升就绪做成共享的结构化契约,而不是 installer stderr 散文或聊天
+记忆。
 
-Candidate files:
+候选文件:
 
 - `loopx/promotion_gate.py`
-- `loopx/cli.py` (promotion-gate command wiring)
-- `loopx/doctor.py` (release provenance and promotion readiness)
-- `loopx/status.py` (promotion readiness and promotion_gate projections)
+- `loopx/cli.py`(promotion-gate 命令接线)
+- `loopx/doctor.py`(release provenance 与 promotion readiness)
+- `loopx/status.py`(promotion readiness 与 promotion_gate 投影)
 - `scripts/install-local.sh`
-- `README.md` (canary-promotion and promotion-gate operator path)
+- `README.md`(canary-promotion 与 promotion-gate 操作员路径)
 - `docs/status-data-contract.md`
 - `examples/promotion-gate-smoke.py`
 - `examples/canary/canary-promotion-readiness-smoke.py`
@@ -274,32 +241,31 @@ Candidate files:
 - `examples/control_plane/status-markdown-smoke.py`
 - `examples/status.example.json`
 
-Validation already observed in recent slices:
+近期切片已观察到的验证:
 
 - `python3 examples/promotion-gate-smoke.py`
 - `python3 examples/canary/canary-promotion-readiness-smoke.py --no-write-evidence`
 - `python3 examples/canary/canary-promotion-readiness-writeback-smoke.py`
 - `python3 examples/install-local-smoke.py`
 - `python3 examples/control_plane/status-markdown-smoke.py`
-- live status readback showing `promotion_gate.gate_state=ready`,
-  `can_promote=True`, `should_warn=False`, and readiness `fresh`.
+- live status 读回,显示 `promotion_gate.gate_state=ready`、`can_promote=True`、
+  `should_warn=False` 与就绪度 `fresh`。
 
-Review notes:
+审阅备注:
 
-- `promotion-gate --format json` is read-only and non-blocking. Automation
-  should assert `gate_state`, `can_promote`, `should_warn`,
-  `non_blocking`, and `readiness.freshness_status`, not parse
-  `warning_message` or installer stderr.
-- `scripts/install-local.sh` may warn on missing/stale readiness, but explicit
-  promotion remains operator-controlled.
-- Evidence writeback must stay append-only via refresh-state/run history.
+- `promotion-gate --format json` 是只读且非阻塞的。自动化应断言 `gate_state`、
+  `can_promote`、`should_warn`、`non_blocking` 与 `readiness.freshness_status`,
+  而不是解析 `warning_message` 或 installer stderr。
+- `scripts/install-local.sh` 可能在就绪缺失/过时时告警,但显式晋升仍由 operator
+  控制。
+- 证据写回必须通过 refresh-state/run history 保持 append-only。
 
-## Batch 2 - Dashboard, Demo Readiness, And macOS Local Availability
+## Batch 2 - Dashboard、Demo 就绪与 macOS 本地可用性
 
-Purpose: make the dashboard demo path resilient and easy to open during
-sharing, including stable local services and browser/source smokes.
+目的:让 dashboard demo 路径稳健且便于分享时打开,包括稳定的本地服务与
+browser/source smokes。
 
-Candidate files:
+候选文件:
 
 - `.gitignore`
 - `apps/dashboard/README.md`
@@ -318,7 +284,7 @@ Candidate files:
 - `examples/serve-status-global-registry-smoke.py`
 - `scripts/macos-dashboard-launchagent.sh`
 
-Validation already observed in recent slices:
+近期切片已观察到的验证:
 
 - `npm run smoke:demo-readiness -- --skip-browser`
 - `npm run smoke:demo-readiness`
@@ -330,21 +296,20 @@ Validation already observed in recent slices:
 - `python3 examples/macos-dashboard-launchagent-status-smoke.py`
 - `npm run build`
 
-Review notes:
+审阅备注:
 
-- The local demo service target is `127.0.0.1:5174` for the dashboard and
-  `127.0.0.1:8766` for status JSON.
-- Browser smokes intentionally start temporary Vite servers; keep them explicit
-  or grouped under demo-readiness, not hidden inside every heartbeat.
-- Do not stage generated `apps/dashboard/dist/` artifacts unless a release
-  explicitly asks for built assets.
+- 本地 demo 服务目标为 dashboard 的 `127.0.0.1:5174` 与 status JSON 的
+  `127.0.0.1:8766`。
+- Browser smokes 有意启动临时 Vite server;保持它们显式或分组到 demo-readiness
+  下,而不是藏在每次 heartbeat 里。
+- 除非发布明确要求构建产物,否则不要暂存生成的 `apps/dashboard/dist/` 工件。
 
-## Batch 3 - Control-Plane State, Quota, Handoff, And Decision Freshness
+## Batch 3 - 控制面状态、Quota、Handoff 与决策新鲜度
 
-Purpose: keep long-running workers coordinated through registry-backed state,
-append-only events, quota truth, and checkpointed decision freshness.
+目的:通过 registry 支持的状态、append-only 事件、quota 真相与检查点式决策
+新鲜度,保持长时间运行 worker 的协调。
 
-Candidate files:
+候选文件:
 
 - `docs/heartbeat-automation-prompt.md`
 - `docs/integration.md`
@@ -367,7 +332,7 @@ Candidate files:
 - `examples/control_plane/review-packet-cli-smoke.py`
 - `examples/control_plane/review-packet-smoke.py`
 
-Validation already observed in recent slices:
+近期切片已观察到的验证:
 
 - `python3 examples/control_plane/heartbeat-prompt-smoke.py`
 - `python3 examples/project/operator-gate-resume-contract-smoke.py`
@@ -377,28 +342,26 @@ Validation already observed in recent slices:
 - `python3 examples/control_plane/review-packet-smoke.py`
 - `python3 examples/project/global-registry-sync-smoke.py`
 
-Review notes:
+审阅备注:
 
-- This batch encodes the principle that Codex threads are workers; append-only
-  run history and registry-backed active state are the durable control plane.
-- Decision-point rebase means rereading current state before reusing an old
-  reward/gate. It does not roll the repository or worker context backward.
-- Routine public-safe commit/push/PR remains allowed after validation and clean
-  boundary scan; destructive git, private material, credentials, prod actions,
-  or explicit repo review gates still stop automation.
+- 本批次编码的原则是:Codex 线程是 worker;append-only 运行历史与 registry
+  支持的活动状态是持久的控制面。
+- 决策点 rebase 意味着在复用旧 reward/gate 之前重新读取当前状态。它不会把
+  repository 或 worker 上下文回滚。
+- 验证通过且边界扫描干净后,常规 public-safe commit/push/PR 仍被允许;破坏性
+  git、私有材料、凭据、生产动作或显式仓库审阅 gate 仍会阻止自动化。
 
-## Batch 4 - Status, Demo Examples, And Public Boundary Fixtures
+## Batch 4 - Status、Demo 示例与公开边界 Fixture
 
-Purpose: keep status/check/demo examples coherent as the control-plane contract
-grows.
+目的:随着控制面契约增长,保持 status/check/demo 示例连贯。
 
-Candidate files:
+候选文件:
 
 - `loopx/bootstrap.py`
 - `loopx/contract.py`
 - `loopx/demo.py`
 - `loopx/global_registry.py`
-- `loopx/status.py` (shared status/data projection hunks)
+- `loopx/status.py`(共享 status/data 投影 hunks)
 - `apps/dashboard/src/data/action-packet.ts`
 - `examples/contract-reward-overlay-smoke.py`
 - `examples/demo-cli-smoke.py`
@@ -407,53 +370,49 @@ Candidate files:
 - `examples/run-smokes.py`
 - `examples/usage-summary-smoke.py`
 
-Validation already observed in recent slices:
+近期切片已观察到的验证:
 
 - `python3 examples/contract-reward-overlay-smoke.py`
 - `python3 examples/demo-cli-smoke.py`
 - `python3 examples/usage-summary-smoke.py`
-- `python3 examples/run-smokes.py` (31 public smoke scripts)
+- `python3 examples/run-smokes.py`(31 个公开 smoke 脚本)
 - `loopx-canary check`
 
-Review notes:
+审阅备注:
 
-- Some files, especially `loopx/status.py` and
-  `apps/dashboard/src/views/dashboard-page.tsx`, span several batches. If the
-  reviewer wants small commits, use hunk staging. Otherwise, combine related
-  status/dashboard batches into one reviewed product-hardening commit.
-- Keep fixtures public-safe and relative-path based.
+- 有些文件,尤其是 `loopx/status.py` 与
+  `apps/dashboard/src/views/dashboard-page.tsx`,横跨几个批次。如果审阅者想要
+  小提交,请使用 hunk staging。否则,把相关 status/dashboard 批次合并为一个
+  经审阅的产品加固提交。
+- 保持 fixture public-safe 且基于相对路径。
 
-## Cross-Cutting State And Manifest Files
+## 跨领域状态与清单文件
 
-Candidate files:
+候选文件:
 
 - `goals/loopx-meta/ACTIVE_GOAL_STATE.md`
 - `docs/commit-readiness-manifest-20260606.md`
 
-Guidance:
+指引:
 
-- Include active-state writeback only if the commit is meant to preserve the
-  public project-control history alongside implementation work.
-- This manifest can be committed as release-review metadata, or used during
-  staging and then removed if the final branch prefers feature-only commits.
+- 只在提交意在随实现工作一起保留公开项目控制历史时,才包含活动状态写回。
+- 本清单可作为发布审阅元数据提交,或在暂存中使用、后于最终分支偏好纯功能提交
+  时移除。
 
-## Do Not Commit
+## 不要提交
 
-Keep these out of any public commit:
+让这些远离任何公开提交:
 
-- `.local/**`, `.loopx/**` runtime outputs, shared
-  `~/.codex/loopx/**` run history, quota events, or live reward overlay
-  data.
-- Codex App automation config, thread metadata, screenshots, generated browser
-  session state, and private local logs.
-- `apps/dashboard/dist/**` unless the release explicitly asks for built assets.
-- Private project worktrees, internal links, company-only documents, raw local
-  user paths, credentials, tokens, production run ids, or private task ledger
-  data.
+- `.local/**`、`.loopx/**` runtime 输出、共享 `~/.codex/loopx/**` 运行历史、
+  quota 事件或实时 reward overlay 数据。
+- Codex App 自动化配置、线程元数据、截图、生成的浏览器会话状态与私有本地日志。
+- `apps/dashboard/dist/**`,除非发布明确要求构建产物。
+- 私有项目 worktree、内部链接、公司专属文档、原始本地用户路径、凭据、token、
+  生产运行 id 或私有任务 ledger 数据。
 
-## Minimum Final Validation Before Commit Or Canary Promotion
+## 提交或 Canary 晋升前的最低最终验证
 
-Run this set after final staging or immediately before canary promotion:
+最终暂存后或 canary 晋升前立即运行此集合:
 
 ```bash
 python3 examples/run-smokes.py
@@ -464,31 +423,27 @@ loopx-canary check
 git diff --check
 ```
 
-For a release-promotion evidence writeback, run:
+对于发布晋升证据写回,运行:
 
 ```bash
 python3 examples/canary/canary-promotion-readiness-smoke.py
 loopx-canary promotion-gate --format json
 ```
 
-The second command should report `gate_state=ready`, `can_promote=true`, and
-`should_warn=false` before `scripts/install-local.sh` promotes the live checkout
-into the default local release snapshot.
+第二条命令应在 `scripts/install-local.sh` 把 live checkout 晋升为默认本地发布
+快照前报告 `gate_state=ready`、`can_promote=true` 与 `should_warn=false`。
 
-## Last Observed Validation
+## 最近观察到的验证
 
-Recent heartbeat slices observed the following on this dirty tree or direct
-subsets of it:
+近期 heartbeat 切片在此脏树或其直接子集上观察到:
 
-- `python3 examples/run-smokes.py`: passed with 31 smoke scripts.
+- `python3 examples/run-smokes.py`:通过,31 个 smoke 脚本。
 - `python3 examples/canary/canary-promotion-readiness-smoke.py --no-write-evidence`:
-  passed and showed dashboard demo-readiness before evidence writeback.
-- `npm --prefix apps/dashboard run smoke:demo-readiness`: passed, including
-  browser smokes.
-- `npm --prefix apps/dashboard run build`: passed with the existing Vite chunk
-  size warning.
-- `loopx-canary check`: passed; public boundary scan clean.
-- `git diff --check`: passed.
+  通过,并在证据写回前显示了 dashboard demo 就绪。
+- `npm --prefix apps/dashboard run smoke:demo-readiness`:通过,包括 browser
+  smokes。
+- `npm --prefix apps/dashboard run build`:通过,带现有的 Vite chunk size 警告。
+- `loopx-canary check`:通过;公开边界扫描干净。
+- `git diff --check`:通过。
 
-Re-run the minimum validation after this manifest is edited or after any
-additional implementation files are touched.
+本清单被编辑或任何额外实现文件被触碰后,重新运行最低验证。

@@ -1,56 +1,52 @@
 # Pull Request Review
 
-The `pull-request-review` capability helps a user review open and recently
-merged pull requests one by one by turning public GitHub PR metadata into a
-guided review queue. Its command packet remains versioned as
-`pr_review_command_v0` and is exposed through `/loopx-pr-review` and
-`loopx pr-review`.
+> [English](README.md)
 
-The reviewed repository is the caller's current GitHub project by default, as
-resolved by `gh`, or the explicit `--repo owner/repo` target. LoopX's own
-repository may be used for dogfood and public fixtures, but the command is not
-LoopX-repo-specific.
+`pull-request-review` capability 帮助用户逐个审阅开放与最近合并的 pull requests:
+把公开 GitHub PR 元数据变成引导式 review 队列。其命令 packet 仍以
+`pr_review_command_v0` 版本化,并通过 `/loopx-pr-review` 与 `loopx pr-review`
+暴露。
 
-The default command is read-only. An explicit `--observation-state-file`
-writes only its local public-safe checkpoint. Neither mode approves reviews,
-posts PR comments, merges, pushes, spends LoopX quota, or completes LoopX todos.
+默认被审阅仓库是由 `gh` 解析的调用方当前 GitHub 项目,或显式 `--repo owner/repo`
+目标。LoopX 自己的仓库可以用于 dogfood 与公开 fixtures,但命令不是
+LoopX-repo 特定的。
 
-The built-in `pull-request-review` capability adds an optional autonomous
-observation to this same command. It reuses the existing GitHub scan and
-normalized review queue; it does not introduce a second crawler or a new write
-authority.
+默认命令是只读的。显式 `--observation-state-file` 只写其本地 public-safe
+checkpoint。两种模式都不批准 reviews、不发 PR 评论、不 merge、不 push、不消耗
+LoopX quota,也不完成 LoopX todos。
 
-The capability also owns the review-depth contract. The shared
-`agent_response_contract.review_execution_contract` defines required evidence,
-completion, freshness, finding, and verdict rules. Each PR carries a compact
-`review_plan` that binds those rules to one exact head and marks code-symbol and
-negative-walkthrough applicability. Host skills route and publish this packet;
-they must not maintain a second explanation checklist.
+内置 `pull-request-review` capability 为同一命令添加可选自主观测。它复用现有
+GitHub 扫描与归一化 review 队列;不引入第二个 crawler 或新的写 authority。
 
-Codex agents should use the dedicated `loopx-pr-review` skill for this slash
-command. Do not route `/loopx-pr-review` through the broader `loopx-project`
-workflow or the merge-focused `loopx-pr-merge` skill.
+Capability 还拥有 review-depth 契约。共享的
+`agent_response_contract.review_execution_contract` 定义必需证据、完成、
+freshness、finding 与 verdict 规则。每个 PR 携带把那些规则绑定到一个确切 head 的
+紧凑 `review_plan`,并标记 code-symbol 与 negative-walkthrough 适用性。Host
+skills 路由并发布该 packet;它们不得维护第二份解释清单。
 
-## Command
+Codex agents 应为该 slash command 使用专用 `loopx-pr-review` skill。不要把
+`/loopx-pr-review` 路由到更宽的 `loopx-project` workflow 或以 merge 为重点的
+`loopx-pr-merge` skill。
 
-| Command | CLI reference | Intent |
+## 命令
+
+| 命令 | CLI 参考 | 意图 |
 | --- | --- | --- |
-| `/loopx-pr-review` | `loopx pr-review [--repo owner/repo] [--state open\|merged\|all] [--since ISO]` | List open and merged PRs for the current project or explicit repository, provide concrete main-regression analysis for each PR, and include a blank five-block template that agentloop fills after reading the selected PR body/diff. |
+| `/loopx-pr-review` | `loopx pr-review [--repo owner/repo] [--state open\|merged\|all] [--since ISO]` | 列出当前项目或显式仓库的 open 与 merged PRs,为每个 PR 提供具体的 main-regression 分析,并包含 agentloop 读取所选 PR body/diff 后填写的空五块模板。 |
 
-The slash command must run the CLI first. Agentloop must not reconstruct the
-review window by manually calling `gh pr view` / `gh pr list` for every PR. The
-CLI packet's `review_groups.unmerged`, `review_groups.merged`, and
-`pull_requests[].review_template` are the authoritative queue. The packet's
-`evidence_commands` are for the second step: reading one selected PR deeply.
-Use the JSON form for the first pass so the response contract and per-PR blank
-templates enter the model context:
+Slash command 必须先运行 CLI。Agentloop 不得通过为每个 PR 手动调用
+`gh pr view` / `gh pr list` 重建 review 窗口。CLI packet 的
+`review_groups.unmerged`、`review_groups.merged` 与
+`pull_requests[].review_template` 是权威队列。Packet 的 `evidence_commands` 用于
+第二步:深入读取一个选中的 PR。第一遍使用 JSON 形式,使响应契约与每个 PR 的空
+模板进入 model context:
 
 ```bash
 loopx --format json pr-review --state all [--repo owner/repo] [--since ISO]
 ```
 
-For an autonomous maintainer monitor, request the complete open queue while
-persisting its compact cursor in an ignored local checkpoint:
+对于自主维护者 monitor,在忽略的本地 checkpoint 中持久化其紧凑游标,同时请求
+完整开放队列:
 
 ```bash
 loopx --format json pr-review --repo owner/repo --state open \
@@ -58,10 +54,10 @@ loopx --format json pr-review --repo owner/repo --state open \
   --observation-state-file .local/pr-review-monitor.json
 ```
 
-The same command reuses that checkpoint on later Codex tasks. Its atomic local
-write grants no GitHub, Todo, push, or merge authority.
-`--previous-observation-json` remains available for stateless callers and is
-mutually exclusive with `--observation-state-file`:
+同一命令在之后的 Codex 任务中复用该 checkpoint。其原子本地写不授予 GitHub、
+Todo、push 或 merge authority。
+`--previous-observation-json` 对无状态调用方仍可用,与
+`--observation-state-file` 互斥:
 
 ```bash
 loopx --format json pr-review --repo owner/repo --state open \
@@ -69,8 +65,7 @@ loopx --format json pr-review --repo owner/repo --state open \
   --previous-observation-json previous.json
 ```
 
-After the selected candidate has been durably materialized as a Todo,
-acknowledge that projection explicitly:
+在选中的候选被持久物化为 Todo 后,显式确认该投影:
 
 ```bash
 loopx --format json pr-review --repo owner/repo --state open \
@@ -79,16 +74,13 @@ loopx --format json pr-review --repo owner/repo --state open \
   --projected-exact-head 2768@0123456789abcdef0123456789abcdef01234567
 ```
 
-Supply `--projected-exact-head` only after the candidate's exact target key has
-been durably materialized as a Todo. Candidate emission is a preview, not a
-projection acknowledgement. Without that explicit ACK, repeated complete polls
-replay the same candidate so a failed or interrupted Todo write cannot strand
-the PR. The option is repeatable and may only acknowledge the prior candidate
-or an already persisted projection cursor.
+只在候选的确切目标 key 持久物化为 Todo 后才提供 `--projected-exact-head`。
+候选发出是预览,不是投影确认。没有该显式 ACK,重复的完整 poll 会重放同一候选,
+使失败或中断的 Todo 写入不会搁浅 PR。该选项可重复,且只能确认先前候选或已持久化
+投影游标。
 
-After the selected candidate has an externally verifiable review or
-merge-readiness result at that exact head, advance the queue with an explicit
-handled cursor:
+在选中候选于该确切 head 上有外部可验证 review 或 merge 就绪结果后,用显式
+handled 游标推进队列:
 
 ```bash
 loopx --format json pr-review --repo owner/repo --state open \
@@ -97,190 +89,149 @@ loopx --format json pr-review --repo owner/repo --state open \
   --handled-exact-head 2768@0123456789abcdef0123456789abcdef01234567
 ```
 
-`--handled-exact-head` is repeatable and uses `NUMBER@HEAD_OID`. The observation
-persists these public-safe cursors in `handled_exact_heads`. Candidate emission
-alone is not a completion receipt: callers must add the cursor only after
-review-result readback proves that exact head was handled. A newly supplied
-cursor must match the prior packet's candidate or one of its
-`projected_candidate_exact_heads`; a caller cannot skip an unselected PR by
-naming it handled. A new head is a new candidate even when the prior head was
-handled.
+`--handled-exact-head` 可重复,使用 `NUMBER@HEAD_OID`。Observation 在
+`handled_exact_heads` 中持久化这些 public-safe 游标。候选发出本身不是完成 receipt:
+调用方必须在 review-result readback 证明该确切 head 已处理后才添加游标。新提供的
+游标必须匹配先前 packet 的候选或其 `projected_candidate_exact_heads` 之一;
+调用方不能通过点名某 PR 为 handled 来跳过未选中的 PR。即使先前 head 已处理,
+新 head 也是新候选。
 
-`pending_candidate_exact_head` preserves the last selected but unhandled exact
-head across unchanged and incomplete polls. It is a scheduling cursor only;
-callers still deduplicate Todo creation by exact target key and must not treat
-the cursor as evidence that a review happened.
+`pending_candidate_exact_head` 在未变与不完整 polls 中保留最后一个已选但未处理
+的确切 head。它只是调度游标;调用方仍按确切目标 key 去重 Todo 创建,且不得把
+游标当作 review 已发生的证据。
 
-`projected_candidate_exact_heads` persists every candidate whose durable Todo
-projection has been explicitly acknowledged but not yet completed. An unchanged
-poll skips those acknowledged exact heads and selects the next unprojected,
-unhandled PR in the age-fair review sequence. Legacy v0 observations treated
-emission as projection; v1 deliberately replays their candidates so stale
-emission cursors cannot strand unreviewed PRs. Todo target-key deduplication
-keeps this recovery idempotent.
-When every actionable PR has already been projected, `candidate` is `None` and
-`pending_candidate_exact_head` remains the last pending cursor. A material
-transition on an already projected exact head still re-selects that head.
+`projected_candidate_exact_heads` 持久化每个持久 Todo 投影被显式确认但尚未完成
+的候选。未变 poll 跳过那些已确认的确切 heads,在年龄公平的 review 序列中选择下
+一个未投影、未处理的 PR。遗留 v0 observations 把发出当作投影;v1 刻意重放它们的
+候选,因此过期发出游标不能搁浅未审阅 PRs。Todo 目标 key 去重保持该恢复幂等。
+当每个可操作 PR 都已投影,`candidate` 为 `None`,`pending_candidate_exact_head`
+保持最后一个待决游标。已投影确切 head 上的 material 转换仍重新选中该 head。
 
-`review_backlog` gives the monitor a compact workload cadence hint. It counts
-open, non-draft PRs whose exact head is actionable and not yet recorded in
-`handled_exact_heads`, and returns `recommended_poll_interval_minutes`. While at
-least one unhandled PR remains, the recommendation is `3`; once the actionable
-backlog is empty, it drops to `15`. The hint is scheduling evidence only: it
-does not grant Todo, review, comment, or merge authority, and callers still
-advance the queue with an explicit handled cursor after exact-head review
-readback.
+`review_backlog` 给 monitor 紧凑的工作负载 cadence 提示。它计数 open、非 draft
+且确切 head 可操作、尚未记录在 `handled_exact_heads` 中的 PRs,并返回
+`recommended_poll_interval_minutes`。只要还有一个未处理 PR,推荐为 `3`;当可操作
+积压为空时降到 `15`。该提示仅是调度证据:它不授予 Todo、review、comment 或 merge
+authority,调用方仍要在确切 head review readback 后用显式 handled 游标推进队列。
 
-`pull_request_review_queue_observation_v1` has exactly three observation
-states:
+`pull_request_review_queue_observation_v1` 恰好有三个观测状态:
 
-- `not_observed`: the source or packet slice was incomplete. Preserve the
-  previous baseline and do not claim the queue is unchanged.
-- `observed_unchanged`: a complete observation has the same queue fingerprint.
-  An unacknowledged packet candidate is replayed. After the caller supplies its
-  projection ACK, the packet selects the next unprojected, unhandled backlog PR
-  so the queue keeps rotating. An acknowledged unhandled candidate remains in
-  `projected_candidate_exact_heads` until the caller supplies its completion
-  cursor.
-- `material_transition`: a complete observation changed an exact head, review
-  conclusion, check state, draft state, mergeability, or open-queue membership.
-  A new head following `REQUEST_CHANGES` may use one fast-feedback slot;
-  check-only activity does not preempt older review-ready work.
+- `not_observed`:源或 packet 分片不完整。保留先前 baseline,不断言队列未变。
+- `observed_unchanged`:完整观测有相同队列 fingerprint。未确认的 packet 候选被
+  重放。调用方提供投影 ACK 后,packet 选择下一个未投影、未处理的积压 PR,使队列
+  持续轮转。已确认的未处理候选保留在 `projected_candidate_exact_heads` 中,直到
+  调用方提供其完成游标。
+- `material_transition`:完整观测改变了确切 head、review 结论、check 状态、draft
+  状态、mergeability 或开放队列成员。`REQUEST_CHANGES` 后的新 head 可以使用一个
+  fast-feedback slot;仅 check 活动不抢占更老的 review-ready 工作。
 
-The repository-scoped fingerprint contains only compact public PR metadata.
-Persisted `items` carry the PR number, fingerprint, exact head, decision, and
-next action; they never carry review bodies. One community response head after
-`REQUEST_CHANGES` may take the fast-feedback lane, then community work is
-oldest-first by the current head's `review_ready_at`. Author-owned fallback
-reviews follow community work, with 24-hour and 48-hour aging lanes preventing
-starvation. `updatedAt` does not define readiness because comments and checks
-must not make old code look new. Projected candidates remain skipped until
-handled or their exact head materially changes.
-It emits a
-`pull_request_review_todo_preview_v0` bound to its exact head. The preview may
-route to initial review, re-review after changes, or merge-readiness
-qualification. It grants no Todo write, GitHub review/comment, push, or merge
-authority; callers must use normal LoopX Todo authority, `loopx-pr-review`, and
-`loopx-pr-merge` policy for those actions.
+Repository-scoped fingerprint 只包含紧凑公开 PR 元数据。持久化 `items` 携带 PR
+编号、fingerprint、确切 head、决策与下一动作;它们从不携带 review 正文。
+`REQUEST_CHANGES` 后的一次社区响应 head 可以走 fast-feedback lane,然后社区工作
+按当前 head `review_ready_at` 的最旧优先。Author 自有 fallback reviews 跟在社区
+工作之后,24 小时与 48 小时老化 lane 防止饥饿。`updatedAt` 不定义就绪度,因为
+评论与 checks 不能让旧代码看似全新。已投影候选保持跳过,直到处理或其确切 head
+material 变化。
+它发出绑定其确切 head 的 `pull_request_review_todo_preview_v0`。Preview 可以路由
+到初次 review、变更后重新 review 或 merge-readiness 资格判定。它不授予 Todo 写、
+GitHub review/comment、push 或 merge authority;调用方必须对这些动作使用正常
+LoopX Todo authority、`loopx-pr-review` 与 `loopx-pr-merge` policy。
 
-Do not pipe that first packet through `jq` or another projection that only
-keeps `.summary` and `.review_sequence`; that drops
-`agent_response_contract`, `review_groups`, `pull_requests[].review_template`,
-`pull_requests[].review_plan`, and `pull_requests[].evidence_commands`, which
-are the fields that make the command a guided review instead of a statistics
-table.
+不要把第一个 packet 通过 `jq` 或另一个只保留 `.summary` 与 `.review_sequence`
+的投影管道;那会丢掉 `agent_response_contract`、`review_groups`、
+`pull_requests[].review_template`、`pull_requests[].review_plan` 与
+`pull_requests[].evidence_commands`——正是让命令成为引导式 review 而非统计表的
+字段。
 
-## Capability-Owned Review Execution
+## Capability 自有的 Review 执行
 
-`pull_request_review_execution_contract_v2` is shared once per packet to avoid
-duplicating a large prompt for every PR in a 100-item queue. It requires these
-typed evidence groups before a verdict:
+`pull_request_review_execution_contract_v2` 每个 packet 共享一次,避免为
+100 项队列中的每个 PR 复制一个巨型 prompt。它要求这些 typed 证据组,然后才给出
+verdict:
 
-- problem context and active caller;
-- architecture and ownership flow;
-- exact changed-line classification across production, tests/fixtures, docs,
-  generated output, and mechanical moves;
-- a 2-5 item exact-head symbol map for code-changing PRs, including caller,
-  state, branch, side effect, consumer, and failure ownership;
-- positive and applicable negative execution walkthroughs;
-- validation tied to changed invariants and failure cases;
-- strongest regression path, blast radius, recovery, minimum repair, and
-  regression test;
-- code-volume necessity and the highest-value behavior-preserving
-  simplification;
-- change proportionality: compare the verified frequency, severity, blast
-  radius, and recovery cost of the original problem with the production
-  mechanism, new state/contracts/CLI/callers, migration, and long-term
-  maintenance surface. Correctness, green CI, and resolution of earlier
-  findings do not override a `disproportionate` or `not_yet_proven` blocker;
-- default-off isolation: for an opt-in change, trace every shared schema,
-  prompt, accepted-input, projection, scheduling, and effect surface. Include
-  installed or automatically loaded skills, agent instructions, prompt
-  templates, help, schemas, install bundles, and provider setup guidance:
-  runtime `default=false` is insufficient when one of those baseline surfaces
-  already changes model or user behavior. Separate availability signals such
-  as installation, discovery, provider readiness, accepted input, and resolver
-  success from activation authority. For scoped capabilities, prove that the
-  intended scope and every required subject are enabled before projecting
-  capability-specific guidance or effects, then run a paired counterfactual
-  proving that disabled behavior still matches the pre-change contract;
-- authority semantics: make public protocol ids and symbols match the real
-  actor lifecycle and authority, distinguishing ephemeral sub-agents from
-  registered peers and durable multi-agent coordination.
+- 问题上下文与活跃 caller;
+- 架构与 ownership 流;
+- 跨生产、测试/fixtures、docs、生成输出与机械挪动的确切行级分类;
+- 对改动代码的 PR 的 2-5 项确切 head 符号映射,包括 caller、state、branch、副作用、
+  consumer 与失败 ownership;
+- 正向与适用的负向执行走查;
+- 绑定到变更不变量与失败案例的 validation;
+- 最强回归路径、爆炸半径、恢复、最小修复与回归测试;
+- 代码量必要性,以及最高价值的保持行为化简;
+- 变更比例性:把原始问题的已验证频率、严重度、爆炸半径与恢复成本,与生产机制、
+  新 state/contracts/CLI/callers、迁移与长期维护 surface 比较。正确性、绿色 CI
+  与早前 findings 的解决不能覆盖 `disproportionate` 或 `not_yet_proven`
+  blocker;
+- 默认关闭隔离:对 opt-in 变更,追踪每个共享 schema、prompt、accepted-input、
+  projection、scheduling 与效应 surface。包括已安装或自动加载的 skills、agent
+  指令、prompt 模板、帮助、schemas、安装 bundles 与 provider 设置指引:当这些
+  基线 surface 之一已经改变 model 或用户行为时,运行时 `default=false` 不足够。
+  把安装、发现、provider 就绪度、accepted input 与 resolver 成功等可用性信号与
+  激活 authority 分开。对 scoped capabilities,先证明预期 scope 与每个必需 subject
+  已启用,然后投影 capability 特定的指引或效应,再运行配对反事实,证明禁用行为
+  仍匹配变更前契约;
+- authority 语义:使公开协议 ids 与符号匹配真实 actor 生命周期与 authority,区分
+  短暂 sub-agents 与注册 peers 及持久多 agent 协调。
 
-Every materially expanded re-review resets proportionality from the original
-problem and evaluates the full exact head. Reviewer-requested additions are not
-progress toward approval by themselves; the reviewer should request the
-smallest viable fix, deletion, split, or hold when the benefit does not justify
-the accumulated mechanism.
+每个 material 扩展的重新 review 从原始问题重置比例性,并评估完整确切 head。
+Reviewer 请求的添加本身不是向批准推进;当收益不证明累积机制时,reviewer 应请求
+最小可行修复、删除、拆分或 hold。
 
-The per-PR `pull_request_review_plan_v1` records the exact target, applicability,
-required evidence ids, and an initially `unverified`
-`pull_request_review_result_v1` skeleton. Metadata, labels, file counts, risk
-hints, and green CI cannot upgrade evidence to `verified`. A stale-head verdict
-is prohibited. Missing evidence remains `unverified` with a reason instead of
-being replaced by confident prose.
+每 PR 的 `pull_request_review_plan_v1` 记录确切目标、适用性、必需证据 ids 与
+初始 `unverified` 的 `pull_request_review_result_v1` 骨架。元数据、标签、文件计数、
+风险提示与绿色 CI 不能把证据升级为 `verified`。Stale-head verdict 被禁止。缺失
+证据保持 `unverified` 并带原因,而不是被自信散文替换。
 
-When `--state all` is used, the command must preserve both lifecycle groups.
-The `--limit` value is applied per group so a busy open queue cannot consume the
-whole packet and make `review_groups.merged` empty while merged PRs exist in the
-window. The default is 100 PRs per selected group. Every packet carries
-`result_completeness`; exhaustive requests must require `complete=true` and
-rerun with its `recommended_limit` when the source scan or packet slice was
-truncated. Live GitHub reads should fetch open and closed/merged windows
-separately before constructing the grouped packet.
+使用 `--state all` 时,命令必须保留两个生命周期组。`--limit` 值按组应用,使忙碌
+开放队列不能吞掉整个 packet、在窗口存在 merged PRs 时让 `review_groups.merged`
+为空。默认每组 100 PRs。每个 packet 携带 `result_completeness`;穷举请求必须要求
+`complete=true`,并在源扫描或 packet 分片被截断时用其 `recommended_limit` 重跑。
+Live GitHub 读取应在构造分组 packet 前分开 fetch 开放与关闭/合并窗口。
 
-The agent response must not stop at a queue table. For `/loopx-pr-review`, the
-queue is only the preface; the final answer should review selected PRs one by
-one with five sections: `动机`, `改动思路`, `具体改动`, `对主干的风险`, and
-`我的整体评价`. A stats/list-only response is valid only when the user
-explicitly asks for stats or a list without review. When the visible message
-starts with `/loopx-pr-review`, words such as `open`, `closed`, `merged`,
-`today`, or a time window are filters on the review queue, not permission to
-skip the review. Downgrade only for explicit opt-out phrases such as `只统计`,
-`只列出`, `stats only`, `list only`, `不要 review`, or `不用分析`.
+Agent 响应不得停在队列表。对于 `/loopx-pr-review`,队列只是前言;最终答案应逐个
+审阅选中的 PRs,包含五段:`动机`、`改动思路`、`具体改动`、`对主干的风险` 与
+`我的整体评价`。仅统计/列表的响应只在该请求不带 review 时用户显式要求统计或
+列表才有效。当可见消息以 `/loopx-pr-review` 开头时,`open`、`closed`、`merged`、
+`today` 或时间窗口等词是 review 队列的过滤器,不是跳过 review 的许可。只为
+`只统计`、`只列出`、`stats only`、`list only`、`不要 review` 或 `不用分析` 等
+显式 opt-out 短语降级。
 
-The published review is a full-PR bilingual review: one complete Chinese
-five-block review covering every changed surface, key symbol, positive and
-negative path, and validation, plus one concise English machine verdict
-(`APPROVE`, `REQUEST_CHANGES`, or the author-owned `COMMENTED` fallback). The
-Chinese review carries the depth and evidence; the English verdict carries the
-machine-readable state and validation summary. A findings-only or blocker-only
-body is not a complete PR review.
+发布的 review 是全 PR 双语 review:一个完整的中文五段 review,覆盖每个变更
+surface、关键符号、正负路径与 validation,外加一个简洁英文机器 verdict
+(`APPROVE`、`REQUEST_CHANGES` 或 author 自有的 `COMMENTED` fallback)。中文
+review 承载深度与证据;英文 verdict 承载机器可读状态与校验摘要。只有 findings
+或只有 blockers 的正文不是完整 PR review。
 
-Each complete PR review must also include whole-PR interpretation depth:
-per-file responsibility mapping, 2-5 key symbol explanations with exact-head
-references, one positive runtime walkthrough, one negative/fail-closed
-walkthrough, per-surface validation, and an overall judgment for the entire PR.
+每个完整 PR review 还必须包含整 PR 解释深度:per-file 责任映射、带确切 head
+引用的 2-5 个关键符号解释、一次正向运行时走查、一次负向/fail-closed 走查、
+per-surface validation,以及整 PR 的判断。
 
-## Source Reads
+## 源读取
 
-Implementations may read compact public PR surfaces:
+实现可以读取紧凑公开 PR surfaces:
 
-- pull request title, number, URL, branch, author, lifecycle state, merge time,
-  and review decision;
-- PR body summary;
-- changed-file list and diff scale;
-- status-check rollup;
-- merge-state metadata;
-- current-head commit timestamps and review metadata used to derive
-  `review_ready_at` and validate a standalone exact-head conclusion.
+- pull request 标题、编号、URL、分支、author、生命周期状态、merge 时间与
+  review 决策;
+- PR body 摘要;
+- 变更文件列表与 diff 规模;
+- status-check 汇总;
+- merge-state 元数据;
+- current-head commit 时间戳与用于派生 `review_ready_at`、验证独立确切 head
+  结论的 review 元数据。
 
-Raw review bodies are used only for the format/exact-head decision and are not
-returned or persisted. A valid latest conclusion names the exact head, contains
-all five Chinese sections plus a line-starting `English verdict: APPROVE` or
-`English verdict: REQUEST_CHANGES`, and keeps that verdict aligned with formal
-`APPROVED`/`CHANGES_REQUESTED` state. Because GitHub blocks every self-review
-state transition, author-owned conclusions use `COMMENTED` plus one exact title:
-`Approval conclusion (author-owned PR; GitHub blocks formal self-approval)` or
-`Request changes conclusion (author-owned PR; GitHub blocks formal self-review)`.
-The compact result is versioned as `pull_request_review_conclusion_v0` and
-reports typed invalid-reason codes.
+Raw review 正文只用于格式/确切 head 决策,不返回也不持久化。有效的最新结论点名
+确切 head,包含全部五段中文以及行首 `English verdict: APPROVE` 或
+`English verdict: REQUEST_CHANGES`,并让该 verdict 与正式 `APPROVED`/
+`CHANGES_REQUESTED` 状态一致。因为 GitHub 阻止每个 self-review 状态转换,
+author 自有结论使用 `COMMENTED` 加一个确切标题:
+`Approval conclusion (author-owned PR; GitHub blocks formal self-approval)` 或
+`Request changes conclusion (author-owned PR; GitHub blocks formal self-review)`。
+紧凑结果以 `pull_request_review_conclusion_v0` 版本化,并报告 typed
+invalid-reason codes。
 
-They must not include raw logs, private connector payloads, credentials, local
-absolute paths, private source bodies, or hidden CI artifacts.
+它们不得包含 raw 日志、私有 connector payloads、凭据、本地绝对路径、私有源正文
+或隐藏 CI artifacts。
 
-## Response Shape
+## 响应形状
 
 `loopx_pr_review_command_response_v0`:
 
@@ -469,91 +420,73 @@ absolute paths, private source bodies, or hidden CI artifacts.
 }
 ```
 
-## Review Flow
+## Review 流程
 
-The packet should let a reviewer move through PRs in order:
+Packet 应让 reviewer 按顺序走过 PRs:
 
-1. Start from `review_groups.unmerged` for PRs that can still affect merge
-   decisions.
-2. Then use `review_groups.merged` for post-merge audit and follow-up quality.
-3. Use `evidence_commands`, key files, changed-file scale, and checks to open
-   the actual PR body and diff.
-4. Execute the PR's `review_plan` against
-   `agent_response_contract.review_execution_contract`; keep unavailable
-   evidence explicitly unverified.
-5. Read `main_regression_analysis` before filling risk prose. It is the CLI's
-   concrete, generated view of potential main regressions, bug risks, and
-   focused validation.
-6. Render the verified structured result through the blank five-block template:
-   `动机`, `改动思路`, `具体改动`, `对主干的风险`, `我的整体评价`.
-   Use each section's range as a depth signal for a reader unfamiliar with the
-   subsystem, not as filler.
-7. Treat `metadata_risk_hint` only as queue-ordering metadata. It must not be
-   copied as the final risk judgement.
-8. Recheck the exact head, then decide `approve`, `request changes`, `defer`, or
-   `merge after checks`.
+1. 从 `review_groups.unmerged` 开始,处理仍可能影响 merge 决策的 PRs。
+2. 然后使用 `review_groups.merged` 做 post-merge 审计与跟进质量。
+3. 使用 `evidence_commands`、关键文件、变更文件规模与 checks 打开真实 PR body
+   与 diff。
+4. 对照 `agent_response_contract.review_execution_contract` 执行该 PR 的
+   `review_plan`;让不可用证据保持显式 unverified。
+5. 填充风险散文前,读取 `main_regression_analysis`。它是 CLI 对潜在 main
+   regressions、bug risks 与聚焦验证的具体生成视图。
+6. 通过空白五块模板渲染已验证的结构化结果:`动机`、`改动思路`、`具体改动`、
+   `对主干的风险`、`我的整体评价`。把每段范围当作对不熟悉子系统的读者的深度
+   信号,而不是填充。
+7. 只把 `metadata_risk_hint` 当作队列排序元数据。不得把它复制为最终风险判断。
+8. 重新检查确切 head,然后决定 `approve`、`request changes`、`defer` 或
+   `merge after checks`。
 
-A response that only lists `Open` and `Merged` PRs, scale, and recommended next
-order is incomplete for `/loopx-pr-review`; it should continue into the
-per-PR five-block review cards after reading evidence.
+只列出 `Open` 与 `Merged` PRs、规模与推荐下一个顺序的响应,对 `/loopx-pr-review`
+是不完整的;读取证据后应继续进入每 PR 五块 review 卡。
 
-Similarly, a response that says it ran `loopx pr-review` but used a command like
-`loopx --format json pr-review ... | jq '.summary, .review_sequence'` is still
-incomplete: the tool call happened, but the contract/template fields were
-discarded before the agent planned its answer.
+同样,声称运行了 `loopx pr-review` 却使用诸如
+`loopx --format json pr-review ... | jq '.summary, .review_sequence'` 之类命令的
+响应仍不完整:工具调用发生了,但契约/模板字段在 agent 规划答案前被丢弃。
 
-## Acceptance Checks
+## 验收检查
 
-A first implementation is acceptable when:
+首个实现可接受的标准是:
 
-- `loopx slash-commands` exposes `/loopx-pr-review`;
-- `loopx pr-review` returns `loopx_pr_review_command_response_v0`;
-- default live reads use the caller's current `gh` repository, while
-  `--repo owner/repo` can review another GitHub project;
-- `--state all` includes merged PRs in the same packet, applies `--limit` per
-  lifecycle group, and keeps `review_groups.merged` non-empty when merged PRs
-  exist in the requested window; `--state open` preserves the old open-only
-  review queue;
-- the default limit is 100, and exhaustive requests only proceed when
-  `result_completeness.complete=true`; truncated packets provide a larger
-  `recommended_limit` for the next read;
-- `--since` can bound an overnight or release-window review without relying on
-  private chat memory;
-- the response includes review sequence, changed-file scope, status checks,
-  key files, risk notes, metadata-only risk hints, concrete
-  `main_regression_analysis`, evidence commands, explicit
-  `review_groups.unmerged` / `review_groups.merged`, and a blank five-block
-  review template;
-- the shared `pull_request_review_execution_contract_v2` owns typed evidence,
-  completion, freshness, findings-first, and verdict policy, while every PR has
-  a compact exact-head `pull_request_review_plan_v1` with an unverified result
-  skeleton;
-- the packet includes `agent_response_contract.table_only_response_allowed=false`
-  and `agent_response_contract.required_packet_fields_to_preserve` so
-  slash-command agents know a table-only chat answer is incomplete;
-- the slash-command catalog marks `/loopx-pr-review` as `must_run_cli_first`
-  and `slash_prefix_dominates_intent`, and says manual `gh` calls are only
-  per-PR deep-read commands after the CLI packet selects a PR;
-- each PR includes `review_template.sections` for `动机`, `改动思路`,
-  `具体改动`, `对主干的风险`, and `我的整体评价`;
-- each review template section carries a section-specific depth range, and the
-  packet's explanation-depth contract requires problem, architecture,
-  implementation, validation, necessity, and risk evidence instead of a generic
-  long answer;
-- live packets expose and recheck `headRefOid` so a review verdict is bound to
-  the remote revision actually inspected;
-- autonomous packets order community work by current-head `review_ready_at`,
-  bound response preemption to one slot, age author-owned fallbacks, and ignore
-  check-only activity for priority;
-- `--observation-state-file` atomically carries observation and handled cursors
-  across Codex tasks without returning a local path or granting external writes;
-- template sections must leave `content` empty so agentloop reads the real PR
-  before writing the review;
-- `metadata_risk_hint` must be repository-generic and must not special-case
-  LoopX files or domains;
-- `main_regression_analysis` must be repository-generic, must include
-  `potential_regressions`, `bug_risks`, and `verification_focus`, and must not
-  be replaced by a blank template;
-- live GitHub reads and fixture-based smokes share the same schema;
-- no raw logs, private payloads, credentials, local paths, or private source
-  bodies are recorded.
+- `loopx slash-commands` 暴露 `/loopx-pr-review`;
+- `loopx pr-review` 返回 `loopx_pr_review_command_response_v0`;
+- 默认 live 读取使用调用方当前的 `gh` 仓库,而 `--repo owner/repo` 可以审阅另一个
+  GitHub 项目;
+- `--state all` 在同一 packet 中包含 merged PRs,按生命周期组应用 `--limit`,
+  并在请求窗口存在 merged PRs 时保持 `review_groups.merged` 非空;`--state open`
+  保留旧 open-only review 队列;
+- 默认 limit 为 100,穷举请求只在 `result_completeness.complete=true` 时进行;
+  截断 packet 为下次读取提供更大的 `recommended_limit`;
+- `--since` 可以限定隔夜或 release-window 审阅,而不依赖私有聊天记忆;
+- 响应包含 review sequence、变更文件范围、状态检查、关键文件、风险注释、
+  metadata-only 风险提示、具体 `main_regression_analysis`、证据命令、显式
+  `review_groups.unmerged` / `review_groups.merged`,以及空白五块 review 模板;
+- 共享 `pull_request_review_execution_contract_v2` 拥有 typed 证据、完成、
+  fresh 度、findings-first 与 verdict policy,而每个 PR 有带 unverified 结果骨架
+  的紧凑确切 head `pull_request_review_plan_v1`;
+- packet 包含 `agent_response_contract.table_only_response_allowed=false` 与
+  `agent_response_contract.required_packet_fields_to_preserve`,使
+  slash-command agents 知道仅表格的聊天答案不完整;
+- slash-command 目录把 `/loopx-pr-review` 标记为 `must_run_cli_first` 与
+  `slash_prefix_dominates_intent`,并说明手动 `gh` 调用只是 CLI packet 选中
+  PR 之后的逐 PR 深读命令;
+- 每个 PR 包含 `review_template.sections`,覆盖 `动机`、`改动思路`、`具体改动`、
+  `对主干的风险` 与 `我的整体评价`;
+- 每个 review 模板段携带段特定深度范围,packet 的解释深度契约要求问题、架构、
+  实现、校验、必要性与风险证据,而不是通用长答案;
+- live packets 暴露并重新检查 `headRefOid`,使 review verdict 绑定到实际检查的
+  远程 revision;
+- 自主 packets 按当前 head `review_ready_at` 排序社区工作,把响应抢占限制为一个
+  slot,age author 自有 fallbacks,并忽略仅 check 的优先级活动;
+- `--observation-state-file` 原子跨 Codex 任务携带 observation 与 handled 游标,
+  不返回本地路径,也不授予外部写;
+- 模板段必须保持 `content` 为空,使 agentloop 在写 review 前读真实 PR;
+- `metadata_risk_hint` 必须是 repository-generic,不得对 LoopX 文件或领域做
+  特判;
+- `main_regression_analysis` 必须 repository-generic,必须包含
+  `potential_regressions`、`bug_risks` 与 `verification_focus`,且不得被空白
+  模板替换;
+- live GitHub 读取与 fixture-based smokes 共享同一 schema;
+- 不记录 raw 日志、私有 payloads、凭据、本地路径或私有源正文。

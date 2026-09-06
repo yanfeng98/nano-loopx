@@ -1,29 +1,27 @@
-<!--
-Copy this file into the draft GitHub release body. Replace every angle-bracket
-placeholder, remove instructional comments, and omit empty detailed groups.
-
-Order rule: the scan-first `## At a Glance` section comes first (headline,
-upgrade, highlights with usage posture, replan fixes, contributors). The
-detailed groups and the bilingual Release Decision come after, so a reader who
-only wants "what changed and how to use it" never has to scroll.
-
-The headings, decision fields, usage fields, and no-change declarations below
-are asserted by `examples/release/release-readiness-doc-smoke.py`; do not
-rename or remove them.
--->
-
 # LoopX vX.Y.Z
 
-## At a Glance
+> [English](release-note-template.md)
 
-<One outcome-led headline for the release, e.g. "更安全、更会收口、更容易被
-运营看见" / "Security hardening, semantic replan closeout, and a clearer
-operator surface." Keep this readable in 15 seconds.>
+<!--
+将此文件复制到 GitHub 发布草稿正文。替换每个尖括号占位符,删除说明性注释,
+并省略空的详细分组。
 
-### Upgrade
+顺序规则:先扫描的 `## At a Glance` 部分位于最前面(标题、升级、带使用姿态的
+亮点、重规划修复、贡献者)。详细分组与双语 Release Decision 随后,因此只想了解
+"改了什么、怎么用"的读者无需滚动。
 
-<Existing installs upgrade explicitly; fresh installs use the bootstrap
-command. Full commands live in `## Install / Update` below.>
+下面的标题、决策字段、用法字段与无变更声明由
+`examples/release/release-readiness-doc-smoke.py` 断言;请勿重命名或删除。
+-->
+
+## 一目了然
+
+<一个以结果为导向的发布标题,例如"更安全、更会收口、更容易被运营看见"。
+让它在 15 秒内可读。>
+
+### 升级
+
+<现有安装显式升级;全新安装使用 bootstrap 命令。完整命令见下方 `## 安装 / 更新`。>
 
 ```bash
 loopx update check         # 只读检查安装 owner 与新版本
@@ -31,136 +29,116 @@ loopx update apply         # 由当前安装 owner 升级到 vX.Y.Z
 loopx --version && loopx doctor
 ```
 
-### Highlights
+### 亮点
 
-<3-6 bullets. Each bullet = one user-visible capability + one line of usage
-posture (with an inline command when useful) + direct PR links. This is the
-copy-ready "what's new and how to use it" list.>
+<3-6 条要点。每条要点 = 一个用户可见能力 + 一行使用姿态(有用时附行内命令)+ 直接 PR 链接。这是可直接使用的"新增了什么、怎么用"列表。>
 
-- <Capability A: one-line outcome. Usage posture: <short command or behavior>.
-  (#PR, #PR)>
-- <Capability B: one-line outcome. Usage posture: <short command or behavior>.
-  (#PR, #PR)>
+- <能力 A:一行结果。使用姿态:<简短命令或行为>。(#PR, #PR)>
+- <能力 B:一行结果。使用姿态:<简短命令或行为>。(#PR, #PR)>
 
-### Replan Fixes
+### 重规划修复
 
-<Bullets naming the concrete replan bugs this release fixes, each with a
-one-line before/after and a direct PR link. Use this section only when the tag
-range contains replan changes.>
+<用要点命名本版本修复的具体重规划 bug,每条带一行前后对比与直接 PR 链接。
+仅当 tag 范围包含重规划变更时才使用本节。>
 
-- <Before -> after. (#PR)>
+- <之前 -> 之后。(#PR)>
 
-### Contributors
+### 贡献者
 
-<@-mention every eligible community contributor from the tag range with their
-concrete feature and PRs, exactly like the detailed `## Community Contributors`
-section. If there is no community contribution, write: 无社区贡献（本版本全部
-提交由维护者完成）/ "No community contribution in this release range." Do not
-list or thank the founder in this section.>
+<以 @ 提及 tag 范围内每位符合条件的社区贡献者,并注明其具体功能与 PR,
+与详细的 `## 社区贡献者` 部分完全一致。若无社区贡献,写:无社区贡献(本版本全部
+提交由维护者完成)。本节不要列出或致谢创始人。>
 
-## Release Decision
+## 发布决策
 
-**Who should upgrade:** <Name the affected users or operators and say who can
-remain on the current version. Do not write "everyone" without a reason.>
+**谁需要升级:** <命名受影响的用户或操作者,并说明谁可以继续留在当前版本。
+不要无理由地写"所有人"。>
 
-**What this release solves:** <State the concrete failure, missing workflow, or
-reliability gap addressed by this release.>
+**本版本解决了什么:** <说明本版本解决的具体故障、缺失工作流或可靠性缺口。>
 
-**Breaking changes:** <Start with "No." or "Yes." If yes, give the migration
-path. If no, still name any changed default, deprecated path, or experimental
-surface that existing users should notice.>
+**破坏性变更:** <以"无。"或"有。"开头。若有,给出迁移路径;
+若没有,仍要说明现有用户应注意的任何默认值变化、废弃路径或实验界面。>
 
-**How to verify:** <State the expected post-upgrade result, then provide the
-smallest commands that prove package identity and the affected behavior.>
+**如何验证:** <说明升级后期望的结果,然后用最小的命令证明包身份与受影响行为。>
 
-**Contributors:** <Name the release maintainer and every community contributor
-from the tag range, or explicitly state that there were no community
-contributions in this release. Link the detailed section when present.>
+**贡献者:** <命名发布维护者与 tag 范围内的每位社区贡献者,或明确声明本版本
+没有社区贡献。有详细部分时链接它。>
 
 ```bash
 loopx --version
 loopx doctor
-<focused-command-that-proves-the-affected-behavior>
+<证明受影响行为的聚焦命令>
 ```
 
-## State Kernel & Control Plane
+## 状态内核与控制面
 
-<Detailed: user-visible state, todo, quota, scheduler, gate, peer-routing, or
-authority change with direct PR links.>
+<详细:用户可见的 state、todo、配额、调度器、gate、对等方路由或权威变更,附直接 PR 链接。>
 
-## Capabilities & Workflows
+## 能力与工作流
 
-<Detailed: shipped user outcome, shipped layer, and any last-mile boundary with
-direct PR links.>
+<详细:已交付的用户结果、已交付的层,以及任何最后一步边界,附直接 PR 链接。>
 
-## Quality & Testing
+## 质量与测试
 
-<Detailed: durable regression coverage, canary, qualification, or release-gate
-change with direct PR links.>
+<详细:可持续的回归覆盖、canary、资格确认或发布 gate 变更,附直接 PR 链接。>
 
-## Benchmarks & Integrations
+## 基准与集成
 
-<Detailed: host, provider, benchmark, or external-boundary change with direct PR
-links. State explicitly when no benchmark or long-horizon outcome claim is
-made.>
+<详细:host、provider、基准或外部边界变更,附直接 PR 链接。没有基准或长程结果声明时
+明确说明。>
 
-## Documentation & Compatibility
+## 文档与兼容性
 
-<Detailed: documentation, migration, default, deprecation, or compatibility
-detail with direct PR links. Repeat the persisted-state migration decision
-explicitly.>
+<详细:文档、迁移、默认值、废弃或兼容性细节,附直接 PR 链接。显式重复持久 state
+迁移决策。>
 
-## Licensing
+## 许可证
 
-<Include this group when the release changes licensing. For `v0.4.8`, state
-that the unified open source core moves to Apache-2.0, releases through
-`v0.4.7` remain MIT, the historical notice is retained, Apache-2.0 continues
-to permit commercial use, and the explicit patent framework supports future
-enterprise and ecosystem collaboration without manufacturing retroactive
-patent grants from historical MIT contributors. Link `docs/project/licensing.md`.>
+<当本版本改变许可证时包含此分组。对于 `v0.4.8`,说明:统一开源核心切换为
+Apache-2.0;`v0.4.7` 及更早版本保持 MIT;保留历史 notice;Apache-2.0 继续允许
+商业使用;显式专利框架支持未来企业与生态协作,但不会让历史 MIT 贡献者凭空产生
+追溯性专利授权。链接 `docs/project/licensing.md`。>
 
 <!--
-Include this section only when the tag range contains eligible contributors
-other than @huangruiteng. Keep founder stewardship out of this community-only
-section; it is already named in Release Decision when relevant.
+仅当 tag 范围内存在 @huangruiteng 之外符合条件的贡献者时包含本节。
+把创始人主导权留在这节社区专属部分之外;相关时它已在 Release Decision 中命名。
 -->
 
-## Community Contributors
+## 社区贡献者
 
-<Detailed: link each eligible GitHub handle and PR, and name the concrete
-contribution. Call out external or first-time contributors when applicable.
-This section mirrors the `At a Glance > Contributors` list in full detail.>
+<详细:链接每个符合条件的 GitHub handle 与 PR,并命名具体贡献。
+适用时点名外部或首次贡献者。本节以完整细节镜像 `At a Glance > Contributors` 列表。>
 
-## Optional Capability Activation & Use
+## 可选能力启用与使用
 
-No new optional capability activation is introduced in this release.
+本版本未引入新的可选能力启用入口。
 
 <!--
-If the release adds or materially changes an experimental, default-off, or
-opt-in surface, replace the no-change declaration with one entry per surface:
+如果本版本新增或实质性改变实验性、默认关闭或选择加入的界面,
+把无变更声明替换为每个界面一条:
 
-### <Surface Name>
+### <界面名称>
 
-**Activation:** <Exact install, enable, command, or profile opt-in.>
+**启用:** <确切的安装、启用、命令或配置选择加入。>
 
-**Validation:** <Minimum runnable readback or verification command.>
+**验证:** <最小可运行的读回或验证命令。>
 
-**Disable / rollback:** <Exact disable, uninstall, envelope removal, or rollback.>
+**停用 / 回退:** <确切的停用、卸载、envelope 移除或回退。>
 
-**Authority boundary:** <Writes, merges, providers, privacy, or host powers not granted.>
+**权限边界:** <不授予的写入、合并、provider、隐私或 host 权力。>
 
-**Docs:** https://github.com/huangruiteng/loopx/blob/vX.Y.Z/<canonical-doc>
+**文档:** https://github.com/huangruiteng/loopx/blob/vX.Y.Z/<canonical-doc>
 
 ```bash
-<activation-command>
-<validation-command>
-<disable-or-rollback-command>
+<启用命令>
+<验证命令>
+<停用或回退命令>
 ```
 -->
 
-## Install / Update
+## 安装 / 更新
 
-New PyPI users and existing PyPI users use the same package-native path:
+全新 PyPI 用户与现有 PyPI 用户都使用相同的包原生路径:
 
 ```bash
 python3 -m pip install --upgrade loopx
@@ -169,8 +147,7 @@ loopx slash-commands --install
 loopx doctor
 ```
 
-All existing installs use explicit update intent; the command preserves the
-active pip, pipx, or archive owner:
+所有现有安装都使用显式更新意图;该命令保留活跃的 pip、pipx 或归档 owner:
 
 ```bash
 loopx update check
@@ -248,7 +225,6 @@ Apache-2.0 不限制商业使用；显式专利框架服务于未来企业与生
 
 - Package version and public tag: `X.Y.Z` / `vX.Y.Z`.
 - Tag target: `<full-commit-sha>`.
-- <Exact-commit checks that passed, including failures or skips without
-  overclaiming hosted, live-model, benchmark, or long-horizon evidence.>
+- 通过的精确提交检查,包括失败或跳过,不夸大受托管、真实模型、基准或长程 evidence。
 
-Compare: https://github.com/huangruiteng/loopx/compare/vPREVIOUS...vX.Y.Z
+对比:https://github.com/huangruiteng/loopx/compare/vPREVIOUS...vX.Y.Z

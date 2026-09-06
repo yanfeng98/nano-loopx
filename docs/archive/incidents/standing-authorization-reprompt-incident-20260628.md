@@ -1,38 +1,34 @@
-# Standing Authorization Reprompt Incident
+# Standing Authorization 重复询问事件
 
-Date: 2026-06-28
+> [English](standing-authorization-reprompt-incident-20260628.md)
 
-Audience: LoopX status/quota owners, decision-scope runtime owners,
-user-gate projection owners, benchmark operators, and self-repair maintainers.
+日期:2026-06-28
 
-## Summary
+读者对象:LoopX status/quota 所有者、决策作用域 runtime 所有者、用户 gate
+投影所有者、benchmark 操作员,以及自修复维护者。
 
-A benchmark rerun lane needed to use an existing private reverse-channel bridge
-as opaque execution material. The owner had previously approved the intended
-route and later expected this class of bridge use to be covered by that
-authorization. LoopX still projected a fresh user gate asking whether the agent
-could use the bridge.
+## 摘要
 
-The immediate gate was not harmful by itself: it preserved the private boundary
-and did not expose bridge material. The bad case is that LoopX treated an
-approval-like decision as a one-off todo completion instead of a reusable,
-scoped capability grant. The agent also failed to check prior decisions and the
-already-decided route before asking the owner again.
+一条 benchmark 重跑通道需要用现成的私有反向通道桥作为不透明执行材料。所有者
+先前已批准预期路由,后来预期这类桥的使用由该授权覆盖。LoopX 仍投影了一个新的
+用户 gate,询问 agent 是否可以使用该桥。
 
-The root problem is therefore mixed:
+直接的 gate 本身没有害处:它保留了私有边界,没有暴露桥材料。坏例在于:LoopX
+把一个"类批准"决策当作一次性 todo 完成处理,而不是可复用、带作用域的能力
+授予。Agent 也没有在再次询问所有者之前检查先前的决策和已定的路由。
 
-- **LoopX product gap:** decision scope exists as a protocol target, but the
-  hot path does not yet model standing authorizations, semantic deduplication,
-  or gate-to-todo release as first-class runtime behavior.
-- **Agent process gap:** the agent should have searched prior approval state,
-  recognized the route was already settled, and run self-repair before
-  re-prompting the owner.
+因此根本问题是混合的:
 
-## Public-Safe Shape
+- **LoopX 产品缺口:** 决策作用域作为协议目标存在,但热路径还没有把常驻授权
+  (standing authorization)、语义去重或"gate 到 todo 释放"建模为一等运行时
+  行为。
+- **Agent 流程缺口:** 该 agent 本应检索先前的批准状态,识别路由已定,并在重新
+  询问所有者之前运行自修复。
 
-This incident is recorded without raw bridge commands, environment values,
-hostnames, local paths, screenshots, private benchmark logs, verifier output,
-or task text. The reusable shape is:
+## Public-Safe 形态
+
+本事件在记录时不包含原始桥命令、环境值、主机名、本地路径、截图、私有
+benchmark 日志、verifier 输出或任务文本。可复用的形态是:
 
 ```text
 user intent = continue the benchmark rerun through the approved route
@@ -44,53 +40,41 @@ expected interaction = LoopX says the action is covered by an existing scoped
   authorization, or asks only when the requested action exceeds that scope
 ```
 
-## What Went Wrong
+## 问题出在哪里
 
-1. **Approval was stored as a todo outcome, not as a reusable grant.** The
-   system could mark a user gate done, but it had no durable object that said
-   "this agent may opaque-execute this bridge class for this lane under these
-   boundaries."
+1. **批准被存为 todo 结果,而不是可复用的授予。** 系统可以勾掉一个用户 gate,
+   但没有持久对象说明"在该边界下,这个 agent 可以为这条通道不透明执行该桥
+   类型"。
+2. **决策作用域覆盖没有涵盖常驻授权。** `decision_scope_v0` 契约说用户决策应
+   点名它们覆盖的权威。本例中,桥使用动作需要结构化作用域,如
+   `resource:lane:reverse_channel_bridge_opaque_execute`,但热路径依赖散文与
+   todo 状态。
+3. **Gate 去重是文本级而非语义级。** 当新 gate 请求同一个动作类时(在同一
+   benchmark 通道和私有边界规则内不透明使用现有反向通道桥),即使措辞不同,
+   仍可能被投影出来。
+4. **路由决策与执行授权混为一谈。** 所有者已经选择了 `/loopx goal-start +
+   reverse channel`。后来的提示词部分听起来像又一次路由决策,而真正缺失的
+   权威更窄:把现有私有桥用作不透明执行材料。
+5. **Gate 完成没有自动释放被阻塞的工作。** 所有者回答后,链接的 benchmark todo
+   仍需要手动状态修复,才能成为被选中的可运行动作。这让操作员付了两次:一次
+   回答 gate,再一次恢复 todo 通道。
+6. **Agent 没有先做先前决策审计。** 鉴于所有者近期澄清了路由与桥策略,该 agent
+   本应在要求另一次批准前,检查当前用户 todo 历史、决策作用域元数据、活动状态
+   注释与运行历史。
 
-2. **Decision-scope coverage did not cover standing authorization.** The
-   `decision_scope_v0` contract says user decisions should name the authority
-   they cover. In this case, the bridge-use action needed a structured scope
-   such as `resource:lane:reverse_channel_bridge_opaque_execute`, but the hot
-   path relied on prose and todo status.
+## 期望语义
 
-3. **Gate deduplication was textual rather than semantic.** A new gate with
-   different wording could be projected even when it asked for the same action
-   class: opaque use of the existing reverse-channel bridge within the same
-   benchmark lane and private-boundary rules.
+LoopX 应区分一次性 gate 与可复用、带作用域的授权。
 
-4. **The route decision and the execution authorization were mixed.** The owner
-   had already chosen `/loopx goal-start + reverse channel`. The later prompt
-   partly sounded like it was asking for a route decision again, while the real
-   missing authority was narrower: use the existing private bridge as opaque
-   execution material.
-
-5. **Gate completion did not automatically release the blocked work.** After
-   the owner answered, the linked benchmark todo still needed manual state
-   repair to become the selected runnable action. That makes the operator pay
-   twice: once to answer the gate, then again to recover the todo lane.
-
-6. **The agent did not perform a prior-decision audit first.** Given the owner
-   had recently clarified the route and bridge policy, the agent should have
-   checked current user-todo history, decision-scope metadata, active-state
-   notes, and run history before asking for another approval.
-
-## Desired Semantics
-
-LoopX should distinguish a one-time gate from a reusable scoped authorization.
-
-| Situation | Expected Behavior |
+| 情形 | 期望行为 |
 | --- | --- |
-| Same agent, same lane, same bridge class, same no-read/no-print/no-log/no-commit boundary | Use the standing authorization and continue. |
-| Same bridge class but broader operation, such as reading or persisting bridge material | Ask a new concrete user gate. |
-| Same approval wording but different agent, lane, benchmark, or external write boundary | Require explicit scope comparison before continuing. |
-| Gate completed and linked to one blocked todo | Recompute that todo's runnable state and selection without manual repair. |
-| Ambiguous prior approval | Ask one precise question and include why the existing scope does not cover it. |
+| 相同 agent、相同通道、相同桥类型、相同 no-read/no-print/no-log/no-commit 边界 | 使用常驻授权并继续。 |
+| 相同桥类型但操作更宽,如读取或持久化桥材料 | 询问一个新的具体用户 gate。 |
+| 相同批准措辞但 agent、通道、benchmark 或外部写边界不同 | 继续前要求显式作用域比较。 |
+| Gate 已完成并链接到一个被阻塞的 todo | 重新计算该 todo 的可运行状态与选择,无需手动修复。 |
+| 先前的批准有歧义 | 问一个精确的问题,并说明现有作用域为何不能覆盖它。 |
 
-Status and quota should surface this as data, not prose:
+Status 与 quota 应把它作为数据而不是散文呈现:
 
 ```json
 {
@@ -112,35 +96,31 @@ Status and quota should surface this as data, not prose:
 }
 ```
 
-## Follow-Up Work
+## 后续工作
 
-### Short-Term: Record The Current Standing Authorization
+### 短期:记录当前常驻授权
 
-Create a compact, public-safe standing authorization record for the current
-bridge-use class:
+为当前桥使用类型创建一个紧凑、public-safe 的常驻授权记录:
 
-- actor: the main-control agent;
-- action: opaque execution only;
-- resource class: reverse-channel bridge;
-- lane: SkillsBench `/loopx goal-start` reruns;
-- boundary: do not read, print, log, persist, or commit bridge contents;
-- revocation: owner can revoke by adding a new user gate or closing the grant.
+- actor:main-control agent;
+- action:仅不透明执行;
+- resource 类型:反向通道桥;
+- lane:SkillsBench `/loopx goal-start` 重跑;
+- boundary:不读取、打印、日志、持久化或提交桥内容;
+- 撤销:所有者可通过新增用户 gate 或关闭该授予来撤销。
 
-The active benchmark todo should declare the matching
-`required_decision_scopes`, and quota should show `grant_covers_action` instead
-of projecting another user todo.
+活动 benchmark todo 应声明匹配的 `required_decision_scopes`,quota 应显示
+`grant_covers_action`,而不是投影另一个用户 todo。
 
-### Short-Term: Add Gate-To-Todo Release
+### 短期:添加 Gate 到 Todo 释放
 
-When a user gate completes, LoopX should recompute the exact linked agent todos
-that list the matching `required_decision_scopes` or `unblocks_todo_id`. If the
-gate releases the selected P0 lane, the next quota projection should select it
-without a separate self-repair turn.
+用户 gate 完成后,LoopX 应重新计算列出匹配 `required_decision_scopes` 或
+`unblocks_todo_id` 的确切链接 agent todos。如果 gate 释放选中的 P0 通道,下一次
+quota 投影应选择它,而无需单独自修复 turn。
 
-### Short-Term: Tighten Gate Prompt Copy
+### 短期:收敛 Gate 提示词文案
 
-Gate prompts should ask only the missing authority. In this case, the prompt
-should have said:
+Gate 提示词应只询问缺失的权威。本例中,提示词本应说:
 
 ```text
 Use the existing reverse-channel bridge as opaque execution material for this
@@ -148,12 +128,11 @@ SkillsBench /loopx goal-start rerun, without reading, printing, logging, or
 committing bridge contents?
 ```
 
-It should not re-open already-decided route choices.
+它不应重新打开已定的路由选择。
 
-### Mid-Term: Make Standing Grants A Runtime Primitive
+### 中期:把常驻授予设为运行时原语
 
-Introduce a first-class `decision_scope_grant_v0` or extend
-`decision_scope_v0` with grant state:
+引入一等 `decision_scope_grant_v0`,或扩展 `decision_scope_v0` 以带授予状态:
 
 - `grant_id`;
 - `actor`;
@@ -163,41 +142,39 @@ Introduce a first-class `decision_scope_grant_v0` or extend
 - `granularity`;
 - `boundary_rules`;
 - `created_from_decision_id`;
-- `expires_at` or `revoked_at`;
-- `audit_summary`.
+- `expires_at` 或 `revoked_at`;
+- `audit_summary`。
 
-Quota should compute `missing_decision_scopes`, `covered_by_gate`, and
-`covered_by_grant` separately so an unresolved gate and an active authorization
-cannot collapse into the same user-facing "owner gate" bucket.
+Quota 应分别计算 `missing_decision_scopes`、`covered_by_gate` 与
+`covered_by_grant`,使未解决的 gate 与活动授权不会坍缩进同一个面向用户的
+"所有者 gate"桶。
 
-### Mid-Term: Semantic Duplicate Gate Detection
+### 中期:语义重复 Gate 检测
 
-Before adding a user gate, normalize its action fingerprint:
+在添加用户 gate 之前,归一化其动作指纹:
 
 ```text
 actor + operation + resource_kind + lane + boundary_rules + scope_key
 ```
 
-If an active grant or equivalent open gate already covers that fingerprint,
-LoopX should either reuse it or update its evidence, not create another user
-todo.
+如果活动授予或等价的开放 gate 已覆盖该指纹,LoopX 应复用或更新其证据,而不是
+创建另一个用户 todo。
 
-### Mid-Term: Scope-Aware Gate UI
+### 中期:作用域感知的 Gate UI
 
-Operator-facing surfaces should render the computed relation:
+面向操作员的 surface 应渲染计算出的关系:
 
-- `covered by prior authorization`;
-- `blocked by open gate`;
-- `scope mismatch`;
-- `expired authorization`;
-- `needs projection repair`.
+- 由先前授权覆盖;
+- 被开放 gate 阻塞;
+- 作用域不匹配;
+- 授权已过期;
+- 需要投影修复。
 
-This lets the owner see whether LoopX is asking a genuinely new question or
-failing to reuse an earlier decision.
+这能让所有者判断:LoopX 是在问一个真正新的问题,还是未能复用早期的决策。
 
-### Long-Term: Event-Sourced Authority Ledger
+### 长期:事件溯源权威 Ledger
 
-Move gate and authorization state toward an event stream:
+把 gate 与授权状态移向事件流:
 
 - `gate_requested`;
 - `gate_answered`;
@@ -205,44 +182,37 @@ Move gate and authorization state toward an event stream:
 - `authorization_used`;
 - `authorization_expired`;
 - `authorization_revoked`;
-- `todo_released_by_authorization`.
+- `todo_released_by_authorization`。
 
-Status/quota should project from that ledger rather than relying on active
-Markdown prose, latest-run text, or chat memory.
+Status/quota 应从那本 ledger 投影,而不是依赖活动 Markdown 散文、最新运行文本
+或聊天记忆。
 
-### Long-Term: Policy Engine For Protected Resources
+### 长期:受保护资源的策略引擎
 
-Bridge usage, credentials, remote execution, public publication, and production
-actions should be checked by the same policy engine. The policy engine should
-make three separate decisions:
+桥的使用、凭据、远程执行、公开发布与生产动作都应由同一个策略引擎检查。策略
+引擎应做三个独立决策:
 
-- whether the action is protected;
-- whether a standing grant covers it;
-- whether the action would expose protected material.
+- 该动作是否受保护;
+- 常驻授予是否覆盖它;
+- 该动作是否会暴露受保护材料。
 
-The engine should fail closed on exposure but avoid re-prompting when the
-owner already granted the same opaque operation.
+引擎应在暴露问题上 fail-closed,但当所有者已授予相同的不透明操作时避免重新
+询问。
 
-## Validation Targets
+## 验证目标
 
-Add focused smokes for these behaviors:
+为这些行为添加强聚焦 smokes:
 
-- a completed standing authorization prevents duplicate gate projection for the
-  same action fingerprint;
-- a different operation, such as reading bridge contents, is not covered by an
-  opaque-execute grant;
-- completing a gate immediately releases the linked agent todo in quota;
-- route-decision gates and execution-authorization gates render as distinct
-  prompts;
-- `quota should-run --agent-id <agent>` reports `covered_by_grant` for a
-  covered action and does not require user notification.
+- 已完成的常驻授权阻止同一动作指纹的重复 gate 投影;
+- 不同操作(如读取桥内容)不被不透明执行授予覆盖;
+- 完成一个 gate 立即使在 quota 中释放链接的 agent todo;
+- 路由决策 gate 与执行授权 gate 渲染为不同提示词;
+- `quota should-run --agent-id <agent>` 对被覆盖动作报告 `covered_by_grant`,
+  且不需要用户通知。
 
-## Related Patterns
+## 相关模式
 
-- `decision-scope-v0`: user/controller decisions need structured scope and
-  action dependencies.
-- Agent-scoped user gate overreach: gates must block only the agents and lanes
-  they actually cover.
-- Default workflow planner gap: runtime route decisions and execution
-  authorization should be explicit mode-plan state, not rediscovered through
-  repeated prompts.
+- `decision-scope-v0`:用户/控制器决策需要结构化作用域与动作依赖。
+- Agent 作用域用户 Gate 越界事件:gate 必须只阻塞它们实际覆盖的 agent 与 lane。
+- 默认工作流规划器缺口事件:运行时路由决策与执行授权应是显式模式计划状态,
+  而不是通过重复提示词反复发现。

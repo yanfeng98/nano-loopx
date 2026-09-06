@@ -1,7 +1,8 @@
 # issue_fix_acceptance_loop_v0
+> [English](issue-fix-acceptance-loop-v0.md)
 
-This protocol now lives with the issue-fix capability:
+该协议现归属于 issue-fix capability：
 
 [`loopx/capabilities/issue_fix/docs/protocols/issue-fix-acceptance-loop-v0.md`](../../../loopx/capabilities/issue_fix/docs/protocols/issue-fix-acceptance-loop-v0.md)
 
-The reference entry remains as a stable pointer for existing links.
+此处保留引用条目，作为既有链接的稳定指针。

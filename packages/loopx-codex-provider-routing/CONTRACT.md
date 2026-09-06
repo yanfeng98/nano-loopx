@@ -1,140 +1,58 @@
-# Contract And Authority Boundary
+# 契约与权威边界
 
-Protocol: `loopx_codex_provider_routing_extension_v0`
+协议:`loopx_codex_provider_routing_extension_v0`
 
-Request: `loopx_codex_provider_routing_request_v0`
+请求:`loopx_codex_provider_routing_request_v0`
 
-Response: `loopx_codex_provider_routing_response_v0`
+响应:`loopx_codex_provider_routing_response_v0`
 
-Catalog: `codex_provider_routing_catalog_v1`
+目录:`codex_provider_routing_catalog_v1`
 
-Runtime status: `codex_provider_routing_runtime_status_v0`
+运行时状态:`codex_provider_routing_runtime_status_v0`
 
-Integration candidate: `codex_provider_integration_candidate_v0`
+集成候选:`codex_provider_integration_candidate_v0`
 
-Heartbeat transport qualification: `codex_app_heartbeat_transport_qualification_v0`
+Heartbeat transport 资格判定:`codex_app_heartbeat_transport_qualification_v0`
 
-Desktop patch qualification: `codex_desktop_patch_qualification_v0`
+桌面补丁资格判定:`codex_desktop_patch_qualification_v0`
 
-Quota recovery qualification: `codex_quota_recovery_qualification_v0`
+Quota 恢复资格判定:`codex_quota_recovery_qualification_v0`
 
-Outage recovery qualification: `codex_outage_recovery_qualification_v0`
+事故恢复资格判定:`codex_outage_recovery_qualification_v0`
 
-Tool transport qualification: `codex_tool_transport_qualification_v0`
+Tool transport 资格判定:`codex_tool_transport_qualification_v0`
 
-The provider accepts exactly one public-safe operation per invocation and
-returns a deterministic JSON result. An input containing credential-shaped
-keys fails before any operation runs.
+该 provider 每次调用恰好接受一个 public-safe 操作,并返回确定性的 JSON 结果。任何含有凭据形态键的输入都会在任何操作运行前失败。
 
-The provider has no Kernel transition authority and no external write
-permission. A qualification result is evidence, not permission to edit a
-Codex home, install CPA, change a model, start a turn, rotate a credential or
-merge an upstream PR.
+该 provider 没有 Kernel 状态转换权威,也没有外部写权限。资格结果只是证据,不是编辑 Codex home、安装 CPA、更换模型、开始 Turn、轮换凭据或合并上游 PR 的许可。
 
-Heartbeat qualification accepts only symbolic, content-free shape facts. For
-an `automation_heartbeat` carrying a `heartbeat_xml` envelope, the conforming
-delivery is `user_input` with `message_role=user`. A `tool_output` observation
-is non-conforming because it changes the semantic role of the scheduler event;
-the provider reports a stable failure code and never recommends prompt or model
-tuning as remediation. App inspection, binary changes and process lifecycle
-remain outside this read-only extension.
+Heartbeat 资格判定只接受符号化的、无内容的形态事实。对于携带 `heartbeat_xml` 信封的 `automation_heartbeat`,合规的投递方式是 `user_input` 且 `message_role=user`。`tool_output` 观察不合规,因为它改变了调度器事件的语义角色;provider 报告稳定错误码,并且从不推荐提示词或模型调优作为修复手段。App 检查、二进制改动与进程生命周期仍处于这个只读扩展之外。
 
-The integration-candidate operation composes with, but does not replace,
-LoopX core `integration-branch`. It accepts only public Git refs, full commit
-SHAs, symbolic source IDs, source kinds and changed-seam labels. The caller
-must supply both current observations and the last successful sync receipt.
-Every observed source head must equal its declared exact head, and the ordered
-source set must cover every required seam. Base movement, source movement or an
-unexpected integration head produces `sync_required`; no Git effect is run.
+集成候选操作与 LoopX 核心 `integration-branch` 组合使用,但不取代它。它只接受公开 Git ref、完整 commit SHA、符号化来源 ID、来源种类与变更 seam 标签。调用方必须同时提供当前观察与最后一次成功的同步 receipt。每个观察到的来源 head 必须等于其声明的确切 head,有序来源集必须覆盖每个必需的 seam。base 移动、来源移动或意外的集成 head 产生 `sync_required`;不执行任何 Git 效果。
 
-After a separately authorized core sync, deployment remains operator-owned.
-The returned contract requires a content-addressed binary, isolated smoke,
-field-level configuration comparison, catalog/retry/runtime readback and a
-retained previous binary/config pointer. Task/session stores are preserved in
-place and are never copied or deleted as part of candidate maintenance.
+在单独授权的核心同步之后,部署仍归运营方。返回的契约要求一个内容寻址的二进制、隔离的 smoke、字段级配置比较、目录/重试/运行时回读,以及一个保留的旧二进制/配置指针。任务/会话存储原地保留,绝不会作为候选维护的一部分被复制或删除。
 
-Runtime status deliberately has two projections. `host_identity` records only
-that the operator's ChatGPT identity is retained but is not projected by the
-custom provider; its `route_binding` is always `none`. `route_intent` and
-`execution` separately report the requested logical route and the symbolic
-provider profiles actually attempted by CPA. A direct Auto hit on B is not a
-fallback; fallback is true only after a second candidate was attempted.
-`route_intent.fast` is derived from the selected `fast/` route slug. A caller
-may include a redundant boolean only when it agrees with that slug.
+运行时状态刻意有两个投影。`host_identity` 只记录运营方的 ChatGPT 身份被保留、但不被自定义 provider 投影;其 `route_binding` 恒为 `none`。`route_intent` 与 `execution` 分别报告请求的逻辑路由与 CPA 实际尝试的符号化 provider profile。对 B 的直接 Auto 命中不是兜底;只有在尝试了第二个候选后,兜底才为真。`route_intent.fast` 从选中的 `fast/` 路由 slug 推导。调用方只有在与那个 slug 一致时才可以包含冗余布尔。
 
-Account observations may contain symbolic catalog profile IDs, readiness,
-bounded success/failure counters and percentage quota windows. The provider
-derives `remaining_percent`. Email addresses, auth IDs/files, credentials,
-private paths, task IDs and request content are forbidden at the public
-boundary.
+账户观察可以包含符号化目录 profile id、就绪、有界的成功/失败计数器与百分比 quota 窗口。provider 推导 `remaining_percent`。邮箱地址、auth id/文件、凭据、私有路径、任务 id 与请求内容在公开边界上是被禁止的。
 
-The catalog defines one bounded account ring, not one ring per visible route.
-Auto and Luna enter the same ring through affinity (or its first member for a
-cold task); Prefer A and Prefer B select different entry points. The ring is
-traversed at most once. A route may then append a terminal fallback tail, but
-the tail is not a ring member and is never revisited. Explicit Ark remains a
-manual hard pin.
+目录定义一个账户环,而不是每个可见路由一个环。Auto 与 Luna 通过亲和进入同一个环(冷任务则进入其第一个成员);Prefer A 与 Prefer B 选择不同的入口。该环最多遍历一次。路由之后可以追加一个终态兜底尾部,但尾部不是环成员,也绝不会被再次访问。显式 Ark 仍然是手动硬固定。
 
-Resilient routes apply baseline admission filters before ring traversal and
-affinity:
+弹性路由在环遍历与亲和之前应用基线接纳过滤器:
 
-1. every candidate must support all modalities required by the complete
-   request history;
-2. when Fast is selected, every candidate must support the requested service
-   tier.
+1. 每个候选必须支持完整请求历史所需的全部模态;
+2. 当选为 Fast 时,每个候选必须支持请求的服务层级。
 
-A third filter applies when the host requires a specific tool item transport.
-Every profile that omits `tool_transports`, including a legacy native Codex
-profile, defaults conservatively to `function_call` only. An adapter may declare
-`custom_tool_call` only after it has proved that it preserves the raw payload
-and item type. A Code Mode request requiring `custom_tool_call` therefore cannot
-silently fall through to an unqualified or function-only provider. The separate
-qualification operation compares requested and observed item types and requires
-completed dispatch.
+当宿主要求特定的工具条目 transport 时,第三个过滤器生效。每个省略 `tool_transports` 的 profile,包括传统原生 Codex profile,都保守地默认为仅 `function_call`。adapter 只有在证明其保留了原始负载与条目类型后,才可以声明 `custom_tool_call`。因此,要求 `custom_tool_call` 的 Code Mode 请求不能静默落到未获资格或仅函数的 provider 上。独立的资格判定操作会比较请求与观察到的条目类型,并要求分发已完成。
 
-Affinity can reorder only the remaining eligible ring members. If none remain,
-the route fails closed before the first visible output or tool call. A
-text-only fallback can therefore serve text Auto requests but cannot receive
-image history. Luna has no heterogeneous fallback tail.
+亲和只能对剩余的合格环成员重排序。如果没有成员剩下,路由在首个可见输出或工具调用之前失败关闭。因此仅文本的兜底可以服务文本型 Auto 请求,但不能接收图像历史。Luna 没有异构兜底尾部。
 
-Fast is modeled as a selector projection over an existing route. A route may
-declare one `fast_selector`; the compiler emits `fast/<route>`, filters its
-candidates to Fast-capable profiles and marks its default tier as `fast`.
-`normalize_selector_request` consumes only the original selector and optional
-service tier: Fast rows resolve to the underlying route and force the wire tier
-to `priority`, while ordinary rows preserve the request. A preserved
-`priority` tier is nevertheless treated as effective Fast state for candidate
-admission, so both the explicit sibling row and the native Fast entry are
-limited to Fast-capable providers. It never accepts a prompt or request body.
-A Fast request cannot fall through to a provider that does not support Fast.
+Fast 被建模为对既有路由的选择器投影。一条路由可以声明一个 `fast_selector`;编译器发出 `fast/<route>`,把其候选过滤为具备 Fast 能力的 profile,并把其默认层级标记为 `fast`。`normalize_selector_request` 只消费原始选择器与可选的服务层级:Fast 行解析到底层路由并把 wire 层级强制为 `priority`,而普通行保留请求。保留的 `priority` 层级在候选接纳中仍被视为有效的 Fast 状态,因此显式兄弟行与原生 Fast 入口都只限于具备 Fast 能力的 provider。它从不接受 prompt 或请求体。Fast 请求不能落到不支持 Fast 的 provider 上。
 
-An applied quota reset is ordered against the observation that created a
-provider cooldown. When the reset is newer, the old cooldown is stale: CPA must
-invalidate it and probe that account before selecting a fallback. A fresh probe
-may either succeed or return a new quota limit; only the latter permits a new
-cooldown and fallback. This contract prevents a reset account from remaining
-unreachable until an obsolete expiry.
+已应用的 quota 重置会与创建 provider cooldown 的观察排序。当重置更新时,旧 cooldown 即为陈旧:CPA 必须在选择兜底前使其失效并探测该账户。新鲜探测要么成功,要么返回新的 quota 限额;只有后者才允许新的 cooldown 与兜底。该契约防止一个已重置账户直到过时的有效期结束前都无法可达。
 
-An observed provider-incident end is ordered the same way. A cooldown created
-by incident errors (for example repeated 4xx/5xx across every native profile)
-is stale once a recovery signal newer than its source is observed. CPA must
-invalidate that cooldown, complete a bounded probe and revalidate any degraded
-fallback affinity before admitting a request that needs native capabilities.
-The fallback may keep serving text-only traffic only while the probe still
-reports an outage; a native-capability request must fail closed rather than
-travel through an unqualified fallback binding.
+观察到的 provider 事故结束按同样方式排序。由事故错误(例如所有原生 profile 上反复出现 4xx/5xx)创建的 cooldown,一旦观察到比其来源更新的恢复信号即为陈旧。CPA 必须使该 cooldown 失效、完成一次有界探测并重新验证任何降级的兜底亲和,然后才允许接纳需要原生能力的请求。兜底只有在探测仍报告事故时才可继续服务仅文本流量;原生能力请求必须失败关闭,而不是穿过未获资格的兜底绑定。
 
-Patched desktop builds have a separate post-build gate. The patch anchor must
-be unique for the current build, every changed ASAR member must have matching
-per-file integrity, the resulting ASAR header digest must match bundle
-metadata, the runtime must be signed and launch, and the patched heartbeat path
-must pass readback. Whole-archive hashing is not a substitute for Electron's
-header and per-file checks. The provider consumes only booleans and counts;
-bundle mutation and signing remain operator effects.
+补丁后的桌面构建有独立的构建后关卡。补丁锚点必须在当前构建中唯一,每个被改变的 ASAR 成员必须有匹配的逐文件完整性,结果 ASAR 头摘要必须与 bundle 元数据匹配,运行时必须已签名且能启动,补丁后的 heartbeat 路径必须通过回读。整档哈希不能替代 Electron 的头与逐文件检查。provider 只消费布尔与计数;bundle 变更与签名仍是运营方效果。
 
-Codex App settings use the same evidence rule. A selector label is not proof
-that a running turn adopted the new model. Qualification requires a durable
-settings revision and a turn receipt that matches it. The content-free runtime
-snapshot must also report each resilient route's entry point, ordered
-candidates, terminal tail and maximum cycle count; catalog compilation alone
-cannot qualify a deployment.
+Codex App 设置应用同样的证据规则。选择器标签不能证明正在运行的 Turn 采用了新模型。资格判定要求一个持久的设置 revision 以及与之匹配的 Turn receipt。无内容的运行时快照还必须报告每条弹性路由的入口、有序候选、终态尾部与最大循环次数;仅目录编译不能为一次部署判定资格。

@@ -1,96 +1,61 @@
-# Reward And Gate Direct-Write Contract
+# 奖励与 Gate 直接写入合同
 
-LoopX has two operator decision writes that must stay distinct:
-run-bound `human_reward` overlays and `operator_gate` decision runs. Both turn a
-human decision into durable runtime evidence, but neither grants write-control,
-production access, or permission to skip the next state/registry/quota read.
+> [English](reward-gate-direct-write-contract.md)
 
-This document defines the minimal `decision_write_contract_v0` planning slice for
-local operator decisions. It is intentionally narrow: use existing CLI and
-loopback preview/apply paths before adding any new dashboard control.
+LoopX 有两种必须保持区别的运营者决策写入:run 绑定的 `human_reward` overlay 与 `operator_gate` 决策 run。两者都把人类决策转化为持久的 runtime 证据,但都不授予写入控制权、生产访问权,或跳过下一次状态/registry/配额读取的权限。
 
-## Contract Fields
+本文定义本地运营者决策所需的最小 `decision_write_contract_v0` 规划切片。它刻意保持狭窄:在添加任何新的 dashboard 控件之前,先使用现有 CLI 与 loopback 预览/apply 路径。
 
-Every direct-write decision path must expose these public-safe fields before a
-write is enabled:
+## 合同字段
 
-- `decision_kind`: `human_reward` or `operator_gate`.
-- `goal_id`: exact goal id.
-- `target_ref`: exact selected run timestamp for `human_reward`, or exact
-  `gate_id` for `operator_gate`.
-- `decision`: compact public-safe decision string.
-- `reason_summary`: one compact public-safe reason.
-- `follow_up`: optional public-safe next condition.
-- `preview_id`: required for browser reward append; omitted for CLI-only gate
-  append until a separate gate preview endpoint exists.
-- `source_of_truth`: `run_bound_human_reward_overlay` or
-  `operator_gate_decision_run`.
-- `write_effect`: what will be appended and what remains unchanged.
-- `project_agent_visibility`: the read path a target project agent should use
-  after the write.
+每条直接写入决策路径在启用写入之前都必须暴露这些公开安全字段:
 
-Unknown fields and private-looking text must be rejected instead of silently
-ignored.
+- `decision_kind`:`human_reward` 或 `operator_gate`。
+- `goal_id`:精确的 goal id。
+- `target_ref`:`human_reward` 的精确所选 run 时间戳,或 `operator_gate` 的精确 `gate_id`。
+- `decision`:紧凑的公开安全决策字符串。
+- `reason_summary`:一条紧凑的公开安全理由。
+- `follow_up`:可选的公开安全后续条件。
+- `preview_id`:浏览器奖励追加必需;在单独的 gate 预览端点存在之前,仅 CLI 的 gate 追加可省略。
+- `source_of_truth`:`run_bound_human_reward_overlay` 或 `operator_gate_decision_run`。
+- `write_effect`:将要追加什么,什么是保持不变的。
+- `project_agent_visibility`:写入后目标项目 Agent 应使用的读取路径。
 
-## Run-Bound Overlay
+未知字段与看似私有的文本必须被拒绝,而不是静默忽略。
 
-A run-bound overlay is a compact append-only annotation attached to one exact
-run index row. It is "run-bound" because its target is a specific run, usually
-identified by `goal_id` plus `run_generated_at` / run path. It is an "overlay"
-because it annotates that prior run without rewriting the original run payload,
-active goal state, or every future decision.
+## Run 绑定 Overlay
 
-For `human_reward`, the overlay records the operator's judgment of that exact
-run or route outcome: decision label, reward value, reason summary, follow-up,
-and timestamp. Later status, dashboard, and controller-readiness projections may
-summarize the overlay, but the run-bound overlay remains the durable source of
-truth. It does not grant write-control, production access, public submission
-permission, or permission to skip a fresh registry/state/quota read.
+Run 绑定 overlay 是附加到精确一行 run index 的紧凑、只追加注解。它是"run 绑定"的,因为其目标是特定 run,通常由 `goal_id` 加 `run_generated_at` / run 路径标识。它是"overlay",因为它注解那个先前的 run,而不重写原始 run payload、活跃 Goal 状态或所有未来决策。
 
-## Human Reward
+对于 `human_reward`,overlay 记录运营者对那一精确 run 或路线结果的判断:决策标签、奖励值、理由摘要、后续条件与时间戳。之后的 status、dashboard 与 controller 就绪投影可以汇总 overlay,但 run 绑定 overlay 仍然是持久的事实来源。它不授予写入控制权、生产访问权、公开提交权限,或跳过新的 registry/状态/配额读取的权限。
 
-`human_reward` judges one exact run or route outcome. The canonical writer is
-`loopx reward`; local dashboards may validate the same compact payload via
-`POST /reward/dry-run`.
+## 人类奖励
 
-Browser append is allowed only when all of these are true:
+`human_reward` 判断一个精确 run 或路线结果。标准写入者是 `loopx reward`;本地 dashboard 可以通过 `POST /reward/dry-run` 验证同样的紧凑 payload。
 
-- `serve-status` is running on loopback.
-- The server was started with `--enable-reward-write-api`.
-- The append request reuses the exact `preview_id` from `/reward/dry-run`.
-- The selected `run_generated_at`, compact reward payload, and raw index count
-  still match the preview.
+只有以下条件全部成立时才允许浏览器追加:
 
-Successful append writes one run-bound `human_reward` overlay row. Active state
-may carry a summary, but the run overlay remains the durable source of truth.
+- `serve-status` 正在 loopback 上运行。
+- 服务器以 `--enable-reward-write-api` 启动。
+- 追加请求复用来自 `/reward/dry-run` 的精确 `preview_id`。
+- 所选的 `run_generated_at`、紧凑奖励 payload 与原始 index 数量仍与预览匹配。
+
+成功追加会写入一行 run 绑定的 `human_reward` overlay。活跃状态可以携带摘要,但 run overlay 仍然是持久的事实来源。
 
 ## Operator Gate
 
-`operator_gate` answers whether a gated handoff or command may proceed. The
-canonical writer is `loopx operator-gate`. The review packet may show a
-local `operator_gate_dry_run_command`, but that command belongs to the operator
-or controller, not to the target project agent.
+`operator_gate` 回答受 gate 保护的交接或命令是否可以进行。标准写入者是 `loopx operator-gate`。review packet 可以显示本地 `operator_gate_dry_run_command`,但该命令属于运营者或 controller,不属于目标项目 Agent。
 
-There is no dashboard `operator_gate` apply endpoint in this contract. Before
-adding one, implement a separate stale-preview handshake equivalent to reward
-append and prove that the target agent sees only an approved handoff after the
-gate decision run exists.
+本合同中不存在 dashboard `operator_gate` apply 端点。在添加之前,先实现与奖励追加等效的独立过期预览握手,并证明在 gate 决策 run 存在后,目标 Agent 只看到已批准的交接。
 
-Approved gates must include an `operator_gate_resume_contract` with the fresh
-state check. The receiving agent must re-read current registry, active state,
-quota, repo snapshot, policy, and run status before executing the approved
-command.
+已批准的 gate 必须包含带新鲜状态检查的 `operator_gate_resume_contract`。接收方 Agent 在执行已批准命令之前必须重新读取当前 registry、活跃状态、配额、repo 快照、策略与 run 状态。
 
-## Dashboard Boundary
+## Dashboard 边界
 
-The default dashboard remains read-mostly:
+默认 dashboard 保持以读为主:
 
-- It may render status, run history, review packets, reward CLI drafts,
-  `/reward/dry-run`, and control-plane setting dry-runs.
-- It may append reward only through loopback `--enable-reward-write-api`.
-- It must not expose gate append, reward append, or control-plane apply unless
-  the corresponding explicit local write API is enabled.
+- 它可以渲染 status、run history、review packet、奖励 CLI 草稿、`/reward/dry-run` 与控制面设置的 dry-run。
+- 它只能通过 loopback `--enable-reward-write-api` 追加奖励。
+- 除非相应的显式本地写入 API 已启用,否则它不得暴露 gate 追加、奖励追加或控制面 apply。
 
-Adding a new write surface requires a smoke that proves disabled-by-default
-behavior, stale-preview rejection, public-safe text validation, exactly one
-runtime append, status refresh, and no local path leakage in compact responses.
+添加新的写入 surface 需要 smoke 来证明:默认禁用行为、过期预览拒绝、公开安全文本验证、精确一次 runtime 追加、状态刷新,以及紧凑响应中不泄露本地路径。

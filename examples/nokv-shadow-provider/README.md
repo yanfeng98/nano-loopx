@@ -1,66 +1,38 @@
-# NoKV canonical-coordination provider reference
+# NoKV 规范协调 provider 参考实现
 
-This directory contains the small, reviewable NoKV reference for
-[RFC: LoopX shared control-plane authority and pluggable state providers v0](../../docs/architecture/rfcs/shared-goal-authority-state-provider-v0.md).
-It is a contract example, not a shipped LoopX runtime integration or a
-production deployment claim.
+此目录包含 [RFC: LoopX 共享控制面权威与可插拔状态 provider v0](../../docs/architecture/rfcs/shared-goal-authority-state-provider-v0.md) 的小型、可评审的 NoKV 参考。它是一个契约示例,不是已交付的 LoopX 运行时集成,也不是生产部署声明。
 
-## Scope
+## 范围
 
-The reference stores one per-goal **canonical coordination aggregate** and
-exercises the Stage 3 lifecycle: `claim_work`, `renew_work`, `release_work`,
-expired-lease `reclaim_work`, stale-fence rejection, and atomic completion with
-continuation/successors. The aggregate carries the current authority revision,
-claim/lease/fence state, store-lineage binding, and replayable receipt index.
-It remains a coverage-only reference and does not migrate the current LoopX
-runtime or promote this provider to the product source of truth.
+该参考存储单个 per-goal **规范协调聚合**,并演练 Stage 3 生命周期:`claim_work`、`renew_work`、`release_work`、过期 lease 的 `reclaim_work`、陈旧围栏拒绝,以及带续接/后继的原子完成。该聚合携带当前权威 revision、claim/lease/fence 状态、存储血统绑定与可重放 receipt 索引。它仍然只是覆盖性参考,不迁移当前 LoopX 运行时,也不把该 provider 晋升为产品真相来源。
 
-The following remain outside this head:
+以下内容仍在这条分支之外:
 
-- run artifacts and run-history ledgers;
-- status and attention projections or caches;
-- quota policy, accounting, and enforcement ledgers;
-- host-local routes, scheduler state, locks, and runtime bindings;
-- raw evidence, transcripts, credentials, and local absolute paths; and
-- Agent IM delivery, wake-up, presence, and offline queues.
+- 运行产物与运行历史 ledger;
+- 状态与关注投影或缓存;
+- quota 策略、记账与强制 ledger;
+- 宿主本地路由、调度器状态、锁与运行时绑定;
+- 原始证据、transcript、凭据与本地绝对路径;
+- Agent IM 投递、唤醒、在场与离线队列。
 
-Those surfaces have separate ownership and synchronization strategies in the
-RFC persistence matrix. A provider does not acquire authority over them merely
-because they may be visible from a shared goal.
+这些组件面在 RFC 持久化矩阵中有各自的所有权与同步策略。一个 provider 不会仅仅因为它们可能从共享 goal 可见,就取得对这些内容的权威。
 
-## Atomic aggregate and receipt replay
+## 原子聚合与 receipt 重放
 
-The current coordination state and the receipt mapping for a newly accepted
-operation are published in the **same head CAS**. The reference does not use a
-last-envelope shortcut or a separate `pending -> head -> finalize` receipt
-protocol.
+当前协调状态与新接受操作的 receipt 映射发布在**同一个 head CAS** 中。参考不使用 last-envelope 捷径,也不使用单独的 `pending -> head -> finalize` receipt 协议。
 
-The one-head CAS is a physical serialization point, not a goal-wide domain
-conflict boundary. Commands name the target todo revision and the compact
-authorization, dependency, and gate preconditions they actually observed.
-After a CAS miss, the authority reloads and checks those facts again. If an
-independent todo advanced the head, it rebases and retries internally; if the
-target todo or a named precondition changed, it returns a domain conflict.
-`authority_revision` remains a goal-wide commit and audit sequence, not a
-required client precondition. In this reference, independent claims use
-`write_scopes=[]`; non-empty cross-todo scope overlap is not qualified here.
-Internal rebase also assumes the publisher never reuses a target-scoped token
-for a different authorization, dependency, or gate snapshot. The deterministic
-probe uses static bootstrap inputs and does not qualify that dynamic publisher.
+单 head CAS 是物理序列化点,不是 goal 范围的领域冲突边界。命令点名它们实际观察到的目标 todo revision 与紧凑的授权、依赖与关卡前置条件。CAS 未命中后,权威重载并再次检查那些事实。如果独立 todo 推进了 head,它内部 rebase 并重试;如果目标 todo 或某个点名前置条件变了,它返回领域冲突。`authority_revision` 保持为 goal 范围的提交与审计序列,而不是必需客户端前置条件。在本参考中,独立 claim 使用 `write_scopes=[]`;非空的跨 todo 范围重叠不在本参考资格的考虑内。内部 rebase 还假定发布者绝不把目标范围的令牌复用于不同授权、依赖或关卡快照。确定性探针使用静态引导输入,不资格化那个动态发布者。
 
-This matters for a historical retry:
+这对历史重试很重要:
 
-1. operation A commits and returns receipt A;
-2. operation B advances the goal head;
-3. the caller retries A after losing its first response; and
-4. the provider returns the original receipt A, field for field, without
-   applying A again or moving the current head.
+1. 操作 A 提交并返回 receipt A;
+2. 操作 B 推进 goal head;
+3. 调用方丢失第一个响应后重试 A;
+4. provider 逐字段返回原始 receipt A,而不再次应用 A,也不移动当前 head。
 
-Each receipt-index entry binds the stable operation identity to a digest of the
-immutable request. Reusing an operation identity with different immutable
-inputs fails closed; it is never classified as an idempotent replay.
+每个 receipt 索引条目把稳定操作身份绑定到不可变请求的摘要。不同不可变输入复用同一操作身份会失败关闭;它绝不会被分类为幂等重放。
 
-The provider contract remains storage-only:
+provider 契约保持为仅存储:
 
 ```text
 load() -> (aggregate | none, provider_generation)
@@ -71,141 +43,63 @@ compare_and_put(expected_provider_generation, aggregate)
      | failed
 ```
 
-`provider_generation` is the opaque storage CAS token. It is distinct from the
-aggregate's `authority_revision` and from each todo's lease epoch; none of these
-three version domains is derived from another.
+`provider_generation` 是不透明存储 CAS 令牌。它不同于聚合的 `authority_revision`,也不同于每个 todo 的 lease epoch;这三个版本域互不推导。
 
-The storage provider deterministically serializes and stores the opaque
-aggregate and returns CAS outcomes. The production
-`loopx.control_plane.coordination` modules (`head` codec plus the
-`CoordinationAuthorityExecutor`) are responsible for request validation,
-authority revision, claim/lease transitions, request-digest binding, and the
-original domain receipt; this directory no longer carries a second reference
-authority. The provider must not inspect an operation receipt or invent
-lease, gate, quota, or scheduling decisions.
+存储 provider 确定性地序列化并存储不透明聚合,并返回 CAS 结果。生产
+`loopx.control_plane.coordination` 模块(`head` codec 加 `CoordinationAuthorityExecutor`)负责请求验证、权威 revision、claim/lease 转换、请求摘要绑定与原始领域 receipt;此目录不再承载第二个参考权威。provider 不得检查操作 receipt,也不得发明 lease、gate、quota 或调度决策。
 
-## Files
+## 文件
 
-- `provider.py`: `NoKVCoordinationProvider`, which maps an opaque per-goal
-  aggregate to NoKV path generation CAS. It serializes through the
-  production canonical head codec, so the adapter cannot fork the
-  digest/parity basis.
-- `probes.py`: deterministic contract regressions driven by the production
-  executor and head codec; every claim/CAS probe round-trips its persisted
-  head through the production `validated_head`. Only the checks in the
-  [evidence note](../../docs/architecture/rfcs/shared-goal-authority-state-provider-v0-evidence.zh-CN.md)
-  are merge evidence for the revised receipt contract.
+- `provider.py`:`NoKVCoordinationProvider`,把不透明的 per-goal 聚合映射到 NoKV 路径 generation CAS。它通过生产的规范 head codec 序列化,因此 adapter 不能分叉摘要/对等基础。
+- `probes.py`:由生产 executor 与 head codec 驱动的确定性契约回归;每个 claim/CAS 探针都通过生产的 `validated_head` 往返其持久化 head。只有[证据笔记](../../docs/architecture/rfcs/shared-goal-authority-state-provider-v0-evidence.zh-CN.md)中的检查才是修订后 receipt 契约的合并证据。
 
-## Validation boundary
+## 验证边界
 
-The provider mapping is pinned to NoKV
-[`3d75d96965`](https://github.com/NoKV-Lab/NoKV/commit/3d75d96965) (the
-0.11.0 line). At that baseline, the Python `publish_bytes` surface accepts
-`expected_generation` for create-only or replacement CAS and exposes optional
-publication `operation_id` and `artifact_revision_id` inputs; `read` and
-`stat` return the path `generation` the adapter treats as
-`provider_generation`. Since NoKV 0.11.0 the SDK raises `FileNotFoundError`
-for a missing path and `FileExistsError` for a create-only collision; every
-other client failure is a `RuntimeError`. The adapter classifies by
-exception class only: `FileNotFoundError` is the one missing signal, and any
-other client failure on a read path raises the typed
-`ProviderUnavailableError` instead of masquerading as an uninitialized goal
-or escaping as a bare `RuntimeError`. Error prose is never a channel - real
-non-missing failures carry messages such as `invalid root route: root
-placement does not exist` - and pre-0.11 SDKs, which signalled missing with
-such prose, cannot route the post-#465 control plane and are outside the
-pinned baseline. `contract.nokv_adapter_exception_mapping` pins the
-classification offline with fake clients that raise the 0.11.0 exception
-classes and the real outage message shapes.
+provider 映射固定到 NoKV
+[`3d75d96965`](https://github.com/NoKV-Lab/NoKV/commit/3d75d96965)(0.11.0 线)。在该基线上,Python `publish_bytes` 组件面接受 create-only 或替换 CAS 的 `expected_generation`,并暴露可选发布 `operation_id` 与 `artifact_revision_id` 输入;`read` 与 `stat` 返回该 adapter 视为 `provider_generation` 的路径 `generation`。从 NoKV 0.11.0 起,SDK 对缺失路径抛出 `FileNotFoundError`,对 create-only 冲突抛出 `FileExistsError`;其他所有客户端失败都是 `RuntimeError`。adapter 只按异常类分类:`FileNotFoundError` 是唯一缺失信号,读路径上的其他任何客户端失败都会抛出类型化 `ProviderUnavailableError`,而不是伪装成未初始化 goal 或逃逸成裸 `RuntimeError`。错误散文永远不是通道——真实的非缺失失败携带如 `invalid root route: root placement does not exist` 之类的消息——而用这种散文报告缺失的 pre-0.11 SDK 无法路由 post-#465 控制面,因此落在固定基线之外。`contract.nokv_adapter_exception_mapping` 用引发 0.11.0 异常类与真实故障消息形态的 fake clients 离线固定该分类。
 
-A fresh coordination-provider handle must be admitted with
-`open_nokv_coordination_provider(...)`. NoKV performs route admission while
-constructing `Client`, before an ordinary provider constructor could classify
-the failure. The adapter-owned helper maps that eager failure to the same
-`ProviderUnavailableError`, performs no coordination write, and never falls
-back to the file provider. The live matrix uses this path for every fresh
-provider handle. Separate clients used only to provision test workspaces and
-snapshots are outside this provider contract and cannot execute authority
-commands. The
-`contract.nokv_fresh_client_failure_is_typed` guards both construction-time and
-post-construction outages.
+新的协调 provider 句柄必须通过 `open_nokv_coordination_provider(...)` 接纳。NoKV 在构造 `Client` 时执行路由接纳,在普通 provider 构造函数分类失败之前。adapter 自有的 helper 把那个急切失败映射为同一个 `ProviderUnavailableError`,不执行协调写,也绝不回退到文件 provider。实时矩阵对每个新 provider 句柄都使用该路径。仅用于配置测试工作区与快照的独立客户端不在该 provider 契约内,不能执行权威命令。
+`contract.nokv_fresh_client_failure_is_typed` 同时守卫构造期与构造后的故障。
 
-The mapping was exercised once by hand against a live NoKV stack at that
-pin (etcd, an S3-compatible object store, `nokv serve`, and `nokv-python`
-built from the same commit): the adapter verbs and the Section 10 checks
-1 to 9 passed with two independent client handles. That run is recorded
-here as evidence for the mapping only; it is not part of the merge gate,
-and it does not qualify restart, recovery, HA, or performance. SDKs built
-before NoKV 0.11.0 cannot decode a 0.11.0 control-plane routing record, so
-the earlier `90883d13539e31185f0d78131989fb51912dbd7e` audit baseline is no
-longer a usable pin.
+该映射曾在该 pin 上对一个真实 NoKV 栈(etcd、S3 兼容对象存储、`nokv serve` 与从同一 commit 构建的 `nokv-python`)手工演练一次:adapter 动词与第 10 节检查 1 到 9 都带着两个独立客户端句柄通过了。那次运行在这里记录为仅针对映射的证据;它不是合并关卡的一部分,也不资格化重启、恢复、HA 或性能。在 NoKV 0.11.0 之前构建的 SDK 无法解码 0.11.0 控制面路由记录,因此更早的 `90883d13539e31185f0d78131989fb51f2dbd7e` 审计基线不再是可用 pin。
 
-The live qualification is scripted and repeatable: `live_e2e.py` runs twelve
-shared lifecycle scenarios (including renew, reclaim after grace, stale-fence
-rejection, atomic completion/successor, competition, replay, lost response,
-retention, and revision advancement) through the production
-`CoordinationAuthorityExecutor` against the file-backed control provider and,
-when `NOKV_COORDINATION_LIVE=1` and the stack variables are set, this NoKV
-provider. One NoKV-only row performs a real commit/snapshot/restore and proves
-the restored lineage fails closed as `store_lineage_mismatch`. Without a
-reachable stack the NoKV rows report unverified and the script stays green, so
-it is evidence tooling, not a merge gate.
+实时资格判定是脚本化且可重复的:`live_e2e.py` 通过生产 `CoordinationAuthorityExecutor` 针对文件支撑的控制 provider 运行十二个共享生命周期场景(包括 renew、宽限期后 reclaim、陈旧围栏拒绝、原子完成/后继、竞争、重放、丢失响应、保留与 revision 推进),并在 `NOKV_COORDINATION_LIVE=1` 且栈变量已设置时针对本 NoKV provider 运行。仅 NoKV 的一行执行一次真实的 commit/snapshot/restore,并证明恢复的血统以 `store_lineage_mismatch` 失败关闭。没有可达栈时 NoKV 行报告未验证,脚本保持绿色,因此它是证据工具,不是合并关卡。
 
 ```bash
 python3 examples/nokv-shadow-provider/live_e2e.py
 ```
 
-Run the merge-relevant deterministic regression from the repository root with:
+从仓库根运行合并相关的确定性回归:
 
 ```bash
 python3 examples/nokv-shadow-provider/probes.py contract
 ```
 
-It must prove all of the following:
+它必须证明以下全部:
 
-- only an explicitly bootstrapped, runnable todo can be claimed;
-- A applies, B advances the head, and a reconstructed authority replays A;
-- replay returns A's original authority receipt field for field;
-- replay leaves the current revision and aggregate unchanged;
-- the same operation identity with a different semantic request is rejected;
-- transport-only retry metadata does not change operation identity;
-- competing claims on the same todo have one winner;
-- concurrent claims on independent todos both succeed after internal CAS
-  revalidation and rebase, within the reference's empty-write-scope boundary;
-- stale target or named preconditions return a domain conflict;
-- bounded unrelated contention fails without creating a receipt or pretending
-  that the target todo conflicted;
-- pre/post-CAS faults and ambiguous results recover success only from a stored
-  receipt or a later successful CAS after target revalidation; same-generation
-  receipt absence fails unproved;
-- the NoKV adapter maps every SDK outcome it can observe (missing head,
-  create-only collision, stale generation, pre-publish failure) onto the typed
-  provider verbs and never leaks an SDK exception class into the authority;
-- a hand-evolved post-completion head read back through the provider byte-CAS
-  projects to the same typed continuation outcomes (`successor | no_followup |
-  active_goal`) as the LoopX durable-completion seam, failing closed on a
-  contradictory record (both `no_followup` and successors), on a dangling
-  declared successor, on an explicit `completion_continuation` that
-  contradicts the recorded fields, and on a done record that omits its
-  explicit continuation, with replay-stable projections.
+- 只有显式引导的、可运行的 todo 才能被认领;
+- A 应用,B 推进 head,重建的权威重放 A;
+- 重放逐字段返回 A 的原始权威 receipt;
+- 重放让当前 revision 与聚合保持不变;
+- 同一操作身份配不同语义请求被拒绝;
+- 仅传输层的重试元数据不改变操作身份;
+- 对同一 todo 的竞争 claim 只有一个赢家;
+- 独立 todos 上的并发 claim 在内部 CAS 重新验证与 rebase 后都成功,限定在参考的空写范围边界内;
+- 过期目标或点名前置条件返回领域冲突;
+- 有界的无关争用失败时不创建 receipt,也不假装目标 todo 冲突;
+- pre/post-CAS 故障与歧义结果只能在存储 receipt 或目标重新验证后的后续成功 CAS 中恢复成功;同 generation 无 receipt 时判定为未证明;
+- NoKV adapter 把可观察到的每个 SDK 结果(缺失 head、create-only 冲突、陈旧 generation、预发布失败)映射到类型化 provider 动词,绝不把 SDK 异常类泄漏进权威;
+- 通过 provider 字节 CAS 回读的、手工演进出的完成 head,投影到与 LoopX 持久完成 seam 相同的类型化续接结果(`successor | no_followup | active_goal`),并对矛盾记录(既有 `no_followup` 又有 successors)、悬空声明的后继、与记录字段矛盾的显式 `completion_continuation`,以及省略显式续接的 done 记录失败关闭,且投影重放稳定。
 
-The durable-completion probes remain the offline read-side comparison. The
-Stage 3 focused tests and live matrix qualify the matching atomic completion
-write side at the reference boundary.
+持久完成探针仍是离线读侧比较。Stage 3 聚焦测试与实时矩阵在参考边界资格化匹配的原子完成写侧。
 
-The nine current result tags are
-`contract.bootstrap_and_preconditions`,
-`contract.a_success_b_advance_replay_a`, `contract.operation_identity`,
-`contract.competing_claims`, `contract.crash_windows_and_ambiguity`,
-`contract.version_domains_and_retain_all`,
-`contract.nokv_adapter_exception_mapping`,
-`contract.durable_completion_projection`, and
-`contract.durable_completion_fail_closed`.
+目前九个结果标签是
+`contract.bootstrap_and_preconditions`、
+`contract.a_success_b_advance_replay_a`、`contract.operation_identity`、
+`contract.competing_claims`、`contract.crash_windows_and_ambiguity`、
+`contract.version_domains_and_retain_all`、
+`contract.nokv_adapter_exception_mapping`、
+`contract.durable_completion_projection` 与
+`contract.durable_completion_fail_closed`。
 
-`probes.py` deliberately remains offline; use `live_e2e.py` for the real stack.
-The reference still does not establish multi-host wake delivery, automatic
-provider promotion, HA/failover, receipt compaction or GC, production
-performance, a dynamic eligibility-projection publisher, non-empty write-scope
-overlap enforcement, or a full LoopX state migration. The NoKV storage-plane
-issues linked from the RFC remain production-canary holds; a green ordered
-single-node exercise does not erase them.
+`probes.py` 刻意保持离线;真实栈请使用 `live_e2e.py`。该参考仍不确立多宿主唤醒投递、自动 provider 晋升、HA/failover、receipt 压缩或 GC、生产性能、动态资格投影发布者、非空写范围重叠执行,或完整的 LoopX 状态迁移。RFC 链接的 NoKV 存储面问题仍是生产 canary 保留项;一次绿色的有序单节点演练不会抹除它们。

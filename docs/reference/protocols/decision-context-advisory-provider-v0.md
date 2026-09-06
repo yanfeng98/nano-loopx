@@ -1,20 +1,16 @@
-# Decision Context advisory provider v0
+# Decision Context 咨询型 provider v0
+> [English](decision-context-advisory-provider-v0.md)
 
-`decision_context_advisory_provider_v0` lets an optional LoopX extension
-implement the existing Decision Context `ContextProvider` port. It is a
-retrieval contract, not a new capability, state authority, or transcript store.
+`decision_context_advisory_provider_v0` 让一个可选的 LoopX extension 实现现有的 Decision Context `ContextProvider` 端口。它是检索契约，不是新 capability、状态权威或 transcript 存储。
 
-## Ownership
+## 所有权
 
-- `decision-context` owns activation, request bounds, evidence rebase, fail-open
-  behavior, public projection, and durable-transition policy.
-- The extension lifecycle owns install, enable, disable, upgrade, doctor
-  readiness, and revision-bound process dispatch.
-- A provider owns only a bounded external read and response normalization.
-- The Goal/Todo/material/amendment owners remain the only paths for durable
-  promotion of a recalled claim.
+- `decision-context` 拥有激活、请求界限、证据 rebase、fail-open 行为、公开投影与持久化转换策略。
+- extension 生命周期拥有安装、启用、禁用、升级、doctor 就绪性与修订绑定的进程分发。
+- provider 只拥有一个有界的外部读取与响应规范化。
+- Goal/Todo/material/amendment owner 仍是召回 claim 持久化提升的唯一路径。
 
-An implementation declares:
+实现声明：
 
 ```toml
 permissions = ["decision_context.read"]
@@ -28,36 +24,29 @@ capability_id = "decision-context"
 protocol = "decision_context_advisory_provider_v0"
 ```
 
-Decision Context may select an exact `config.extension_id`. Without one,
-resolution succeeds only when exactly one enabled, doctor-ready extension
-implements the protocol. Missing, disabled, stale, ambiguous, failed, and
-contract-invalid providers degrade to an unavailable recall receipt; authority
-source collection continues.
+Decision Context 可以选定一个精确的 `config.extension_id`。没有指定时，只有当恰好一个已启用且 doctor 就绪的 extension 实现该协议时，解析才成功。缺失、禁用、过期、歧义、失败与契约无效的 provider 会降级为不可用的召回回执；权威源收集继续。
 
-## Retrieve request
+## 检索请求
 
-The runtime receives a `decision_context_advisory_retrieve_request_v0` object:
+运行时接收一个 `decision_context_advisory_retrieve_request_v0` 对象：
 
-| Field | Contract |
+| 字段 | 契约 |
 | --- | --- |
-| `schema_version` | Exact request schema token. |
-| `operation` | Exactly `retrieve`. |
-| `namespace` | Bounded caller namespace. |
-| `scope_ref` | Provider-neutral scope selected for this call; full evidence assembly may take it from the profile, while one-off recall supplies it ephemerally. |
-| `query` | Bounded private retrieval query. |
-| `query_summary` | Public-safe description; the raw query is not projected. |
-| `max_results` | Positive integer, capped by Core at 8. |
-| `timeout_seconds` | Finite execution timeout from 1 through 120 seconds, further capped by the extension binding. |
-| `observed_at` | Caller observation time. |
+| `schema_version` | 精确请求 schema token。 |
+| `operation` | 恰好为 `retrieve`。 |
+| `namespace` | 有界调用方命名空间。 |
+| `scope_ref` | 为本次调用选定的 provider-neutral scope；完整证据组装可从 profile 获取它，而一次性召回则临时提供。 |
+| `query` | 有界私有检索查询。 |
+| `query_summary` | 公开安全描述；原始查询不投影。 |
+| `max_results` | 正整数，由 Core 限制在 8。 |
+| `timeout_seconds` | 从 1 到 120 秒的有限执行超时，进一步由 extension 绑定限制。 |
+| `observed_at` | 调用方观察时间。 |
 
-The provider must not interpret a scope as a Goal identity or authority grant.
-Host-specific syntax is normalized before the provider boundary. For example,
-LoopX parses `codex://threads/<thread-id>` and emits
-`host-session:codex:<thread-id>`; the provider never parses the deep link.
+provider 不得把 scope 解释为 Goal 身份或授权授予。host 专属语法在 provider 边界前被规范化。例如，LoopX 解析 `codex://threads/<thread-id>` 并发出 `host-session:codex:<thread-id>`；provider 从不解析深链。
 
-## Retrieve response
+## 检索响应
 
-The runtime returns a `decision_context_advisory_retrieve_response_v0` object:
+运行时返回一个 `decision_context_advisory_retrieve_response_v0` 对象：
 
 ```json
 {
@@ -76,34 +65,12 @@ The runtime returns a `decision_context_advisory_retrieve_response_v0` object:
 }
 ```
 
-Core rejects missing or unknown fields, invalid bounds, a non-numeric score,
-items on an unavailable response, and a status/reason mismatch. The process
-deadline is the shorter of the profile request and extension lifecycle limits.
-`content` and `resource_ref` remain in-process during full evidence assembly.
-For an explicit one-off `decision-context recall-context`, content may be
-returned only in a `local_private_transient` packet to the current agent; the
-scope, raw provider payload, and content are not persisted. The nested public
-`context_provider_retrieval_v0` receipt keeps the summary and score, hashes the
-resource reference, and omits content. Provider errors are reported with
-compact reason codes; subprocess output and private paths are not copied into
-public state. Every returned content item is typed as untrusted advisory input
-and cannot supply instructions or authority.
+Core 拒绝缺失或未知字段、无效界限、非数值 score、不可用响应上的 items，以及 status/reason 不匹配。进程期限取 profile 请求与 extension 生命周期限制中较短者。`content` 与 `resource_ref` 在完整证据组装期间保持在进程内。对于显式的一次性 `decision-context recall-context`，content 只能在 `local_private_transient` 包中返回给当前 agent；scope、原始 provider 载荷与 content 不持久化。嵌套的公开 `context_provider_retrieval_v0` 回执保留 summary 与 score、对 resource 引用做哈希并省略 content。provider 错误以紧凑原因码报告；subprocess 输出与私有路径不复制进公开状态。每个返回的 content 项都被类型化为不受信任的咨询输入，不能提供指令或权限。
 
-The one-off command takes `scope_ref` as a call argument while the private
-profile continues to gate the Goal, Agent, provider identity, namespace, bounds,
-and timeout. It does not mutate the profile, scan authority sources, access
-cursors, create settlement state, or authorize execution.
+一次性命令把 `scope_ref` 作为调用参数，而私有 profile 继续把关 Goal、Agent、provider 身份、命名空间、界限与超时。它不修改 profile、不扫描权威源、不访问 cursor、不创建 settlement 状态、不授权执行。
 
-The protocol defines no sync or write operation. A provider used through the
-`ContextProvider` interface returns `read_only_provider` for `sync`. It grants
-no permission, workspace access, claim, lease, lifecycle authority, execution
-authority, amendment authority, or write scope.
+该协议不定义 sync 或 write 操作。通过 `ContextProvider` 接口使用的 provider 对 `sync` 返回 `read_only_provider`。它不授予权限、工作区访问、claim、lease、生命周期权限、执行权限、amendment 权限或写 scope。
 
-## Obelisk implementation
+## Obelisk 实现
 
-The optional `packages/loopx-obelisk` distribution implements this protocol for
-historical Codex tasks. It uses Obelisk's public `--version` and read-only
-`--query` CLI boundary, filters to the exact normalized Codex session, excludes
-`session.is_invoking`, and accepts only visible user or assistant text rows. It
-does not import Obelisk code, read its SQLite schema, invoke `--build` or
-`--attune`, or control a live Codex task.
+可选的 `packages/loopx-obelisk` 发行版为历史 Codex 任务实现本协议。它使用 Obelisk 公开的 `--version` 与只读 `--query` CLI 边界，过滤到精确规范化 Codex 会话，排除 `session.is_invoking`，只接受可见的用户或 assistant 文本行。它不导入 Obelisk 代码、不读取其 SQLite schema、不调用 `--build` 或 `--attune`，也不控制活动 Codex 任务。

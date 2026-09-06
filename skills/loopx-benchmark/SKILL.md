@@ -3,77 +3,73 @@ name: loopx-benchmark
 description: Use when a LoopX-managed goal runs, tracks, scores, or analyzes a benchmark experiment through benchmark-toolkit, including experiment-board rows, solver arms, integrity qualification, matched comparisons, or case insights. Do not use for casual benchmark discussion, ordinary software microbenchmarks, or eval mentions without LoopX experiment state.
 ---
 
-# LoopX Benchmark Workflow
+# LoopX Benchmark 工作流
 
-Use this skill for a LoopX-managed benchmark experiment. The builtin
-`benchmark-toolkit` capability owns provider-neutral experiment state and
-integrity boundaries. This packaged skill is its task-triggered Agent playbook.
+> [English](SKILL.md)
 
-The capability is catalog-ready without a per-Goal enable switch. Installing
-this skill does not grant runner, shell, network, credential, private-evidence,
-or Goal mutation authority. Respect the selected todo's required capabilities,
-any external provider binding, host permissions, and user gates.
+对 LoopX 管理的 benchmark 实验使用本技能。内置的
+`benchmark-toolkit` capability 拥有 provider-neutral 实验状态与完整性边界。
+本打包技能是它的任务触发版 Agent playbook。
 
-## Capability surface
+该 capability 无需按 Goal 启用开关即可目录就绪。安装本技能不授予 runner、
+shell、network、credential、private-evidence 或 Goal 变更权限。尊重所选 todo
+的必需 capability、任何外部 provider 绑定、宿主权限与用户 gate。
 
-- `loopx capability show benchmark-toolkit --format json` — catalog entry with
-  usage hints, role boundaries, and the post-run case-insight template.
-- `loopx benchmark --help` — subcommands (experiment-board-show,
-  experiment-board-upsert, source-revision-fence, integrity-qualification,
-  classify-artifacts).
+## Capability 界面
 
-## Share a study through the public-safe contract
+- `loopx capability show benchmark-toolkit --format json` — 目录条目，含使用
+  提示、角色边界与运行后 case-insight 模板。
+- `loopx benchmark --help` — 子命令（experiment-board-show、
+  experiment-board-upsert、source-revision-fence、integrity-qualification、
+  classify-artifacts）。
 
-When another benchmark developer needs portable study data, use the capability's
-typed study flow rather than sharing a runner-specific ledger or raw evidence:
+## 通过公开安全契约共享研究
 
-1. Validate `benchmark_study_manifest_v0` with `benchmark study-validate`.
-2. Wrap one allowlisted manifest, experiment-board row, redacted insight, or runtime
-   observation with `benchmark upload-envelope`.
-3. Run `benchmark upload-local` without `--execute` first, then explicitly execute
-   against a caller-selected local JSONL store.
-4. Verify the record/digest/revision binding with `benchmark upload-readback`.
-5. Derive the campaign/arm/case/run packet with `benchmark study-dashboard`; pass a
-   compact four-arm contract only when the study preregistered that design.
+当另一个 benchmark 开发者需要可移植的研究数据时，使用该 capability 的
+typed study 流程，而不是共享 runner 特定 ledger 或原始证据：
 
-For `case_insight_projection`, first upload the same run's active terminal
-experiment-board row with `insight.status=complete`. The case, run, and outcome
-must match; the run row remains the only arm, score, countability, integrity, and
-treatment-fidelity authority. Reduce private post-run evidence to bounded prose
-and public-safe handles or digests before building the envelope.
+1. 用 `benchmark study-validate` 验证 `benchmark_study_manifest_v0`。
+2. 用 `benchmark upload-envelope` 包装一个允许清单中的 manifest、
+   experiment-board 行、脱敏 insight 或运行时观察。
+3. 先不带 `--execute` 运行 `benchmark upload-local`，然后对调用方选择的
+   本地 JSONL 存储显式执行。
+4. 用 `benchmark upload-readback` 验证 record/digest/revision 绑定。
+5. 用 `benchmark study-dashboard` 推导 campaign/arm/case/run 包；
+   仅当研究预先注册了该设计时才传递紧凑的四臂契约。
 
-The local provider is a no-network simulation. It does not grant remote upload,
-publication, credentials, retention, or benchmark submission authority. Adapters
-keep their native metric names and reduce private post-run evidence before envelope
-construction.
+对 `case_insight_projection`，先用 `insight.status=complete` 上传同一运行
+的活跃终态 experiment-board 行。case、run 与 outcome 必须匹配；run 行仍是
+arm、score、countability、integrity 与 treatment-fidelity 的唯一权威。构建
+envelope 前，把私有运行后证据压缩为有界散文与公开安全句柄或摘要。
 
-## Select the operating lane
+本地 provider 是无网络模拟。它不授予远端上传、发布、凭据、保留或 benchmark
+提交权限。Adapter 保留其原始指标名称，并在构建 envelope 前压缩私有运行后
+证据。
 
-- **Inspect or explain:** use `capability show` and `benchmark --help`; remain
-  read-only. Do not create an experiment-board row merely because the user asks
-  what the toolkit does.
-- **Plan, select, or launch a run:** follow the experiment sequence below. The
-  first action is to read the board; a launch still requires an authorized
-  runner and admitted source.
-- **Monitor an active campaign:** read the board and runtime-owned projections;
-  update only on material run transitions. Do not manufacture progress from a
-  timer tick.
-- **Analyze a terminal run:** wait until solving is terminal and scoring is
-  complete before reading hidden evaluator evidence or writing a case insight.
+## 选择运行通道
 
-For a generic library microbenchmark or an eval with no LoopX Goal/board, use
-the task's normal tools instead of imposing this workflow.
+- **检查或解释：**使用 `capability show` 与 `benchmark --help`；保持只读。
+  不要仅因用户问 toolkit 做什么就创建 experiment-board 行。
+- **计划、选择或启动运行：**遵循下方的实验序列。第一步是读板；启动仍需
+  经授权的 runner 与被认可的源。
+- **监控活跃 campaign：**读板与运行时所属投影；仅在材料性运行迁移时更新。
+  不要从计时器滴答制造进展。
+- **分析终态运行：**等待 solving 终态且评分完成后，才读取隐藏 evaluator
+  证据或编写 case insight。
 
-## Experiment sequence
+对通用库 microbenchmark 或没有 LoopX Goal/板的 eval，使用任务常规工具，
+而不是强加此工作流。
 
-1. **Read the experiment board before launching or selecting a case.**
+## 实验序列
+
+1. **启动或选择 case 前先读实验板。**
    ```bash
    loopx benchmark experiment-board-show --goal-id <GOAL_ID> --format json
    ```
-   Inspect baseline, treatment, explore, countability, effort, and insight rows
-   before choosing the next arm.
+   选择下一 arm 前检查 baseline、treatment、explore、countability、effort
+   与 insight 行。
 
-2. **Qualify the source revision before each new run admission.**
+2. **在每次新运行接纳前认定源修订。**
    ```bash
    loopx benchmark source-revision-fence \
      --source-checkout <clean-source> \
@@ -81,116 +77,105 @@ the task's normal tools instead of imposing this workflow.
      --observed-reference-revision <OBSERVED_HEAD> \
      --require-admitted --format json
    ```
-   The fence fails closed unless the clean pinned source matches the observed
-   reference head.
+   除非干净的固定源与观察到的参考 head 匹配，否则该 fence 失败关闭。
 
-3. **Preview, then preregister or mark the run row when it starts.**
+3. **运行时先预览，再预注册或标记运行行。**
    ```bash
    loopx benchmark experiment-board-upsert --goal-id <GOAL_ID> \
      --row-json <running-row.json> --format json
    loopx benchmark experiment-board-upsert --goal-id <GOAL_ID> \
      --row-json <running-row.json> --execute --format json
    ```
-   The running row uses `status=running`, empty `metrics`, and
+   运行行使用 `status=running`、空的 `metrics` 与
    `countability={integrity_qualified:false, official_result_present:false,
-   score_countable:false}`. Keep the same stable `run_id` for every transition.
+   score_countable:false}`。每次迁移保持同一稳定 `run_id`。
 
-4. **Preview and upsert terminal score, countability, effort, and insight.**
-   First run integrity qualification. An automated restricted-access match is a
-   countable suspicion, not a cheating verdict. After solver and scoring are
-   terminal, inspect the real solver trajectory, tool results, and final
-   workspace. Pass a compact
-   `benchmark_restricted_access_adjudication_v0` only after that review; confirm
-   cheating only when restricted material was actually disclosed and causally
-   entered a solving or validation decision.
+4. **预览并 upsert 终态 score、countability、effort 与 insight。**
+   先运行完整性资格认定。自动的受限访问匹配是可计数的嫌疑，不是作弊裁决。
+   solver 与评分终态后，检查真实 solver 轨迹、工具结果与最终工作区。
+   只有在该评审后，才传递紧凑的
+   `benchmark_restricted_access_adjudication_v0`；仅当受限材料确实被披露且
+   因果进入 solving 或验证决策时才确认作弊。
 
    ```bash
    loopx benchmark experiment-board-upsert --goal-id <GOAL_ID> \
      --row-json <terminal-row.json> --execute --format json
    ```
-   The terminal row sets `status=completed`, fills `metrics` (primary metric plus
-   guardrails), and updates `countability`. Only mark `score_countable=true` when
-   `integrity_qualified=true` and `official_result_present=true`. Fill `effort`
-   and set `insight.status` to `complete` after the post-run analysis.
+   终态行设置 `status=completed`，填入 `metrics`（主指标加 guardrail），
+   并更新 `countability`。仅当 `integrity_qualified=true` 且
+   `official_result_present=true` 时，才标记 `score_countable=true`。运行后
+   分析完成后填入 `effort` 并将 `insight.status` 设为 `complete`。
 
-   For non-baseline arms, also reduce the reviewed mechanism facts separately:
+   对非 baseline arm，另外单独压缩审阅过的机制事实：
    ```bash
    loopx benchmark treatment-continuation-receipt \
      --observation-json <compact-post-run-observation.json> --format json
    ```
-   This receipt distinguishes qualified startup from post-start semantic control
-   persistence. It is analysis-only and must not change score countability,
-   integrity qualification, treatment fidelity, or matched-pair eligibility.
+   该 receipt 区分合格启动与启动后语义控制持续。它仅供分析，不得改变
+   score countability、integrity 资格认定、treatment fidelity 或匹配对资格。
 
-5. **Read matched comparisons before selecting the next arm.**
+5. **选择下一 arm 前读取匹配比较。**
    ```bash
    loopx benchmark experiment-board-show --goal-id <GOAL_ID> --format json
    ```
-   Only claim paired results from `matched_pair_countable` comparisons. Keep
-   diagnostic-only explore rows in a separate evidence lane.
+   只从 `matched_pair_countable` 比较中主张配对结果。把纯诊断 Explore 行
+   保留在单独证据通道。
 
-## Run-row contract
+## 运行行契约
 
-- `benchmark_id`, `study_id`, `case_id`, `run_id`, `arm_id`, `arm_role`,
-  `attempt`, `status`, `observed_at`, `model_id`, `protocol_id`,
-  `comparison_protocol_id`, `claim_scope`, `primary_metric`,
-  `guardrail_metrics`, `metrics`, `countability`, `treatment_fidelity`,
-  `effort`, `insight` are the canonical row fields (`schema_version` =
-  `benchmark_experiment_board_row_v0`).
-- Baseline rows must use `treatment_fidelity=not_applicable` and cannot name a
-  `comparison_anchor_run_id`. Non-baseline rows must name a
-  `comparison_anchor_run_id`.
-- Metrics are `{"name": {"value": <number>, "unit": <str>,
-  "higher_is_better": <bool>}}`; at most 16 entries. The `primary_metric` must
-  not also be a guardrail metric.
-- `score_countable` requires `status=completed`, `integrity_qualified=true`,
-  and `official_result_present=true`. `score=0` is a valid completed result.
+- `benchmark_id`、`study_id`、`case_id`、`run_id`、`arm_id`、`arm_role`、
+  `attempt`、`status`、`observed_at`、`model_id`、`protocol_id`、
+  `comparison_protocol_id`、`claim_scope`、`primary_metric`、
+  `guardrail_metrics`、`metrics`、`countability`、`treatment_fidelity`、
+  `effort`、`insight` 是规范行字段（`schema_version` =
+  `benchmark_experiment_board_row_v0`）。
+- Baseline 行必须使用 `treatment_fidelity=not_applicable`，且不能命名
+  `comparison_anchor_run_id`。非 baseline 行必须命名 `comparison_anchor_run_id`。
+- Metrics 是 `{"name": {"value": <number>, "unit": <str>,
+  "higher_is_better": <bool>}}`；最多 16 项。`primary_metric` 不得同时是
+  guardrail 指标。
+- `score_countable` 需要 `status=completed`、`integrity_qualified=true` 与
+  `official_result_present=true`。`score=0` 是有效的已完成结果。
 
-## Source, integrity, and artifact boundaries
+## 源、完整性与产物边界
 
-- `source-revision-fence` is read-only and caller-observed: it performs no
-  fetch, install, or launch. It blocks new admissions only.
-- `integrity-qualification` reduces private trajectory and runner isolation
-  evidence to a compact public-safe receipt (hashes, counts, reason codes).
-- Scanner hits for restricted source access or host-boundary escape probes set
-  `restricted_access_review=suspected` while keeping the run score-eligible. Use
-  `--restricted-access-adjudication-json` for the post-run agent decision; only
-  confirmed disclosure plus causal use disqualifies the score.
-- `classify-artifacts` classifies benchmark artifact paths without reading them;
-  use it before reading or publishing any candidate artifact.
-- The solver lane must not read hidden tests, verifier sources, gold answers, or
-  official feedback during the solving phase. The post-run analyst may read full
-  private evidence only after the solver is terminal and scoring is complete.
-- `capability bind` selects an external provider implementation for a Goal; it
-  is not the activation mechanism for this builtin capability. Todo
-  `required_capability` fields remain runtime prerequisites, not product
-  capability switches.
+- `source-revision-fence` 只读且由调用方观察：它不执行 fetch、install 或
+  launch。它只阻止新的接纳。
+- `integrity-qualification` 把私有轨迹与 runner 隔离证据压缩为紧凑公开安全
+  receipt（哈希、计数、原因码）。
+- 对受限源访问或宿主边界逃逸探针的扫描命中，会把 `restricted_access_review`
+  设为 `suspected`，同时保持运行可计入分数。对运行后 agent 决策使用
+  `--restricted-access-adjudication-json`；只有确认披露加因果使用才取消
+  分数资格。
+- `classify-artifacts` 在不读取产物的前提下分类 benchmark 产物路径；在读取
+  或发布任何候选产物前使用它。
+- Solving 阶段，solver 通道不得读取隐藏测试、verifier 源、标准答案或官方
+  反馈。运行后分析者只能在 solver 终态且评分完成后读取完整私有证据。
+- `capability bind` 为 Goal 选择外部 provider 实现；它不是该内置 capability
+  的激活机制。Todo `required_capability` 字段保持为运行时前置条件，而非产品
+  capability 开关。
 
-## Campaign monitoring and post-run insight
+## Campaign 监控与运行后洞察
 
-- When a campaign starts and the caller authorizes ongoing monitoring, add one
-  `continuous_monitor` todo. Refresh aggregate score/coverage and write
-  `benchmark_case_insight_v0` on material scored-case transitions, with bounded
-  periodic reviews while the campaign remains active.
-- Treat that monitor as an observation lane, not executable delivery. When a
-  material poll discovers bounded repository, runner-repair, or experiment work,
-  use `quota monitor-poll --material-change --next-agent-todo` with explicit
-  `--next-action-kind`, repository, and required capabilities so it creates an
-  independent runnable `advancement_task`. An unchanged poll creates no successor
-  and spends no delivery quota.
-- If the main campaign advancement Todo is waiting for a monitor transition, keep
-  it `open` and pair `resume_when=monitor_changed:<monitor-todo-id>` with an
-  already-created independent runnable successor. Do not mark the wait `blocked`,
-  and do not treat the monitor itself as delivery work.
-- Report only public-safe conclusions (countable baselines, countable
-  treatments, matched pairs, aggregate primary metric by arm, improved/flat/
-  regressed pair counts). Never copy raw private evidence into a user update.
-- After a solver stops and scoring completes, read the task, real trajectory,
-  final workspace, hidden tests, verifier, and failure/score details; write one
-  `benchmark_case_insight_v0` explaining the decisive evidence, why the outcome
-  happened, and what LoopX should test next.
-- For treatment arms, record whether qualified startup was followed by semantic
-  Todo transitions, technical replans, or control closeout. Use `startup_only`
-  only when a complete authorized post-run review observed no such transition;
-  otherwise absence is `unknown`. Keep terminal settlement separate.
-- Do not send a repetitive user update when nothing material changed.
+- 当 campaign 启动且调用方授权持续监控时，添加一个 `continuous_monitor` todo。
+  在材料性 scored-case 迁移时刷新聚合 score/coverage 并写入
+  `benchmark_case_insight_v0`，在 campaign 保持活跃期间进行有界周期性评审。
+- 把该 monitor 视为观察通道，而非可执行交付。当材料性 poll 发现有界仓库、
+  runner-repair 或实验工作时，用 `quota monitor-poll --material-change
+  --next-agent-todo` 并带显式 `--next-action-kind`、repository 与必需
+  capability，以创建独立可运行的 `advancement_task`。无变化的 poll 不产生
+  继任者，也不消耗交付 quota。
+- 如果主 campaign advancement Todo 在等待某个 monitor 迁移，保持其为 `open`，
+  并把 `resume_when=monitor_changed:<monitor-todo-id>` 与已创建的独立可运行
+  继任者配对。不要将等待标记为 `blocked`，也不要将 monitor 本身视为交付
+  工作。
+- 只报告公开安全结论（可计数的 baseline、可计数的 treatment、匹配对、按 arm
+  的聚合主指标、改善/持平/回退配对计数）。永远不要把原始私有证据复制到用户
+  更新中。
+- solver 停止且评分完成后，读取任务、真实轨迹、最终工作区、隐藏测试、verifier
+  与失败/评分细节；写一个 `benchmark_case_insight_v0` 解释决定性证据、结果
+  为何发生以及 LoopX 下一步应测试什么。
+- 对 treatment arm，记录合格启动是否跟随语义 Todo 迁移、技术重规划或控制
+  收尾。仅当完整授权的运行后评审未观察到此类迁移时才使用 `startup_only`；
+  否则其缺省为 `unknown`。保持终态结算独立。
+- 无材料性变化时不要发送重复的用户更新。

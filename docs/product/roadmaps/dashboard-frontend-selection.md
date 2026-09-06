@@ -1,200 +1,112 @@
-# Dashboard Frontend Selection
+# 仪表盘前端选型
 
-LoopX should keep the no-dependency static HTML renderer as a diagnostic
-fallback, but the product dashboard should use a real frontend stack.
+> [English](dashboard-frontend-selection.md)
 
-The target UI is a local control plane for agent goals: status lanes, run
-history, contract health, controller handoffs, and drill-down views. It should
-feel closer to an observability or orchestration console than to a generated
-report.
+LoopX 应该保留无依赖的静态 HTML 渲染器作为诊断兜底，但产品 dashboard 应当使用真正的前端技术栈。
 
-## Product Benchmarks
+目标 UI 是针对 Agent goal 的本地控制面：状态泳道、run 历史、契约健康、controller 交接与下钻视图。它应该更接近观测或编排控制台，而不是一份生成的报告。
 
-The useful reference products cluster around three product surfaces:
+## 产品基准
 
-- AI observability tools such as Langfuse, LangSmith, and Braintrust emphasize
-  trace/session inspection, eval comparison, filters, score summaries, prompt
-  linkage, and production-to-eval loops.
-- Orchestration tools such as Dagster and Temporal emphasize run lists, run
-  detail pages, event histories, lineage, dependency graphs, and replayability.
-- Monitoring tools such as Grafana emphasize composable panels, dashboard
-  variables, transformations, links, and shareable views.
-- Work management tools such as Linear emphasize priority, cycle capacity,
-  triage queues, and explicit pause/resume states instead of hiding compute
-  allocation inside notification cadence.
-- Modern developer products such as Vercel and Linear set the visual bar:
-  restrained typography, sharp command surfaces, compact rows, calm contrast,
-  strong empty states, and status accents rather than decorative color.
-- Observability products such as Datadog and Grafana set the density bar:
-  reusable widgets, health panels, filters, dashboard links, and drill-downs
-  that turn a first screen into an operator cockpit.
-- Multica is a useful near-neighbor for product shape, not for direct cloning:
-  its public repo uses a Next.js web app, Go backend, PostgreSQL/pgvector,
-  local agent daemon, shared UI package, Base UI/shadcn-style components,
-  TanStack Query/Table, resizable panels, command menus, agent boards, agent
-  profiles, runtimes, squads, task timelines, and reusable skill surfaces.
-  LoopX should borrow the dense agent-board and workspace-member
-  grammar while keeping the control-plane source of truth in LoopX
-  status/quota/run history rather than in a chat or issue board.
+有参考价值的产品大致围绕三类产品形态：
 
-For LoopX, the common lesson is not "more charts." The first screen
-needs an action-oriented queue and trustworthy drill-downs:
+- Langfuse、LangSmith、Braintrust 等 AI 观测工具侧重 trace/session 检查、eval 对比、过滤器、分数汇总、prompt 关联，以及从生产到 eval 的闭环。
+- Dagster、Temporal 等编排工具侧重 run 列表、run 详情页、事件历史、血缘、依赖图与可重放性。
+- Grafana 等监控工具侧重可组合面板、dashboard 变量、转换、链接与可分享视图。
+- Linear 等工作管理工具侧重优先级、周期容量、分诊队列，以及显式的暂停/恢复状态，而不是把算力分配藏进通知节奏里。
+- Vercel、Linear 等现代开发者产品定下了视觉基线：克制的排版、锋利的面板、紧凑的行、平稳的对比度、出色的空状态，以及用状态色点缀而不是装饰性配色。
+- Datadog、Grafana 等观测产品定下了密度基线：可复用组件、健康面板、过滤器、dashboard 链接与下钻，把首屏变成 operator 驾驶舱。
+- Multica 在产品形态上是有用的近邻，而不是直接克隆对象：其公开仓库使用 Next.js web 应用、Go 后端、PostgreSQL/pgvector、本地 agent daemon、共享 UI 包、Base UI/shadcn 风格组件、TanStack Query/Table、可调整面板、命令菜单、agent board、agent 档案、runtimes、squad、任务时间线与可复用的 skill surface。LoopX 应该借用其密集的 agent-board 与 workspace 成员语法，同时把控制面的事实源留在 LoopX 的 status/quota/run 历史里，而不是聊天或 issue board 里。
 
-- at-a-glance health and attention lanes,
-- compute quota lanes that show which goals are eligible, throttled, waiting,
-  paused, or asking for a burst,
-- a human operator view that translates agent-facing status into review,
-  approval, waiting, and reward-capture decisions,
-- filterable goal and run tables,
-- URL-addressable status filters,
-- run detail pages with compact JSON/Markdown links,
-- event or timeline views for peer task coordination and child-worker evidence,
-- later graph views for goal dependencies and handoffs.
+对 LoopX 而言，常见教训不是"更多图表"。首屏需要面向行动的队列和可信的下钻：
 
-## Decision
+- 一眼可读的健康与关注泳道，
+- 计算配额泳道，显示哪些 goal 可用、被限流、在等待、已暂停或正在请求 burst，
+- 把面向 agent 的状态翻译成评审、批准、等待与 reward-capture 决策的 human operator 视图，
+- 可过滤的 goal 与 run 表格，
+- 可 URL 寻址的状态过滤器，
+- 带紧凑 JSON/Markdown 链接的 run 详情页，
+- 面向 peer 任务协调与 child-worker evidence 的事件或时间线视图，
+- 稍后为 goal 依赖与交接加入图视图。
 
-Build the official dashboard as `apps/presentation/dashboard` with a static-build-first
-frontend:
+## 决策
 
-- **Vite + React + TypeScript** for a local-first single-page app that can read
-  exported JSON, build to static HTML/assets, and later call a small local API.
-- **shadcn/ui + Tailwind CSS + Radix primitives + lucide-react** for a polished,
-  accessible, owned component system with good defaults.
-- **TanStack Router** for typed routes and URL-backed filters such as selected
-  goal, queue lane, severity, and run id.
-- **TanStack Table** for attention queues, run history, contract findings, and
-  future child-agent tables.
-- **TanStack Query** once the dashboard reads from a local HTTP endpoint instead
-  of only loading static JSON files.
-- **Recharts through shadcn chart patterns** for first-pass trend and summary
-  panels.
-- **Zod** for validating `loopx --format json status` payloads at the UI
-  boundary.
-- **Vitest + Playwright** for component and browser-level checks.
+把官方 dashboard 建为 `apps/presentation/dashboard`，采用静态构建优先的前端：
 
-This means "static HTML dashboard" should not mean hand-written HTML forever.
-The Python renderer remains the no-dependency diagnostic fallback. The product
-dashboard should be a Vite static build with owned shadcn-style components and
-typed data boundaries.
+- **Vite + React + TypeScript**，做一个 local-first 单页应用：能读取导出的 JSON，构建成静态 HTML/资源，之后可以调用小型本地 API。
+- **shadcn/ui + Tailwind CSS + Radix primitives + lucide-react**，提供精美、可访问、自有化的组件系统与良好默认值。
+- **TanStack Router**，用于类型化路由与 URL 支持的过滤器，如选中 goal、队列泳道、severity 与 run id。
+- **TanStack Table**，用于关注队列、run 历史、契约发现与将来的 child-agent 表格。
+- **TanStack Query**，等 dashboard 从本地 HTTP 端点读取而非只加载静态 JSON 之后再用。
+- **Recharts（通过 shadcn chart 模式）**，用于第一轮趋势与汇总面板。
+- **Zod**，用于在 UI 边界校验 `loopx --format json status` 载荷。
+- **Vitest + Playwright**，用于组件与浏览器级检查。
 
-## Two Frontstage Surfaces
+这意味着"静态 HTML dashboard"不应永远是手写 HTML。Python 渲染器继续作为无依赖的诊断兜底。产品 dashboard 应当是基于 Vite 的静态构建，使用自有化的 shadcn 风格组件与类型化数据边界。
 
-LoopX should keep two product surfaces separate even when they share the
-same React app, visual tokens, and small components.
+## 两个 Frontstage Surface
 
-The **public showcase frontstage** is the homepage-style surface. It should be
-catalog-driven, polished, animated, and concise. Its data source is
-`docs/showcases/showcase-catalog.json` plus generated public-safe fixtures. It
-must not read live registry state, local status exports, internal project
-labels, raw task ids, raw benchmark material, screenshots from private tools,
-or machine-specific paths. This surface can be more aggressive visually because
-its job is to help new users feel the product value quickly.
+即使共用同一个 React 应用、视觉令牌与小组件，LoopX 也应该把两个产品 surface 分开。
 
-The **Personal Workspace** is the user/operator workspace. It should
-be denser, calmer, and more conservative: goal header, quota guard, user todo
-lane, agent todo lane, claims, gates, artifacts, source warnings, and run
-timeline. It may read live status only from relative or loopback URLs and stays
-read-only until a separate local write capability is explicitly enabled. This
-surface should optimize for correctness, scanability, and repeat use.
+**Public Showcase Frontstage** 是首页风格的 surface。它应该由 catalog 驱动、精美、有动效且凝练。其数据源是 `docs/showcases/showcase-catalog.json` 加上生成的 public-safe 夹具。它不得读取实时 registry 状态、本地 status 导出、内部项目 label、原始 task id、原始 benchmark 素材、来自私有工具的截图或机器特定路径。这个 surface 在视觉上可以更激进，因为它的职责是让新用户快速感受到产品价值。
 
-Do not blur these surfaces for convenience. A hosted or copied public link
-should land in showcase mode. The legacy live diagnostics link lives under
-`/deprecated/frontstage/ops` and requires a safe local status source. Shared UI
-primitives are fine; shared live data defaults are not, and new operator
-features must land in Personal Workspace.
+**Personal Workspace** 是用户/operator 工作区。它应该更密集、更克制、更保守：goal 头部、quota guard、user todo 泳道、agent todo 泳道、claims、gates、artifacts、source 警告与 run 时间线。它只允许从相对或 loopback URL 读取实时状态，并且在显式启用单独的本地写能力之前保持只读。这个 surface 应追求正确性、可扫读性与重复使用。
 
-## Why This Stack
+不要为了方便模糊这两个 surface。托管或复制的公开链接应当落在 showcase 模式。遗留的实时诊断链接位于 `/deprecated/frontstage/ops`，需要安全的本地 status 源。共享 UI 原语没问题；共享实时数据默认值不行，新的 operator 功能必须进 Personal Workspace。
 
-Vite is a better fit than a server-first framework for the next milestone. Goal
-Harness is local-first, and the dashboard can start as a static build that
-reads JSON. Server rendering, auth, and hosted deployment are not yet product
-requirements.
+## 为什么选这套技术栈
 
-shadcn/ui is preferable to a heavy all-in component library because the
-dashboard needs strong defaults but should still own the code. LoopX can
-adapt cards, sidebars, tables, command menus, charts, and badges without
-fighting a closed design system.
+对下一个里程碑而言，Vite 比 server-first 框架更合适。Goal Harness 是 local-first 的，dashboard 可以先作为读取 JSON 的静态构建。服务端渲染、认证与托管部署还不是产品需求。
 
-The visual baseline should borrow from Vercel/Linear rather than generic admin
-templates: a dark utility rail, quiet white or near-black work surfaces, 8px
-cards, monospaced or tabular status values where useful, dense tables, and only
-small status color accents.
+shadcn/ui 优于笨重的全家桶组件库，因为 dashboard 需要强默认值，但仍应自持代码。LoopX 可以在不对抗封闭设计系统的情况下改造卡片、侧边栏、表格、命令菜单、图表与徽章。
 
-TanStack Router and Table fit the shape of the data. The core UI states are
-filters, search params, sort order, selected rows, and stable drill-down URLs,
-not marketing pages.
+视觉基线应向 Vercel/Linear 借鉴而不是通用 admin 模板：深色工具侧栏、安静的白或近黑工作表面、8px 卡片、在有用处使用等宽或表格数字的状态值、密集表格，以及少量状态色点缀。
 
-Recharts is enough for the first dashboard because the immediate visualizations
-are counts, history trends, and small comparisons. Custom graph work should be
-added only when task-scoped peer relationships need a dedicated graph view.
+TanStack Router 与 Table 契合数据形态。核心 UI 状态是过滤器、搜索参数、排序、选中行与稳定的下钻 URL，而不是营销页面。
 
-## Rejected Options
+Recharts 足够满足第一个 dashboard，因为眼前的可视化是计数、历史趋势与小型对比。只有任务尺度的 peer 关系需要专门图视图时，才应加入自定义图工作。
 
-- **Keep extending the Python static renderer**: good for smoke tests and
-  offline diagnostics, but it will become hard to maintain once filters, detail
-  views, responsive layout, and accessible interactions matter.
-- **Use Grafana directly**: excellent for metrics dashboards, but LoopX
-  needs an action queue and goal/run semantics rather than generic data-source
-  panels.
-- **Use Next.js now**: strong framework, but premature for a local static
-  control plane with no server-side auth or hosted product surface.
-- **Use Material UI / Ant Design as the primary system**: productive, but the
-  defaults are less tailored to a compact agent-control dashboard and harder to
-  make feel owned.
-- **Build with Tailwind alone**: visually flexible, but slower to reach
-  accessible menus, dialogs, tabs, tables, tooltips, and charts.
-- **Adopt a prebuilt admin template as the primary product**: fast initially,
-  but the generic CRM/SaaS look would fight the LoopX model of queue,
-  run history, contract health, and controller handoff.
+## 被否决的选项
 
-## UX Direction
+- **继续扩展 Python 静态渲染器**：适合冒烟测试与离线诊断，但一旦过滤器、详情视图、响应式布局与可访问交互重要起来，就会难以维护。
+- **直接使用 Grafana**：做指标 dashboard 很出色，但 LoopX 需要行动队列和 goal/run 语义，而不是通用数据源面板。
+- **现在就用 Next.js**：框架很强，但对一个没有服务端认证或托管产品 surface 的本地静态控制面来说为时过早。
+- **把 Material UI / Ant Design 作为主要系统**：高效，但默认值对一个紧凑的 agent 控制 dashboard 不够贴合，也更难做出自有感。
+- **只用 Tailwind 构建**：视觉灵活，但更难达到可访问的菜单、对话框、标签页、表格、tooltip 与图表。
+- **采用预制 admin 模板作为主要产品**：一开始很快，但通用 CRM/SaaS 观感会和 LoopX 的队列、run 历史、契约健康与 controller 交接模型冲突。
 
-The dashboard should be dense, calm, and operational:
+## UX 方向
 
-- left navigation for goals, queue, runs, contract health, and settings;
-- top controls for registry, runtime root, scan scope, and refresh state;
-- first-screen lanes for user/controller, Codex-ready, external-watch, and
-  blocking health;
-- a compact quota strip for compute quota, spent agent turns, and next
-  eligible time;
-- table-first drill-downs instead of oversized hero sections;
-- subdued color with status accents, not a one-hue brand wash;
-- light and dark modes from the beginning;
-- no raw private evidence in public demo data.
+dashboard 应当密集、冷静、可操作：
 
-## Current Implementation Segment
+- 左侧导航：goal、queue、runs、契约健康与设置；
+- 顶部控件：registry、runtime root、扫描范围与刷新状态；
+- 首屏泳道：user/controller、Codex-ready、external-watch 与阻塞健康；
+- 紧凑的配额条：计算配额、已消耗 agent turns 与下一个合格时间；
+- 表格优先的下钻，而不是过大 hero 区；
+- 低调配色加状态点缀，而不是单一色调的品牌渲染；
+- 一开始就支持浅色与深色模式；
+- 公开演示数据中不出现原始私有 evidence。
 
-The first dashboard scaffold lives in `apps/presentation/dashboard`. It uses the selected
-stack and renders a real screen from `examples/status.example.json`:
+## 当前实现切片
 
-- contract health summary,
-- contract health detail for errors, warnings, and successful checks,
-- attention queue lanes,
-- sortable queue table,
-- goal/run counters,
-- responsive desktop and mobile layout,
-- `npm run build` verification.
+第一个 dashboard 脚手架位于 `apps/presentation/dashboard`。它使用选定技术栈，并从 `examples/status.example.json` 渲染真实界面：
 
-Keep `examples/render-status-dashboard.py` as a low-friction fallback for
-environments that cannot build the React app.
+- 契约健康汇总，
+- 契约健康详情（错误、警告与成功检查），
+- 关注队列泳道，
+- 可排序的队列表格，
+- goal/run 计数器，
+- 响应式桌面与移动布局，
+- `npm run build` 验证。
 
-The first product-path `/frontstage` slice now exists in `apps/presentation/dashboard`: it
-renders `attention_queue.items[].goal_channel_projection` as a read-only
-channel board that makes a single goal feel like a managed workspace lane. It
-shows the decision frame, quota guard, user todo lane, agent todo lane, active
-claims, open gates, compact timeline, source warnings, URL-backed
-selection/filter/search, and truth contract. This route is where Multica-style
-agent-board density belongs; the existing Python/HTML renderer should stay a
-no-build diagnostic fallback. The next slices should be quality work: visual
-acceptance, richer public-safe fixtures, and operator onboarding details rather
-than another base renderer. The ops board now keeps outcome, lease,
-capability-wait, and workspace-repair states legible from the local demo
-fixture without granting browser write authority.
-The durable interaction baseline is tracked in
-`docs/product/surfaces/frontstage-dashboard-interaction-baseline.md`, including the
-showcase/homepage versus ops/control-plane split.
+保留 `examples/render-status-dashboard.py` 作为无法构建 React 应用的环境的低摩擦兜底。
 
-## Sources Checked
+首个产品路径 `/frontstage` 切片现在存在于 `apps/presentation/dashboard`：它把 `attention_queue.items[].goal_channel_projection` 渲染为只读 channel board，让单个 goal 像一条被管理的 workspace 泳道。它展示决策框架、quota guard、user todo 泳道、agent todo 泳道、active claims、打开中的 gates、紧凑时间线、source 警告、URL 支持的选中/过滤/搜索与 truth 契约。这条路由才是 Multica 式 agent-board 密度该出现的地方；现有的 Python/HTML 渲染器应保持为免构建的诊断兜底。接下来的切片应当是质量工作：视觉验收、更丰富的 public-safe 夹具与 operator onboarding 细节，而不是再来一个基础渲染器。ops board 现在能把 outcome、lease、capability-wait 与 workspace-repair 状态从本地演示夹具中清晰呈现，而不授予浏览器写权限。
+
+持久交互基线记录在 `docs/product/surfaces/frontstage-dashboard-interaction-baseline.md`，包括 showcase/首页与 ops/控制面拆分。
+
+## 查过的资料
 
 - Langfuse observability docs: <https://langfuse.com/docs/observability/overview>
 - Langfuse sessions docs: <https://langfuse.com/docs/sessions>

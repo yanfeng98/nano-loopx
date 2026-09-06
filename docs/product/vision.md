@@ -1,47 +1,33 @@
-# Product Vision
+# 产品愿景
 
-LoopX is not only a developer tool for AI coding loops. It starts there
-because engineering work exposes the hard control-plane problems quickly:
-state drift, human gates, run evidence, handoffs, ownership, quota, and
-public/private boundaries. The larger product category is a dynamic goal
-control plane: a way to turn a static agent goal into long-running, reviewable
-state that stays understandable and recoverable across many turns. LoopX runs
-on top of different agent harnesses and provides long-horizon state, semantic
-decisions, governance, recovery, and human-agent collaboration without
-replacing the harness that executes the work.
+> [English](vision.md)
 
-The long-term product should help humans who do not want to inspect prompts,
-logs, or traces. The first customer is the maintainer/operator of a Loop Agent:
-someone who needs to manage always-running digital workers, external signals,
-human gates, evidence, and value over time. A user should be able to run
-multiple agents across tools and off-hours, then open a first screen and
-understand:
+LoopX 不只是面向 AI 编码 loop 的开发者工具。它从那里起步，因为工程工作很快暴露控制面的难题：状态漂移、人类 gates、run evidence、handoffs、所有权、quota 与 public/private 边界。更大的产品类别是动态 goal 控制面：把静态 agent goal 变成长程、可评审的状态，在众多 Turn 之间保持可理解且可恢复。LoopX 运行在不同 agent harness 之上，提供长程状态、语义决策、治理、恢复与人机协同，而不替换执行工作的 harness。
 
-- what the agent has done;
-- what the agent is doing now;
-- where progress is blocked;
-- what will happen next;
-- what the agent needs from the user;
-- how user feedback changes the plan.
+长期产品应帮助不想检查 prompt、日志或轨迹的人。第一个客户是 Loop Agent 的 maintainer/operator：需要管理常开数字 worker、外部信号、人类 gates、evidence 与随时间积累价值的人。用户应当能够跨工具跑多个 agent、在非工作时间继续运行，然后打开首屏就能理解：
+
+- agent 做了什么；
+- agent 现在在做什么；
+- 进展在哪里被阻塞；
+- 接下来会发生什么；
+- agent 需要用户提供什么；
+- 用户反馈如何改变计划。
 
 ## Loop Agent
 
-A Loop Agent is an always-running digital worker with:
+Loop Agent 是具有以下特征的常开数字 worker：
 
-- a relatively stable responsibility;
-- a relatively consistent work objective;
-- external signals it watches or receives;
-- work products that match its responsibility;
-- organized evidence of what it did and why it mattered;
-- human feedback through a lightweight performance-review loop;
-- explicit focus and cost controls.
+- 相对稳定的职责；
+- 相对一致的工作目标；
+- 它关注或接收的外部信号；
+- 与职责匹配的工作产品；
+- 对其所做的事及其为何重要的有组织 evidence；
+- 通过轻量 performance-review loop 获得的人类反馈；
+- 显式的专注与成本控制。
 
-LoopX should not try to make every worker smarter by hiding more autonomy in
-the executor. It should make the worker more manageable: selectable work,
-visible gates, bounded execution, compact evidence, reviewable outcomes, and
-clear next improvement targets.
+LoopX 不应通过在 executor 里隐藏更多自主性来让每个 worker 更聪明。它应让 worker 更可管理：可选工作、可见 gates、有界执行、紧凑 evidence、可评审成果与清晰的下一个改进目标。
 
-## First-Screen Copy
+## 首屏文案
 
 **Always-on agent teams, governed by human judgment**
 
@@ -59,200 +45,135 @@ LoopX 把目标、用户决策、agent todo、认领关系、scope、safe fallba
 run history 和 quota 放进同一层状态：该等人的地方明确等人，不该空等的
 安全侧路继续推进。
 
-The product promise is always-on progress without uncontrolled autonomy:
-registered peers can continue independently claimed bounded work, while human gates,
-capability gates, quota, evidence, and project boundaries remain explicit. In
-that sense, LoopX is not just a longer prompt or a bigger todo list; it
-is the dynamic goal state around executor loops.
+产品承诺是常开进展但不失控自主：注册 peers 可以继续独立认领有边界的工作，而人类 gates、capability gates、quota、evidence 与项目边界保持显式。从这个意义上说，LoopX 不只是更长的 prompt 或更大的 todo 列表；它是 executor loop 周围的动态 goal 状态。
 
-## Maintainer-First Management Surface
+## Maintainer 优先的管理 Surface
 
-The highest-priority product surface is an intelligent management view for the
-maintainer/operator. It should answer:
+最高优先级产品 surface 是面向 maintainer/operator 的智能管理视图。它应回答：
 
-- what signals arrived since the last check;
-- which signals are high-value anchors worth acting on;
-- which Loop Agent owns each active lane;
-- which human gates need attention;
-- what evidence proves progress or explains a stop;
-- where the agent earned or lost performance-review credit;
-- what next management action matters most.
+- 自上次检查以来到达了哪些信号；
+- 哪些信号是值得行动的高价值锚点；
+- 每个活跃泳道由哪个 Loop Agent 拥有；
+- 哪些人类 gates 需要关注；
+- 什么 evidence 证明进展或解释停止；
+- agent 在哪获得或失去了 performance-review 信用；
+- 什么下一个管理动作最重要。
 
-This surface comes before a domain-specific issue-fix UI. Open-source issue and
-PR work is valuable because it creates visible artifacts and measurable
-feedback, but it should feed the maintainer surface rather than define the
-whole product.
+该 surface 先于领域特定 issue-fix UI。开源 issue 与 PR 工作有价值，因为它创造可见 artifacts 与可度量反馈，但它应喂养 maintainer surface，而不是定义整个产品。
 
-### Agent Work Feed
+### Agent 工作 Feed
 
-The ideal first interaction is closer to a recommendation feed than to a
-project dashboard. The user should be able to review agent work the way they
-review a stream of cards: quickly decide whether each output was useful,
-misdirected, risky, or worth turning into the next anchor.
+理想的首交互更接近推荐 feed，而不是项目 dashboard。用户应能像浏览一串卡片一样评审 agent 工作：快速决定每个输出是否有用、被误导、有风险，或值得变成下一个锚点。
 
-The feed item is not a raw task and not a raw log. It is an agent work card:
+Feed 条目不是原始任务，也不是原始日志。它是 agent 工作卡：
 
-- what the agent produced;
-- why the card deserves attention now;
-- what evidence backs the claim;
-- what it cost in quota or user attention;
-- what the agent proposes next;
-- which one-tap feedback choices are available.
+- agent 产出了什么；
+- 为什么这卡现在值得关注；
+- 什么 evidence 支撑该声明；
+- 它花了多少 quota 或用户注意力；
+- agent 接下来提议什么；
+- 有哪些一键反馈选择。
 
-Useful feedback should be lightweight but structured:
+有用反馈应轻量但结构化：
 
-- useful; continue this direction;
-- not useful; lower this pattern's priority;
-- wrong direction; correct the goal or reward;
-- evidence is insufficient; add validation;
-- promote to anchor, showcase, or follow-up todo;
-- risky or private; trigger boundary review or a gate.
+- 有用；继续这个方向；
+- 没用；降低这个模式的优先级；
+- 方向错误；纠正 goal 或 reward；
+- evidence 不足；添加验证；
+- 晋升为锚点、showcase 或后续 todo；
+- 有风险或私有；触发边界评审或 gate。
 
-This turns performance review from a periodic report into a continuous
-human-in-the-loop signal. LoopX should sort the feed for management value, not
-addiction: unresolved gates, high-value uncertain work, expensive repeated
-patterns, evidence gaps, and showcase candidates should surface before routine
-activity.
+这把表现评审从周期性报告变成连续的人机协同信号。LoopX 应把 feed 按管理价值排序，而不是成瘾性排序：未解决 gates、高价值不确定工作、昂贵重复模式、evidence 缺口与 showcase 候选应在例行活动之前浮现。
 
-## Display Surface Adoption Path
+## 显示 Surface 采用路径
 
-The intelligent display surface and the LoopX control loop should be
-decoupled at adoption time, but designed to grow together.
+智能显示 surface 与 LoopX 控制 loop 应在采用时解耦，但设计上共同成长。
 
-The first step can be read-only:
+第一步可以是只读：
 
-- ingest existing agent artifacts, issues, PRs, docs, run summaries, or chat
-  feedback;
-- show what the agent did, what evidence exists, and what deserves review;
-- let the maintainer score value, quality, control, cost, and learning;
-- produce a performance-review summary without changing the agent's next
-  action.
+- 摄入既有 agent artifacts、issues、PRs、docs、run 摘要或聊天反馈；
+- 显示 agent 做了什么、存在什么 evidence、什么值得评审；
+- 让 maintainer 对价值、质量、控制、成本与学习评分；
+- 产出 performance-review 摘要，而不改变 agent 的下一个动作。
 
-This mode is useful even before a team adopts LoopX. It gives a maintainer a
-low-friction way to inspect and quantify whether an always-running agent is
-useful.
+该模式甚至在一个团队采用 LoopX 之前就有用。它给 maintainer 一种低摩擦方式来检查并量化一个常开 agent 是否有用。
 
-The second step is control writeback:
+第二步是控制写回：
 
-- accepted feedback becomes gates, todo changes, preference hints, reward
-  notes, or anchor selection;
-- low-quality work becomes blocker evidence, scope correction, or next
-  improvement targets;
-- selected anchors become bounded LoopX work with explicit evidence and stop
-  conditions.
+- 接受的反馈变成 gates、todo 变更、偏好提示、reward 说明或锚点选择；
+- 低质量工作变成 blocker evidence、scope 纠正或下一个改进目标；
+- 选中锚点变成带显式 evidence 与停止条件的有边界 LoopX 工作。
 
-In short, the display surface makes agent work visible and reviewable; LoopX
-makes that review change the next loop. The two surfaces can be adopted in
-sequence, but they should share schemas such as `signal_v0`, `anchor_v0`,
-`review_event_v0`, and `performance_review_v0`.
+简而言之，显示 surface 让 agent 工作可见且可评审；LoopX 让该评审改变下一个 loop。两个 surface 可以顺序采用，但它们应共享 `signal_v0`、`anchor_v0`、`review_event_v0` 与 `performance_review_v0` 等 schema。
 
-## Open-Source Anchors
+## 开源锚点
 
-Open-source issue / PR solver pilots are strong value-proof candidates when
-they are chosen as high-value anchors:
+当开源 issue / PR solver 试点被选为高价值锚点时，它们是很强的价值证明候选：
 
-- visible public artifact: issue, PR, failing check, stale review, or conflict;
-- credible maintainer pain;
-- bounded risk and clear stop conditions;
-- measurable outcome: routed, diagnosed, fixed, merged, rejected, or gated;
-- public-safe story potential.
+- 可见公开 artifact：issue、PR、失败的检查、过期评审或冲突；
+- 可信的 maintainer 痛点；
+- 有界风险与清晰停止条件；
+- 可度量成果：已路由、已诊断、已修复、已合并、已拒绝或被 gate；
+- public-safe 故事潜力。
 
-LoopX's maintainer-side role is to choose anchors, define the candidate packet,
-record the evidence boundary, capture human review signals, and graduate
-approved outcomes into showcase material. The actual solver implementation may
-belong to a repo-specific collaborator or adapter.
+LoopX 在 maintainer 侧的职责是选锚点、定义候选 packet、记录 evidence 边界、捕获人类评审信号，把批准成果毕业为 showcase 资料。实际 solver 实现可以属于仓库特定 collaborator 或 adapter。
 
-## Office Operations Connectors
+## Office Operations 连接器
 
-Office and content-operations workflows are another useful showcase lane. The
-point is not to make an agent produce more posts. The point is to show that a
-Loop Agent can connect to more information surfaces, select higher-quality
-signals, propose useful actions, and learn from human feedback.
+Office 与 content-operations 工作流是另一个有用的 showcase 泳道。重点不是让 agent 产出更多帖子。重点是展示一个 Loop Agent 能连接更多信息 surface、选择更高质量信号、提议有用动作，并从人类反馈中学习。
 
-A public-safe workflow can look like:
+Public-safe 工作流可以是这样：
 
 ```text
 connector
-  -> information
-  -> signal / trend / anchor candidate
-  -> draft or action proposal
-  -> human scoring / feedback
-  -> optional publish or outreach gate
-  -> performance review / next improvement
+  -> 信息
+  -> 信号 / 趋势 / 锚点候选
+  -> 草稿或动作提案
+  -> 人类评分 / 反馈
+  -> 可选的发布或外联 gate
+  -> 表现评审 / 下一改进
 ```
 
-Good connector examples include browser-based social research, local-first chat
-archive search, issue / PR metadata, meeting notes, task systems, and document
-changes. Publishing or outreach should remain explicitly gated.
+好的连接器示例包括基于浏览器的社交研究、local-first 聊天归档搜索、issue / PR 元数据、会议笔记、任务系统与文档变更。发布或外联应保持显式 gate。
 
-The right metrics are not raw draft count. Better signals are accepted anchors,
-useful insights, qualified conversations, user-rated draft quality, feedback
-learning, source-boundary correctness, and cost per useful signal.
+正确指标不是原始草稿数。更好的信号是已接受锚点、有用洞察、合格对话、用户评分草稿质量、反馈学习、来源边界正确性与每有用信号成本。
 
-## Creator-Operator Case
+## 创作者-Operator 案例
 
-A useful medium-term case is a self-media or creator-operations user. The user
-does not primarily care whether the underlying worker is Codex, Claude Code, a
-browser agent, or a workflow script. They care whether the long-running agent
-can help them keep a creative goal moving:
+一个有用的中期案例是自媒体或创作者运营用户。用户主要不关心底层 worker 是 Codex、Claude Code、浏览器 agent 还是工作流脚本。他们关心长程 agent 能否帮他们保持创作目标前进：
 
-- detect trends across social platforms;
-- map trends against the user's creative preferences and audience;
-- extract insights that are worth creating from;
-- draft articles, outlines, scripts, or video concepts;
-- maintain a material, phrase, source, and copy library;
-- show what changed since the last check;
-- ask for human taste, risk, or publishing decisions at the right time.
+- 跨社交平台检测趋势；
+- 把趋势对照用户创作偏好与受众；
+- 提取值得创作的有用洞察；
+- 起草文章、大纲、脚本或视频概念；
+- 维护素材、措辞、来源与文案库；
+- 显示自上次检查以来的变化；
+- 在正确时机询问人类品味、风险或发布决策。
 
-The bottleneck is product experience as much as model capability. A user should
-not have to read raw browsing traces, private notes, or agent reasoning to know
-whether the work is useful. LoopX should turn that activity into a
-small set of visible control-plane objects: goals, gates, todos, evidence,
-feedback, boundaries, and next actions.
+瓶颈既在产品体验也在模型能力。用户不应必须读原始浏览轨迹、私有笔记或 agent 推理才能知道工作是否有用。LoopX 应把那种活动变成一小套可见控制面对象：goals、gates、todos、evidence、feedback、boundaries 与 next actions。
 
-## Productization Tracks
+## 产品化轨道
 
-The current roadmap should land as four public-safe tracks:
+当前路线图应落地为四条 public-safe 轨道：
 
-1. **Maintainer management surface**: design first-screen cards for signal
-   inbox, selected anchors, active lanes, gates, evidence quality, performance
-   review, value/cost trend, and next management action.
-2. **Non-technical operator status model**: design first-screen cards that say
-   what happened, what is happening, where the agent is blocked, what comes
-   next, and what user feedback would change. This model should avoid internal
-   CLI jargon and translate control-plane state into plain language.
-3. **Open-source anchor packet**: define how an issue, PR, failing check, stale
-   review, or conflict becomes a candidate with owner, risk, allowed action,
-   evidence boundary, human gate, and showcase consent.
-4. **Office-operations connector showcase**: prototype a public-safe
-   connector-to-signal-to-feedback loop using synthetic or consented data, with
-   an explicit publish/outreach gate and metrics beyond article count.
-5. **Feedback and boundary contract**: define how user feedback becomes gates,
-   preferences, todo updates, or product-improvement notes while preserving
-   source attribution, platform terms, no-autopublish gates, and private
-   creative-material boundaries.
+1. **Maintainer 管理 surface**：为信号收件箱、选中锚点、活跃泳道、gates、evidence 质量、表现评审、价值/成本趋势与下一个管理动作设计首屏卡片。
+2. **非技术 operator 状态模型**：设计首屏卡片，说明发生了什么、正在发生什么、agent 在哪里被阻塞、接下来是什么，以及什么用户反馈会改变。该模型应避免内部 CLI 术语，把控制面状态翻译成通俗语言。
+3. **开源锚点 packet**：定义 issue、PR、失败的检查、过期评审或冲突如何成为带 owner、风险、允许动作、evidence 边界、人类 gate 与 showcase 同意的候选。
+4. **Office-operations 连接器 showcase**：用合成或经同意数据原型一个 public-safe 的连接器到信号到反馈 loop，带显式发布/外联 gate 与超出文章数的指标。
+5. **反馈与边界契约**：定义用户反馈如何变成 gates、偏好、todo 更新或产品改进说明，同时保留来源归属、平台条款、no-autopublish gates 与私有创作资料边界。
 
-## Boundary
+## 边界
 
-This vision does not turn LoopX into a social-media crawler, publishing
-bot, or end-user content platform. Those tools may live in a host product or
-project adapter. LoopX should provide the durable control projection:
-current goal, decision gates, safe next work, evidence summaries, feedback
-writeback, and boundary checks.
+该愿景不把 LoopX 变成社交媒体爬虫、发布 bot 或最终用户内容平台。那些工具可以住在宿主产品或项目 adapter。LoopX 应提供持久控制投影：当前 goal、决策 gates、安全下一个工作、evidence 摘要、反馈写回与边界检查。
 
-The default product posture is conservative:
+默认产品姿态保守：
 
-- do not autopublish content without an explicit user gate;
-- do not treat private notes, drafts, or creative material as public evidence;
-- do not copy raw platform data into public docs or examples;
-- do not claim trend, audience, or performance uplift without a measured
-  public-safe basis;
-- keep user taste feedback separate from hard safety or permission gates.
+- 未经显式 user gate 不自动发布内容；
+- 不把私有笔记、草稿或创作资料当作公开 evidence；
+- 不把原始平台数据复制进公开文档或示例；
+- 不未经度量的 public-safe 基础就声称趋势、受众或性能提升；
+- 把用户品味反馈与硬安全或权限 gates 保持分开。
 
-## Why It Belongs In LoopX
+## 为什么它属于 LoopX
 
-This case stress-tests the same product promise as engineering and benchmark
-loops, but with a different user: a non-engineering operator who needs clarity,
-not infrastructure. If LoopX can make this workflow legible, it proves
-the control plane is not just for developers. It is a way to keep long-running
-agent work useful, bounded, reviewable, and easy to steer.
+该案例与工程和 benchmark loop 检验同一产品承诺，但用户不同：一个需要清晰而不是基础设施的非工程 operator。如果 LoopX 能让这个工作流可读，它就证明控制面不只是给开发者用的。它是一种保持长程 agent 工作有用、有边界、可评审且易于转向的方式。

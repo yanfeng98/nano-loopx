@@ -1,12 +1,13 @@
-# DeepSeek Harness Connector
+# DeepSeek Harness 连接器
 
-Status: public-safe v0 connector for using DeepSeek Harness (`dsh`) as a
-bounded agent execution host behind LoopX.
+> [English](deepseek-harness-connector.md)
 
-DeepSeek Harness is an open-source agent harness by DeepSeek AI. LoopX does not
-replace dsh's model loop, tools, sandbox, or session log. Instead, the connector
-lets LoopX govern one dsh-backed work segment at a time through the existing
-LoopX Turn protocol:
+状态:公开安全 v0 连接器,用于把 DeepSeek Harness(`dsh`)用作 LoopX 之后的
+有界 agent 执行宿主。
+
+DeepSeek Harness 是 DeepSeek AI 的开源 agent harness。LoopX 不替代 dsh 的模型
+循环、工具、沙箱或会话日志。相反,连接器让 LoopX 通过现有 LoopX Turn 协议一次
+治理一段由 dsh 支撑的工作:
 
 ```text
 LoopX quota should-run
@@ -18,30 +19,28 @@ LoopX quota should-run
     -> LoopX writeback + quota spend
 ```
 
-## What This Connector Adds
+## 该连接器带来什么
 
-- A thin adapter, now a first-class goal-mode subpackage at
-  `loopx/dsh_goal_mode/` (run with `python -m loopx.dsh_goal_mode`; the
-  historical `scripts/dsh_turn_host_adapter.py` launcher still works),
-  that translates
-  `loopx_turn_host_request_v0` into one bounded dsh session prompt and parses
-  the model's final JSON result back into `loopx_turn_result_v0`.
-- A `deepseek-harness` agent type in LoopX onboarding so users can request the
-  exact host instead of the generic `other-agent`.
-- Optional dependency `loopx[deepseek-harness]` for the validated
-  `deepseek-harness-sdk==0.1.2a3` Python client.
+- 一个轻量适配器,现已成为 `loopx/dsh_goal_mode/` 下的一等 goal-mode 子包
+  (用 `python -m loopx.dsh_goal_mode` 运行;历史启动器
+  `scripts/dsh_turn_host_adapter.py` 仍可用),它把
+  `loopx_turn_host_request_v0` 翻译成一个有界的 dsh 会话提示,并把模型的最终
+  JSON 结果解析回 `loopx_turn_result_v0`。
+- 在 LoopX 接入流程中新增 `deepseek-harness` agent 类型,让用户可以请求确切
+  宿主,而不是通用的 `other-agent`。
+- 为经过验证的 `deepseek-harness-sdk==0.1.2a3` Python 客户端提供可选依赖
+  `loopx[deepseek-harness]`。
 
-## Install
+## 安装
 
-Install LoopX's optional DeepSeek Harness extra:
+安装 LoopX 的可选 DeepSeek Harness extras:
 
 ```bash
 python -m pip install 'loopx[deepseek-harness]'
 ```
 
-The DeepSeek Harness SDK spawns the bundled `dsh-jsonrpc-agent` runtime. It
-uses the explicit adapter configuration plus normal provider environment
-variables:
+DeepSeek Harness SDK 会启动随附的 `dsh-jsonrpc-agent` runtime。它使用显式配置的
+适配器参数以及常规 provider 环境变量:
 
 ```text
 DEEPSEEK_API_KEY
@@ -49,16 +48,15 @@ DEEPSEEK_BASE_URL
 DSH_HOME
 ```
 
-The adapter resolves its SDK home in this order: explicit `--dsh-home`, then
-`DSH_HOME`, then `<workspace>/.local/.dsh-sessions`. It passes that path as the
-SDK's `dsh_home` field; the SDK does not implicitly select `~/.dsh`.
+适配器按以下顺序解析其 SDK home:显式 `--dsh-home`,然后是 `DSH_HOME`,再是
+`<workspace>/.local/.dsh-sessions`。它把该路径作为 SDK 的 `dsh_home` 字段传入;
+SDK 不会隐式选择 `~/.dsh`。
 
-Prepare a dsh `cordis.yml` when the default bundled composition is not
-appropriate. See the
-[DeepSeek Harness Python SDK reference](https://github.com/deepseek-ai/deepseek-harness/blob/master/python/sdk/README.md)
-for runtime selection and configuration.
+当默认的随附组合(composition)不合适时,请准备一个 dsh `cordis.yml`。关于
+runtime 选择与配置,请参阅
+[DeepSeek Harness Python SDK 参考](https://github.com/deepseek-ai/deepseek-harness/blob/master/python/sdk/README.md)。
 
-## Onboard
+## 接入
 
 ```bash
 loopx doctor --agent-type deepseek-harness
@@ -71,10 +69,10 @@ loopx agent-onboard \
   --available-capability shell
 ```
 
-`deepseek-harness` maps to the generic CLI agent loop and uses
-`--runtime-profile generic_cli` in quota/heartbeat commands.
+`deepseek-harness` 映射到通用 CLI agent 循环,并在配额/心跳命令中使用
+`--runtime-profile generic_cli`。
 
-## Run One Governed Turn
+## 运行一轮受管 Turn
 
 ```bash
 loopx turn run-once \
@@ -88,15 +86,13 @@ loopx turn run-once \
   --execute
 ```
 
-The adapter uses `<workspace>/.local/.dsh-sessions/` as its workspace-local
-SDK home by default. Override it with `--dsh-home <path>`; the historical
-`--session-root` spelling remains an adapter-command compatibility alias.
-Session persistence itself is owned by the selected dsh composition and is not
-implied by the home-directory name.
+适配器默认使用 `<workspace>/.local/.dsh-sessions/` 作为其工作区本地 SDK home。
+可用 `--dsh-home <path>` 覆盖;历史拼写 `--session-root` 仍是适配器命令的兼容
+别名。会话持久化本身由所选 dsh 组合拥有,并不因 home 目录名而隐含。
 
-## Run One Governed Turn In Process (`--host dsh`)
+## 在进程内运行一轮受管 Turn(`--host dsh`)
 
-The built-in host runs the same adapter inside the CLI process:
+内置宿主在 CLI 进程内运行同一个适配器:
 
 ```bash
 loopx turn run-once \
@@ -112,33 +108,27 @@ loopx turn run-once \
   --execute
 ```
 
-Unlike the subprocess mode, provider failures reach the Turn journal as typed
-`loopx_turn_host_failure_v0` kinds (including the SDK's exception-free
-`RunResult.finish_reason == "error"` terminal report), so bounded same-Turn
-retry stays available. This mode does not promise cross-turn dsh session
-continuity or an outer wake/timer. See the adapter README for the home and
-classification precedence, plus the hermetic verification smoke
-(`examples/loopx-turn-dsh-builtin-host-e2e-smoke.py`).
+与子进程模式不同,provider 失败会以类型化 `loopx_turn_host_failure_v0` 种类进入
+Turn 日志(包括 SDK 无异常的 `RunResult.finish_reason == "error"` 终止报告),
+因此同 Turn 有界重试仍然可用。该模式不承诺跨 Turn 的 dsh 会话连续性,也不承诺
+外部 wake/定时器。关于 home 与分类优先级,以及密闭(hermetic)验证 smoke
+(`examples/loopx-turn-dsh-builtin-host-e2e-smoke.py`),请参阅适配器 README。
 
-## Boundaries
+## 边界
 
-- LoopX keeps the durable goal, todo, claim, gate, quota, evidence, and
-  scheduler authority.
-- dsh owns model calls, tools, sandboxing, and the raw session log.
-- The adapter must not publish raw transcripts, dsh JSONL sessions, credentials,
-  local absolute paths, or unbounded tool output into LoopX state.
-- `DeepSeekHarness.run()` returns the candidate result; it is not proof of
-  completion. An independent validator is required before LoopX writeback.
-- The dsh Python SDK is an optional dependency. Core LoopX remains runtime
-  dependency-free.
-- The adapter derives an owner-local session id, but LoopX does not project or
-  validate a DSH Host Session Binding. This surface therefore does not claim a
-  managed supervisor or cross-process resume guarantee.
+- LoopX 保留持久 goal、todo、claim、gate、配额、证据与 scheduler 权威。
+- dsh 拥有模型调用、工具、沙箱化与原始会话日志。
+- 适配器不得把原始转录、dsh JSONL 会话、凭证、本地绝对路径或无界工具输出发布
+  进 LoopX 状态。
+- `DeepSeekHarness.run()` 返回的是候选结果;它不是完成的证明。LoopX 写回之前
+  需要独立验证器。
+- dsh Python SDK 是可选依赖。核心 LoopX 保持无 runtime 依赖。
+- 适配器派生一个 owner 本地会话 id,但 LoopX 不投影或验证 DSH Host Session
+  Binding。因此该界面不声称受管监督器或跨进程恢复保证。
 
-## Hermetic Validation
+## 密闭验证
 
-The repository includes four validation paths. The first three do not require the
-DeepSeek Harness SDK or a real dsh runtime:
+仓库包含四条验证路径。前三条不需要 DeepSeek Harness SDK 或真实 dsh runtime:
 
 ```bash
 python3 examples/dsh-turn-host-adapter-smoke.py
@@ -146,31 +136,29 @@ python3 examples/loopx-turn-dsh-e2e-smoke.py
 python3 examples/loopx-turn-dsh-builtin-host-e2e-smoke.py
 ```
 
-The first guards adapter translation and result shaping. The second drives the
-full `loopx turn run-once -> adapter -> fake dsh -> validator -> writeback ->
-quota spend -> idempotent replay` chain. The third proves the built-in host's
-success path plus three bounded provider-capacity attempts, retry-budget
-exhaustion without a fourth Host invocation, zero failure spend/writeback, and
-provider-prose non-persistence.
+第一条守护适配器翻译与结果成形。第二条驱动完整的
+`loopx turn run-once -> adapter -> fake dsh -> validator -> writeback ->
+quota spend -> idempotent replay` 链路。第三条验证内置宿主的成功路径,外加三次
+有界 provider 容量尝试、在不产生第四次 Host 调用的情况下耗尽重试预算、零失败
+消耗/写回,以及 provider 散文不持久化。
 
-The fourth uses the real `deepseek-harness-sdk` and the bundled dsh JSON-RPC
-runtime. It still avoids a real model call by serving a local mock OpenAI-compatible
-SSE endpoint, so it is hermetic and does not require `DEEPSEEK_API_KEY`:
+第四条使用真实 `deepseek-harness-sdk` 与随附的 dsh JSON-RPC runtime。它通过
+提供本地 mock 的 OpenAI 兼容 SSE 端点,仍然避免真实模型调用,因此是密闭的,
+也不需要 `DEEPSEEK_API_KEY`:
 
 ```bash
 python3 examples/loopx-turn-dsh-real-e2e-smoke.py --host generic-cli
 python3 examples/loopx-turn-dsh-real-e2e-smoke.py --host dsh
 ```
 
-The real-dsh smoke clears ambient DSH home variables and proves that both host
-paths can supply an explicit SDK home, start the actual dsh runtime, run one
-bounded turn through the real JSON-RPC agent loop, parse a typed JSON final
-message, and complete LoopX validation/writeback/quota spend.
+real-dsh smoke 会清除环境中的 DSH home 变量,并验证:两条宿主路径都能提供显式
+SDK home、启动实际 dsh runtime、通过真实 JSON-RPC agent 循环运行一轮有界 Turn、
+解析类型化 JSON 最终消息,并完成 LoopX 验证/写回/配额消耗。
 
-## Related Contracts
+## 相关契约
 
-- [DeepSeek Harness control-plane adapter](deepseek-harness-control-plane-adapter.md)
-- [Runtime connector catalog](runtime-connector-catalog.md)
+- [DeepSeek Harness 控制面适配器](deepseek-harness-control-plane-adapter.md)
+- [Runtime 连接器目录](runtime-connector-catalog.md)
 - [LoopX Turn v0](../reference/protocols/loopx-turn-v0.md)
-- [Host integration surface v0](../reference/protocols/host-integration-surface-v0.md)
-- [Embed LoopX In Your Agent Runner](../guides/custom-agent-runner-integration.md)
+- [宿主集成面 v0](../reference/protocols/host-integration-surface-v0.md)
+- [在 Agent Runner 中嵌入 LoopX](../guides/custom-agent-runner-integration.md)

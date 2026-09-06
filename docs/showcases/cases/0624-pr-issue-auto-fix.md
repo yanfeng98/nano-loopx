@@ -1,59 +1,46 @@
-# 0624: PR Issue Automatic Fix Loop
+# 0624:PR 问题自动修复 Loop
 
-## Summary
+> [English](0624-pr-issue-auto-fix.md)
 
-This case captures the issue-to-fix loop: review feedback, issue text, or a PR
-comment should become an executable repair plan with a repro or focused smoke,
-not an informal note in chat. LoopX turns that signal into a bounded workflow
-that can classify the problem, prepare a branch, implement a fix, validate it,
-and report the result back to the review surface.
+## 摘要
 
-The original showcase included private visual evidence. This public case keeps
-only the reusable product pattern and the repository surfaces that support it.
+这个案例捕获的是"问题到修复"的 Loop:审查反馈、问题文本或 PR 评论应该变成一个带复现或聚焦 smoke 的可执行修复计划,而不是聊天里的一条非正式笔记。LoopX 把这种信号转成一个有界工作流,可以分类问题、准备分支、实现修复、验证它,并把结果回报到审查界面。
 
-## Pattern
+原始 showcase 包含了私有视觉证据。这个公开案例只保留可复用的产品模式和支持它的仓库界面。
 
-Automatic issue fixing needs more than "read the issue and edit files." A safe
-workflow needs to:
+## 模式
 
-- classify whether the issue body or review comment is enough to act on;
-- create or identify a focused reproduction path;
-- keep private or gated issue bodies out of public fixtures;
-- make the implementation branch explicit;
-- run a small validation command before reporting success;
-- record any unresolved reviewer decision as a concrete todo.
+自动问题修复需要的远不止"读问题然后改文件"。一个安全的工作流需要:
 
-## LoopX Behavior
+- 分类问题正文或审查评论是否足以行动;
+- 创建或识别一条聚焦的复现路径;
+- 把私有或被 gate 的问题正文挡在公共 fixture 之外;
+- 让实现分支明确;
+- 在报告成功前运行一个小验证命令;
+- 把任何未解决的审查者决定记录为具体 todo。
 
-LoopX supports the loop with issue-fix planning and command-pack style
-contracts:
+## LoopX 行为
 
-- the initial signal becomes ordered todos rather than prose;
-- gated reads remain explicit when a body or comment is not safe to consume;
-- implementation and validation steps stay separate;
-- review feedback can create a successor todo instead of being lost after a PR
-  comment;
-- the final packet records what was fixed, what was validated, and what still
-  needs a reviewer.
+LoopX 用问题修复规划与 command-pack 风格的契约支持这个 Loop:
 
-## User-Facing Value
+- 初始信号变成有序 todos,而不是散文;
+- 当正文或评论不安全消费时,gated 读取保持明确;
+- 实现与验证步骤保持分离;
+- 审查反馈可以创建继任 todo,而不是在 PR 评论后丢失;
+- 最终数据包记录修了什么、验证了什么、还有什么等审查者。
 
-The operator can point LoopX at a review issue and expect a controlled repair
-loop: understand the request, create a repro, implement the fix, validate it,
-and surface remaining review decisions. The user does not have to translate
-every PR comment into a manual agent prompt.
+## 用户价值
 
-## Evidence Boundary
+操作者可以把审查问题指向 LoopX,期待一次受控的修复 Loop:理解请求、创建复现、实现修复、验证它,并把剩余的审查决定呈现出来。用户不必把每条 PR 评论翻译成手动 agent 提示。
 
-This case excludes private screenshots, raw issue bodies from gated sources,
-internal review notes, local paths, raw logs, credentials, and unpublished
-repository artifacts. Public evidence should be the sanitized workflow plan,
-focused smoke, branch diff, and public PR review outcome.
+## 证据边界
 
-## Public Evidence Sequence
+这个案例排除私有截图、来自 gated 来源的原始问题正文、内部审查笔记、本地路径、原始日志、凭据和未公开的仓库工件。公开证据应该是脱敏后的工作流计划、聚焦 smoke、分支 diff 和公开 PR 审查结果。
 
-1. A PR issue or review comment appears.
-2. LoopX classifies the issue and creates ordered repair todos.
-3. The agent builds or finds a focused repro.
-4. The fix lands as a reviewable branch diff with validation.
-5. Remaining reviewer decisions are written back as concrete todos.
+## 公开证据序列
+
+1. 一条 PR 问题或审查评论出现。
+2. LoopX 分类该问题并创建有序的修复 todos。
+3. Agent 构建或找到一条聚焦复现。
+4. 修复以带验证的可审查分支 diff 落地。
+5. 剩余的审查者决定被写回为具体 todos。

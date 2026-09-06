@@ -1,58 +1,47 @@
-# 0623: Overnight Project Refactor As PR-Sized Slices
+# 0623:以 PR 规模切片进行的隔夜项目重构
 
-## Summary
+> [English](0623-overnight-project-refactor.md)
 
-This case captures a long unattended refactor that stayed reviewable because
-LoopX kept splitting the work into bounded PR-sized slices. The reusable lesson
-is that autonomous refactoring should not land as one huge diff. It should keep
-todo follow-up, supersede decisions, validation, and review boundaries visible.
+## 摘要
 
-The source note described an overnight refactor wave. This repository records
-the public-safe control-plane pattern rather than private screenshots or local
-project state.
+这个案例捕获了一次长时间无人值守的重构,它之所以保持可审查,是因为 LoopX 持续把工作拆分成有界的 PR 规模切片。可复用的教训是:自主重构不应以一个大 diff 落地,而应让 todo 跟进、取代决定、验证和审查边界保持可见。
 
-## Before
+来源说明描述了一波隔夜重构。本仓库记录的是公开安全的控制面模式,而不是私有截图或本地项目状态。
 
-Large refactors are a bad fit for naive autonomous loops. Without a control
-plane, an agent can keep editing after the original plan is stale, mix cleanup
-with behavior changes, or produce a broad diff that is hard to review.
+## 之前
 
-The desired behavior is:
+大型重构不适合朴素的自主 Loop。没有控制面时,agent 可能在原计划过时后继续修改,把清理与行为变更混在一起,或产生难以审查的宽泛 diff。
 
-1. keep the goal and current slice explicit;
-2. finish one reviewable unit at a time;
-3. create follow-up todos for remaining work;
-4. supersede stale todos when the refactor discovers a better route;
-5. validate each slice before merge or handoff.
+期望的行为是:
 
-## LoopX Behavior
+1. 保持 goal 与当前切片明确;
+2. 一次只完成一个可审查单元;
+3. 为剩余工作创建跟进 todos;
+4. 当重构发现更好的路线时,取代过时的 todos;
+5. 在合并或交接前验证每个切片。
 
-LoopX makes that refactor loop durable:
+## LoopX 行为
 
-- `todo follow-up` turns discoveries into the next concrete slice;
-- `supersede` prevents stale tasks from staying runnable;
-- quota and status keep the current slice separate from adjacent cleanup;
-- review packets and focused smokes keep each PR independently checkable;
-- public/private boundary scans prevent local planning material from leaking
-  into public docs.
+LoopX 让这个重构 Loop 变得持久:
 
-## User-Facing Value
+- `todo follow-up` 把发现变成下一个具体切片;
+- `supersede` 防止过时任务继续可运行;
+- quota 与状态把当前切片与相邻清理区分开;
+- 审查包与聚焦 smoke 让每个 PR 可独立检查;
+- 公共/私有边界扫描防止本地规划材料泄入公共文档。
 
-The operator can let a refactor continue overnight while still waking up to
-reviewable units. The project moves faster, but the review surface remains
-human-sized.
+## 用户价值
 
-## Evidence Boundary
+操作者可以让重构隔夜继续,而醒来面对的仍是可审查单元。项目推进更快,但审查界面仍然保持人类尺度。
 
-This case excludes private screenshots, raw chats, internal planning notes,
-local paths, credentials, raw logs, and unpublished project artifacts. Public
-evidence should come from the resulting PR-sized diffs, validation commands,
-and follow-up/supersede state, not from raw agent traces.
+## 证据边界
 
-## Public Evidence Sequence
+这个案例排除私有截图、原始聊天、内部规划笔记、本地路径、凭据、原始日志和未公开的项目工件。公开证据应来自由此产生的 PR 规模 diff、验证命令和跟进/取代状态,而不是原始 agent 轨迹。
 
-1. A broad refactor starts as a long-running goal.
-2. LoopX keeps the current slice explicit.
-3. Follow-up and supersede convert discoveries into reviewable next steps.
-4. Each slice gets validation and a review packet.
-5. The operator reviews bounded PRs instead of a giant autonomous diff.
+## 公开证据序列
+
+1. 一次宽泛的重构以长程 goal 开始。
+2. LoopX 保持当前切片明确。
+3. 跟进与取代把发现转化为可审查的下一步。
+4. 每个切片获得验证与审查包。
+5. 操作者审查有界的 PR,而不是一个巨大的自主 diff。
