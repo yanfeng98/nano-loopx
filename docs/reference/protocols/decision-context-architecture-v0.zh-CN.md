@@ -35,7 +35,7 @@ flowchart TD
 - lifecycle truth：继续由现有 Core 管理
 - OpenViking：可替换的 context provider，不是全局依赖或 action authority
 
-## 为什么不是 Core
+## 边界
 
 LoopX Core 拥有跨领域的生命周期与权限边界：
 
@@ -67,7 +67,7 @@ goal owner 可以显式选择场景、provider 和 agent lane。
 | 动作权限 | 不创造 authority | 不创造 authority |
 | 连接方式 | 可作为 Decision Context 的可选经验来源 | verified outcome 可产生 Reward Memory candidate |
 
-## 四层 packet
+## 四个 packet
 
 ### `decision_evidence_packet_v0`
 
@@ -178,16 +178,16 @@ capability 与 goal 配置承担。
 
 ## 不变量
 
-1. 四类公开 packet 都是 goal-scoped、public-safe、稳定指纹化的结构化记录。
+1. 四个公开 packet 都是 goal-scoped、public-safe、稳定指纹化的结构化记录。
 2. evidence 与 proposal 分离，模型建议不能伪装成事实。
-3. provider 不创造 authority；provider payload、raw chat、tool output、credentials
-   不进入 packet。
-4. recall 必须有界；accepted claim 必须保留 exact-read、revision 与 conflict receipt。
-5. proposal 只能建议，真实迁移继续经现有 todo、gate、quota 和 writeback。
-6. provider 不可用时 fail open，不阻断 Core lifecycle。
-7. cursor commit 的边界是 review settlement，而不是未来 outcome。
-8. `no_change` 必须有显式语义证明，且不创建 user gate。
-9. verified outcome 先进入可审计 receipt，再决定是否提炼为 Reward Memory。
+3. provider 不创造 authority。
+4. provider payload、raw chat、tool output、credentials 不进入 packet。
+5. recall 必须有界；accepted claim 必须保留 exact-read、revision 与 conflict receipt。
+6. proposal 只能建议，真实迁移继续经现有 todo、gate、quota 和 writeback。
+7. provider 不可用时 fail open，不阻断 Core lifecycle。
+8. cursor commit 的边界是 review settlement，而不是未来 outcome。
+9. `no_change` 必须有显式语义证明，且不创建 user gate。
+10. verified outcome 先进入可审计 receipt，再决定是否提炼为 Reward Memory。
 
 ## 分阶段交付
 
