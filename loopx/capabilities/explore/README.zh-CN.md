@@ -1,5 +1,7 @@
 # 探索结果层
 
+[English](README.md)
+
 状态：受支持的 optional capability；harness 执行契约默认关闭。
 
 ## 概览
