@@ -10,8 +10,6 @@
 - [最小自定义 runtime 示例（中文）](minimal-custom-runtime-example.md)
 - [自定义 Agent runner 集成](custom-agent-runner-integration.md)
 - [自定义 Agent runner 集成（中文）](custom-agent-runner-integration.md)
-- [KunlunCode 适配器指南（中文 Markdown）](kunluncode-adapter.md)
-- [KunlunCode 适配器指南（中文 HTML）](kunluncode-adapter.html)
 - [Auto-research 命令路径](../../demo/auto_research/README.md)
 - [Auto Research 停止、接管与状态感知唤醒](auto-research-stop-takeover-wake-walkthrough.md)
 - [多 Agent 产品配方](multi-agent-product-recipe.md)

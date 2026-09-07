@@ -83,13 +83,16 @@ def resolve_exact_heartbeat_turn_identity(
         return None, "", {}
     if not agent_id:
         raise ValueError("--turn-instance-id requires exact --agent-id identity")
-    profile = (
-        SchedulerRuntimeProfile(runtime_profile)
-        if runtime_profile is not None
-        else scheduler_runtime_profile_for_execution_context(
-            scheduler_execution_context
+    try:
+        profile = (
+            SchedulerRuntimeProfile(runtime_profile)
+            if runtime_profile is not None
+            else scheduler_runtime_profile_for_execution_context(
+                scheduler_execution_context
+            )
         )
-    )
+    except ValueError:
+        profile = None
     if profile not in {
         SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT,

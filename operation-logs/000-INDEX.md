@@ -16,6 +16,7 @@
 | 012 | [012-merge-series-review.md](012-merge-series-review.md) | 连续 merge 系列复查(006–011):发现并修复 2 处信息丢失 |
 | 013 | [013-upstream-merge-7.md](013-upstream-merge-7.md) | 上游七次 merge(14 commits,1.0.0 release) |
 | 014 | [014-upstream-merge-8.md](014-upstream-merge-8.md) | 上游八次 merge(1 commit,#4005) |
+| 015 | [015-remove-kunluncode.md](015-remove-kunluncode.md) | 移除 KunlunCode 宿主适配器(32 文件,+16/−5630;HEAD 基线对照 362 失败同为环境问题) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。

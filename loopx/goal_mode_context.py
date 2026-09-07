@@ -60,8 +60,8 @@ def resolve_goal_context(
 ) -> dict[str, Any] | None:
     """Resolve one goal from the nearest registry and an optional host binding.
 
-    ``require_preferred_binding`` is used by hosts such as KunlunCode whose
-    identity must never fall back to another host's first registered agent.
+    ``require_preferred_binding`` is used by hosts that must never fall back
+    to another host's first registered agent.
     """
     registry = find_registry(cwd)
     if registry is None:

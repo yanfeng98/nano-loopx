@@ -98,7 +98,6 @@ def register_heartbeat_control_commands(
             "codex_cli",
             "generic_cli",
             "claude_code",
-            "kunluncode",
             "local_scheduler",
         ],
         help="Host surface embedded in the generated quota guard.",
