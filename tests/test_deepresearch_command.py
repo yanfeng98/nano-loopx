@@ -1015,8 +1015,8 @@ def test_skill_facade_installs_for_skill_facade_surfaces(tmp_path: Path) -> None
     from loopx.slash_command_install import install_slash_commands
 
     # The facade spec is host-generic: every skill-facade surface (gemini,
-    # cursor, and agy once its surface PR merges) installs it from the same
-    # specs list, so proving one surface proves the wiring.
+    # cursor) installs it from the same specs list, so proving one surface
+    # proves the wiring.
     home = tmp_path / "gemini-home"
     payload = install_slash_commands(execute=True, surfaces=["gemini"], gemini_home=str(home))
     assert payload["ok"] is True

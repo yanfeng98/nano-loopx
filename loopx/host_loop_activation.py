@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from .agent_registry import normalize_registered_agents
-from .agy_goal_mode import AGY_ACCEPTED_INPUTS, agy_activation_extras
 from .control_plane.scheduler.execution_context import SchedulerRuntimeProfile
 from .control_plane.todos.contract import (
     normalize_required_capabilities,
@@ -43,7 +42,6 @@ def scheduler_command_binding_for_agent_type(
         "pi": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "gemini-cli": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "cursor-agent": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
-        "agy": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "deepseek-harness": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "deepseek-harness-native": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
     }.get(canonical)
@@ -67,7 +65,6 @@ SUPPORTED_AGENT_TYPES = [
     "pi",
     "gemini-cli",
     "cursor-agent",
-    "agy",
     "deepseek-harness",
     "deepseek-harness-native",
     "manual",
@@ -186,12 +183,6 @@ AGENT_TYPE_CATALOG: dict[str, dict[str, Any]] = {
             "cursor cli",
         ],
     },
-    "agy": {
-        "display_name": "Antigravity CLI",
-        "host_loop": "Antigravity CLI native /goal loop with schedule self-wakes (LoopX quota pacing is advisory)",
-        "entry": "the LoopX skill installed in ~/.gemini/antigravity-cli/skills",
-        "accepted_inputs": list(AGY_ACCEPTED_INPUTS),
-    },
     "deepseek-harness": {
         "display_name": "DeepSeek Harness",
         "host_loop": "DeepSeek Harness headless/automation loop gated by LoopX quota",
@@ -286,9 +277,6 @@ HOST_SURFACE_TO_AGENT_TYPE = {
     "gemini": "gemini-cli",
     "cursor-agent": "cursor-agent",
     "cursor": "cursor-agent",
-    "agy": "agy",
-    "antigravity": "agy",
-    "antigravity-cli": "agy",
     "deepseek-harness": "deepseek-harness",
     "dsh": "deepseek-harness",
     "deepseek-harness-native": "deepseek-harness-native",
@@ -422,7 +410,6 @@ def _heartbeat_commands(
         "pi": "Pi visible goal loop gated by LoopX",
         "gemini-cli": "Gemini CLI agent loop gated by LoopX",
         "cursor-agent": "Cursor Agent CLI loop gated by LoopX",
-        "agy": "Antigravity CLI agent loop with advisory LoopX quota pacing",
         "deepseek-harness": "DeepSeek Harness automation loop gated by LoopX",
         "deepseek-harness-native": "DeepSeek Harness same-session plugin loop gated by LoopX",
         "manual": "External scheduler or manual shell LoopX poll",
@@ -998,18 +985,6 @@ def _cursor_agent_activation(commands: dict[str, str], cli_bin: str) -> dict[str
     )
 
 
-def _agy_cli_activation(commands: dict[str, str], cli_bin: str) -> dict[str, Any]:
-    return _skill_facade_cli_activation(
-        commands,
-        cli_bin,
-        host_label="Antigravity CLI",
-        host_surface="agy_agent_loop",
-        install_surface="agy",
-        skills_root="~/.gemini/antigravity-cli/skills",
-        **agy_activation_extras(),
-    )
-
-
 def _deepseek_harness_activation(commands: dict[str, str]) -> dict[str, Any]:
     return {
         "host_surface": "deepseek_harness_automation_loop",
@@ -1165,8 +1140,6 @@ def build_host_loop_activation_packet(
         surface = _gemini_cli_activation(commands, cli_bin)
     elif canonical == "cursor-agent":
         surface = _cursor_agent_activation(commands, cli_bin)
-    elif canonical == "agy":
-        surface = _agy_cli_activation(commands, cli_bin)
     elif canonical == "deepseek-harness":
         surface = _deepseek_harness_activation(commands)
     elif canonical == "deepseek-harness-native":
