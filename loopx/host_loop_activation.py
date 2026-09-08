@@ -44,7 +44,6 @@ def scheduler_command_binding_for_agent_type(
         "pi": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "gemini-cli": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "cursor-agent": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
-        "zcode": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "agy": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "deepseek-harness": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "deepseek-harness-native": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
@@ -70,7 +69,6 @@ SUPPORTED_AGENT_TYPES = [
     "pi",
     "gemini-cli",
     "cursor-agent",
-    "zcode",
     "agy",
     "deepseek-harness",
     "deepseek-harness-native",
@@ -209,17 +207,6 @@ AGENT_TYPE_CATALOG: dict[str, dict[str, Any]] = {
             "cursor cli",
         ],
     },
-    "zcode": {
-        "display_name": "ZCode",
-        "host_loop": "agent-driven ZCode loop gated by LoopX quota should-run",
-        "entry": "$loopx <task> or the LoopX skill from ZCODE_HOME/skills",
-        "accepted_inputs": [
-            "zcode",
-            "z_code",
-            "z code",
-            "z-code",
-        ],
-    },
     "agy": {
         "display_name": "Antigravity CLI",
         "host_loop": "Antigravity CLI native /goal loop with schedule self-wakes (LoopX quota pacing is advisory)",
@@ -322,8 +309,6 @@ HOST_SURFACE_TO_AGENT_TYPE = {
     "gemini": "gemini-cli",
     "cursor-agent": "cursor-agent",
     "cursor": "cursor-agent",
-    "zcode": "zcode",
-    "z-code": "zcode",
     "agy": "agy",
     "antigravity": "agy",
     "antigravity-cli": "agy",
@@ -461,7 +446,6 @@ def _heartbeat_commands(
         "pi": "Pi visible goal loop gated by LoopX",
         "gemini-cli": "Gemini CLI agent loop gated by LoopX",
         "cursor-agent": "Cursor Agent CLI loop gated by LoopX",
-        "zcode": "ZCode agent loop gated by LoopX",
         "agy": "Antigravity CLI agent loop with advisory LoopX quota pacing",
         "deepseek-harness": "DeepSeek Harness automation loop gated by LoopX",
         "deepseek-harness-native": "DeepSeek Harness same-session plugin loop gated by LoopX",
@@ -1046,28 +1030,6 @@ def _cursor_agent_activation(commands: dict[str, str], cli_bin: str) -> dict[str
     )
 
 
-def _zcode_activation(commands: dict[str, str], cli_bin: str) -> dict[str, Any]:
-    from .zcode_goal_mode import SKILLS_ROOT_LABEL, ZCODE_INSTALL_SURFACE
-
-    return _skill_facade_cli_activation(
-        commands,
-        cli_bin,
-        host_label="ZCode",
-        host_surface="zcode_agent_loop",
-        install_surface=ZCODE_INSTALL_SURFACE,
-        skills_root=SKILLS_ROOT_LABEL,
-        extra_host_mutation={
-            "missing_host_tool_gate": (
-                "LoopX is currently integrated with ZCode via skill facade and "
-                "has no direct machine binding for ZCode native Goal Mode or "
-                "Automations. If the session cannot keep entering through quota "
-                "should-run, show the exact heartbeat-prompt command for the user "
-                "to run and do not claim autonomous heartbeat support."
-            ),
-        },
-    )
-
-
 def _agy_cli_activation(commands: dict[str, str], cli_bin: str) -> dict[str, Any]:
     return _skill_facade_cli_activation(
         commands,
@@ -1237,8 +1199,6 @@ def build_host_loop_activation_packet(
         surface = _gemini_cli_activation(commands, cli_bin)
     elif canonical == "cursor-agent":
         surface = _cursor_agent_activation(commands, cli_bin)
-    elif canonical == "zcode":
-        surface = _zcode_activation(commands, cli_bin)
     elif canonical == "agy":
         surface = _agy_cli_activation(commands, cli_bin)
     elif canonical == "deepseek-harness":
