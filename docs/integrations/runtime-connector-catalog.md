@@ -48,7 +48,7 @@ LoopX 询问工作是否被允许、写回已验证状态,并暴露足够的活�
 ### 可复用的 shell_worker 参考
 
 `scripts/external_scheduler_worker.py` 是一个感知 scheduler 提示的
-`shell_worker`,用于通用可见 CLI 循环(例如 TraeX)。每个 tick 运行
+`shell_worker`,用于通用可见 CLI 循环。每个 tick 运行
 `quota should-run --include-detail scheduler`,投影一行公开安全状态
 (`waiting`/`should_run`/`terminal`、节奏类别、下次检查分钟数、未变化次数),并按
 `local_scheduler` 进阶阶梯休眠。它在一个小的状态文件中跟踪连续未变化索引,并在
@@ -123,7 +123,7 @@ runtime 就绪。
 planner-worker 是一个 **opt-in 实验性**切片,不是目录连接器,也不是常驻
 scheduler。一次调用完成规划、最多执行一个 worker 步骤、运行调用者批准的验证,
 并返回类型化回执。模型路由保持显式;在提供定价之前成本保持不完整;线上 provider
-(例如 TraeX)保持可选。
+由调用方显式提供。
 
 操作员指南(provider 中立的 fake runtime):
 [实验性 planner-worker 模式](../guides/planner-worker-experimental.md)。

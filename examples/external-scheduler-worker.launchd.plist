@@ -3,7 +3,7 @@
   Template launchd agent for the LoopX external shell_worker.
 
   Replace every __PLACEHOLDER__ before loading:
-    __LABEL__         unique launchd label, e.g. com.loopx.traex-goal-watcher
+    __LABEL__         unique launchd label, e.g. com.loopx.goal-watcher
     __WORKER__        absolute path to scripts/external_scheduler_worker.py
     __LOOPX_BIN__     absolute path to the loopx executable (run `which loopx`)
     __REGISTRY__      absolute path to the registry (global or project-local)

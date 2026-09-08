@@ -85,6 +85,19 @@ Sonar，测试 job 不接收 Sonar secret。触发范围取原有两套 workflow
 Reproduce one shard locally with `python -m pytest -q -n 2 --splits 2 --group 1
 --splitting-algorithm least_duration --cov=loopx`。省略分片参数即可在本地运行完整套件。
 
+### 共享开发机的串行验证
+
+本地与其他任务共用资源时，一次只运行一个聚焦测试批次，不传 `-n auto`。
+若全局安装的第三方 pytest 插件冲突，可用 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`
+禁用自动加载，并按测试需要显式加载插件（异步测试用 `-p pytest_asyncio.plugin`）。
+清空 `PYTEST_ADDOPTS`，避免继承额外 worker 参数。
+
+TypeScript Effect runtime 的真实路径需要本地 socket 通信。若受限沙箱中出现
+`runtime_exited_before_ready`，先核对 Node 就绪和本地通信权限，在授权的隔离
+环境中补跑；不能把启动失败或 socket 测试跳过计为通过。为测试进程指定专用
+临时 `TMPDIR`，让运行时按测试源码指纹在该目录启动，避免复用其他会话的运行时
+或操作活动 goal 状态。原始诊断保留在临时目录中，提交只包含可复用规则和测试。
+
 ## Smoke 与 Canary
 
 Durable smoke 应保护已交付行为、可复用合同、公开/私有边界，或曾让自动化卡死的

@@ -19,7 +19,7 @@ LoopX 决策 -> agent CLI 执行 -> 验证器证明 -> LoopX 提交
 | 阶段 | Owner | 契约 |
 | --- | --- | --- |
 | 决策 | LoopX CLI | 从实时 goal、todo、gate、capability、quota 与节奏状态中选一个允许动作。 |
-| 执行 | Host 适配器加 Trae CLI 或 Codex CLI 等 agent CLI | 消费一个类型化请求、运行一个有界段落、发出一个类型化候选结果。 |
+| 执行 | Host 适配器加 Codex CLI 等 agent CLI | 消费一个类型化请求、运行一个有界段落、发出一个类型化候选结果。 |
 | 验证 | 独立任务特定命令或回调 | 检查真实工件、测试、远程状态或声明的只读后置条件。 |
 | 提交 | LoopX CLI | 只在验证通过后写持久化状态并花费一个配额槽。 |
 
@@ -54,15 +54,13 @@ loopx turn run-once \
   --execute
 ```
 
-除非它已经实现类型化 stdin/stdout 契约，否则不要直接把自由格式交互命令作为 `--host-adapter-command-json` 传入。对于 Trae CLI、Codex CLI 或另一会话式 CLI，适配器在 Turn 请求/结果对象与该 CLI 的 prompt、会话与输出模型之间翻译。原始 transcript 文本、进程退出零与 host 自己的完成主张绝不构成足够验证。
-
-TraeX（`traex exec`）的参考无头适配器位于 `scripts/traex_turn_host_adapter.py`；它从 Turn 信封读取有界动作文本并写一个类型化结果，把 goal/todo 权限与验证留给 LoopX。
+除非它已经实现类型化 stdin/stdout 契约，否则不要直接把自由格式交互命令作为 `--host-adapter-command-json` 传入。对于 Codex CLI 或另一会话式 CLI，适配器在 Turn 请求/结果对象与该 CLI 的 prompt、会话与输出模型之间翻译。原始 transcript 文本、进程退出零与 host 自己的完成主张绝不构成足够验证。
 
 一个 DeepSeek Harness 适配器位于 `loopx.dsh_goal_mode` 子包中（用 `python -m loopx.dsh_goal_mode` 运行；遗留 `scripts/dsh_turn_host_adapter.py` 启动器仍可用）；它使用可选的 `deepseek-harness-sdk` Python 客户端运行一个有界 dsh 会话，并把最终 assistant JSON 消息解析为同一类型化 Turn 结果。优先使用内置 `loopx turn run-once --host dsh` 界面，使结构化 SDK 终态失败到达 Turn Journal。用 `--host generic-cli` 的模块/子进程调用保持为兼容与回滚路径。参见 [DeepSeek Harness connector](../../integrations/deepseek-harness-connector.md)。
 
 ### 任何 Agent CLI 的五个问题
 
-接入 Trae CLI、Codex CLI 或另一 host 前，回答这五个问题：
+接入 Codex CLI 或另一 host 前，回答这五个问题：
 
 1. **如何无人值守运行？** 选择显式非交互命令与工作区。若 CLI 仅交互，它还不是 `isolated-headless` 适配器。
 2. **如何返回一个类型化结果？** 优先原生输出 schema 或专用结果文件。不要把任意会话文本当作完成契约抓取。

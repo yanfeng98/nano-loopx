@@ -7,7 +7,7 @@
 
 使用
 `examples/experiments/planner_worker/runtime-smoke.py` 中交付的 fake adapters，
-无需在线模型 provider 即可学习契约。TraeX 只是可选的扩展 provider 之一。
+无需在线模型 provider 即可学习契约。
 
 ## 操作者契约
 
@@ -18,7 +18,7 @@
 | 调用方批准的验证 | 每个 `validation_commands` 条目必须出现在调用方 allowlist 中。未批准的命令在 Worker 写入前停止。 |
 | 单步 receipt | 每次 `run_planner_worker_once` 最多选择一个可执行步骤，执行一次，并返回 `planner_worker_receipt_v0`。 |
 | 不完整成本 | Receipt 在收到定价之前始终设置 `cost.complete=false`；token `usage` 仍可能是完整的。 |
-| Provider opt-in | Core 拥有契约与 fake runtime。在线 provider（例如 TraeX）保持可选，且必须显式调用。 |
+| Provider opt-in | Core 拥有契约与 fake runtime。在线 provider 由调用方提供，且必须显式调用。 |
 | 停止 | 不自动重启或调度另一个切片。读取 receipt 的 `status`/`reason` 并退出；任何后续调用前清理或重置工作区。 |
 
 ## Fake Runtime 走查
@@ -36,18 +36,12 @@ runtime smoke 构建一个临时干净 git fixture，注入 fake Planner 与 Wor
 - 验证只运行已批准的命令；
 - `usage.complete` 可以为 true，而 `cost.complete` 保持 false。
 
-## 可选 TraeX Provider
+## 本地验证实现
 
-仅当你有意 opt-in 一个真实 TraeX 二进制时：
-
-```bash
-python3 scripts/experiments/traex_planner_worker_probe.py \
-  --cwd /path/to/clean/worktree \
-  --validation-command 'python3 -m pytest -q tests/test_target.py'
-```
-
-显式传入每个已批准的验证命令。探测前保持工作区干净。把 TraeX 输出当作一个
-包装着同一 typed receipt 的 provider 探测载荷——而不是 LoopX 内核写回权威。
+通用 `GitWorkspaceObserver`、`SubprocessValidationRunner` 位于
+`loopx.experiments.planner_worker.workspace`；工作区检查失败抛出
+`PlannerWorkerWorkspaceError`（`RuntimeError` 子类）。TraeX provider、probe
+脚本及旧模块导入已移除。调用方提供自己的 adapters，继续复用同一契约与验证实现。
 
 ## 该模式不是什么
 

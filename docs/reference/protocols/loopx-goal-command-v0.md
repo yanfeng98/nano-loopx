@@ -26,7 +26,6 @@
    - `ark-managed-agent`：把生成的 `<task_body>` 作为原生 Goal 提交一次。Goal 运行时拥有继续与终态评估；不要用 LoopX Turn 包装其内部迭代，也不要在相位边界重提。
    - `claude-code`：用 `/loopx <task>` 武装 LoopX，然后运行原生 `/loop`。
    - `opencode`：从已安装的 LoopX OpenCode bridge 调用 `loopx_goal_activate`；bridge 通过 `quota should-run` 关卡空闲继续与定时器唤醒，且只在已验证终态 no-follow-up 时完成。
-   - `traex-cli`：通过 TraeX 可见 goal 渲染器把可见 TraeX TUI 设为 `/goal <task_body>`，而配额仍绑定到通用 `generic_cli` 运行时 profile。TraeX `/goal` 要求 `~/.trae/traecli.toml` 中有 `[features] goals = true`；若 goal 模式关闭，显示可粘贴的 `/goal <task_body>` gate。除非安装了已验证的 LoopX 适配器，否则不要路由到 `/loop`。LoopX 不为 TraeX 提供 Codex App 自动化或 slash-command 安装器；它从 `~/.trae/skills` 加载 skills。
    - `pi`：从已安装的 LoopX Pi extension 调用 `loopx_goal_activate`；extension 通过 `quota should-run` 关卡已结算继续与定时器唤醒，且只在已验证终态 no-follow-up 时停止。
    - `manual` / `other-agent`：接入 `loopx agent-onboard` 描述的外部 loop 驱动器。
 7. 若 host 不能修改该界面，报告精确可粘贴 gate，而不是声称自主设置完成。
@@ -37,6 +36,11 @@
 ```bash
 loopx agent-onboard --list-agent-types
 ```
+
+TraeX CLI 接入已移除：`traex-cli` 及其别名不再是可选 host，
+`heartbeat-prompt --visible-goal-host` 参数与对应 Python 参数、专用渲染 API
+也已撤除。旧调用会明确失败，不自动转成其他 Agent；既有 registry 与历史证据
+不会被迁移或删除。需要继续工作时，显式选择上面列出的受支持宿主。
 
 `codex` 这类歧义值必须失效关闭，因为 Codex App 自动化、SSH 上的 Codex App、IDE 插件与 Codex CLI 使用不同 host-loop 激活路径。
 

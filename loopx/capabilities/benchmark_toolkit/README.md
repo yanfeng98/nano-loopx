@@ -24,7 +24,7 @@ loopx benchmark agent-phase \
 也不授予 model 或凭据 authority。solver 命令由 runner 拥有,在 runner 选择的
 当前目录执行;请求工作区必须与该目录完全一致。solver 通过 stdin 接收校验后的
 指令,外加仅有的平台查询、locale、临时目录与阶段特定环境变量;环境凭据不会被
-继承。这允许直接使用无头命令,如 `traex exec --sandbox workspace-write -`,
+继承。这允许直接使用接收 stdin 的无头 solver 命令,
 而无需 benchmark 特定 driver。需要凭据的 provider 必须单独定义显式授权契约,
 而不是扩大这个通用边界。
 
@@ -292,33 +292,9 @@ LoopX 要求。
 
 ## 完整性资格判定
 
-### TraeX 证据捕获
-
-TraeX `exec --json` 发出面向自动化的 stdout JSONL 流,而不是其归档会话的完整副本。
-在完整性判定的资格之前,把该私有流转换为 ATIF,并可选择提供匹配的私有归档 JSONL,
-用于独立观测的运行时 model 路由:
-
-```bash
-loopx benchmark traex-evidence \
-  --source-jsonl .local/private-run/traex-stdout.jsonl \
-  --route-source-jsonl .local/private-run/traex-session.jsonl \
-  --atif-output .local/private-run/agent/trajectory.json \
-  --route-receipt-output .local/private-run/public/model-route.json \
-  --requested-model GPT-5.4 \
-  --require-runtime-route \
-  --execute --format json
-```
-
-不加 `--execute` 时,该命令只校验并预览,不写盘。私有 ATIF 保留工具参数与观测,
-用于本地完整性分析。Route receipt 只包含紧凑的请求与观测路由标签,以及
-`runtime_route_verified`、`runtime_route_mismatch`、`runtime_route_ambiguous`,
-`route_requested_not_runtime_audited` 之一;它从不包含 prompts、raw tool content
-或路径。Stdout JSONL 通常没有 runtime route 事件,所以省略
-`--route-source-jsonl` 并不能证明实际运行了哪个 model。提供独立归档时,其 session
-id 必须与 stdout `thread.started` id 完全一致。转换器覆盖观测到的 TraeX 命令与
-文件变更 stdout 事件,以及归档的 function-call 与 custom-tool-call 对;未知的
-承载动作的 stdout 或归档项会 fail closed,而不是产生部分审计 trajectory。该命令
-不启动 TraeX、不读取 verifier 数据、不给 run 打分,也不发布任一 artifact。
+TraeX 专用的 `benchmark traex-evidence` 命令、`traex_evidence` Python 模块及其
+包级导出已移除。既有 ATIF 文件仍可作为以下通用完整性检查的输入；本地证据
+不会被改写或删除。新 trajectory 由 runner 所属的显式转换器提供。
 
 在 agent 阶段之后、runner 产出隔离 attestation 之后运行完整性判定。Trajectory
 与任何敏感值仍是私有本地输入:
