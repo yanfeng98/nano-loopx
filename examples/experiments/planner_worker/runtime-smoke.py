@@ -20,7 +20,7 @@ from loopx.experiments.planner_worker.contract import (  # noqa: E402
 from loopx.experiments.planner_worker.runtime import (  # noqa: E402
     run_planner_worker_once,
 )
-from loopx.experiments.planner_worker.traex import (  # noqa: E402
+from loopx.experiments.planner_worker.workspace import (  # noqa: E402
     GitWorkspaceObserver,
     SubprocessValidationRunner,
 )

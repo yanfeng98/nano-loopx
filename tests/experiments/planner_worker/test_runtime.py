@@ -15,7 +15,7 @@ from loopx.experiments.planner_worker.runtime import (
     WorkspaceChange,
     run_planner_worker_once,
 )
-from loopx.experiments.planner_worker.traex import (
+from loopx.experiments.planner_worker.workspace import (
     GitWorkspaceObserver,
     SubprocessValidationRunner,
 )
