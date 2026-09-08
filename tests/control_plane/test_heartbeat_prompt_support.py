@@ -16,10 +16,6 @@ from loopx.control_plane.heartbeat.host import (
     uses_ark_managed_agent_goal_host,
     uses_native_goal_host_loop,
 )
-from loopx.control_plane.heartbeat.visible_goal import (
-    build_visible_goal_initial_runtime_capability_projection,
-    validate_visible_goal_policy_rule,
-)
 from loopx.heartbeat_prompt import (
     build_heartbeat_prompt,
     render_heartbeat_prompt_markdown,
@@ -100,24 +96,6 @@ def test_host_detection_prefers_runtime_profile() -> None:
         )
         is True
     )
-
-
-def test_visible_goal_capability_projection_filters_control_vocabulary() -> None:
-    projection = build_visible_goal_initial_runtime_capability_projection(
-        ["loop", "network", "external_evidence_poll"]
-    )
-    assert projection is not None
-    assert "loop" not in projection["capabilities"]
-    assert projection["capabilities"] == ["network", "external_evidence_poll"]
-    assert projection["scope"] == "visible_goal_session"
-
-
-def test_visible_goal_policy_rejects_heartbeat_only_vocabulary() -> None:
-    with pytest.raises(ValueError, match="heartbeat-only"):
-        validate_visible_goal_policy_rule(
-            field="permission_rule",
-            value="use rrule now",
-        )
 
 
 def test_public_facade_still_builds_and_renders_prompts() -> None:

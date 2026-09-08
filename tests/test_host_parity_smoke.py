@@ -91,7 +91,6 @@ class TestAgentTypeCatalog:
         ("codex-cli-tui", "codex-cli"),
         ("claude-code", "claude-code"),
         ("opencode", "opencode"),
-        ("traex", "traex-cli"),
         ("pi", "pi"),
         ("gemini", "gemini-cli"),
         ("cursor", "cursor-agent"),
@@ -107,13 +106,11 @@ class TestAgentTypeCatalog:
         assert normalize_agent_type("codex-app") == "codex-app"
         assert normalize_agent_type("pi") == "pi"
         assert normalize_agent_type("gemini") == "gemini-cli"
-        assert normalize_agent_type("traex") == "traex-cli"
 
     def test_host_managed_skill_types(self):
         host = {
             "ark-managed-agent",
             "deepseek-harness-native",
-            "traex-cli",
             "other-agent",
         }
         for at in SUPPORTED_AGENT_TYPES:
@@ -134,7 +131,6 @@ class TestSchedulerBindings:
             "codex-ide-plugin": "codex_cli",
             "claude-code": "claude_code",
             "opencode": "generic_cli",
-            "traex-cli": "generic_cli",
             "pi": "generic_cli",
             "gemini-cli": "generic_cli",
             "cursor-agent": "generic_cli",
@@ -150,7 +146,7 @@ class TestSchedulerBindings:
     def test_generic_cli_types_share_profile(self):
         profiles = {
             t: scheduler_command_binding_for_agent_type(t)["runtime_profile"]
-            for t in ["opencode", "traex-cli", "pi", "gemini-cli", "cursor-agent"]}
+            for t in ["opencode", "pi", "gemini-cli", "cursor-agent"]}
         assert len(set(profiles.values())) == 1
 
 

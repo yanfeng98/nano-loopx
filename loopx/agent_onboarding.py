@@ -276,7 +276,6 @@ def _bootstrap_pack_command(
         "codex-cli": "codex-cli-tui",
         "claude-code": "claude-code",
         "opencode": "opencode",
-        "traex-cli": "traex-cli",
         "pi": "pi",
         "gemini-cli": "gemini-cli",
         "cursor-agent": "cursor-agent",
@@ -320,8 +319,6 @@ def _start_instruction(agent_type: str) -> str:
         return "Run `/loopx <task>` to arm LoopX, then run native `/loop`."
     if agent_type == "opencode":
         return "Run `/loopx <task>`; after todo writeback, call `loopx_goal_activate` with the generated heartbeat task body."
-    if agent_type == "traex-cli":
-        return "Use `$loopx <task>` or select the LoopX skill from `/skills`; after todos are written, set `/goal <task_body>` in the visible TraeX TUI (enable `[features] goals = true` first if goal mode is off)."
     if agent_type == "pi":
         return "Run `/loopx <task>`; after todo writeback, call `loopx_goal_activate` with the generated heartbeat task body."
     if agent_type == "gemini-cli":

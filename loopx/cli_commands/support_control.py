@@ -613,7 +613,6 @@ def handle_support_control_command(
                     if any(explicit_scheduler_fields)
                     else None
                 ),
-                visible_goal_host=args.visible_goal_host,
                 turn_granularity=turn_granularity,
                 turn_instance_id=args.turn_instance_id,
             )

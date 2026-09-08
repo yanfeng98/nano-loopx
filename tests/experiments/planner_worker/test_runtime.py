@@ -901,3 +901,40 @@ def test_runtime_rejects_special_file_even_when_planner_targets_it(
     assert receipt["write_scope"]["unsupported_paths"] == ["worker.fifo"]
     assert receipt["validation"] == []
     assert validation_calls == []
+
+
+def test_workspace_observer_rejects_non_git_and_dirty_workspaces(tmp_path: Path) -> None:
+    import subprocess
+    from loopx.experiments.planner_worker.workspace import PlannerWorkerWorkspaceError
+
+    observer = GitWorkspaceObserver()
+    with pytest.raises(PlannerWorkerWorkspaceError, match="git worktree"):
+        observer.assert_clean(tmp_path)
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / "untracked.txt").write_text("existing work\n", encoding="utf-8")
+    with pytest.raises(PlannerWorkerWorkspaceError, match="must be clean"):
+        observer.assert_clean(tmp_path)
+    assert (tmp_path / "untracked.txt").read_text() == "existing work\n"
+
+
+def test_validation_timeout_stops_the_real_process(tmp_path: Path) -> None:
+    import os
+    import time
+
+    (tmp_path / "slow.py").write_text(
+        "import os, time\nfrom pathlib import Path\n"
+        "Path('process.pid').write_text(str(os.getpid()))\n"
+        "time.sleep(60)\n",
+        encoding="utf-8",
+    )
+    started = time.monotonic()
+    result = SubprocessValidationRunner(
+        timeout_seconds=1,
+        approved_commands=frozenset({"python3 slow.py"}),
+    )("python3 slow.py", tmp_path)
+    assert not result.passed
+    assert result.exit_code is None
+    assert time.monotonic() - started < 10
+    pid = int((tmp_path / "process.pid").read_text())
+    with pytest.raises(ProcessLookupError):
+        os.kill(pid, 0)

@@ -193,14 +193,6 @@ from .study_projection import (
     read_benchmark_upload_receipt,
     simulate_benchmark_upload,
 )
-from .traex_evidence import (
-    ATIF_SCHEMA_VERSION,
-    BENCHMARK_MODEL_ROUTE_RECEIPT_SCHEMA_VERSION,
-    TRAE_BENCHMARK_EVIDENCE_SCHEMA_VERSION,
-    build_traex_model_route_receipt,
-    capture_traex_benchmark_evidence,
-    convert_traex_events_to_atif,
-)
 from .treatment_continuation import (
     BENCHMARK_TREATMENT_CONTINUATION_OBSERVATION_SCHEMA_VERSION,
     BENCHMARK_TREATMENT_CONTINUATION_RECEIPT_SCHEMA_VERSION,
@@ -208,7 +200,6 @@ from .treatment_continuation import (
 )
 
 __all__ = [
-    "ATIF_SCHEMA_VERSION",
     "BENCHMARK_ADAPTIVE_CONCURRENCY_DECISION_SCHEMA_VERSION",
     "BENCHMARK_ADAPTIVE_CONCURRENCY_POLICY_SCHEMA_VERSION",
     "BENCHMARK_CANDIDATE_SOURCE_BOUNDARY_SCHEMA_VERSION",
@@ -230,7 +221,6 @@ __all__ = [
     "BENCHMARK_INTEGRITY_POLICY_SCHEMA_VERSION",
     "BENCHMARK_INTEGRITY_QUALIFICATION_SCHEMA_VERSION",
     "BENCHMARK_LOCAL_UPLOAD_RECORD_SCHEMA_VERSION",
-    "BENCHMARK_MODEL_ROUTE_RECEIPT_SCHEMA_VERSION",
     "BENCHMARK_PUBLIC_PROGRESS_SCHEMA_VERSION",
     "BENCHMARK_RESOURCE_HEADROOM_RECEIPT_SCHEMA_VERSION",
     "BENCHMARK_RESTRICTED_ACCESS_ADJUDICATION_SCHEMA_VERSION",
@@ -256,7 +246,6 @@ __all__ = [
     "REWARD_CONTRACT_SCHEMA_VERSION",
     "RUN_PERMISSION_POLICY_SCHEMA_VERSION",
     "RUN_PERMISSION_QUOTA_PROJECTION_SCHEMA_VERSION",
-    "TRAE_BENCHMARK_EVIDENCE_SCHEMA_VERSION",
     "BenchmarkContinuationDecision",
     "BenchmarkEventWindowState",
     "BenchmarkJobReceiptState",
@@ -310,8 +299,6 @@ __all__ = [
     "build_native_codex_isolation_envelope",
     "build_native_goal_public_trajectory_summary",
     "build_run_permission_policy",
-    "build_traex_model_route_receipt",
-    "capture_traex_benchmark_evidence",
     "classify_benchmark_artifact_path",
     "classify_benchmark_candidate_source_path",
     "compact_benchmark_four_arm_contract",
@@ -322,7 +309,6 @@ __all__ = [
     "compact_native_goal_receipt",
     "compact_run_permission_policy_for_quota",
     "configure_benchmark_concurrency_envelope",
-    "convert_traex_events_to_atif",
     "default_benchmark_concurrency_envelope_path",
     "default_benchmark_experiment_board_path",
     "filter_public_benchmark_artifact_paths",

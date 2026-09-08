@@ -37,14 +37,6 @@ from .control_plane.heartbeat.rules import (
     SCHEDULER_HINT_THIN_RULE,
     USER_TODO_FINAL_MESSAGE_RULE,
 )
-from .control_plane.heartbeat.visible_goal import (
-    VISIBLE_GOAL_HEARTBEAT_ONLY_POLICY_PATTERNS,
-    VISIBLE_GOAL_HOST_CONTROL_CAPABILITIES,
-    VISIBLE_GOAL_INITIAL_RUNTIME_CAPABILITY_LIMIT,
-    VISIBLE_GOAL_INITIAL_RUNTIME_CAPABILITY_PROJECTION_SCHEMA_VERSION,
-    build_visible_goal_initial_runtime_capability_projection,
-    validate_visible_goal_policy_rule,
-)
 
 __all__ = [
     "CODEX_NATIVE_GOAL_UNCHANGED_WAIT_RULE",
@@ -60,10 +52,6 @@ __all__ = [
     "SCHEDULER_HINT_COMPACT_RULE",
     "SCHEDULER_HINT_THIN_RULE",
     "USER_TODO_FINAL_MESSAGE_RULE",
-    "VISIBLE_GOAL_HEARTBEAT_ONLY_POLICY_PATTERNS",
-    "VISIBLE_GOAL_HOST_CONTROL_CAPABILITIES",
-    "VISIBLE_GOAL_INITIAL_RUNTIME_CAPABILITY_LIMIT",
-    "VISIBLE_GOAL_INITIAL_RUNTIME_CAPABILITY_PROJECTION_SCHEMA_VERSION",
     "_render_goal_task_body",
     "agent_prompt_command_args",
     "agent_profile_prompt_projection",
@@ -72,7 +60,6 @@ __all__ = [
     "build_heartbeat_prompt_error_payload",
     "build_interface_budget",
     "build_peer_identity_required_error",
-    "build_visible_goal_initial_runtime_capability_projection",
     "heartbeat_prompt_mode",
     "normalize_agent_scope",
     "normalize_agent_scopes",
@@ -86,11 +73,9 @@ __all__ = [
     "render_heartbeat_task_body",
     "render_peer_agent_scope_instruction",
     "render_thin_heartbeat_task_body",
-    "render_traex_visible_goal_task_body",
     "render_visible_goal_task_body",
     "uses_ark_managed_agent_goal_host",
     "uses_native_goal_host_loop",
-    "validate_visible_goal_policy_rule",
 ]
 
 
@@ -121,11 +106,6 @@ def render_compact_heartbeat_task_body(**kwargs):
 
 def render_visible_goal_task_body(**kwargs):
     from .control_plane.heartbeat.task_body import render_visible_goal_task_body as _impl
-    return _impl(**kwargs)
-
-
-def render_traex_visible_goal_task_body(**kwargs):
-    from .control_plane.heartbeat.task_body import render_traex_visible_goal_task_body as _impl
     return _impl(**kwargs)
 
 

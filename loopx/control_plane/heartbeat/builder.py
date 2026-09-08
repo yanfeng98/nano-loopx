@@ -17,10 +17,7 @@ from ..quota.spend_sources import (
     DEFAULT_SLOT_SPEND_SOURCE,
     VISIBLE_GOAL_SLOT_SPEND_SOURCE,
 )
-from ..scheduler.execution_context import (
-    SchedulerRuntimeProfile,
-    render_scheduler_execution_args,
-)
+from ..scheduler.execution_context import render_scheduler_execution_args
 from ..todos.contract import (
     normalize_required_capabilities,
     normalize_todo_claimed_by,
@@ -53,12 +50,7 @@ from .task_body import (
     render_compact_heartbeat_task_body,
     render_heartbeat_task_body,
     render_thin_heartbeat_task_body,
-    render_traex_visible_goal_task_body,
     render_visible_goal_task_body,
-)
-from .visible_goal import (
-    build_visible_goal_initial_runtime_capability_projection,
-    validate_visible_goal_policy_rule,
 )
 from ...project_prompt import (
     render_accountable_progress_refresh_command,
@@ -85,15 +77,12 @@ FINE_GRAINED_TURN_RULE = (
 
 def _select_task_body_renderer(
     *,
-    traex_visible_goal: bool,
     ark_managed_agent_goal: bool,
     native_goal_host: bool,
     thin: bool,
     brief: bool,
     compact: bool,
 ) -> Any:
-    if traex_visible_goal:
-        return render_traex_visible_goal_task_body
     if ark_managed_agent_goal:
         return render_ark_managed_agent_goal_task_body
     if native_goal_host:
@@ -139,11 +128,9 @@ def _heartbeat_prompt_commands(
     runtime_root: str | Path | None,
     normalized_agent_id: str | None,
     normalized_available_capabilities: tuple[str, ...],
-    task_body_available_capabilities: tuple[str, ...],
     runtime_profile: str | None,
     scheduler_execution_context: Any,
     native_goal_host: bool,
-    traex_visible_goal: bool,
     active_state_arg: str,
     agent_args: str,
     capability_args: str,
@@ -171,25 +158,6 @@ def _heartbeat_prompt_commands(
         agent_id=normalized_agent_id,
         available_capabilities=normalized_available_capabilities,
     )
-    task_body_quota_guard_command = quota_guard_command
-    task_body_quota_spend_command = quota_spend_command
-    if traex_visible_goal:
-        task_body_quota_guard_command = render_quota_guard_command(
-            goal_id,
-            cli_bin=cli_bin,
-            runtime_root=runtime_root,
-            agent_id=normalized_agent_id,
-            available_capabilities=task_body_available_capabilities,
-            runtime_profile=runtime_profile,
-            scheduler_execution_context=scheduler_execution_context,
-        )
-        task_body_quota_spend_command = render_quota_spend_command(
-            goal_id,
-            source=VISIBLE_GOAL_SLOT_SPEND_SOURCE,
-            cli_bin=cli_bin,
-            runtime_root=runtime_root,
-            agent_id=normalized_agent_id,
-        )
     scheduler_args = render_scheduler_execution_args(
         runtime_profile=runtime_profile,
         scheduler_execution_context=scheduler_execution_context,
@@ -220,8 +188,8 @@ def _heartbeat_prompt_commands(
     return {
         "quota_guard_command": quota_guard_command,
         "quota_spend_command": quota_spend_command,
-        "task_body_quota_guard_command": task_body_quota_guard_command,
-        "task_body_quota_spend_command": task_body_quota_spend_command,
+        "task_body_quota_guard_command": quota_guard_command,
+        "task_body_quota_spend_command": quota_spend_command,
         "refresh_state_command": render_refresh_state_command(
             goal_id,
             cli_bin=cli_bin,
@@ -263,7 +231,6 @@ def build_heartbeat_prompt(
     available_capabilities: list[str] | tuple[str, ...] | None = None,
     runtime_profile: str | None = None,
     scheduler_execution_context: dict[str, Any] | None = None,
-    visible_goal_host: str | None = None,
     turn_granularity: str | None = None,
     turn_instance_id: str | None = None,
 ) -> dict[str, Any]:
@@ -273,21 +240,10 @@ def build_heartbeat_prompt(
         {"turn_granularity": turn_granularity} if turn_granularity is not None else None
     )
     fine_grained = normalized_turn_granularity == TURN_GRANULARITY_FINE
-    if visible_goal_host not in {None, "traex-cli"}:
-        raise ValueError(f"unsupported visible goal host: {visible_goal_host}")
-    if visible_goal_host == "traex-cli" and (
-        runtime_profile != SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP.value
-        or scheduler_execution_context is not None
-    ):
-        raise ValueError(
-            "visible_goal_host='traex-cli' requires runtime_profile='generic_cli' "
-            "without scheduler_execution_context"
-        )
-    traex_visible_goal = visible_goal_host == "traex-cli"
     native_goal_host = uses_native_goal_host_loop(
         runtime_profile=runtime_profile,
         scheduler_execution_context=scheduler_execution_context,
-    ) or traex_visible_goal
+    )
     ark_managed_agent_goal = uses_ark_managed_agent_goal_host(
         runtime_profile=runtime_profile,
         scheduler_execution_context=scheduler_execution_context,
@@ -301,15 +257,6 @@ def build_heartbeat_prompt(
     active_state_arg = f" --active-state {active_state_text}" if active_state else ""
     resolved_material_rule = material_queue_rule or DEFAULT_MATERIAL_QUEUE_RULE
     resolved_permission_rule = permission_rule or DEFAULT_PERMISSION_RULE
-    if traex_visible_goal:
-        validate_visible_goal_policy_rule(
-            field="material_queue_rule",
-            value=resolved_material_rule,
-        )
-        validate_visible_goal_policy_rule(
-            field="permission_rule",
-            value=resolved_permission_rule,
-        )
     normalized_agent_id = normalize_todo_claimed_by(agent_id) if agent_id else None
     if agent_id and not normalized_agent_id:
         raise ValueError("agent_id must be a public-safe token such as codex-main-control")
@@ -326,9 +273,6 @@ def build_heartbeat_prompt(
     explicit_agent_scopes = normalize_agent_scopes(agent_scopes)
     profile_agent_scopes = agent_profile_scopes(agent_profile)
     normalized_agent_scopes = explicit_agent_scopes or profile_agent_scopes
-    if traex_visible_goal:
-        for scope in normalized_agent_scopes:
-            validate_visible_goal_policy_rule(field="agent_scope", value=scope)
     agent_scope_source = "argument" if explicit_agent_scopes else "agent_profile_v1" if profile_agent_scopes else None
     if normalized_agent_scopes and not normalized_agent_id:
         raise ValueError("--agent-scope requires --agent-id so claimed_by uses a registered agent")
@@ -363,21 +307,6 @@ def build_heartbeat_prompt(
     normalized_available_capabilities = normalize_required_capabilities(
         available_capabilities
     )
-    initial_runtime_capability_projection = (
-        build_visible_goal_initial_runtime_capability_projection(
-            normalized_available_capabilities
-        )
-        if traex_visible_goal
-        else None
-    )
-    if initial_runtime_capability_projection:
-        task_body_available_capabilities = initial_runtime_capability_projection[
-            "capabilities"
-        ]
-    elif traex_visible_goal:
-        task_body_available_capabilities = []
-    else:
-        task_body_available_capabilities = normalized_available_capabilities
     capability_args = render_available_capability_args(
         normalized_available_capabilities
     )
@@ -395,11 +324,9 @@ def build_heartbeat_prompt(
         runtime_root=runtime_root,
         normalized_agent_id=normalized_agent_id,
         normalized_available_capabilities=normalized_available_capabilities,
-        task_body_available_capabilities=task_body_available_capabilities,
         runtime_profile=runtime_profile,
         scheduler_execution_context=scheduler_execution_context,
         native_goal_host=native_goal_host,
-        traex_visible_goal=traex_visible_goal,
         active_state_arg=active_state_arg,
         agent_args=agent_args,
         capability_args=capability_args,
@@ -407,7 +334,6 @@ def build_heartbeat_prompt(
     )
     cli_preflight = render_cli_preflight(cli_bin=cli_bin)
     task_body_renderer = _select_task_body_renderer(
-        traex_visible_goal=traex_visible_goal,
         ark_managed_agent_goal=ark_managed_agent_goal,
         native_goal_host=native_goal_host,
         thin=thin,
@@ -419,7 +345,7 @@ def build_heartbeat_prompt(
         active_state=active_state_text,
         cli_preflight=cli_preflight,
         pr_review_pre_quota_command=(
-            "" if traex_visible_goal else commands["pr_review_pre_quota_command"] or ""
+            commands["pr_review_pre_quota_command"] or ""
         ),
         quota_guard_command=str(commands["task_body_quota_guard_command"]),
         quota_spend_command=str(commands["task_body_quota_spend_command"]),
@@ -444,8 +370,6 @@ def build_heartbeat_prompt(
         host_limit = (
             "Ark Managed Agent goal prompt"
             if ark_managed_agent_goal
-            else "visible TraeX /goal task body"
-            if traex_visible_goal
             else "visible Codex /goal task body"
         )
         raise ValueError(
@@ -473,20 +397,6 @@ def build_heartbeat_prompt(
         "registered_agents": normalized_registered_agents,
         "runtime_profile": runtime_profile,
         "scheduler_execution_context": scheduler_execution_context,
-        **(
-            {"visible_goal_host": visible_goal_host}
-            if visible_goal_host
-            else {}
-        ),
-        **(
-            {
-                "initial_runtime_capability_projection": (
-                    initial_runtime_capability_projection
-                )
-            }
-            if initial_runtime_capability_projection
-            else {}
-        ),
         **(
             {"host_contract": build_ark_managed_agent_host_contract()}
             if ark_managed_agent_goal

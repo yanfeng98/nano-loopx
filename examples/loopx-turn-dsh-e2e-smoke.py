@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end qualification for the DeepSeek Harness generic-cli Turn adapter.
 
-Mirrors the TraeX e2e fixture but drives the generic-cli host through the real
+Drives the generic-cli host through the real
 ``scripts/dsh_turn_host_adapter.py`` against a fake dsh runner. This exercises
 the full governed chain without a model call or DeepSeek Harness SDK:
 

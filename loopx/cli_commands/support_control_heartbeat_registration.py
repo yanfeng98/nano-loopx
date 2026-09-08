@@ -81,14 +81,6 @@ def register_heartbeat_control_commands(
         ),
     )
     heartbeat_prompt_parser.add_argument(
-        "--visible-goal-host",
-        choices=["traex-cli"],
-        help=(
-            "Render the visible Goal task contract for an explicitly verified "
-            "host while preserving its scheduler runtime profile."
-        ),
-    )
-    heartbeat_prompt_parser.add_argument(
         "-H",
         "--host-surface",
         choices=[

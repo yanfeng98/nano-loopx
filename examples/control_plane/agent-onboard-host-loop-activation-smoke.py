@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shlex
 import subprocess
 import sys
@@ -52,18 +51,6 @@ def run_cli(
 def main() -> int:
     catalog = build_agent_type_catalog()
     agent_types = {item["agent_type"] for item in catalog["canonical_agent_types"]}
-    assert {
-        "codex-app",
-        "codex-app-ssh",
-        "codex-ide-plugin",
-        "codex-cli",
-        "claude-code",
-        "opencode",
-        "traex-cli",
-        "pi",
-        "manual",
-        "other-agent",
-    } <= agent_types
     ambiguous = {item["input"]: item["use_one_of"] for item in catalog["ambiguous_inputs"]}
     assert ambiguous["codex"] == [
         "codex-app",
@@ -81,8 +68,6 @@ def main() -> int:
     assert agent_type_for_host_surface("pi") == "pi"
     assert agent_type_for_host_surface("pi-tui") == "pi"
     assert agent_type_for_host_surface("ark-managed-agent") == "ark-managed-agent"
-    assert agent_type_for_host_surface("traex-cli") == "traex-cli"
-    assert agent_type_for_host_surface("traex") == "traex-cli"
     assert agent_type_for_host_surface("deepseek-harness") == "deepseek-harness"
     assert agent_type_for_host_surface("dsh") == "deepseek-harness"
 
@@ -100,7 +85,6 @@ def main() -> int:
         agent_type="ark-managed-agent",
         goal_id="demo",
     )
-    traex_cli = build_host_loop_activation_packet(agent_type="traex-cli", goal_id="demo")
     dsh = build_host_loop_activation_packet(agent_type="deepseek-harness", goal_id="demo")
     assert codex_app["activation_method"] == "create_or_update_codex_app_automation", codex_app
     assert codex_app_ssh["activation_method"] == "set_visible_goal", codex_app_ssh
@@ -136,36 +120,10 @@ def main() -> int:
     assert "--runtime-profile generic_cli" in pi["commands"]["heartbeat_prompt"], pi
     assert ark_managed_agent["activation_method"] == "submit_goal_once", ark_managed_agent
     assert ark_managed_agent["host_surface"] == "ark_managed_agent_goal_mode", ark_managed_agent
-    assert traex_cli["activation_method"] == "set_visible_goal", traex_cli
-    assert traex_cli["host_surface"] == "traex_visible_goal_mode", traex_cli
-    assert traex_cli["host_mutation"]["host_command"] == "/goal <task_body>", traex_cli
-    assert traex_cli["host_mutation"]["requires_host_feature_flag"] == (
-        "[features] goals = true in ~/.trae/traecli.toml"
-    ), traex_cli
-    assert "--runtime-profile generic_cli" in traex_cli["commands"]["heartbeat_prompt"], traex_cli
-    assert all(
-        "--visible-goal-host traex-cli" in traex_cli["commands"][key]
-        for key in (
-            "heartbeat_prompt",
-            "heartbeat_prompt_json",
-            "visible_goal_prompt_json",
-        )
-    ), traex_cli
-    assert traex_cli["commands"]["heartbeat_prompt_json"] == (
-        traex_cli["commands"]["visible_goal_prompt_json"]
-    ), traex_cli
-    assert traex_cli["activation_input_command"] == (
-        traex_cli["commands"]["visible_goal_prompt_json"]
-    ), traex_cli
-    assert "automation_update" not in str(traex_cli), traex_cli
     assert dsh["activation_method"] == "external_loop_driver", dsh
     assert dsh["host_surface"] == "deepseek_harness_automation_loop", dsh
     assert "--runtime-profile generic_cli" in dsh["commands"]["heartbeat_prompt"], dsh
     assert "scripts/dsh_turn_host_adapter.py" in dsh["entry_command_hint"], dsh
-    assert re.search(
-        r"(?<![a-z0-9_/])/loop(?![a-z0-9_-])",
-        str(traex_cli).lower(),
-    ) is None, traex_cli
     gated_activation = build_host_loop_activation_packet(
         agent_type="codex-app",
         goal_id="multi-agent-demo",

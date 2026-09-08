@@ -490,51 +490,6 @@ def render_visible_goal_task_body(
         agent_scope_instruction=agent_scope_instruction,
         host_wait_rule=CODEX_NATIVE_GOAL_UNCHANGED_WAIT_RULE,
     )
-def render_traex_visible_goal_task_body(
-    *,
-    goal_id: str,
-    active_state: str,
-    cli_preflight: str,
-    pr_review_pre_quota_command: str,
-    quota_guard_command: str,
-    quota_spend_command: str,
-    refresh_state_command: str,
-    progress_refresh_state_command: str,
-    material_queue_rule: str,
-    permission_rule: str,
-    cli_bin: str,
-    agent_scope_instruction: str,
-    expanded_prompt_command: str,
-    compact_prompt_command: str,
-    brief_prompt_command: str,
-    thin_prompt_command: str,
-) -> str:
-    del (
-        cli_preflight,
-        refresh_state_command,
-        cli_bin,
-        expanded_prompt_command,
-        compact_prompt_command,
-        brief_prompt_command,
-        thin_prompt_command,
-    )
-    return _render_goal_task_body(
-        goal_id=goal_id,
-        active_state=active_state,
-        host_preamble=(
-            "in this visible\nTraeX `/goal` task; its Goal owns interactive "
-            "continuation."
-        ),
-        completion_subject="visible Goal",
-        pr_review_pre_quota_command=pr_review_pre_quota_command,
-        quota_guard_command=quota_guard_command,
-        quota_spend_command=quota_spend_command,
-        progress_refresh_state_command=progress_refresh_state_command,
-        material_queue_rule=material_queue_rule,
-        permission_rule=permission_rule,
-        agent_scope_instruction=agent_scope_instruction,
-        host_wait_rule="",
-    )
 def _render_goal_task_body(
     *,
     goal_id: str,
@@ -751,16 +706,6 @@ No heartbeat task body was generated.
 def render_heartbeat_prompt_markdown(payload: dict[str, Any]) -> str:
     if payload.get("ok") is False:
         return render_heartbeat_prompt_error_markdown(payload)
-    if payload.get("visible_goal_host") == "traex-cli":
-        return f"""# Visible TraeX Goal Prompt
-
-Paste this task body into the visible TraeX `/goal` task.
-
-````text
-{payload.get("task_body", "")}
-````
-
-{render_heartbeat_generator_inputs_markdown(payload)}"""
     if payload.get("thin"):
         style = "thin "
     elif payload.get("brief"):
