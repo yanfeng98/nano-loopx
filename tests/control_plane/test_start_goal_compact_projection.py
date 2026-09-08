@@ -1614,7 +1614,6 @@ def test_cli_without_host_returns_read_only_host_selection_gate(
     assert [choice["host_surface"] for choice in choices] == [
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli-tui",
         "claude-code",
         "opencode",
@@ -1629,9 +1628,9 @@ def test_cli_without_host_returns_read_only_host_selection_gate(
         "shell",
         "other-agent",
     ]
-    ide = next(choice for choice in choices if choice["host_surface"] == "codex-ide-plugin")
-    assert "--host-surface codex-ide-plugin" in ide["rerun_command"]
-    assert "--capability-route issue-fix" in ide["rerun_command"]
+    cli = next(choice for choice in choices if choice["host_surface"] == "codex-cli-tui")
+    assert "--host-surface codex-cli-tui" in cli["rerun_command"]
+    assert "--capability-route issue-fix" in cli["rerun_command"]
 
 
 @pytest.mark.parametrize(
@@ -1768,45 +1767,6 @@ def test_ark_managed_agent_plans_todos_before_one_shot_goal_activation(
     assert activation["host_mutation"]["prompt_field"] == "task_body"
     assert "--runtime-profile ark_managed_agent_goal" in (
         activation["commands"]["heartbeat_prompt"]
-    )
-
-
-def test_codex_ide_plugin_uses_visible_goal_and_preserves_compact_parity(
-    tmp_path: Path,
-) -> None:
-    project = _write_connected_project(tmp_path)
-    common = {
-        "project": project,
-        "goal_id": GOAL_ID,
-        "agent_id": AGENT_ID,
-        "cli_bin": "loopx",
-        "host_surface": "codex-ide-plugin",
-        "goal_text": GOAL_TEXT,
-        "available_capabilities": ["network"],
-    }
-    compact = build_start_goal_guided_packet(
-        **common,
-        include_command_pack_detail=False,
-    )
-    detailed = build_start_goal_guided_packet(
-        **common,
-        include_command_pack_detail=True,
-    )
-
-    activation = compact["command_pack"]["host_loop_activation"]
-    assert detailed["command_pack"]["agent_type"] == "codex-ide-plugin"
-    assert activation["host_surface"] == "codex_ide_visible_goal_mode"
-    assert activation["activation_method"] == "set_visible_goal"
-    assert activation["host_mutation"]["host_command"] == "/goal <task_body>"
-    assert _host_shadow_document(compact) == _host_shadow_document(detailed)
-
-    legacy = build_start_goal_guided_packet(
-        **{**common, "host_surface": "codex-ide"},
-        include_command_pack_detail=True,
-    )
-    assert legacy["command_pack"]["agent_type"] == "codex-ide-plugin"
-    assert legacy["command_pack"]["host_loop_activation"]["host_surface"] == (
-        "codex_ide_visible_goal_mode"
     )
 
 

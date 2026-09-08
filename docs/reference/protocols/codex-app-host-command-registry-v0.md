@@ -140,7 +140,7 @@ loopx resolve-agent-thread \
   --thread-link 'codex://threads/<thread-id>'
 ```
 
-深链不编码任务的执行界面。无显式 `--host-surface` 时，LoopX 只搜索 Codex host 家族（`codex-app`、`codex-app-ssh`、`codex-ide-plugin` 与 `codex-cli-tui`）并报告匹配的界面。调用方可以传其中任一界面以缩小查找。`bound` 结果指名恰好一个 `goal_id` 与 `agent_id`。`missing` 结果只表示链接解析成功；它不授权接管，也不证明目标任务连接到本 LoopX 项目。`ambiguous` 与无效结果失效关闭。命令不存储任何内容，返回解析的定位器且 `authority=locator_only`。发送方仍必须通过正常引导启动流程注册并绑定自己的 agent lane，且两个任务必须显式陈述各自职责。深链不共享聊天上下文、权限、凭据、工作区访问、lease 或写 scope。并发写者仍需要独立 worktree 或等价隔离。确认唯一绑定后，暴露只读任务检查的 host 可以使用解析的 `thread_id` 检查或引用该任务。工具可用性与访问另行检查；检查不可用时，发送方必须显式转发所需上下文。
+深链不编码任务的执行界面。无显式 `--host-surface` 时，LoopX 只搜索 Codex host 家族（`codex-app`、`codex-app-ssh` 与 `codex-cli-tui`）并报告匹配的界面。调用方可以传其中任一界面以缩小查找。`bound` 结果指名恰好一个 `goal_id` 与 `agent_id`。`missing` 结果只表示链接解析成功；它不授权接管，也不证明目标任务连接到本 LoopX 项目。`ambiguous` 与无效结果失效关闭。命令不存储任何内容，返回解析的定位器且 `authority=locator_only`。发送方仍必须通过正常引导启动流程注册并绑定自己的 agent lane，且两个任务必须显式陈述各自职责。深链不共享聊天上下文、权限、凭据、工作区访问、lease 或写 scope。并发写者仍需要独立 worktree 或等价隔离。确认唯一绑定后，暴露只读任务检查的 host 可以使用解析的 `thread_id` 检查或引用该任务。工具可用性与访问另行检查；检查不可用时，发送方必须显式转发所需上下文。
 
 中文：在目标 Codex 任务菜单中选择"复制 -> 复制深度链接"，把 `codex://threads/<thread-id>` 连同双方分工发给另一个任务。接收方先运行上面的只读命令；只有返回 `bound` 且 `goal_id`、`agent_id` 与预期一致时，才把它视为已确认的 LoopX 会话绑定。`missing` 只表示链接格式有效但尚无本项目绑定。深度链接只负责定位，不同步权限、目录、对话上下文、lease 或写入范围；并行修改代码仍需独立 worktree。
 
@@ -152,7 +152,7 @@ loopx resolve-agent-thread \
 
 `start-goal --project <path>` 保留该精确项目路由。特别是，新风 linked worktree 不得静默继承共享其 Git common 目录的另一个 worktree 注册的 goal。当检查或修复既有连接时，更低层的 `bootstrap-command-pack` 仍允许把 linked worktree 解析到其规范注册来源。
 
-`start-goal` 不在 Codex App 自动化、SSH 上的 Codex App、Codex IDE 插件、Codex CLI TUI 或 OpenCode 之间猜测。调用方应为精确当前 host 传 `--host-surface codex-app`、`codex-app-ssh`、`codex-ide-plugin`、`codex-cli-tui` 或 `opencode`。`codex-app-ssh` 意为桌面应用附着到远程工作区且无法暴露其自动化工具，因此可见 `/goal` 拥有继续。`codex-ide-plugin` 指已安装的 IDE 插件 host，而非编辑器旁使用的任意 Codex 会话。遗留 `codex-ide` 值仍作为兼容别名接受，但不作为选择关卡选项。省略该选项时，命令返回带精确重跑命令的只读 `host_surface_selection` gate；它不得连接项目、写入 todos、激活 host 或花费配额。
+`start-goal` 不在 Codex App 自动化、SSH 上的 Codex App、Codex CLI TUI 或 OpenCode 之间猜测。调用方应为精确当前 host 传 `--host-surface codex-app`、`codex-app-ssh`、`codex-cli-tui` 或 `opencode`。`codex-app-ssh` 意为桌面应用附着到远程工作区且无法暴露其自动化工具，因此可见 `/goal` 拥有继续。省略该选项时，命令返回带精确重跑命令的只读 `host_surface_selection` gate；它不得连接项目、写入 todos、激活 host 或花费配额。
 
 ## 权限边界
 
@@ -177,7 +177,6 @@ loopx agent-onboard --agent-type codex-cli --project .
 loopx agent-onboard --agent-type codex-app-ssh --project .
 loopx bootstrap-command-pack --project .
 loopx start-goal --guided --project . --goal-text "<goal text>" --host-surface codex-cli-tui
-loopx --format json start-goal --guided --project . --goal-text "<goal text>" --host-surface codex-ide-plugin --include-command-pack-detail
 loopx bootstrap-command-pack --project . --goal-text "<goal text>"
 loopx pr-review
 loopx global-summary

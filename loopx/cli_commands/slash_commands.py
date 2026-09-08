@@ -56,8 +56,6 @@ def register_slash_commands_command(
             "codex-cli",
             "codex-app",
             "codex-app-ssh",
-            "codex-ide-plugin",
-            "codex-ide",
             "claude-code",
             "opencode",
             "gemini",

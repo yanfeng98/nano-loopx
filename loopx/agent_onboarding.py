@@ -35,7 +35,7 @@ CHANGE_QUALITY_SKILL_ID = "loopx-change-quality"
 
 
 def _surface_install_command(agent_type: str, cli_bin: str, project: str) -> str | None:
-    if agent_type in {"codex-app", "codex-app-ssh", "codex-ide-plugin", "codex-cli"}:
+    if agent_type in {"codex-app", "codex-app-ssh", "codex-cli"}:
         return f"{shell_arg(cli_bin)} slash-commands --install --surface codex"
     if agent_type == "claude-code":
         return f"{shell_arg(cli_bin)} slash-commands --install --surface claude-code"
@@ -65,7 +65,6 @@ def _project_skill_surface(agent_type: str) -> str | None:
     if agent_type in {
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli",
     }:
         return "codex"
@@ -270,7 +269,6 @@ def _bootstrap_pack_command(
     surface_by_type = {
         "codex-app": "codex-app",
         "codex-app-ssh": "codex-app-ssh",
-        "codex-ide-plugin": "codex-ide-plugin",
         "codex-cli": "codex-cli-tui",
         "claude-code": "claude-code",
         "opencode": "opencode",
@@ -308,8 +306,6 @@ def _start_instruction(agent_type: str) -> str:
         return "Use `$loopx <task>` or select the LoopX skill from `/skills`; Codex App should then create/update the heartbeat automation."
     if agent_type == "codex-app-ssh":
         return "Use `$loopx <task>` or select the LoopX skill from `/skills`; after todos are written, set `/goal <task_body>` in the visible Codex App task."
-    if agent_type == "codex-ide-plugin":
-        return "Use `$loopx <task>` or select the LoopX skill from `/skills`; after todos are written, set `/goal <task_body>` in the visible IDE plugin."
     if agent_type == "codex-cli":
         return "Use `$loopx <task>` or select the LoopX skill from `/skills`; after todos are written, set `/goal <task_body>` in the visible TUI."
     if agent_type == "claude-code":

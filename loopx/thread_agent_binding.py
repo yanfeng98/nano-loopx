@@ -21,7 +21,6 @@ CODEX_THREAD_HOST_SURFACES = frozenset(
     {
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli-tui",
     }
 )

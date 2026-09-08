@@ -22,7 +22,6 @@
    - `codex-app`：根据生成的 `heartbeat-prompt` 任务正文创建或更新 Codex App heartbeat 自动化。
    - `codex-app-ssh`：当 Codex App 通过 SSH 附着到远程工作区且 host 自动化工具不可用时，使用生成的 `codex_app_ssh_goal` profile 把当前可见任务设为 `/goal <task_body>`。在其类型化未变化轮询限制与最终 quota 检查之后，使用原生 `update_goal(status=blocked)` 只阻塞该 host Goal；保持已注册 LoopX goal 活动，并用 `/goal resume` 恢复 host。
    - `codex-cli`：把可见 Codex CLI TUI 设为 `/goal <task_body>`。
-   - `codex-ide-plugin`：通过同一 `codex_cli` 运行时 profile 把可见 IDE composer 任务设为 `/goal <task_body>`。
    - `ark-managed-agent`：把生成的 `<task_body>` 作为原生 Goal 提交一次。Goal 运行时拥有继续与终态评估；不要用 LoopX Turn 包装其内部迭代，也不要在相位边界重提。
    - `claude-code`：用 `/loopx <task>` 武装 LoopX，然后运行原生 `/loop`。
    - `opencode`：从已安装的 LoopX OpenCode bridge 调用 `loopx_goal_activate`；bridge 通过 `quota should-run` 关卡空闲继续与定时器唤醒，且只在已验证终态 no-follow-up 时完成。
@@ -42,13 +41,13 @@ TraeX CLI 接入已移除：`traex-cli` 及其别名不再是可选 host，
 也已撤除。旧调用会明确失败，不自动转成其他 Agent；既有 registry 与历史证据
 不会被迁移或删除。需要继续工作时，显式选择上面列出的受支持宿主。
 
-`codex` 这类歧义值必须失效关闭，因为 Codex App 自动化、SSH 上的 Codex App、IDE 插件与 Codex CLI 使用不同 host-loop 激活路径。
+`codex` 这类歧义值必须失效关闭，因为 Codex App 自动化、SSH 上的 Codex App 与 Codex CLI 使用不同 host-loop 激活路径。
 
-Codex App SSH、Codex CLI/IDE 与 Ark Managed Agent 构成一个原生 Goal host 家族。它们共享稳定 `loopx_goal_prompt_v0` 正文、4,000 字符 host 预算、每次继续的 `quota should-run` 包、持久化 LoopX writeback 与非 heartbeat 配额记账。它们的继续 owner 仍是显式 host 契约：
+Codex App SSH、Codex CLI 与 Ark Managed Agent 构成一个原生 Goal host 家族。它们共享稳定 `loopx_goal_prompt_v0` 正文、4,000 字符 host 预算、每次继续的 `quota should-run` 包、持久化 LoopX writeback 与非 heartbeat 配额记账。它们的继续 owner 仍是显式 host 契约：
 
 | 原生 Goal host | 激活 | 继续与阻塞状态 owner |
 | --- | --- | --- |
-| Codex App SSH / Codex CLI / Codex IDE | 设置可见 `/goal <task_body>`。 | 原生 Codex Goal；在未变化限制后可以调用 `update_goal(status=blocked)`，只有用户 `/goal resume` 重新激活它。 |
+| Codex App SSH / Codex CLI | 设置可见 `/goal <task_body>`。 | 原生 Codex Goal；在未变化限制后可以调用 `update_goal(status=blocked)`，只有用户 `/goal resume` 重新激活它。 |
 | Ark Managed Agent | 一次性提交同一 prompt 家族。 | Managed Agent Goal 运行时及其持久化 journal；LoopX 不得模拟 `/goal resume` 或盲目重提。 |
 
 该家族是 prompt、quota 与状态边界抽象，不是声称所有 host 具有相同传输或生命周期 API。

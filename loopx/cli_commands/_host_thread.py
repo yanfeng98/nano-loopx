@@ -12,7 +12,6 @@ def current_host_thread_id(args: argparse.Namespace) -> str | None:
     if host_surface in {
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli-tui",
     }:
         return os.environ.get("CODEX_THREAD_ID") or None

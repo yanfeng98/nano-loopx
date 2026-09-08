@@ -62,7 +62,6 @@ START_GOAL_CAPABILITY_ROUTES = ("issue-fix",)
 START_GOAL_HOST_SURFACES = (
     "codex-app",
     "codex-app-ssh",
-    "codex-ide-plugin",
     "codex-cli-tui",
     "claude-code",
     "opencode",
@@ -347,7 +346,6 @@ def build_start_goal_host_surface_selection_packet(
     host_descriptions = {
         "codex-app": "Codex desktop app with heartbeat automation support",
         "codex-app-ssh": "Codex desktop app over SSH with visible /goal support",
-        "codex-ide-plugin": "Codex IDE plugin; activate its visible goal mode",
         "codex-cli-tui": "terminal Codex TUI with visible /goal support",
         "claude-code": "Claude Code with native /loop",
         "opencode": "OpenCode LoopX goal bridge",
@@ -393,7 +391,7 @@ def build_start_goal_host_surface_selection_packet(
         )
     reason = (
         "host surface is required because Codex App automation, Codex App over SSH, "
-        "the Codex IDE plugin, Codex CLI, and Ark Managed Agent "
+        "Codex CLI, and Ark Managed Agent "
         "have different continuation contracts"
     )
     gate = {

@@ -68,7 +68,7 @@ loopx new-project-prompt \
 
 安装器还为能发现用户安装 skills 的宿主界面注册 LoopX 命令家族：
 
-- Codex CLI / IDE / App：`~/.codex/skills/loopx*` 下的显式 LoopX 命令 facade
+- Codex CLI / App：`~/.codex/skills/loopx*` 下的显式 LoopX 命令 facade
   skills。Codex 目前不支持用户定义的原生顶级 `/loopx` slash command，因此通过
   `$loopx` 或 `/skills` 调用项目命令。主 `LoopX` 命令 facade 与 `LoopX Project`
   workflow skill 是两个独立条目：命令 facade 设置 `allow_implicit_invocation: false`，
@@ -126,13 +126,11 @@ loopx start-goal --guided --project . --goal-text "<goal text>" \
 全局管理器或 PR 评审命令使用 `loopx slash-commands` 打印当前规范命令列表与回退
 CLI 形态。
 
-对应宿主使用 `codex-app`、`codex-app-ssh`、`codex-ide-plugin`、`codex-cli-tui`、
-`opencode` 或 `opencode2`。当桌面 App 通过 SSH 附加到远程工作区且其自动化工具
-不可用时使用 `codex-app-ssh`；LoopX 将生成可见 `/goal` 任务。仅当 LoopX 通过已安装
-IDE plugin 运行时选择 `codex-ide-plugin`；在编辑器旁使用 Codex 并不使宿主成为
-IDE plugin。确切宿主未知时，省略 `--host-surface` 一次：LoopX 返回带精确重跑
-命令的只读选择 gate，且不写项目状态。遗留 `codex-ide` 值仍是接受中的兼容别名，
-但不再宣传。这防止升级把 IDE plugin 或终端启动静默路由到桌面 App heartbeat。
+对应宿主使用 `codex-app`、`codex-app-ssh`、`codex-cli-tui`、`opencode` 或
+`opencode2`。当桌面 App 通过 SSH 附加到远程工作区且其自动化工具不可用时使用
+`codex-app-ssh`；LoopX 将生成可见 `/goal` 任务。确切宿主未知时，省略
+`--host-surface` 一次：LoopX 返回带精确重跑命令的只读选择 gate，且不写项目状态。
+这防止升级把终端启动静默路由到桌面 App heartbeat。
 
 ## 本地状态备份
 

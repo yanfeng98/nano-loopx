@@ -152,7 +152,6 @@ def test_codex_install_upgrades_managed_loopx_facade(tmp_path: Path) -> None:
     assert "Identify the exact current host surface" in skill_text
     assert "ark-managed-agent" in skill_text
     assert "`ordered_steps` and `goal_start_contract` as authoritative" in skill_text
-    assert "use `codex-ide` for the IDE" not in skill_text
     assert "surface the exact pasteable gate" in skill_text
     assert "follow its exact CLI `interaction_contract` or quota command first" in skill_text
     assert "treat `--action-kind` as the documented extensible public-safe token" in skill_text

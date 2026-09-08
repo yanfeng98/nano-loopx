@@ -18,39 +18,6 @@ from loopx.host_loop_activation import (
 from loopx.project_prompt import render_accountable_progress_refresh_command
 
 
-def test_codex_ide_plugin_is_an_exact_host_type_with_visible_goal_activation() -> None:
-    assert normalize_agent_type("codex-ide-plugin") == "codex-ide-plugin"
-    assert normalize_agent_type("VSCode Codex") == "codex-ide-plugin"
-    assert normalize_agent_type("codex-ide") == "codex-ide-plugin"
-    assert agent_type_for_host_surface("codex-ide-plugin") == "codex-ide-plugin"
-    assert agent_type_for_host_surface("codex-ide") == "codex-ide-plugin"
-    assert agent_type_for_host_surface("codex-app") == "codex-app"
-    assert agent_type_for_host_surface("codex-cli-tui") == "codex-cli"
-    assert normalize_agent_type("Open Code") == "opencode"
-    assert agent_type_for_host_surface("opencode") == "opencode"
-    assert agent_type_for_host_surface("ark-managed-agent") == "ark-managed-agent"
-
-    packet = build_host_loop_activation_packet(
-        agent_type="codex-ide-plugin",
-        goal_id="fixture-goal",
-        agent_id="codex-fixture",
-        registered_agents=["codex-fixture"],
-    )
-
-    assert packet["host_surface"] == "codex_ide_visible_goal_mode"
-    assert packet["activation_method"] == "set_visible_goal"
-    assert packet["host_mutation"]["owner"] == "Codex IDE plugin composer"
-    assert packet["host_mutation"]["host_command"] == "/goal <task_body>"
-    assert "automation_update" not in str(packet)
-    assert (
-        "--runtime-profile codex_cli"
-        in packet["commands"]["heartbeat_prompt"]
-    )
-    assert " -H " not in packet["commands"]["heartbeat_prompt"]
-    assert " -O " not in packet["commands"]["heartbeat_prompt"]
-    assert " -M " not in packet["commands"]["heartbeat_prompt"]
-
-
 @pytest.mark.parametrize(
     ("agent_type", "runtime_profile"),
     (
@@ -58,7 +25,6 @@ def test_codex_ide_plugin_is_an_exact_host_type_with_visible_goal_activation() -
         ("codex-app", "codex_app_heartbeat"),
         ("codex-app-ssh", "codex_app_ssh_goal"),
         ("codex-cli", "codex_cli"),
-        ("codex-ide-plugin", "codex_cli"),
         ("claude-code", "claude_code"),
         ("opencode", "generic_cli"),
         ("pi", "generic_cli"),
@@ -437,7 +403,6 @@ def test_new_agent_onboarding_defaults_to_fresh_identity() -> None:
         "ark-managed-agent",
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli",
         "claude-code",
         "opencode",
@@ -561,13 +526,12 @@ def test_generic_cli_prompt_keeps_external_loop_semantics() -> None:
     assert "visible TraeX `/goal` task" not in payload["task_body"]
 
 
-def test_ambiguous_codex_requires_app_ide_or_cli_selection() -> None:
+def test_ambiguous_codex_requires_app_ssh_or_cli_selection() -> None:
     with pytest.raises(AgentTypeError) as caught:
         normalize_agent_type("codex")
 
     assert caught.value.suggestions == [
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli",
     ]

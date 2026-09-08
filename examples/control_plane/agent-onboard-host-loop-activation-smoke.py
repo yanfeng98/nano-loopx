@@ -50,19 +50,15 @@ def run_cli(
 
 def main() -> int:
     catalog = build_agent_type_catalog()
-    agent_types = {item["agent_type"] for item in catalog["canonical_agent_types"]}
     ambiguous = {item["input"]: item["use_one_of"] for item in catalog["ambiguous_inputs"]}
     assert ambiguous["codex"] == [
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli",
     ], ambiguous
 
     assert agent_type_for_host_surface("chat-box") == "codex-app"
     assert agent_type_for_host_surface("codex-app-ssh") == "codex-app-ssh"
-    assert agent_type_for_host_surface("codex-ide-plugin") == "codex-ide-plugin"
-    assert agent_type_for_host_surface("codex-ide") == "codex-ide-plugin"
     assert agent_type_for_host_surface("codex-cli-tui") == "codex-cli"
     assert agent_type_for_host_surface("opencode") == "opencode"
     assert agent_type_for_host_surface("pi") == "pi"
@@ -76,7 +72,6 @@ def main() -> int:
         agent_type="codex-app-ssh",
         goal_id="demo",
     )
-    codex_ide = build_host_loop_activation_packet(agent_type="codex-ide-plugin", goal_id="demo")
     codex_cli = build_host_loop_activation_packet(agent_type="codex-cli", goal_id="demo")
     claude_code = build_host_loop_activation_packet(agent_type="claude-code", goal_id="demo")
     opencode = build_host_loop_activation_packet(agent_type="opencode", goal_id="demo")
@@ -104,8 +99,6 @@ def main() -> int:
     assert app_ssh_scheduler.projection()["scheduler_owner"] == "agent_cli_loop"
     assert app_ssh_scheduler.projection()["execution_mode"] == "interactive"
     assert app_ssh_scheduler.projection()["codex_app_applicability"] == "not_applicable"
-    assert codex_ide["activation_method"] == "set_visible_goal", codex_ide
-    assert codex_ide["host_mutation"]["host_command"] == "/goal <task_body>", codex_ide
     assert codex_cli["host_mutation"]["host_command"] == "/goal <task_body>", codex_cli
     assert claude_code["host_mutation"]["host_command"] == "/loop", claude_code
     assert opencode["activation_method"] == "activate_loopx_opencode_goal_bridge", opencode
@@ -172,7 +165,6 @@ def main() -> int:
     assert ambiguous_payload["suggestions"] == [
         "codex-app",
         "codex-app-ssh",
-        "codex-ide-plugin",
         "codex-cli",
     ], ambiguous_payload
 
@@ -342,18 +334,6 @@ def main() -> int:
                 key,
                 selected_pack["commands"],
             )
-
-        ide_onboarding = build_agent_onboarding_packet(
-            project=project,
-            agent_type="codex-ide-plugin",
-            goal_id="multi-agent-goal",
-            agent_id="codex-product-capability",
-            cli_bin=cli_bin,
-        )
-        ide_bootstrap = ide_onboarding["commands"]["bootstrap_command_pack"]
-        assert "--host-surface codex-ide-plugin" in ide_bootstrap, ide_onboarding
-        assert "worker-bridge" not in ide_bootstrap, ide_onboarding
-        assert "visible IDE plugin" in ide_onboarding["recommended_start"], ide_onboarding
 
         app_ssh_onboarding = build_agent_onboarding_packet(
             project=project,
