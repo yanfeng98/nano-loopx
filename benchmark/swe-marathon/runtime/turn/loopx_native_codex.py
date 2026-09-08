@@ -12,14 +12,15 @@ wrapper, not this product.
 
 The real path, all of it LoopX's:
 
-    install_native_codex_profile      scripts/install-local.sh builds a release
-                                      snapshot and installs the six LoopX skills
+    profile install (modes/profile_install.py)
+                                      scripts/install-local.sh builds a release
+                                      snapshot and installs the LoopX skills
                                       into a profile-owned CODEX_HOME
     loopx bootstrap                   LoopX writes .loopx/registry.json and
                                       .codex/goals/<id>/ACTIVE_GOAL_STATE.md,
                                       with its own execution profile
     loopx configure-goal              registers the peer identity
-    render_native_codex_goal_prompt   the installed CLI renders the real Goal
+    loopx heartbeat-prompt --thin     the installed CLI renders the real Goal
                                       body -- the thing I used to hand-write
     run_native_goal_process_until_terminal
                                       codex app-server owns continuation while
@@ -91,20 +92,35 @@ def build_host_profile(loopx_root: str = _LOOPX_ROOT,
     Reuses an existing profile: the installer refuses a non-empty target on
     purpose, because mixing installation revisions would invalidate the
     treatment, and re-installing per task would repeat that work 54 times.
+
+    The isolated-install implementation lives in runtime/modes/profile_install.py
+    and is shared with run_mode; the toolkit-level host-typed profile module it
+    used to wrap has been retired with its host.  Load it by file path because
+    this turn stack does not assume the `runtime/` package is importable.
     """
     sys.path.insert(0, loopx_root)
-    from loopx.capabilities.benchmark_toolkit.native_codex_profile import (
-        compact_native_codex_profile_receipt,
-        inspect_native_codex_profile,
-        install_native_codex_profile,
-    )
+    import importlib.util
+
+    installer_path = Path(__file__).resolve().parent.parent / "modes" / "profile_install.py"
+    spec = importlib.util.spec_from_file_location("modes_profile_install", installer_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"modes/profile_install.py 不可加载: {installer_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["modes_profile_install"] = module  # dataclass 需要 module 注册
+    spec.loader.exec_module(module)
 
     target = Path(profile_root)
     if target.exists() and any(target.iterdir()):
-        profile = inspect_native_codex_profile(target, source_root=loopx_root)
+        profile = module.inspect(target, source_root=loopx_root)
     else:
-        profile = install_native_codex_profile(loopx_root, target)
-    return compact_native_codex_profile_receipt(profile)
+        profile = module.install(loopx_root, target)
+    return {
+        "source_revision": profile.source_revision,
+        "source_clean": profile.source_clean,
+        "skills_digest": profile.skills_digest,
+        "required_skill_ids": list(profile.required_skill_ids),
+        "materialized_skill_ids": list(profile.materialized_skill_ids),
+    }
 
 
 class LoopxNativeCodex(GoalCodex):
@@ -338,7 +354,7 @@ prompt = run("heartbeat_prompt",
              ["heartbeat-prompt", "--thin", "--goal-id", a.goal_id,
               "--agent-id", a.agent_id, "--available-capability", "shell",
               "--available-capability", "filesystem_write",
-              "--runtime-profile", "codex_app_ssh_goal", "--cli-bin", cli])
+              "--runtime-profile", "codex_cli", "--cli-bin", cli])
 
 body = prompt.get("task_body")
 if body:

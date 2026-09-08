@@ -15,7 +15,7 @@ import copy from "./swe-marathon-copy.json";
 type Language = "en" | "zh";
 type Arm = (typeof benchmarkData.arms)[number];
 
-const armOrder = ["plain", "goal", "ssh-goal", "codex-cli", "heartbeat"] as const;
+const armOrder = ["plain", "goal", "codex-cli", "heartbeat"] as const;
 const publicAnalysisUrl =
   "https://github.com/huangruiteng/loopx/pull/3887#issuecomment-5535839229";
 const repositoryStudyUrl =
@@ -36,14 +36,12 @@ const armLabels: Record<Language, Record<string, string>> = {
   en: {
     plain: "Plain Codex",
     goal: "Native Goal",
-    "ssh-goal": "Codex App SSH Goal + LoopX",
     "codex-cli": "Codex CLI Goal profile + LoopX*",
     heartbeat: "LoopX Turn (external-scheduler automation)",
   },
   zh: {
     plain: "裸 Codex",
     goal: "原生 Goal",
-    "ssh-goal": "Codex App SSH Goal + LoopX",
     "codex-cli": "Codex CLI Goal profile + LoopX*",
     heartbeat: "LoopX Turn（外部调度 Automation）",
   },
@@ -251,7 +249,6 @@ export function SweMarathonBrief() {
                 [armLabels[language].goal, behaviorMetrics.agent_step_ratio_vs_plain_median.goal_native],
                 [armLabels[language]["codex-cli"], behaviorMetrics.agent_step_ratio_vs_plain_median["codex-cli"]],
                 [armLabels[language].heartbeat, behaviorMetrics.agent_step_ratio_vs_plain_median.heartbeat],
-                [armLabels[language]["ssh-goal"], behaviorMetrics.agent_step_ratio_vs_plain_median["ssh-goal"], true],
               ]}
               format={(value) => `${value.toFixed(2)}×`}
             />
@@ -261,7 +258,6 @@ export function SweMarathonBrief() {
                 [armLabels[language].plain, behaviorMetrics.self_verification_density_per_step_median.plain],
                 [armLabels[language].goal, behaviorMetrics.self_verification_density_per_step_median.goal_native],
                 [armLabels[language].heartbeat, behaviorMetrics.self_verification_density_per_step_median.heartbeat],
-                [armLabels[language]["ssh-goal"], behaviorMetrics.self_verification_density_per_step_median["ssh-goal"], true],
               ]}
               format={(value) => value.toFixed(3)}
             />

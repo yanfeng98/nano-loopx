@@ -61,7 +61,6 @@ GOAL_CAPABILITY_ROUTE_SCHEMA_VERSION = "loopx_goal_capability_route_v0"
 START_GOAL_CAPABILITY_ROUTES = ("issue-fix",)
 START_GOAL_HOST_SURFACES = (
     "codex-app",
-    "codex-app-ssh",
     "codex-cli-tui",
     "claude-code",
     "opencode",
@@ -344,7 +343,6 @@ def build_start_goal_host_surface_selection_packet(
     normalized_goal_text = " ".join(goal_text.split())
     host_descriptions = {
         "codex-app": "Codex desktop app with heartbeat automation support",
-        "codex-app-ssh": "Codex desktop app over SSH with visible /goal support",
         "codex-cli-tui": "terminal Codex TUI with visible /goal support",
         "claude-code": "Claude Code with native /loop",
         "opencode": "OpenCode LoopX goal bridge",
@@ -388,7 +386,7 @@ def build_start_goal_host_surface_selection_packet(
             }
         )
     reason = (
-        "host surface is required because Codex App automation, Codex App over SSH, "
+        "host surface is required because Codex App automation, "
         "Codex CLI, and Ark Managed Agent "
         "have different continuation contracts"
     )

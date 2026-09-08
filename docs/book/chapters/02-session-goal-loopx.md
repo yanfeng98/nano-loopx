@@ -228,7 +228,6 @@ LoopX 保留同一 control-plane contract，但不同 Host 的启动和唤醒机
 | Host surface | 驱动 | 关键限制 |
 | --- | --- | --- |
 | Codex App | `$loopx <task>` + App heartbeat | cadence 需要 RRULE apply/readback/ACK |
-| Codex App over SSH | visible `/goal` | 不依赖 App automation tools |
 | Codex CLI TUI | generated bootstrap + visible `/goal` | 保持 visible、interruptible |
 | Claude Code | `/loopx` + opt-in native `/loop` adapter | 仍走同一 quota/writeback |
 | OpenCode 1/2 | `/loopx` + opt-in Goal bridge / persistent worker | bridge 或 worker 保持 Host 可见性与停止语义 |
@@ -237,7 +236,7 @@ LoopX 保留同一 control-plane contract，但不同 Host 的启动和唤醒机
 | Shell / other Agent | guided packet + caller-owned runner | 无 runner hook 时由调用方唤醒 |
 
 表中出现一个 Host 不代表所有 Host 都支持相同 automation API。`host_surface` 未知时，应省略一次
-该参数并使用只读 selection Gate；不要把 Codex CLI、App SSH 或普通 shell 猜成
+该参数并使用只读 selection Gate；不要把 Codex CLI 或普通 shell 猜成
 Codex App heartbeat。完整表面、启动方式、停止策略和验证证据以 Runtime Connector Catalog 与
 对应 Host 文档为准；Dev Book 不复制每个 adapter 的完整 runbook。
 

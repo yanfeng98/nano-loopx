@@ -20,7 +20,6 @@
 5. 运行 `refresh-state`。
 6. 若 host loop 缺失、未知或过期，则激活它：
    - `codex-app`：根据生成的 `heartbeat-prompt` 任务正文创建或更新 Codex App heartbeat 自动化。
-   - `codex-app-ssh`：当 Codex App 通过 SSH 附着到远程工作区且 host 自动化工具不可用时，使用生成的 `codex_app_ssh_goal` profile 把当前可见任务设为 `/goal <task_body>`。在其类型化未变化轮询限制与最终 quota 检查之后，使用原生 `update_goal(status=blocked)` 只阻塞该 host Goal；保持已注册 LoopX goal 活动，并用 `/goal resume` 恢复 host。
    - `codex-cli`：把可见 Codex CLI TUI 设为 `/goal <task_body>`。
    - `ark-managed-agent`：把生成的 `<task_body>` 作为原生 Goal 提交一次。Goal 运行时拥有继续与终态评估；不要用 LoopX Turn 包装其内部迭代，也不要在相位边界重提。
    - `claude-code`：用 `/loopx <task>` 武装 LoopX，然后运行原生 `/loop`。
@@ -41,18 +40,16 @@ TraeX CLI 接入已移除：`traex-cli` 及其别名不再是可选 host，
 也已撤除。旧调用会明确失败，不自动转成其他 Agent；既有 registry 与历史证据
 不会被迁移或删除。需要继续工作时，显式选择上面列出的受支持宿主。
 
-`codex` 这类歧义值必须失效关闭，因为 Codex App 自动化、SSH 上的 Codex App 与 Codex CLI 使用不同 host-loop 激活路径。
+`codex` 这类歧义值必须失效关闭，因为 Codex App 自动化与 Codex CLI 使用不同 host-loop 激活路径。
 
-Codex App SSH、Codex CLI 与 Ark Managed Agent 构成一个原生 Goal host 家族。它们共享稳定 `loopx_goal_prompt_v0` 正文、4,000 字符 host 预算、每次继续的 `quota should-run` 包、持久化 LoopX writeback 与非 heartbeat 配额记账。它们的继续 owner 仍是显式 host 契约：
+Codex CLI 与 Ark Managed Agent 构成一个原生 Goal host 家族。它们共享稳定 `loopx_goal_prompt_v0` 正文、4,000 字符 host 预算、每次继续的 `quota should-run` 包、持久化 LoopX writeback 与非 heartbeat 配额记账。它们的继续 owner 仍是显式 host 契约：
 
 | 原生 Goal host | 激活 | 继续与阻塞状态 owner |
 | --- | --- | --- |
-| Codex App SSH / Codex CLI | 设置可见 `/goal <task_body>`。 | 原生 Codex Goal；在未变化限制后可以调用 `update_goal(status=blocked)`，只有用户 `/goal resume` 重新激活它。 |
+| Codex CLI | 设置可见 `/goal <task_body>`。 | 原生 Codex Goal；在未变化限制后可以调用 `update_goal(status=blocked)`，只有用户 `/goal resume` 重新激活它。 |
 | Ark Managed Agent | 一次性提交同一 prompt 家族。 | Managed Agent Goal 运行时及其持久化 journal；LoopX 不得模拟 `/goal resume` 或盲目重提。 |
 
 该家族是 prompt、quota 与状态边界抽象，不是声称所有 host 具有相同传输或生命周期 API。
-
-`codex-app-ssh` 任务正文是交互式 Goal 契约，不是计划 heartbeat。它必须适配 Codex `/goal` 文本限制、用 `--begin-turn` 调用 `quota should-run`，使 CLI 铸造精确 Todo 选择所需的身份，且不得指示 host 调用 `automation_update`、应用 RRULE 或合成 `LOOPX_TURN`。这个 CLI 自有选择回执不把 Goal 变成 heartbeat 自动化或 Turn 绑定 settlement 流程；在已验证 writeback 之后，Goal 仍以 `--source visible-goal` 花费一次。
 
 可见 Goal 激活捕获任务正文生成时观察到的能力，但该初始列表对长程会话并非穷尽。因此动态能力指引属于 CLI 决策包，而非稳定 Goal prompt。当 `quota should-run` 发现可修复的运行时能力缺口时，`interaction_contract.cli_channel` 返回类型化 `runtime_capability_reentry_v0` 包。每个候选在其实时调用点成功观察后，其精确重新进入命令才可声明 `--available-capability`。
 

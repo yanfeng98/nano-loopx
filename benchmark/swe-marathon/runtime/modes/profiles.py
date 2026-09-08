@@ -1,18 +1,17 @@
-"""三种 Codex × LoopX 运行模式的声明式定义。
+"""Codex × LoopX 运行模式的声明式定义。
 
-模式取自 LoopX README 的 Codex 三行 host 表（upstream README.md:289-291）。
-三者的差别不是"接法不同"，而是 LoopX 渲染出的 body、闸门命令、结算来源不同——
-这里把差别集中成数据，驱动逻辑（session.py / codex_host.py）对三者一视同仁。
+模式取自 LoopX README 的 Codex host 表。差别不是"接法不同"，而是 LoopX 渲染出
+的 body、闸门命令、结算来源不同——这里把差别集中成数据，驱动逻辑（session.py /
+codex_host.py）对它们一视同仁。
 
-实测三个 profile 在同一个 goal 上渲染出的差别（loopx 0.5.3）：
+实测 profile 在同一个 goal 上渲染出的差别（loopx 0.5.3）：
 
-    codex_app_ssh_goal   body 2720 字符  guard 带 --begin-turn      spend --source visible-goal
     codex_cli            body 2698 字符  guard 不带 --begin-turn    spend --source visible-goal
     codex_app_heartbeat  body 1557 字符  guard --codex-app + LOOPX_TURN  spend --source heartbeat
 
-前两者是 visible-Goal 渲染器（body 开头"in this visible Codex `/goal`"），
-Codex 自己拥有续跑；第三个是精简派发器 body，每次唤醒是全新 turn，续跑由外部
-调度器拥有。
+codex_cli 是 visible-Goal 渲染器（body 开头"in this visible Codex `/goal`"），
+Codex 自己拥有续跑；codex_app_heartbeat 是精简派发器 body，每次唤醒是全新 turn，
+续跑由外部调度器拥有。
 """
 
 from __future__ import annotations
@@ -53,23 +52,6 @@ class Mode:
     substitution: str = ""
     """若本适配器用了替代传输/替代 host_surface，在这里写清楚。空 = 无替代。"""
 
-
-#: `Codex App over SSH` —— LoopX 自己的 benchmark 方法唯一认可的 treatment 臂。
-#: benchmark/deepswe/README.md 要求三项产品路径证据：本 profile 渲染的 Goal body、
-#: 装进 app-server 所用 CODEX_HOME 的 skills、以及 body 里点名的 release CLI。
-SSH_GOAL = Mode(
-    name="ssh-goal",
-    runtime_profile="codex_app_ssh_goal",
-    host_surface="codex_app_ssh",
-    scheduler_owner="agent_cli_loop",
-    execution_mode="interactive",
-    continuation_owner="codex",
-    spend_source="visible-goal",
-    notes=(
-        "LoopX benchmark/deepswe 的官方 treatment 臂。app-server 承载 visible Goal，"
-        "Codex 拥有自动续跑；驱动只起首轮 turn 并观察终态。"
-    ),
-)
 
 #: `Codex CLI` —— 可见 `/goal`。文档（docs/product/runtimes/codex-cli/
 #: codex-cli-tui-loop.md 的 "Headless Disabled Boundary"）明确：这条路默认不提供
@@ -156,7 +138,7 @@ HEARTBEAT_CLAIM_APP = Mode(
 )
 
 
-MODES: dict[str, Mode] = {m.name: m for m in (SSH_GOAL, CODEX_CLI, HEARTBEAT)}
+MODES: dict[str, Mode] = {m.name: m for m in (CODEX_CLI, HEARTBEAT)}
 MODES[HEARTBEAT_CLAIM_APP.name] = HEARTBEAT_CLAIM_APP
 
 

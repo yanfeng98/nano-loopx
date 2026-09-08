@@ -23,7 +23,6 @@ from loopx.project_prompt import render_accountable_progress_refresh_command
     (
         ("ark-managed-agent", "ark_managed_agent_goal"),
         ("codex-app", "codex_app_heartbeat"),
-        ("codex-app-ssh", "codex_app_ssh_goal"),
         ("codex-cli", "codex_cli"),
         ("claude-code", "claude_code"),
         ("opencode", "generic_cli"),
@@ -43,7 +42,6 @@ def test_first_class_hosts_bind_one_runtime_profile(
     ("runtime_profile", "expected"),
     (
         ("ark_managed_agent_goal", True),
-        ("codex_app_ssh_goal", True),
         ("codex_cli", True),
         ("codex_app_heartbeat", False),
         ("claude_code", False),
@@ -168,7 +166,7 @@ def test_deepseek_harness_native_is_distinct_same_session_host() -> None:
 
 @pytest.mark.parametrize(
     "runtime_profile",
-    ("ark_managed_agent_goal", "codex_app_ssh_goal"),
+    ("ark_managed_agent_goal",),
 )
 def test_goal_hosts_attribute_spend_to_current_progress_refresh(
     runtime_profile: str,
@@ -232,7 +230,7 @@ def test_heartbeat_prompt_commands_keep_explicit_runtime_root() -> None:
 
 @pytest.mark.parametrize(
     "runtime_profile",
-    ("ark_managed_agent_goal", "codex_app_ssh_goal"),
+    ("ark_managed_agent_goal", "codex_cli"),
 )
 def test_goal_hosts_share_narrow_runtime_skill_routing(
     runtime_profile: str,
@@ -270,7 +268,6 @@ def test_goal_hosts_reuse_thin_dispatch_and_stay_compact() -> None:
         runtime_profile="codex_app_heartbeat",
     )
     goal_hosts = [
-        build_heartbeat_prompt(**common, runtime_profile="codex_app_ssh_goal"),
         build_heartbeat_prompt(**common, runtime_profile="codex_cli"),
         build_heartbeat_prompt(**common, runtime_profile="ark_managed_agent_goal"),
     ]
@@ -285,11 +282,6 @@ def test_goal_hosts_reuse_thin_dispatch_and_stay_compact() -> None:
 
 
 def test_native_codex_goal_wait_rule_matches_blocked_resume_contract() -> None:
-    ssh_body = build_heartbeat_prompt(
-        goal_id="ssh-wait-fixture",
-        thin=True,
-        runtime_profile="codex_app_ssh_goal",
-    )["task_body"]
     cli_body = build_heartbeat_prompt(
         goal_id="cli-wait-fixture",
         thin=True,
@@ -301,7 +293,7 @@ def test_native_codex_goal_wait_rule_matches_blocked_resume_contract() -> None:
         runtime_profile="ark_managed_agent_goal",
     )["task_body"]
 
-    for body in (ssh_body, cli_body):
+    for body in (cli_body,):
         assert "call `update_goal` with `status=blocked`" in body
         assert "Only user `/goal resume`" in body
         assert "reactivates it; rerun quota after resume" in body
@@ -312,7 +304,6 @@ def test_native_codex_goal_wait_rule_matches_blocked_resume_contract() -> None:
     ("runtime_profile", "expected_host"),
     (
         ("ark_managed_agent_goal", "Ark Managed Agent goal prompt"),
-        ("codex_app_ssh_goal", "visible Codex /goal task body"),
         ("codex_cli", "visible Codex /goal task body"),
     ),
 )
@@ -402,7 +393,6 @@ def test_new_agent_onboarding_defaults_to_fresh_identity() -> None:
     (
         "ark-managed-agent",
         "codex-app",
-        "codex-app-ssh",
         "codex-cli",
         "claude-code",
         "opencode",
@@ -526,12 +516,11 @@ def test_generic_cli_prompt_keeps_external_loop_semantics() -> None:
     assert "visible TraeX `/goal` task" not in payload["task_body"]
 
 
-def test_ambiguous_codex_requires_app_ssh_or_cli_selection() -> None:
+def test_ambiguous_codex_requires_app_or_cli_selection() -> None:
     with pytest.raises(AgentTypeError) as caught:
         normalize_agent_type("codex")
 
     assert caught.value.suggestions == [
         "codex-app",
-        "codex-app-ssh",
         "codex-cli",
     ]

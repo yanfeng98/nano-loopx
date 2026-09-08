@@ -86,7 +86,7 @@ def test_app_server_environment_rejects_upstream_provider_authority(
     )
     monkeypatch.setattr(
         mod,
-        "native_codex_profile_environment",
+        "_profile_environment",
         lambda *_args, **_kwargs: {"PATH": "/bin", forbidden_key: "fixture"},
     )
     with pytest.raises(ValueError, match="outside app-server"):

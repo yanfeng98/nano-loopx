@@ -41,7 +41,7 @@ def _write_trial(root: Path, task: str, arm: str, reward: float,
 
 
 def test_matched_denominator_on_single_arm_build_failure():
-    """两任务、五模式；其中一个模式在 task2 上构建失败（partial=0）。
+    """两任务、全部模式齐；其中一个模式在 task2 上构建失败（partial=0）。
 
     该模式的 partial 均值应为 (1.0 + 0.0)/2 = 0.5、n=2（未缩成 n=1）。
     """
@@ -54,7 +54,7 @@ def test_matched_denominator_on_single_arm_build_failure():
                          partial=0.0 if bf else 1.0, build_failed=bf)
         cur = _common.collect(root)
         full = [t for t in {t for t, _ in cur}
-                if sum(1 for a in _common.ARMS if (t, a) in cur) == 5]
+                if sum(1 for a in _common.ARMS if (t, a) in cur) == len(_common.ARMS)]
         assert sorted(full) == ["task1", "task2"]
         rs = [cur[(t, "codex-cli")] for t in full]
         s = _aggregate._mode_summary(rs)

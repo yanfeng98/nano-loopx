@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""五模式评测脚本的公共件：模式名归一化、连续分口径、结果收集、路径校验。
+"""四模式评测脚本的公共件：模式名归一化、连续分口径、结果收集、路径校验。
 
 抽出来是为了让 _compare / _partial / _summarize / _aggregate / _extract_traj 复用同一
 份口径（避免同一个 bug 在多个脚本里各修一遍），也消除重复代码。改这里等于同时改所有
@@ -14,12 +14,12 @@ import os
 import pathlib
 import re
 
-# 五个模式：2 条 baseline（plain=裸 codex、goal=codex 原生 goal）+ 3 个 LoopX 模式
-ARMS = ("plain", "goal", "ssh-goal", "codex-cli", "heartbeat")
+# 四个模式：2 条 baseline（plain=裸 codex、goal=codex 原生 goal）+ 2 个 LoopX 模式
+ARMS = ("plain", "goal", "codex-cli", "heartbeat")
 
 
 def norm(name: str) -> str:
-    """模式名归一化：ssh-goal-1537631 → ssh-goal。
+    """模式名归一化：codex-cli-1537631 → codex-cli。
 
     marathon_run.sh 在原目录不可写时会回退成 `<mode>-<pid>`。不归一化的话这些结果
     的 key 不在 ARMS 白名单里，下游打印循环会静默跳过——结果存在但表里看不见。

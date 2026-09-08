@@ -86,7 +86,6 @@ def register_heartbeat_control_commands(
         choices=[
             "ark_managed_agent",
             "codex_app",
-            "codex_app_ssh",
             "codex_cli",
             "generic_cli",
             "claude_code",

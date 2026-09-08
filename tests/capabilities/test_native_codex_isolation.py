@@ -128,7 +128,7 @@ def test_native_codex_isolation_rejects_overlapping_authority_roots(
 
     with pytest.raises(
         NativeCodexIsolationError,
-        match="native_codex_profile_root_overlaps_private_root",
+        match="profile_root_overlaps_private_root",
     ):
         build_native_codex_isolation_envelope(
             executable="sh",

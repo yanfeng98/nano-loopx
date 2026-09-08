@@ -84,7 +84,7 @@ class TestAgentTypeCatalog:
                      for item in catalog["ambiguous_inputs"]}
         assert "codex" in ambiguous
         assert ambiguous["codex"] == [
-            "codex-app", "codex-app-ssh", "codex-cli"]
+            "codex-app", "codex-cli"]
 
     @pytest.mark.parametrize("surface,expected", [
         ("chat-box", "codex-app"),
@@ -126,7 +126,6 @@ class TestSchedulerBindings:
         expected = {
             "ark-managed-agent": "ark_managed_agent_goal",
             "codex-app": "codex_app_heartbeat",
-            "codex-app-ssh": "codex_app_ssh_goal",
             "codex-cli": "codex_cli",
             "claude-code": "claude_code",
             "opencode": "generic_cli",

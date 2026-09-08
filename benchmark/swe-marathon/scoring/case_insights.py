@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把五模式聚合（data.json）里的观察，投影成**非官方 draft** 记录
+"""把四模式聚合（data.json）里的观察，投影成**非官方 draft** 记录
 `swe_marathon_case_insight_draft_v0`（见 upstream #3878 / RFC #3812）。
 
 【为什么是 draft，不是官方 projection】
@@ -133,9 +133,6 @@ _GOOD_CASE_NOTES = {
         "了具体边界缺陷——包括 offset-table 越界，以及 four-stream Huffman 在极小 regenerated size 下第四段"
         "计算下溢、令前序段越过 literal buffer 的内存安全漏洞（并补了 sanitizer 回归）。这些正是 hidden 套件"
         "考察的长尾，最终 hidden 37/37。"),
-    ("zstd-decoder", "ssh-goal"): (
-        "轨迹对照：plain 52 step 早停（hidden 25/37）；ssh-goal 经续跑推进到 135 step，越过 plain 的自宣完成点后"
-        "继续加固 dictionary/frame 边界与畸形输入路径，hidden 37/37。同一机制、更短路径达到满分。"),
 }
 
 
@@ -155,7 +152,7 @@ def _automation_recovers_insight(task: str, arm: str, partial, plain_partial, no
             "expected", "medium")
 
 
-_AUTOMATION_ARMS = {"goal", "ssh-goal", "codex-cli", "heartbeat"}
+_AUTOMATION_ARMS = {"goal", "codex-cli", "heartbeat"}
 _RECOVER_MIN_GAP = 0.2
 
 
@@ -226,16 +223,16 @@ _STUDY_OBSERVATIONS = [
         "metrics": {
             # agent step 数相对 plain 的倍率（跨 14 任务中位数）——“工作时长被拉长多少”
             "agent_step_ratio_vs_plain_median": {
-                "ssh-goal": 1.89, "heartbeat": 1.52, "codex-cli": 1.34, "goal_native": 1.19},
+                "heartbeat": 1.52, "codex-cli": 1.34, "goal_native": 1.19},
             "tasks_where_a_loopx_arm_runs_longer_than_plain": "14/14",
             # 自我验证密度（每步提及 audit/sanitizer/fuzz/regression/edge-case 的次数）——“工作性质”
             "self_verification_density_per_step_median": {
-                "plain": 0.024, "ssh-goal": 0.107, "heartbeat": 0.104, "goal_native": 0.084},
+                "plain": 0.024, "heartbeat": 0.104, "goal_native": 0.084},
             "tasks_where_loopx_density_exceeds_plain": "14/14",
         },
         "interpretation": ("裸 codex 可见测试一绿即判定完成、几乎不自查（密度 0.024/步）；LoopX 续跑"
                            "反复驳回其 update_goal=complete、每轮重读 worktree，模型随即转向审自己的"
-                           "代码、造边界用例、加 sanitizer/fuzz 回归（密度 ~0.10/步，约 4.5×）。当任务"
+                           "代码、造边界用例、加 sanitizer/fuzz 回归（密度 ~0.10/步，约 4.3×）。当任务"
                            "存在可见信号之外的长尾时，这段被激活的自我验证直接兑现为能力得分——见 "
                            "zstd-decoder 的 automation_recovers_over_baseline 记录（plain 0.72→LoopX 1.0）。"),
         "evidence_note": ("aggregate over 14 SWE-Marathon tasks' agent trajectories; public-safe "

@@ -16,7 +16,6 @@ from ..quota.settlement import (
 )
 from ..quota.spend_sources import (
     build_quota_spend_action,
-    visible_goal_turn_reentry_action,
 )
 from ..scheduler.execution_context import (
     SchedulerExecutionContextResolution,
@@ -713,10 +712,6 @@ def interaction_next_cli_actions(
         if scheduler_args
         else "rerun the typed quota_guard from the current host packet"
     )
-    if turn_reentry_action := visible_goal_turn_reentry_action(
-        payload, settlement_plan, scheduler_execution_context, turn_instance_id, typed_quota_guard
-    ):
-        return [turn_reentry_action]
     typed_monitor_poll = (
         f"{command_prefix} quota monitor-poll --goal-id {goal_id}{scoped_cli_args}"
         f"{scheduler_args} --execute"

@@ -96,11 +96,24 @@ turn = run_native_goal_process_until_terminal(
 
 处理组还需要三个独立的产品路径证明:
 
-1. 为 `codex_app_ssh_goal` profile 生成的 Goal 正文;
+1. 该 profile 渲染出的 Goal 正文;
 2. LoopX skills 安装进 app-server 使用的确切 `CODEX_HOME`;
 3. 该 Goal 正文点名的 LoopX 发布快照 CLI。
 
-用 `benchmark_toolkit.native_codex_profile.install_native_codex_profile` 准备后两项。不要把 `SKILL.md` 文件复制进 runner 镜像。用 `render_native_codex_goal_prompt` 生成第一项输入,让 app-server 保持在无凭据的 `native_codex_profile_environment` 上,并通过 `serve_runner_owned_provider_gateway` 路由其 provider。app-server 只接收 gateway URL 与一个固定的非密钥 env sentinel。Linux 宿主侧 worker 也必须运行在 `native_codex_isolation` 内;仅过滤子进程 env 并不能阻止 danger-full-access agent 读取父进程环境或环境中的 HOME 文件。`native_codex_app_server_shell_policy_args` 仍是为模型创建的 shell 提供的纵深防御,而不是凭据边界。设置 `NativeGoalConfig.required_skill_ids=profile.required_skill_ids`。运行时随后在 thread 创建之前使用 `skills/list`,并且除非 Codex 实际发现已安装的 skill 集,否则在模型工作之前失败。仅文件系统检查不是处理保真证据。
+第 1 项由已安装的 loopx CLI 以显式 runtime profile 渲染
+(`loopx heartbeat-prompt --thin ...`);第 2、3 项由 runner 用 LoopX 自带的
+`scripts/install-local.sh` 准备(共享实现见
+[`benchmark/swe-marathon/runtime/modes/profile_install.py`](../swe-marathon/runtime/modes/profile_install.py)),
+并以 `loopx.skill_install_readback` 校验安装回读。不要把 `SKILL.md` 文件复制进
+runner 镜像。app-server 必须保持在无凭据的环境上:通过
+`serve_runner_owned_provider_gateway` 路由其 provider,app-server 只接收
+gateway URL 与一个固定的非密钥 env sentinel。Linux 宿主侧 worker 也必须运行在
+`native_codex_isolation` 内;仅过滤子进程 env 并不能阻止 danger-full-access
+agent 读取父进程环境或环境中的 HOME 文件。shell 环境策略仍是为模型创建的 shell
+提供的纵深防御,而不是凭据边界。设置 `NativeGoalConfig.required_skill_ids` 为
+已安装的 skill 集。运行时随后在 thread 创建之前使用 `skills/list`,并且除非
+Codex 实际发现已安装的 skill 集,否则在模型工作之前失败。仅文件系统检查不是
+处理保真证据。
 
 ## 权威与反作弊
 

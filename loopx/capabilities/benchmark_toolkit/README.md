@@ -189,46 +189,30 @@ public/private 证据化简已经是本 capability 的一部分;DeepSWE 研究�
 下命名相似的归档 reducer 是历史证据,不是该 native-runner 契约的依赖或兼容
 入口点。
 
-### 正式安装的 profile 与 skill 发现
+### Skill 发现与凭据边界
 
-只提供 Goal prompt 与 source-checkout CLI 的 treatment,并没有证明真实的 LoopX
-产品路径。Prompt、已安装 skills 与已安装 CLI 是三个独立输入。使用
-`native_codex_profile` 通过 LoopX 自带的 `scripts/install-local.sh` 创建隔离的
-本地 release,而不是复制 skill 文件或导入任意 checkout:
+正式安装 profile 的宿主专用校验路径已退役,其模块与渲染入口随之移除;runner
+需要自行安排 LoopX release 与 skills 的安装、以及 Goal body 的渲染。下面这些
+边界仍然有效。
+
+设置 `required_skill_ids` 让原生运行时在 `thread/start` 之前调用真实的 app-server
+`skills/list` surface;缺失 skills、发现错误或错误的 cwd 会在任何 model turn
+之前失败。这是 skill 保真的门禁,不依赖文件系统检查:
 
 ```python
 from loopx.capabilities.benchmark_toolkit.native_codex_goal import NativeGoalConfig
-from loopx.capabilities.benchmark_toolkit.native_codex_profile import (
-    install_native_codex_profile,
-    native_codex_app_server_shell_policy_args,
-    native_codex_profile_environment,
-    render_native_codex_goal_prompt,
-)
 from loopx.capabilities.benchmark_toolkit.provider_gateway import (
     serve_runner_owned_provider_gateway,
 )
 
-profile = install_native_codex_profile(loopx_source, isolated_profile_root)
-prompt = render_native_codex_goal_prompt(
-    profile,
-    project_root=task_visible_cwd,
-    goal_id=goal_id,
-    agent_id=agent_id,
-    runtime_registry_path=case_runtime_registry,
-)
 config = NativeGoalConfig(
     cwd=task_visible_cwd,
-    objective=prompt.task_body,
+    objective=objective,
     task_instruction=task_instruction,
-    required_skill_ids=profile.required_skill_ids,
+    required_skill_ids=required_skill_ids,   # runner 持有的已安装 skill 集
 )
-process_env = native_codex_profile_environment(profile, base_env=runner_environment)
-process_env["LOOPX_MODEL_PROVIDER_SENTINEL"] = (
-    "runner-owned-gateway-no-upstream-secret"
-)
-shell_policy = native_codex_app_server_shell_policy_args(
-    excluded_env_keys=("LOOPX_MODEL_PROVIDER_SENTINEL",),
-)
+process_env = {**runner_environment, "LOOPX_MODEL_PROVIDER_SENTINEL":
+               "runner-owned-gateway-no-upstream-secret"}
 with serve_runner_owned_provider_gateway(
     upstream_base_url=runner_provider_base_url,
     upstream_bearer_token=runner_provider_credential,
@@ -238,39 +222,17 @@ with serve_runner_owned_provider_gateway(
     ...
 ```
 
-Profile installer 把 release、可执行文件、manual、home 与 Codex skill 根目录
-重定向到提供的隔离目录。它使用固定的 installer 路径,包括其生成的 `$loopx`
-入口 skill 与打包的 workflow-skill readback;该非交互 worker 会禁用无关的交互式
-slash-command surfaces。检查验证 release-snapshot CLI、确切 source revision、
-默认干净的 source、skill-tree digests,以及 `doctor --agent-type codex-app-ssh`。
+上游 provider 值必须留在 `serve_runner_owned_provider_gateway` 中,而 app-server
+只接收 loopback gateway URL 与固定非 secret sentinel。在 Linux 上,把 app-server
+放进 `native_codex_isolation`,让它的新 PID namespace 与 synthetic root 隐藏
+runner 进程、环境 HOME、provider 文件与 controller 私有根。没有该 OS 边界的
+环境过滤不是凭据隔离:danger-full-access 子进程否则可以检查父进程环境。
+runner 还可以通过 shell 环境策略只保留最小非 secret 变量集,作为模型创建 shell
+的纵深防御。没有等价 authority 边界的平台必须 fail closed,或使用容器/VM 路径
+(如 Pier);它们不得回退到环境原生执行。
 
-`render_native_codex_goal_prompt` 通过 release-snapshot CLI 调用
-`heartbeat-prompt --thin`,需要 `codex_app_ssh_goal` profile 与 interface budget,
-并证明返回的 body 指名了那个已安装 CLI。对于隔离 case,它还替换通用
-global-registry token 为显式 case registry。让 app-server 保持使用
-`native_codex_profile_environment`;它只提供正式 profile 的 `HOME`、
-`CODEX_HOME` 与 `PATH`。上游 provider 值必须留在
-`serve_runner_owned_provider_gateway` 中,而 app-server 只接收 loopback gateway
-URL 与固定非 secret sentinel。在 Linux 上,把 app-server 放进 `native_codex_isolation`,
-让它的新 PID namespace 与 synthetic root 隐藏 runner 进程、环境 HOME、provider
-文件与 controller 私有根。没有该 OS 边界的环境过滤不是凭据隔离:danger-full-access
-子进程否则可以检查父进程环境。`native_codex_app_server_shell_policy_args` 保留一个
-小型的 model-created shell 环境作为纵深防御。没有等价 authority 边界的平台必须
-fail closed,或使用容器/VM 路径(如 Pier);它们不得回退到环境原生执行。设置
-`required_skill_ids` 让原生运行时在 `thread/start` 之前调用真实的 app-server
-`skills/list` surface;缺失 skills、发现错误或错误的 cwd 会在任何 model turn
-之前失败。无路径的 profile、prompt 与 Goal receipts 随后可以在不发布安装路径、
-prompt 文本或 skill 正文的情况下证明全部三个输入。
-
-用以下命令运行正式 installer 加无模型 readback smoke:
-
-```bash
-python examples/benchmark-native-goal-installed-profile-smoke.py \
-  --require-app-server
-```
-
-该 helper 只安装到其目标目录。它不授予凭据、网络、任务、evaluator、上传、
-提交或评分 authority;这些仍是 runner 自有的边界。
+上述 helper 不授予凭据、网络、任务、evaluator、上传、提交或评分 authority;
+这些仍是 runner 自有的边界。
 
 Toolkit 借鉴了现代 benchmark runner 已经确立的有用契约:ATIF 兼容的 agent
 trajectory、独立拥有的 verifier 阶段、显式 attempt 记账,以及紧凑结果化简。

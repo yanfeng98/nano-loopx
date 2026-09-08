@@ -126,9 +126,8 @@ loopx start-goal --guided --project . --goal-text "<goal text>" \
 全局管理器或 PR 评审命令使用 `loopx slash-commands` 打印当前规范命令列表与回退
 CLI 形态。
 
-对应宿主使用 `codex-app`、`codex-app-ssh`、`codex-cli-tui`、`opencode` 或
-`opencode2`。当桌面 App 通过 SSH 附加到远程工作区且其自动化工具不可用时使用
-`codex-app-ssh`；LoopX 将生成可见 `/goal` 任务。确切宿主未知时，省略
+对应宿主使用 `codex-app`、`codex-cli-tui`、`opencode` 或
+`opencode2`。确切宿主未知时，省略
 `--host-surface` 一次：LoopX 返回带精确重跑命令的只读选择 gate，且不写项目状态。
 这防止升级把终端启动静默路由到桌面 App heartbeat。
 

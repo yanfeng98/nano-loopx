@@ -61,8 +61,8 @@ loopx start-goal --guided --project . --goal-text "<your first long-running task
 
 命令包检查面向宿主的恢复包。引导启动包是第一条任务路径：把生成的事务粘贴进
 Codex、Claude Code 或其他能从项目根运行 shell 命令的兼容 Agent。当真实宿主是
-`codex-app`、`codex-app-ssh`、`codex-cli-tui`、`claude-code` 或 `shell` 时，
-使用对应值。通过 SSH 附加、无自动化工具的 Codex App 用 `codex-app-ssh`。宿主
+`codex-app`、`codex-cli-tui`、`claude-code` 或 `shell` 时，
+使用对应值。宿主
 不明确时，省略该标志一次并跟随返回的只读选择 gate；该预览不写项目状态。
 
 ## 多项目管理器命令

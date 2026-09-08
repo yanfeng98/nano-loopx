@@ -1,11 +1,10 @@
 """LoopX 侧的一轮：渲染 body → 过闸门 → 结算。
 
-对三种模式一视同仁；模式差别全部来自 profiles.Mode，本模块不写 if mode ==。
+对模式一视同仁；模式差别全部来自 profiles.Mode，本模块不写 if mode ==。
 
-刻意不复用 benchmark_toolkit.native_codex_profile.render_native_codex_goal_prompt：
-那个函数把 `codex_app_ssh_goal` 写死在三处（native_codex_profile.py:337-338、366、
-399），换 profile 就会在 `runtime_profile != "codex_app_ssh_goal"` 那道断言上失败。
-这里直接调同一个 CLI 子命令，把 profile 参数化，其余校验照抄它的意图。
+body 由 heartbeat-prompt --thin 这个 CLI 子命令直接渲染，profile 经
+profile_args() 参数化；渲染器按 profile 分岔（visible-Goal vs 心跳派发器），
+其余校验在本模块内按模式意图做。
 """
 
 from __future__ import annotations
@@ -188,9 +187,9 @@ class LoopxSession:
     def _assert_body_matches_mode(self, body: str, payload: dict[str, Any]) -> None:
         """确认渲染出来的确实是本模式的 body，而不是别的模式的。
 
-        这一条是仿 native_codex_profile.py:366 的 runtime_profile 断言。渲染器按
-        profile 分岔（visible-Goal vs 心跳派发器），拿错了不会报错、只会静默测成
-        另一个模式——那种失败最难发现，所以在这里挡住。
+        渲染器按 profile 分岔（visible-Goal vs 心跳派发器），拿错了不会报错、
+        只会静默测成另一个模式——那种失败最难发现，所以在这里用 runtime_profile
+        断言挡住。
         """
 
         visible = _VISIBLE_MARKER in body

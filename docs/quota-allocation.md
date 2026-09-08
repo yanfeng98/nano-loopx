@@ -606,13 +606,11 @@ Markdown 决策：
       "limits": {
         "local_scheduler": 3,
         "codex_cli_tui": 3,
-        "codex_app_ssh_goal": 3,
         "claude_code_loop": 3
       },
       "after_limits": {
         "local_scheduler": "stop_tick_loop",
         "codex_cli_tui": "update_goal_blocked_keep_loopx_active",
-        "codex_app_ssh_goal": "update_goal_blocked_keep_loopx_active",
         "claude_code_loop": "stop_loop"
       },
       "final_quota_replan_check_enabled": true,
@@ -632,7 +630,6 @@ Markdown 决策：
       "contains": [
         "local_scheduler",
         "codex_cli_tui",
-        "codex_app_ssh_goal",
         "claude_code_loop",
         "final_quota_replan_check",
         "reset_policy_detail",
@@ -863,20 +860,19 @@ cadence 回归——不能永久压制修复。该观察只包含 cadence 元数
 reset RRULE 已匹配但其新 reset token/identity 未持久化，`apply_needed=false`、
 `ack_needed=true`，绑定 `ack_hint.cli_args` 记录确切读回，而不做 no-op host 写。
 缺失或不匹配读回仍需要 `automation_update`；LoopX 从不直接编辑 App manifest。
-对 Codex App SSH Goal、Codex CLI TUI 与 Claude Code loop，默认热路径读取
+对 Codex CLI TUI 与 Claude Code loop，默认热路径读取
 `scheduler_hint.unchanged_poll.limits.<runtime>`。值 `3` 表示第三次未变化轮询
 触发 `scheduler_hint.unchanged_poll.final_quota_replan_check_action` 点名的紧凑
 最终 quota/replan 检查；如果重跑仍未变化，loop 应用
 `scheduler_hint.unchanged_poll.after_limits.<runtime>`。需要更旧每运行时细节对象
 的 host 必须用 `quota should-run --include-detail scheduler` opt in，
 并读取 `scheduler_hint.cold_path_detail.local_scheduler`、
-`scheduler_hint.cold_path_detail.codex_cli_tui`、
-`scheduler_hint.cold_path_detail.codex_app_ssh_goal` 或
+`scheduler_hint.cold_path_detail.codex_cli_tui` 或
 `scheduler_hint.cold_path_detail.claude_code_loop`。该 opt-in 只是诊断与迁移支持：
 忘记 `--include-detail scheduler` 的 host 或 Agent 仍须通过读取
 `scheduler_hint.detail_ref.hot_path_runtime_fields` 点名的默认热路径字段
 保留核心调度能力。
-对原生 Codex `/goal` 运行时（`codex_cli_tui` 与 `codex_app_ssh_goal`），
+对原生 Codex `/goal` 运行时（`codex_cli_tui`），
 after-limit 动作只在同一阻塞条件连续重复三个 Goal turn 后调用
 `status=blocked` 的 `update_goal`。注册的 LoopX 目标保持活跃，用户用
 `/goal resume` 恢复原生 Goal，最终检查与阻塞转移都不花 LoopX quota。

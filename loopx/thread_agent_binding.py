@@ -20,7 +20,6 @@ HOST_SESSION_LOCATOR_SCHEMA_VERSION = "loopx_host_session_locator_v0"
 CODEX_THREAD_HOST_SURFACES = frozenset(
     {
         "codex-app",
-        "codex-app-ssh",
         "codex-cli-tui",
     }
 )

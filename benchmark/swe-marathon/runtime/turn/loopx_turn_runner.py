@@ -14,7 +14,7 @@ instead of executing (measured once: 431 assistant messages, zero command
 executions, an empty patch scored 0/24).  The other two arms run Codex with
 approvals and sandbox bypassed, so the LoopX arm has to as well or the three
 differ in permissions as well as in looping.  Editing LoopX's argparse choices
-would also have made the source tree dirty, and install_native_codex_profile
+would also have made the source tree dirty, and the profile installer
 refuses an unclean source because mixing revisions invalidates a benchmark
 treatment.  Building the Namespace directly avoids both problems and touches
 no file in the LoopX checkout.

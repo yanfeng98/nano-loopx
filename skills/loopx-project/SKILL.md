@@ -393,26 +393,6 @@ Stack、最近进度与 critic，然后在选择工作前运行简短 steering �
 
 ## 设置周期 Heartbeat
 
-当精确宿主是经 SSH 连接远程工作区的 Codex App，且因该宿主边界 `automation_update`
-不可用时，使用可见 Goal 集成，而不是报告缺失自动化 blocker：
-
-```bash
-loopx --format json agent-onboard \
-  --agent-type codex-app-ssh \
-  --project . \
-  --goal-id <STABLE_GOAL_ID> \
-  --agent-id <REGISTERED_AGENT_ID>
-```
-
-运行返回的 `activation_input_command`，读取 `task_body`，把当前可见任务设置为
-`/goal <task_body>`。在 Codex App 中，直接使用可用的 Goal 控制；当宿主暴露 Goal
-控制时，不要让用户运行 `heartbeat-prompt` 或手动粘贴正文。仅当 Goal 控制也不可用
-时，展现精确可粘贴 gate。
-
-生成的 `codex_app_ssh_goal` 正文受 `/goal` 4000 字符上限约束。它使用交互式
-`agent_cli_loop` 调度器上下文、省略 heartbeat turn receipts，且不得创建/更新
-自动化、应用 RRULE 节奏或虚构 `LOOPX_TURN`。
-
 当用户或控制器需要已连接 goal 的周期 Codex App heartbeat 时，优先生成器而非
 手动复制 quota 生命周期：
 

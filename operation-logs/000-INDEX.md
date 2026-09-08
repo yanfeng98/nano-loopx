@@ -20,6 +20,7 @@
 | 016 | [016-remove-zcode.md](016-remove-zcode.md) | 移除 ZCode 宿主适配器(14 文件;残留仅历史 changelog,专注测试 + HEAD 基线对照) |
 | 017 | [017-remove-codex-ide-plugin.md](017-remove-codex-ide-plugin.md) | 移除 Codex IDE plugin 宿主适配器(22 文件;协议/指南文档静默净删,全量基线对照) |
 | 018 | [018-remove-antigravity-cli.md](018-remove-antigravity-cli.md) | 移除 Antigravity CLI 宿主适配器(13 文件;README 行删除,全量基线对照) |
+| 019 | [019-remove-codex-app-ssh.md](019-remove-codex-app-ssh.md) | 移除 Codex App over SSH 宿主适配器(~60 文件;枚举手术 + scheduler_hint + benchmark ssh-goal 臂完整退役) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。

@@ -33,7 +33,7 @@ ACTIVATION = {
     "schema_version": "loopx_host_loop_activation_v1",
     "agent_id": "codex-fixture",
     "activation_required_after_todo_write": True,
-    "host_surface": "codex_app_ssh_visible_goal_mode",
+    "host_surface": "codex_cli_visible_goal_mode",
     "activation_method": "set_visible_goal",
     "host_mutation": {"host_command": "/goal <task_body>"},
 }
@@ -57,7 +57,7 @@ def _actual_entry_packet() -> dict[str, Any]:
         "command_pack_detail_included": False,
         "goal_id": "fixture-goal",
         "agent_id": "codex-fixture",
-        "host_surface": "codex-app-ssh",
+        "host_surface": "codex-cli",
         "guided_transaction": TRANSACTION,
         "safety_contract": {
             "writes_registry": False,

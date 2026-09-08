@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把 marathon-full 的五模式结果聚合成单一 data.json，供可视化网页与总结 md 使用。
+"""把 marathon-full 的四模式结果聚合成单一 data.json，供可视化网页与总结 md 使用。
 
 口径全部走 scripts/_common（模式名归一化、只认 job 级 result.json、属主校验、半成品
 metrics 排除、cost 取 cost_usd）。cost 以 result.json 的 cost_usd 为准（不是 0）。
@@ -21,9 +21,8 @@ from _common import ARMS, collect, mean, safe_path
 ARM_ROLE = {
     "plain": "baseline①：裸 codex，objective = 'Finish the task.'，无 goal、无 LoopX",
     "goal": "baseline②：codex 原生 goal（codex 自带的 goal 功能，注入干净 goal，非 LoopX）",
-    "ssh-goal": "LoopX 模式①：codex 原生 goal + LoopX 渲染的 goal body/skills，经 ssh 驱动",
-    "codex-cli": "LoopX 模式②：容器内跑 loopx CLI 现渲 goal body（带 claim/lease/peer 样板）",
-    "heartbeat": "LoopX 模式③：心跳驱动的续跑/解锁 + LoopX goal body/skills",
+    "codex-cli": "LoopX 模式①：容器内跑 loopx CLI 现渲 goal body（带 claim/lease/peer 样板）",
+    "heartbeat": "LoopX 模式②：心跳驱动的续跑/解锁 + LoopX goal body/skills",
 }
 
 
@@ -59,7 +58,7 @@ def main() -> int:
         return 1
 
     tasks = sorted({t for t, _ in cur})
-    full = [t for t in tasks if sum(1 for a in ARMS if (t, a) in cur) == 5]
+    full = [t for t in tasks if sum(1 for a in ARMS if (t, a) in cur) == len(ARMS)]
 
     cells: dict = {}
     for (task, arm), rec in cur.items():
@@ -85,7 +84,7 @@ def main() -> int:
     }
     outp.parent.mkdir(parents=True, exist_ok=True)
     outp.write_text(json.dumps(data, ensure_ascii=False, indent=2))
-    print(f"写出 {outp}：{len(tasks)} 任务，{len(full)} 五模式齐，{len(cur)} trial")
+    print(f"写出 {outp}：{len(tasks)} 任务，{len(full)} 四模式齐，{len(cur)} trial")
     for a in ARMS:
         s = arm_summary[a]
         print(f"  {a:10} reward={s['reward']!s:>6} partial={s['partial']!s:>7} "

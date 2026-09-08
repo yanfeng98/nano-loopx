@@ -122,7 +122,6 @@ def register_quota_command(
         choices=[
             "ark_managed_agent",
             "codex_app",
-            "codex_app_ssh",
             "codex_cli",
             "generic_cli",
             "claude_code",

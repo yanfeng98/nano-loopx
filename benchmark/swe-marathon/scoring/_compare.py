@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""五模式对比报表。可同时读两个跑次做跨预算对照。
+"""四模式对比报表。可同时读两个跑次做跨预算对照。
 
     _compare.py <out_dir> [archive_dir]
 
@@ -47,14 +47,14 @@ def _print_grid(cur: dict, tasks: list) -> None:
     for t in tasks:
         n = sum(1 for a in ARMS if (t, a) in cur)
         print(f"{t[:26]:26}" + "".join(f"{cell(cur.get((t, a))):>12}" for a in ARMS)
-              + f" {n}/5" + ("★" if n == 5 else ""))
+              + f" {n}/{len(ARMS)}" + ("★" if n == len(ARMS) else ""))
 
 
 def _print_full_compare(cur: dict, full: list) -> None:
-    print(f"\n五模式齐 {len(full)} 个任务: {full}")
+    print(f"\n四模式齐 {len(full)} 个任务: {full}")
     if not full:
         return
-    print("\n=== 只用五模式齐的任务比较 ===")
+    print("\n=== 只用四模式齐的任务比较 ===")
     hdr = f"  {'模式':11}{'reward':>8}"
     if HAS_PARTIAL:
         hdr += f"{'partial':>9}{'构建失败':>9}"
@@ -77,8 +77,8 @@ def _print_full_compare(cur: dict, full: list) -> None:
 
 
 def _print_loopx_cont(cur: dict) -> None:
-    print("\n=== LoopX 三模式的续跑与解锁 ===")
-    for a in ("ssh-goal", "codex-cli", "heartbeat"):
+    print("\n=== LoopX 两模式的续跑与解锁 ===")
+    for a in ("codex-cli", "heartbeat"):
         rs = [v for (t, x), v in cur.items() if x == a]
         cont = [v.get("cont") for v in rs if v.get("cont") is not None]
         unb = [v.get("unblock") for v in rs if v.get("unblock") is not None]
@@ -110,7 +110,7 @@ def main() -> int:
         print("  没有结果")
         return 0
     tasks = sorted({t for t, _ in cur})
-    full = [t for t in tasks if sum(1 for a in ARMS if (t, a) in cur) == 5]
+    full = [t for t in tasks if sum(1 for a in ARMS if (t, a) in cur) == len(ARMS)]
     _print_grid(cur, tasks)
     _print_full_compare(cur, full)
     _print_loopx_cont(cur)

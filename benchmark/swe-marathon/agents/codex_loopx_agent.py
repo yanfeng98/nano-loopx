@@ -111,7 +111,7 @@ for _cand in (_here.parent, _here.parent / "runtime", _here.parent.parent):
 from modes.profiles import profile_args as _profile_args, resolve as _resolve_mode  # noqa: E402
 
 _MODE = _resolve_mode(
-    os.environ.get("WEN_MODE", "ssh-goal"),
+    os.environ.get("WEN_MODE", "codex-cli"),
     claim_codex_app=bool(os.environ.get("WEN_CLAIM_CODEX_APP")),
 )
 #: 渲染时传给 loopx 的 profile 参数（具名 profile 或 -H/-O/-M 三元组）
@@ -119,35 +119,18 @@ _PROFILE_ARGS = " ".join(_profile_args(_MODE))
 
 _GOAL_DOC_PATH = f"{_ROOT}/goal-doc.md"
 _FIXED_GOAL_ID = "lhtb-goal"
-# 与 benchmark_toolkit 的 NATIVE_CODEX_PROFILE_REQUIRED_SKILL_IDS 对应。
-# 实测 install-local.sh 物化出这 6 个。
-# 技能门禁向上游常量看齐，不写死。
-# 写死过一次 6 个，而 loopx 0.5.3 物化 7 个（多 loopx-benchmark）；
-# 门禁只查那 6 个，于是容器里少装一个技能完全不会被发现。
-# 从 LOOPX_SRC_DIR 读常量，读不到就退回历史的 6 个并在日志里说明。
-def _load_required_skills() -> tuple[str, ...]:
-    src = os.environ.get("LOOPX_SRC_DIR", "")
-    if src and os.path.isdir(src):
-        import sys as _s
-        if src not in _s.path:
-            _s.path.insert(0, src)
-        try:
-            from loopx.capabilities.benchmark_toolkit.native_codex_profile import (
-                NATIVE_CODEX_PROFILE_REQUIRED_SKILL_IDS as _R,
-            )
-            return tuple(_R)
-        except Exception:
-            pass
-    return (
-        "loopx", "loopx-doc-registry", "loopx-pr-program",
-        "loopx-pr-review", "loopx-project", "loopx-self-repair",
-    )
+# 技能门禁查这 6 个必需 skill（loopx 及其 5 个 host skill）+ `loopx` 本体。
+# 上游 benchmark_toolkit 里对应的常量和它的宿主 profile 校验一起退役了，
+# 这里保留实测过的历史集合：install-local.sh 物化出的技能比门禁多（如
+# loopx-benchmark），门禁只查必需的那 6 个，容器里少装一个技能会被下面的
+# fail-closed 检查发现。
+_REQUIRED_SKILLS = (
+    "loopx", "loopx-doc-registry", "loopx-pr-program",
+    "loopx-pr-review", "loopx-project", "loopx-self-repair",
+)
 
-
-_REQUIRED_SKILLS = _load_required_skills()
-
-# `render_native_codex_goal_prompt` 里的同名常量：渲染出的 body 带这个占位符，
-# 必须替换成真实 registry 路径，替换后还要验证占位符确实消失。
+# 渲染出的 body 带这个占位符，必须替换成真实 registry 路径，替换后还要验证
+# 占位符确实消失。
 _GLOBAL_REGISTRY_TOKEN = "$HOME/.codex/loopx/registry.global.json"
 
 
@@ -337,7 +320,7 @@ class CodexLoopxAgent(CodexGoalAgent):
         missing = [s for s in _REQUIRED_SKILLS if s not in (chk.stdout or "")]
         if chk.returncode or missing:
             raise RuntimeError(f"LoopX profile 不完整，缺 skill: {missing}")
-        doc = self._sh(cid, f"{_CLI} --format json doctor --agent-type codex-app-ssh",
+        doc = self._sh(cid, f"{_CLI} --format json doctor --agent-type codex-cli",
                        env=self._cli_env())
         try:
             if not json.loads(doc.stdout).get("ok"):
@@ -404,7 +387,7 @@ class CodexLoopxAgent(CodexGoalAgent):
                      f"{_PROFILE_ARGS} --cli-bin {_CLI} "
                      f"--available-capability shell --available-capability filesystem_write",
                      env=env, timeout=300)
-        # 下面每一条校验都照抄 render_native_codex_goal_prompt()，
+        # 下面每一条校验与历史渲染路径保持同一意图，
         # 失败码沿用它的命名，方便和 LoopX 自己的实现对照。
         try:
             payload = json.loads(r.stdout)
@@ -562,8 +545,8 @@ class CodexLoopxAgent(CodexGoalAgent):
                 # 【踩过的坑】这条裸 raise 原来不赋值 _unblock_count，于是 receipt 里
                 # 该字段是 None 而不是数字。偏偏这是**最需要证据的**出口：非超时的
                 # 协议错误（实测是 8 次流层重试被 TPM 限流耗尽后抛出的），trial 会
-                # 提前几十分钟死掉。mastodon-clone/ssh-goal 就这么丢了解锁计数，
-                # 排查时只能靠"别的臂都是 0、就它是 -"这个差异反推。
+                # 提前几十分钟死掉。mastodon-clone 的 LoopX trial 就这么丢了解锁
+                # 计数，排查时只能靠"别的臂都是 0、就它是 -"这个差异反推。
                 # 每条出口都要留下计数，否则出问题的那次恰好没有证据。
                 self._unblock_count = unblocks
                 raise
@@ -574,8 +557,8 @@ class CodexLoopxAgent(CodexGoalAgent):
             if status != "blocked" or unblocks >= max_unblocks:
                 # 【实测教训】只在循环内判 blocked 是不够的：Goal 常常在 wait 返回、
                 # codex 停止续跑之后才落到 blocked，那时已经走到这个 return。
-                # 实测 ssh-goal cont=3 / codex-cli cont=2 都以 blocked 收尾而
-                # 解锁一次未触发。这里在返回前再兜一次。
+                # 实测 codex-cli cont=2 以 blocked 收尾而解锁一次未触发。
+                # 这里在返回前再兜一次。
                 if status == "blocked" and unblocks < max_unblocks:
                     unblocks += 1
                     self.logger.info("收尾时仍 blocked，第 %d 次解锁后重试", unblocks)

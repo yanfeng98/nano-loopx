@@ -447,23 +447,23 @@ def build_native_codex_isolation_envelope(
             resolved_profile = profile_root.resolve(strict=True)
         except OSError as exc:
             raise NativeCodexIsolationError(
-                "native_codex_profile_root_missing"
+                "profile_root_missing"
             ) from exc
         if not resolved_profile.is_dir():
-            raise NativeCodexIsolationError("native_codex_profile_root_not_directory")
+            raise NativeCodexIsolationError("profile_root_not_directory")
         if _paths_overlap(resolved_profile, resolved_private_root):
             raise NativeCodexIsolationError(
-                "native_codex_profile_root_overlaps_private_root"
+                "profile_root_overlaps_private_root"
             )
         if _paths_overlap(resolved_profile, resolved_work_dir):
             raise NativeCodexIsolationError(
-                "native_codex_profile_root_overlaps_work_dir"
+                "profile_root_overlaps_work_dir"
             )
         if workspace_source is not None and _paths_overlap(
             resolved_profile, Path(workspace_raw)
         ):
             raise NativeCodexIsolationError(
-                "native_codex_profile_root_overlaps_workspace_source"
+                "profile_root_overlaps_workspace_source"
             )
         profile_raw = str(resolved_profile)
 

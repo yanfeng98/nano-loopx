@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""统一驱动 Codex × LoopX 的三种模式。
+"""统一驱动 Codex × LoopX 的运行模式。
 
-    python3 -m modes.run_mode --mode ssh-goal   --project <dir> --task-file <f>
     python3 -m modes.run_mode --mode codex-cli  --project <dir> --task-file <f>
     python3 -m modes.run_mode --mode heartbeat  --project <dir> --task-file <f> --ticks 4
 

@@ -11,8 +11,10 @@ reuses the shipped native Goal runtime (no second implementation):
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
+import re
 import sys
 import tempfile
 import time
@@ -41,15 +43,98 @@ from loopx.capabilities.benchmark_toolkit.native_codex_isolation import (  # noq
     build_native_codex_isolation_envelope,
     rebase_native_codex_loopx_workspace_state,
 )
-from loopx.capabilities.benchmark_toolkit.native_codex_profile import (  # noqa: E402
-    NativeCodexProfile,
-    install_native_codex_profile,
-    native_codex_app_server_shell_policy_args,
-    native_codex_profile_environment,
-)
 from loopx.capabilities.benchmark_toolkit.provider_gateway import (  # noqa: E402
     serve_runner_owned_provider_gateway,
 )
+
+# 隔离 profile 的安装实现共享 swe-marathon 的 runtime/modes/profile_install.py
+# （原 benchmark_toolkit 里的宿主专用 profile 模块已随其宿主退役）；按文件路径
+# 加载，因为各 benchmark 目录不是同一个可导入包。
+_PROFILE_INSTALLER_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "swe-marathon" / "runtime" / "modes" / "profile_install.py"
+)
+_PROFILE_INSTALLER_SPEC = importlib.util.spec_from_file_location(
+    "swe_marathon_profile_install", _PROFILE_INSTALLER_PATH
+)
+if _PROFILE_INSTALLER_SPEC is None or _PROFILE_INSTALLER_SPEC.loader is None:  # pragma: no cover
+    raise ImportError(f"profile installer 不可加载: {_PROFILE_INSTALLER_PATH}")
+_profile_installer = importlib.util.module_from_spec(_PROFILE_INSTALLER_SPEC)
+sys.modules["swe_marathon_profile_install"] = _profile_installer  # dataclass 需要 module 注册
+_PROFILE_INSTALLER_SPEC.loader.exec_module(_profile_installer)
+
+# app-server 模型创建 shell 的 env 白名单 + 排除项，作为凭据隔离的纵深防御。
+# 真正的凭据边界是 native_codex_isolation 的 OS authority boundary。
+_ENV_PASSTHROUGH = (
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "PATH",
+    "SSL_CERT_DIR",
+    "SSL_CERT_FILE",
+    "TERM",
+    "TZ",
+)
+_AGENT_SHELL_ENV_INCLUDE_ONLY = (
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "LOGNAME",
+    "PATH",
+    "SHELL",
+    "SSL_CERT_DIR",
+    "SSL_CERT_FILE",
+    "TERM",
+    "TMPDIR",
+    "TZ",
+    "USER",
+)
+_SAFE_ENV_KEY = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
+
+
+def _profile_environment(
+    profile: _profile_installer.InstalledProfile,
+    base_env: dict[str, str],
+) -> dict[str, str]:
+    """profile 的最小运行环境：HOME/CODEX_HOME/PATH + 非 secret 直通项。"""
+
+    env = {key: str(base_env[key]) for key in _ENV_PASSTHROUGH if base_env.get(key)}
+    inherited_path = env.get("PATH", os.defpath)
+    env.update(
+        {
+            "HOME": str(profile.home),
+            "CODEX_HOME": str(profile.codex_home),
+            "PATH": f"{profile.bin_dir}{os.pathsep}{inherited_path}",
+        }
+    )
+    return env
+
+
+def _shell_environment_policy_args(
+    *,
+    excluded_env_keys: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Codex shell 环境的纵深防御：只继承最小非 secret 变量集。"""
+
+    normalized = tuple(
+        sorted({str(value).strip() for value in excluded_env_keys if str(value).strip()})
+    )
+    invalid = [key for key in normalized if not _SAFE_ENV_KEY.fullmatch(key)]
+    if invalid:
+        raise ValueError(
+            "excluded_env_keys must contain safe environment variable names"
+        )
+    return (
+        "-c",
+        'shell_environment_policy.inherit="core"',
+        "-c",
+        "shell_environment_policy.ignore_default_excludes=false",
+        "-c",
+        f"shell_environment_policy.include_only={json.dumps(_AGENT_SHELL_ENV_INCLUDE_ONLY)}",
+        "-c",
+        f"shell_environment_policy.exclude={json.dumps(normalized)}",
+    )
 
 
 def _objective(case_id: str, workspace: Path, instruction: str, treatment: bool) -> str:
@@ -119,15 +204,12 @@ def _app_server_command(
 
 
 def _app_server_environment(
-    profile: NativeCodexProfile,
+    profile: _profile_installer.InstalledProfile,
     environ: dict[str, str],
 ) -> dict[str, str]:
     """Build the credential-free environment visible inside native isolation."""
 
-    profile_environment = native_codex_profile_environment(
-        profile,
-        base_env=environ,
-    )
+    profile_environment = _profile_environment(profile, environ)
     forbidden = {
         _PROVIDER_BASE_URL_ENV_KEY,
         _PROVIDER_CREDENTIAL_ENV_KEY,
@@ -178,16 +260,16 @@ def run_case(
         tempfile.TemporaryDirectory(prefix="loopx-widesearch-profile-") as profile_dir,
         tempfile.TemporaryDirectory(prefix="loopx-widesearch-worker-") as worker_dir,
     ):
-        profile = install_native_codex_profile(
+        profile = _profile_installer.install(
             REPO_ROOT,
             Path(profile_dir),
-            base_env=os.environ,
+            require_clean_source=True,
         )
         with serve_runner_owned_provider_gateway(
             upstream_base_url=provider_base_url,
             upstream_bearer_token=provider_credential,
         ) as gateway:
-            shell_policy_args = native_codex_app_server_shell_policy_args(
+            shell_policy_args = _shell_environment_policy_args(
                 excluded_env_keys=(_PROVIDER_SENTINEL_ENV_KEY,)
             )
             app_server_command = _app_server_command(

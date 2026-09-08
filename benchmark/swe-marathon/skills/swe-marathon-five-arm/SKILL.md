@@ -1,25 +1,22 @@
 ---
 name: swe-marathon-five-arm
-description: 在 SWE-Marathon 上做 codex harness 五臂对照（裸 codex / 原生 /goal / LoopX 三模式）。包含 agent 适配、跑法、监控，以及一整天踩出来的坑——这些坑的共同特征是**退出码 0、日志干净、结果看着正常**，不看这份文档几乎必然重踩。
+description: 在 SWE-Marathon 上做 codex harness 四臂对照（裸 codex / 原生 /goal / LoopX 两模式）。包含 agent 适配、跑法、监控，以及一整天踩出来的坑——这些坑的共同特征是**退出码 0、日志干净、结果看着正常**，不看这份文档几乎必然重踩。
 ---
 
-# SWE-Marathon 五臂对照
+# SWE-Marathon 四臂对照
 
-对照维度是 **harness**，不是模型。五条臂的模型、effort、工具面、沙箱、容器完全一致，唯一变量是"怎么驱动 codex"。
+对照维度是 **harness**，不是模型。四条臂的模型、effort、工具面、沙箱、容器完全一致，唯一变量是"怎么驱动 codex"。
 
-## 五条臂
+## 四条臂
 
 | 臂 | agent 类 | 是什么 | runtime profile |
 |---|---|---|---|
 | `plain` | `codex_plain_appserver:CodexPlainAppServer` | 裸 codex，不挂 Goal、不装 LoopX | — |
 | `goal` | `codex_goal_agent:CodexGoalAgent` | codex 原生 `/goal`，不装 LoopX | — |
-| `ssh-goal` | `codex_loopx_agent:CodexLoopxAgent` | LoopX 模式二：Codex App over SSH | `codex_app_ssh_goal --begin-turn` |
-| `codex-cli` | 同上，`WEN_MODE=codex-cli` | LoopX 模式三：Codex CLI 可见 `/goal` | `codex_cli` |
-| `heartbeat` | 同上，`WEN_MODE=heartbeat` | LoopX 模式一：心跳自动化 | `generic_cli --turn-instance-id` |
+| `codex-cli` | `codex_loopx_agent:CodexLoopxAgent`，`WEN_MODE=codex-cli` | LoopX：Codex CLI 可见 `/goal` | `codex_cli` |
+| `heartbeat` | 同上，`WEN_MODE=heartbeat` | LoopX：心跳自动化 | `generic_cli --turn-instance-id` |
 
-三个 LoopX 臂共用一个 agent 类，靠 `WEN_MODE` 选 `modes/profiles.py` 里的 Mode。**模式差异是数据不是分支**——body 文本、runtime profile、是否需要 turn instance 都写在 Mode 里。
-
-`ssh-goal` 与 `codex-cli` 的 goal body 逐字只差一行（runtime profile 那行），这符合上游设计：分流发生在 LoopX CLI 的闸门里，不在 body 文本里。
+两个 LoopX 臂共用一个 agent 类，靠 `WEN_MODE` 选 `modes/profiles.py` 里的 Mode。**模式差异是数据不是分支**——body 文本、runtime profile、是否需要 turn instance 都写在 Mode 里。
 
 ## 必须披露的两处偏离
 
@@ -32,7 +29,7 @@ description: 在 SWE-Marathon 上做 codex harness 五臂对照（裸 codex / �
 # 环境验收（install-only，不烧 token）
 ./scripts/verify_envs.sh
 
-# 超时路径冒烟（~10 分钟跑完五臂，验证预算耗尽后能正常收尾评分）
+# 超时路径冒烟（~10 分钟跑完四臂，验证预算耗尽后能正常收尾评分）
 ./scripts/canary_timeout.sh
 
 # 全量
@@ -129,17 +126,17 @@ LOOPX_PYTHON=/opt/loopx-py/bin/python3
 
 ### 三道门禁，任何一道不过就硬失败
 
-1. **技能齐全**：`_REQUIRED_SKILLS` 从上游常量 `NATIVE_CODEX_PROFILE_REQUIRED_SKILL_IDS` 读，**不要硬编码**——0.5.3 是 7 个，历史值是 6 个，硬编码会漏掉 `loopx-benchmark`
-2. **`doctor` 通过**：`loopx --format json doctor --agent-type codex-app-ssh`
+1. **技能齐全**：`_REQUIRED_SKILLS` 门禁查 `loopx` 及其 5 个 host skill（上游对应常量已随其宿主校验退役，保留实测过的历史集合）；`ls {CODEX_HOME}/skills` 少一个就硬失败
+2. **`doctor` 通过**：`loopx --format json doctor --agent-type codex-cli`
 3. **`skills/list` 发现**：`native_codex_goal` 在 `thread/start` **之前**发 `skills/list`，codex 没真的发现那些 skill 就直接失败，**一个 token 都不花**——这是最省钱的门禁
 
 装配成功的日志长这样：`LoopX profile 就绪（7 skills + CLI + doctor ok）`
 
 ### goal body 渲染
 
-`render_native_codex_goal_prompt` 产出的 body 里带 `$HOME/.codex/loopx/registry.global.json` 占位符，**必须替换成真实 registry 路径，替换后还要验证占位符确实消失**。
+渲染出的 body 里带 `$HOME/.codex/loopx/registry.global.json` 占位符，**必须替换成真实 registry 路径，替换后还要验证占位符确实消失**。
 
-日志：`LoopX goal body 已渲染（2953 字符，goal_id=lhtb-goal，ungated=True）`。字符数按模式不同（heartbeat 1682 / codex-cli 2931 / ssh-goal 2953），这是模式确实分开渲染的证据。
+日志：`LoopX goal body 已渲染（2953 字符，goal_id=lhtb-goal，ungated=True）`。字符数按模式不同（heartbeat 1682 / codex-cli 2931），这是模式确实分开渲染的证据。
 
 ### 运行期状态写在仓库里
 
@@ -183,7 +180,7 @@ agents/native_codex_goal.py                            ← 符号链接到 wen/l
 loopx.capabilities.benchmark_toolkit.native_codex_goal ← 装在 .venv
 ```
 
-互不为子类。`run()` 里按**类**捕获 `goal_timeout_before_terminal` 的后果：只有 `goal` 臂的超时被吞掉并正常评分，LoopX 三臂的超时逃到 harbor 被当基础设施故障 → 重试 → 记 errored，几小时的真实进度全丢。
+互不为子类。`run()` 里按**类**捕获 `goal_timeout_before_terminal` 的后果：只有 `goal` 臂的超时被吞掉并正常评分，LoopX 臂的超时逃到 harbor 被当基础设施故障 → 重试 → 记 errored，几小时的真实进度全丢。
 
 **修法**：按**消息**判定（两个类都继承 `RuntimeError`）。
 
@@ -193,7 +190,7 @@ except RuntimeError as exc:
         raise
 ```
 
-超时是长程任务的**正常预算耗尽**，五臂必须一视同仁按部分进度评分。
+超时是长程任务的**正常预算耗尽**，四臂必须一视同仁按部分进度评分。
 
 ### 三、二值 reward 在紧预算下没有区分度
 
@@ -264,13 +261,13 @@ xargs -r kill -TERM < /tmp/kill.txt
 | `_partial.py` 用 `m.parts[1]`，绝对路径下是 `mnt` | 异常被 `2>/dev/null` 吞掉，整段连续分静默消失 |
 | `grep -c` 计数为 0 时退出码 1，`\|\| echo 0` 追加第二个 0 | 变量含换行，监控输出被拆成三行 |
 | 计数不按「本次跑次」切分 | 跨重启累加，显示 37/90 而当次只排了 10 |
-| `_receipts.py` 读 `unblock_count`（真名 `_unblock_count`，带下划线） | 五臂全返回 None，会永远报"解锁 0 次" |
+| `_receipts.py` 读 `unblock_count`（真名 `_unblock_count`，带下划线） | 四臂全返回 None，会永远报"解锁 0 次" |
 
 **教训**：监控工具要和被测对象一样对待——先验证它真能看见东西。路径写错的监控比没有监控更坏，因为它每轮都报"正常"。
 
 ### 八、别拿环境不同的数据下结论
 
-- **臂均值不可比**：各臂跑过的任务集不同。`ssh-goal` 均值低是因为它多跑了几个难任务。只用**双方都跑过的格**做配对比较
+- **臂均值不可比**：各臂跑过的任务集不同，多跑难任务的臂均值会偏低。只用**双方都跑过的格**做配对比较
 - **遗留目录要排除**：root 属主的旧跑次目录（`marathon_run.sh` 写不进去会另起 `<arm>-<pid>`），里面的 receipt 是上一轮的。`_receipts.py` 按臂目录属主排除
 - **半成品 metrics 要排除**：正在重跑的 trial 也留 `metrics.json`，内容是 `phase: initialized`、partial 0.0，采信会**凭空造出一个 0 分**
 - **查容器内状态要复现 agent 的环境**：`docker exec` 裸奔没有 PATH，`loopx doctor` 找不到 node 会报 `status_collection_failed`，看着像 LoopX 坏了。正确环境是
