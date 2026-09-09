@@ -129,5 +129,4 @@ Action 变更、replan 或终态关闭必须回到严格语义 checkpoint。
   `../../docs/state-interaction-model.md` 与
   `../../docs/concepts/interaction-pattern-catalog.md`。
 - quota 与 heartbeat 决策，阅读 `../../docs/quota-allocation.md` 与
-  `../../docs/heartbeat-automation-prompt.md`。
 - 提交/PR 卫生失败，阅读 `../../AGENTS.md`。

@@ -354,13 +354,13 @@ function scheduler(payload: JsonObject, turn: ReturnType<typeof interpretQuotaSh
   for (const field of ["reason_code", "spend_policy"]) {
     if (source[field] !== null && source[field] !== undefined) result[field] = source[field];
   }
-  const codexApp = object(source.codex_app);
-  if (Object.keys(codexApp).length === 0) return result;
+  const codexCli = object(source.codex_cli);
+  if (Object.keys(codexCli).length === 0) return result;
   const app: JsonObject = {};
   for (const field of ["apply", "host_action", "recommended_rrule", "no_spend_for_cadence_change"]) {
-    if (codexApp[field] !== null && codexApp[field] !== undefined) app[field] = codexApp[field];
+    if (codexCli[field] !== null && codexCli[field] !== undefined) app[field] = codexCli[field];
   }
-  const state = object(codexApp.stateful_backoff);
+  const state = object(codexCli.stateful_backoff);
   if (Object.keys(state).length > 0) {
     const compactState: JsonObject = {};
     for (const field of ["state_key", "current_rrule", "apply_needed", "ack_needed", "state_status"]) {
@@ -376,7 +376,7 @@ function scheduler(payload: JsonObject, turn: ReturnType<typeof interpretQuotaSh
     }
     app.stateful_backoff = compactState;
   }
-  const ack = object(codexApp.ack_hint);
+  const ack = object(codexCli.ack_hint);
   const cliArgs = executableCliArgs(ack.cli_args);
   if (cliArgs.length > 0) {
     app.ack_cli_args = cliArgs;
@@ -386,13 +386,13 @@ function scheduler(payload: JsonObject, turn: ReturnType<typeof interpretQuotaSh
       request: SCHEDULER_DETAIL_REQUEST,
     };
   }
-  if (object(codexApp.failure_hint).cli_args) {
+  if (object(codexCli.failure_hint).cli_args) {
     app.failure_cli_args_detail_ref = {
       reason: "cold_path_until_host_update_failure",
       request: SCHEDULER_DETAIL_REQUEST,
     };
   }
-  if (Object.keys(app).length > 0) result.codex_app = app;
+  if (Object.keys(app).length > 0) result.codex_cli = app;
   return result;
 }
 

@@ -138,7 +138,7 @@ Use skills: `loopx-project`; if surprising/tiny/contradictory, `loopx-self-repai
 LoopX CLI is source of truth.
 ```
 
-不要保留旧自动化 id 或提示正文作为隐藏兼容路径。如果 Codex App 心跳无法就地重命名,删除旧心跳并创建新的 `loopx` 心跳。
+不要保留旧自动化 id 或提示正文作为隐藏兼容路径。如果宿主心跳无法就地重命名,删除旧心跳并创建新的 `loopx` 心跳。
 
 8. 只通过恢复备份回滚。
 

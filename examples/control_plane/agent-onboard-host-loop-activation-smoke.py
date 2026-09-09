@@ -47,12 +47,8 @@ def run_cli(
 def main() -> int:
     catalog = build_agent_type_catalog()
     ambiguous = {item["input"]: item["use_one_of"] for item in catalog["ambiguous_inputs"]}
-    assert ambiguous["codex"] == [
-        "codex-app",
-        "codex-cli",
-    ], ambiguous
+    assert ambiguous["codex"] == ["codex-cli"], ambiguous
 
-    assert agent_type_for_host_surface("chat-box") == "codex-app"
     assert agent_type_for_host_surface("codex-cli-tui") == "codex-cli"
     assert agent_type_for_host_surface("opencode") == "opencode"
     assert agent_type_for_host_surface("pi") == "pi"
@@ -61,7 +57,7 @@ def main() -> int:
     assert agent_type_for_host_surface("deepseek-harness") == "deepseek-harness"
     assert agent_type_for_host_surface("dsh") == "deepseek-harness"
 
-    codex_app = build_host_loop_activation_packet(agent_type="codex-app", goal_id="demo")
+    codex_cli_app = build_host_loop_activation_packet(agent_type="codex-cli", goal_id="demo")
     codex_cli = build_host_loop_activation_packet(agent_type="codex-cli", goal_id="demo")
     claude_code = build_host_loop_activation_packet(agent_type="claude-code", goal_id="demo")
     opencode = build_host_loop_activation_packet(agent_type="opencode", goal_id="demo")
@@ -71,7 +67,7 @@ def main() -> int:
         goal_id="demo",
     )
     dsh = build_host_loop_activation_packet(agent_type="deepseek-harness", goal_id="demo")
-    assert codex_app["activation_method"] == "create_or_update_codex_app_automation", codex_app
+    assert codex_cli_app["host_mutation"]["host_command"] == "/goal <task_body>", codex_cli_app
     assert codex_cli["host_mutation"]["host_command"] == "/goal <task_body>", codex_cli
     assert claude_code["host_mutation"]["host_command"] == "/loop", claude_code
     assert opencode["activation_method"] == "activate_loopx_opencode_goal_bridge", opencode
@@ -91,7 +87,7 @@ def main() -> int:
     assert "--runtime-profile generic_cli" in dsh["commands"]["heartbeat_prompt"], dsh
     assert "scripts/dsh_turn_host_adapter.py" in dsh["entry_command_hint"], dsh
     gated_activation = build_host_loop_activation_packet(
-        agent_type="codex-app",
+        agent_type="codex-cli",
         goal_id="multi-agent-demo",
         registered_agents=["codex-main-control", "codex-product-capability"],
     )
@@ -100,7 +96,7 @@ def main() -> int:
     assert gated_activation["activation_input_command"] is None, gated_activation
     assert len(gated_activation["identity_selection_gate"]["choices"]) == 2, gated_activation
     peer_activation = build_host_loop_activation_packet(
-        agent_type="codex-app",
+        agent_type="codex-cli",
         goal_id="peer-agent-demo",
         registered_agents=["codex-alpha", "codex-beta"],
     )
@@ -111,7 +107,7 @@ def main() -> int:
         for choice in peer_activation["identity_selection_gate"]["choices"]
     ), peer_activation
     single_agent_activation = build_host_loop_activation_packet(
-        agent_type="codex-app",
+        agent_type="codex-cli",
         goal_id="single-agent-demo",
         registered_agents=["codex-main-control"],
     )
@@ -136,7 +132,7 @@ def main() -> int:
     ambiguous_payload = json.loads(ambiguous_result.stdout)
     assert ambiguous_payload["ok"] is False, ambiguous_payload
     assert ambiguous_payload["suggestions"] == [
-        "codex-app",
+        "codex-cli",
         "codex-cli",
     ], ambiguous_payload
 
@@ -208,7 +204,7 @@ def main() -> int:
 
         onboarding_gate = build_agent_onboarding_packet(
             project=project,
-            agent_type="codex-app",
+            agent_type="codex-cli",
             goal_id="multi-agent-goal",
             cli_bin=cli_bin,
         )
@@ -250,7 +246,7 @@ def main() -> int:
             goal_id="multi-agent-goal",
             agent_id=None,
             cli_bin=cli_bin,
-            host_surface="codex-app",
+            host_surface="codex-cli-tui",
             goal_text="fix a public issue",
         )
         assert command_pack_gate["recommended_next_step"]["kind"] == "select_agent_identity"
@@ -263,7 +259,7 @@ def main() -> int:
             goal_id="multi-agent-goal",
             agent_id=None,
             cli_bin=cli_bin,
-            host_surface="codex-app",
+            host_surface="codex-cli-tui",
             goal_text="fix a public issue",
         )
         transaction = guided_gate["guided_transaction"]
@@ -275,7 +271,7 @@ def main() -> int:
             goal_id="multi-agent-goal",
             agent_id="codex-product-capability",
             cli_bin=cli_bin,
-            host_surface="codex-app",
+            host_surface="codex-cli-tui",
             goal_text="fix a public issue",
             available_capabilities=["network", "external_evidence_poll"],
         )

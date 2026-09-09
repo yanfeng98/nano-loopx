@@ -147,7 +147,7 @@ def register_start_goal_command(subparsers: argparse._SubParsersAction) -> None:
         "--thread-id",
         help=(
             "Stable opaque host thread id used to reuse the bound agent lane. "
-            "Codex App defaults to the ambient CODEX_THREAD_ID when available."
+            "Codex CLI defaults to the ambient CODEX_THREAD_ID when available."
         ),
     )
     start_goal_parser.add_argument(

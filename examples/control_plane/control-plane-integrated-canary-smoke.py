@@ -293,10 +293,10 @@ def assert_bounded_delivery_state_machine_bundle(quota_payload: dict[str, Any]) 
     scheduler = quota_payload["scheduler_hint"]
     assert scheduler["action"] == "run_now", scheduler
     assert scheduler["cadence_class"] == "active_work", scheduler
-    codex_app = scheduler["codex_app"]
-    assert codex_app["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
-    assert codex_app["no_spend_for_cadence_change"] is True, scheduler
-    assert codex_app["stateful_backoff"]["apply_needed"] is True, scheduler
+    codex_cli = scheduler["codex_cli"]
+    assert codex_cli["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
+    assert codex_cli["no_spend_for_cadence_change"] is True, scheduler
+    assert codex_cli["stateful_backoff"]["apply_needed"] is True, scheduler
 
     frontier = quota_payload["goal_frontier_projection"]
     assert frontier["remaining_advancement_frontier"] == {
@@ -324,8 +324,8 @@ def assert_scheduler_ack_state_machine(
     runtime_root: Path,
     quota_payload: dict[str, Any],
 ) -> dict[str, Any]:
-    codex_app = quota_payload["scheduler_hint"]["codex_app"]
-    backoff = codex_app["stateful_backoff"]
+    codex_cli = quota_payload["scheduler_hint"]["codex_cli"]
+    backoff = codex_cli["stateful_backoff"]
     ack_payload = run_cli(
         registry_path,
         runtime_root,
@@ -335,13 +335,18 @@ def assert_scheduler_ack_state_machine(
         GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--surface",
-        "codex_app",
+        "codex_cli",
         "--state-key",
         backoff["state_key"],
         "--applied-rrule",
-        codex_app["recommended_rrule"],
+        codex_cli["recommended_rrule"],
         "--reset-token",
         backoff["reset_token"],
         "--identity-signature",
@@ -361,13 +366,18 @@ def assert_scheduler_ack_state_machine(
         GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
-    steady_codex_app = steady_payload["scheduler_hint"]["codex_app"]
-    assert steady_codex_app["stateful_backoff"]["apply_needed"] is False, steady_payload
-    assert steady_codex_app["stateful_backoff"]["state_status"] == "same_identity", steady_payload
-    assert steady_codex_app["host_action"] == "none", steady_payload
-    assert "recommended_rrule" not in steady_codex_app, steady_payload
+    steady_codex_cli = steady_payload["scheduler_hint"]["codex_cli"]
+    assert steady_codex_cli["stateful_backoff"]["apply_needed"] is False, steady_payload
+    assert steady_codex_cli["stateful_backoff"]["state_status"] == "same_identity", steady_payload
+    assert steady_codex_cli["host_action"] == "none", steady_payload
+    assert "recommended_rrule" not in steady_codex_cli, steady_payload
     return steady_payload
 
 
@@ -451,7 +461,12 @@ def assert_event_todo_completion_successor_state_machine(
         GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
     assert routed["decision"] == "run", routed
     assert routed["effective_action"] == "normal_run", routed
@@ -537,7 +552,12 @@ def assert_refresh_and_spend_state_machine(
         GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
     assert spent_payload["quota"]["spent_slots"] == 1, spent_payload
     assert spent_payload["quota"]["state"] == "eligible", spent_payload
@@ -555,7 +575,12 @@ def assert_due_monitor_poll_state_machine(root: Path) -> None:
         MONITOR_GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
     assert quota_payload["ok"] is True, quota_payload
     assert quota_payload["should_run"] is True, quota_payload
@@ -609,7 +634,12 @@ def assert_due_monitor_poll_state_machine(root: Path) -> None:
         MONITOR_GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
     assert quiet_payload["decision"] == "skip", quiet_payload
     assert quiet_payload["effective_action"] == "monitor_quiet_skip", quiet_payload
@@ -676,7 +706,12 @@ def assert_markdown_same_agent_continuation_read_path(root: Path) -> None:
         MARKDOWN_GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
     assert source_quota["decision"] == "run", source_quota
     assert source_quota["agent_lane_next_action"]["todo_id"] == source_todo_id, source_quota
@@ -750,7 +785,12 @@ def assert_markdown_same_agent_continuation_read_path(root: Path) -> None:
         MARKDOWN_GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
     assert successor_quota["decision"] == "run", successor_quota
     assert successor_quota["effective_action"] == "normal_run", successor_quota
@@ -837,7 +877,12 @@ def run_fixture_canary(root: Path) -> None:
         GOAL_ID,
         "--agent-id",
         AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
     )
     assert quota_payload["ok"] is True, quota_payload
     assert quota_payload["should_run"] is True, quota_payload

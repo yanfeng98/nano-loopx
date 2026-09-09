@@ -66,7 +66,7 @@ def fixture_payload() -> dict[str, object]:
         "normal_delivery_allowed": True,
         "recommended_action": "continue demo todo",
         "quota": {"state": "eligible"},
-        "scheduler_hint": {"codex_app": {"stateful_backoff": {"apply_needed": False}}},
+        "scheduler_hint": {"codex_cli": {"stateful_backoff": {"apply_needed": False}}},
     }
     return build_ready_score_report(
         doctor_payload=doctor,

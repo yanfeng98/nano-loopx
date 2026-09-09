@@ -113,8 +113,6 @@ class LoopxSession:
             # 否则等一个永远不会出现的人工放行。
             "--accept-onboarding-agent-todos",
             "--begin-autonomous-advance",
-            # 不让 bootstrap 去问要不要建 Codex App 心跳自动化：本工作区没有真 App。
-            "--codex-app-heartbeat", "no",
         ])
         self._run([
             "configure-goal",
@@ -282,12 +280,10 @@ class LoopxSession:
         """从闸门决策里摘出宿主该兑现的调度义务。
 
         对 local_scheduler，这里应该是空的（cadence 由宿主自己拥有）。
-        对硬声明 codex_app 的变体，这里会有 apply_needed/ack_needed——本驱动没有
-        真 App 可以 automation_update，所以只记录、不假装兑现。
         """
 
         hint = decision.get("scheduler_hint") or {}
-        app = hint.get("codex_app") or {}
+        app = hint.get("codex_cli") or {}
         backoff = app.get("stateful_backoff") or {}
         return {
             "applicability": app.get("applicability"),

@@ -88,8 +88,8 @@ from ..scheduler.external_evidence_observation import (
 )
 from ..scheduler.scheduler_hint import build_scheduler_hint
 from ..scheduler.state import (
-    CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
-    CODEX_APP_SURFACE,
+    CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
+    CODEX_CLI_SURFACE,
     load_scheduler_state,
 )
 from ..todos.contract import (
@@ -187,8 +187,7 @@ def _compact_autonomous_candidate_context(
 
 def _scheduler_hint(
     payload: dict[str, Any], *, include_detail: bool = False,
-    codex_app_scheduler_state: dict[str, Any] | None = None, available_capabilities: Any = None, codex_app_current_rrule: Any = None,
-    codex_app_automation_id: Any = None,
+    codex_cli_scheduler_state: dict[str, Any] | None = None, available_capabilities: Any = None, codex_cli_current_rrule: Any = None,
     scheduler_execution_context: Mapping[str, Any] | SchedulerExecutionContextResolution | None = None,
 ) -> dict[str, Any]:
     return build_scheduler_hint(
@@ -196,14 +195,13 @@ def _scheduler_hint(
         user_action_required=_user_channel_action_required(payload),
         agent_scope_frontier_actions=[action.value for action in AgentScopeFrontierAction],
         include_detail=include_detail,
-        codex_app_scheduler_state=codex_app_scheduler_state,
-        available_capabilities=available_capabilities, codex_app_current_rrule=codex_app_current_rrule,
-        codex_app_automation_id=codex_app_automation_id,
+        codex_cli_scheduler_state=codex_cli_scheduler_state,
+        available_capabilities=available_capabilities, codex_cli_current_rrule=codex_cli_current_rrule,
         scheduler_execution_context=scheduler_execution_context,
     )
 
 
-def _load_codex_app_scheduler_state(
+def _load_codex_cli_scheduler_state(
     status_payload: dict[str, Any],
     *,
     goal_id: str,
@@ -217,8 +215,8 @@ def _load_codex_app_scheduler_state(
         Path(str(raw_runtime_root)).expanduser(),
         goal_id=goal_id,
         agent_id=safe_agent_id,
-        surface=CODEX_APP_SURFACE,
-        state_key=CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+        surface=CODEX_CLI_SURFACE,
+        state_key=CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
     )
 
 
@@ -1459,8 +1457,8 @@ def _build_quota_should_run_payload(
         payload,
         include_detail=prepared.include_scheduler_detail,
         available_capabilities=prepared.runtime_available_capabilities,
-        codex_app_scheduler_state=(
-            _load_codex_app_scheduler_state(
+        codex_cli_scheduler_state=(
+            _load_codex_cli_scheduler_state(
                 prepared.status_payload,
                 goal_id=prepared.safe_goal_id,
                 agent_id=quota_decision_agent_id(payload)
@@ -1468,11 +1466,10 @@ def _build_quota_should_run_payload(
             )
             if prepared.resolved_scheduler_context.ok
             and prepared.resolved_scheduler_context.context is not None
-            and prepared.resolved_scheduler_context.context.codex_app_applicable
+            and prepared.resolved_scheduler_context.context.codex_cli_applicable
             else None
         ),
-        codex_app_current_rrule=prepared.codex_app_current_rrule,
-        codex_app_automation_id=prepared.codex_app_automation_id,
+        codex_cli_current_rrule=prepared.codex_cli_current_rrule,
         scheduler_execution_context=prepared.resolved_scheduler_context,
     )
     finalize_user_gate_notification_cooldown(

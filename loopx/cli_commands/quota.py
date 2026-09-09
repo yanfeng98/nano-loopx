@@ -43,9 +43,6 @@ from ..control_plane.quota.settlement_cli import (
 )
 from ..control_plane.quota.turn_envelope import build_turn_envelope
 from ..control_plane.effect_runtime import EffectRuntimeRejected
-from ..control_plane.scheduler.execution_context import (
-    GUIDED_START_TURN_RUNTIME_PROFILES,
-)
 from ..control_plane.todos.contract import normalize_todo_id
 from ..file_lock import lock_timeout_error_fields
 from ..presentation.renderers.quota_event_markdown import (
@@ -68,7 +65,6 @@ from ..quota import (
     void_quota_slot,
 )
 from ..status import collect_status
-from ..upgrade import resolve_codex_app_automation_rrule
 from .lark_inbox import (
     build_lark_operator_inbox_urgency_projector,
     dispatch_goal_lark_turn_start_hooks,
@@ -334,11 +330,20 @@ def _quota_renderer(
 def _requested_quota_action_todo_id(
     args: argparse.Namespace,
 ) -> str | None:
-    if not (
-        bool(args.codex_app)
-        or args.runtime_profile
-        in {profile.value for profile in GUIDED_START_TURN_RUNTIME_PROFILES}
-    ):
+    """Explicit hosted-scheduler action selection stays opt-in.
+
+    Only the explicit hosted-automation context (local_scheduler +
+    host_automation + hosted_automation) treats ``--todo-id`` as a requested
+    same-turn action selection; other host surfaces keep ``--todo-id`` as a
+    settlement target and stay inside the bounded suggestion portfolio.
+    """
+
+    hosted_context = (
+        str(getattr(args, "host_surface", "") or "") == "local_scheduler"
+        and str(getattr(args, "scheduler_owner", "") or "") == "host_automation"
+        and str(getattr(args, "execution_mode", "") or "") == "hosted_automation"
+    )
+    if not hosted_context:
         return None
     return normalize_todo_id(args.todo_id)
 
@@ -560,10 +565,10 @@ def handle_quota_command(
                     "agent-todos" in detail_sections
                     and not bool(getattr(args, "turn_envelope", False))
                 ),
-                codex_app_current_rrule=args.codex_app_current_rrule,
+                codex_cli_current_rrule=args.observed_host_rrule,
                 registry_path=registry_path,
                 runtime_root=runtime_root,
-                host_observation_resolver=resolve_codex_app_automation_rrule,
+                host_observation_resolver=None,
                 scheduler_execution_context=scheduler_context,
                 operator_inbox_urgency_projector=operator_inbox_urgency_projector,
                 bounded_research_frontier_projector=(
@@ -651,10 +656,10 @@ def handle_quota_command(
                                 "agent-todos" in detail_sections
                                 and not bool(getattr(args, "turn_envelope", False))
                             ),
-                            codex_app_current_rrule=args.codex_app_current_rrule,
+                            codex_cli_current_rrule=args.observed_host_rrule,
                             registry_path=registry_path,
                             runtime_root=runtime_root,
-                            host_observation_resolver=resolve_codex_app_automation_rrule,
+                            host_observation_resolver=None,
                             scheduler_execution_context=scheduler_context,
                             operator_inbox_urgency_projector=operator_inbox_urgency_projector,
                             bounded_research_frontier_projector=(

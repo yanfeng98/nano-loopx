@@ -114,7 +114,7 @@ def assert_compact_runtime_policy_complete(
     expected_registry_path: Path | None = None,
     expected_runtime_root: Path | None = None,
 ) -> None:
-    codex_app = compact["codex_app"]
+    codex_app = compact["codex_cli"]
     unchanged_poll = compact["unchanged_poll"]
     stateful_backoff = codex_app["stateful_backoff"]
     ack_hint = codex_app["ack_hint"]
@@ -247,7 +247,7 @@ def assert_compact_runtime_policy_complete(
     assert "final_quota_replan_check_action" in unchanged_poll, (name, compact)
     assert unchanged_poll["spend_policy"], (name, compact)
     assert compact["reset_policy"]["reset_token"], (name, compact)
-    assert compact["reset_policy"]["codex_app_initial_rrule"], (name, compact)
+    assert compact["reset_policy"]["codex_cli_initial_rrule"], (name, compact)
     for omitted in (
         "schema_version",
         "codex_app_tool",
@@ -299,7 +299,7 @@ def assert_compact_scheduler(name: str, source_payload: dict) -> None:
         expected_agent_id=source_payload["agent_identity"]["agent_id"],
     )
     assert compact["reset_policy"]["reset_token"], (name, compact)
-    assert compact["reset_policy"]["codex_app_initial_rrule"] == compact["codex_app"]["recommended_rrule"], (
+    assert compact["reset_policy"]["codex_cli_initial_rrule"] == compact["codex_cli"]["recommended_rrule"], (
         name,
         compact,
     )
@@ -317,7 +317,7 @@ def assert_compact_scheduler(name: str, source_payload: dict) -> None:
     assert cold_path["codex_cli_tui"]["final_quota_replan_check"], (name, detailed)
     assert cold_path["claude_code_loop"]["after_limit"], (name, detailed)
     stateful_detail = cold_path["stateful_backoff_detail"]
-    assert stateful_detail["progression_minutes"] == compact["codex_app"]["example_progression_minutes"], (
+    assert stateful_detail["progression_minutes"] == compact["codex_cli"]["example_progression_minutes"], (
         name,
         detailed,
     )
@@ -429,7 +429,7 @@ def assert_cli_compact_and_detail_contract() -> None:
     ), detailed
     assert detailed["cold_path_detail"]["reset_policy_detail"]["codex_app_tool"] == "automation_update", detailed
     assert detailed["cold_path_detail"]["stateful_backoff_detail"]["progression_minutes"] == (
-        compact["codex_app"]["example_progression_minutes"]
+        compact["codex_cli"]["example_progression_minutes"]
     ), detailed
 
 

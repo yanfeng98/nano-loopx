@@ -65,7 +65,7 @@ def test_quota_turn_envelope_consumes_effect_turn_at_runtime() -> None:
         "scheduler_hint": {
             "action": "run_now",
             "cadence_class": "active_work",
-            "codex_app": {
+            "codex_cli": {
                 "apply": "none_already_applied",
                 "host_action": "none",
             },

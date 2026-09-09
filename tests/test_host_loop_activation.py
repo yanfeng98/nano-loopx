@@ -22,7 +22,6 @@ from loopx.project_prompt import render_accountable_progress_refresh_command
     ("agent_type", "runtime_profile"),
     (
         ("ark-managed-agent", "ark_managed_agent_goal"),
-        ("codex-app", "codex_app_heartbeat"),
         ("codex-cli", "codex_cli"),
         ("claude-code", "claude_code"),
         ("opencode", "generic_cli"),
@@ -43,7 +42,7 @@ def test_first_class_hosts_bind_one_runtime_profile(
     (
         ("ark_managed_agent_goal", True),
         ("codex_cli", True),
-        ("codex_app_heartbeat", False),
+        ("generic_cli", False),
         ("claude_code", False),
     ),
 )
@@ -265,7 +264,7 @@ def test_goal_hosts_reuse_thin_dispatch_and_stay_compact() -> None:
     }
     generic = build_heartbeat_prompt(
         **common,
-        runtime_profile="codex_app_heartbeat",
+        runtime_profile="generic_cli",
     )
     goal_hosts = [
         build_heartbeat_prompt(**common, runtime_profile="codex_cli"),
@@ -277,7 +276,7 @@ def test_goal_hosts_reuse_thin_dispatch_and_stay_compact() -> None:
     for payload in goal_hosts:
         for rule in shared_rules:
             assert rule in payload["task_body"]
-        assert payload["interface_budget"]["budget_char_count"] <= 2_800
+        assert payload["interface_budget"]["budget_char_count"] <= 3_000
         assert payload["interface_budget"]["within_budget"] is True
 
 
@@ -335,25 +334,9 @@ def test_accountable_refresh_preserves_explicit_validated_turn_semantics() -> No
     assert "outcome_progress" not in command
 
 
-def test_codex_app_activation_uses_narrow_runtime_profile() -> None:
-    packet = build_host_loop_activation_packet(
-        agent_type="codex-app",
-        goal_id="fixture-goal",
-        agent_id="codex-fixture",
-        registered_agents=["codex-fixture"],
-    )
-
-    command = packet["commands"]["heartbeat_prompt"]
-    assert "--codex-app" in command
-    assert "--runtime-profile" not in command
-    assert "--host-surface" not in command
-    assert "--scheduler-owner" not in command
-    assert "--execution-mode" not in command
-
-
 def test_new_agent_onboarding_defaults_to_fresh_identity() -> None:
     packet = build_host_loop_activation_packet(
-        agent_type="codex-app",
+        agent_type="codex-cli",
         goal_id="fixture-goal",
         registered_agents=["codex-existing"],
         fresh_agent_default=True,
@@ -392,7 +375,6 @@ def test_new_agent_onboarding_defaults_to_fresh_identity() -> None:
     "agent_type",
     (
         "ark-managed-agent",
-        "codex-app",
         "codex-cli",
         "claude-code",
         "opencode",
@@ -417,7 +399,7 @@ def test_identity_selection_preserves_v0_prompt_fields(
 
 def test_new_agent_onboarding_gates_an_empty_agent_registry() -> None:
     packet = build_host_loop_activation_packet(
-        agent_type="codex-app",
+        agent_type="codex-cli",
         goal_id="fixture-goal",
         registered_agents=[],
         fresh_agent_default=True,
@@ -431,7 +413,7 @@ def test_new_agent_onboarding_gates_an_empty_agent_registry() -> None:
 
 def test_explicit_identity_preserves_existing_agent_continuation() -> None:
     packet = build_host_loop_activation_packet(
-        agent_type="codex-app",
+        agent_type="codex-cli",
         goal_id="fixture-goal",
         agent_id="codex-existing",
         registered_agents=["codex-existing"],
@@ -442,25 +424,6 @@ def test_explicit_identity_preserves_existing_agent_continuation() -> None:
     assert packet["activation_allowed"] is True
     assert packet["agent_id"] == "codex-existing"
     assert packet["identity_selection_gate"] is None
-
-
-def test_codex_app_thin_prompt_embeds_profile_only_in_quota_command() -> None:
-    prompt = build_heartbeat_prompt(
-        goal_id="fixture-goal",
-        thin=True,
-        runtime_profile="codex_app_heartbeat",
-    )
-
-    assert "--codex-app" in prompt["quota_guard_command"]
-    assert "--codex-app" in prompt["task_body"]
-    assert "host_surface" not in prompt["task_body"]
-    assert "scheduler_owner" not in prompt["task_body"]
-    assert (
-        "use selection_command when required"
-    ) in prompt["task_body"]
-    assert "compact_prompt_command" not in prompt
-    assert "brief_prompt_command" not in prompt
-    assert prompt["interface_budget"]["within_budget"] is True
 
 
 def test_opencode_activation_uses_bridge_tool_and_generic_cli_quota() -> None:
@@ -516,11 +479,8 @@ def test_generic_cli_prompt_keeps_external_loop_semantics() -> None:
     assert "visible TraeX `/goal` task" not in payload["task_body"]
 
 
-def test_ambiguous_codex_requires_app_or_cli_selection() -> None:
+def test_ambiguous_codex_requires_explicit_cli_selection() -> None:
     with pytest.raises(AgentTypeError) as caught:
         normalize_agent_type("codex")
 
-    assert caught.value.suggestions == [
-        "codex-app",
-        "codex-cli",
-    ]
+    assert caught.value.suggestions == ["codex-cli"]

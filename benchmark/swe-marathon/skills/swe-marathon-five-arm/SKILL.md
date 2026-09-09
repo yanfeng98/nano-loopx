@@ -21,7 +21,7 @@ description: 在 SWE-Marathon 上做 codex harness 四臂对照（裸 codex / �
 ## 必须披露的两处偏离
 
 1. **`plain` 走 app-server，不是论文的 `codex exec`。** 原因见下面「只杀对照组」那节。
-2. **`heartbeat` 用 `generic_cli` 代替 `codex_app`。** 上游 `host_surface=codex_app` 是留给真 Codex App 的：它回一套 `stateful_backoff`，期待宿主调 App 的 `automation_update` 改 RRULE 再 ACK；没有真 App 就永远悬着。上游给自建定时器指定的对口就是 `generic_cli`（参考实现 `scripts/external_scheduler_worker.py` 的默认值）。这个替换写在 `profiles.py` 的 `substitution` 字段里，**但不会自动进产物，报表时要手工带上**。
+2. **`heartbeat` 用 `generic_cli`（自建定时器对口）。** 上游给自建定时器指定的 profile 就是 `generic_cli`（参考实现 `scripts/external_scheduler_worker.py` 的默认值），闸门发 local_scheduler 提示。这个替换写在 `profiles.py` 的 `substitution` 字段里，**但不会自动进产物，报表时要手工带上**。
 
 ## 跑法
 

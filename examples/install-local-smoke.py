@@ -180,9 +180,6 @@ def main() -> int:
         stale_loopx = bin_dir / "loopx"
         stale_loopx.write_text("#!/usr/bin/env bash\nexit 99\n", encoding="utf-8")
         stale_loopx.chmod(0o755)
-        stale_fallback = bin_dir / "loopx-apply-rrule"
-        stale_fallback.write_text("#!/usr/bin/env bash\nexit 98\n", encoding="utf-8")
-        stale_fallback.chmod(0o755)
         stale_canary_target = root / "stale-canary-target"
         stale_canary_target.mkdir()
         (bin_dir / "loopx-canary").symlink_to(stale_canary_target)
@@ -230,10 +227,6 @@ def main() -> int:
         assert "non-blocking" in install.stderr, install.stderr
         assert "examples/canary/canary-promotion-readiness-smoke.py" in install.stderr, install.stderr
         assert f"- executable: {bin_dir / 'loopx'}" in install.stdout, install.stdout
-        assert (
-            f"- Codex App fallback executable: {bin_dir / 'loopx-apply-rrule'}"
-            in install.stdout
-        ), install.stdout
         assert "- release: " in install.stdout, install.stdout
         assert f"- canary executable: {bin_dir / 'loopx-canary'}" in install.stdout, install.stdout
         assert "- executable compatibility: none" in install.stdout, install.stdout
@@ -262,18 +255,13 @@ def main() -> int:
 
         wrapper = bin_dir / "loopx"
         assert wrapper.is_symlink(), wrapper
-        fallback_wrapper = bin_dir / "loopx-apply-rrule"
-        assert fallback_wrapper.is_symlink(), fallback_wrapper
         assert not (bin_dir / "goal-harness").exists()
         assert (bin_dir / "goal-harness.legacy-disabled").is_symlink()
         assert wrapper.resolve() != REPO_ROOT / "scripts" / "loopx", wrapper.resolve()
         assert wrapper.resolve().name == "loopx", wrapper.resolve()
         release_root = wrapper.resolve().parents[1]
-        assert fallback_wrapper.resolve() == (
-            release_root / "scripts" / "loopx-apply-rrule"
-        ), fallback_wrapper.resolve()
         fallback_help = subprocess.run(
-            [str(fallback_wrapper), "--help"],
+            [str(wrapper), "--help"],
             cwd=root,
             env=env,
             check=True,

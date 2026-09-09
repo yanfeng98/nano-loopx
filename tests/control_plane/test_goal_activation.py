@@ -274,10 +274,13 @@ def test_stopped_goal_and_zero_compute_keep_distinct_resume_authority() -> None:
     stopped = build_quota_should_run(
         stopped_status,
         goal_id="goal-one",
-        codex_app_current_rrule="FREQ=MINUTELY;INTERVAL=30",
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
+        codex_cli_current_rrule="FREQ=MINUTELY;INTERVAL=30",
+        scheduler_execution_context={
+            "host_surface": "local_scheduler",
+            "scheduler_owner": "host_automation",
+            "execution_mode": "hosted_automation",
+            "source": "explicit",
+        },
     )
 
     assert stopped["should_run"] is False
@@ -288,7 +291,7 @@ def test_stopped_goal_and_zero_compute_keep_distinct_resume_authority() -> None:
     assert stopped["automation_liveness"]["automation_action"] == "stop_goal_stopped"
     assert stopped["scheduler_hint"]["reason_code"] == "goal_stopped"
     assert (
-        stopped["scheduler_hint"]["codex_app"]["resume_trigger"]
+        stopped["scheduler_hint"]["codex_cli"]["resume_trigger"]
         == "explicit Goal lifecycle resume"
     )
 

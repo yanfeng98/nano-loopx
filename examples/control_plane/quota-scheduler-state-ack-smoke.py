@@ -35,7 +35,12 @@ def run_should_run(
         GOAL_ID,
         "--agent-id",
         SCOPED_AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--scan-path",
         str(project),
         registry_path=registry_path,
@@ -55,7 +60,7 @@ def assert_cli_scheduler_ack_public_round_trip() -> None:
             runtime_root=runtime_root,
             project=project,
         )
-        before_app = before["scheduler_hint"]["codex_app"]
+        before_app = before["scheduler_hint"]["codex_cli"]
         target_rrule = before_app["recommended_rrule"]
         ack_hint = before_app["ack_hint"]
         assert before_app["stateful_backoff"]["apply_needed"] is True, before
@@ -82,7 +87,7 @@ def assert_cli_scheduler_ack_public_round_trip() -> None:
             runtime_root=runtime_root,
             project=project,
         )
-        settled_app = settled["scheduler_hint"]["codex_app"]
+        settled_app = settled["scheduler_hint"]["codex_cli"]
         assert settled_app["stateful_backoff"]["state_status"] == "same_identity"
         assert settled_app["stateful_backoff"]["current_rrule"] == target_rrule
         assert settled_app["stateful_backoff"]["apply_needed"] is False

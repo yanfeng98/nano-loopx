@@ -109,7 +109,7 @@ Please include:
 以 issue 或讨论上的紧凑笔记形式跟踪指标:
 
 - `workflow_type`:issue_fix、pr_review、overnight_refactor、blocked_fallback 或其他;
-- `entry_point`:slash_command、codex_cli_tui、codex_app、claude_code 或 manual_cli;
+- `entry_point`:slash_command、codex_cli_tui、claude_code 或 manual_cli;
 - `artifact_produced`:todo_plan、patch_pr、review_packet、validation_summary、blocker_packet 或 none;
 - `validation_state`:not_run、failed、passed、partial 或 not_applicable;
 - `human_gate_count`:具体用户/控制器 gate 的整数计数;

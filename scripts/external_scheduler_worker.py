@@ -9,7 +9,7 @@ should run, projects a one-line public-safe status, and either:
   * with --wake-cmd: runs the configured command when should_run is true.
 
 The generic CLI scheduler hint carries only the *initial* interval plus a
-progression ladder and an unchanged-poll limit. Unlike codex-app's stateful
+progression ladder and an unchanged-poll limit. Unlike the hosted-scheduler stateful
 host backoff, the local progression index is not persisted server-side, so this
 worker tracks consecutive unchanged polls in a small state file and advances
 through the ladder exactly as a visible TUI loop would.

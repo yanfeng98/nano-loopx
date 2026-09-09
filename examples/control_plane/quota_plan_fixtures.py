@@ -37,16 +37,16 @@ def _nested_value(payload: dict, path: str):
 
 
 def scheduler_reset_profile_snapshot(scheduler: dict) -> dict:
-    codex_app = scheduler["codex_app"]
+    codex_cli = scheduler["codex_cli"]
     unchanged_poll = scheduler["unchanged_poll"]
     limits = unchanged_poll["limits"]
     return {
         "cadence_class": scheduler["cadence_class"],
-        "codex_app_initial_interval_minutes": codex_app["recommended_interval_minutes"],
-        "codex_app_initial_rrule": codex_app["recommended_rrule"],
-        "codex_app_max_interval_minutes": codex_app["max_interval_minutes"],
-        "codex_app_progression_minutes": codex_app["example_progression_minutes"],
-        "unchanged_poll_backoff_multiplier": codex_app["unchanged_poll_backoff_multiplier"],
+        "codex_cli_initial_interval_minutes": codex_cli["recommended_interval_minutes"],
+        "codex_cli_initial_rrule": codex_cli["recommended_rrule"],
+        "codex_cli_max_interval_minutes": codex_cli["max_interval_minutes"],
+        "codex_cli_progression_minutes": codex_cli["example_progression_minutes"],
+        "unchanged_poll_backoff_multiplier": codex_cli["unchanged_poll_backoff_multiplier"],
         "local_scheduler_unchanged_poll_limit": limits["local_scheduler"],
         "claude_code_loop_unchanged_poll_limit": limits["claude_code_loop"],
     }

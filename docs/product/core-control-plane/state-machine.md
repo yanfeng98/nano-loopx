@@ -303,7 +303,7 @@ stateDiagram-v2
   ResetToInitial --> ActiveCadence
 ```
 
-| 调度器动作 | 当前节奏类别 | 典型 Codex App 初始/最大 | 含义 |
+| 调度器动作 | 当前节奏类别 | 典型宿主初始/最大 | 含义 |
 | --- | --- | --- | --- |
 | `run_now` | `active_work` | 3 / 10 分钟 | 必须尝试工作或修复。 |
 | `backoff_waiting_for_user` | `human_gate` | 30 / 120 分钟 | 接下来是具体的用户/控制器动作。 |
@@ -353,13 +353,11 @@ stateDiagram-v2
   GlobalWriteBlocked --> RepairNeeded
   ProjectRegistered --> QuotaVisible: project registry mode
   GlobalRegistered --> QuotaVisible: global quota recognizes goal/agent
-  QuotaVisible --> HeartbeatConsentRequired: codex_app_heartbeat=ask
-  QuotaVisible --> HeartbeatPreauthorized: codex_app_heartbeat=yes
-  QuotaVisible --> ManualLoopOnly: codex_app_heartbeat=no or unsupported host
-  HeartbeatConsentRequired --> HeartbeatEnabled: user confirms + host installed
-  HeartbeatPreauthorized --> HeartbeatEnabled: host installed
-  HeartbeatEnabled --> FirstTickVerified: heartbeat fires + quota checked
+  QuotaVisible --> HostLoopRequired: host loop activation pending
+  QuotaVisible --> ManualLoopOnly: host unsupported or no host loop
+  HostLoopRequired --> HeartbeatEnabled: host loop installed
   ManualLoopOnly --> FirstTickVerified: manual/TUI/Claude tick checked quota
+  HeartbeatEnabled --> FirstTickVerified: heartbeat fires + quota checked
   RepairNeeded --> ProjectRegistered: repair validated
   FirstTickVerified --> [*]
 ```
@@ -370,9 +368,8 @@ stateDiagram-v2
 | `GlobalSyncPending` / `GlobalRegistered` | `global_sync` payload | 共享状态/配额可以发现该 goal。 |
 | `GlobalWriteBlocked` / `RepairNeeded` | 注册表可写性探针或同步错误 | 产生具体的修复/gate;不要悄然降级。 |
 | `QuotaVisible` | `quota should-run` 可解析 goal 与 agent | 调度器可以推理该目标。 |
-| `HeartbeatConsentRequired` | `codex_app_heartbeat=ask` | 在安装周期性 Codex App 自动化前询问。 |
-| `HeartbeatPreauthorized` | `codex_app_heartbeat=yes` | 在声称自动化活动之前安装/更新 host loop。 |
-| `ManualLoopOnly` | `codex_app_heartbeat=no` 或 host 不受支持 | 手动、TUI、Claude 或按需 Loop 仍然有效。 |
+| `HostLoopRequired` | host loop activation 待定 | 在声称自动化活动之前安装/更新 host loop。 |
+| `ManualLoopOnly` | host 不受支持或未安装 host loop | 手动、TUI、Claude 或按需 Loop 仍然有效。 |
 | `FirstTickVerified` | 来自真实 tick 的运行历史或配额 evidence | 运行 Loop 实际被演练过。 |
 
 对于只读项目地图,`adapter.status=planned` 只允许试运行预览,直到 `read_only_map_opt_in` 运维者 gate 批准。已连接的只读状态,如 `connected`、`connected-read-only` 与 `read-only-map-ready`,可以追加一个真实的只读地图。

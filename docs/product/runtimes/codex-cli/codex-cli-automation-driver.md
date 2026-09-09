@@ -6,7 +6,7 @@
 面向伙伴的路径请从
 [用 Codex CLI 运行一次 LoopX Turn](loopx-turn-codex-cli-quickstart.md) 开始。它把这份维护参考缩小为内置 adapter、一个独立校验器与一条命令。
 
-产品目标是一个可复用机制：LoopX CLI 决定什么可以运行，Codex CLI 执行一个有边界的 agent Turn，LoopX 校验并记录结果。它应当接近 Codex App 中可用的控制面行为，但不复制 App 特定的 heartbeat 逻辑，也不把 Codex session 文件变成项目状态。
+产品目标是一个可复用机制：LoopX CLI 决定什么可以运行，Codex CLI 执行一个有边界的 agent Turn，LoopX 校验并记录结果。它提供与可见 `/goal` 相同的控制面行为，但不复制宿主特定的 heartbeat 逻辑，也不把 Codex session 文件变成项目状态。
 
 主机无关（host-neutral）生命周期由
 [`loopx_turn_v0`](../../../reference/protocols/loopx-turn-v0.md) 定义。本页记录 Codex CLI adapter 策略与当前 parity 缺口。
@@ -26,12 +26,12 @@ Codex host 把 resume id 保留在按 goal、agent、todo 键控的私有本地 
 
 较旧的 `codex-cli-local-scheduler-*` 命令保持为诊断与兼容性探针。它们不是默认编排叙事，也不得被手工组合成第二套控制面。
 
-## Codex App Parity 矩阵
+## 目标基线矩阵
 
-| 能力 | Codex App 基线 | 当前 Codex CLI 路由 | v0 驱动要求 |
+| 能力 | 可见 `/goal` 基线 | 当前 Codex CLI 路由 | v0 驱动要求 |
 | --- | --- | --- | --- |
-| 持久身份 | 自动化线程加注册的 LoopX agent | Goal、agent 与 todo 是权威；resume id 留在私有 runtime 状态 | 保持 session 句柄不透明、本地、非权威 |
-| 唤醒与恢复 | Heartbeat 唤醒既有线程 | `run-once` 只启动或恢复合格的本地位 session | 添加不重叠的周期性唤醒 host 与交互式 attach 证据 |
+| 持久身份 | visible goal 线程加注册的 LoopX agent | Goal、agent 与 todo 是权威；resume id 留在私有 runtime 状态 | 保持 session 句柄不透明、本地、非权威 |
+| 唤醒与恢复 | 宿主调度唤醒既有线程 | `run-once` 只启动或恢复合格的本地位 session | 添加不重叠的周期性唤醒 host 与交互式 attach 证据 |
 | 新鲜控制决策 | Agent 运行实时 `quota should-run` 并遵循 `interaction_contract` | `turn plan` 与 `run-once` 使用实时 TurnEnvelope | 保持夹具仅测试用，并在每次 host 尝试前重新决策 |
 | User gate | 显示具体投影动作；host 工作停止 | 在 host 调用之前路由 | 保留精确投影动作与 no-spend 行为 |
 | Todo 延续 | 选中的 todo、claim、延续与后继策略跨 Turn 幸存 | Todo 身份经 plan、host 请求、写回与 receipt 保持 | 增加更广的调度式与交互式延续资格 |
@@ -39,7 +39,7 @@ Codex host 把 resume id 保留在按 goal、agent、todo 键控的私有本地 
 | Workspace 隔离 | Agent 遵守 workspace guard 与仓库策略 | 调用方提供显式项目；仓库 worktree 策略保持外部 | 在可写 host 之前集成一级 workspace guard |
 | 有界执行 | Heartbeat prompt 要求一个有验证的片段 | 内置与通用 host 要求类型化结果与显式超时 | 合格化更长的仓库 Turn 与交互式中断 |
 | 校验与写回 | 校验、刷新，然后 spend 一个槽位 | 独立命令校验门控持久写回与一次 spend | 保持校验器任务特定并在 host 之外 |
-| Scheduler/backoff | App RRULE 被应用并确认而不 spend | 最终实时 scheduler 检查是 Turn receipt 的一部分 | 外部周期性 host 必须无重叠地应用所需 host 动作 |
+| Scheduler/backoff | 宿主 RRULE 被应用并确认而不 spend | 最终实时 scheduler 检查是 Turn receipt 的一部分 | 外部周期性 host 必须无重叠地应用所需 host 动作 |
 | 修复/replan | 类型化控制状态可以保留、修复或替换当前路线 | Host 与校验失败路由到类型化修复/replan；两次停滞需要 todo 或 vision 增量 | 扩展真实 host 负向路径资格 |
 | 隐私 | 原始 host 资料留在 LoopX 状态之外 | 现有边界强健 | 保持当前边界并添加类型化结果通道 |
 
@@ -111,18 +111,16 @@ Replan Turn 必须写一个边界 todo 增量或 vision replan 触发。如果�
 2. **Shadow - 当前矩阵完成**：状态夹具在不执行 host 的情况下保留动作签名与类型化路由。
 3. **一次 Turn - 隔离 Codex CLI 完成**：一个真实恢复的 host session 返回类型化结果、通过独立测试、写入状态、spend 一次并完成 scheduler 最终检查。
 4. **调度式延续 - 部分**：恢复/新 session 资格与超时恢复已证明；通用非重叠周期性 host loop 与 `interactive-visible` 模式仍开放。
-5. **Benchmark dogfood - 进行中**：在匹配的 source、budget、并发、无反馈、无同步、无上传、无提交边界下，把驱动与 Codex App 及规范可计数 `/goal` 基线对比。
+5. **Benchmark dogfood - 进行中**：在匹配的 source、budget、并发、无反馈、无同步、无上传、无提交边界下，把驱动与规范可计数 `/goal` 基线对比。
 6. **晋升评审 - 待定**：决定保持 adapter 实验状态、退役更旧探针，还是晋升另一 CLI host。
 
 Benchmark dogfood 记录紧凑 parity、轨迹与收尾 evidence。它不得提交原始任务文本、原始轨迹、verifier 输出、凭据或本地 artifact 路径。
 
 ## 回滚与非目标
 
-Adapter 必须可以在不改变 LoopX goal 状态、普通 CLI 命令或 Codex App heartbeat 运行的情况下禁用。旧探针命令可以保留为诊断，直到整合驱动覆盖它们的持久边界；它们不得成为默认产品叙事。
+Adapter 必须可以在不改变 LoopX goal 状态、普通 CLI 命令或宿主 heartbeat 运行的情况下禁用。旧探针命令可以保留为诊断，直到整合驱动覆盖它们的持久边界；它们不得成为默认产品叙事。
 
 该路径不会：
-
-- 在测出匹配 parity evidence 之前替换 Codex App；
 - 让 Codex CLI session 数据成为权威；
 - 悄悄回答 user gates 或处理凭据；
 - 启动 benchmark 作业、上传 artifacts 或提交 leaderboard 结果；或

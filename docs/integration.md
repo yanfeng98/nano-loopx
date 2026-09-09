@@ -229,7 +229,7 @@ loopx new-project-prompt \
   --goal-doc /path/to/project/GOAL.md
 ```
 
-如果已连接项目之后应通过循环 Codex App heartbeat 运行，生成 heartbeat 任务体，
+如果已连接项目之后应通过循环宿主 heartbeat 运行，生成 heartbeat 任务体，
 而不是手抄 quota guard 与 spend 协议：
 
 ```bash
@@ -241,7 +241,7 @@ loopx heartbeat-prompt \
 active state。只把 `--active-state` 保留为分离状态文件、迁移检查或兼容测试的
 显式覆盖。
 
-对即时 Codex App 自动化，当目标 Codex Agent 能自己检查 LoopX 状态与 CLI 输出时，
+对即时宿主自动化，当目标 Agent 能自己检查 LoopX 状态与 CLI 输出时，
 用薄形式作为本地机器默认调度器：
 
 ```bash
@@ -271,7 +271,7 @@ blocker-push、推荐、steering-audit、writeback、refresh 与 spend 生命周
 而不用把完整审计提示复制进每 run 上下文。精简任务体用于应只携带预检/guard、
 核心不变量与 spend 记账的已安装自动化，同时把细节分支委托回生成的契约。
 
-Codex App 可见目标文本可以保持短，如
+Codex CLI 可见目标文本可以保持短，如
 `按 ACTIVE_GOAL_STATE.md，基于 LoopX 体系，推进项目`。它只是给人类与执行者的
 标签。循环自动化提示应使用上面生成的 heartbeat 任务体，使每个项目共享同一
 quota、gate、steering-audit、writeback、refresh 与 spend 生命周期。

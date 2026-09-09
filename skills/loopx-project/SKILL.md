@@ -55,7 +55,7 @@ loopx start-goal --guided --project . --goal-text "<GOAL_TEXT>"
 
 仅当调用方提供了该精确显式路由开关时，才追加 `--capability-route issue-fix`。
 
-已知时包含 `--goal-id <STABLE_GOAL_ID>`。Codex App 自动读取稳定的环境变量
+已知时包含 `--goal-id <STABLE_GOAL_ID>`。Codex CLI 自动读取稳定的环境变量
 `CODEX_THREAD_ID`；其他暴露稳定不透明线程 id 的宿主应在每次 `/loopx` 调用
 时把它作为 `--thread-id <HOST_THREAD_ID>` 传入。如果该线程已绑定，在 start、
 heartbeat、quota、refresh-state 与 Todo 命令中复用返回的
@@ -393,7 +393,7 @@ Stack、最近进度与 critic，然后在选择工作前运行简短 steering �
 
 ## 设置周期 Heartbeat
 
-当用户或控制器需要已连接 goal 的周期 Codex App heartbeat 时，优先生成器而非
+当用户或控制器需要已连接 goal 的周期宿主 heartbeat 时，优先生成器而非
 手动复制 quota 生命周期：
 
 ```bash
@@ -435,7 +435,7 @@ loopx heartbeat-prompt --thin --goal-id <STABLE_GOAL_ID> \
 活动状态，使已安装自动化不固定陈旧路径。仅对分离的状态文件、迁移检查或兼容
 测试传 `--active-state <ACTIVE_GOAL_STATE_PATH>`。
 
-把生成的任务正文复制到 Codex App heartbeat 自动化中。thin 正文是可信本地
+把生成的任务正文复制到宿主 heartbeat 自动化中。thin 正文是可信本地
 worker 的已安装默认：它保持自动化提示词项目无关，并告诉 Codex 每次唤醒重读
 registry/global quota 真相、活动状态、status/run history、仓库状态与项目信号。
 扩展审计源使用 `--full`。当上下文压力重要但已安装提示词仍应内联携带 quota、
@@ -466,31 +466,31 @@ quota 守卫返回 `execution_obligation` 与 `heartbeat_recommendation`。它�
 `execution_obligation` 与 `scheduler_hint`，后者控制下次唤醒节奏与外部循环
 无变化轮询自停；这是调度政策，不是交付权限。Codex CLI TUI 与 Claude Code 循环
 应在应用其 `after_limit` 前从 `scheduler_hint` 运行最终 quota/replan 检查；
-如果守护变化或返回 `run_now`，遵循新 quota 契约而不是停止。Codex App heartbeat
+如果守护变化或返回 `run_now`，遵循新 quota 契约而不是停止。宿主 heartbeat
 worker 应在可用时搜索/使用 `automation_update`。如果
 `scheduler_hint.action=stop_until_explicit_resume` 且
-`scheduler_hint.codex_app.host_action=pause_or_delete_current_heartbeat`，
+`scheduler_hint.codex_cli.host_action=pause_or_delete_current_heartbeat`，
 调用一次 `automation_update` 暂停当前 heartbeat（仅当宿主无法暂停时删除），
 验证宿主结果，不消耗 quota，并结束该轮次。此终态宿主动作优先于 RRULE 处理且
 不需要 scheduler ACK。否则仅当
-`scheduler_hint.codex_app.stateful_backoff.apply_needed=true` 且存在
-`scheduler_hint.codex_app.recommended_rrule` 时才使用 `automation_update`。
-RRULE 更新成功后，用 `scheduler_hint.codex_app.ack_hint.cli_args` 运行 `loopx`
+`scheduler_hint.codex_cli.stateful_backoff.apply_needed=true` 且存在
+`scheduler_hint.codex_cli.recommended_rrule` 时才使用 `automation_update`。
+RRULE 更新成功后，用 `scheduler_hint.codex_cli.ack_hint.cli_args` 运行 `loopx`
 （通常是 `quota scheduler-ack-current`，它会重读最新 scheduler hint，而不是
 手工复制短生命周期重置 token）。每个 hint 与轮次最多尝试一次宿主更新。失败或
-超时时，不要重试或 ACK；运行一次 `scheduler_hint.codex_app.failure_hint.cli_args`。
+超时时，不要重试或 ACK；运行一次 `scheduler_hint.codex_cli.failure_hint.cli_args`。
 该无消耗写回记录失败的目标/观察宿主对，使后续 heartbeat 抑制精确重复，直到
 任一值变化。在观察到的宿主节奏下继续允许的交付。如果 `apply_needed=false` 但
 `ack_needed=true`，匹配的宿主回读已证明 RRULE；跳过 `automation_update`，
 直接运行绑定的 ack hint。LoopX 拥有重置/进展状态，并在期望 RRULE 已应用时
 省略 `recommended_rrule`。
 节奏变更、重置为初始更新、最终检查与自停变更不消耗 quota。
-对唯一匹配的活跃 Codex App heartbeat，`quota should-run` 自动协调已安装 RRULE
+对唯一匹配的活跃宿主 heartbeat，`quota should-run` 自动协调已安装 RRULE
 与 LoopX 的 ACK ledger。把 `stateful_backoff.host_observation.status=drift_detected`
 视为节奏修复权威；陈旧或过早 ACK 不得抑制 `apply_needed`。
 当回读匹配尚未绑定到调度器状态的 reset RRULE 时，ack hint 携带精确重置 token、
 身份签名与 CLI 路由；缺失回读不得使用此捷径。
-此回读仅节奏相关，绝不暴露自动化提示词或授予 LoopX 直接编辑 Codex App 文件的
+此回读仅节奏相关，绝不暴露自动化提示词或授予 LoopX 直接编辑宿主文件的
 权限。
 
 决定安静无操作前读取 `execution_obligation`：
@@ -531,7 +531,7 @@ gate 但返回安静 `DONT_NOTIFY`；有界提醒窗口或材料性 gate/宿主�
 够格的仅 monitor 无迁移轮询保持用户 todo 在负载中可见，但在材料性迁移出现前
 应安静。
 
-保持 Codex App 可见 goal 文本简短，例如
+保持 Codex CLI 可见 goal 文本简短，例如
 `按 ACTIVE_GOAL_STATE.md，基于 LoopX 体系，推进项目`。不要用该简短文本作为
 自动化正文。跨项目，自动化正文应是同一生成生命周期提示词，仅变化 `goal_id`、
 `active_state` 与窄项目边界规则。当项目看似需要自定义自动分支时，先把它视为

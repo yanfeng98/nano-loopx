@@ -36,7 +36,7 @@ def register_quota_command(
             "void-slot",
         ],
         default="status",
-        help="Use status for all groups, plan for next-turn groups, should-run for one goal, monitor-poll for no-spend quiet poll evidence, scheduler-ack for successful Codex App RRULE state, scheduler-fail-current to suppress a repeated failed host update pair, spend-slot for accounting, or void-slot for a non-destructive accounting correction.",
+        help="Use status for all groups, plan for next-turn groups, should-run for one goal, monitor-poll for no-spend quiet poll evidence, scheduler-ack for successful host RRULE state, scheduler-fail-current to suppress a repeated failed host update pair, spend-slot for accounting, or void-slot for a non-destructive accounting correction.",
     )
     quota_parser.add_argument(
         "--goal-id",
@@ -90,9 +90,9 @@ def register_quota_command(
         help=argparse.SUPPRESS,
     )
     quota_parser.add_argument(
-        "--codex-app-current-rrule",
+        "--observed-host-rrule",
         help=(
-            "Current RRULE observed from the active Codex App heartbeat. For "
+            "Current RRULE observed from the active host heartbeat. For "
             "`quota should-run`, this reconciles host reality with LoopX's last "
             "scheduler ACK so a stale ACK cannot suppress a required update."
         ),
@@ -107,21 +107,10 @@ def register_quota_command(
         ),
     )
     quota_parser.add_argument(
-        "-A",
-        "--codex-app",
-        action="store_true",
-        help=(
-            "Compact explicit alias for --runtime-profile "
-            "codex_app_heartbeat. Cannot be combined with another scheduler "
-            "runtime or execution context."
-        ),
-    )
-    quota_parser.add_argument(
         "-H",
         "--host-surface",
         choices=[
             "ark_managed_agent",
-            "codex_app",
             "codex_cli",
             "generic_cli",
             "claude_code",
@@ -173,16 +162,6 @@ def register_quota_command(
         help=argparse.SUPPRESS,
     )
     quota_parser.add_argument(
-        "--begin-turn",
-        action="store_true",
-        help=(
-            "For an initial Codex App `quota should-run`, mint and persist one "
-            "new Turn identity. Any explicit Todo-selection command returned by "
-            "the guard reuses the minted identity. Cannot be combined with "
-            "--turn-instance-id or --todo-id."
-        ),
-    )
-    quota_parser.add_argument(
         "--replan-obligation-id",
         help=(
             "Typed autonomous replan obligation binding for `quota spend-slot`. "
@@ -209,12 +188,12 @@ def register_quota_command(
     register_quota_monitor_poll_request_arguments(quota_parser)
     quota_parser.add_argument(
         "--surface",
-        default="codex_app",
-        help="Scheduler surface for scheduler ACK/failure commands; defaults to codex_app.",
+        default="codex_cli",
+        help="Scheduler surface for scheduler ACK/failure commands; defaults to codex_cli.",
     )
     quota_parser.add_argument(
         "--state-key",
-        default="scheduler_hint.codex_app.stateful_backoff",
+        default="scheduler_hint.codex_cli.stateful_backoff",
         help="Scheduler state key for scheduler ACK/failure commands.",
     )
     quota_parser.add_argument(

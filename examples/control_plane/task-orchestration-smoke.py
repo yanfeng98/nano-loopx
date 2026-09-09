@@ -289,7 +289,7 @@ def main() -> int:
         assert blocked_turn["scheduler_hint"]["action"] == (
             "return_to_owner_until_material_change"
         ), blocked_turn
-        assert blocked_turn["scheduler_hint"]["codex_app"]["host_action"] == (
+        assert blocked_turn["scheduler_hint"]["codex_cli"]["host_action"] == (
             "pause_or_delete_current_heartbeat"
         ), blocked_turn
         assert blocked_turn["scheduler_hint"]["unchanged_poll"][

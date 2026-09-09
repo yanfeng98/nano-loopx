@@ -107,7 +107,6 @@ nav:
       - Long Task Cadence: operations/long-task-cadence-policy.md
       - Authority Sources: operations/authority-source-registration.md
       - Status Data Contract: status-data-contract.md
-      - Heartbeat Automation Prompt: heartbeat-automation-prompt.md
   - Capabilities:
       - capabilities/README.md
       - Benchmark Toolkit: capabilities/benchmark-toolkit/README.md

@@ -34,9 +34,15 @@ from loopx.control_plane.work_items.interaction_contract import (
 )
 from loopx.quota import build_quota_should_run
 
+HOSTED_SCHEDULER_CONTEXT = {
+    "host_surface": "local_scheduler",
+    "scheduler_owner": "host_automation",
+    "execution_mode": "hosted_automation",
+    "source": "explicit",
+}
+
 VALID_COMBINATIONS = {
     ("ark_managed_agent", "goal_runtime", "interactive"),
-    ("codex_app", "host_automation", "hosted_automation"),
     ("local_scheduler", "host_automation", "hosted_automation"),
     *{
         (surface, owner, mode)
@@ -55,11 +61,6 @@ FIRST_CLASS_RUNTIME_PROFILES = (
         SchedulerRuntimeProfile.ARK_MANAGED_AGENT_GOAL,
         ("ark_managed_agent", "goal_runtime", "interactive"),
         " --runtime-profile ark_managed_agent_goal",
-    ),
-    (
-        SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT,
-        ("codex_app", "host_automation", "hosted_automation"),
-        " --codex-app",
     ),
     (
         SchedulerRuntimeProfile.CODEX_CLI_VISIBLE,
@@ -183,19 +184,19 @@ def test_scheduler_execution_context_decision_table(
     if values not in VALID_COMBINATIONS:
         assert hint["execution_phase"]["disposition"] == "contract_error"
         assert hint["execution_phase"]["completed"] is False
-        assert hint["codex_app"]["applicability"] == "blocked_invalid_context"
+        assert hint["codex_cli"]["applicability"] == "blocked_invalid_context"
         return
 
-    app_expected = values == (
-        "codex_app",
+    host_expected = values == (
+        "local_scheduler",
         "host_automation",
         "hosted_automation",
     )
-    assert hint["codex_app"]["applicability"] == (
-        "applicable" if app_expected else "not_applicable"
+    assert hint["codex_cli"]["applicability"] == (
+        "applicable" if host_expected else "not_applicable"
     )
-    assert ("stateful_backoff" in hint["codex_app"]) is app_expected
-    if app_expected:
+    assert ("stateful_backoff" in hint["codex_cli"]) is host_expected
+    if host_expected:
         assert "execution_context" not in hint
         assert "execution_phase" not in hint
     else:
@@ -210,8 +211,8 @@ def test_partial_scheduler_context_fails_closed_without_app_action() -> None:
     )
 
     assert hint["action"] == "repair_scheduler_execution_context"
-    assert hint["codex_app"]["applicability"] == "blocked_invalid_context"
-    assert "stateful_backoff" not in hint["codex_app"]
+    assert hint["codex_cli"]["applicability"] == "blocked_invalid_context"
+    assert "stateful_backoff" not in hint["codex_cli"]
     assert hint["execution_phase"]["apply_needed"] is False
 
 
@@ -220,32 +221,26 @@ def test_missing_scheduler_context_fails_closed() -> None:
 
     assert hint["action"] == "repair_scheduler_execution_context"
     assert hint["execution_context"]["valid"] is False
-    assert hint["codex_app"]["applicability"] == "blocked_invalid_context"
+    assert hint["codex_cli"]["applicability"] == "blocked_invalid_context"
     assert hint["execution_phase"]["disposition"] == "contract_error"
 
 
-def test_codex_app_runtime_profile_preserves_host_backoff() -> None:
-    context = scheduler_execution_context_for_runtime_profile(
-        SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-    )
+def test_hosted_scheduler_context_preserves_host_backoff() -> None:
     hint = build_scheduler_hint(
         _active_payload(),
         include_detail=True,
-        scheduler_execution_context=context,
+        scheduler_execution_context=HOSTED_SCHEDULER_CONTEXT,
     )
 
     assert "execution_context" not in hint
     assert "execution_phase" not in hint
-    assert hint["cold_path_detail"]["execution_context"]["source"] == (
-        "runtime_profile:codex_app_heartbeat"
-    )
+    assert hint["cold_path_detail"]["execution_context"]["source"] == "explicit"
     assert (
-        hint["cold_path_detail"]["execution_context"]["codex_app_applicability"]
+        hint["cold_path_detail"]["execution_context"]["codex_cli_applicability"]
         == "applicable"
     )
-    assert hint["codex_app"]["stateful_backoff"]["apply_needed"] is True
+    assert hint["codex_cli"]["stateful_backoff"]["apply_needed"] is True
     assert hint["cold_path_detail"]["execution_phase"]["apply_needed"] is True
-
 
 def test_goal_runtime_projects_typed_immediate_continuation() -> None:
     context = scheduler_execution_context_for_runtime_profile(
@@ -291,7 +286,7 @@ def test_goal_runtime_defer_requires_bounded_recheck_interval() -> None:
         build_goal_runtime_continuation(
             {
                 "action": "backoff_until_state_change",
-                "codex_app": {"recommended_interval_minutes": None},
+                "codex_cli": {"recommended_interval_minutes": None},
             }
         )
 
@@ -676,9 +671,7 @@ def test_quota_payload_compaction_preserves_earliest_frontier_deadline() -> None
         )
         codex_hint = build_scheduler_hint(
             quota,
-            scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-                SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-            ),
+            scheduler_execution_context=HOSTED_SCHEDULER_CONTEXT,
         )
     finally:
         scheduler_hint_mod.now_utc = original_scheduler_now
@@ -698,7 +691,7 @@ def test_quota_payload_compaction_preserves_earliest_frontier_deadline() -> None
     assert continuation["disposition"] == "defer"
     assert continuation["recheck_after_seconds"] == 10 * 60
     assert continuation["recheck_source"] == "frontier_earliest_material_transition"
-    assert codex_hint["codex_app"]["recommended_rrule"] == (
+    assert codex_hint["codex_cli"]["recommended_rrule"] == (
         "FREQ=MINUTELY;INTERVAL=10"
     )
 
@@ -707,13 +700,11 @@ def test_quota_payload_compaction_preserves_earliest_frontier_deadline() -> None
     ("cadence", "expected_minutes"),
     (("5min", 5), ("5 minutes", 5), ("300s", 5), ("1s", 1)),
 )
-def test_codex_app_monitor_wait_uses_canonical_cadence_forms(
+def test_hosted_scheduler_monitor_wait_uses_canonical_cadence_forms(
     cadence: str,
     expected_minutes: int,
 ) -> None:
-    context = scheduler_execution_context_for_runtime_profile(
-        SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-    )
+    context = HOSTED_SCHEDULER_CONTEXT
     payload = _monitor_wait_payload()
     payload["agent_todo_summary"] = {
         "monitor_open_items": [
@@ -731,7 +722,7 @@ def test_codex_app_monitor_wait_uses_canonical_cadence_forms(
         scheduler_execution_context=context,
     )
 
-    assert hint["codex_app"]["recommended_rrule"] == (
+    assert hint["codex_cli"]["recommended_rrule"] == (
         f"FREQ=MINUTELY;INTERVAL={expected_minutes}"
     )
     assert hint["cold_path_detail"]["cadence_context"]["cadence_minutes"] == (
@@ -1013,9 +1004,7 @@ def test_codex_profile_does_not_admit_children_without_observed_spawn() -> None:
 
 
 def test_adaptive_admission_uses_todo_authority_beyond_display_items() -> None:
-    context = scheduler_execution_context_for_runtime_profile(
-        SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-    )
+    context = HOSTED_SCHEDULER_CONTEXT
     agent_items = [
         quota_todo_item(
             todo_id=f"todo_agent_{index}",
@@ -1108,9 +1097,7 @@ def _child_capability_surface_case(
     available_capabilities: list[str] | None = None,
     persisted_capabilities: list[str] | None = None,
 ) -> tuple[dict, dict, object]:
-    context = scheduler_execution_context_for_runtime_profile(
-        SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-    )
+    context = HOSTED_SCHEDULER_CONTEXT
     status = quota_status_payload(
         goal_id="child-capability-surface-fixture",
         status="active",
@@ -1199,7 +1186,8 @@ def test_observed_spawn_enters_next_cli_action_and_replay_admits_child() -> None
         (
             "loopx --format json quota should-run --goal-id "
             "child-capability-surface-fixture --agent-id codex-fixture "
-            "--available-capability subagent_spawn --codex-app"
+            "--available-capability subagent_spawn -H local_scheduler -O "
+            "host_automation -M hosted_automation"
         )
     ]
     replay_tokens = shlex.split(next_cli_actions[0])
@@ -1220,7 +1208,7 @@ def test_observed_spawn_enters_next_cli_action_and_replay_admits_child() -> None
         "should-run",
         "--goal-id",
     ]
-    assert replay_tokens[-1] == "--codex-app"
+    assert "local_scheduler" in replay_tokens
     assert replayed_capabilities == ["subagent_spawn"]
     for quota in (first_quota, replayed_quota):
         contract = quota["task_orchestration_contract"]
@@ -1234,7 +1222,7 @@ def test_persisted_capabilities_do_not_enter_scheduler_ack() -> None:
         persisted_capabilities=["subagent_spawn", "subagent_resume"],
     )
 
-    ack_cli_args = quota["scheduler_hint"]["codex_app"]["ack_hint"]["cli_args"]
+    ack_cli_args = quota["scheduler_hint"]["codex_cli"]["ack_hint"]["cli_args"]
 
     assert _runtime_capabilities_from_cli_args(ack_cli_args) == []
 
@@ -1244,7 +1232,7 @@ def test_observed_spawn_enters_scheduler_ack() -> None:
         available_capabilities=["subagent_spawn"],
     )
 
-    ack_cli_args = quota["scheduler_hint"]["codex_app"]["ack_hint"]["cli_args"]
+    ack_cli_args = quota["scheduler_hint"]["codex_cli"]["ack_hint"]["cli_args"]
 
     assert _runtime_capabilities_from_cli_args(ack_cli_args) == ["subagent_spawn"]
 
@@ -1254,7 +1242,7 @@ def test_persisted_capabilities_do_not_enter_scheduler_failure() -> None:
         persisted_capabilities=["subagent_spawn", "subagent_resume"],
     )
 
-    failure_cli_args = quota["scheduler_hint"]["codex_app"]["failure_hint"]["cli_args"]
+    failure_cli_args = quota["scheduler_hint"]["codex_cli"]["failure_hint"]["cli_args"]
 
     assert _runtime_capabilities_from_cli_args(failure_cli_args) == []
 
@@ -1264,7 +1252,7 @@ def test_observed_spawn_enters_scheduler_failure() -> None:
         available_capabilities=["subagent_spawn"],
     )
 
-    failure_cli_args = quota["scheduler_hint"]["codex_app"]["failure_hint"]["cli_args"]
+    failure_cli_args = quota["scheduler_hint"]["codex_cli"]["failure_hint"]["cli_args"]
 
     assert _runtime_capabilities_from_cli_args(failure_cli_args) == [
         "subagent_spawn"
@@ -1308,7 +1296,8 @@ def test_observed_spawn_enters_cooldown_rebuild() -> None:
         (
             "loopx --format json quota should-run --goal-id "
             "child-capability-surface-fixture --agent-id codex-fixture "
-            "--available-capability subagent_spawn --codex-app"
+            "--available-capability subagent_spawn -H local_scheduler -O "
+            "host_automation -M hosted_automation"
         )
     ]
 
@@ -1325,9 +1314,7 @@ def test_registered_peer_v1_keeps_non_runtime_orchestration_followup() -> None:
         },
         mode="task_orchestration",
         available_capabilities=[],
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
+        scheduler_execution_context=HOSTED_SCHEDULER_CONTEXT,
     )
 
     assert actions == [
@@ -1365,7 +1352,7 @@ def test_stale_unbound_guard_converges_after_profile_regeneration(
 
     assert stale_hint["action"] == "repair_scheduler_execution_context"
     assert regenerated_hint.get("action") != "repair_scheduler_execution_context"
-    assert regenerated_hint["codex_app"]["applicability"] in {
+    assert regenerated_hint["codex_cli"]["applicability"] in {
         "applicable",
         "not_applicable",
     }
@@ -1390,27 +1377,6 @@ def test_generic_outer_controller_rerun_actions_are_typed() -> None:
     assert scheduler_args == " --runtime-profile outer_controller"
     assert all(scheduler_args in action for action in actions)
     assert all(" -H " not in action for action in actions)
-
-
-def test_codex_app_monitor_quiet_retry_uses_turn_receipt() -> None:
-    actions = interaction_next_cli_actions(
-        {
-            "goal_id": "codex-heartbeat-fixture",
-            "agent_identity": {"agent_id": "codex-fixture"},
-        },
-        mode="monitor_quiet_skip",
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
-    )
-
-    assert actions == [
-        (
-            "on missing/write_failed heartbeat_receipt only: loopx --format json "
-            "quota should-run --goal-id codex-heartbeat-fixture --agent-id "
-            'codex-fixture --codex-app --turn-instance-id "${LOOPX_TURN:?}"'
-        )
-    ]
 
 
 def test_unbound_rerun_actions_do_not_emit_executable_bare_guards() -> None:

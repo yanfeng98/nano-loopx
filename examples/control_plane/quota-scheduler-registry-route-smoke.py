@@ -94,19 +94,24 @@ def main() -> None:
             GOAL_ID,
             "--agent-id",
             AGENT_ID,
-            "--codex-app",
+            "-H",
+            "local_scheduler",
+            "-O",
+            "host_automation",
+            "-M",
+            "hosted_automation",
             "--available-capability",
             "network",
             "--available-capability",
             "external_write",
-            "--codex-app-current-rrule",
+            "--observed-host-rrule",
             "FREQ=MINUTELY;INTERVAL=3",
             "--turn-envelope",
             "--scan-path",
             str(project),
             cwd=project,
         )
-        ack_cli_args = decision["scheduler"]["codex_app"]["ack_cli_args"]
+        ack_cli_args = decision["scheduler"]["codex_cli"]["ack_cli_args"]
         assert ack_cli_args[:4] == [
             "--registry",
             str(global_registry.resolve()),
@@ -134,12 +139,17 @@ def main() -> None:
             GOAL_ID,
             "--agent-id",
             AGENT_ID,
-            "--codex-app",
+            "-H",
+            "local_scheduler",
+            "-O",
+            "host_automation",
+            "-M",
+            "hosted_automation",
             "--scan-path",
             str(project),
             cwd=project,
         )
-        stateful = follow_up["scheduler_hint"]["codex_app"]["stateful_backoff"]
+        stateful = follow_up["scheduler_hint"]["codex_cli"]["stateful_backoff"]
         assert stateful["state_status"] == "same_identity", follow_up
 
     print("quota scheduler registry route smoke passed")

@@ -13,6 +13,7 @@ import re
 import pytest
 
 from loopx.host_loop_activation import (
+    AgentTypeError,
     HOST_SURFACE_TO_AGENT_TYPE,
     SUPPORTED_AGENT_TYPES,
     agent_type_for_host_surface,
@@ -68,7 +69,6 @@ class TestAgentTypeCatalog:
         catalog = build_agent_type_catalog()
         assert catalog["ok"]
         types = {t["agent_type"] for t in catalog["canonical_agent_types"]}
-        assert "codex-app" in types
         assert "codex-cli" in types
         assert "claude-code" in types
         assert "opencode" in types
@@ -78,16 +78,14 @@ class TestAgentTypeCatalog:
         assert "ark-managed-agent" in types
         assert "other-agent" in types
         assert "manual" in types
-        assert len(types) >= 13
+        assert len(types) >= 12
 
         ambiguous = {item["input"]: item["use_one_of"]
                      for item in catalog["ambiguous_inputs"]}
         assert "codex" in ambiguous
-        assert ambiguous["codex"] == [
-            "codex-app", "codex-cli"]
+        assert ambiguous["codex"] == ["codex-cli"]
 
     @pytest.mark.parametrize("surface,expected", [
-        ("chat-box", "codex-app"),
         ("codex-cli-tui", "codex-cli"),
         ("claude-code", "claude-code"),
         ("opencode", "opencode"),
@@ -103,7 +101,8 @@ class TestAgentTypeCatalog:
         assert HOST_SURFACE_TO_AGENT_TYPE[surface] == expected
 
     def test_normalize_agent_type(self):
-        assert normalize_agent_type("codex-app") == "codex-app"
+        with pytest.raises(AgentTypeError):
+            normalize_agent_type("codex-desktop")
         assert normalize_agent_type("pi") == "pi"
         assert normalize_agent_type("gemini") == "gemini-cli"
 
@@ -125,7 +124,6 @@ class TestSchedulerBindings:
     def test_runtime_profiles(self):
         expected = {
             "ark-managed-agent": "ark_managed_agent_goal",
-            "codex-app": "codex_app_heartbeat",
             "codex-cli": "codex_cli",
             "claude-code": "claude_code",
             "opencode": "generic_cli",

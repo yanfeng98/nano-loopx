@@ -31,8 +31,8 @@ const fixture = JSON.parse(
 const scope = {
   goalId: "goal-a",
   agentId: "agent-a",
-  surface: "codex_app",
-  stateKey: "scheduler_hint.codex_app.stateful_backoff",
+  surface: "codex_cli",
+  stateKey: "scheduler_hint.codex_cli.stateful_backoff",
 };
 
 function state(lastAppliedRrule = "FREQ=MINUTELY;INTERVAL=3") {
@@ -185,8 +185,8 @@ test("state path is scoped, sanitized, and stable", () => {
       "goal-with-spaces-116e9296329bcdc8",
       "scheduler-state",
       "agent-..-..-other-55571d8866830ec6",
-      "codex_app-b32e6f37f5dad64e",
-      "d9ad89d416adc9b2.json",
+      "codex_cli-64d91e65f41c722b",
+      "b514e30690688b07.json",
     ),
   );
 });
@@ -198,7 +198,7 @@ test("sanitized-equivalent scheduler scopes have distinct bounded paths", () => 
   const agentPaths = ["agent/name", "agent-name"].map((agentId) =>
     schedulerStatePath("/runtime", { ...scope, agentId })
   );
-  const surfacePaths = ["codex app", "codex-app"].map((surface) =>
+  const surfacePaths = ["codex cli", "codex-cli"].map((surface) =>
     schedulerStatePath("/runtime", { ...scope, surface })
   );
   assert.equal(new Set(goalPaths).size, goalPaths.length);
@@ -219,7 +219,7 @@ test("legacy scheduler state is migrated once into the collision-safe layout", a
     "scheduler-state",
     scope.agentId,
     scope.surface,
-    "d9ad89d416adc9b2.json",
+    "b514e30690688b07.json",
   );
   await writeSchedulerState(storeRequest(runtimeRoot, { state: state() }));
   const canonicalPath = schedulerStatePath(runtimeRoot, scope);

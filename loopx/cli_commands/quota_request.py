@@ -25,9 +25,9 @@ def register_quota_monitor_poll_request_arguments(
     quota_parser.add_argument(
         "--todo-id",
         help=(
-            "For Codex App `quota should-run`, select one currently projected "
-            "eligible action through typed same-turn qualification; otherwise "
-            "name the accountable Todo settlement target."
+            "Name the accountable Todo settlement target, or select one "
+            "currently projected eligible action through typed same-turn "
+            "qualification."
         ),
     )
     quota_parser.add_argument("--target-key", help="Stable monitor target key for `quota monitor-poll` metadata writeback.")
@@ -92,7 +92,6 @@ def register_quota_monitor_poll_request_arguments(
 
 def validate_quota_command_request(args: argparse.Namespace) -> None:
     command = args.quota_command
-    begin_turn = bool(getattr(args, "begin_turn", False))
     if command not in {"status", "plan"} and not args.goal_id:
         raise QuotaCommandValidationError(
             f"`loopx quota {command}` requires --goal-id"
@@ -113,23 +112,6 @@ def validate_quota_command_request(args: argparse.Namespace) -> None:
     if command == "should-run" and args.todo_id and not args.turn_instance_id:
         raise QuotaCommandValidationError(
             "`loopx quota should-run --todo-id` requires --turn-instance-id"
-        )
-    if begin_turn and command != "should-run":
-        raise QuotaCommandValidationError(
-            "--begin-turn is only valid with `loopx quota should-run`"
-        )
-    if begin_turn and args.turn_instance_id:
-        raise QuotaCommandValidationError(
-            "--begin-turn cannot be combined with --turn-instance-id"
-        )
-    if begin_turn and args.todo_id:
-        raise QuotaCommandValidationError(
-            "--begin-turn cannot select --todo-id; reuse the exact "
-            "--turn-instance-id returned by the initial guard"
-        )
-    if begin_turn and not args.agent_id:
-        raise QuotaCommandValidationError(
-            "--begin-turn requires exact --agent-id identity"
         )
     if (
         command not in {"status", "plan", "should-run"}

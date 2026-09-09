@@ -5,11 +5,11 @@ import json
 import pytest
 
 from loopx.control_plane.scheduler.scheduler_hint import (
-    build_codex_app_scheduler_ack_hint,
+    build_codex_cli_scheduler_ack_hint,
 )
 from loopx.control_plane.scheduler.state import (
-    CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
-    CODEX_APP_SURFACE,
+    CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
+    CODEX_CLI_SURFACE,
     SCHEDULER_STATE_SCHEMA_VERSION,
     load_scheduler_state,
     write_scheduler_state,
@@ -42,8 +42,8 @@ def test_scheduler_state_scope_mutations_fail_closed(
         "schema_version": SCHEDULER_STATE_SCHEMA_VERSION,
         "goal_id": "goal-ack-decision-table",
         "agent_id": AGENT_ID,
-        "surface": CODEX_APP_SURFACE,
-        "state_key": CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+        "surface": CODEX_CLI_SURFACE,
+        "state_key": CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
         "reset_token": RESET_TOKEN,
         "identity_signature": IDENTITY_SIGNATURE,
         "progression_index": 0,
@@ -81,7 +81,7 @@ def test_scheduler_state_scope_mutations_fail_closed(
 
 
 def test_scheduler_ack_hint_preserves_public_contract_and_runtime_capabilities() -> None:
-    hint = build_codex_app_scheduler_ack_hint(
+    hint = build_codex_cli_scheduler_ack_hint(
         goal_id="goal-ack-contract",
         agent_id=AGENT_ID,
         applied_rrule=EXPECTED_RRULE,
@@ -98,7 +98,7 @@ def test_scheduler_ack_hint_preserves_public_contract_and_runtime_capabilities()
         "uses_current_hint": hint["uses_current_hint"],
         "no_spend": hint["no_spend"],
     } == {
-        "schema_version": "codex_app_scheduler_ack_hint_v0",
+        "schema_version": "codex_cli_scheduler_ack_hint_v0",
         "command": "quota scheduler-ack-current",
         "execute": True,
         "uses_current_hint": True,
@@ -116,7 +116,12 @@ def test_scheduler_ack_hint_preserves_public_contract_and_runtime_capabilities()
         "goal-ack-contract",
         "--agent-id",
         AGENT_ID,
-        "-A",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--available-capability",
         "network",
         "--available-capability",

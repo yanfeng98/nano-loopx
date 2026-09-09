@@ -31,7 +31,7 @@
 
   <rect x="58" y="370" width="250" height="150" rx="14" fill="#f8fafc" stroke="#64748b" class="box" />
   <text x="82" y="406" class="label">Agent runtimes</text>
-  <text x="82" y="436" class="body">Codex App heartbeat</text>
+  <text x="82" y="436" class="body">Hosted heartbeat</text>
   <text x="82" y="461" class="body">Codex CLI TUI</text>
   <text x="82" y="486" class="body">Claude Code /loop</text>
   <text x="82" y="511" class="small">worker bridge / manual shell</text>

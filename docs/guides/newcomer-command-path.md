@@ -35,7 +35,6 @@ App 或 CLI。选择与你已使用界面匹配的驱动器：
 
 | 界面 | 从这里开始 | 靠什么持续推进 |
 | --- | --- | --- |
-| Codex App | 项目线程中的 `$loopx <task text>` 或 `/skills` -> `loopx` | App heartbeat 自动化。让 Agent 安装或刷新生成的 LoopX heartbeat body；从 bootstrap 节奏开始，然后跟随 `quota should-run.scheduler_hint`。 |
 | Codex CLI | 从项目根运行 `codex`，然后粘贴 `loopx codex-cli-bootstrap-message --project .` 的输出 | 当前已验证的 Codex CLI 构建不加载用户安装的 `/loopx` 或 `/prompts:loopx` 命令。保持 executor 可见，然后设置生成的 `/goal <thin task_body>`。 |
 | Claude Code | 安装 LoopX，然后 `/loopx <task text>` | 安装器注册轻量 slash-command skills。仅当 Claude Code 原生 `/loop` 应受 LoopX `should_run` 门控时，才启用 opt-in adapter。 |
 | OpenCode | 安装 OpenCode 界面，然后 `/loopx <task text>` | 桥接层写入命令、plugin、runtime 与固定依赖。写入 todos 后调用 `loopx_goal_activate` 绑定 quota 门控的 goal loop。 |
@@ -61,7 +60,7 @@ loopx start-goal --guided --project . --goal-text "<your first long-running task
 
 命令包检查面向宿主的恢复包。引导启动包是第一条任务路径：把生成的事务粘贴进
 Codex、Claude Code 或其他能从项目根运行 shell 命令的兼容 Agent。当真实宿主是
-`codex-app`、`codex-cli-tui`、`claude-code` 或 `shell` 时，
+`codex-cli-tui`、`claude-code` 或 `shell` 时，
 使用对应值。宿主
 不明确时，省略该标志一次并跟随返回的只读选择 gate；该预览不写项目状态。
 
@@ -87,7 +86,7 @@ task 入口作为在一个仓库内开始有用工作的方式。
 | 一次理解多个 LoopX 项目 | `/loopx-global-summary` | 需要聚焦管理器视图时的 `/loopx-global-gates`、`/loopx-global-todos` 或 `/loopx-global-risks`。 |
 | 理解工作为何暂停 | `/loopx` | Agent 需要更深的证据包时的 `loopx diagnose --goal-id <goal-id>`。 |
 | 评审交接或 gate | Agent 的 LoopX 状态摘要 | 获取可复制操作者包的 `loopx review-packet --goal-id <goal-id>`。 |
-| 运维循环工作 | Codex App heartbeat 或可见的 Codex CLI 任务体 | 安装或修复 loop 时的 `loopx heartbeat-prompt --thin --goal-id <goal-id>`。 |
+| 运维循环工作 | 可见的 Codex CLI 任务体 | 安装或修复 loop 时的 `loopx heartbeat-prompt --thin --goal-id <goal-id>`。 |
 | 调试控制面 | 具体的错误或受限 todo | `loopx status`、`loopx history`、`loopx quota should-run` 或 `loopx check`。 |
 
 ## 参考边界

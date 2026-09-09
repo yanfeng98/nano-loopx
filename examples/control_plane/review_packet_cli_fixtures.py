@@ -6,7 +6,6 @@ import json
 import re
 import subprocess
 import sys
-import tempfile
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path

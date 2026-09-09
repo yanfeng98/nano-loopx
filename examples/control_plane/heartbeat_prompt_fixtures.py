@@ -13,7 +13,6 @@ if str(REPO_ROOT) not in sys.path:
 from loopx.heartbeat_prompt import INTERFACE_BUDGET_CHARS  # noqa: E402
 
 
-DOC = REPO_ROOT / "docs" / "heartbeat-automation-prompt.md"
 README = REPO_ROOT / "README.md"
 GETTING_STARTED = REPO_ROOT / "docs" / "guides" / "getting-started.md"
 INTEGRATION_DOC = REPO_ROOT / "docs" / "integration.md"

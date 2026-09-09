@@ -25,7 +25,6 @@ if str(REPO_ROOT) not in sys.path:
 from demo.auto_research.worker_runtime import (
     run_auto_research_worker_turn,
     load_auto_research_worker_frontier,
-    AUTO_RESEARCH_WORKER_TURN_SCHEMA_VERSION,
 )
 from demo.auto_research.worker_loop import (
     run_auto_research_worker_loop,

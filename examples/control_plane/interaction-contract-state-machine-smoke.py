@@ -12,9 +12,6 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from loopx.control_plane.agents.agent_scope import AgentScopeFrontierAction  # noqa: E402
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.scheduler.scheduler_hint import build_scheduler_hint  # noqa: E402
 from loopx.control_plane.todos.quota_summary import (  # noqa: E402
     compact_quota_todo_summary_for_payload,
@@ -32,9 +29,7 @@ from loopx.control_plane.work_items.work_lane import build_work_lane_contract  #
 
 GOAL_ID = "interaction-state-machine-goal"
 AGENT_ID = "codex-product-capability"
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 def advancement_item(todo_id: str = "todo_active") -> dict[str, Any]:
@@ -293,7 +288,7 @@ def _assert_cross_layer_case(
     assert contract["agent_channel"]["quiet_noop_allowed"] is quiet, (name, contract)
     assert contract["cli_channel"]["spend_after_validation"] is spend, (name, contract)
     assert scheduler_hint["action"] == scheduler, (name, scheduler_hint)
-    assert scheduler_hint["codex_app"]["recommended_interval_minutes"] == interval, (
+    assert scheduler_hint["codex_cli"]["recommended_interval_minutes"] == interval, (
         name,
         scheduler_hint,
     )

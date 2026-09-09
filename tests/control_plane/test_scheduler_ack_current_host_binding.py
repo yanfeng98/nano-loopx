@@ -55,7 +55,12 @@ def _quota(
         GOAL_ID,
         "--agent-id",
         SCOPED_AGENT_ID,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         registry_path=registry_path,
         runtime_root=runtime_root,
         cwd=project,
@@ -77,7 +82,7 @@ def test_scheduler_ack_current_replays_host_binding_after_update(
     _write_heartbeat_rrule(codex_home, "FREQ=MINUTELY;INTERVAL=3")
 
     first = _quota(registry_path, runtime_root, project)
-    app = first["scheduler_hint"]["codex_app"]
+    app = first["scheduler_hint"]["codex_cli"]
     target_rrule = app["recommended_rrule"]
     ack_hint = app["ack_hint"]
     assert app["stateful_backoff"]["apply_needed"] is True
@@ -96,7 +101,7 @@ def test_scheduler_ack_current_replays_host_binding_after_update(
     assert ack["already_applied"] is False
 
     settled = _quota(registry_path, runtime_root, project)
-    settled_app = settled["scheduler_hint"]["codex_app"]
+    settled_app = settled["scheduler_hint"]["codex_cli"]
     assert settled_app["stateful_backoff"]["apply_needed"] is False
     assert settled_app["stateful_backoff"]["ack_needed"] is False
     assert settled_app["host_action"] == "none"
@@ -116,7 +121,7 @@ def test_scheduler_ack_current_resets_stale_identity_from_matching_host(
     _write_heartbeat_rrule(codex_home, "FREQ=MINUTELY;INTERVAL=3")
 
     first = _quota(registry_path, runtime_root, project)
-    first_app = first["scheduler_hint"]["codex_app"]
+    first_app = first["scheduler_hint"]["codex_cli"]
     target_rrule = first_app["recommended_rrule"]
     _write_heartbeat_rrule(codex_home, target_rrule)
     stale_state = build_scheduler_state(
@@ -138,7 +143,7 @@ def test_scheduler_ack_current_resets_stale_identity_from_matching_host(
     )
 
     reset = _quota(registry_path, runtime_root, project)
-    reset_app = reset["scheduler_hint"]["codex_app"]
+    reset_app = reset["scheduler_hint"]["codex_cli"]
     reset_backoff = reset_app["stateful_backoff"]
     assert reset_backoff["state_status"] == "reset_required"
     assert reset_backoff["apply_needed"] is False
@@ -157,7 +162,7 @@ def test_scheduler_ack_current_resets_stale_identity_from_matching_host(
     )
 
     settled = _quota(registry_path, runtime_root, project)
-    settled_backoff = settled["scheduler_hint"]["codex_app"][
+    settled_backoff = settled["scheduler_hint"]["codex_cli"][
         "stateful_backoff"
     ]
     assert settled_backoff["state_status"] == "same_identity"
@@ -171,7 +176,7 @@ def test_quota_should_run_ignores_cross_agent_scheduler_state(tmp_path: Path) ->
         scoped_agents=True,
     )
     first = _quota(registry_path, runtime_root, project)
-    first_rrule = first["scheduler_hint"]["codex_app"]["recommended_rrule"]
+    first_rrule = first["scheduler_hint"]["codex_cli"]["recommended_rrule"]
     ack = run_json_cli(
         "quota",
         "scheduler-ack",
@@ -181,7 +186,12 @@ def test_quota_should_run_ignores_cross_agent_scheduler_state(tmp_path: Path) ->
         SCOPED_AGENT_ID,
         "--applied-rrule",
         first_rrule,
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--execute",
         registry_path=registry_path,
         runtime_root=runtime_root,
@@ -196,7 +206,7 @@ def test_quota_should_run_ignores_cross_agent_scheduler_state(tmp_path: Path) ->
     )
 
     repaired = _quota(registry_path, runtime_root, project)
-    app = repaired["scheduler_hint"]["codex_app"]
+    app = repaired["scheduler_hint"]["codex_cli"]
     assert app["recommended_rrule"] == first_rrule
     assert app["stateful_backoff"]["state_status"] == "missing"
     assert app["stateful_backoff"]["apply_needed"] is True
@@ -226,7 +236,12 @@ def test_scheduler_fail_current_rejects_missing_turn_receipt_without_state_write
         "heartbeat-missing-receipt",
         "--failed-rrule",
         "FREQ=MINUTELY;INTERVAL=3",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--execute",
         registry_path=registry_path,
         runtime_root=runtime_root,
@@ -294,11 +309,10 @@ def test_scheduler_ack_collects_the_periodic_should_run_lookback(
         available_capabilities=["shell", "network", "benchmark_runner"],
         include_scheduler_detail=False,
         runtime_profile=None,
-        codex_app=True,
-        host_surface=None,
-        scheduler_owner=None,
-        execution_mode=None,
-        codex_app_current_rrule=None,
+        host_surface="local_scheduler",
+        scheduler_owner="host_automation",
+        execution_mode="hosted_automation",
+        codex_cli_current_rrule=None,
         slots=1,
         source="heartbeat",
         void_generated_at=None,
@@ -312,8 +326,8 @@ def test_scheduler_ack_collects_the_periodic_should_run_lookback(
         next_agent_todo=None,
         next_user_todo=None,
         next_claimed_by=None,
-        surface="codex_app",
-        state_key="scheduler_hint.codex_app.stateful_backoff",
+        surface="codex_cli",
+        state_key="scheduler_hint.codex_cli.stateful_backoff",
         applied_rrule="FREQ=MINUTELY;INTERVAL=10",
         reset_token="fixture-reset-token",
         identity_signature="fixture-identity-signature",

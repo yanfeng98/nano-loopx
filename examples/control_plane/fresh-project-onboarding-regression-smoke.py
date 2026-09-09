@@ -182,7 +182,6 @@ def test_guided_template_acceptance(project: Path, goal_id: str) -> None:
         "--adapter-kind", "read_only_project_map_v0",
         "--adapter-status", "connected-read-only",
         "--no-onboarding-scan",
-        "--codex-app-heartbeat", "ask",
         "--no-global-sync",
         check=False,
     )
@@ -336,8 +335,7 @@ def test_clean_second_run() -> None:
             "--adapter-kind", "read_only_project_map_v0",
             "--adapter-status", "connected-read-only",
             "--no-onboarding-scan",
-            "--codex-app-heartbeat", "ask",
-            "--no-global-sync",
+                "--no-global-sync",
             check=False,
         )
         registry_path = project / ".loopx" / "registry.json"

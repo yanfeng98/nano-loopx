@@ -287,9 +287,9 @@ export function interpretQuotaShouldRunPacket(
   const interaction = decodeInteractionContract(packet.interaction_contract);
   const lane = asObject(packet.work_lane_contract);
   const scheduler = asObject(packet.scheduler_hint);
-  const codexApp = asObject(scheduler.codex_app);
-  const ackHint = asObject(codexApp.ack_hint);
-  const failureHint = asObject(codexApp.failure_hint);
+  const codexCli = asObject(scheduler.codex_cli);
+  const ackHint = asObject(codexCli.ack_hint);
+  const failureHint = asObject(codexCli.failure_hint);
   const cliChannel = asObject(interaction.cli_channel);
   const gate = asObject(packet.capability_gate);
   const protocol = asObject(packet.protocol_action_packet);
@@ -326,7 +326,7 @@ export function interpretQuotaShouldRunPacket(
     next_effect: {
       cli_actions: stringArray(cliChannel.next_cli_actions),
       execution_mode: nullableTruthyString(
-        packet.execution_mode || codexApp.execution_mode || scheduler.execution_mode,
+        packet.execution_mode || codexCli.execution_mode || scheduler.execution_mode,
       ),
       scheduler_action: nullableTruthyString(scheduler.action),
       cadence_class: nullableTruthyString(scheduler.cadence_class),
@@ -346,9 +346,9 @@ export function interpretTurnResultPacket(
 ): EffectTurn<JsonObject, string> {
   const packet = asObject(packetValue);
   const scheduler = asObject(packet.scheduler_hint);
-  const codexApp = asObject(scheduler.codex_app);
-  const ackHint = asObject(codexApp.ack_hint);
-  const failureHint = asObject(codexApp.failure_hint);
+  const codexCli = asObject(scheduler.codex_cli);
+  const ackHint = asObject(codexCli.ack_hint);
+  const failureHint = asObject(codexCli.failure_hint);
   const completedPhases = stringArray(packet.completed_phases);
   const failedPhase = nullableTruthyString(packet.failed_phase);
   const resultKind = truthyString(packet.result_kind);
@@ -386,7 +386,7 @@ export function interpretTurnResultPacket(
     next_effect: {
       cli_actions: stringArray(packet.next_cli_actions),
       execution_mode: nullableTruthyString(
-        packet.execution_mode || codexApp.execution_mode || scheduler.execution_mode,
+        packet.execution_mode || codexCli.execution_mode || scheduler.execution_mode,
       ),
       scheduler_action: nullableTruthyString(scheduler.action),
       cadence_class: nullableTruthyString(scheduler.cadence_class),

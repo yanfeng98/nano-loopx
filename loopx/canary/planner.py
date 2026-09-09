@@ -927,8 +927,8 @@ CURRENT_REPO_PROFILES: tuple[dict[str, Any], ...] = (
         "id": "host-command-entry",
         "title": "Host command entry and slash-command discovery",
         "purpose": (
-            "Check slash-command discovery, Codex App host command routing, "
-            "and global manager command entry surfaces without mutating project state."
+            "Check slash-command discovery and global manager command entry "
+            "surfaces without mutating project state."
         ),
         "catalog_families": ["Human Decision", "Work Routing", "State And Boundary"],
         "trigger_hints": (
@@ -943,8 +943,6 @@ CURRENT_REPO_PROFILES: tuple[dict[str, Any], ...] = (
             "global manager",
             "host command",
             "host command registry",
-            "codex app host command",
-            "docs/reference/protocols/codex-app-host-command-registry-v0.md",
             "docs/reference/protocols/global-manager-command-v0.md",
             "loopx/cli_commands/slash_commands.py",
             "loopx/cli_commands/summary_all.py",
@@ -954,11 +952,6 @@ CURRENT_REPO_PROFILES: tuple[dict[str, Any], ...] = (
                 "command": "python3 examples/slash-command-catalog-smoke.py",
                 "tier": "default",
                 "reason": "guards public slash-command discovery and legacy alias visibility",
-            },
-            {
-                "command": "python3 examples/codex-app-host-command-registry-smoke.py",
-                "tier": "default",
-                "reason": "guards Codex App host command routing and fail-closed slash-command help",
             },
             {
                 "command": "python3 examples/project/global-manager-command-protocol-smoke.py",
@@ -1006,7 +999,7 @@ CURRENT_REPO_PROFILES: tuple[dict[str, Any], ...] = (
         "id": "runtime-connector-catalog",
         "title": "Runtime connector catalog",
         "purpose": (
-            "Check Codex App heartbeat, Codex CLI TUI, Claude Code loop, "
+            "Check Codex CLI TUI, Claude Code loop, "
             "and worker bridge connector contracts from the public runtime catalog."
         ),
         "catalog_families": ["Work Routing", "State And Boundary", "Planning Governance"],
@@ -1015,8 +1008,6 @@ CURRENT_REPO_PROFILES: tuple[dict[str, Any], ...] = (
             "runtime connector catalog",
             "runtime-connector-catalog",
             "docs/integrations/runtime-connector-catalog.md",
-            "codex app heartbeat",
-            "codex_app_heartbeat",
             "codex cli tui",
             "codex_cli_tui",
             "claude code loop",
@@ -1037,7 +1028,7 @@ CURRENT_REPO_PROFILES: tuple[dict[str, Any], ...] = (
             {
                 "command": "python3 examples/control_plane/heartbeat-prompt-smoke.py",
                 "tier": "default",
-                "reason": "guards Codex App heartbeat identity, scheduler hints, and no-spend cadence behavior",
+                "reason": "guards hosted scheduler identity, scheduler hints, and no-spend cadence behavior",
             },
             {
                 "command": "python3 examples/codex-cli-tui-bootstrap-smoke-bundle-smoke.py",

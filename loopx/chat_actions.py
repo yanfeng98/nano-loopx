@@ -21,7 +21,6 @@ from .control_plane.runtime.time import now_utc, parse_timestamp, utc_isoformat
 from .control_plane.scheduler.monitor_todo import monitor_next_due_at
 from .control_plane.todos.contract import require_supported_todo_resume_when
 from .history import load_registry
-from .host_loop_activation import build_host_loop_activation_packet
 from .quota import build_quota_should_run
 from .registry import registry_goals
 from .todos import add_goal_todo, update_goal_todo
@@ -36,7 +35,6 @@ SUPPORTED_ACTION_KINDS = {
     "goal.update",
     "goal.lifecycle",
     "agent.bind",
-    "heartbeat.bind",
     "monitor.create",
     "monitor.update",
     "gate.resolve",
@@ -441,7 +439,6 @@ class ChatActionService(
                     "agent_id",
                     "workspace_ref",
                     "permission",
-                    "heartbeat",
                     "stop_condition",
                     "initial_todos",
                 },
@@ -467,25 +464,6 @@ class ChatActionService(
                     result[field] = _opaque(values[field], field=field)
             if result.get("agent_id"):
                 self._agent_eligibility(str(result["agent_id"]))
-            if values.get("heartbeat") is not None:
-                if not isinstance(values["heartbeat"], Mapping):
-                    raise ValueError("heartbeat must be an object")
-                heartbeat = self._allowed_parameters(
-                    values["heartbeat"], allowed={"enabled", "cadence", "timezone"}
-                )
-                enabled = heartbeat.get("enabled")
-                if not isinstance(enabled, bool):
-                    raise ValueError("heartbeat.enabled must be true or false")
-                normalized_heartbeat: dict[str, Any] = {"enabled": enabled}
-                if heartbeat.get("cadence"):
-                    normalized_heartbeat["cadence"] = _normalize_cadence(
-                        heartbeat["cadence"]
-                    )
-                if heartbeat.get("timezone"):
-                    normalized_heartbeat["timezone"] = _text(
-                        heartbeat["timezone"], field="heartbeat.timezone", limit=80
-                    )
-                result["heartbeat"] = normalized_heartbeat
             if values.get("initial_todos") is not None:
                 if not isinstance(values["initial_todos"], list):
                     raise ValueError("initial_todos must be a list")
@@ -526,50 +504,6 @@ class ChatActionService(
                 "goal_id": goal_id,
                 "agent_id": agent_id,
             }
-        if action_kind == "heartbeat.bind":
-            values = self._allowed_parameters(
-                parameters,
-                allowed={
-                    "goal_id",
-                    "agent_id",
-                    "cadence",
-                    "timezone",
-                    "stop_condition",
-                    "notification_policy",
-                    "operation",
-                },
-            )
-            goal_id = _opaque(values.get("goal_id"), field="goal_id")
-            self._goal(goal_id)
-            operation = str(values.get("operation") or "bind").strip().lower()
-            if operation not in {"bind", "edit", "pause", "resume", "stop"}:
-                raise ValueError("heartbeat operation must be bind, edit, pause, resume, or stop")
-            agent_id = _opaque(values.get("agent_id"), field="agent_id")
-            self._agent_eligibility(agent_id)
-            result: dict[str, Any] = {
-                "goal_id": goal_id,
-                "agent_id": agent_id,
-                "operation": operation,
-            }
-            if values.get("cadence"):
-                result["cadence"] = _normalize_cadence(values["cadence"])
-            if values.get("timezone"):
-                result["timezone"] = _text(values["timezone"], field="timezone", limit=80)
-            if values.get("stop_condition"):
-                result["stop_condition"] = _text(
-                    values["stop_condition"], field="stop_condition", limit=160
-                ).lower()
-            if values.get("notification_policy"):
-                result["notification_policy"] = _opaque(
-                    values["notification_policy"], field="notification_policy"
-                )
-            if operation == "bind" and not all(
-                result.get(field) for field in ("cadence", "timezone", "stop_condition")
-            ):
-                raise ValueError("heartbeat bind requires cadence, timezone, and stop_condition")
-            if operation == "edit" and len(result) == 3:
-                raise ValueError("heartbeat edit requires a configuration change")
-            return result
         if action_kind == "monitor.create":
             values = self._allowed_parameters(
                 parameters,
@@ -795,7 +729,6 @@ class ChatActionService(
         self, proposal_id: str, proposal: dict[str, Any], parameters: dict[str, Any]
     ) -> dict[str, Any]:
         current_fingerprint = self._registry_fingerprint()
-        heartbeat = parameters.get("heartbeat") if isinstance(parameters.get("heartbeat"), dict) else {}
         goal_id = str(parameters["goal_id"])
         existing_goal = next(
             (
@@ -872,7 +805,6 @@ class ChatActionService(
                 onboarding_scan_enabled=False,
                 accept_onboarding_agent_todos=False,
                 begin_autonomous_advance=False,
-                codex_app_heartbeat="no",
                 preserve_todos=True,
                 force=False,
                 dry_run=False,
@@ -1016,21 +948,6 @@ class ChatActionService(
                 receipt={"outcome": "first_turn_gated", "gate": first_turn_gate},
             )
         child_gate: dict[str, Any] | None = first_turn_gate
-        if heartbeat.get("enabled") is True:
-            heartbeat_parameters = {
-                "goal_id": goal_id,
-                "agent_id": agent_id or "codex",
-                "operation": "bind",
-                "cadence": str(heartbeat.get("cadence") or "1d"),
-                "timezone": str(heartbeat.get("timezone") or "UTC"),
-                "stop_condition": str(parameters.get("stop_condition") or "goal_complete"),
-            }
-            child_gate = self._heartbeat_gate(heartbeat_parameters).gate
-            self.store.save_checkpoint(
-                proposal_id,
-                step="heartbeat_gate_ready",
-                receipt={"outcome": "heartbeat_gate_ready", "gate": child_gate},
-            )
         receipt = {
             "receipt_id": _digest({"proposal_id": proposal_id, "goal_id": goal_id})[:32],
             "outcome": "goal_created",
@@ -1099,44 +1016,6 @@ class ChatActionService(
             proposal_id, current_state_fingerprint=current_fingerprint, receipt=receipt
         )
         return {"proposal": stored, "turn": None}
-
-    def _heartbeat_gate(self, parameters: dict[str, Any]) -> ProtectedActionGate:
-        goal_id = str(parameters["goal_id"])
-        agent_id = str(parameters["agent_id"])
-        registered = registered_agent_ids_for_goal(self._goal(goal_id))
-        if agent_id not in registered:
-            raise ValueError("heartbeat Agent must be registered for the Goal")
-        packet = build_host_loop_activation_packet(
-            agent_type="codex-app",
-            goal_id=goal_id,
-            agent_id=agent_id,
-            registered_agents=registered,
-        )
-        operation = str(parameters.get("operation") or "bind")
-        gate_receipt = _digest(
-            {"goal_id": goal_id, "agent_id": agent_id, "operation": operation, "packet": packet}
-        )[:32]
-        return ProtectedActionGate(
-            "heartbeat.bind",
-            gate={
-                "kind": "host_activation_required",
-                "summary": "The Codex App host owns heartbeat automation creation.",
-                "next_action": "Use automation_update with the canonical activation packet, then verify the installed automation before retrying.",
-                "operation": operation,
-                "gate_receipt": gate_receipt,
-                "desired_configuration": {
-                    key: parameters[key]
-                    for key in (
-                        "cadence",
-                        "timezone",
-                        "stop_condition",
-                        "notification_policy",
-                    )
-                    if parameters.get(key) is not None
-                },
-                "activation_packet": packet,
-            },
-        )
 
     def _apply_monitor_create(
         self, proposal_id: str, proposal: dict[str, Any], parameters: dict[str, Any]
@@ -1335,8 +1214,6 @@ class ChatActionService(
             return self._apply_goal_lifecycle(proposal_id, proposal, parameters)
         if action_kind == "agent.bind":
             return self._apply_agent_bind(proposal_id, proposal, parameters)
-        if action_kind == "heartbeat.bind":
-            raise self._heartbeat_gate(parameters)
         if action_kind == "monitor.create":
             return self._apply_monitor_create(proposal_id, proposal, parameters)
         if action_kind == "todo.update":

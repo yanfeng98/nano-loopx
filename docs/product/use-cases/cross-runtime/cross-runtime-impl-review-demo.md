@@ -14,7 +14,7 @@ LoopX 可以跨不同 agent runtime 协调实现/评审 loop：
 - 一个 verifier 命令或 smoke 结果被记录为紧凑 evidence。
 - LoopX 拥有 todo claims、gates、evidence、quota 与下一个 handoff。
 
-Demo 不得声称 LoopX 本身是通用执行器。Runtime 启动仍属宿主 surface：Claude Code `/loop`、Codex App heartbeat、Codex CLI TUI goal 模式或显式 shell 桥。
+Demo 不得声称 LoopX 本身是通用执行器。Runtime 启动仍属宿主 surface：Claude Code `/loop`、宿主 heartbeat、Codex CLI TUI goal 模式或显式 shell 桥。
 
 ## 当前 Public-Safe 流程
 
@@ -69,7 +69,7 @@ loopx --format json quota should-run --goal-id <goal> --agent-id codex-review
 /loopx Review <implementation evidence>
 ```
 
-或一个 `quota should-run --agent-id codex-review` 选中评审 todo 的 Codex App heartbeat。
+或一个 `quota should-run --agent-id codex-review` 选中评审 todo 的宿主 heartbeat。
 
 ## 状态形态
 

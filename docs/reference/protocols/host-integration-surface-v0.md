@@ -4,7 +4,7 @@ LoopX host 集成让 agent host 使用 LoopX 控制面，而无需成为第二�
 
 v0 协议契约有意保持小：薄 hook 激活、生命周期读取、受控 todo/gate 写入、可选显式 lease 写入、紧凑状态投影、CLI 回退与公开/私有边界恒等式。它不证明任何适配器已安装，也不授予超出既有 CLI 等价 LoopX 生命周期的写权限。
 
-Codex App slash 命令解析由 [codex_app_host_command_registry_v0](codex-app-host-command-registry-v0.md) 覆盖：host 在普通聊天之前识别 `/loopx`、`/loopx <goal text>` 与 `/loopx-global-*`，然后交接给同一 CLI 支撑的生命周期。
+Codex CLI slash 命令解析由 Codex CLI shell/技能覆盖：host 在普通聊天之前识别 `/loopx`、`/loopx <goal text>` 与 `/loopx-global-*`，然后交接给同一 CLI 支撑的生命周期。
 
 ## 角色
 
@@ -34,7 +34,7 @@ Hook 正文应保持像生成的 heartbeat prompt 一样薄。项目策略属于
 
 `ark-managed-agent` 是一次性 goal host，不是 LoopX Turn 驱动器。LoopX 生成一个简短、传输中立的 goal prompt；Managed Agent goal 运行时拥有所有内部迭代与继续。
 
-该 prompt 使用与 Codex App/CLI 可见 goal host 相同的 4,000 字符接口预算与受保护 goal 策略；只有 host 所有权前言不同。
+该 prompt 使用与 Codex CLI 可见 goal host 相同的 4,000 字符接口预算与受保护 goal 策略；只有 host 所有权前言不同。
 
 用以下命令生成 prompt：
 

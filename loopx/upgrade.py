@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
-import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -150,9 +148,16 @@ def installed_prompt_policy_audit(entry: dict[str, Any] | None) -> dict[str, Any
     return prompt_policy_audit(task_body if isinstance(task_body, str) else None)
 
 
-def load_installed_manifest(path: Path | None) -> dict[str, Any]:
+def load_installed_manifest(path: Path | str | None) -> dict[str, Any]:
+    if isinstance(path, str):
+        path = Path(path)
     if path is None:
-        return load_codex_app_automation_manifest()
+        return {
+            "available": False,
+            "path": "none",
+            "entries": [],
+            "reason": "no installed manifest provided; pass --installed-manifest",
+        }
     if not path.exists():
         return {
             "available": False,
@@ -174,202 +179,11 @@ def load_installed_manifest(path: Path | None) -> dict[str, Any]:
     }
 
 
-def codex_home() -> Path:
-    return Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
-
-
-def parse_automation_toml(path: Path) -> dict[str, Any]:
-    return tomllib.loads(path.read_text(encoding="utf-8"))
-
-
-def infer_goal_id_from_prompt(prompt: str) -> str | None:
-    patterns = (
-        r"Advance\s+`([^`]+)`\s+from\b",
-        r"Advance\s+`([^`]+)`\s+using\b",
-        r"--goal-id\s+([A-Za-z0-9_.:-]+)",
-        r"goal_id:\s*`([^`]+)`",
-    )
-    for pattern in patterns:
-        match = re.search(pattern, prompt)
-        if match:
-            return match.group(1)
-    return None
-
-
-def infer_agent_id_from_prompt(prompt: str) -> str | None:
-    patterns = (
-        r"Agent:\s*`([^`]+)`",
-        r"--agent-id\s+([A-Za-z0-9_.:-]+)",
-    )
-    for pattern in patterns:
-        match = re.search(pattern, prompt)
-        if match:
-            return match.group(1)
-    return None
-
-
-def infer_prompt_mode(prompt: str) -> str:
-    if "compact LoopX heartbeat body" in prompt:
-        return "compact"
-    if "Brief installed LoopX heartbeat" in prompt:
-        return "brief"
-    if "Keep the heartbeat thin." in prompt or "from the registry-declared active state" in prompt:
-        return "thin"
-    return DEFAULT_UPGRADE_MODES[0]
-
 
 def infer_available_capabilities_from_prompt(prompt: str) -> list[str]:
     return normalize_required_capabilities(
         AVAILABLE_CAPABILITY_PATTERN.findall(prompt)
     )
-
-
-def load_codex_app_automation_manifest(root: Path | None = None) -> dict[str, Any]:
-    home = root or codex_home()
-    automations_root = home / "automations"
-    if not automations_root.exists():
-        return {
-            "available": False,
-            "path": str(automations_root),
-            "entries": [],
-            "reason": "no installed automation manifest provided and Codex App automations directory does not exist",
-            "source": "codex_app_automations",
-            "parse_error_count": 0,
-            "parse_errors": [],
-            "parse_errors_complete": True,
-        }
-
-    entries: list[dict[str, Any]] = []
-    parse_errors: list[dict[str, str]] = []
-    parse_error_count = 0
-    for path in sorted(automations_root.glob("*/automation.toml")):
-        try:
-            automation = parse_automation_toml(path)
-        except OSError:
-            parse_error_reason = "unreadable"
-        except UnicodeError:
-            parse_error_reason = "invalid_utf8"
-        except tomllib.TOMLDecodeError:
-            parse_error_reason = "invalid_toml"
-        else:
-            parse_error_reason = None
-        if parse_error_reason is not None:
-            parse_error_count += 1
-            if len(parse_errors) < _AUTOMATION_PARSE_ERROR_LIMIT:
-                parse_errors.append(
-                    {
-                        "automation_id": path.parent.name,
-                        "reason": parse_error_reason,
-                    }
-                )
-            continue
-        if automation.get("kind") != "heartbeat":
-            continue
-        prompt = automation.get("prompt")
-        if not isinstance(prompt, str) or not prompt.strip():
-            continue
-        goal_id = infer_goal_id_from_prompt(prompt)
-        if not goal_id:
-            continue
-        agent_id = infer_agent_id_from_prompt(prompt)
-        status = str(automation.get("status") or "ACTIVE")
-        entries.append(
-            {
-                "automation_id": str(automation.get("id") or path.parent.name),
-                "goal_id": goal_id,
-                "agent_id": agent_id,
-                "mode": infer_prompt_mode(prompt),
-                "prompt_sha256": prompt_digest(prompt),
-                "char_count": len(prompt),
-                "line_count": len(prompt.splitlines()),
-                "prompt_policy_audit": prompt_policy_audit(prompt),
-                "available_capabilities": infer_available_capabilities_from_prompt(
-                    prompt
-                ),
-                "rrule": str(automation.get("rrule") or "").strip(),
-                "target_thread_id": str(
-                    automation.get("target_thread_id") or ""
-                ).strip(),
-                "status": status,
-                "installed": status.upper() != "DELETED",
-                "source": "codex_app_automation_toml",
-                "path": str(path),
-            }
-        )
-
-    return {
-        "available": True,
-        "path": str(automations_root),
-        "entries": entries,
-        "source": "codex_app_automations",
-        "reason": (
-            None
-            if entries
-            else (
-                "no readable LoopX heartbeat automations discovered"
-                if parse_error_count
-                else "no LoopX heartbeat automations discovered"
-            )
-        ),
-        "parse_error_count": parse_error_count,
-        "parse_errors": parse_errors,
-        "parse_errors_complete": parse_error_count == len(parse_errors),
-    }
-
-
-def resolve_codex_app_automation_rrule(
-    *,
-    goal_id: str,
-    agent_id: str | None = None,
-    thread_id: str | None = None,
-    root: Path | None = None,
-) -> dict[str, Any]:
-    """Resolve one active Codex App heartbeat RRULE without exposing its body."""
-
-    manifest = load_codex_app_automation_manifest(root)
-    if not manifest.get("available"):
-        return {"available": False, "reason": manifest.get("reason")}
-    safe_goal_id = str(goal_id or "").strip()
-    safe_agent_id = str(agent_id or "").strip()
-    safe_thread_id = str(thread_id or os.environ.get("CODEX_THREAD_ID") or "").strip()
-    candidates = [
-        entry
-        for entry in manifest.get("entries", [])
-        if isinstance(entry, dict)
-        and entry.get("installed") is True
-        and str(entry.get("goal_id") or "") == safe_goal_id
-        and (not safe_agent_id or str(entry.get("agent_id") or "") == safe_agent_id)
-        and (
-            not safe_thread_id
-            or str(entry.get("target_thread_id") or "") == safe_thread_id
-        )
-        and str(entry.get("rrule") or "").strip()
-    ]
-    if len(candidates) != 1:
-        result = {
-            "available": False,
-            "reason": (
-                "Codex App heartbeat RRULE is ambiguous"
-                if candidates
-                else "no matching active Codex App heartbeat RRULE"
-            ),
-            "candidate_count": len(candidates),
-        }
-        parse_error_count = int(manifest.get("parse_error_count") or 0)
-        if parse_error_count:
-            result["manifest_parse_error_count"] = parse_error_count
-            result["manifest_parse_errors"] = manifest.get("parse_errors") or []
-            result["manifest_parse_errors_complete"] = (
-                manifest.get("parse_errors_complete") is True
-            )
-        return result
-    entry = candidates[0]
-    return {
-        "available": True,
-        "rrule": entry["rrule"],
-        "automation_id": str(entry.get("automation_id") or "").strip(),
-        "source": "codex_app_automation_manifest",
-    }
 
 
 def installed_entry_digest(entry: dict[str, Any]) -> str | None:
@@ -517,7 +331,7 @@ def build_loop_activation_summary(
     activated = status == "current"
     return {
         "schema_version": "loopx_host_loop_activation_v0",
-        "host_surface": "codex_app_heartbeat",
+        "host_surface": "codex_cli",
         "status": status,
         "activated": activated,
         "target_count": target_count,
@@ -532,7 +346,7 @@ def build_loop_activation_summary(
         "recommended_action": (
             "loop surface is active"
             if activated
-            else "for Codex App, create or update the heartbeat automation from the generated scoped heartbeat-prompt; "
+            else ""
             "for Codex CLI TUI or Claude Code, verify their own host loop surface instead; "
             "do not claim LoopX setup complete until the active host surface is proven or a concrete host-tool gate is reported"
         ),
@@ -745,7 +559,7 @@ def build_upgrade_plan(
                 agent_profile=agent_profile,
                 registered_agents=registered_agents or None,
                 available_capabilities=available_capabilities,
-                runtime_profile="codex_app_heartbeat",
+                runtime_profile="codex_cli",
                 turn_granularity=turn_granularity,
             )
             summary = prompt_summary(prompt, mode)

@@ -63,7 +63,7 @@ def test_turn_result_failure_preserves_failed_phase() -> None:
     packet["scheduler_hint"] = {
         "action": "failure_settle",
         "cadence_class": "repair",
-        "codex_app": {
+        "codex_cli": {
             "failure_hint": {
                 "cli_args": [
                     "quota",

@@ -35,7 +35,7 @@ def main() -> int:
             "host 自有命令注册表",
             "不是已交付插件清单",
             "LoopX CLI 保持事实来源",
-            "codex_app_host_command_registry_v0",
+            "codex_cli_slash_commands",
             "host_integration_surface_v0",
             "session_runtime_loopx_projection_v0",
             "## 插件能力集",

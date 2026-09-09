@@ -42,7 +42,6 @@ __all__ = [
     "SettlementResult",
     "SettlementStep",
     "SettlementStepKind",
-    "build_codex_app_settlement_plan",
     "build_turn_scoped_cli_settlement_plan",
     "receipt_bound_monitor_phase",
     "receipt_bound_replay_phase",
@@ -57,33 +56,6 @@ def _quoted_turn_ref(turn_instance_id_ref: str) -> str:
     if turn_instance_id_ref == "${LOOPX_TURN:?}":
         return '"${LOOPX_TURN:?}"'
     return shlex.quote(turn_instance_id_ref)
-
-
-def build_codex_app_settlement_plan(
-    *,
-    goal_id: str,
-    agent_id: str,
-    command_prefix: str = "loopx",
-    todo_id: str | None = None,
-    replan_obligation_id: str | None = None,
-    scoped_cli_args: str,
-    lifecycle_actor_args: str,
-    turn_instance_id_ref: str | None = None,
-    delivery_boundary: str | None = None,
-    quota_spend_source: str = "heartbeat",
-) -> SettlementPlan:
-    return build_turn_scoped_cli_settlement_plan(
-        goal_id=goal_id,
-        agent_id=agent_id,
-        command_prefix=command_prefix,
-        todo_id=todo_id,
-        replan_obligation_id=replan_obligation_id,
-        scoped_cli_args=scoped_cli_args,
-        lifecycle_actor_args=lifecycle_actor_args,
-        turn_instance_id=turn_instance_id_ref or "${LOOPX_TURN:?}",
-        delivery_boundary=delivery_boundary,
-        quota_spend_source=quota_spend_source,
-    )
 
 
 def build_turn_scoped_cli_settlement_plan(

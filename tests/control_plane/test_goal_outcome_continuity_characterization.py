@@ -6,9 +6,6 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, cast
 
-from loopx.control_plane.scheduler.execution_context import (
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.testing.quota_fixtures import (
     quota_status_payload,
     quota_todo_item,
@@ -22,9 +19,7 @@ FIXTURE = (
     / "control_plane"
     / "goal_outcome_continuity_characterization_v0.json"
 )
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 _BANNED_KEYS = {
     "credential",
     "credentials",

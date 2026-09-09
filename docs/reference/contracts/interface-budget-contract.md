@@ -82,4 +82,4 @@ python3 examples/control_plane/status-quota-perf-budget-smoke.py
 
 Scheduler 重置策略预算:
 
-`quota should-run.scheduler_hint.reset_policy` 是 host 动作摘要,不是调试快照。它携带重置 token、host 状态 key、初始 Codex App RRULE、未变状态清除标志,以及检测重置转换所需的短标识/profile 签名。完整的标识/profile 快照不进入热路径;调试重置 token 为何改变时,使用 status、history、活跃状态或聚焦的回归 fixture。
+`quota should-run.scheduler_hint.reset_policy` 是 host 动作摘要,不是调试快照。它携带重置 token、host 状态 key、初始宿主 RRULE、未变状态清除标志,以及检测重置转换所需的短标识/profile 签名。完整的标识/profile 快照不进入热路径;调试重置 token 为何改变时,使用 status、history、活跃状态或聚焦的回归 fixture。

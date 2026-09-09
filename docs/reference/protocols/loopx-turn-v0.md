@@ -305,6 +305,6 @@ loopx turn inspect-journal \
 2. 一个真实 host 适配器证明启动/恢复、类型化结果、验证、幂等 writeback、花费顺序与 scheduler 确认；
 3. 交互与隔离无头模式失效关闭而不互切；
 4. 受控 benchmark dogfood 运行显示来源、预算、并发与无反馈边界保持可比；并且
-5. 回滚可以禁用适配器，同时保持普通 LoopX CLI 状态与 Codex App heartbeat 运行完好。
+5. 回滚可以禁用适配器，同时保持普通 LoopX CLI 状态与宿主 heartbeat 运行完好。
 
-本协议不授权 benchmark 启动、leaderboard 提交、生产写入、凭据处理或默认替换 Codex App。
+本协议不授权 benchmark 启动、leaderboard 提交、生产写入、凭据处理或默认替换宿主。

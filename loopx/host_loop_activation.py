@@ -33,7 +33,6 @@ def scheduler_command_binding_for_agent_type(
     canonical = normalize_agent_type(agent_type)
     runtime_profile = {
         "ark-managed-agent": SchedulerRuntimeProfile.ARK_MANAGED_AGENT_GOAL,
-        "codex-app": SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT,
         "codex-cli": SchedulerRuntimeProfile.CODEX_CLI_VISIBLE,
         "claude-code": SchedulerRuntimeProfile.CLAUDE_CODE_VISIBLE,
         "opencode": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
@@ -55,7 +54,6 @@ def agent_type_uses_host_managed_skills(agent_type: str) -> bool:
 
 SUPPORTED_AGENT_TYPES = [
     "ark-managed-agent",
-    "codex-app",
     "codex-cli",
     "claude-code",
     "opencode",
@@ -82,12 +80,6 @@ AGENT_TYPE_CATALOG: dict[str, dict[str, Any]] = {
             "managed_agent",
             "managed agent",
         ],
-    },
-    "codex-app": {
-        "display_name": "Codex App",
-        "host_loop": "Codex App heartbeat automation",
-        "entry": "$loopx <task> or the explicit LoopX skill from /skills",
-        "accepted_inputs": ["codex-app", "codex_app", "codex app", "codex-desktop", "codex desktop"],
     },
     "codex-cli": {
         "display_name": "Codex CLI TUI",
@@ -206,9 +198,9 @@ AGENT_TYPE_CATALOG: dict[str, dict[str, Any]] = {
 }
 
 AMBIGUOUS_AGENT_TYPE_INPUTS: dict[str, list[str]] = {
-    "codex": ["codex-app", "codex-cli"],
-    "openai-codex": ["codex-app", "codex-cli"],
-    "openai codex": ["codex-app", "codex-cli"],
+    "codex": ["codex-cli"],
+    "openai-codex": ["codex-cli"],
+    "openai codex": ["codex-cli"],
     "cli": ["codex-cli", "manual", "other-agent"],
 }
 
@@ -246,8 +238,6 @@ class AgentTypeError(ValueError):
 HOST_SURFACE_TO_AGENT_TYPE = {
     "ark-managed-agent": "ark-managed-agent",
     "ark_managed_agent": "ark-managed-agent",
-    "codex-app": "codex-app",
-    "chat-box": "codex-app",
     "codex-cli-tui": "codex-cli",
     "claude-code": "claude-code",
     "opencode": "opencode",
@@ -290,9 +280,8 @@ def build_agent_type_catalog() -> dict[str, Any]:
         ],
         "selection_rule": (
             "Agents should pass a canonical agent_type. Ambiguous values such as "
-            "`codex` are rejected because Codex App automation "
-            "and Codex CLI have different "
-            "host-loop activation paths."
+            "`codex` are rejected because the Codex family has multiple "
+            "host-loop activation paths; pass `codex-cli` explicitly."
         ),
     }
 
@@ -367,7 +356,7 @@ def normalize_agent_type(value: str | None) -> str:
 
 
 def agent_type_for_host_surface(value: str | None) -> str:
-    key = (value or "codex-app").strip().lower()
+    key = (value or "codex-cli").strip().lower()
     if key in HOST_SURFACE_TO_AGENT_TYPE:
         return HOST_SURFACE_TO_AGENT_TYPE[key]
     return normalize_agent_type(key)
@@ -384,7 +373,6 @@ def _heartbeat_commands(
 ) -> dict[str, str]:
     scope_by_type = {
         "ark-managed-agent": "Ark Managed Agent one-shot Goal activation",
-        "codex-app": "Codex App heartbeat automation",
         "codex-cli": "Codex CLI /goal visible TUI loop",
         "claude-code": "Claude Code native /loop gated by LoopX",
         "opencode": "OpenCode visible goal loop gated by LoopX",
@@ -611,34 +599,6 @@ def _identity_state(
             "required_cli_arg": "--agent-id <registered-agent-id>",
         }
     )
-
-
-def _codex_app_activation(commands: dict[str, str]) -> dict[str, Any]:
-    return {
-        "host_surface": "codex_app_heartbeat_automation",
-        "entry_command_hint": "$loopx <task> or the explicit LoopX skill from /skills",
-        "activation_method": "create_or_update_codex_app_automation",
-        "activation_input_command": commands["heartbeat_prompt_json"],
-        "host_mutation": {
-            "owner": "Codex App host",
-            "preferred_tool": "automation_update",
-            "cli_can_mutate_directly": False,
-            "missing_host_tool_gate": (
-                "Codex App automation_update is unavailable; surface a pasteable "
-                "heartbeat task_body gate instead of claiming autonomous setup."
-            ),
-        },
-        "activation_steps": [
-            "Run the heartbeat-prompt JSON command after project state and todos are written.",
-            "Read task_body from the JSON payload.",
-            "Create or update a Codex App heartbeat automation starting at 3 minutes.",
-            "On later ticks, follow quota should-run scheduler_hint for backoff, reset, and scheduler-ack.",
-        ],
-        "success_criteria": [
-            "A Codex App heartbeat automation exists for this goal and uses the generated task_body.",
-            "The next wakeup starts from LoopX quota/status/state, not stale chat memory.",
-        ],
-    }
 
 
 def _ark_managed_agent_activation(commands: dict[str, str]) -> dict[str, Any]:
@@ -1093,8 +1053,6 @@ def build_host_loop_activation_packet(
     )
     if canonical == "ark-managed-agent":
         surface = _ark_managed_agent_activation(commands)
-    elif canonical == "codex-app":
-        surface = _codex_app_activation(commands)
     elif canonical == "codex-cli":
         surface = _codex_cli_activation(commands)
     elif canonical == "claude-code":

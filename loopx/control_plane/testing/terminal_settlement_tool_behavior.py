@@ -39,6 +39,14 @@ TERMINAL_SETTLEMENT_REENTRY_TOOL_BEHAVIOR_RECEIPT_SCHEMA_VERSION = (
 TERMINAL_SETTLEMENT_TOOL_BEHAVIOR_MAX_CALLS = 10
 TERMINAL_SETTLEMENT_REENTRY_TOOL_BEHAVIOR_MAX_CALLS = 5
 
+TERMINAL_SETTLEMENT_FIXTURE_HOSTED_SCHEDULER_CONTEXT = {
+	"host_surface": "local_scheduler",
+	"scheduler_owner": "host_automation",
+	"execution_mode": "hosted_automation",
+	"source": "explicit",
+}
+
+
 TERMINAL_SETTLEMENT_FIXTURE_GOAL_ID = "terminal-settlement-fixture"
 TERMINAL_SETTLEMENT_FIXTURE_AGENT_ID = "codex-terminal-settlement"
 TERMINAL_SETTLEMENT_FIXTURE_TODO_ID = "todo_terminal001"
@@ -226,7 +234,7 @@ def _build_fixture(root: Path) -> _TerminalSettlementFixture:
             "filesystem_read",
             "filesystem_write",
         ],
-        runtime_profile="codex_app_heartbeat",
+        scheduler_execution_context=TERMINAL_SETTLEMENT_FIXTURE_HOSTED_SCHEDULER_CONTEXT,
     )
     quota_guard_command = str(prompt["quota_guard_command"])
     if quota_guard_command not in str(prompt["task_body"]):

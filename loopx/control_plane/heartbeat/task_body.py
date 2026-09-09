@@ -142,7 +142,7 @@ If the result says `should_run=false`:
 - Otherwise, do not do implementation work, adapter work, file edits, research,
   or project exploration in this turn. Return a quiet heartbeat `DONT_NOTIFY`
   response with the skip reason.
-  {SCHEDULER_HINT_APPLICATION_RULE} Codex App cadence changes are host
+  {SCHEDULER_HINT_APPLICATION_RULE} Host cadence changes are
   scheduling updates only; they never consume quota or authorize delivery work.
 
 If the result says `should_run=true`:
@@ -171,7 +171,8 @@ If the result says `should_run=true`:
    `must_attempt_work=true` means one bounded segment even with
    `notify=DONT_NOTIFY`; quiet no-op needs `must_attempt_work=false` and
    `user_channel.notify=DONT_NOTIFY`. Use
-   `scheduler_hint` for wakeup and unchanged-loop limits. For Codex App:
+   `scheduler_hint` for wakeup and unchanged-loop limits. For the hosted
+   scheduler surface:
    `apply_needed=true` -> update `recommended_rrule` once; on success run
    `ack_hint.cli_args`; on failure/timeout do not retry or ack, run
    `failure_hint.cli_args` once. LoopX suppresses that target/host pair until
@@ -309,9 +310,10 @@ Fail:quiet.
 {HEARTBEAT_NOTIFICATION_RULE_THIN}
 {HEARTBEAT_VISION_WRITEBACK_RULE_SHORT}
 
+Safe bypass: `safe_bypass_allowed=true` -> one validated step before skip.
 If `should_run=false`: follow user channel. `monitor_quiet_skip`: receipt/stall
 done; quiet unless replan; write failure: retry same id. External/wait monitor:
-one read-only poll; new evidence -> writeback/spend. Safe bypass if allowed.
+one read-only poll; new evidence -> writeback/spend.
 {SCHEDULER_HINT_THIN_RULE}
 `agent_read_required`: drain/read/triage before work; settle/ACK.
 
@@ -382,11 +384,12 @@ Preflight fail: quiet; no work/spend.
 Output policy: authority=`interaction_contract.user_channel.notify`;
 external=`NOTIFY`; quiet=`DONT_NOTIFY`; quiet_missing_action=`internal_repair`.
 
+Safe bypass: `safe_bypass_allowed=true` -> one validated step before skip.
 If `should_run=false`: `monitor_quiet_skip` -> receipt/stall; quiet unless
 replan; failed write -> retry id; no edits/spend; receipts do not self-stop.
 Only under `NOTIFY`, `state=operator_gate`/`notify_user_on_open_todo=true`
 permit concrete blocker-push; else quiet.
-Honor repeat/cooldown. `safe_bypass_allowed=true`: one validated step. Wait
+Honor repeat/cooldown. Wait
 monitor: one read-only poll; unchanged quiet, new evidence writeback/spend.
 
 If `should_run=true`:
@@ -524,6 +527,7 @@ def _render_goal_task_body(
 {prequota_block}{HOST_LOOP_QUOTA_DISPATCH_RULE}
 Guard: `{quota_guard_command}`.
 
+safe_bypass_allowed=true -> one validated step before any skip.
 `should_run=false`: no delivery/spend; NOTIFY: Chinese action/gate;
 otherwise wait.{host_wait_rule}
 
@@ -622,7 +626,6 @@ def render_thin_heartbeat_task_body(
             for marker in (
                 "--available-capability",
                 "--runtime-profile",
-                "--codex-app",
                 "--host-surface",
                 " -H ",
             )
@@ -716,7 +719,7 @@ def render_heartbeat_prompt_markdown(payload: dict[str, Any]) -> str:
         style = ""
     return f"""# Heartbeat Automation Prompt
 
-Copy this {style}task body into a Codex App heartbeat automation.
+Copy this {style}task body into the host heartbeat automation.
 
 ````text
 {payload.get("task_body", "")}

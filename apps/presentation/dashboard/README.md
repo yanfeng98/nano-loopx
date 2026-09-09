@@ -103,7 +103,7 @@ LOOPX_PYTHON=/path/to/python3.12 npm run dev
 
 - **动作安全与控制面**:
   对 Goals、Todos、Heartbeats、监视器或设置的持久修改遵循类型化 preview → 受治理 apply → 已验证 receipt 协议。展现方式随风险与可逆性而变化:受保护或不可逆动作保持 review 优先,而下方可逆的 Goal pause 直接应用就绪的 preview,并把过期或新被关卡约束的结果升级回 review。浏览器从不执行对控制面真相的未调解直接写入。
-  Goal 目录的主列表只保留活动 Goals。使用 Goal 旁边的暂停动作一键应用可逆停止;持久反馈报告结果,停止的 Goal 在折叠的 **Stopped Goals** 区域保留其 Todos、历史与证据,并且可以从同一区域恢复。停止 Goal 会暂停自动 Agent Turn;它不把 Goal 标记为完成,也不删除状态。停止的 Goal 离开活动attention 范畴,投影零有效 quota,从而让调度器停止宿主自动化(如 Codex App heartbeat),同时保留配置的 quota。
+  Goal 目录的主列表只保留活动 Goals。使用 Goal 旁边的暂停动作一键应用可逆停止;持久反馈报告结果,停止的 Goal 在折叠的 **Stopped Goals** 区域保留其 Todos、历史与证据,并且可以从同一区域恢复。停止 Goal 会暂停自动 Agent Turn;它不把 Goal 标记为完成,也不删除状态。停止的 Goal 离开活动attention 范畴,投影零有效 quota,从而让调度器停止宿主自动化,同时保留配置的 quota。
   Goal stop 与 `quota.compute=0` 共享这条关闭路径,但保留不同的恢复权威:只有 Goal 生命周期恢复可以重新激活一个停止的 Goal,而显式的正向 quota 更新会恢复一个 quota 暂停。Stop 不强制杀死进行中的工具调用;下一个 `quota should-run` 包会告诉宿主在另一个自动 Turn 之前暂停或删除周期性的 heartbeat。等价的 CLI 流程是:
 
   ```bash

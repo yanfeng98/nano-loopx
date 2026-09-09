@@ -448,7 +448,7 @@ def _guided_scenario_packet(
         goal_id=goal_id,
         agent_id=agent_id,
         cli_bin="loopx",
-        host_surface="codex-app",
+        host_surface="codex-cli-tui",
         goal_text="Establish one public-safe quality contract.",
         available_capabilities=["network"],
         include_command_pack_detail=False,
@@ -778,7 +778,7 @@ def build_actual_default_model_behavior_scenario_inputs(
 def build_actual_default_model_behavior_scenario_packets(
     root: Path,
 ) -> dict[str, dict[str, Any]]:
-    """Build the default packets used by Codex App automation qualification."""
+    """Build the default packets used by host-loop automation qualification."""
 
     _, packets = build_actual_default_model_behavior_scenario_inputs(root)
     return packets

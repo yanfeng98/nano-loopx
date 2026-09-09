@@ -162,7 +162,6 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
                 "tests/control_plane/test_scheduler_host_followup_hint_transport.py",
                 "tests/control_plane/test_scheduler_state_transition_rules.py",
                 "tests/control_plane_ts/scheduler_heartbeat_followup.test.ts",
-                "tests/control_plane_ts/scheduler_heartbeat_followup_cli.test.ts",
             ),
             "durable_smoke": _covered(
                 "examples/control_plane/quota-scheduler-state-ack-smoke.py",
@@ -171,7 +170,6 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
             ),
             "catalog_canary": _covered("scheduler-ack-route"),
             "host_upgrade": _covered(
-                "tests/test_scheduler_native_launcher.py",
                 "tests/test_windows_install.py",
             ),
             "model_behavior": _not_applicable(

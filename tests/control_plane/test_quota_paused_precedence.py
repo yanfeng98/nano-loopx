@@ -8,8 +8,6 @@ import pytest
 from loopx.configure_goal import configure_goal
 from loopx.control_plane.scheduler.execution_context import (
     GENERIC_CLI_OUTER_CONTROLLER_SCHEDULER_CONTEXT,
-    SchedulerRuntimeProfile,
-    scheduler_execution_context_for_runtime_profile,
 )
 from loopx.control_plane.testing.quota_fixtures import (
     quota_status_payload,
@@ -142,15 +140,18 @@ def test_paused_quota_preempts_workspace_repair(
     assert "workspace_guard" not in payload
 
 
-def test_paused_quota_stops_codex_app_heartbeat_until_explicit_resume() -> None:
+def test_paused_quota_stops_hosted_heartbeat_until_explicit_resume() -> None:
     payload = build_quota_should_run(
         _paused_status(),
         goal_id=GOAL_ID,
         agent_id=AGENT_ID,
-        codex_app_current_rrule="FREQ=MINUTELY;INTERVAL=30",
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
+        codex_cli_current_rrule="FREQ=MINUTELY;INTERVAL=30",
+        scheduler_execution_context={
+            "host_surface": "local_scheduler",
+            "scheduler_owner": "host_automation",
+            "execution_mode": "hosted_automation",
+            "source": "explicit",
+        },
     )
 
     _assert_authoritatively_paused(payload)
@@ -160,14 +161,14 @@ def test_paused_quota_stops_codex_app_heartbeat_until_explicit_resume() -> None:
 
     scheduler = payload["scheduler_hint"]
     assert scheduler["reason_code"] == "quota_paused"
-    codex_app = scheduler["codex_app"]
-    assert codex_app["applicability"] == "applicable"
-    assert codex_app["apply"] == "pause_or_delete_current_heartbeat_if_possible"
-    assert codex_app["host_action"] == "pause_or_delete_current_heartbeat"
-    assert codex_app["host_action_required"] is True
-    assert codex_app["ack_required"] is False
-    assert codex_app["resume_trigger"] == "explicit quota resume with quota.compute > 0"
-    assert "recommended_rrule" not in codex_app
+    codex_cli = scheduler["codex_cli"]
+    assert codex_cli["applicability"] == "applicable"
+    assert codex_cli["apply"] == "pause_or_delete_current_heartbeat_if_possible"
+    assert codex_cli["host_action"] == "pause_or_delete_current_heartbeat"
+    assert codex_cli["host_action_required"] is True
+    assert codex_cli["ack_required"] is False
+    assert codex_cli["resume_trigger"] == "explicit quota resume with quota.compute > 0"
+    assert "recommended_rrule" not in codex_cli
 
 
 def test_paused_quota_preserves_unhealthy_status_fact() -> None:

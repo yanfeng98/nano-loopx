@@ -287,8 +287,8 @@ def _compact_interaction_contract(contract: dict[str, Any]) -> dict[str, Any]:
 def _compact_scheduler_hint(scheduler_hint: dict[str, Any]) -> dict[str, Any]:
     if not scheduler_hint:
         return {}
-    codex_app = _as_dict(scheduler_hint.get("codex_app"))
-    stateful_backoff = _as_dict(codex_app.get("stateful_backoff"))
+    codex_cli = _as_dict(scheduler_hint.get("codex_cli"))
+    stateful_backoff = _as_dict(codex_cli.get("stateful_backoff"))
     reset_policy = _as_dict(scheduler_hint.get("reset_policy"))
     unchanged_poll = _as_dict(scheduler_hint.get("unchanged_poll"))
     return {
@@ -296,14 +296,14 @@ def _compact_scheduler_hint(scheduler_hint: dict[str, Any]) -> dict[str, Any]:
         "action": scheduler_hint.get("action"),
         "cadence_class": scheduler_hint.get("cadence_class"),
         "reason": scheduler_hint.get("reason"),
-        "codex_app": {
-            "apply": codex_app.get("apply"),
-            "host_action": codex_app.get("host_action"),
-            "recommended_rrule": codex_app.get("recommended_rrule"),
-            "recommended_interval_minutes": codex_app.get("recommended_interval_minutes"),
+        "codex_cli": {
+            "apply": codex_cli.get("apply"),
+            "host_action": codex_cli.get("host_action"),
+            "recommended_rrule": codex_cli.get("recommended_rrule"),
+            "recommended_interval_minutes": codex_cli.get("recommended_interval_minutes"),
             "current_rrule": stateful_backoff.get("current_rrule"),
             "apply_needed": stateful_backoff.get("apply_needed"),
-            "no_spend_for_cadence_change": codex_app.get("no_spend_for_cadence_change"),
+            "no_spend_for_cadence_change": codex_cli.get("no_spend_for_cadence_change"),
         },
         "unchanged_poll": {
             "final_quota_replan_check_enabled": unchanged_poll.get(
@@ -315,7 +315,7 @@ def _compact_scheduler_hint(scheduler_hint: dict[str, Any]) -> dict[str, Any]:
         },
         "reset_policy": {
             "reset_token": reset_policy.get("reset_token"),
-            "codex_app_initial_rrule": reset_policy.get("codex_app_initial_rrule"),
+            "codex_cli_initial_rrule": reset_policy.get("codex_cli_initial_rrule"),
         },
     }
 
@@ -371,18 +371,18 @@ def _goal_frontier_projection_line(goal_frontier: dict[str, Any]) -> str | None:
 def _scheduler_hint_line(scheduler_hint: dict[str, Any]) -> str | None:
     if not scheduler_hint:
         return None
-    codex_app = _as_dict(scheduler_hint.get("codex_app"))
+    codex_cli = _as_dict(scheduler_hint.get("codex_cli"))
     unchanged_poll = _as_dict(scheduler_hint.get("unchanged_poll"))
     return (
         "- scheduler_hint: "
         f"action={scheduler_hint.get('action')} "
         f"cadence={scheduler_hint.get('cadence_class')} "
-        f"codex_app_apply={codex_app.get('apply')} "
-        f"apply_needed={codex_app.get('apply_needed')} "
-        f"recommended_rrule={codex_app.get('recommended_rrule')} "
-        f"current_rrule={codex_app.get('current_rrule')} "
+        f"codex_cli_apply={codex_cli.get('apply')} "
+        f"apply_needed={codex_cli.get('apply_needed')} "
+        f"recommended_rrule={codex_cli.get('recommended_rrule')} "
+        f"current_rrule={codex_cli.get('current_rrule')} "
         f"final_replan_check={unchanged_poll.get('final_quota_replan_check_enabled')} "
-        f"no_spend_for_cadence_change={codex_app.get('no_spend_for_cadence_change')}"
+        f"no_spend_for_cadence_change={codex_cli.get('no_spend_for_cadence_change')}"
     )
 
 

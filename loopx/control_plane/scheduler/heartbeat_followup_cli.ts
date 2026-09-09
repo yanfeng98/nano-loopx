@@ -65,7 +65,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     "--applied-rrule",
     "--failed-rrule",
     "--failure-kind",
-    "--codex-app-current-rrule",
+    "--observed-host-rrule",
     "--turn-instance-id",
     "--reset-token",
     "--identity-signature",
@@ -75,7 +75,6 @@ function parseArgs(argv: string[]): ParsedArgs {
   ]);
   const booleanOptions = new Set([
     "-A",
-    "--codex-app",
     "--execute",
     "--dry-run",
     "--host-match-observed",
@@ -227,12 +226,12 @@ function requestFromArgs(argv: string[]): { request: Record<string, unknown>; fo
   if (expectedOperation === "host_failure" && values["--failed-rrule"]) {
     matchingText(facts, "expected_rrule", values["--failed-rrule"], "--failed-rrule");
   }
-  if (values["--codex-app-current-rrule"]) {
+  if (values["--observed-host-rrule"]) {
     matchingText(
       facts,
       "observed_host_rrule",
-      values["--codex-app-current-rrule"],
-      "--codex-app-current-rrule",
+      values["--observed-host-rrule"],
+      "--observed-host-rrule",
     );
   }
   if (values["--failure-kind"]) matchingText(facts, "failure_kind", values["--failure-kind"], "--failure-kind");

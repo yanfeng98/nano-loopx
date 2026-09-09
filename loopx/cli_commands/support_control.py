@@ -16,7 +16,6 @@ from ..chat_server import (
     DEFAULT_CHAT_PORT,
     serve_chat,
 )
-from ..control_plane.scheduler.execution_context import SchedulerRuntimeProfile
 from ..dashboard_launcher import launch_dashboard, replace_existing_loopx_chat
 from ..execution_profile import execution_profile_turn_granularity
 from ..heartbeat_prequota import (
@@ -158,8 +157,7 @@ def register_support_control_commands(
         "--installed-manifest",
         help=(
             "Optional JSON manifest of installed automations with goal_id, mode, automation_id, and "
-            "prompt_sha256/task_body. If omitted, upgrade-plan auto-discovers Codex App heartbeat "
-            "automations from $CODEX_HOME/automations or ~/.codex/automations."
+            "prompt_sha256/task_body. If omitted, no installed manifest is assumed."
         ),
     )
     upgrade_plan_parser.add_argument(
@@ -568,23 +566,12 @@ def handle_support_control_command(
                 args.scheduler_owner,
                 args.execution_mode,
             )
-            if args.codex_app and (
-                args.runtime_profile or any(explicit_scheduler_fields)
-            ):
-                raise ValueError(
-                    "--codex-app cannot be combined with --runtime-profile, "
-                    "--host-surface, --scheduler-owner, or --execution-mode"
-                )
             if args.runtime_profile and any(explicit_scheduler_fields):
                 raise ValueError(
                     "--runtime-profile cannot be combined with --host-surface, "
                     "--scheduler-owner, or --execution-mode"
                 )
-            runtime_profile = (
-                SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT.value
-                if args.codex_app
-                else args.runtime_profile
-            )
+            runtime_profile = args.runtime_profile
             payload = build_heartbeat_prompt(
                 goal_id=args.goal_id,
                 active_state=active_state,

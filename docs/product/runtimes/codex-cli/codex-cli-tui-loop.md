@@ -32,7 +32,7 @@ and set the current Codex CLI goal to `/goal <thin task_body>`. Then stop and
 report the goal id, current user gate, top agent todo, and next safe action.
 ```
 
-这段文本应当是 Codex CLI 原生的设置路径，对应 App 使用的同一生命周期：先设置，包括把薄 loop prompt 立即安装进 surface。在 Codex CLI 中 loop 是 `/goal <thin task_body>`；在 Codex App 中 loop 是每 3 分钟带 `<thin task_body>` 的 heartbeat 自动化。这条消息足以让终端 agent：
+这段文本应当是 Codex CLI 原生的设置路径：先设置，包括把薄 loop prompt 立即安装进 surface。在 Codex CLI 中 loop 是 `/goal <thin task_body>`。这条消息足以让终端 agent：
 
 - 运行 `loopx doctor`；
 - 在要求用户克隆 LoopX 仓库之前，用 PyPI 与打包 workflow-skill 安装器安装或修复缺失的本地 CLI；

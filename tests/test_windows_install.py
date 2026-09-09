@@ -148,8 +148,6 @@ def test_windows_installer_promotes_release_and_runs_doctor(tmp_path: Path) -> N
             "Verify the native Windows PowerShell lifecycle",
             "--no-onboarding-scan",
             "--no-global-sync",
-            "--codex-app-heartbeat",
-            "no",
         ],
         env=launch_env,
     )

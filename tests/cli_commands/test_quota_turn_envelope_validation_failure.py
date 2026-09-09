@@ -24,7 +24,7 @@ def test_turn_envelope_renders_typed_failure_when_context_preparation_fails(
     monkeypatch: pytest.MonkeyPatch,
     turn_envelope: bool,
 ) -> None:
-    """Regression: --begin-turn --turn-envelope must not raise UnboundLocalError.
+    """Regression: turn-scoped --turn-envelope must not raise UnboundLocalError.
 
     When ``prepare_quota_command_context`` fails scheduler execution-context
     validation, the CLI returns the typed validation payload; the post-try
@@ -48,7 +48,6 @@ def test_turn_envelope_renders_typed_failure_when_context_preparation_fails(
         quota_command="should-run",
         goal_id="synthetic-goal",
         agent_id="synthetic-agent",
-        begin_turn=True,
         turn_envelope=turn_envelope,
         format="json",
     )

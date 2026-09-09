@@ -389,7 +389,12 @@ def assert_unchanged_writeback() -> None:
             "network",
             "--available-capability",
             "external_evidence_poll",
-            "--codex-app",
+            "-H",
+            "local_scheduler",
+            "-O",
+            "host_automation",
+            "-M",
+            "hosted_automation",
         )
         assert followup["decision"] == "autonomous_replan_required", followup
         assert followup["effective_action"] == "autonomous_replan_required", followup
@@ -632,7 +637,12 @@ def assert_material_transition_followup() -> None:
             "network",
             "--available-capability",
             "external_evidence_poll",
-            "--codex-app",
+            "-H",
+            "local_scheduler",
+            "-O",
+            "host_automation",
+            "-M",
+            "hosted_automation",
         )
         assert handoff["ok"] is True, handoff
         assert handoff["decision"] == "run", handoff
@@ -647,7 +657,7 @@ def assert_material_transition_followup() -> None:
         scheduler = handoff["scheduler_hint"]
         assert scheduler["action"] == "run_now", scheduler
         assert scheduler["cadence_class"] == "active_work", scheduler
-        assert scheduler["codex_app"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
+        assert scheduler["codex_cli"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
         contract = handoff["interaction_contract"]
         assert contract["agent_channel"]["must_attempt"] is True, contract
         assert contract["cli_channel"]["spend_after_validation"] is True, contract
@@ -1082,11 +1092,11 @@ def cli_monitor_poll_scheduler_hints(registry_path: Path, *scheduler_args: str) 
     return payload["before"]["scheduler_hint"], payload["after"]["scheduler_hint"]
 
 
-def assert_cli_monitor_poll_preserves_codex_app_scheduler_context() -> None:
+def assert_cli_monitor_poll_preserves_codex_cli_scheduler_context() -> None:
     with tempfile.TemporaryDirectory(prefix="loopx-monitor-poll-codex-app-") as tmp:
         hints = cli_monitor_poll_scheduler_hints(write_fixture(Path(tmp))[0], "--codex-app")
         for scheduler_hint in hints:
-            assert scheduler_hint["codex_app"]["applicability"] == "applicable", scheduler_hint
+            assert scheduler_hint["codex_cli"]["applicability"] == "applicable", scheduler_hint
             assert scheduler_hint["action"] != "repair_scheduler_execution_context", scheduler_hint
 
 
@@ -1099,8 +1109,8 @@ def assert_cli_monitor_poll_preserves_outer_controller_scheduler_context() -> No
             execution_context = scheduler_hint["execution_context"]
             execution_phase = scheduler_hint["execution_phase"]
             assert scheduler_hint["action"] != "repair_scheduler_execution_context", scheduler_hint
-            assert scheduler_hint["codex_app"]["applicability"] == "not_applicable", scheduler_hint
-            assert "stateful_backoff" not in scheduler_hint["codex_app"], scheduler_hint
+            assert scheduler_hint["codex_cli"]["applicability"] == "not_applicable", scheduler_hint
+            assert "stateful_backoff" not in scheduler_hint["codex_cli"], scheduler_hint
             assert (
                 execution_context["host_surface"],
                 execution_context["scheduler_owner"],
@@ -1128,8 +1138,8 @@ def assert_cli_monitor_poll_invalid_scheduler_context_fails_closed() -> None:
             execution_context = scheduler_hint["execution_context"]
             execution_phase = scheduler_hint["execution_phase"]
             assert scheduler_hint["action"] == "repair_scheduler_execution_context", scheduler_hint
-            assert scheduler_hint["codex_app"]["applicability"] == "blocked_invalid_context", scheduler_hint
-            assert "stateful_backoff" not in scheduler_hint["codex_app"], scheduler_hint
+            assert scheduler_hint["codex_cli"]["applicability"] == "blocked_invalid_context", scheduler_hint
+            assert "stateful_backoff" not in scheduler_hint["codex_cli"], scheduler_hint
             assert execution_context["valid"] is False, scheduler_hint
             assert execution_context["errors"] == [
                 "outer_controller requires execution_mode=isolated_headless"
@@ -1213,13 +1223,13 @@ def assert_cli_monitor_poll_uses_should_run_lookback() -> None:
         next_user_todo=None,
         next_user_task_class=None,
         next_claimed_by=None,
-        codex_app=True,
+        codex_cli=True,
         runtime_profile=None,
         host_surface=None,
         scheduler_owner=None,
         execution_mode=None,
-        surface="codex_app",
-        state_key="scheduler_hint.codex_app.stateful_backoff",
+        surface="codex_cli",
+        state_key="scheduler_hint.codex_cli.stateful_backoff",
         applied_rrule=None,
         reset_token=None,
         identity_signature=None,
@@ -1251,7 +1261,7 @@ def assert_cli_monitor_poll_uses_should_run_lookback() -> None:
     assert seen["record_kwargs"]["available_capabilities"] == ["network"], seen
     scheduler_context = seen["record_kwargs"]["scheduler_execution_context"]
     assert scheduler_context.ok is True, scheduler_context
-    assert scheduler_context.context.host_surface.value == "codex_app", scheduler_context
+    assert scheduler_context.context.host_surface.value == "codex_cli", scheduler_context
     assert scheduler_context.context.scheduler_owner.value == "host_automation", scheduler_context
     assert scheduler_context.context.execution_mode.value == "hosted_automation", scheduler_context
     assert seen["payload"] == {"ok": True, "mode": "monitor-poll", "dry_run": True, "appended": False}, seen
@@ -1262,7 +1272,7 @@ def main() -> int:
     assert_should_run_turn_receipt_is_idempotent()
     assert_turn_scoped_monitor_poll_is_idempotent()
     assert_cli_monitor_poll_uses_should_run_lookback()
-    assert_cli_monitor_poll_preserves_codex_app_scheduler_context()
+    assert_cli_monitor_poll_preserves_codex_cli_scheduler_context()
     assert_cli_monitor_poll_preserves_outer_controller_scheduler_context()
     assert_cli_monitor_poll_invalid_scheduler_context_fails_closed()
     assert_writeback_helper_preview_contract()

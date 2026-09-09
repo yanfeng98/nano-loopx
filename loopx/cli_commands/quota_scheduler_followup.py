@@ -23,7 +23,6 @@ from ..control_plane.scheduler.execution_context import (
     SchedulerExecutionContextResolution,
 )
 from ..quota import record_quota_scheduler_ack
-from ..upgrade import resolve_codex_app_automation_rrule
 
 
 def _build_scheduler_followup_decision(
@@ -34,7 +33,7 @@ def _build_scheduler_followup_decision(
     runtime_root: Path,
     heartbeat_receipt: Mapping[str, object] | None,
     turn_instance_id: str | None,
-    codex_app_current_rrule: str | None,
+    codex_cli_current_rrule: str | None,
     scheduler_context: Mapping[str, object]
     | SchedulerExecutionContextResolution
     | None,
@@ -58,10 +57,10 @@ def _build_scheduler_followup_decision(
         agent_id=args.agent_id,
         available_capabilities=args.available_capabilities,
         include_scheduler_detail=False,
-        codex_app_current_rrule=codex_app_current_rrule,
+        codex_cli_current_rrule=codex_cli_current_rrule,
         registry_path=registry_path,
         runtime_root=runtime_root,
-        host_observation_resolver=resolve_codex_app_automation_rrule,
+        host_observation_resolver=None,
         scheduler_execution_context=scheduler_context,
         operator_inbox_urgency_projector=operator_inbox_urgency_projector,
         bounded_research_frontier_projector=project_live_explore_composition_frontier,
@@ -127,14 +126,7 @@ def build_scheduler_followup_payload(
             "delivery_outcome": "surface_only",
         }
 
-    observed_rrule = str(args.codex_app_current_rrule or "").strip()
-    if args.quota_command == "scheduler-fail-current" and not observed_rrule:
-        host_observation = resolve_codex_app_automation_rrule(
-            goal_id=args.goal_id,
-            agent_id=args.agent_id,
-        )
-        if host_observation.get("available") is True:
-            observed_rrule = str(host_observation.get("rrule") or "")
+    observed_rrule = str(args.observed_host_rrule or "").strip()
 
     before_decision = _build_scheduler_followup_decision(
         status_payload,
@@ -143,7 +135,7 @@ def build_scheduler_followup_payload(
         runtime_root=runtime_root,
         heartbeat_receipt=heartbeat_receipt,
         turn_instance_id=turn_instance_id,
-        codex_app_current_rrule=(
+        codex_cli_current_rrule=(
             args.applied_rrule
             if bool(getattr(args, "host_match_observed", False))
             else observed_rrule

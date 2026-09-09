@@ -6,12 +6,10 @@ codex_host.py）对它们一视同仁。
 
 实测 profile 在同一个 goal 上渲染出的差别（loopx 0.5.3）：
 
-    codex_cli            body 2698 字符  guard 不带 --begin-turn    spend --source visible-goal
-    codex_app_heartbeat  body 1557 字符  guard --codex-app + LOOPX_TURN  spend --source heartbeat
+    codex_cli   body 2698 字符  guard 不带 turn 标识    spend --source visible-goal
 
 codex_cli 是 visible-Goal 渲染器（body 开头"in this visible Codex `/goal`"），
-Codex 自己拥有续跑；codex_app_heartbeat 是精简派发器 body，每次唤醒是全新 turn，
-续跑由外部调度器拥有。
+Codex 自己拥有续跑。
 """
 
 from __future__ import annotations
@@ -80,21 +78,15 @@ CODEX_CLI = Mode(
     ),
 )
 
-#: `Codex App` 心跳 —— host_automation + hosted_automation。
-#:
-#: host_surface=codex_app 在上游是留给真 Codex App 产品的：它会回一套
-#: scheduler_hint.codex_app.stateful_backoff（apply_needed / recommended_rrule /
-#: reset_token / identity_signature），期待宿主去调 App 自己的 automation_update
-#: 改 RRULE 再 ACK。没有真 App 就兑现不了，只会永远悬着或者伪造 ACK。
+#: 心跳 —— 自建定时器驱动（generic_cli）。
 #:
 #: 上游为自建定时器指定的对口是 `--runtime-profile generic_cli`：shell_worker
 #: 参考实现 `scripts/external_scheduler_worker.py` 默认就是它，其 help 明写
 #: "Quota runtime profile that emits the local_scheduler hint"。
 #:
-#: 不要直接传 -H local_scheduler：`--turn-instance-id` 只接受 generic_cli 或
-#: codex_app_heartbeat（否则报 "requires runtime-profile generic_cli or
-#: codex_app_heartbeat so quota guard creates a heartbeat receipt"），而没有
-#: turn instance 就拿不到心跳收据。
+#: 不要直接传 -H local_scheduler：`--turn-instance-id` 只接受 generic_cli
+#: （否则报 "requires runtime-profile generic_cli so quota guard creates a
+#: heartbeat receipt"），而没有 turn instance 就拿不到心跳收据。
 HEARTBEAT = Mode(
     name="heartbeat",
     runtime_profile="generic_cli",
@@ -110,43 +102,17 @@ HEARTBEAT = Mode(
         "worker.py 的做法推进阶梯。"
     ),
     substitution=(
-        "host_surface: generic_cli 代替 codex_app —— 这是上游为自建定时器指定的"
-        "对口 profile，不是权宜之计。用 --claim-codex-app 可切到硬声明 codex_app。"
-    ),
-)
-
-#: `--claim-codex-app` 时用的变体：硬声明 codex_app。会拿到 App 形状的
-#: stateful_backoff，但本驱动没有真 App 去 automation_update，apply_needed /
-#: ack_needed 会一直悬着。仅用于观察这套义务在无 App 环境下如何卡住。
-HEARTBEAT_CLAIM_APP = Mode(
-    name="heartbeat-codex-app",
-    runtime_profile="codex_app_heartbeat",
-    host_surface="codex_app",
-    scheduler_owner="host_automation",
-    execution_mode="hosted_automation",
-    continuation_owner="driver",
-    needs_turn_instance=True,
-    spend_source="heartbeat",
-    notes=(
-        "硬声明 codex_app。校验只查枚举组合、不验身份，所以能过；但没有真 App，"
-        "scheduler_hint 的 apply_needed/ack_needed 无法诚实兑现。"
-    ),
-    substitution=(
-        "host_surface: 声明为 codex_app 但没有真 Codex App 支撑。"
-        "属上游文档意义上的误用，只用于观察义务如何悬空。"
+        "host_surface: generic_cli —— 这是上游为自建定时器指定的对口 profile。"
     ),
 )
 
 
 MODES: dict[str, Mode] = {m.name: m for m in (CODEX_CLI, HEARTBEAT)}
-MODES[HEARTBEAT_CLAIM_APP.name] = HEARTBEAT_CLAIM_APP
 
 
-def resolve(name: str, *, claim_codex_app: bool = False) -> Mode:
-    """按短名取模式；heartbeat 可切成硬声明 codex_app 的变体。"""
+def resolve(name: str) -> Mode:
+    """按短名取模式。"""
 
-    if name == HEARTBEAT.name and claim_codex_app:
-        return HEARTBEAT_CLAIM_APP
     try:
         return MODES[name]
     except KeyError:

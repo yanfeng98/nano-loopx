@@ -75,7 +75,7 @@ test("Turn envelope transaction owns compaction and signature construction", () 
   const envelope = buildTurnEnvelope({
     payload: source,
     protocol_action_fields: protocolActionFields,
-    scheduler_execution_args: " --scheduler-runtime-profile codex_app",
+    scheduler_execution_args: " --scheduler-runtime-profile codex_cli",
   });
 
   assert.equal(envelope.schema_version, "loopx_turn_envelope_v0");
@@ -83,7 +83,7 @@ test("Turn envelope transaction owns compaction and signature construction", () 
   assert.equal(
     (envelope.detail_ref as Record<string, unknown>).full_decision,
     "loopx --format json quota should-run --goal-id goal-turn-envelope " +
-      "--agent-id agent-ts --scheduler-runtime-profile codex_app",
+      "--agent-id agent-ts --scheduler-runtime-profile codex_cli",
   );
   const capsule = envelope.contract_capsule as Record<string, unknown>;
   assert.deepEqual(capsule.protocol_action_packet, {

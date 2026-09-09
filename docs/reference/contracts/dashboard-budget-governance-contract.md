@@ -10,7 +10,7 @@ LoopX 的预算与治理已经体现在内核对象中:配额、scheduler 提示
 | 运营者概念 | 来源字段 | Dashboard 中的含义 |
 | --- | --- | --- |
 | 预算 | `quota.compute`, `quota.allowed_slots`, `quota.spent_slots`, `quota.state` | 该 Goal 在当前配额窗口内可以消耗多少自动 Agent 时间,以及现在是否可以运行。 |
-| 节奏 | `scheduler_hint.codex_app`, `scheduler_hint.unchanged_poll`, `scheduler_hint.reset_policy`;`scheduler_hint.cold_path_detail.local_scheduler` 提供的可选用冷细节 | host 应该多久唤醒一次 Agent,何时启用退避,以及用户反馈或新工作何时重置间隔。 |
+| 节奏 | `scheduler_hint.codex_cli`, `scheduler_hint.unchanged_poll`, `scheduler_hint.reset_policy`;`scheduler_hint.cold_path_detail.local_scheduler` 提供的可选用冷细节 | host 应该多久唤醒一次 Agent,何时启用退避,以及用户反馈或新工作何时重置间隔。 |
 | 消耗规则 | `interaction_contract.cli_channel.spend_policy`, `scheduler_hint.unchanged_poll.spend_policy`, `work_lane_contract` | 哪些转换消耗配额,哪些生命周期检查不消耗。 |
 | 人工控制 | user todos、operator gates、`local_dashboard_api`、未来的控制面 dry-run/apply 路径 | 人类可以批准、暂停、覆盖或恢复什么,以及浏览器是否被允许预览或应用变更。 |
 | 证据 | todo ids、run ids、配额消耗事件、紧凑制品、源文件警告 | Dashboard 为什么相信当前的预算/治理状态,以及去哪里审计它。 |

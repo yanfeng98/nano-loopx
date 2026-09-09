@@ -19,9 +19,6 @@ from loopx.quota import (  # noqa: E402
 from loopx.control_plane.goals.goal_frontier import (  # noqa: E402
     build_goal_frontier_projection_context_from_status,
 )
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.todos.quota_summary import (  # noqa: E402
     select_quota_todo_summary,
 )
@@ -41,9 +38,7 @@ FUTURE_DUE_AT = "2999-01-01T00:00:00+00:00"
 FUTURE_EXPIRY_AT = "2999-12-31T00:00:00+00:00"
 WATCH_FRONTIER_ID = "fixture-monitor-target"
 WATCH_TODO_ID = "todo_monitor_wait"
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 GLOBAL_REPLAN_OBLIGATION = {

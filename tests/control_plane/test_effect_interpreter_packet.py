@@ -205,7 +205,7 @@ def test_effect_turn_carries_scheduler_ack_and_failure_hints() -> None:
         "scheduler_hint": {
             "action": "apply_rrule",
             "cadence_class": "active_work",
-            "codex_app": {
+            "codex_cli": {
                 "ack_hint": {
                     "cli_args": [
                         "quota",

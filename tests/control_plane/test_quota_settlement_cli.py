@@ -8,9 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import pytest
 
-from loopx.bootstrap_command_pack import build_start_goal_guided_packet
 from loopx.control_plane.work_items.delivery_outcome import (
     PROGRESS_DELIVERY_OUTCOMES,
     DeliveryOutcome,
@@ -47,12 +45,12 @@ def _write_fixture(
         "---\n"
         "status: active-read-only\n"
         "owner_mode: goal\n"
-        'objective: "Settle one standard Codex App delivery."\n'
+        'objective: "Settle one standard hosted-scheduler delivery."\n'
         "updated_at: 2026-01-01T00:00:00+00:00\n"
         "---\n\n"
         "# Settlement CLI Fixture\n\n"
         "## Objective\n\n"
-        "Settle one standard Codex App delivery.\n\n"
+        "Settle one standard hosted-scheduler delivery.\n\n"
         "## Next Action\n\n"
         "- Validate and settle the selected delivery.\n\n"
         "## Agent Todo\n\n"
@@ -534,7 +532,12 @@ def test_gitless_goal_refresh_and_quota_spend_settle_end_to_end(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         *binding,
@@ -623,7 +626,12 @@ def test_typed_outcome_gap_settles_exact_turn_without_becoming_progress(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         *binding,
@@ -751,7 +759,12 @@ def test_in_flight_progress_preserves_todo_across_heartbeat_settlements(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -804,7 +817,12 @@ def test_in_flight_progress_preserves_todo_across_heartbeat_settlements(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -863,218 +881,6 @@ def test_in_flight_progress_preserves_todo_across_heartbeat_settlements(
     }
 
 
-def test_standard_codex_app_settlement_is_receipted_and_idempotent(
-    tmp_path: Path,
-) -> None:
-    project, runtime, registry_path = _write_fixture(tmp_path)
-    _configure_read_only_todo(project)
-    binding = (
-        "--agent-id",
-        AGENT_ID,
-        "--todo-id",
-        TODO_ID,
-        "--turn-instance-id",
-        TURN_ID,
-    )
-
-    guard_rc, guard = _run_cli(
-        registry_path,
-        runtime,
-        "quota",
-        "should-run",
-        "--codex-app",
-        "--goal-id",
-        GOAL_ID,
-        "--agent-id",
-        AGENT_ID,
-        "--turn-instance-id",
-        TURN_ID,
-        "--scan-path",
-        str(project),
-    )
-
-    assert guard_rc == 0, guard
-    identity = guard["heartbeat_receipt"]["settlement_identity"]
-    assert identity["todo_id"] == TODO_ID
-    assert identity["effect_id"] == (f"{GOAL_ID}:{AGENT_ID}:{TODO_ID}:{TURN_ID}")
-
-    complete_args = (
-        "todo",
-        "complete",
-        "--goal-id",
-        GOAL_ID,
-        *binding,
-        "--claimed-by",
-        AGENT_ID,
-        "--evidence",
-        "original delivery validated",
-        "--next-agent-todo",
-        "Continue the explicit successor delivery.",
-        "--next-claimed-by",
-        AGENT_ID,
-        "--next-action-kind",
-        "implement",
-    )
-    complete_rc, complete = _run_cli(
-        registry_path,
-        runtime,
-        *complete_args,
-    )
-
-    assert complete_rc == 0, complete
-    assert complete["settlement_result"]["ok"] is True
-    assert [
-        receipt["step_kind"] for receipt in complete["settlement_result"]["receipts"]
-    ] == ["validation"]
-    successor_id = complete["next_todos"][0]["todo_id"]
-    assert successor_id != TODO_ID
-    complete_replay_rc, complete_replay = _run_cli(
-        registry_path,
-        runtime,
-        *complete_args,
-    )
-    assert complete_replay_rc == 0, complete_replay
-    assert complete_replay["idempotent_replay"] is True
-    assert complete_replay["settlement_result"]["ok"] is True
-
-    refresh_args = (
-        "refresh-state",
-        "--goal-id",
-        GOAL_ID,
-        "--classification",
-        "validated_progress",
-        "--delivery-batch-scale",
-        "single_surface",
-        "--delivery-outcome",
-        "outcome_progress",
-        *binding,
-        "--no-global-sync",
-        "--suppress-external-sinks",
-    )
-    refresh_rc, refresh = _run_cli(
-        registry_path,
-        runtime,
-        *refresh_args,
-    )
-
-    assert refresh_rc == 0, refresh
-    assert refresh["settlement_result"]["ok"] is True
-    assert [
-        receipt["step_kind"] for receipt in refresh["settlement_result"]["receipts"]
-    ] == ["validation", "durable_writeback"]
-    refresh_replay_rc, refresh_replay = _run_cli(
-        registry_path,
-        runtime,
-        *refresh_args,
-    )
-    assert refresh_replay_rc == 0, refresh_replay
-    assert refresh_replay["idempotent_replay"] is True
-    assert _classification_count(runtime, "validated_progress") == 1
-
-    fresh_guard_rc, fresh_guard = _run_cli(
-        registry_path,
-        runtime,
-        "quota",
-        "should-run",
-        "--codex-app",
-        "--goal-id",
-        GOAL_ID,
-        "--agent-id",
-        AGENT_ID,
-        "--scan-path",
-        str(project),
-    )
-    assert fresh_guard_rc == 0, fresh_guard
-    assert fresh_guard["selected_todo"]["todo_id"] == successor_id
-
-    spend_args = (
-        "quota",
-        "spend-slot",
-        "--goal-id",
-        GOAL_ID,
-        "--slots",
-        "1",
-        "--source",
-        "heartbeat",
-        "--execute",
-        *binding,
-        "--scan-path",
-        str(project),
-    )
-    spend_rc, spend = _run_cli(registry_path, runtime, *spend_args)
-    replay_rc, replay = _run_cli(registry_path, runtime, *spend_args)
-
-    assert spend_rc == 0, spend
-    assert spend["settlement_result"]["ok"] is True
-    assert [
-        receipt["step_kind"] for receipt in spend["settlement_result"]["receipts"]
-    ] == ["validation", "durable_writeback", "quota_spend"]
-    assert replay_rc == 0, replay
-    assert replay["idempotent_replay"] is True
-    assert replay["appended"] is False
-    assert _spend_run_count(runtime) == 1
-
-    settled_replay_rc, settled_replay = _run_cli(
-        registry_path,
-        runtime,
-        "quota",
-        "should-run",
-        "--codex-app",
-        "--goal-id",
-        GOAL_ID,
-        "--agent-id",
-        AGENT_ID,
-        "--turn-instance-id",
-        TURN_ID,
-        "--scan-path",
-        str(project),
-    )
-    assert settled_replay_rc == 0, settled_replay
-    assert settled_replay["decision"] == "skip"
-    assert settled_replay["effective_action"] == "heartbeat_settled_skip"
-    assert settled_replay["execution_obligation"]["must_attempt_work"] is False
-    assert settled_replay.get("selected_todo") is None
-    assert settled_replay["heartbeat_receipt"]["status"] == "replayed"
-    assert (
-        settled_replay["heartbeat_receipt"]["settlement_identity"]["todo_id"] == TODO_ID
-    )
-    assert _spend_run_count(runtime) == 1
-
-    settled_ack_hint = settled_replay["scheduler_hint"]["codex_app"]["ack_hint"]
-    assert settled_ack_hint["args"]["turn_instance_id"] == TURN_ID
-    assert settled_ack_hint["cli_args"][-3:] == [
-        "--turn-instance-id",
-        TURN_ID,
-        "--execute",
-    ]
-    ack_rc, ack = _run_cli(
-        registry_path,
-        runtime,
-        *settled_ack_hint["cli_args"],
-    )
-    assert ack_rc == 0, ack
-    assert ack["scheduler_state_mutated"] is True
-    assert ack["already_applied"] is False
-
-    fresh_turn_rc, fresh_turn = _run_cli(
-        registry_path,
-        runtime,
-        "quota",
-        "should-run",
-        "--codex-app",
-        "--goal-id",
-        GOAL_ID,
-        "--agent-id",
-        AGENT_ID,
-        "--turn-instance-id",
-        "turn-settlement-cli-2",
-        "--scan-path",
-        str(project),
-    )
-    assert fresh_turn_rc == 0, fresh_turn
-    assert fresh_turn["selected_todo"]["todo_id"] == successor_id
-
-
 def _assert_material_monitor_writeback_can_add_workspace_before_spend(
     tmp_path: Path,
     *,
@@ -1099,7 +905,12 @@ def _assert_material_monitor_writeback_can_add_workspace_before_spend(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1266,7 +1077,12 @@ def test_same_turn_identityless_guard_upgrades_and_settles_full_chain(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1354,7 +1170,12 @@ def test_same_turn_identityless_guard_upgrades_and_settles_full_chain(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1402,7 +1223,12 @@ def test_agent_selects_one_bounded_action_before_delivery_receipt_binding(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1459,113 +1285,6 @@ def test_agent_selects_one_bounded_action_before_delivery_receipt_binding(
     assert _heartbeat_receipt_count(runtime, turn_instance_id) == 2
 
 
-@pytest.mark.parametrize("host_surface", ["codex-app"])
-def test_guided_start_begins_one_turn_and_executes_returned_selection(
-    tmp_path: Path,
-    host_surface: str,
-) -> None:
-    project, runtime, registry_path = _write_fixture(tmp_path)
-    _configure_selectable_alternative(project)
-    packet = build_start_goal_guided_packet(
-        project=project,
-        goal_id=GOAL_ID,
-        agent_id=AGENT_ID,
-        cli_bin="loopx",
-        host_surface=host_surface,
-        goal_text="Start one accountable delivery turn.",
-    )
-    guard_command = next(
-        step["command"]
-        for step in packet["guided_transaction"]["ordered_steps"]
-        if step["id"] == "quota_guard"
-    )
-
-    assert "--begin-turn" in guard_command
-    assert "--turn-instance-id" not in guard_command
-    first_rc, first = _run_generated_cli(
-        guard_command,
-        registry_path=registry_path,
-    )
-
-    assert first_rc == 0, first
-    assert first["interaction_contract"]["cli_channel"]["selection_required"] is True
-    turn_instance_id = first["heartbeat_receipt"]["turn_instance_id"]
-    assert turn_instance_id.startswith("guided-start:")
-    selection = first["interaction_contract"]["cli_channel"]["selection_command"]
-    assert (
-        f"--turn-instance-id {turn_instance_id}" in selection["command_args_template"]
-    )
-    selection_command = f"{selection['route_prefix']} " + selection[
-        "command_args_template"
-    ].replace("{todo_id}", ALTERNATIVE_TODO_ID)
-
-    selected_rc, selected = _run_generated_cli(
-        selection_command,
-        registry_path=registry_path,
-    )
-
-    assert selected_rc == 0, selected
-    assert selected["selected_todo"]["todo_id"] == ALTERNATIVE_TODO_ID
-    assert selected["selected_todo"]["selection_binding"] == "heartbeat_receipt"
-    receipt_identity = selected["heartbeat_receipt"]["settlement_identity"]
-    assert receipt_identity["turn_instance_id"] == turn_instance_id
-    cli_channel = selected["interaction_contract"]["cli_channel"]
-    settlement_plan = cli_channel["settlement_plan"]
-    assert settlement_plan["identity"] == receipt_identity
-    assert f"--turn-instance-id {turn_instance_id}" in json.dumps(settlement_plan)
-    expected_source = "heartbeat"
-    assert any(
-        f"--source {expected_source}" in action
-        for action in cli_channel["next_cli_actions"]
-    )
-    assert _heartbeat_receipt_count(runtime, turn_instance_id) == 2
-
-
-@pytest.mark.parametrize("host_surface", ["codex-app"])
-def test_single_todo_guided_start_keeps_direct_delivery_semantics(
-    tmp_path: Path,
-    host_surface: str,
-) -> None:
-    project, _runtime, registry_path = _write_fixture(tmp_path)
-    packet = build_start_goal_guided_packet(
-        project=project,
-        goal_id=GOAL_ID,
-        agent_id=AGENT_ID,
-        cli_bin="loopx",
-        host_surface=host_surface,
-        goal_text="Start one accountable delivery turn.",
-    )
-    guard_command = next(
-        step["command"]
-        for step in packet["guided_transaction"]["ordered_steps"]
-        if step["id"] == "quota_guard"
-    )
-
-    guard_rc, guard = _run_generated_cli(
-        guard_command,
-        registry_path=registry_path,
-    )
-
-    assert guard_rc == 0, guard
-    assert guard["selected_todo"]["todo_id"] == TODO_ID
-    assert (
-        guard["interaction_contract"]["cli_channel"].get("selection_required") is None
-    )
-    identity = guard["heartbeat_receipt"]["settlement_identity"]
-    assert identity["todo_id"] == TODO_ID
-    assert identity["turn_instance_id"].startswith("guided-start:")
-    settlement_plan = guard["interaction_contract"]["cli_channel"][
-        "settlement_plan"
-    ]
-    assert settlement_plan["identity"] == identity
-    expected_source = "heartbeat"
-    assert expected_source in next(
-        step["command_template"]
-        for step in settlement_plan["ordered_steps"]
-        if step["kind"] == "quota_spend"
-    )
-
-
 def test_legacy_todo_guard_keeps_current_replan_gate_strict(
     tmp_path: Path,
 ) -> None:
@@ -1579,7 +1298,12 @@ def test_legacy_todo_guard_keeps_current_replan_gate_strict(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1634,32 +1358,6 @@ def test_legacy_todo_guard_keeps_current_replan_gate_strict(
     assert "requires a typed semantic delta" in refresh["error"]
 
 
-def test_begin_turn_rejects_a_non_receipt_runtime_profile(tmp_path: Path) -> None:
-    project, runtime, registry_path = _write_fixture(tmp_path)
-
-    guard_rc, guard = _run_cli(
-        registry_path,
-        runtime,
-        "quota",
-        "should-run",
-        "--runtime-profile",
-        "generic_cli",
-        "--goal-id",
-        GOAL_ID,
-        "--agent-id",
-        AGENT_ID,
-        "--begin-turn",
-        "--scan-path",
-        str(project),
-    )
-
-    assert guard_rc == 1, guard
-    assert guard["error_code"] == "QUOTA_VALIDATION_FAILED"
-    assert guard["reason"] == (
-        "--begin-turn requires runtime-profile codex_app_heartbeat"
-    )
-
-
 def test_agent_can_select_eligible_todo_outside_bounded_suggestions(
     tmp_path: Path,
 ) -> None:
@@ -1669,7 +1367,12 @@ def test_agent_can_select_eligible_todo_outside_bounded_suggestions(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1709,7 +1412,12 @@ def test_agent_selection_rejects_unprojected_todo(tmp_path: Path) -> None:
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1754,7 +1462,12 @@ def test_unsuggested_selection_revalidates_current_capability_readiness(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1792,7 +1505,12 @@ def test_first_call_agent_selection_is_qualified_before_receipt_commit(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1824,7 +1542,12 @@ def test_pending_action_selection_does_not_preempt_newly_due_monitor(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1868,7 +1591,12 @@ def test_pending_action_selection_can_bind_exact_newly_due_monitor(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1908,7 +1636,12 @@ def test_pending_action_selection_can_bind_exact_newly_due_monitor(
     poll_args = (
         "quota",
         "monitor-poll",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -1970,7 +1703,12 @@ def test_pending_action_selection_does_not_commit_after_new_user_gate(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2013,7 +1751,12 @@ def test_todoless_autonomous_replan_settles_quota_refresh_spend_chain(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2038,7 +1781,7 @@ def test_todoless_autonomous_replan_settles_quota_refresh_spend_chain(
     assert plan_identity["binding_id"] == identity["binding_id"]
     assert plan_identity["replan_obligation_id"] == obligation_id
     assert plan_identity["turn_instance_id"] == turn_instance_id
-    original_scheduler_ack_args = guard["scheduler_hint"]["codex_app"][
+    original_scheduler_ack_args = guard["scheduler_hint"]["codex_cli"][
         "ack_hint"
     ]["cli_args"]
     original_scheduler_ack_args = original_scheduler_ack_args[
@@ -2114,7 +1857,12 @@ def test_todoless_autonomous_replan_settles_quota_refresh_spend_chain(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2159,7 +1907,12 @@ def test_todoless_autonomous_replan_settles_quota_refresh_spend_chain(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2202,7 +1955,12 @@ def test_todoless_blocked_replan_settles_read_only_external_evidence_without_wor
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2305,7 +2063,12 @@ def test_todo_bound_autonomous_replan_uses_one_binding_for_refresh_and_spend(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2411,7 +2174,12 @@ def test_autonomous_replan_semantic_delta_keeps_accountable_receipt_chain(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2505,7 +2273,12 @@ def test_autonomous_replan_semantic_delta_keeps_accountable_receipt_chain(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2534,7 +2307,12 @@ def test_open_replan_rejects_missing_semantic_delta_before_durable_write(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2591,7 +2369,12 @@ def test_runtime_capability_reentry_preserves_receipt_bound_todo_and_rejects_exp
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2656,7 +2439,12 @@ def test_runtime_capability_reentry_preserves_receipt_bound_autonomous_replan(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2752,7 +2540,12 @@ def test_peer_refresh_rejects_implicit_canonical_workspace_before_writeback(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2847,7 +2640,12 @@ def test_same_turn_receipt_replay_defers_newly_due_higher_priority_monitor(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -2897,7 +2695,12 @@ def test_same_turn_receipt_replay_defers_newly_due_higher_priority_monitor(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -3037,7 +2840,12 @@ def test_read_only_settlement_omits_non_causal_delivery_workspace(
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -3261,7 +3069,12 @@ def test_same_turn_terminal_receipt_replay_preempts_autonomous_replan(
     guard_args = (
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",
@@ -3382,7 +3195,12 @@ def test_legacy_read_only_workspace_mismatch_fails_then_corrects_from_todo_contr
         runtime,
         "quota",
         "should-run",
-        "--codex-app",
+        "-H",
+        "local_scheduler",
+        "-O",
+        "host_automation",
+        "-M",
+        "hosted_automation",
         "--goal-id",
         GOAL_ID,
         "--agent-id",

@@ -9,8 +9,8 @@ import pytest
 
 from loopx.control_plane.scheduler import scheduler_hint
 from loopx.control_plane.scheduler.scheduler_hint import (
-    build_codex_app_scheduler_ack_hint,
-    build_codex_app_scheduler_failure_hint,
+    build_codex_cli_scheduler_ack_hint,
+    build_codex_cli_scheduler_failure_hint,
 )
 
 FACTS_FLAG = "--scheduler-host-facts-chunk"
@@ -22,8 +22,8 @@ def _host_facts(operation: str) -> dict[str, object]:
         "operation": operation,
         "goal_id": "goal-native-followup",
         "agent_id": "agent-native-followup",
-        "surface": "codex_app",
-        "state_key": "scheduler_hint.codex_app.stateful_backoff",
+        "surface": "codex_cli",
+        "state_key": "scheduler_hint.codex_cli.stateful_backoff",
         "reset_token": "reset-native-followup",
         "identity_signature": "identity-native-followup",
         "progression_index": 0,
@@ -80,7 +80,7 @@ def _decode(cli_args: list[str]) -> dict[str, object]:
 
 
 def test_ack_hint_carries_bounded_native_followup_facts_without_changing_verb() -> None:
-    hint = build_codex_app_scheduler_ack_hint(
+    hint = build_codex_cli_scheduler_ack_hint(
         goal_id="goal-native-followup",
         agent_id="agent-native-followup",
         applied_rrule="FREQ=MINUTELY;INTERVAL=15",
@@ -114,7 +114,7 @@ def test_ack_hint_carries_bounded_native_followup_facts_without_changing_verb() 
 
 def test_failure_hint_carries_the_same_versioned_native_boundary() -> None:
     facts = _host_facts("host_failure")
-    hint = build_codex_app_scheduler_failure_hint(
+    hint = build_codex_cli_scheduler_failure_hint(
         goal_id="goal-native-followup",
         agent_id="agent-native-followup",
         failed_rrule="FREQ=MINUTELY;INTERVAL=15",
@@ -138,7 +138,7 @@ def test_native_facts_are_not_dropped_when_cli_args_exceed_legacy_budget() -> No
         f"capability-{index}-" + (chr(97 + index) * 140) for index in range(12)
     ]
 
-    hint = build_codex_app_scheduler_ack_hint(
+    hint = build_codex_cli_scheduler_ack_hint(
         goal_id="goal-native-followup",
         agent_id="agent-native-followup",
         applied_rrule="FREQ=MINUTELY;INTERVAL=15",
@@ -164,7 +164,7 @@ def test_oversized_native_facts_fail_instead_of_falling_back_to_python() -> None
     )
 
     with pytest.raises(ValueError, match="exceed the native CLI transport bound"):
-        build_codex_app_scheduler_ack_hint(
+        build_codex_cli_scheduler_ack_hint(
             goal_id="goal-native-followup",
             agent_id="agent-native-followup",
             applied_rrule="FREQ=MINUTELY;INTERVAL=15",
@@ -200,7 +200,7 @@ def test_native_facts_bind_dash_prefixed_chunks_as_option_values(
 
 
 def test_legacy_hint_builder_without_host_facts_keeps_the_compatibility_route() -> None:
-    hint = build_codex_app_scheduler_ack_hint(
+    hint = build_codex_cli_scheduler_ack_hint(
         goal_id="goal-native-followup",
         agent_id="agent-native-followup",
         applied_rrule="FREQ=MINUTELY;INTERVAL=15",

@@ -8,8 +8,8 @@ from typing import Any
 from ..effect_runtime import _node_executable
 from ..runtime.time import now_local_iso
 from ..scheduler.state import (
-    CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
-    CODEX_APP_SURFACE,
+    CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
+    CODEX_CLI_SURFACE,
     normalize_scheduler_rrule,
 )
 from ..todos.contract import normalize_todo_claimed_by
@@ -99,7 +99,7 @@ def _host_facts(
     )
     if not stateful_backoff:
         raise ValueError(
-            "current quota decision has no Codex App stateful scheduler packet"
+            "current quota decision has no hosted-scheduler stateful packet"
         )
     if str(stateful_backoff.get("state_key") or "") != state_key:
         raise ValueError("--state-key does not match the current scheduler hint")
@@ -262,8 +262,8 @@ def record_quota_scheduler_ack_for_decision(
     goal_id: str,
     agent_id: str | None,
     execute: bool = False,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
     applied_rrule: str | None = None,
     reset_token: str | None = None,
     identity_signature: str | None = None,
@@ -356,8 +356,8 @@ def record_quota_scheduler_failure_for_decision(
     goal_id: str,
     agent_id: str | None,
     execute: bool = False,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
     failed_rrule: str | None = None,
     observed_host_rrule: str | None = None,
     failure_kind: str = "host_tool_failure",

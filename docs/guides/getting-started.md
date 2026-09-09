@@ -11,7 +11,7 @@
 
 对于精选学习路径，先看[开发者手册](/loopx/docs/book/)，再进入完整指南。
 
-## Codex App 与其他 Agent 设置
+## Codex CLI 与其他 Agent 设置
 
 如果你已经在用 Codex、Claude Code、Cursor 或其他终端 Agent，在它已工作于项目根
 的情况下粘贴以下内容：
@@ -34,8 +34,8 @@ Then run `loopx doctor`. Work only from the current project root:
 2. If the project is not connected, prefer `loopx connect`; use
    `loopx bootstrap` only when project state clearly needs initialization.
 3. Ensure `.loopx/`, `.codex/goals/`, and `.local/` are ignored.
-4. Set up the thin LoopX heartbeat for this surface. For Codex App, start the
-   recurring automation at 3 minutes, then follow
+4. Set up the thin LoopX heartbeat for this surface. For Codex CLI, set the
+   visible `/goal` to the generated thin task_body, then follow
    `quota should-run.scheduler_hint` for backoff and self-stop behavior.
 5. Stop after setup and report the active state id, current user gate, top
    agent todo, and next safe action.
@@ -126,7 +126,7 @@ loopx start-goal --guided --project . --goal-text "<goal text>" \
 全局管理器或 PR 评审命令使用 `loopx slash-commands` 打印当前规范命令列表与回退
 CLI 形态。
 
-对应宿主使用 `codex-app`、`codex-cli-tui`、`opencode` 或
+对应宿主使用 `codex-cli-tui`、`opencode` 或
 `opencode2`。确切宿主未知时，省略
 `--host-surface` 一次：LoopX 返回带精确重跑命令的只读选择 gate，且不写项目状态。
 这防止升级把终端启动静默路由到桌面 App heartbeat。
@@ -145,8 +145,8 @@ loopx backup-state --project .
 loopx backup-state --project . --execute
 ```
 
-备份默认写入 `~/.codex/loopx/backups`。它捕获共享 LoopX runtime root、Codex App
-自动化、已安装的 `loopx-*` skills、当前项目状态，以及每个可达项目的 `.loopx`、
+备份默认写入 `~/.codex/loopx/backups`。它捕获共享 LoopX runtime root、已安装的
+`loopx-*` skills、当前项目状态，以及每个可达项目的 `.loopx`、
 `.codex/goals`、`.claude/goals`、`.local/goals`、registry 声明的活动状态与从全局
 registry 发现的 source registry。缺失或过期的项目路由在 manifest 中保持可见。
 仅当刻意需要窄归档时使用 `--current-project-only`。把归档与 manifest 当作私有本地
@@ -192,8 +192,7 @@ next safe action.
 用户 todo、顶层 agent todo 与下一个安全动作。除非用户明确要求在设置回合做交付，
 否则设置回合不应为交付花费 quota。Agent 仍应在设置期间生成
 `heartbeat-prompt --thin` 并把该 body 安装进界面：Codex CLI 得到
-`/goal <thin task_body>`，而 Codex App 得到从 3 分钟开始并随后遵循
-`scheduler_hint` 的 heartbeat 自动化 body。
+`/goal <thin task_body>`，随后遵循 `scheduler_hint`。
 
 一旦 `loopx` 安装完成，生成更严格的仓库专属设置消息：
 
@@ -738,9 +737,8 @@ loopx quota spend-slot \
 
 不要为安静的 `should_run=false` skip、preflight 失败或纯 dry-run 预览追加花费。
 
-生成受 guard 的 Codex App heartbeat body。首次运行 Codex App 上手应在 3 分钟
-bootstrap 节奏安装该 body，除非用户明确要求其他间隔；后续等待应遵循
-`quota should-run.scheduler_hint`：
+生成受 guard 的 heartbeat body。首次上手应在 bootstrap 节奏安装该 body，
+除非用户明确要求其他间隔；后续等待应遵循 `quota should-run.scheduler_hint`：
 
 ```bash
 loopx heartbeat-prompt --thin --goal-id your-project-goal
@@ -768,7 +766,7 @@ loopx heartbeat-prompt --compact --goal-id your-project-goal \
 ```
 
 一旦设置 `coordination.registered_agents`，不带 `--agent-id` 调用
-`heartbeat-prompt` 会 fail closed；这让过期的 Codex App 自动化暴露升级错误，而不是
+`heartbeat-prompt` 会 fail closed；这让过期的宿主自动化暴露升级错误，而不是
 在无身份或无范围的情况下静默运行。没有 `coordination.registered_agents` 的旧 goal
 registry 在 scoped heartbeat 或 todo claim 点名 agent 时也 fail closed；先注册
 agent 身份，而不是让 worker 发明 claim id。
@@ -946,7 +944,7 @@ operator-gate           record a human gate decision
 reward                  append run-bound human reward
 todo                    add, claim, complete, update, supersede, or archive todos
 quota                   inspect or account for automatic agent turns
-heartbeat-prompt        generate Codex App heartbeat task bodies
+heartbeat-prompt        generate hosted-scheduler heartbeat task bodies
 upgrade-plan            plan local default-upgrade heartbeat propagation
 review-packet           package a CLI-visible handoff packet
 serve-status            serve local status JSON for the dashboard

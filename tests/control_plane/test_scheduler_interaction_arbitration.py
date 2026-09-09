@@ -11,9 +11,6 @@ from loopx.control_plane.scheduler.arbitration import (
     build_scheduler_arbitration,
 )
 from loopx.control_plane.scheduler.scheduler_hint import build_scheduler_hint
-from loopx.control_plane.scheduler.execution_context import (
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.work_items.interaction_contract import (
     build_interaction_contract,
 )
@@ -25,7 +22,7 @@ AGENT_SCOPE_ACTIONS = {
     "reassignment_required",
     "successor_replan_required",
 }
-APP_CONTEXT = scheduler_execution_context_for_runtime_profile("codex_app_heartbeat")
+APP_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 def _app_scheduler_hint(payload: dict, **kwargs) -> dict:
@@ -328,8 +325,8 @@ def test_true_user_gate_still_blocks_required_non_delivery_work() -> None:
     assert contract["agent_channel"]["must_attempt"] is False
     assert contract["response_plan"]["action_sequence"] == ["notify", "wait"]
     assert hint["action"] == "backoff_waiting_for_user"
-    assert hint["codex_app"]["recommended_interval_minutes"] == 30
-    assert hint["codex_app"]["example_progression_minutes"] == [30, 60]
+    assert hint["codex_cli"]["recommended_interval_minutes"] == 30
+    assert hint["codex_cli"]["example_progression_minutes"] == [30, 60]
 
 
 def test_human_gate_respects_a_tighter_continuous_monitor_deadline(
@@ -369,10 +366,10 @@ def test_human_gate_respects_a_tighter_continuous_monitor_deadline(
 
     assert hint["action"] == "backoff_waiting_for_user"
     assert hint["cadence_class"] == "human_gate"
-    assert hint["codex_app"]["recommended_interval_minutes"] == 3
-    assert hint["codex_app"]["example_progression_minutes"] == [3]
+    assert hint["codex_cli"]["recommended_interval_minutes"] == 3
+    assert hint["codex_cli"]["example_progression_minutes"] == [3]
     assert hint["cold_path_detail"]["cadence_context"]["cap_minutes"] == 3
-    assert hint["reset_policy"]["codex_app_initial_interval_minutes"] == 3
+    assert hint["reset_policy"]["codex_cli_initial_interval_minutes"] == 3
 
 
 def test_raw_should_run_cannot_override_blocking_gate() -> None:
@@ -518,8 +515,8 @@ def test_blocked_peer_coordination_returns_to_owner_without_polling() -> None:
     )
 
     assert hint["action"] == "return_to_owner_until_material_change"
-    assert hint["codex_app"]["host_action"] == ("pause_or_delete_current_heartbeat")
-    assert hint["codex_app"]["host_action_required"] is True
+    assert hint["codex_cli"]["host_action"] == ("pause_or_delete_current_heartbeat")
+    assert hint["codex_cli"]["host_action_required"] is True
     assert hint["unchanged_poll"]["local_scheduler"] == "stop"
     assert hint["unchanged_poll"]["final_quota_replan_check_enabled"] is False
 

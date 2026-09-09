@@ -12,7 +12,6 @@ GOAL_RUNTIME_CONTINUATION_SCHEMA_VERSION = "goal_runtime_continuation_v0"
 
 class HostSurface(str, Enum):
     ARK_MANAGED_AGENT = "ark_managed_agent"
-    CODEX_APP = "codex_app"
     CODEX_CLI = "codex_cli"
     GENERIC_CLI = "generic_cli"
     CLAUDE_CODE = "claude_code"
@@ -35,7 +34,6 @@ class ExecutionMode(str, Enum):
 
 class SchedulerRuntimeProfile(str, Enum):
     ARK_MANAGED_AGENT_GOAL = "ark_managed_agent_goal"
-    CODEX_APP_HEARTBEAT = "codex_app_heartbeat"
     CODEX_CLI_VISIBLE = "codex_cli"
     CLAUDE_CODE_VISIBLE = "claude_code"
     GENERIC_CLI_AGENT_LOOP = "generic_cli"
@@ -68,23 +66,11 @@ NATIVE_GOAL_RUNTIME_PROFILES = frozenset(
     }
 )
 
-GUIDED_START_TURN_RUNTIME_PROFILES = frozenset(
-    {
-        SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT,
-    }
-)
-
-
 _SCHEDULER_RUNTIME_PROFILE_CONTEXTS = {
     SchedulerRuntimeProfile.ARK_MANAGED_AGENT_GOAL: (
         HostSurface.ARK_MANAGED_AGENT,
         SchedulerOwner.GOAL_RUNTIME,
         ExecutionMode.INTERACTIVE,
-    ),
-    SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT: (
-        HostSurface.CODEX_APP,
-        SchedulerOwner.HOST_AUTOMATION,
-        ExecutionMode.HOSTED_AUTOMATION,
     ),
     SchedulerRuntimeProfile.CODEX_CLI_VISIBLE: (
         HostSurface.CODEX_CLI,
@@ -124,9 +110,9 @@ class SchedulerExecutionContext:
     source: str
 
     @property
-    def codex_app_applicable(self) -> bool:
+    def codex_cli_applicable(self) -> bool:
         return (
-            self.host_surface is HostSurface.CODEX_APP
+            self.host_surface is HostSurface.LOCAL_SCHEDULER
             and self.scheduler_owner is SchedulerOwner.HOST_AUTOMATION
             and self.execution_mode is ExecutionMode.HOSTED_AUTOMATION
         )
@@ -139,8 +125,8 @@ class SchedulerExecutionContext:
             "execution_mode": self.execution_mode.value,
             "source": self.source,
             "valid": True,
-            "codex_app_applicability": (
-                "applicable" if self.codex_app_applicable else "not_applicable"
+            "codex_cli_applicability": (
+                "applicable" if self.codex_cli_applicable else "not_applicable"
             ),
         }
 
@@ -166,7 +152,7 @@ class SchedulerExecutionContextResolution:
             "execution_mode": supplied.get("execution_mode"),
             "source": supplied.get("source") or "explicit",
             "valid": False,
-            "codex_app_applicability": "blocked_invalid_context",
+            "codex_cli_applicability": "blocked_invalid_context",
             "errors": list(self.errors),
         }
 
@@ -178,11 +164,6 @@ def _validation_errors(context: SchedulerExecutionContext) -> list[str]:
         HostSurface.GENERIC_CLI,
         HostSurface.CLAUDE_CODE,
     }
-    if context.host_surface is HostSurface.CODEX_APP:
-        if context.scheduler_owner is not SchedulerOwner.HOST_AUTOMATION:
-            errors.append("codex_app requires scheduler_owner=host_automation")
-        if context.execution_mode is not ExecutionMode.HOSTED_AUTOMATION:
-            errors.append("codex_app requires execution_mode=hosted_automation")
     if context.host_surface is HostSurface.ARK_MANAGED_AGENT:
         if context.scheduler_owner is not SchedulerOwner.GOAL_RUNTIME:
             errors.append("ark_managed_agent requires scheduler_owner=goal_runtime")
@@ -336,8 +317,6 @@ def scheduler_runtime_profile_for_execution_context(
 def _render_scheduler_runtime_profile_args(
     profile: SchedulerRuntimeProfile,
 ) -> str:
-    if profile is SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT:
-        return " --codex-app"
     return f" --runtime-profile {shlex.quote(profile.value)}"
 
 
@@ -441,7 +420,7 @@ def build_goal_runtime_continuation(
             continuation["recheck_after_seconds"] = frontier_recheck_after_seconds
             continuation["recheck_source"] = "frontier_earliest_material_transition"
         else:
-            host_cadence = scheduler_hint.get("codex_app")
+            host_cadence = scheduler_hint.get("codex_cli")
             host_cadence = host_cadence if isinstance(host_cadence, Mapping) else {}
             recommended_interval = host_cadence.get("recommended_interval_minutes")
             if not isinstance(recommended_interval, int) or recommended_interval <= 0:
@@ -465,22 +444,22 @@ def apply_scheduler_execution_context(
         raise ValueError("cannot apply an invalid scheduler execution context")
     context = resolution.context
 
-    codex_app = (
-        result.get("codex_app") if isinstance(result.get("codex_app"), dict) else {}
+    codex_cli = (
+        result.get("codex_cli") if isinstance(result.get("codex_cli"), dict) else {}
     )
-    if context.codex_app_applicable:
-        codex_app["applicability"] = "applicable"
+    if context.codex_cli_applicable:
+        codex_cli["applicability"] = "applicable"
         backoff = (
-            codex_app.get("stateful_backoff")
-            if isinstance(codex_app.get("stateful_backoff"), dict)
+            codex_cli.get("stateful_backoff")
+            if isinstance(codex_cli.get("stateful_backoff"), dict)
             else {}
         )
         apply_needed = (
             backoff.get("apply_needed") is True
-            or codex_app.get("host_action_required") is True
+            or codex_cli.get("host_action_required") is True
         )
         ack_needed = backoff.get("ack_needed") is True
-        result["codex_app"] = codex_app
+        result["codex_cli"] = codex_cli
         execution_phase = {
             "schema_version": "scheduler_execution_phase_v0",
             "host_surface": context.host_surface.value,
@@ -509,7 +488,7 @@ def apply_scheduler_execution_context(
     )
 
     result["execution_context"] = resolution.projection()
-    result["codex_app"] = {
+    result["codex_cli"] = {
         "applicability": "not_applicable",
         "reason_code": f"cadence_owned_by_{context.scheduler_owner.value}",
         "apply": "none",
@@ -520,7 +499,7 @@ def apply_scheduler_execution_context(
     reset_policy = result.get("reset_policy")
     if isinstance(reset_policy, dict):
         for key in tuple(reset_policy):
-            if key.startswith("codex_app_"):
+            if key.startswith("codex_cli_"):
                 reset_policy.pop(key, None)
     cold_path = result.get("cold_path_detail")
     if isinstance(cold_path, dict):
@@ -528,7 +507,7 @@ def apply_scheduler_execution_context(
         reset_detail = cold_path.get("reset_policy_detail")
         if isinstance(reset_detail, dict):
             for key in tuple(reset_detail):
-                if key.startswith("codex_app_"):
+                if key.startswith("codex_cli_"):
                     reset_detail.pop(key, None)
     owner = context.scheduler_owner.value
     result["execution_phase"] = {
@@ -541,7 +520,7 @@ def apply_scheduler_execution_context(
         "ack_needed": False,
         "acknowledged": False,
         "completion_reason": (
-            "selected scheduler owner requires no Codex App apply or ACK"
+            "selected scheduler owner requires no hosted-scheduler apply or ACK"
         ),
     }
     if goal_runtime_continuation is not None:

@@ -82,8 +82,7 @@ loopx quota should-run \
   --runtime-profile codex_cli
 ```
 
-你应该看到 Host runtime 指向 `codex_cli`，scheduler owner 属于 Goal/agent loop，而不是 Codex App
-heartbeat。若 packet 报告 scheduler context 缺失，先修复 runtime profile，不要忽略 warning。
+你应该看到 Host runtime 指向 `codex_cli`，scheduler owner 属于 Goal/agent loop。若 packet 报告 scheduler context 缺失，先修复 runtime profile，不要忽略 warning。
 
 ## 5. 保持身份与 Todo 归属
 
@@ -137,7 +136,7 @@ Host 的 Goal resume 表面恢复，而不是反复重发完整任务。
 到这里，你已经可以在不修改 LoopX core 的情况下：
 
 - 让现有 Git 项目拥有可恢复的 Goal、Todo、Gate 与 evidence；
-- 从 Codex App 或 visible Codex CLI TUI 启动同一套项目状态；
+- 从 visible Codex CLI TUI 启动同一套项目状态；
 - 在 Host 切换时保留 authority、identity 与 workspace boundary；
 - 用 status、history 与 quota 检查真实 continuation。
 

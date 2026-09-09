@@ -9,10 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from loopx.control_plane.scheduler.execution_context import (
-    SchedulerRuntimeProfile,
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.quota import (
     build_quota_should_run as _build_quota_should_run,
     render_quota_should_run_markdown,
@@ -34,9 +30,12 @@ FULL_AIRLINE_ACTION = (
     "source-heldout vector-aware scorer gate."
 )
 USER_TODO = "[P1] Decide whether to approve a no-submit setup check."
-CODEX_APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-)
+CODEX_APP_SCHEDULER_CONTEXT = {
+    "host_surface": "local_scheduler",
+    "scheduler_owner": "host_automation",
+    "execution_mode": "hosted_automation",
+    "source": "explicit",
+}
 
 
 def build_quota_should_run(*args, **kwargs):

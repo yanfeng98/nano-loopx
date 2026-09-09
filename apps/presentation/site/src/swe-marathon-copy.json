@@ -25,7 +25,7 @@
       "codex-cli": "Regressed in this runner; transport/host mismatch present",
       "heartbeat": "Highest reward and partial; highest cost"
     },
-    "runnerNote": "Runner naming: codex-cli is Codex CLI Goal-profile-driven LoopX, but this benchmark substitutes app-server transport for the live TUI; heartbeat is the LoopX Turn / automation arm, driven externally through generic_cli rather than a real Codex App automation host.",
+    "runnerNote": "Runner naming: codex-cli is Codex CLI Goal-profile-driven LoopX, but this benchmark substitutes app-server transport for the live TUI; heartbeat is the LoopX Turn / automation arm, driven externally through generic_cli rather than a real recurring host automation.",
     "backgroundEyebrow": "01 / Why this benchmark",
     "backgroundTitle": "Long enough to expose the work after ‘done.’",
     "backgroundBody": "SWE-Marathon v1.1 contains 20 realistic, multi-hour software tasks. It combines visible and hidden tests, adversarial checks, and, for product clones, computer-use verification. This study used 15 non-GPU tasks so every arm shared one matched denominator.",
@@ -253,7 +253,7 @@
       "codex-cli": "本 runner 中退化；存在传输/Host 错配",
       "heartbeat": "Reward 与 partial 最高；成本也最高"
     },
-    "runnerNote": "Runner 命名：codex-cli 是 Codex CLI Goal profile 驱动 LoopX，但本 benchmark 以 app-server 代替真实 TUI 承载；heartbeat 才是 LoopX Turn / Automation arm，由 generic_cli 外部调度，并非真实 Codex App automation host。",
+    "runnerNote": "Runner 命名：codex-cli 是 Codex CLI Goal profile 驱动 LoopX，但本 benchmark 以 app-server 代替真实 TUI 承载；heartbeat 才是 LoopX Turn / Automation arm，由 generic_cli 外部调度，并非真实宿主 automation。",
     "backgroundEyebrow": "01 / 为什么选这个 Benchmark",
     "backgroundTitle": "它足够长，能看见 Agent 在“完成”之后做什么。",
     "backgroundBody": "SWE-Marathon v1.1 包含 20 个真实、多小时的软件工程任务，使用可见与隐藏测试、对抗性检查，并对产品克隆任务加入 Computer-Use 验证。本实验选取其中 15 个非 GPU 任务，使四个 arm 保持同一 matched 分母。",

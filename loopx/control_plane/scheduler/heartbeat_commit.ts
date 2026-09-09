@@ -16,8 +16,8 @@ import {
 } from "../runtime_decode.ts";
 import {
   buildSchedulerState,
-  CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
-  CODEX_APP_SURFACE,
+  CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
+  CODEX_CLI_SURFACE,
   mergeSchedulerHostUpdateFailure,
   normalizeSchedulerHostUpdateFailures,
   normalizeSchedulerRrule,
@@ -305,11 +305,11 @@ function requestObject(value: unknown): SchedulerHeartbeatCommitRequest {
   const runtimeRoot = requiredString(request.runtime_root, "runtime_root").trim();
   const goalId = requiredString(request.goal_id, "goal_id").trim();
   const agentId = requiredString(request.agent_id, "agent_id").trim();
-  const surface = textOrDefault(request.surface, "surface", CODEX_APP_SURFACE);
+  const surface = textOrDefault(request.surface, "surface", CODEX_CLI_SURFACE);
   const stateKey = textOrDefault(
     request.state_key,
     "state_key",
-    CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
   );
   const resetToken = requiredString(request.reset_token, "reset_token").trim();
   const identitySignature = requiredString(

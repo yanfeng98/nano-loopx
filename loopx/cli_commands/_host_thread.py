@@ -10,7 +10,6 @@ def current_host_thread_id(args: argparse.Namespace) -> str | None:
         return str(explicit)
     host_surface = getattr(args, "host_surface", None)
     if host_surface in {
-        "codex-app",
         "codex-cli-tui",
     }:
         return os.environ.get("CODEX_THREAD_ID") or None

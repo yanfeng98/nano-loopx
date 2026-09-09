@@ -81,7 +81,7 @@ loopx start-goal --guided --project . \
   --goal-id <goal-id> \
   --agent-id <agent-id> \
   --goal-text "<goal text>" \
-  --host-surface codex-app
+  --host-surface codex-cli-tui
 
 loopx start-goal --guided --project . \
   --goal-id <goal-id> \
@@ -171,7 +171,7 @@ package 可能需要各自的 migration/rollback；不要把 wrapper 回滚描�
 
 ## Scheduler 收敛入口
 
-当 Codex App packet 报告 `stateful_backoff.apply_needed=true` 时，先让 Host 应用
+当宿主 packet 报告 `stateful_backoff.apply_needed=true` 时，先让 Host 应用
 `recommended_rrule` 并读取真实结果，再执行 packet 中完整的 `ack_hint.cli_args`。当前通常是：
 
 ```bash

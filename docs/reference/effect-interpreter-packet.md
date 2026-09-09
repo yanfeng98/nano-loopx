@@ -96,8 +96,8 @@ observation 指回 Loop:
 | `execution_mode` | 有序 effect program 的执行策略(`serial` / `parallel` / `interleaved`) |
 | `scheduler_hint.action` | 调度器周边决策 |
 | `scheduler_hint.cadence_class` | 下一次 host 唤醒的节奏 |
-| `scheduler_hint.codex_app.ack_hint.cli_args` | Host ACK effect |
-| `scheduler_hint.codex_app.failure_hint.cli_args` | Host 失败 effect |
+| `scheduler_hint.codex_cli.ack_hint.cli_args` | Host ACK effect |
+| `scheduler_hint.codex_cli.failure_hint.cli_args` | Host 失败 effect |
 
 `EffectTurn.next_effect` 是该槽位的代码透镜。它保持数据编码的 handler 可见:host 调用 CLI 动作,并通过 ACK/失败 hint 结算成功或失败,而不是让 LoopX 跨 Turn 持有一个 callable。当下一个 effect 是有序 effect program 时,`execution_mode` 是数据编码的策略;当 packet 未声明时默认为 `None`。
 

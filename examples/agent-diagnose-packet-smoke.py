@@ -83,7 +83,7 @@ def assert_diagnose_markdown_separates_status_and_packet_goal_counts() -> None:
                     "scheduler_hint": {
                         "action": "run_now",
                         "cadence_class": "active_work",
-                        "codex_app": {
+                        "codex_cli": {
                             "apply": "update_rrule",
                             "apply_needed": True,
                             "recommended_rrule": "FREQ=MINUTELY;INTERVAL=3",
@@ -329,7 +329,7 @@ def main() -> int:
         scheduler_hint = selected["quota_signals"]["scheduler_hint"]
         assert scheduler_hint["schema_version"] == "diagnose_scheduler_hint_summary_v0", selected
         assert "local_scheduler" not in str(scheduler_hint), scheduler_hint
-        assert scheduler_hint["codex_app"]["no_spend_for_cadence_change"] is True, scheduler_hint
+        assert scheduler_hint["codex_cli"]["no_spend_for_cadence_change"] is True, scheduler_hint
         assert selected["agent_reasoning_checklist"], selected
         assert any(
             " diagnose " in command and f"--goal-id {GOAL_ID}" in command

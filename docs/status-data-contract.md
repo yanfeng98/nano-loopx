@@ -1238,7 +1238,7 @@ writeback。`execution_obligation`、`heartbeat_recommendation`、
 `protocol_action_packet` 保持该契约下的兼容与下钻字段，不是竞争真相源。
 
 同一 payload 包含 `scheduler_hint.schema_version=scheduler_hint_v0`。
-这是 host 运行时的调度契约，不是 delivery 权限：Codex App 可以为长等待退避其
+这是 host 运行时的调度契约，不是 delivery 权限：宿主可以为长等待退避其
 自动化 cadence，而 Codex CLI TUI 与 Claude Code loop 可以在重复未变化轮询后运行
 一次最终 quota/replan 检查，然后只在 guard 仍未变化时退出/停止。Cadence 变更、
 最终检查与 loop 自停从不花 quota。Host scheduler 把
@@ -1253,14 +1253,14 @@ writeback。`execution_obligation`、`heartbeat_recommendation`、
 `loopx quota should-run --include-detail scheduler` 时从
 `scheduler_hint.cold_path_detail` 可用。Reset 在未变化退避恢复前把 Codex
 App/本地 cadence 回到当前 profile 初始间隔，且不花 quota。
-Codex App heartbeat 只在 `codex_app.stateful_backoff.apply_needed=true` 且
-`codex_app.recommended_rrule` 存在时使用 `automation_update`。如果该更新成功，
-Agent 必须运行 `codex_app.ack_hint.cli_args`；当前 payload 用
+Host 调度 heartbeat 只在 `codex_cli.stateful_backoff.apply_needed=true` 且
+`codex_cli.recommended_rrule` 存在时使用 `automation_update`。如果该更新成功，
+Agent 必须运行 `codex_cli.ack_hint.cli_args`；当前 payload 用
 `quota scheduler-ack-current`，让 LoopX 重读最新 hint，然后在运行时根下持久化
 `reset_token`、`identity_signature`、`progression_index` 与
 `last_applied_rrule`。同一身份重复时，LoopX 在已应用间隔流逝后推进 progression，
 直到最大间隔。即时 post-ACK 读回保持在被确认 RRULE 上，使重复调和收敛而非振荡。
-当 reset token 变化时，下一个投影 RRULE 回到 `reset_policy.codex_app_initial_rrule`。
+当 reset token 变化时，下一个投影 RRULE 回到 `reset_policy.codex_cli_initial_rrule`。
 如果当前期望 RRULE 已应用，`recommended_rrule` 被省略且应跳过 host 更新。
 当该匹配读回仍需要 reset-token/identity 绑定时，`ack_needed=true`；
 直接运行绑定 ack。否则无需 scheduler 动作。

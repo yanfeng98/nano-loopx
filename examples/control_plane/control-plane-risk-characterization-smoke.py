@@ -19,9 +19,6 @@ if str(REPO_ROOT) not in sys.path:
 
 from loopx.quota import build_quota_should_run  # noqa: E402
 from loopx.review_packet import build_review_packet  # noqa: E402
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.testing.quota_fixtures import (  # noqa: E402
     quota_status_payload,
     quota_todo_item as todo_item,
@@ -29,9 +26,7 @@ from loopx.control_plane.testing.quota_fixtures import (  # noqa: E402
 )
 
 
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 GOAL_ID = "control-plane-risk-characterization"
@@ -450,12 +445,12 @@ def assert_reassignment_scheduler_contract() -> None:
     scheduler = quota["scheduler_hint"]
     assert scheduler["action"] == "backoff_until_reassigned", scheduler
     assert scheduler["cadence_class"] == "agent_scope_wait", scheduler
-    assert scheduler["codex_app"]["recommended_rrule"] == (
+    assert scheduler["codex_cli"]["recommended_rrule"] == (
         "FREQ=MINUTELY;INTERVAL=10"
     ), scheduler
-    assert scheduler["codex_app"]["recommended_interval_minutes"] == 10, scheduler
-    assert scheduler["codex_app"]["stateful_backoff"]["apply_needed"] is True, scheduler
-    assert scheduler["codex_app"]["no_spend_for_cadence_change"] is True, scheduler
+    assert scheduler["codex_cli"]["recommended_interval_minutes"] == 10, scheduler
+    assert scheduler["codex_cli"]["stateful_backoff"]["apply_needed"] is True, scheduler
+    assert scheduler["codex_cli"]["no_spend_for_cadence_change"] is True, scheduler
 
     packet = build_review_packet(payload, goal_id=GOAL_ID)
     assert packet["ok"] is True, packet

@@ -117,13 +117,13 @@ def _full_decision() -> dict[str, object]:
             "action": "run_now",
             "cadence_class": "active_work",
             "spend_policy": "spend after validated writeback",
-            "codex_app": {
+            "codex_cli": {
                 "apply": "update_automation_cadence_if_possible",
                 "host_action": "update_current_heartbeat_rrule",
                 "recommended_rrule": "FREQ=MINUTELY;INTERVAL=3",
                 "no_spend_for_cadence_change": True,
                 "stateful_backoff": {
-                    "state_key": "scheduler_hint.codex_app.stateful_backoff",
+                    "state_key": "scheduler_hint.codex_cli.stateful_backoff",
                     "current_rrule": "FREQ=MINUTELY;INTERVAL=60",
                     "apply_needed": True,
                     "state_status": "reset_required",
@@ -344,9 +344,9 @@ def test_turn_envelope_derives_canonical_slots_through_effect_turn() -> None:
     assert envelope["execution_policy"]["safe_bypass_allowed"] is False
     assert envelope["writeback"]["spend_after_validation"] is True
     assert (
-        envelope["scheduler"]["codex_app"]["stateful_backoff"]["apply_needed"] is True
+        envelope["scheduler"]["codex_cli"]["stateful_backoff"]["apply_needed"] is True
     )
-    assert envelope["scheduler"]["codex_app"]["ack_cli_args"][0] == "quota"
+    assert envelope["scheduler"]["codex_cli"]["ack_cli_args"][0] == "quota"
     assert (
         envelope["contract_capsule"]["work_lane_contract"]["lane"] == "advancement_task"
     )
@@ -504,20 +504,6 @@ def test_three_long_child_briefs_stay_within_turn_envelope_budget() -> None:
     assert envelope["compaction"]["within_budget"] is True
 
 
-def test_turn_envelope_full_decision_preserves_codex_app_profile() -> None:
-    envelope = build_turn_envelope(
-        _full_decision(),
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
-    )
-
-    assert envelope["detail_ref"]["full_decision"] == (
-        "loopx --format json quota should-run --goal-id fixture-goal "
-        "--agent-id codex-fixture --codex-app"
-    )
-
-
 def test_turn_envelope_detail_refs_preserve_explicit_runtime_root() -> None:
     payload = _full_decision()
     payload["runtime_root"] = "/tmp/loopx custom runtime"
@@ -621,9 +607,9 @@ def test_turn_envelope_preserves_exact_scheduler_ack_argv() -> None:
     cli_args.extend(
         [
             "--surface",
-            "codex_app",
+            "codex_cli",
             "--state-key",
-            "scheduler_hint.codex_app.stateful_backoff",
+            "scheduler_hint.codex_cli.stateful_backoff",
             "--applied-rrule",
             "FREQ=MINUTELY;INTERVAL=3",
             "--host-match-observed",
@@ -634,10 +620,10 @@ def test_turn_envelope_preserves_exact_scheduler_ack_argv() -> None:
             "--execute",
         ]
     )
-    source["scheduler_hint"]["codex_app"]["ack_hint"]["cli_args"] = cli_args
+    source["scheduler_hint"]["codex_cli"]["ack_hint"]["cli_args"] = cli_args
 
     envelope = build_turn_envelope(source)
-    compact_args = envelope["scheduler"]["codex_app"]["ack_cli_args"]
+    compact_args = envelope["scheduler"]["codex_cli"]["ack_cli_args"]
 
     assert compact_args == cli_args
     assert compact_args.count("--available-capability") == len(capabilities)
@@ -653,17 +639,17 @@ def test_turn_envelope_preserves_exact_scheduler_ack_argv() -> None:
 
 def test_turn_envelope_omits_oversized_scheduler_argv_instead_of_truncating() -> None:
     source = _full_decision()
-    source["scheduler_hint"]["codex_app"]["ack_hint"]["cli_args"] = [
+    source["scheduler_hint"]["codex_cli"]["ack_hint"]["cli_args"] = [
         "quota",
         "x" * 513,
         "--execute",
     ]
 
     envelope = build_turn_envelope(source)
-    codex_app = envelope["scheduler"]["codex_app"]
+    codex_cli = envelope["scheduler"]["codex_cli"]
 
-    assert "ack_cli_args" not in codex_app
-    assert codex_app["ack_cli_args_detail_ref"] == {
+    assert "ack_cli_args" not in codex_cli
+    assert codex_cli["ack_cli_args_detail_ref"] == {
         "reason": "omitted_to_preserve_executable_argv",
         "request": "loopx quota should-run --include-detail scheduler",
     }
@@ -739,9 +725,9 @@ def test_turn_envelope_stays_actionable_during_scheduler_reset() -> None:
     ack_cli_args.extend(
         [
             "--surface",
-            "codex_app",
+            "codex_cli",
             "--state-key",
-            "scheduler_hint.codex_app.stateful_backoff",
+            "scheduler_hint.codex_cli.stateful_backoff",
             "--applied-rrule",
             "FREQ=MINUTELY;INTERVAL=3",
             "--execute",
@@ -754,17 +740,17 @@ def test_turn_envelope_stays_actionable_during_scheduler_reset() -> None:
         *ack_cli_args[6:-4],
         "--failed-rrule",
         "FREQ=MINUTELY;INTERVAL=3",
-        "--codex-app-current-rrule",
+        "--observed-host-rrule",
         "FREQ=MINUTELY;INTERVAL=3",
         "--execute",
     ]
-    codex_app = source["scheduler_hint"]["codex_app"]
-    codex_app["ack_hint"]["cli_args"] = ack_cli_args
-    codex_app["failure_hint"] = {"cli_args": failure_cli_args}
+    codex_cli = source["scheduler_hint"]["codex_cli"]
+    codex_cli["ack_hint"]["cli_args"] = ack_cli_args
+    codex_cli["failure_hint"] = {"cli_args": failure_cli_args}
     source["protocol_action_packet"] = build_protocol_action_packet(source)
 
     envelope = build_turn_envelope(source)
-    compact_app = envelope["scheduler"]["codex_app"]
+    compact_app = envelope["scheduler"]["codex_cli"]
 
     assert envelope["action"]["selected_todo"]["text_ref"] == (
         "action.recommended_action"

@@ -145,7 +145,6 @@ def _seed_visible_demo_control_plane(
         onboarding_scan_enabled=False,
         accept_onboarding_agent_todos=False,
         begin_autonomous_advance=True,
-        codex_app_heartbeat="no",
         force=False,
         dry_run=False,
         sync_global=False,

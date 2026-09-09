@@ -57,7 +57,7 @@ def _actual_entry_packet() -> dict[str, Any]:
         "command_pack_detail_included": False,
         "goal_id": "fixture-goal",
         "agent_id": "codex-fixture",
-        "host_surface": "codex-cli",
+        "host_surface": "codex-cli-tui",
         "guided_transaction": TRANSACTION,
         "safety_contract": {
             "writes_registry": False,

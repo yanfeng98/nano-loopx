@@ -33,6 +33,14 @@ SELECTED_TODO_TOOL_BEHAVIOR_RECEIPT_SCHEMA_VERSION = (
 )
 SELECTED_TODO_TOOL_BEHAVIOR_MAX_CALLS = 6
 
+SELECTED_TODO_TOOL_HOSTED_CONTEXT = {
+    "host_surface": "local_scheduler",
+    "scheduler_owner": "host_automation",
+    "execution_mode": "hosted_automation",
+    "source": "explicit",
+}
+
+
 SELECTED_TODO_TOOL_FIXTURE_GOAL_ID = "portfolio-goal"
 SELECTED_TODO_TOOL_FIXTURE_AGENT_ID = "codex-portfolio"
 SELECTED_TODO_TOOL_FIXTURE_TODO_ID = "todo_portfolio001"
@@ -259,7 +267,7 @@ def _build_fixture(
         agent_id=SELECTED_TODO_TOOL_FIXTURE_AGENT_ID,
         registered_agents=[SELECTED_TODO_TOOL_FIXTURE_AGENT_ID],
         available_capabilities=["shell", "filesystem_read"],
-        runtime_profile="codex_app_heartbeat",
+        scheduler_execution_context=SELECTED_TODO_TOOL_HOSTED_CONTEXT,
     )
     quota_guard_command = str(prompt["quota_guard_command"])
     if quota_guard_command not in str(prompt["task_body"]):
@@ -307,7 +315,19 @@ def _is_quota_guard(command: str) -> bool:
         == SELECTED_TODO_TOOL_FIXTURE_GOAL_ID
         and argument_value(tokens, "--agent-id")
         == SELECTED_TODO_TOOL_FIXTURE_AGENT_ID
-        and "--codex-app" in tokens
+        and (
+            (
+                argument_value(tokens, "--runtime-profile") == "generic_cli"
+                or (
+                    argument_value(tokens, "-H") == "local_scheduler"
+                    and argument_value(tokens, "-O") == "host_automation"
+                )
+            )
+            or (
+                argument_value(tokens, "-H") == "local_scheduler"
+                and argument_value(tokens, "-O") == "host_automation"
+            )
+        )
         and argument_value(tokens, "--turn-instance-id")
     )
 

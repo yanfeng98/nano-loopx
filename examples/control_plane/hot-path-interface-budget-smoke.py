@@ -30,15 +30,10 @@ from loopx.interface_budget import build_interface_budget_cadence  # noqa: E402
 from loopx.quota import build_quota_should_run  # noqa: E402
 from loopx.review_packet import build_review_packet  # noqa: E402
 from loopx.status import collect_status  # noqa: E402
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 
 
 GOAL_ID = "interface-budget-goal"
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 CONTRACT_DOC = REPO_ROOT / "docs" / "reference" / "contracts" / "interface-budget-contract.md"
 SURFACE_BUDGETS = {
     "heartbeat_prompt_json": {
@@ -391,13 +386,13 @@ def main() -> int:
         heartbeat_payload = build_heartbeat_prompt(
             goal_id=GOAL_ID,
             thin=True,
-            runtime_profile="codex_app_heartbeat",
+            runtime_profile="generic_cli",
         )
 
         assert quota_payload["should_run"] is True, quota_payload
         reset_policy = quota_payload["scheduler_hint"]["reset_policy"]
         assert reset_policy["reset_token"], reset_policy
-        assert reset_policy["codex_app_initial_rrule"], reset_policy
+        assert reset_policy["codex_cli_initial_rrule"], reset_policy
         assert reset_policy["host_state_key"] == "scheduler_hint.reset_policy.reset_token", reset_policy
         assert "identity_snapshot" not in reset_policy, reset_policy
         assert "profile_snapshot" not in reset_policy, reset_policy

@@ -42,7 +42,6 @@ def main() -> int:
         "LoopX state：objective + gate + todo + scope + evidence + quota",
         "## 试用 LoopX",
         "### 从你已经在用的 Agent 启动",
-        "Codex App",
         "Codex CLI",
         "Claude Code",
         "Cursor、shell、自有 runner",

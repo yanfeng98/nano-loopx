@@ -12,9 +12,6 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from loopx.quota import build_quota_should_run  # noqa: E402
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.status import compact_todo_group  # noqa: E402
 from loopx.control_plane.todos.handoff_gate import (  # noqa: E402
     build_todo_handoff_gate_lanes,
@@ -26,9 +23,7 @@ from loopx.control_plane.todos.handoff_gate import (  # noqa: E402
 GOAL_ID = "cleared-blocker-successor-gate-fixture"
 BLOCKED_AGENT = "codex-value-explorer"
 PRIMARY_AGENT = "codex-main-control"
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 def todo_item(
@@ -337,10 +332,10 @@ def assert_cleared_blocker_requires_successor_replan() -> None:
     scheduler = payload["scheduler_hint"]
     assert scheduler["action"] == "run_now", scheduler
     assert scheduler["cadence_class"] == "active_work", scheduler
-    assert scheduler["codex_app"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
-    assert scheduler["codex_app"]["recommended_interval_minutes"] == 3, scheduler
-    assert scheduler["codex_app"]["stateful_backoff"]["apply_needed"] is True, scheduler
-    assert scheduler["codex_app"]["no_spend_for_cadence_change"] is True, scheduler
+    assert scheduler["codex_cli"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
+    assert scheduler["codex_cli"]["recommended_interval_minutes"] == 3, scheduler
+    assert scheduler["codex_cli"]["stateful_backoff"]["apply_needed"] is True, scheduler
+    assert scheduler["codex_cli"]["no_spend_for_cadence_change"] is True, scheduler
 
 
 def assert_stale_handoff_closeout_stays_with_its_executor() -> None:

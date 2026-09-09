@@ -51,7 +51,7 @@ weekly profile 不要求任何之一。
 
 Capability 默认保持**不活跃于后台工作与外部写**。只有当项目需要自定义 sources、
 renderers、受众 policy、时区/RRULE 或显式 sink bindings 时,才创建项目自有的
-`periodic_report_profile_v0`。无人值守周期报告只使用 Codex App Automation:
+`periodic_report_profile_v0`。无人值守周期报告只使用宿主 Automation:
 host 调度应匹配该自定义 profile 的 RRULE。暂停 Automation 或把 profile 设为
 `enabled: false` 会停止该调度路径。
 

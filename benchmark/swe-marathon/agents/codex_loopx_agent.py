@@ -86,8 +86,8 @@ _GOAL_ID_MODE = os.environ.get("LOOPX_GOAL_ID_MODE", "fixed")
 #      于是 LoopX 自己一条候选 todo 都没提，状态文件里那些任务专属 todo 全是模型
 #      运行时自己建的。`terminal_no_followup`（待办队列空）因此成为最大拦截源之一。
 #
-#   ② 人工门禁在无人场景下永不放行。`--codex-app-heartbeat ask` 不预授权；
-#      `coordination.write_scope` 是空的，agent 没有声明过的写权限；实测
+#   ② 人工门禁在无人场景下永不放行。`--accept-onboarding-agent-todos` 预授权候选
+#      todo；`coordination.write_scope` 是空的，agent 没有声明过的写权限；实测
 #      `quota should-run` 真实返回里出现 state=operator_gate。
 #
 #   ③ 死锁。goal body 写明第三次相同阻塞轮就 `update_goal status=blocked`，
@@ -110,10 +110,7 @@ for _cand in (_here.parent, _here.parent / "runtime", _here.parent.parent):
         break
 from modes.profiles import profile_args as _profile_args, resolve as _resolve_mode  # noqa: E402
 
-_MODE = _resolve_mode(
-    os.environ.get("WEN_MODE", "codex-cli"),
-    claim_codex_app=bool(os.environ.get("WEN_CLAIM_CODEX_APP")),
-)
+_MODE = _resolve_mode(os.environ.get("WEN_MODE", "codex-cli"))
 #: 渲染时传给 loopx 的 profile 参数（具名 profile 或 -H/-O/-M 三元组）
 _PROFILE_ARGS = " ".join(_profile_args(_MODE))
 
@@ -144,12 +141,12 @@ class CodexLoopxAgent(CodexGoalAgent):
         其余（objective、adapter、goal-doc、goal-id）逐字不变。
         """
         if not _UNGATED:
-            return "--no-onboarding-scan --codex-app-heartbeat ask"
+            return "--no-onboarding-scan"
         return (
             # ① 打开 LoopX 自己的首连扫描与候选 todo 提议，并允许自动推进
             "--accept-onboarding-agent-todos --begin-autonomous-advance "
-            # ② 预授权心跳 + 声明写权限（原来 coordination.write_scope 是空的）
-            f"--codex-app-heartbeat yes --write-scope {cwd}"
+            # ② 声明写权限（原来 coordination.write_scope 是空的）
+            f"--write-scope {cwd}"
         )
 
     def _goal_id(self) -> str:

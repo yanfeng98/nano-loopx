@@ -9,9 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.testing.quota_fixtures import (  # noqa: E402
     quota_status_payload,
     quota_todo_item,
@@ -35,9 +32,7 @@ MATERIAL_WAIT_ID = "todo_material_wait"
 GATED_ACTION = "[P0] Review refreshed projection wording."
 FALLBACK_ACTION = "[P1] Continue catalog-driven product canary coverage."
 ARCHIVE_MONITOR_ACTION = "[P1] Monitor product refactor/catalog canary continuation."
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 def build_agent_todos(*, prerequisite_status: str) -> dict:

@@ -11,9 +11,6 @@ from loopx.control_plane.quota.stall_repair import (
 )
 from loopx.control_plane.quota.turn_envelope import build_turn_envelope
 from loopx.control_plane.scheduler import scheduler_hint as scheduler_hint_module
-from loopx.control_plane.scheduler.execution_context import (
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.scheduler.scheduler_hint import build_scheduler_hint
 from loopx.control_plane.scheduler.state import (
     SCHEDULER_HOST_UPDATE_FAILURE_SCHEMA_VERSION,
@@ -27,9 +24,7 @@ from loopx.quota import build_quota_should_run
 
 GOAL_ID = "user-gate-lane-progress-fixture"
 AGENT_ID = "codex-main-control"
-APP_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 def _status_payload(*, gate_action_kind: str) -> dict:
@@ -227,7 +222,7 @@ def test_blocking_user_gate_backs_off_instead_of_polling_as_active_work() -> Non
         "turn_envelope_action_dimensions_v1"
     )
     assert payload["scheduler_hint"]["cadence_class"] == "human_gate"
-    assert payload["scheduler_hint"]["codex_app"]["recommended_interval_minutes"] == 30
+    assert payload["scheduler_hint"]["codex_cli"]["recommended_interval_minutes"] == 30
     assert payload["long_task_cadence_hint"] == {
         "schema_version": "cadence_hint_v0",
         "signal": "blocked",
@@ -238,25 +233,25 @@ def test_blocking_user_gate_backs_off_instead_of_polling_as_active_work() -> Non
         ],
     }
 
-    initial_backoff = payload["scheduler_hint"]["codex_app"]["stateful_backoff"]
+    initial_backoff = payload["scheduler_hint"]["codex_cli"]["stateful_backoff"]
     next_hint = build_scheduler_hint(
         payload,
         user_action_required=True,
-        codex_app_scheduler_state={
+        codex_cli_scheduler_state={
             "reset_token": initial_backoff["reset_token"],
             "identity_signature": initial_backoff["identity_signature"],
             "progression_index": initial_backoff["progression_index"],
             "last_applied_rrule": initial_backoff["current_rrule"],
         },
-        codex_app_current_rrule=initial_backoff["current_rrule"],
+        codex_cli_current_rrule=initial_backoff["current_rrule"],
         scheduler_execution_context=APP_CONTEXT,
     )
 
     assert next_hint["cadence_class"] == "human_gate"
-    assert next_hint["codex_app"]["recommended_interval_minutes"] == 60
-    assert next_hint["codex_app"]["stateful_backoff"]["progression_index"] == 1
-    assert next_hint["codex_app"]["stateful_backoff"]["apply_needed"] is True
-    assert next_hint["codex_app"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=60"
+    assert next_hint["codex_cli"]["recommended_interval_minutes"] == 60
+    assert next_hint["codex_cli"]["stateful_backoff"]["progression_index"] == 1
+    assert next_hint["codex_cli"]["stateful_backoff"]["apply_needed"] is True
+    assert next_hint["codex_cli"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=60"
 
 
 def _runtime_recovery_gate_status(
@@ -408,7 +403,7 @@ def test_acked_human_gate_advances_despite_unrelated_historical_host_failure(
         agent_id=AGENT_ID,
         scheduler_execution_context=APP_CONTEXT,
     )
-    first_rrule = payload["scheduler_hint"]["codex_app"]["stateful_backoff"][
+    first_rrule = payload["scheduler_hint"]["codex_cli"]["stateful_backoff"][
         "current_rrule"
     ]
     historical_failure = {
@@ -423,7 +418,7 @@ def test_acked_human_gate_advances_despite_unrelated_historical_host_failure(
     host_matched = build_scheduler_hint(
         payload,
         user_action_required=True,
-        codex_app_scheduler_state={
+        codex_cli_scheduler_state={
             "reset_token": "previous-active-work",
             "identity_signature": "previous-active-work",
             "progression_index": 0,
@@ -432,10 +427,10 @@ def test_acked_human_gate_advances_despite_unrelated_historical_host_failure(
             "updated_at": now.isoformat(),
             "host_update_failures": [historical_failure],
         },
-        codex_app_current_rrule=first_rrule,
+        codex_cli_current_rrule=first_rrule,
         scheduler_execution_context=APP_CONTEXT,
     )
-    matched_app = host_matched["codex_app"]
+    matched_app = host_matched["codex_cli"]
     assert matched_app["stateful_backoff"]["apply_needed"] is False
     assert matched_app["stateful_backoff"]["ack_needed"] is True
     assert matched_app["ack_hint"]["after"] == "matching_host_rrule_observed"
@@ -463,12 +458,12 @@ def test_acked_human_gate_advances_despite_unrelated_historical_host_failure(
     next_hint = build_scheduler_hint(
         payload,
         user_action_required=True,
-        codex_app_scheduler_state=settled_state,
-        codex_app_current_rrule=first_rrule,
+        codex_cli_scheduler_state=settled_state,
+        codex_cli_current_rrule=first_rrule,
         scheduler_execution_context=APP_CONTEXT,
     )
 
-    next_app = next_hint["codex_app"]
+    next_app = next_hint["codex_cli"]
     assert next_app["stateful_backoff"]["progression_index"] == 1
     assert next_app["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=60"
     assert next_app["stateful_backoff"]["apply_needed"] is True

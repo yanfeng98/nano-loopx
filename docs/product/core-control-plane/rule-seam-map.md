@@ -70,7 +70,7 @@
 | 配额计划与 should-run 组装 | `build_quota_plan`, `build_quota_should_run` | 合并状态、配额核算、gate 与策略输出的薄编排层。 | `quota should-run` JSON 字段名与交互契约保持兼容。 |
 | 效果包透镜 | `loopx.control_plane.effect_program.interpret_quota_should_run_packet` | 基于现有配额包的只读规范效果槽。 | 运行时决策不变;聚焦测试与文档消费该透镜。 |
 | 用户/agent/CLI 分离 | `_protocol_action_packet`, `_interaction_contract` | 没有调度或写回副作用的协议包构建器。 | 运维者 gate 与有界交付 payload 保持相同的 action_required 与 must_attempt 含义。 |
-| 调度策略 | `_scheduler_hint` 包装器加 `loopx.control_plane.scheduler.scheduler_hint` | 由最终决策状态驱动的纯调度提示构建器。 | RRULE、重置令牌与无花费节奏字段在 Codex App 与本地 Loop 间保持稳定。 |
+| 调度策略 | `_scheduler_hint` 包装器加 `loopx.control_plane.scheduler.scheduler_hint` | 由最终决策状态驱动的纯调度提示构建器。 | RRULE、重置令牌与无花费节奏字段在宿主与本地 Loop 间保持稳定。 |
 | Monitor 写回 | `_quota_decision_due_monitor_item`, `build_quota_monitor_poll_event`, `record_quota_monitor_poll` | 具有幂等 todo 查找与下次到期投影的 monitor 事件/写回模块。 | due-monitor 与外部 evidence monitor 轮询路径保持无花费,并拒绝非 monitor todo。 |
 | 花费核算 | `build_quota_slot_spend_event`, `spend_quota_slot` | 具有显式可核算运行查找的配额核算模块。 | 只在已验证写回后花费;来源枚举与槽核算保持不变。 |
 | Markdown 渲染 | `render_quota_should_run_markdown` 及相关渲染器 | 基于已构建 payload 的纯渲染模块。 | JSON 决策不依赖 markdown 字符串。 |

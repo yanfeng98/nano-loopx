@@ -164,7 +164,7 @@ def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list
             "argument_hint": "[--fine-grained] [--capability-route issue-fix] [task text]",
             "instructions": [
                 "Visible command arguments: `$ARGUMENTS`.",
-                "Identify the exact current host surface (codex-app, codex-cli-tui, opencode, opencode2, pi, gemini-cli, cursor-agent, deepseek-harness, or ark-managed-agent).",
+                "Identify the exact current host surface (codex-cli-tui, opencode, opencode2, pi, gemini-cli, cursor-agent, deepseek-harness, or ark-managed-agent).",
                 _loopx_start_goal_arguments_instruction(
                     cli_bin=cli_bin,
                     host_surface=None,
@@ -172,7 +172,7 @@ def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list
                 "Treat the returned `ordered_steps` and `goal_start_contract` as authoritative. Follow their identity, capability-route, Todo, writeback, host-loop, quota, and stop/gate rules before substantive work; do not reconstruct those rules from skill memory.",
                 "If the packet exposes a goal-selection gate, rerun one exact choice before any mutation.",
                 "When authoring task Todos, treat `--action-kind` as the documented extensible public-safe token: choose a short task-relevant value such as `implement`, `test`, or `review`; do not search the LoopX source for an allowlist.",
-                "Consume a turn-start quota JSON packet exactly once: read the complete output directly or save it and query it with `jq`; never pipe a `--begin-turn` call through `head` or `tail`, and never rerun `--begin-turn` to recover hidden fields. When selection is required, choose the Todo and use `interaction_contract.cli_channel.selection_command` with the returned Turn identity before mutation.",
+                "Consume a turn-start quota JSON packet exactly once: read the complete output directly or save it and query it with `jq`; never pipe a turn-start call through `head` or `tail`, and never rerun a turn-start guard to recover hidden fields. When selection is required, choose the Todo and use `interaction_contract.cli_channel.selection_command` with the returned Turn identity before mutation.",
                 f"If arguments are empty and the host already identifies an active LoopX goal, follow its exact CLI `interaction_contract` or quota command first; otherwise inspect `{cli_bin} status` and `{cli_bin} bootstrap-command-pack --project .` before changing files.",
                 "If this session cannot mutate the host loop surface, surface the exact pasteable gate instead of claiming autonomous setup.",
             ],
@@ -562,7 +562,7 @@ def _normalize_surfaces(surfaces: list[str] | None) -> list[str]:
             candidates = ["codex", "claude-code", "opencode"]
         elif surface == "codex":
             candidates = ["codex"]
-        elif surface in {"codex-app", "codex-cli"}:
+        elif surface == "codex-cli":
             candidates = ["codex"]
         elif surface in {"gemini-cli", "gemini-code"}:
             candidates = ["gemini"]
@@ -787,7 +787,7 @@ def install_slash_commands(
                 installed.append(
                     {
                         "surface": "codex",
-                        "host_surfaces": ["codex-cli", "codex-app"],
+                        "host_surfaces": ["codex-cli"],
                         "mechanism": "retired_codex_custom_prompt",
                         "command": spec["command"],
                         "path": str(prompt_path),
@@ -801,7 +801,7 @@ def install_slash_commands(
                 installed.append(
                     {
                         "surface": "codex",
-                        "host_surfaces": ["codex-cli", "codex-app"],
+                        "host_surfaces": ["codex-cli"],
                         "mechanism": "retired_codex_custom_prompt",
                         "command": spec["command"],
                         "path": str(prompt_path),
@@ -819,7 +819,7 @@ def install_slash_commands(
                 installed.append(
                     {
                         "surface": "codex",
-                        "host_surfaces": ["codex-cli", "codex-app"],
+                        "host_surfaces": ["codex-cli"],
                         "mechanism": "codex_explicit_skills",
                         "command": spec["command"],
                         "path": str(skill_path),
@@ -831,7 +831,7 @@ def install_slash_commands(
                 installed.append(
                     {
                         "surface": "codex",
-                        "host_surfaces": ["codex-cli", "codex-app"],
+                        "host_surfaces": ["codex-cli"],
                         "mechanism": "codex_skill_openai_metadata",
                         "command": spec["command"],
                         "path": str(metadata_path),
@@ -845,7 +845,7 @@ def install_slash_commands(
             installed.append(
                 {
                     "surface": "codex",
-                    "host_surfaces": ["codex-cli", "codex-app"],
+                    "host_surfaces": ["codex-cli"],
                     "mechanism": "codex_explicit_skills",
                     "command": spec["command"],
                     "path": str(skill_path),
@@ -866,7 +866,7 @@ def install_slash_commands(
                 installed.append(
                     {
                         "surface": "codex",
-                        "host_surfaces": ["codex-cli", "codex-app"],
+                        "host_surfaces": ["codex-cli"],
                         "mechanism": "codex_skill_openai_metadata",
                         "command": spec["command"],
                         "path": str(metadata_path),
@@ -880,7 +880,7 @@ def install_slash_commands(
                     installed.append(
                         {
                             "surface": "codex",
-                            "host_surfaces": ["codex-cli", "codex-app"],
+                            "host_surfaces": ["codex-cli"],
                             "mechanism": "retired_codex_command_metadata",
                             "command": spec["command"],
                             "path": str(metadata_path),

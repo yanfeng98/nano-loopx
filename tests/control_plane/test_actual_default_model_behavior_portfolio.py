@@ -15,9 +15,6 @@ from loopx.control_plane.quota.cli_projection import (
     compact_quota_should_run_cli_payload,
 )
 from loopx.control_plane.quota.turn_envelope import quota_action_signature_document
-from loopx.control_plane.scheduler.execution_context import (
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.testing.actual_default_model_behavior_portfolio import (
     ACTUAL_DEFAULT_MODEL_BEHAVIOR_HOT_PATH_JSON_BUDGET,
     actual_default_model_behavior_scenario_catalog,
@@ -252,9 +249,7 @@ def test_weak_turn_actor_executes_required_successor_replan_with_user_notice() -
         goal_id="weak-successor-replan-fixture",
         agent_id=agent_id,
         scheduler_execution_context=(
-            scheduler_execution_context_for_runtime_profile(
-                "codex_app_heartbeat"
-            )
+            {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
         ),
     )
 

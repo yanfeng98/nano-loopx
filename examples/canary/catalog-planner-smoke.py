@@ -652,7 +652,6 @@ def assert_pr_release_and_refactor_profiles_select() -> None:
     host_command_payload = build_catalog_canary_plan(
         changed_files=[
             "loopx/cli_commands/slash_commands.py",
-            "docs/reference/protocols/codex-app-host-command-registry-v0.md",
             "docs/reference/protocols/global-manager-command-v0.md",
         ],
         surfaces=["slash-commands /loopx-global-summary host command registry"],
@@ -665,7 +664,6 @@ def assert_pr_release_and_refactor_profiles_select() -> None:
     host_command_profile = host_command_profiles["host-command-entry"]
     host_command_commands = [check["command"] for check in host_command_profile["checks"]]
     assert "python3 examples/slash-command-catalog-smoke.py" in host_command_commands
-    assert "python3 examples/codex-app-host-command-registry-smoke.py" in host_command_commands
     assert "python3 examples/project/global-manager-command-protocol-smoke.py" in host_command_commands
     assert all(check["tier"] == "default" for check in host_command_profile["checks"])
     assert host_command_profile["deep_checks_available"] is False, host_command_profile

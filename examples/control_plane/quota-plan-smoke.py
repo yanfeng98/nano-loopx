@@ -26,9 +26,6 @@ from loopx.quota import (  # noqa: E402
     render_quota_markdown,
     render_quota_should_run_markdown,
 )
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 
 from quota_plan_fixtures import (  # noqa: E402
     _nested_value,
@@ -52,9 +49,7 @@ from quota_plan_fixtures import (  # noqa: E402
 )
 
 
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 def assert_plan_shape(plan: dict, markdown: str | None = None) -> None:
@@ -1020,9 +1015,9 @@ def assert_heartbeat_recommendation_lifecycle() -> None:
     assert mapped_decision["execution_obligation"]["kind"] == "quiet_noop_if_unchanged", mapped_decision
     scheduler = mapped_decision["scheduler_hint"]
     assert scheduler["action"] == "backoff_until_fresh_evidence", mapped_decision
-    assert scheduler["codex_app"]["recommended_interval_minutes"] == 60, mapped_decision
-    assert scheduler["codex_app"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=60", mapped_decision
-    assert scheduler["codex_app"]["example_progression_minutes"] == [60], mapped_decision
+    assert scheduler["codex_cli"]["recommended_interval_minutes"] == 60, mapped_decision
+    assert scheduler["codex_cli"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=60", mapped_decision
+    assert scheduler["codex_cli"]["example_progression_minutes"] == [60], mapped_decision
     assert scheduler["unchanged_poll"]["limits"]["codex_cli_tui"] == 3, mapped_decision
     assert scheduler["unchanged_poll"]["final_quota_replan_check_enabled"] is True, mapped_decision
     assert "local_scheduler" not in scheduler, scheduler
@@ -1033,8 +1028,8 @@ def assert_heartbeat_recommendation_lifecycle() -> None:
     assert isinstance(reset["reset_token"], str) and len(reset["reset_token"]) == 16, reset
     assert reset["reset_token"] == expected_scheduler_reset_token(scheduler, mapped_decision), reset
     assert reset["host_state_key"] == "scheduler_hint.reset_policy.reset_token", reset
-    assert reset["codex_app_initial_interval_minutes"] == 60, reset
-    assert reset["codex_app_initial_rrule"] == "FREQ=MINUTELY;INTERVAL=60", reset
+    assert reset["codex_cli_initial_interval_minutes"] == 60, reset
+    assert reset["codex_cli_initial_rrule"] == "FREQ=MINUTELY;INTERVAL=60", reset
     assert len(reset["identity_signature"]) == 12, reset
     assert "identity_snapshot" not in reset, reset
     assert "profile_snapshot" not in reset, reset
@@ -1042,8 +1037,8 @@ def assert_heartbeat_recommendation_lifecycle() -> None:
     assert "profile" not in reset, reset
     profile_snapshot = scheduler_reset_profile_snapshot(scheduler)
     assert profile_snapshot["cadence_class"] == "unchanged_noop", profile_snapshot
-    assert profile_snapshot["codex_app_initial_rrule"] == "FREQ=MINUTELY;INTERVAL=60", profile_snapshot
-    assert profile_snapshot["codex_app_max_interval_minutes"] == 60, profile_snapshot
+    assert profile_snapshot["codex_cli_initial_rrule"] == "FREQ=MINUTELY;INTERVAL=60", profile_snapshot
+    assert profile_snapshot["codex_cli_max_interval_minutes"] == 60, profile_snapshot
     assert profile_snapshot["unchanged_poll_backoff_multiplier"] == 2, profile_snapshot
     identity_snapshot = {
         key: _nested_value(mapped_decision, key)
@@ -1057,8 +1052,8 @@ def assert_heartbeat_recommendation_lifecycle() -> None:
     assert "heartbeat_recommendation: mode=mapped_noop_if_unchanged notify=DONT_NOTIFY" in mapped_markdown
     assert "heartbeat_stop_if_unchanged: `True`" in mapped_markdown, mapped_markdown
     assert "scheduler_hint: action=backoff_until_fresh_evidence" in mapped_markdown, mapped_markdown
-    assert "codex_app_rrule=FREQ=MINUTELY;INTERVAL=60" in mapped_markdown, mapped_markdown
-    assert "codex_app_progression=[60]" in mapped_markdown, mapped_markdown
+    assert "codex_cli_rrule=FREQ=MINUTELY;INTERVAL=60" in mapped_markdown, mapped_markdown
+    assert "codex_cli_progression=[60]" in mapped_markdown, mapped_markdown
     assert "scheduler_reset: initial_interval=60" in mapped_markdown, mapped_markdown
     assert "initial_rrule=FREQ=MINUTELY;INTERVAL=60" in mapped_markdown, mapped_markdown
     assert "reset_generation=" in mapped_markdown, mapped_markdown

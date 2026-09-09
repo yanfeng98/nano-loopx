@@ -10,9 +10,6 @@ from loopx.control_plane.quota.scheduler_ack import (
     record_quota_scheduler_ack_for_decision,
 )
 from loopx.control_plane.scheduler import scheduler_hint as scheduler_hint_module
-from loopx.control_plane.scheduler.execution_context import (
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.scheduler.scheduler_hint import build_scheduler_hint
 
 GOAL_ID = "scheduler-backoff-convergence"
@@ -23,9 +20,7 @@ HOST_3 = "FREQ=MINUTELY;INTERVAL=3"
 HOST_6 = "FREQ=MINUTELY;INTERVAL=6"
 HOST_10 = "FREQ=MINUTELY;INTERVAL=10"
 HOST_7 = "FREQ=MINUTELY;INTERVAL=7"
-APP_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 AGENT_SCOPE_ACTIONS = [action.value for action in AgentScopeFrontierAction]
 
 
@@ -167,8 +162,8 @@ def _hint(
     return build_scheduler_hint(
         decision,
         agent_scope_frontier_actions=AGENT_SCOPE_ACTIONS,
-        codex_app_scheduler_state=scheduler_state,
-        codex_app_current_rrule=host_rrule,
+        codex_cli_scheduler_state=scheduler_state,
+        codex_cli_current_rrule=host_rrule,
         scheduler_execution_context=APP_CONTEXT,
     )
 
@@ -241,7 +236,7 @@ def test_scheduler_hint_cadence_policy_decision_table(
         decision = _active_decision()
 
     initial = _hint(monkeypatch, decision, now=now)
-    initial_app = initial["codex_app"]
+    initial_app = initial["codex_cli"]
     assert initial_app["example_progression_minutes"] == case["progression"]
     assert initial_app["recommended_rrule"] == case["initial_rrule"]
 
@@ -258,7 +253,7 @@ def test_scheduler_hint_cadence_policy_decision_table(
         scheduler_state=scheduler_state,
         host_rrule=case["initial_rrule"],
     )
-    after_app = after_interval["codex_app"]
+    after_app = after_interval["codex_cli"]
     assert after_app["stateful_backoff"]["progression_index"] == case[
         "expected_index"
     ]
@@ -299,8 +294,8 @@ def test_monitor_identity_ignores_recommended_action_text_mutation(
         host_rrule=HOST_15,
     )
 
-    assert second["codex_app"]["stateful_backoff"]["state_status"] == "same_identity"
-    assert second["codex_app"]["recommended_rrule"] == HOST_30
+    assert second["codex_cli"]["stateful_backoff"]["state_status"] == "same_identity"
+    assert second["codex_cli"]["recommended_rrule"] == HOST_30
     assert "recommended_action" not in second["unchanged_identity_keys"]
 
 
@@ -311,7 +306,7 @@ def test_monitor_ack_settles_before_progression_and_avoids_3_6_3_flip(
     now = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
     decision = _monitor_decision(now=now, minutes_until_due=31)
     first = _hint(monkeypatch, decision, now=now)
-    first_app = first["codex_app"]
+    first_app = first["codex_cli"]
     assert first_app["recommended_rrule"] == HOST_15
 
     settled_state = _ack_state(
@@ -327,7 +322,7 @@ def test_monitor_ack_settles_before_progression_and_avoids_3_6_3_flip(
         scheduler_state=settled_state,
         host_rrule=HOST_15,
     )
-    immediate_app = immediate["codex_app"]
+    immediate_app = immediate["codex_cli"]
     assert immediate_app["stateful_backoff"]["state_status"] == "same_identity"
     assert immediate_app["stateful_backoff"]["current_rrule"] == HOST_15
     assert immediate_app["stateful_backoff"]["apply_needed"] is False
@@ -343,7 +338,7 @@ def test_monitor_ack_settles_before_progression_and_avoids_3_6_3_flip(
         scheduler_state=settled_state,
         host_rrule=HOST_15,
     )
-    near_due_app = near_due["codex_app"]
+    near_due_app = near_due["codex_cli"]
     assert near_due_app["example_progression_minutes"] == [15]
     assert near_due_app["stateful_backoff"]["current_rrule"] == HOST_15
     assert near_due_app["stateful_backoff"]["apply_needed"] is False
@@ -355,7 +350,7 @@ def test_monitor_near_due_under_floor_uses_tight_cadence(monkeypatch) -> None:
     decision = _monitor_decision(now=now, minutes_until_due=7, cadence="30m")
     first = _hint(monkeypatch, decision, now=now)
 
-    first_app = first["codex_app"]
+    first_app = first["codex_cli"]
     assert first_app["recommended_rrule"] == HOST_7
     assert first_app["example_progression_minutes"] == [7]
     assert first["cadence_class"] == "monitor_wait"
@@ -382,8 +377,8 @@ def test_monitor_progression_advances_after_elapsed_interval_and_then_converges(
         scheduler_state=settled_15,
         host_rrule=HOST_15,
     )
-    assert early["codex_app"]["stateful_backoff"]["current_rrule"] == HOST_15
-    assert early["codex_app"]["stateful_backoff"]["apply_needed"] is False
+    assert early["codex_cli"]["stateful_backoff"]["current_rrule"] == HOST_15
+    assert early["codex_cli"]["stateful_backoff"]["apply_needed"] is False
 
     elapsed = now + timedelta(minutes=15)
     advance = _hint(
@@ -393,7 +388,7 @@ def test_monitor_progression_advances_after_elapsed_interval_and_then_converges(
         scheduler_state=settled_15,
         host_rrule=HOST_15,
     )
-    advance_app = advance["codex_app"]
+    advance_app = advance["codex_cli"]
     assert advance_app["recommended_rrule"] == HOST_30
     assert advance_app["stateful_backoff"]["host_observation"]["status"] == (
         "drift_detected"
@@ -412,7 +407,7 @@ def test_monitor_progression_advances_after_elapsed_interval_and_then_converges(
         scheduler_state=settled_30,
         host_rrule=HOST_30,
     )
-    converged_app = converged["codex_app"]
+    converged_app = converged["codex_cli"]
     assert converged_app["stateful_backoff"]["current_rrule"] == HOST_30
     assert converged_app["stateful_backoff"]["apply_needed"] is False
     assert converged_app["stateful_backoff"]["host_observation"]["status"] == (
@@ -429,7 +424,7 @@ def test_capability_bridge_wait_backs_off_and_material_work_resets(
     bridge = _capability_bridge_decision()
 
     first = _hint(monkeypatch, bridge, now=now)
-    first_app = first["codex_app"]
+    first_app = first["codex_cli"]
     assert first["action"] == "run_now"
     assert first["cadence_class"] == "active_work"
     assert first_app["recommended_rrule"] == HOST_3
@@ -447,8 +442,8 @@ def test_capability_bridge_wait_backs_off_and_material_work_resets(
         scheduler_state=settled_3,
         host_rrule=HOST_3,
     )
-    assert early["codex_app"]["stateful_backoff"]["progression_index"] == 0
-    assert "recommended_rrule" not in early["codex_app"]
+    assert early["codex_cli"]["stateful_backoff"]["progression_index"] == 0
+    assert "recommended_rrule" not in early["codex_cli"]
 
     elapsed_3 = now + timedelta(minutes=3)
     advance_6 = _hint(
@@ -458,7 +453,7 @@ def test_capability_bridge_wait_backs_off_and_material_work_resets(
         scheduler_state=settled_3,
         host_rrule=HOST_3,
     )
-    advance_6_app = advance_6["codex_app"]
+    advance_6_app = advance_6["codex_cli"]
     assert advance_6_app["stateful_backoff"]["progression_index"] == 1
     assert advance_6_app["recommended_rrule"] == HOST_6
 
@@ -476,7 +471,7 @@ def test_capability_bridge_wait_backs_off_and_material_work_resets(
         scheduler_state=settled_6,
         host_rrule=HOST_6,
     )
-    assert advance_10["codex_app"]["recommended_rrule"] == HOST_10
+    assert advance_10["codex_cli"]["recommended_rrule"] == HOST_10
 
     material_work = dict(bridge)
     material_work["effective_action"] = "normal_run"
@@ -497,7 +492,7 @@ def test_capability_bridge_wait_backs_off_and_material_work_resets(
         scheduler_state=settled_6,
         host_rrule=HOST_6,
     )
-    reset_app = reset["codex_app"]
+    reset_app = reset["codex_cli"]
     assert reset_app["stateful_backoff"]["state_status"] == "reset_required"
     assert reset_app["stateful_backoff"]["progression_index"] == 0
     assert reset_app["recommended_rrule"] == HOST_3
@@ -515,5 +510,5 @@ def test_capability_bridge_wait_backs_off_and_material_work_resets(
         scheduler_state=settled_material,
         host_rrule=HOST_3,
     )
-    assert still_active["codex_app"]["stateful_backoff"]["progression_index"] == 0
-    assert "recommended_rrule" not in still_active["codex_app"]
+    assert still_active["codex_cli"]["stateful_backoff"]["progression_index"] == 0
+    assert "recommended_rrule" not in still_active["codex_cli"]

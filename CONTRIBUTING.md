@@ -143,7 +143,7 @@ LoopX 默认生命周期的 opt-in 原型。将其测试、示例与脚本放在
   但不拥有 LoopX 状态、quota、完成、验证、调度器策略或重规划策略。
 
 不要在 `run-once` 内添加睡眠循环、cron 实现、周期守护进程、操作员通知路径
-或多 Turn 重规划循环。不要复制 Codex App 的 heartbeat 提示词规则到第二个
+或多 Turn 重规划循环。不要复制宿主 heartbeat 提示词规则到第二个
 scheduler。复用现有 interaction、scheduler、autonomous-replan、todo 与
 TurnEnvelope 契约；只有运行时特有的"应用唤醒"这一动作才属于 scheduler 适配器。
 
@@ -153,7 +153,7 @@ todo_id)` 前沿。不透明的可恢复宿主会话是恢复元数据，不是�
 
 按可评审切片分阶段提交宿主 loop 贡献：
 
-1. 用独立派生的 fixture 表征当前 Codex App 与 Turn 行为；
+1. 用独立派生的 fixture 表征当前宿主与 Turn 行为；
 2. 添加一个无宿主或无状态效应的纯 next-disposition 决策表；
 3. 添加一个带假时钟与假宿主的 scheduler-owner 适配器；
 4. 只有在共享迁移契约稳定后才添加运行时特定的唤醒、通知或展示。

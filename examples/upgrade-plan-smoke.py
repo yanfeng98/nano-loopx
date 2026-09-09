@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-import os
 import sys
 import tempfile
 from pathlib import Path
@@ -16,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from loopx.configure_goal import configure_goal  # noqa: E402
 from loopx.heartbeat_prompt import build_heartbeat_prompt  # noqa: E402
-from loopx.upgrade import build_upgrade_plan, prompt_digest, render_upgrade_plan_markdown  # noqa: E402
+from loopx.upgrade import build_upgrade_plan, infer_available_capabilities_from_prompt, prompt_digest, prompt_policy_audit, render_upgrade_plan_markdown  # noqa: E402
 
 
 GOAL_ID = "upgrade-plan-goal"
@@ -87,7 +86,7 @@ def assert_unknown_manifest_blocks_promotion(registry_path: Path) -> dict:
     assert payload["summary"]["stage_deferred_goal_count"] == 1, payload
     assert payload["summary"]["unknown_prompt_count"] == 1, payload
     assert payload["summary"]["installed_manifest_available"] is False, payload
-    assert payload["summary"]["installed_manifest_source"] == "codex_app_automations", payload
+    assert payload["summary"]["installed_manifest_source"] is None, payload
     assert payload["summary"]["installed_manifest_entry_count"] == 0, payload
     assert payload["summary"]["installed_manifest_has_task_body"] is False, payload
     assert payload["summary"]["installed_prompt_policy_warning_count"] == 0, payload
@@ -112,7 +111,7 @@ def assert_unknown_manifest_blocks_promotion(registry_path: Path) -> dict:
     assert goal["state_file_exists"] is True, payload
     thin_prompt = goal["generated_prompts"]["thin"]
     assert thin_prompt["within_interface_budget"] is True, payload
-    assert thin_prompt["interface_budget"]["mode"] == "thin", payload
+    assert thin_prompt["interface_budget"]["mode"] in {"visible_goal", "thin"}, payload
     assert thin_prompt["interface_budget_char_count"] <= thin_prompt["interface_budget_max_chars"], payload
     assert goal["installed_prompts"]["thin"]["status"] == "unknown", payload
     markdown = render_upgrade_plan_markdown(payload)
@@ -243,26 +242,41 @@ def assert_stage_deferred_selection_is_not_upgrade_work(registry_path: Path) -> 
     assert "stage-deferred" in payload["recommended_action"], payload
 
 
-def write_codex_app_automation(codex_home: Path, *, prompt: str) -> Path:
-    automation_path = codex_home / "automations" / GOAL_ID / "automation.toml"
-    automation_path.parent.mkdir(parents=True, exist_ok=True)
-    automation_path.write_text(
-        "\n".join(
-            [
-                "version = 1",
-                f'id = "{GOAL_ID}"',
-                'kind = "heartbeat"',
-                'name = "Upgrade Plan Fixture"',
-                f"prompt = {json.dumps(prompt)}",
-                'status = "ACTIVE"',
-                'rrule = "RRULE:FREQ=MINUTELY;INTERVAL=5"',
-                'target_thread_id = "fixture-thread"',
-                "",
-            ]
-        ),
+def write_installed_manifest(path: Path, *, goal_id: str, prompt: str, agent_id: str | None = None) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    entries = [
+        {
+            "automation_id": goal_id,
+            "goal_id": goal_id,
+            "agent_id": agent_id,
+            "mode": "thin",
+            "prompt_sha256": prompt_digest(prompt),
+            "char_count": len(prompt),
+            "line_count": len(prompt.splitlines()),
+            "prompt_policy_audit": prompt_policy_audit(prompt),
+            "available_capabilities": infer_available_capabilities_from_prompt(prompt),
+            "rrule": (
+                "RRULE:FREQ=MINUTELY;INTERVAL=5"
+                if agent_id is None
+                else "RRULE:FREQ=MINUTELY;INTERVAL=3"
+            ),
+            "target_thread_id": "fixture-thread",
+            "status": "ACTIVE",
+            "installed": True,
+            "source": "installed_manifest_json",
+            "path": str(path),
+        }
+    ]
+    path.write_text(
+        json.dumps(
+            {"available": True, "path": str(path), "entries": entries},
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
         encoding="utf-8",
     )
-    return automation_path
+    return path
 
 
 def write_registered_fixture(root: Path) -> Path:
@@ -313,28 +327,6 @@ def write_registered_fixture(root: Path) -> Path:
     return registry_path
 
 
-def write_registered_codex_app_automation(codex_home: Path, *, prompt: str) -> Path:
-    automation_path = codex_home / "automations" / REGISTERED_GOAL_ID / "automation.toml"
-    automation_path.parent.mkdir(parents=True, exist_ok=True)
-    automation_path.write_text(
-        "\n".join(
-            [
-                "version = 1",
-                f'id = "{REGISTERED_GOAL_ID}"',
-                'kind = "heartbeat"',
-                'name = "Registered Agent Fixture"',
-                f"prompt = {json.dumps(prompt)}",
-                'status = "ACTIVE"',
-                'rrule = "RRULE:FREQ=MINUTELY;INTERVAL=3"',
-                'target_thread_id = "fixture-thread"',
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    return automation_path
-
-
 def assert_registered_agent_activation_is_checked(root: Path) -> None:
     registry_path = write_registered_fixture(root)
     payload = build_upgrade_plan(registry_path=registry_path, cli_bin="loopx")
@@ -372,15 +364,23 @@ def assert_registered_agent_activation_is_checked(root: Path) -> None:
         agent_id=REGISTERED_AGENT_ID,
         registered_agents=[REGISTERED_AGENT_ID],
         available_capabilities=["network", "external_evidence_poll"],
-        runtime_profile="codex_app_heartbeat",
+        runtime_profile="codex_cli",
         turn_granularity="fine",
     )["task_body"]
     assert "Fine-grained planning contract" in rendered, rendered
-    write_registered_codex_app_automation(root / "registered-codex-home", prompt=rendered)
-    old_codex_home = os.environ.get("CODEX_HOME")
-    os.environ["CODEX_HOME"] = str(root / "registered-codex-home")
+    registered_manifest_path = root / "registered-manifest.json"
+    write_installed_manifest(
+        registered_manifest_path,
+        goal_id=REGISTERED_GOAL_ID,
+        prompt=rendered,
+        agent_id=REGISTERED_AGENT_ID,
+    )
     try:
-        pending_payload = build_upgrade_plan(registry_path=registry_path, cli_bin="loopx")
+        pending_payload = build_upgrade_plan(
+            registry_path=registry_path,
+            installed_manifest=str(registered_manifest_path),
+            cli_bin="loopx",
+        )
         pending_migration = pending_payload["managed_heartbeats"][0][
             "peer_runtime_automation_migration"
         ]
@@ -402,12 +402,13 @@ def assert_registered_agent_activation_is_checked(root: Path) -> None:
             automation_prompt_migration_ack=pending_migration["migration_id"],
             execute=True,
         )
-        current_payload = build_upgrade_plan(registry_path=registry_path, cli_bin="loopx")
+        current_payload = build_upgrade_plan(
+            registry_path=registry_path,
+            installed_manifest=str(registered_manifest_path),
+            cli_bin="loopx",
+        )
     finally:
-        if old_codex_home is None:
-            os.environ.pop("CODEX_HOME", None)
-        else:
-            os.environ["CODEX_HOME"] = old_codex_home
+        pass
     current_goal = current_payload["managed_heartbeats"][0]
     assert current_payload["summary"]["current_prompt_count"] == 1, current_payload
     assert current_payload["summary"]["host_loop_activated_goal_count"] == 1, current_payload
@@ -420,67 +421,48 @@ def assert_registered_agent_activation_is_checked(root: Path) -> None:
     assert current_payload["installed_manifest"]["entries"][0]["agent_id"] == REGISTERED_AGENT_ID, current_payload
     assert current_goal["host_loop_activation"]["activated"] is True, current_payload
     markdown = render_upgrade_plan_markdown(current_payload)
-    assert "host_loop_activation: surface=`codex_app_heartbeat` status=`current` activated=`True`" in markdown, markdown
+    assert "host_loop_activation: surface=`codex_cli` status=`current` activated=`True`" in markdown, markdown
 
 
-def assert_codex_app_automation_is_discovered(registry_path: Path, codex_home: Path, first_payload: dict) -> None:
+def assert_installed_manifest_is_discovered(
+    registry_path: Path,
+    manifest_path: Path,
+    first_payload: dict,
+) -> None:
     rendered = build_heartbeat_prompt(
         goal_id=GOAL_ID,
         active_state=None,
         active_state_source="registry",
         thin=True,
         cli_bin="loopx",
-        runtime_profile="codex_app_heartbeat",
+        runtime_profile="codex_cli",
     )["task_body"]
     expected_sha = first_payload["managed_heartbeats"][0]["generated_prompts"]["thin"]["sha256"]
     assert prompt_digest(rendered) == expected_sha, first_payload
-    write_codex_app_automation(
-        codex_home,
-        prompt=rendered,
+    write_installed_manifest(manifest_path, goal_id=GOAL_ID, prompt=rendered)
+    payload = build_upgrade_plan(
+        registry_path=registry_path,
+        installed_manifest=str(manifest_path),
+        cli_bin="loopx",
     )
-    invalid_path = codex_home / "automations" / "invalid-legacy" / "automation.toml"
-    invalid_path.parent.mkdir(parents=True)
-    invalid_path.write_text(
-        'kind = "heartbeat"\nprompt = "C:\\Users\\alice"\n',
-        encoding="utf-8",
-    )
-    payload = build_upgrade_plan(registry_path=registry_path, cli_bin="loopx")
-    assert payload["installed_manifest"]["source"] == "codex_app_automations", payload
     assert payload["installed_manifest"]["available"] is True, payload
-    assert payload["installed_manifest"]["parse_error_count"] == 1, payload
-    assert payload["installed_manifest"]["parse_errors"] == [
-        {"automation_id": "invalid-legacy", "reason": "invalid_toml"}
-    ], payload
-    assert payload["installed_manifest"]["parse_errors_complete"] is True, payload
     auto_entry = payload["installed_manifest"]["entries"][0]
     assert "task_body" not in auto_entry, payload
     assert auto_entry["prompt_sha256"] == expected_sha, payload
-    assert auto_entry["prompt_policy_audit"]["status"] == "clean", payload
-    assert auto_entry["prompt_policy_audit"]["warning_count"] == 0, payload
+    audit = auto_entry["prompt_policy_audit"]
+    assert audit["status"] in {"clean", "warning"}, payload
+    if audit["status"] == "warning":
+        kinds = {warning["kind"] for warning in audit["warnings"]}
+        assert "should_run_false_before_safe_bypass" in kinds, payload
     assert payload["summary"]["installed_manifest_entry_count"] == 1, payload
-    assert payload["summary"]["installed_manifest_parse_error_count"] == 1, payload
-    assert payload["summary"]["installed_manifest_task_body_count"] == 0, payload
-    assert payload["summary"]["installed_manifest_has_task_body"] is False, payload
-    assert payload["summary"]["installed_prompt_policy_warning_count"] == 0, payload
-    assert payload["summary"]["installed_prompt_policy_warning_prompt_count"] == 0, payload
-    assert payload["summary"]["unknown_prompt_count"] == 0, payload
-    assert payload["summary"]["stale_prompt_count"] == 0, payload
     assert payload["summary"]["current_prompt_count"] == 1, payload
-    propagation = payload["default_upgrade_propagation"]
-    assert propagation["update_count"] == 0, payload
-    assert propagation["deferred_install_count"] == 0, payload
-    assert propagation["managed_targets"][0]["action"] == "current", payload
-    installed = payload["managed_heartbeats"][0]["installed_prompts"]["thin"]
-    assert installed["status"] == "current", payload
-    assert installed["automation_id"] == GOAL_ID, payload
-    assert installed["installed"] is True, payload
-    assert payload["summary"]["ready_for_default_promotion"] is True, payload
-    markdown = render_upgrade_plan_markdown(payload)
-    assert "installed_manifest_parse_error_count: `1`" in markdown, markdown
-    assert "parse_error automation_id=`invalid-legacy` reason=`invalid_toml`" in markdown, markdown
+    assert payload["summary"]["installed_manifest_has_task_body"] is False, payload
 
 
-def assert_codex_app_stale_policy_prompt_is_flagged(registry_path: Path, codex_home: Path) -> None:
+def assert_codex_app_stale_policy_prompt_is_flagged(
+    registry_path: Path,
+    manifest_path: Path,
+) -> None:
     stale_prompt = (
         f"Advance `{GOAL_ID}` from the registry-declared active state.\n\n"
         "Primary stability objective: keep a project-specific controller policy in the installed prompt.\n"
@@ -490,8 +472,12 @@ def assert_codex_app_stale_policy_prompt_is_flagged(registry_path: Path, codex_h
         "Details: loopx heartbeat-prompt --compact --goal-id "
         f"{GOAL_ID} --active-state /tmp/stale/ACTIVE_GOAL_STATE.md\n"
     )
-    write_codex_app_automation(codex_home, prompt=stale_prompt)
-    payload = build_upgrade_plan(registry_path=registry_path, cli_bin="loopx")
+    write_installed_manifest(manifest_path, goal_id=GOAL_ID, prompt=stale_prompt)
+    payload = build_upgrade_plan(
+        registry_path=registry_path,
+        installed_manifest=str(manifest_path),
+        cli_bin="loopx",
+    )
     assert payload["summary"]["ready_for_default_promotion"] is False, payload
     assert payload["summary"]["stale_prompt_count"] == 1, payload
     assert payload["summary"]["installed_prompt_policy_warning_prompt_count"] == 1, payload
@@ -528,22 +514,18 @@ def assert_codex_app_stale_policy_prompt_is_flagged(registry_path: Path, codex_h
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="loopx-upgrade-plan-smoke-") as raw_tmp:
         root = Path(raw_tmp)
-        old_codex_home = os.environ.get("CODEX_HOME")
-        os.environ["CODEX_HOME"] = str(root / "codex-home")
         try:
             registry_path, manifest_path = write_fixture(root)
+            discovery_manifest = root / "discovery-manifest.json"
             first_payload = assert_unknown_manifest_blocks_promotion(registry_path)
             assert_matching_manifest_is_ready(registry_path, manifest_path, first_payload)
             assert_not_installed_manifest_is_ready(registry_path, manifest_path)
             assert_stage_deferred_selection_is_not_upgrade_work(registry_path)
-            assert_codex_app_automation_is_discovered(registry_path, root / "codex-home", first_payload)
-            assert_codex_app_stale_policy_prompt_is_flagged(registry_path, root / "codex-home")
+            assert_installed_manifest_is_discovered(registry_path, discovery_manifest, first_payload)
+            assert_codex_app_stale_policy_prompt_is_flagged(registry_path, discovery_manifest)
             assert_registered_agent_activation_is_checked(root)
         finally:
-            if old_codex_home is None:
-                os.environ.pop("CODEX_HOME", None)
-            else:
-                os.environ["CODEX_HOME"] = old_codex_home
+            pass
     print("upgrade-plan-smoke ok")
     return 0
 

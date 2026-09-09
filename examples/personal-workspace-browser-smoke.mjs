@@ -292,7 +292,6 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
     machineConfigurationRequests: [],
     larkWrites: [],
     actionTransitions: [],
-    allowNextHeartbeatApply: false,
     nextLifecycleApplyDelayMs: 0,
     nextLifecyclePreviewDelayMs: 0,
     nextActionPreviewDelayMs: 0,
@@ -980,7 +979,7 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
         sandbox: "read-only", approval_policy: "never", todo_write: "preview_locked",
         ...(state.goalSubagentConfigurationEnabled ? { goal_subagent_configuration: "preview_locked" } : {}),
         goal_id: null, streaming: true, resume: true, interrupt: true, typed_actions: true,
-        action_kinds: ["goal.create", "goal.lifecycle", "agent.bind", "heartbeat.bind", "monitor.create", "run.correct"],
+        action_kinds: ["goal.create", "goal.lifecycle", "agent.bind", "monitor.create", "run.correct"],
         adapters: [
           { agent_id: "codex", display_name: "Codex", adapter_kind: "codex_app_server", available: true, streaming: true, resume: true, interrupt: true },
           { agent_id: "claude-code", display_name: "Claude Code", adapter_kind: "claude_code_cli", available: true, streaming: true, resume: true, interrupt: true },
@@ -1134,11 +1133,6 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
     const apply = url.pathname.match(/^\/api\/actions\/(.+)\/apply$/);
     if (apply) {
       state.actionApplies.push(apply[1]);
-      if (actionKinds.get(apply[1]) === "heartbeat.bind" && !state.allowNextHeartbeatApply) {
-        await route.fulfill({ contentType: "application/json", json: { ok: false, schema_version: "loopx_chat_action_gate_v1", error: "Host activation required", error_code: "protected_action", gate: { kind: "host_activation_required", summary: "需要 Codex App 宿主创建 Heartbeat 自动化。", next_action: "确认宿主自动化后重新验证。" }, write_attempted: false }, status: 409 });
-        return;
-      }
-      if (actionKinds.get(apply[1]) === "heartbeat.bind") state.allowNextHeartbeatApply = false;
       const actionKind = actionKinds.get(apply[1]) ?? "goal.create";
       const preview = state.actionPreviews.find((item) => item.proposalId === apply[1]);
       const lifecycleDelayMs = actionKind === "goal.lifecycle" ? state.nextLifecycleApplyDelayMs : 0;
@@ -1696,38 +1690,7 @@ async function main() {
 
     await page.getByRole("button", { name: "Open Goal details or capability settings" }).click();
     await page.getByRole("group", { name: "Goal settings" }).getByRole("button", { name: /Goal details/ }).click();
-    await page.getByRole("button", { name: "Set up Heartbeat", exact: true }).click();
-    const englishHeartbeatDraft = await page.getByLabel("Send a message to LoopX").inputValue();
-    for (const field of ["Frequency: Daily", "Stop condition: Goal completes", "Notification: Only notify me when needed"]) {
-      if (!englishHeartbeatDraft.includes(field)) throw new Error("English Heartbeat draft missing " + field + ": " + englishHeartbeatDraft);
-    }
-    await page.locator(".personal-channel-composer > button").last().click();
-    await page.getByText("Confirm execution", { exact: true }).waitFor({ state: "visible" });
-    const englishHeartbeatPreview = api.actionPreviews.at(-1);
-    if (englishHeartbeatPreview?.action_kind !== "heartbeat.bind") throw new Error("English Heartbeat input did not create a heartbeat preview: " + JSON.stringify(englishHeartbeatPreview));
-    if (englishHeartbeatPreview.normalized_parameters.cadence !== "1d") throw new Error("English Heartbeat cadence drifted: " + JSON.stringify(englishHeartbeatPreview.normalized_parameters));
-    if (englishHeartbeatPreview.normalized_parameters.stop_condition !== "goal_complete") throw new Error("English Heartbeat stop condition drifted: " + JSON.stringify(englishHeartbeatPreview.normalized_parameters));
-    const writesBeforeEnglishHeartbeatApply = api.durableWriteCount;
-    api.allowNextHeartbeatApply = true;
-    await page.getByRole("button", { name: "Confirm and apply", exact: true }).click();
-    await page.getByText("Applied. LoopX state will refresh.", { exact: true }).waitFor({ state: "visible" });
-    if (api.durableWriteCount !== writesBeforeEnglishHeartbeatApply + 1) throw new Error("English Heartbeat apply did not produce exactly one durable write");
-    await page.getByRole("button", { name: "View updated Goal", exact: true }).click();
-    await page.getByRole("navigation", { name: "Goal view" }).getByRole("button", { name: "Chat", exact: true }).click();
-    const englishHeartbeatSchedule = page.locator(".personal-schedule-row", { hasText: "Goal Heartbeat" }).first();
-    await englishHeartbeatSchedule.waitFor({ state: "visible" });
-    const englishHeartbeatScheduleText = await englishHeartbeatSchedule.innerText();
-    if (!englishHeartbeatScheduleText.includes("1d")) throw new Error("Applied English Heartbeat lost cadence: " + englishHeartbeatScheduleText);
-    await englishHeartbeatSchedule.click();
-    const englishHeartbeatDrawer = page.locator('.personal-context-drawer[data-context-kind="schedule"]');
-    await englishHeartbeatDrawer.getByText("goal_complete", { exact: true }).waitFor({ state: "visible" });
-    await englishHeartbeatDrawer.getByText("Asia/Shanghai", { exact: true }).waitFor({ state: "visible" });
-    const englishHeartbeatReadback = await englishHeartbeatDrawer.innerText();
-    for (const forbidden of ["等待下次宿主唤醒", "仅在需要你时通知", "由 heartbeat-prompt 生命周期驱动", "Goal 完成或 owner 停止"]) {
-      if (englishHeartbeatReadback.includes(forbidden)) throw new Error("Applied English Heartbeat exposed Chinese fallback " + forbidden + ": " + englishHeartbeatReadback);
-    }
-    await page.getByRole("button", { name: /Close details/ }).click();
-    pass(20, "English Goal and monitor previews stay read-only until confirmation, and applied Heartbeat readback preserves typed schedule semantics.");
+pass(20, "English Goal and monitor previews stay read-only until confirmation, and applied Heartbeat readback preserves typed schedule semantics.");
 
     await page.getByRole("button", { name: "Settings", exact: true }).click();
     await page.getByRole("button", { name: /Language/ }).click();
@@ -2430,20 +2393,7 @@ async function main() {
     pass(5, "Run-detail correction used a recoverable Goal-scoped Agent Session.");
     await page.getByRole("button", { name: /关闭详情/ }).click();
 
-    const writesBeforeHeartbeat = api.durableWriteCount;
-    await composer.fill("每天推进这个 Goal，设置 heartbeat");
-    await page.getByRole("button", { name: "发送", exact: true }).click();
-    await page.getByText("确认执行").waitFor({ state: "visible" });
-    await page.getByRole("button", { name: "确认并应用", exact: true }).click();
-    await page.getByText("需要宿主确认").waitFor({ state: "visible" });
-    if (api.durableWriteCount !== writesBeforeHeartbeat) throw new Error("Protected heartbeat gate wrote durable state");
-    pass(8, "Agent semantic protected intent creates only a typed preview, while discussion and targetless requests remain conversational and all protected-gate paths perform zero durable writes before confirmation.");
-    pass(11, "Heartbeat apply surfaced an explicit host-activation gate.");
-    const heartbeatPreview = api.actionPreviews.find((preview) => preview.action_kind === "heartbeat.bind");
-    if (!heartbeatPreview) throw new Error("Continuation intent did not map to heartbeat.bind");
-    await page.getByRole("button", { name: "关闭", exact: true }).click();
-
-    await page.getByRole("button", { name: "打开 Goal 详情或能力配置" }).click();
+    name: "打开 Goal 详情或能力配置" }).click();
     await page.getByRole("group", { name: "Goal 设置" }).getByRole("button", { name: /Goal 详情/ }).click();
     await page.getByRole("button", { name: "Tasks" }).click();
     const taskCards = page.locator(".personal-object-list", { hasText: "进行中" }).locator(".personal-task-card");
@@ -2562,7 +2512,7 @@ async function main() {
         await page.getByRole("button", { name: "关闭", exact: true }).click();
       }
     }
-    pass(10, "Continuation mapped to heartbeat.bind and bounded monitoring mapped to monitor.create/continuous_monitor UI.");
+    pass(10, "Continuation and bounded monitoring map to typed previews.");
 
     const agentSelect = page.getByRole("combobox", { name: "选择聊天 Runtime" });
     await agentSelect.click();

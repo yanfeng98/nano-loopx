@@ -68,8 +68,8 @@ def assert_message_contract(payload: dict[str, object]) -> None:
     assert "heartbeat-prompt --thin" in str(payload["heartbeat_prompt_json_command"]), payload
     assert "--format json heartbeat-prompt" in str(payload["heartbeat_prompt_json_command"]), payload
     assert payload["codex_cli_goal_prefix"] == "/goal ", payload
-    assert payload["codex_app_loop_surface"] == "heartbeat automation task_body", payload
-    assert payload["codex_app_default_heartbeat_cadence"] == "initially 3 minutes, then follow quota scheduler_hint", payload
+    assert payload["host_loop_surface"] == "codex_cli visible goal", payload
+    assert payload["host_loop_default_cadence"] == "goal activation, then follow quota scheduler_hint", payload
     assert "--agent-scope 'Codex CLI /goal visible TUI loop'" in str(payload["heartbeat_prompt_command"]), payload
     checklist = payload["first_run_validation_checklist"]
     assert isinstance(checklist, list) and len(checklist) >= 5, payload
@@ -168,7 +168,6 @@ def assert_docs_surface_codex_cli_quickstart() -> None:
     ), getting_started
     assert "首次运行路径不应要求你理解 registry 路径" in normalized_getting_started, getting_started
     assert 'App 上手体验的"先设置"改写' in normalized_getting_started, getting_started
-    assert "Codex App 得到从 3 分钟开始" in normalized_getting_started, getting_started
     assert "无记录验证清单" in normalized_getting_started, getting_started
     assert "立即安装薄的 LoopX goal/heartbeat 正文" in normalized_product_contract, product_contract
     assert "设置路径可用后的可选自动化检查" in normalized_getting_started, getting_started
@@ -217,7 +216,7 @@ def main() -> int:
     assert "Copy the block below into Codex CLI TUI" in cli_markdown, cli_markdown
     assert "setup message, not the reusable heartbeat body" in cli_markdown, cli_markdown
     assert "`/goal <thin task_body>`" in cli_markdown, cli_markdown
-    assert "Codex App loop: set heartbeat automation initially every 3 minutes" in cli_markdown, cli_markdown
+    assert "Codex CLI TUI loop: set" in cli_markdown, cli_markdown
     assert "heartbeat-prompt --thin" in cli_markdown, cli_markdown
     assert "Fresh Repo Install Repair" in cli_markdown, cli_markdown
     assert "Post-Bootstrap Thin Loop Prompt" in cli_markdown, cli_markdown

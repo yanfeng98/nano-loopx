@@ -16,7 +16,7 @@
 ## 产品领域
 
 - [Foundations](foundations/README.md):Agent 身份、规划、奖励、重规划和 server/client 形态。
-- [Runtimes](runtimes/README.md):Codex CLI、Codex App 以及未来的运行时体验。
+- [Runtimes](runtimes/README.md):Codex CLI 以及未来的运行时体验。
 - [运维者界面](surfaces/README.md):状态、可观测性、前场和展示边界。
 - [使用场景](use-cases/README.md):自动研究、issue/PR 工作、跨运行时评审与办公运营。
 - [路线图](roadmaps/README.md):提出的里程碑,并非当前运行时契约。

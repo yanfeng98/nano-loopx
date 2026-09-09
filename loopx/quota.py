@@ -91,8 +91,8 @@ from .control_plane.scheduler.execution_context import (
     SchedulerExecutionContextResolution,
 )
 from .control_plane.scheduler.state import (
-    CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
-    CODEX_APP_SURFACE,
+    CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
+    CODEX_CLI_SURFACE,
 )
 from .control_plane.todos.contract import (
     normalize_todo_claimed_by,
@@ -863,8 +863,7 @@ def build_quota_should_run(
     available_capabilities: Any = None,
     include_scheduler_detail: bool = False,
     include_agent_todo_detail: bool = False,
-    codex_app_current_rrule: Any = None,
-    codex_app_automation_id: Any = None,
+    codex_cli_current_rrule: Any = None,
     scheduler_execution_context: (
         Mapping[str, Any] | SchedulerExecutionContextResolution | None
     ) = None,
@@ -889,8 +888,7 @@ def build_quota_should_run(
         available_capabilities=available_capabilities,
         include_scheduler_detail=include_scheduler_detail,
         include_agent_todo_detail=include_agent_todo_detail,
-        codex_app_current_rrule=codex_app_current_rrule,
-        codex_app_automation_id=codex_app_automation_id,
+        codex_cli_current_rrule=codex_cli_current_rrule,
         scheduler_execution_context=scheduler_execution_context,
         operator_inbox_urgency_projector=operator_inbox_urgency_projector,
         receipt_bound_todo_id=receipt_bound_todo_id,
@@ -965,8 +963,8 @@ def record_quota_scheduler_ack(
     execute: bool = False,
     agent_id: str | None = None,
     available_capabilities: Any = None,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
     applied_rrule: str | None = None,
     reset_token: str | None = None,
     identity_signature: str | None = None,
@@ -989,7 +987,7 @@ def record_quota_scheduler_ack(
             goal_id=safe_goal_id,
             agent_id=safe_agent_id,
             available_capabilities=available_capabilities,
-            codex_app_current_rrule=(applied_rrule if host_match_observed else None),
+            codex_cli_current_rrule=(applied_rrule if host_match_observed else None),
             scheduler_execution_context=scheduler_execution_context,
             operator_inbox_urgency_projector=operator_inbox_urgency_projector,
         )
@@ -1004,8 +1002,8 @@ def record_quota_scheduler_ack(
         goal_id=safe_goal_id,
         agent_id=safe_agent_id,
         execute=execute,
-        surface=str(surface or CODEX_APP_SURFACE).strip() or CODEX_APP_SURFACE,
-        state_key=str(state_key or CODEX_APP_STATEFUL_BACKOFF_STATE_KEY).strip(),
+        surface=str(surface or CODEX_CLI_SURFACE).strip() or CODEX_CLI_SURFACE,
+        state_key=str(state_key or CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY).strip(),
         applied_rrule=applied_rrule,
         reset_token=reset_token,
         identity_signature=identity_signature,

@@ -11,8 +11,8 @@ import pytest
 
 from loopx.control_plane import effect_runtime
 from loopx.control_plane.scheduler.state import (
-    CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
-    CODEX_APP_SURFACE,
+    CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
+    CODEX_CLI_SURFACE,
     SCHEDULER_STATE_STORE_REQUEST_SCHEMA,
     build_scheduler_state,
     load_scheduler_state,
@@ -45,8 +45,8 @@ def _store_request(runtime_root: Path, state: dict[str, object]) -> dict[str, ob
         "runtime_root": str(runtime_root),
         "goal_id": GOAL_ID,
         "agent_id": AGENT_ID,
-        "surface": CODEX_APP_SURFACE,
-        "state_key": CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+        "surface": CODEX_CLI_SURFACE,
+        "state_key": CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
         "state": state,
     }
 

@@ -417,7 +417,7 @@ def _surface_commands(
             "--agent-id",
             AGENT_IDS[0],
             "--host-surface",
-            "codex-app",
+            "codex-cli-tui",
             "--goal-text",
             GOAL_TEXT,
         ],
@@ -432,7 +432,7 @@ def _surface_commands(
             "--agent-id",
             AGENT_IDS[0],
             "--host-surface",
-            "codex-app",
+            "codex-cli-tui",
             "--goal-text",
             GOAL_TEXT,
         ],
@@ -603,7 +603,7 @@ def _mode_variant_commands(
             "--agent-id",
             AGENT_IDS[0],
             "--host-surface",
-            "codex-app",
+            "codex-cli-tui",
             "--goal-text",
             GOAL_TEXT,
             "--include-command-pack-detail",
@@ -1679,31 +1679,6 @@ def test_todo_list_explicit_limit_bounds_projection_overlay_ids(
     assert [key for key in overlay if key.endswith("_todo_ids")] == []
 
 
-def test_turn_envelope_cli_preserves_codex_app_scheduler_binding(
-    tmp_path: Path,
-) -> None:
-    project, runtime, registry_path, state_file = _write_fixture(
-        tmp_path,
-        SCENARIOS[0],
-    )
-    command = _mode_variant_commands(
-        project=project,
-        runtime=runtime,
-        registry_path=registry_path,
-        state_file=state_file,
-        output_format="json",
-    )["quota_should_run_turn_envelope"]
-
-    exit_code, text = _invoke_cli([*command, "--codex-app"])
-
-    assert exit_code == 0, text
-    payload = json.loads(text)
-    assert payload["detail_ref"]["full_decision"] == (
-        "loopx --format json quota should-run "
-        f"--goal-id {GOAL_ID} --agent-id {AGENT_IDS[0]} --codex-app"
-    )
-
-
 def test_quota_should_run_cli_actions_keep_explicit_runtime_root(
     tmp_path: Path,
 ) -> None:
@@ -1756,7 +1731,6 @@ def test_first_class_runtime_profiles_fit_thin_prompt_budget_and_cli_round_trip(
     tmp_path: Path,
 ) -> None:
     cases = (
-        (SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT, "--codex-app"),
         (SchedulerRuntimeProfile.CODEX_CLI_VISIBLE, "--runtime-profile codex_cli"),
         (SchedulerRuntimeProfile.CLAUDE_CODE_VISIBLE, "--runtime-profile claude_code"),
         (SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP, "--runtime-profile generic_cli"),

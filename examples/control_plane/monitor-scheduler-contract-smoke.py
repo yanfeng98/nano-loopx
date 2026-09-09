@@ -14,9 +14,6 @@ from loopx.control_plane.testing.quota_fixtures import quota_status_payload  # n
 from loopx.control_plane.scheduler import monitor_todo as monitor_todo_module  # noqa: E402
 from loopx.control_plane.scheduler import scheduler_hint as scheduler_hint_module  # noqa: E402
 from loopx.control_plane.scheduler import time as scheduler_time  # noqa: E402
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.runtime import time as runtime_time  # noqa: E402
 from loopx.quota import build_quota_should_run, render_quota_should_run_markdown  # noqa: E402
 
@@ -27,9 +24,7 @@ PAST_DUE_AT = "2000-01-01T00:00:00+00:00"
 FUTURE_DUE_AT = "2999-01-01T00:00:00+00:00"
 EXPIRED_AT = "2000-01-01T00:05:00+00:00"
 FROZEN_NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 FRONTIER_REPLAN_ACK_RUNS = [
     {
         "classification": "monitor_scheduler_replan_ack",
@@ -238,13 +233,13 @@ def assert_not_due_monitor_scheduler_uses_due_horizon_before_cadence() -> None:
         ]
     )
     scheduler = guard["scheduler_hint"]
-    codex_app = scheduler["codex_app"]
-    stateful = codex_app["stateful_backoff"]
+    codex_cli = scheduler["codex_cli"]
+    stateful = codex_cli["stateful_backoff"]
     assert guard["decision"] == "skip", guard
     assert guard["effective_action"] == "monitor_quiet_skip", guard
     assert scheduler["cadence_class"] == "monitor_wait", scheduler
-    assert codex_app["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=15", scheduler
-    assert codex_app["example_progression_minutes"] == [15, 30, 60], scheduler
+    assert codex_cli["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=15", scheduler
+    assert codex_cli["example_progression_minutes"] == [15, 30, 60], scheduler
     assert stateful["current_rrule"] == "FREQ=MINUTELY;INTERVAL=15", scheduler
 
 
@@ -264,13 +259,13 @@ def assert_monitor_scheduler_far_window_uses_coarse_backoff() -> None:
         include_scheduler_detail=True,
     )
     scheduler = guard["scheduler_hint"]
-    codex_app = scheduler["codex_app"]
+    codex_cli = scheduler["codex_cli"]
     context = scheduler["cold_path_detail"]["cadence_context"]
     assert guard["effective_action"] == "monitor_quiet_skip", guard
     assert context["phase"] == "far_window", context
     assert context["cap_minutes"] == 90, context
-    assert codex_app["example_progression_minutes"] == [15, 30, 60], scheduler
-    assert codex_app["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=15", scheduler
+    assert codex_cli["example_progression_minutes"] == [15, 30, 60], scheduler
+    assert codex_cli["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=15", scheduler
 
 
 def assert_monitor_scheduler_due_horizon_can_break_host_floor() -> None:
@@ -288,13 +283,13 @@ def assert_monitor_scheduler_due_horizon_can_break_host_floor() -> None:
         include_scheduler_detail=True,
     )
     scheduler = guard["scheduler_hint"]
-    codex_app = scheduler["codex_app"]
+    codex_cli = scheduler["codex_cli"]
     context = scheduler["cold_path_detail"]["cadence_context"]
     assert context["phase"] == "near_window", context
     assert context["host_floor_minutes"] == 7, context
     assert context["cap_minutes"] == 7, context
-    assert codex_app["example_progression_minutes"] == [7], scheduler
-    assert codex_app["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=7", scheduler
+    assert codex_cli["example_progression_minutes"] == [7], scheduler
+    assert codex_cli["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=7", scheduler
 
 
 def assert_monitor_scheduler_near_window_caps_without_breaking_floor() -> None:
@@ -313,13 +308,13 @@ def assert_monitor_scheduler_near_window_caps_without_breaking_floor() -> None:
         include_scheduler_detail=True,
     )
     scheduler = guard["scheduler_hint"]
-    codex_app = scheduler["codex_app"]
+    codex_cli = scheduler["codex_cli"]
     context = scheduler["cold_path_detail"]["cadence_context"]
     assert guard["effective_action"] == "monitor_quiet_skip", guard
     assert context["phase"] == "near_window", context
     assert context["host_floor_minutes"] == 15, context
     assert context["cap_minutes"] == 37, context
-    assert codex_app["example_progression_minutes"] == [15, 30], scheduler
+    assert codex_cli["example_progression_minutes"] == [15, 30], scheduler
 
 
 def assert_monitor_scheduler_near_window_reset_identity_is_stable() -> None:
@@ -355,11 +350,11 @@ def assert_monitor_scheduler_near_window_reset_identity_is_stable() -> None:
     assert first_context["cap_minutes"] == 37, first_context
     assert same_bucket_context["cap_minutes"] == 36, same_bucket_context
     assert next_bucket_context["cap_minutes"] == 29, next_bucket_context
-    assert first_scheduler["codex_app"]["example_progression_minutes"] == [15, 30], first_scheduler
-    assert same_bucket_scheduler["codex_app"]["example_progression_minutes"] == [15, 30], (
+    assert first_scheduler["codex_cli"]["example_progression_minutes"] == [15, 30], first_scheduler
+    assert same_bucket_scheduler["codex_cli"]["example_progression_minutes"] == [15, 30], (
         same_bucket_scheduler
     )
-    assert next_bucket_scheduler["codex_app"]["example_progression_minutes"] == [15], (
+    assert next_bucket_scheduler["codex_cli"]["example_progression_minutes"] == [15], (
         next_bucket_scheduler
     )
     assert first_scheduler["reset_policy"]["reset_token"] == same_bucket_scheduler[
@@ -392,16 +387,16 @@ def assert_monitor_scheduler_active_window_honors_tighter_cadence() -> None:
         include_scheduler_detail=True,
     )
     scheduler = guard["scheduler_hint"]
-    codex_app = scheduler["codex_app"]
+    codex_cli = scheduler["codex_cli"]
     context = scheduler["cold_path_detail"]["cadence_context"]
     assert guard["effective_action"] == "monitor_quiet_skip", guard
     assert context["phase"] == "active_window", context
     assert context["cadence_minutes"] == 3, context
     assert context["host_floor_minutes"] == 3, context
-    assert codex_app["example_progression_minutes"] == [3], scheduler
+    assert codex_cli["example_progression_minutes"] == [3], scheduler
     local_scheduler = scheduler["cold_path_detail"]["local_scheduler"]
     assert local_scheduler["example_progression_minutes"] == [3], scheduler
-    assert codex_app["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
+    assert codex_cli["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
 
 
 def assert_unscheduled_monitor_requires_metadata_repair() -> None:
@@ -746,13 +741,13 @@ def assert_expired_monitor_does_not_catch_up() -> None:
     assert monitor_items[0]["todo_id"] == "todo_monitor_expired", monitor_items
     assert monitor_items[0]["expires_at"] == EXPIRED_AT, monitor_items
     scheduler = guard["scheduler_hint"]
-    codex_app = scheduler["codex_app"]
+    codex_cli = scheduler["codex_cli"]
     context = scheduler["cold_path_detail"]["cadence_context"]
     assert scheduler["cadence_class"] == "monitor_wait", scheduler
     assert context["phase"] == "expired", context
     assert context["expired_monitor_count"] == 1, context
-    assert codex_app["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=15", scheduler
-    assert codex_app["example_progression_minutes"] == [15, 30, 60], scheduler
+    assert codex_cli["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=15", scheduler
+    assert codex_cli["example_progression_minutes"] == [15, 30, 60], scheduler
 
 
 def assert_due_monitor_priority_does_not_steal_advancement_lane() -> None:
@@ -842,7 +837,7 @@ def assert_capability_repair_precedes_scheduled_monitor_wait() -> None:
     assert "capability_monitor_fallback" not in guard, guard
     assert guard["heartbeat_recommendation"]["recommended_mode"] == "repair_capability_bridge", guard
     assert scheduler["cadence_class"] == "active_work", scheduler
-    assert scheduler["codex_app"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
+    assert scheduler["codex_cli"]["recommended_rrule"] == "FREQ=MINUTELY;INTERVAL=3", scheduler
 
 
 def assert_read_only_projected_due_monitor_does_not_force_writeback() -> None:

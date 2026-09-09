@@ -175,7 +175,6 @@ def test_missing_project_stops_before_mutation() -> None:
         assert isinstance(next_step, dict)
         assert next_step["requires_user_confirmation"] is True
         assert "--dry-run" in str(next_step["dry_run_command"])
-        assert "--codex-app-heartbeat ask" in str(next_step["dry_run_command"])
         assert "--dry-run" not in str(next_step["after_confirmation_command"])
         assert "/loopx-summary-all" not in json.dumps(payload)
 
@@ -353,7 +352,7 @@ def test_start_goal_guided_previews_transaction_without_mutation() -> None:
         assert selection["guided_transaction"]["blocked_by"] == "host_surface_selection"
         assert selection["safety_contract"]["writes_registry"] is False
 
-        payload = run_json(*start_args, "--host-surface", "codex-app")
+        payload = run_json(*start_args, "--host-surface", "codex-cli-tui")
 
         assert payload["schema_version"] == "loopx_start_goal_guided_v0"
         assert payload["read_only"] is True
@@ -458,7 +457,7 @@ def test_start_goal_guided_requires_explicit_goal_for_multi_goal_project() -> No
             "--project",
             str(project),
             "--host-surface",
-            "codex-app",
+            "codex-cli-tui",
             "--goal-text",
             "Add a new meta agent without reusing an old lane",
         )
@@ -738,7 +737,7 @@ def test_start_goal_guided_derives_display_name_from_goal_text() -> None:
             "--agent-id",
             "codex-test-agent",
             "--host-surface",
-            "codex-app",
+            "codex-cli-tui",
             "--goal-text",
             "修复 scheduler state path 覆盖问题",
             "--include-command-pack-detail",
@@ -778,7 +777,7 @@ def test_start_goal_guided_derives_display_name_from_goal_text() -> None:
             "--agent-id",
             "codex-test-agent",
             "--host-surface",
-            "codex-app",
+            "codex-cli-tui",
             "--goal-text",
             "some objective",
             "--display-name",
@@ -801,7 +800,7 @@ def test_start_goal_guided_derives_display_name_from_goal_text() -> None:
             "--agent-id",
             "codex-test-agent",
             "--host-surface",
-            "codex-app",
+            "codex-cli-tui",
             "--goal-text",
             "/private/secret/path should not leak",
             "--include-command-pack-detail",

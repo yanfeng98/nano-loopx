@@ -202,8 +202,7 @@ def _unbound_visible_goal_settlement_failure(
     elif not turn_instance_id:
         reason = (
             "visible Goal settlement for selected Todo "
-            f"{selected_todo_id} requires turn_instance_id from quota should-run; "
-            "rerun the guard with --begin-turn"
+            f"{selected_todo_id} requires turn_instance_id from quota should-run"
         )
     else:
         return None

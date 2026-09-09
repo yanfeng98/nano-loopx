@@ -62,9 +62,6 @@ def _parser() -> argparse.ArgumentParser:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--mode", required=True, choices=sorted(MODES),
                    help="运行模式")
-    p.add_argument("--claim-codex-app", action="store_true",
-                   help="heartbeat 模式下硬声明 host_surface=codex_app（上游文档"
-                        "意义上的误用，只用于观察 RRULE/ACK 义务如何悬空）")
     p.add_argument("--project", required=True, help="任务工作区（Codex 可见的 cwd）")
     p.add_argument("--task-file", required=True, help="任务正文文件（UTF-8）")
     p.add_argument("--goal-id", default="wen-goal")
@@ -164,7 +161,7 @@ def _compact_settlement(settled: dict[str, Any]) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    mode = resolve(args.mode, claim_codex_app=args.claim_codex_app)
+    mode = resolve(args.mode)
     project = Path(args.project).expanduser().resolve()
     if not project.is_dir():
         print(f"FATAL: --project 不是目录: {project}", file=sys.stderr)

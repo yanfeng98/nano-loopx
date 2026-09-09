@@ -19,7 +19,6 @@ from ..quota.spend_sources import (
 )
 from ..scheduler.execution_context import (
     SchedulerExecutionContextResolution,
-    SchedulerRuntimeProfile,
     render_scheduler_execution_args,
     scheduler_runtime_profile_for_execution_context,
 )
@@ -590,6 +589,7 @@ def _turn_scoped_cli_settlement_context(
         runtime_profile=scheduler_runtime_profile_for_execution_context(
             scheduler_execution_context
         ),
+        scheduler_execution_context=scheduler_execution_context,
         goal_id=goal_id,
         agent_id=agent_id,
         command_prefix=selection.render_cli_command_prefix(runtime_root=runtime_root),
@@ -718,21 +718,6 @@ def interaction_next_cli_actions(
         if scheduler_args
         else "use the current host packet's typed monitor command"
     )
-    typed_heartbeat_receipt_retry = (
-        f"on missing/write_failed heartbeat_receipt only: {typed_quota_guard} "
-        '--turn-instance-id "${LOOPX_TURN:?}"'
-        if scheduler_args
-        else (
-            "on missing/write_failed heartbeat_receipt only: retry the current "
-            "host packet's typed quota guard with the same heartbeat turn id"
-        )
-    )
-    heartbeat_turn_receipt_enabled = (
-        scheduler_runtime_profile_for_execution_context(
-            scheduler_execution_context
-        )
-        is SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-    )
     if mode == "governed_capability_intent":
         projection = (
             payload.get("pending_capability_intent")
@@ -797,8 +782,6 @@ def interaction_next_cli_actions(
             f"{command_prefix} heartbeat-prompt --thin --goal-id {goal_id} --agent-id <registered-agent> --agent-scope '<scope>'",
         ]
     if mode == "monitor_quiet_skip":
-        if heartbeat_turn_receipt_enabled:
-            return [typed_heartbeat_receipt_retry]
         return [
             typed_monitor_poll,
             typed_quota_guard,

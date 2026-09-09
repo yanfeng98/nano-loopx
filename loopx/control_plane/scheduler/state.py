@@ -18,8 +18,8 @@ SCHEDULER_STATE_OPERATION_RESULT_SCHEMA = (
 )
 SCHEDULER_STATE_STORE_REQUEST_SCHEMA = "loopx_scheduler_state_store_request_v0"
 SCHEDULER_STATE_STORE_RESULT_SCHEMA = "loopx_scheduler_state_store_result_v0"
-CODEX_APP_STATEFUL_BACKOFF_STATE_KEY = "scheduler_hint.codex_app.stateful_backoff"
-CODEX_APP_SURFACE = "codex_app"
+CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY = "scheduler_hint.codex_cli.stateful_backoff"
+CODEX_CLI_SURFACE = "codex_cli"
 
 
 def _operation_result(operation: str, **params: Any) -> Any:
@@ -152,8 +152,8 @@ def normalize_scheduler_state(
     *,
     goal_id: str,
     agent_id: str,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
 ) -> dict[str, Any] | None:
     normalized = _operation_result(
         "normalize_state",
@@ -174,8 +174,8 @@ def build_scheduler_state(
     *,
     goal_id: Any,
     agent_id: str,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
     reset_token: Any,
     identity_signature: Any,
     progression_index: int,
@@ -214,8 +214,8 @@ def scheduler_state_path(
     *,
     goal_id: str,
     agent_id: str,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
 ) -> Path:
     value = _operation_result(
         "state_path",
@@ -273,8 +273,8 @@ def load_scheduler_state(
     *,
     goal_id: str,
     agent_id: str | None,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
 ) -> dict[str, Any] | None:
     if not agent_id:
         return None
@@ -299,8 +299,8 @@ def write_scheduler_state(
     *,
     goal_id: str,
     agent_id: str,
-    surface: str = CODEX_APP_SURFACE,
-    state_key: str = CODEX_APP_STATEFUL_BACKOFF_STATE_KEY,
+    surface: str = CODEX_CLI_SURFACE,
+    state_key: str = CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY,
 ) -> Path:
     result = _store_result(
         "write",

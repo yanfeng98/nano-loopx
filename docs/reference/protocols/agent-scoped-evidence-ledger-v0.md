@@ -109,7 +109,7 @@ loopx --format json evidence-log --goal-id <goal-id> --agent-id <agent-id> --thi
 | `--thin` | 选择当前唯一的公开安全模式；显式接受它以便生成可读命令。 |
 | 全局 `--format json\|markdown` | 选择 JSON 或紧凑 Markdown 渲染。 |
 
-命令在缺 `goal_id` 或 `agent_id` 时必须失效关闭。`codex` 这类模糊界面值不应静默落入 other-agent 语义；调用方应传已注册 agent id，并在需要时传独立 host 界面，如 `codex-app`、`codex-cli`、`opencode` 或 `claude-code`。
+命令在缺 `goal_id` 或 `agent_id` 时必须失效关闭。`codex` 这类模糊界面值不应静默落入 other-agent 语义；调用方应传已注册 agent id，并在需要时传独立 host 界面，如 `codex-cli`、`opencode` 或 `claude-code`。
 
 ## 作用域规则
 
@@ -171,7 +171,7 @@ agent 随后应写回以下之一：
 
 本流程使用 effect-program 分离，而不添加第二个 settlement 执行器。Host 上下文投影是可重复读取效果；类型化进展 writeback 是单独验证的状态迁移。投递回执证明上下文投递，语义增量证明该上下文的使用。任一回执都不得冒充另一个。
 
-实时行为资格测试通过实际函数工具对话而非仅测试输出字段验证该因果交接。一个 Doubao actor 接收交付的 Codex App heartbeat 正文，并针对一个封闭公开安全 Goal 选择 quota 命令。Harness 通过真实 LoopX CLI 运行该命令，返回其实际上下文/动作包，并要求 actor 选择下一个真实工具动作。actor 独立资格选定的类型化观察，然后执行真实 `refresh-state` 命令。仅证据日志、仅散文、quota 前、等价指纹与无 grounding 的 successor 动作都不能通过。只允许临时 fixture 状态变化，回执存储有界命令摘要与类型化结局，而非 prompt、包或输出。
+实时行为资格测试通过实际函数工具对话而非仅测试输出字段验证该因果交接。一个 Doubao actor 接收交付的宿主 heartbeat 正文，并针对一个封闭公开安全 Goal 选择 quota 命令。Harness 通过真实 LoopX CLI 运行该命令，返回其实际上下文/动作包，并要求 actor 选择下一个真实工具动作。actor 独立资格选定的类型化观察，然后执行真实 `refresh-state` 命令。仅证据日志、仅散文、quota 前、等价指纹与无 grounding 的 successor 动作都不能通过。只允许临时 fixture 状态变化，回执存储有界命令摘要与类型化结局，而非 prompt、包或输出。
 
 ## 隐私边界
 

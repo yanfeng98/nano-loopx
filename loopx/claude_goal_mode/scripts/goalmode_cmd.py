@@ -230,7 +230,7 @@ def main():
     print(f"  todo_id : {tid}")
     print(f"  scope   : {proj}")
     print(f"  task    : {task}")
-    print(f"  wrote   : .claude/loop.md  (the per-tick protocol)")
+    print("  wrote   : .claude/loop.md  (the per-tick protocol)")
     print()
     print("START WORKING — run native `/loop`  (Claude self-paces)  or  `/loop 10m`  (fixed cadence).")
     print("Each /loop tick runs: should_run -> claim_task -> ONE bounded verified segment -> complete_task.")

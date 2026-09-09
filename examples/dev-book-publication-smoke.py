@@ -26,7 +26,6 @@ CHAPTERS = (
     "03-one-turn",
     "04-runtime-boundaries",
     "05-connect-existing-project",
-    "06-codex-app",
     "07-codex-cli",
     "source-protocol-map",
     "source-trace-protocol-chain",

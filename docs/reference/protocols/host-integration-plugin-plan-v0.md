@@ -2,11 +2,10 @@
 
 `host_integration_plugin_plan_v0` 描述从今天 skill 级 LoopX slash-command 回退到 host 自有命令注册表插件的产品路径。它是规划契约，不是已交付插件清单。
 
-目标是让 Codex App 之类的 host 识别 `/loopx` 命令、安装或刷新瘦 heartbeat 正文、应用 `scheduler_hint` 并保护私有运行时数据，同时让 LoopX CLI 保持事实来源。
+目标是让宿主 host 识别 `/loopx` 命令、安装或刷新瘦 heartbeat 正文、应用 `scheduler_hint` 并保护私有运行时数据，同时让 LoopX CLI 保持事实来源。
 
 本计划组合既有契约：
 
-- [codex_app_host_command_registry_v0](codex-app-host-command-registry-v0.md) 用于 `/loopx`、`/loopx <goal text>` 与 `/loopx-global-*` 解析。
 - [host_integration_surface_v0](host-integration-surface-v0.md) 用于生命周期读取、受控写入、CLI 回退与公开/私有边界。
 - [session_runtime_loopx_projection_v0](session-runtime-loopx-projection-v0.md) 用于不含原始 transcript 的紧凑运行时投影。
 
@@ -28,7 +27,7 @@
 | 生命周期读取 | 把 status、quota、评审包与 command-pack 输出呈现为紧凑 host 包。 | 来自 `status`、`quota should-run`、`review-packet` 与 `bootstrap-command-pack` 的 CLI JSON。 |
 | 受控写入 | 只提供 CLI 等价的 todo/gate/reward/refresh/spend 操作，必要时带 dry-run。 | LoopX CLI 命令与 active-state/event ledger 写入。 |
 | 自动化安装 | 使用 `heartbeat-prompt --thin` 与作用域 agent 身份创建或刷新 host heartbeat。 | 生成的 heartbeat prompt 与 registry 协调字段。 |
-| Scheduler 适配器 | 仅在 `stateful_backoff.apply_needed=true` 时通过 `automation_update` 应用 `scheduler_hint.codex_app.recommended_rrule`，然后运行 `codex_app.ack_hint.cli_args`；当仅 `ack_needed=true` 时跳过 host 写入，直接运行绑定 ack。 | `quota should-run.scheduler_hint`、`quota scheduler-ack-current`。 |
+| Scheduler 适配器 | 仅在 `stateful_backoff.apply_needed=true` 时通过 `automation_update` 应用 `scheduler_hint.codex_cli.recommended_rrule`，然后运行 `codex_cli.ack_hint.cli_args`；当仅 `ack_needed=true` 时跳过 host 写入，直接运行绑定 ack。 | `quota should-run.scheduler_hint`、`quota scheduler-ack-current`。 |
 | 隐私 guard | 脱敏本地路径，拒绝原始 transcript/会话文件/凭据载荷。 | 公开/私有边界加 host 投影边界检查。 |
 
 ## 分阶段路径
@@ -76,8 +75,8 @@ loopx heartbeat-prompt --thin --goal-id <goal-id> \
 Host 在每次 heartbeat 结果后应用 `quota should-run.scheduler_hint`：
 
 - `run_now` 恢复或保留活动节奏。
-- wait/backoff 状态只在需要 host 更新工作时暴露 `codex_app.recommended_rrule`。
-- `codex_app.stateful_backoff.apply_needed=true` 意为针对该 RRULE 调用 `automation_update`；成功后运行 `codex_app.ack_hint.cli_args`，使 LoopX 持久化 reset token、身份签名、进度索引与最后应用的 RRULE。
+- wait/backoff 状态只在需要 host 更新工作时暴露 `codex_cli.recommended_rrule`。
+- `codex_cli.stateful_backoff.apply_needed=true` 意为针对该 RRULE 调用 `automation_update`；成功后运行 `codex_cli.ack_hint.cli_args`，使 LoopX 持久化 reset token、身份签名、进度索引与最后应用的 RRULE。
 - `apply_needed=false` 意为所需 RRULE 已应用；跳过 host 更新。若 `ack_needed=true`，直接运行绑定的 `ack_hint.cli_args`，使 LoopX 持久化匹配的 host 回读；否则无需任何 scheduler 动作。
 - Codex CLI TUI 与 Claude Code loop 在自停前运行最终 quota/replan 检查。
 
@@ -111,8 +110,8 @@ Host 在每次 heartbeat 结果后应用 `quota should-run.scheduler_hint`：
 ```json
 {
   "schema_version": "host_integration_plugin_plan_v0",
-  "host_kind": "codex_app",
-  "command_registry": "codex_app_host_command_registry_v0",
+  "host_kind": "codex_cli",
+  "command_registry": "codex_cli_slash_commands",
   "automation": {
     "heartbeat_prompt_mode": "thin",
     "requires_agent_identity": true,

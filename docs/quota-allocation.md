@@ -498,7 +498,7 @@ source:validated_goal_closure}` 加
 attention 文本来授权关闭。
 
 `automation_liveness` 刻意不设置轮询 cadence。guard 还暴露 `scheduler_hint`，
-它是 host 运行时调度契约：Codex App 自动化在长等待期间应渐进后退到推荐
+它是 host 运行时调度契约：宿主自动化在长等待期间应渐进后退到推荐
 间隔/最大值，而 Codex CLI TUI 与 Claude Code loop 应在其未变化轮询上限后运行
 一次最终 `quota should-run` replan 检查，并在 guard 仍未变化时退出或停止。
 Cadence 变更、最终检查与自停 turn 永不 spend 配额；只有验证 delivery 或允许的
@@ -506,8 +506,9 @@ writeback 会。
 
 Scheduler 归属是显式的。裸 `quota should-run` 仍可暴露 quota 决策，
 但其 `scheduler_hint` 以 `repair_scheduler_execution_context` fail closed；
-它永不假设 Codex App。生成的 Codex App heartbeat 传显式
-`codex_app_heartbeat` profile；生成的命令用其紧凑别名 `--codex-app`。
+它永不假设某个宿主。生成的宿主 heartbeat 传显式
+`--runtime-profile`；其他 host 传 typed `--host-surface`、`--scheduler-owner` 与 `--execution-mode`
+三元组描述消费该 hint 的运行时。
 其他 host 传 typed `--host-surface`、`--scheduler-owner` 与 `--execution-mode`
 三元组描述消费该 hint 的运行时。
 
@@ -553,7 +554,7 @@ Dashboard 应把计算配额显示为紧凑控制面：
 ```bash
 loopx quota status
 loopx quota plan
-loopx --format json --registry "$HOME/.codex/loopx/registry.global.json" quota should-run --goal-id <goal-id> --runtime-profile codex_app_heartbeat
+loopx --format json --registry "$HOME/.codex/loopx/registry.global.json" quota should-run --goal-id <goal-id> --runtime-profile generic_cli
 loopx --registry "$HOME/.codex/loopx/registry.global.json" quota spend-slot --goal-id <goal-id> --slots 1
 loopx --registry "$HOME/.codex/loopx/registry.global.json" quota spend-slot --goal-id <goal-id> --slots 1 --execute
 ```
@@ -598,7 +599,7 @@ Markdown 决策：
   "scheduler_hint": {
     "schema_version": "scheduler_hint_v0",
     "action": "backoff_waiting_for_user",
-    "codex_app": {
+    "codex_cli": {
       "recommended_interval_minutes": 30,
       "example_progression_minutes": [30, 60]
     },
@@ -623,7 +624,7 @@ Markdown 决策：
       "execution_required": false,
       "request": "loopx quota should-run --include-detail scheduler",
       "hot_path_runtime_fields": [
-        "codex_app",
+        "codex_cli",
         "unchanged_poll",
         "reset_policy"
       ],
@@ -639,8 +640,8 @@ Markdown 决策：
     "reset_policy": {
       "reset_token": "0123456789abcdef",
       "host_state_key": "scheduler_hint.reset_policy.reset_token",
-      "codex_app_initial_interval_minutes": 30,
-      "codex_app_initial_rrule": "FREQ=MINUTELY;INTERVAL=30",
+      "codex_cli_initial_interval_minutes": 30,
+      "codex_cli_initial_rrule": "FREQ=MINUTELY;INTERVAL=30",
       "identity_signature": "123456789abc"
     }
   },
@@ -773,25 +774,20 @@ Codex 是否必须尝试工作、delivery 是否允许、quiet no-op 是否允�
 以及 quota spend 是否只在验证后允许。执行者应先读该对象。
 响应还包含 `scheduler_hint.schema_version=scheduler_hint_v0`。该 hint 不是
 delivery 权限。它是跨运行时等待策略：`run_now` 对必需工作保持活跃 cadence；
-`backoff_waiting_for_user` 减缓 Codex App 并在重复未变化轮询后停止 CLI/Claude
+`backoff_waiting_for_user` 减缓宿主并在重复未变化轮询后停止 CLI/Claude
 loop；`backoff_until_reassigned` 处理 peer 重分配等待而不过快丢 Agent 间
 handoff cadence；`backoff_until_material_transition` 处理 monitor-only quiet
 轮询；`backoff_until_fresh_evidence` 处理映射或 post-handoff no-op 等待。
-对 Codex App 与本地 scheduler，`recommended_interval_minutes` 是下一个目标间隔。
-对 Codex App heartbeat，`recommended_rrule` 只在
-`codex_app.stateful_backoff.apply_needed=true` 时发出；如果期望 RRULE 已应用，
+对宿主与本地 scheduler，`recommended_interval_minutes` 是下一个目标间隔。
+对宿主 heartbeat，`recommended_rrule` 只在
+`codex_cli.stateful_backoff.apply_needed=true` 时发出；如果期望 RRULE 已应用，
 它被省略，使 Agent 不再调用 host 工具。
 如果该匹配仍需要 reset-token/identity 绑定，`stateful_backoff.ack_needed=true`
 且绑定 ack 不经 host 更新运行。
-当需要 apply 但会话中没有 `automation_update` 时，`codex_app.fallback_hint`
-携带已解析自动化的有界 `loopx-apply-rrule` 命令（备份 `codex-dev.db`、
-同步 TOML+SQLite、运行绑定 ACK）。直接 SQLite 编辑绕过 App API，
-所以 fallback 只为此缺口投影，绝不作为常规路径；未解析自动化 id 投影
-`available=false` 并需要可粘贴 heartbeat gate，而不是猜测。
-成功的 host RRULE 更新后，Agent 用 `loopx` 加 `codex_app.ack_hint.cli_args`
+成功的 host RRULE 更新后，Agent 用 `loopx` 加 `codex_cli.ack_hint.cli_args`
 记录该事实；当前 payload 用 `quota scheduler-ack-current` 在 LoopX 无 spend 地
 推进每 goal/agent scheduler 状态前重读最新 scheduler hint。人类 gate 可以在具体
-用户 todo 表露后让 Codex App heartbeat 通过 `[30, 60]`。LoopX 把 Codex App
+用户 todo 表露后让宿主 heartbeat 通过 `[30, 60]`。LoopX 把宿主
 集成上限设为 60 分钟；更粗等待保持本地 scheduler 可用，而不作为 App heartbeat
 RRULE 发出。
 CLI 产生的 ACK hint 把该参数向量绑定到产生 `quota should-run` 的确切 registry
@@ -811,20 +807,20 @@ Monitor-only quiet 等待走 `[15, 30, 60]`，同时保持同一无 spend monito
 Agent 作用域等待使用更保守的调整曲线，如 `[10, 20, 30, 60]`，
 使 600 秒本地 tick 在进一步冷却前接近现有 Agent 间交互 cadence。
 紧凑热路径只携带 host 需要行动的 reset 字段：`reset_policy.reset_token`、
-`host_state_key`、`codex_app_initial_interval_minutes`、
-`codex_app_initial_rrule` 与短 `identity_signature`。Host 应在未变化轮询间缓存
+`host_state_key`、`codex_cli_initial_interval_minutes`、
+`codex_cli_initial_rrule` 与短 `identity_signature`。Host 应在未变化轮询间缓存
 并比较 `reset_token`，并在 token 变化时重置未变化连续段。token 由 scheduler
 动作加当前身份/profile 输入派生；解释性 reset profile、profile 签名、reset
 条件摘要与 stateful-backoff 策略在调用方请求
 `loopx quota should-run --include-detail scheduler` 时住在
 `scheduler_hint.cold_path_detail`。Host 还应在外部事件使目标再次可执行时重置，
 例如线程中的用户反馈、新或重分配 todo、已解决 gate 或实质证据转移。
-重置在再次开始未变化退避前应用 `codex_app_initial_interval_minutes`
+重置在再次开始未变化退避前应用 `codex_cli_initial_interval_minutes`
 （与匹配的本地 scheduler 初始间隔）；它永不 spend quota。
-对 Codex App heartbeat，host 与 Agent 只在
-`codex_app.stateful_backoff.apply_needed=true` 且 `codex_app.recommended_rrule`
+对宿主 heartbeat，host 与 Agent 只在
+`codex_cli.stateful_backoff.apply_needed=true` 且 `codex_cli.recommended_rrule`
 存在时使用 `automation_update`。`automation_update` 成功后，Agent 必须运行
-`codex_app.ack_hint.cli_args`。当前 payload 用 `quota scheduler-ack-current`，
+`codex_cli.ack_hint.cli_args`。当前 payload 用 `quota scheduler-ack-current`，
 LoopX 随后在运行时根下持久化 `reset_token`、`identity_signature`、
 `progression_index` 与 `last_applied_rrule`。重复未变化身份只在已应用 RRULE
 完成一个真实间隔后推进 `progression_minutes`。因此即时 post-ACK 调和验证已结算
@@ -834,7 +830,7 @@ post-update ack 协议，而无需他们拥有或 diff 整个 quota 状态。如
 `apply_needed=false` 且 `ack_needed=true`，同一命令记录确切匹配的 host 读回，
 而不调用 `automation_update`。
 如果 `automation_update` 失败或超时，Agent 不得 ACK。LoopX 保持观察到的 host
-RRULE 权威。Agent 运行 `codex_app.failure_hint.cli_args` 一次持久化失败
+RRULE 权威。Agent 运行 `codex_cli.failure_hint.cli_args` 一次持久化失败
 target/observed-host 对，且不花 quota。LoopX 保留至多四个不同对 24 小时，
 因此活跃工作与 monitor 等待目标在 host RRULE 未变时不能互相覆盖。后续 heartbeat
 对每个保留的确切对暴露 `apply_needed=false` 与
@@ -852,7 +848,7 @@ cadence 当作已应用 cadence。
 且不在同一 turn 发出或立即到期一个 successor RRULE。用户反馈、新可运行工作、
 重分配或实质证据因此把自动化恢复到当前 profile 初始间隔，再恢复退避。
 
-`quota should-run` 还观察唯一匹配的活跃 Codex App heartbeat（goal + agent +
+`quota should-run` 还观察唯一匹配的活跃宿主 heartbeat（goal + agent +
 当前线程）的 RRULE。观察到的 host RRULE 计算 `apply_needed` 时优先于
 `last_applied_rrule`，紧凑结果暴露为 `stateful_backoff.host_observation`。
 不匹配是 `drift_detected`，所以 host 更新前写入的 ACK——或后来的 host 侧

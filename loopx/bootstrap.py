@@ -43,29 +43,6 @@ DEFAULT_DOMAIN = "project-goal-control-plane"
 GENERIC_ONBOARDING_ADAPTER_KINDS = frozenset(
     {"generic_project_goal_v0", "read_only_project_map_v0"}
 )
-HEARTBEAT_OPT_IN_STATUS_REQUIRED = (
-    "requires explicit heartbeat=yes/no before a recurring Codex App automation is installed"
-)
-HEARTBEAT_OPT_IN_STATUS_PREAUTHORIZED = (
-    "explicitly preauthorized; create or update the host loop before claiming recurring automation is active"
-)
-HEARTBEAT_OPT_IN_STATUS_DECLINED = (
-    "explicitly declined; keep the goal manual or on-demand unless the user later opts in"
-)
-HEARTBEAT_OPT_IN_INSTRUCTION = (
-    "Ask the user whether to enable the Codex App heartbeat. heartbeat=yes means create or update a recurring "
-    "Codex App automation from an identity-scoped `loopx heartbeat-prompt --thin` task body; heartbeat=no means "
-    "keep the goal manual or on-demand."
-)
-HEARTBEAT_OPT_IN_PREAUTHORIZED_INSTRUCTION = (
-    "The user preauthorized the Codex App heartbeat. Create or update the recurring automation from an "
-    "identity-scoped `loopx heartbeat-prompt --thin` task body before claiming recurring automation is active."
-)
-HEARTBEAT_OPT_IN_DECLINED_INSTRUCTION = (
-    "The user declined the Codex App heartbeat. Do not install recurring automation; keep the goal manual or "
-    "on-demand unless the user later opts in."
-)
-CODEX_APP_HEARTBEAT_CHOICES = {"ask", "yes", "no"}
 ONBOARDING_CONNECTION_VALIDATION_AGENT = "agent"
 ONBOARDING_CONNECTION_VALIDATION_PROVIDER_PREVALIDATED = "provider-prevalidated"
 ONBOARDING_CONNECTION_VALIDATION_CHOICES = {
@@ -150,13 +127,6 @@ def onboarding_candidates(onboarding_scan: dict[str, Any] | None) -> list[dict[s
     return [candidate for candidate in candidates if isinstance(candidate, dict)]
 
 
-def normalize_codex_app_heartbeat(value: str | None) -> str:
-    choice = (value or "ask").strip().lower()
-    if choice not in CODEX_APP_HEARTBEAT_CHOICES:
-        raise ValueError("codex_app_heartbeat must be one of: ask, yes, no")
-    return choice
-
-
 def normalize_onboarding_connection_validation(value: str | None) -> str:
     choice = (value or ONBOARDING_CONNECTION_VALIDATION_AGENT).strip().lower()
     if choice not in ONBOARDING_CONNECTION_VALIDATION_CHOICES:
@@ -167,44 +137,11 @@ def normalize_onboarding_connection_validation(value: str | None) -> str:
     return choice
 
 
-def heartbeat_opt_in_required(
-    *,
-    onboarding_scan: dict[str, Any] | None,
-    codex_app_heartbeat: str,
-) -> bool:
-    return bool(onboarding_scan and codex_app_heartbeat == "ask")
-
-
-def host_loop_activation_required(
-    *,
-    onboarding_scan: dict[str, Any] | None,
-    codex_app_heartbeat: str,
-) -> bool:
-    return bool(onboarding_scan and codex_app_heartbeat in {"ask", "yes"})
-
-
-def heartbeat_status(codex_app_heartbeat: str) -> str:
-    if codex_app_heartbeat == "yes":
-        return HEARTBEAT_OPT_IN_STATUS_PREAUTHORIZED
-    if codex_app_heartbeat == "no":
-        return HEARTBEAT_OPT_IN_STATUS_DECLINED
-    return HEARTBEAT_OPT_IN_STATUS_REQUIRED
-
-
-def heartbeat_instruction(codex_app_heartbeat: str) -> str | None:
-    if codex_app_heartbeat == "yes":
-        return HEARTBEAT_OPT_IN_PREAUTHORIZED_INSTRUCTION
-    if codex_app_heartbeat == "no":
-        return HEARTBEAT_OPT_IN_DECLINED_INSTRUCTION
-    return HEARTBEAT_OPT_IN_INSTRUCTION
-
-
 def render_onboarding_state_markdown(
     *,
     onboarding_scan: dict[str, Any] | None,
     accept_onboarding_agent_todos: bool,
     begin_autonomous_advance: bool,
-    codex_app_heartbeat: str,
 ) -> str:
     if not onboarding_scan:
         return ""
@@ -243,7 +180,6 @@ def render_onboarding_state_markdown(
         f"- Validation signal files: `{', '.join(validation_paths) or 'none'}`.",
         f"- Candidate agent todos: `{acceptance_status}`.",
         f"- Autonomous advancement: `{autonomous_status}`.",
-        f"- Codex App heartbeat: `{heartbeat_status(codex_app_heartbeat)}`.",
         "",
         "## Proposed Onboarding Candidates",
         "",
@@ -267,7 +203,6 @@ def onboarding_user_todo_text(
     *,
     acceptance_required: bool,
     autonomous_choice_required: bool,
-    heartbeat_choice_required: bool,
 ) -> str | None:
     decisions: list[str] = []
     reply_parts: list[str] = []
@@ -277,9 +212,6 @@ def onboarding_user_todo_text(
     if autonomous_choice_required:
         decisions.append("whether Codex may start autonomous advancement")
         reply_parts.append("autonomous=yes/no")
-    if heartbeat_choice_required:
-        decisions.append("whether to enable the Codex App heartbeat")
-        reply_parts.append("heartbeat=yes/no")
     if not decisions:
         return None
     verb = "Choose" if acceptance_required else "Decide"
@@ -290,25 +222,16 @@ def onboarding_agent_review_todo_text(
     *,
     acceptance_required: bool,
     autonomous_choice_required: bool,
-    heartbeat_choice_required: bool,
 ) -> str | None:
-    if not acceptance_required and not autonomous_choice_required and not heartbeat_choice_required:
+    if not acceptance_required and not autonomous_choice_required:
         return None
     prompts: list[str] = []
     if acceptance_required:
         prompts.append("which candidate agent todos to accept")
     if autonomous_choice_required:
         prompts.append("whether autonomous advancement may start")
-    if heartbeat_choice_required:
-        prompts.append("whether to enable the Codex App heartbeat")
     prefix = "Present the onboarding scan and ask " if acceptance_required else "Ask "
-    text = f"[P1] {prefix}{', '.join(prompts)} before delivery work."
-    if heartbeat_choice_required:
-        text += (
-            " If heartbeat=yes, create or update the Codex App heartbeat from an identity-scoped "
-            "`loopx heartbeat-prompt --thin` task body before claiming recurring automation is active."
-        )
-    return text
+    return f"[P1] {prefix}{', '.join(prompts)} before delivery work."
 
 
 def onboarding_connection_validation_action(adapter_kind: str) -> dict[str, str] | None:
@@ -330,7 +253,6 @@ def onboarding_next_action(
     onboarding_scan: dict[str, Any] | None,
     accept_onboarding_agent_todos: bool,
     begin_autonomous_advance: bool,
-    codex_app_heartbeat: str,
     include_connection_validation: bool = True,
 ) -> str:
     if not onboarding_scan:
@@ -342,39 +264,19 @@ def onboarding_next_action(
         if validation_action:
             return validation_action["text"]
         return "Initial routing is owned by the connected domain adapter."
-    need_heartbeat_choice = codex_app_heartbeat == "ask"
-    if not accept_onboarding_agent_todos or not begin_autonomous_advance or need_heartbeat_choice:
+    if not accept_onboarding_agent_todos or not begin_autonomous_advance:
         asks: list[str] = []
         if not accept_onboarding_agent_todos:
             asks.append("which proposed onboarding agent todos to accept")
         if not begin_autonomous_advance:
             asks.append("whether Codex may start autonomous advancement")
-        if need_heartbeat_choice:
-            asks.append("whether to enable the Codex App heartbeat")
         follow_up = "then write accepted choices and refresh state before delivery work."
-        heartbeat_follow_up = ""
-        if need_heartbeat_choice:
-            heartbeat_follow_up = (
-                " If heartbeat=yes, create or update the recurring automation from an identity-scoped "
-                "`loopx heartbeat-prompt --thin` task body."
-            )
-        elif codex_app_heartbeat == "yes":
-            heartbeat_follow_up = (
-                " Create or update the preauthorized recurring automation from an identity-scoped "
-                "`loopx heartbeat-prompt --thin` task body."
-            )
         autonomous_follow_up = (
             " If autonomous=yes, run the quota guard and execute the first accepted onboarding agent todo."
             if not begin_autonomous_advance
             else " Run the quota guard and execute the first accepted onboarding agent todo once accepted choices permit."
         )
-        return f"Ask the user {', '.join(asks)}, {follow_up}{heartbeat_follow_up}{autonomous_follow_up}"
-    if codex_app_heartbeat == "yes":
-        return (
-            "Create or update the Codex App heartbeat from an identity-scoped `loopx heartbeat-prompt --thin` task "
-            "body, run the quota guard, execute the first accepted onboarding Agent Todo as a bounded segment, write "
-            "evidence, complete or update the todo, and refresh state."
-        )
+        return f"Ask the user {', '.join(asks)}, {follow_up}{autonomous_follow_up}"
     return (
         "Run the quota guard, execute the first accepted onboarding Agent Todo as a bounded segment, write evidence, "
         "complete or update the todo, and refresh state."
@@ -389,7 +291,6 @@ def apply_onboarding_todos_to_state(
     onboarding_scan: dict[str, Any] | None,
     accept_onboarding_agent_todos: bool,
     begin_autonomous_advance: bool,
-    codex_app_heartbeat: str,
     include_connection_validation: bool = True,
 ) -> str:
     if not onboarding_scan:
@@ -427,11 +328,9 @@ def apply_onboarding_todos_to_state(
 
     acceptance_required = not accept_onboarding_agent_todos
     autonomous_choice_required = not begin_autonomous_advance
-    heartbeat_choice_required = codex_app_heartbeat == "ask"
     user_todo = onboarding_user_todo_text(
         acceptance_required=acceptance_required,
         autonomous_choice_required=autonomous_choice_required,
-        heartbeat_choice_required=heartbeat_choice_required,
     )
     if user_todo:
         add_todo_to_lines(
@@ -445,7 +344,6 @@ def apply_onboarding_todos_to_state(
     agent_todo = onboarding_agent_review_todo_text(
         acceptance_required=acceptance_required,
         autonomous_choice_required=autonomous_choice_required,
-        heartbeat_choice_required=heartbeat_choice_required,
     )
     if agent_todo:
         add_todo_to_lines(
@@ -471,7 +369,6 @@ def render_state_markdown(
     onboarding_scan: dict[str, Any] | None = None,
     accept_onboarding_agent_todos: bool = False,
     begin_autonomous_advance: bool = False,
-    codex_app_heartbeat: str = "ask",
     include_connection_validation: bool = True,
     handoff_mode: str = HANDOFF_MODE_LEGACY,
 ) -> str:
@@ -481,7 +378,6 @@ def render_state_markdown(
         onboarding_scan=onboarding_scan,
         accept_onboarding_agent_todos=accept_onboarding_agent_todos,
         begin_autonomous_advance=begin_autonomous_advance,
-        codex_app_heartbeat=codex_app_heartbeat,
     )
     onboarding_block = f"\n{onboarding_markdown}\n" if onboarding_markdown else ""
     next_action = onboarding_next_action(
@@ -489,7 +385,6 @@ def render_state_markdown(
         onboarding_scan=onboarding_scan,
         accept_onboarding_agent_todos=accept_onboarding_agent_todos,
         begin_autonomous_advance=begin_autonomous_advance,
-        codex_app_heartbeat=codex_app_heartbeat,
         include_connection_validation=include_connection_validation,
     )
     # ``handoff_mode`` travels in the state front matter (RFC shared-goal
@@ -560,7 +455,6 @@ adapter_id: {goal_id}
         onboarding_scan=onboarding_scan,
         accept_onboarding_agent_todos=accept_onboarding_agent_todos,
         begin_autonomous_advance=begin_autonomous_advance,
-        codex_app_heartbeat=codex_app_heartbeat,
         include_connection_validation=include_connection_validation,
     )
 
@@ -723,7 +617,6 @@ def bootstrap_project(
     onboarding_connection_validation: str = ONBOARDING_CONNECTION_VALIDATION_AGENT,
     accept_onboarding_agent_todos: bool = False,
     begin_autonomous_advance: bool = False,
-    codex_app_heartbeat: str = "ask",
     onboarding_max_commits: int = 5,
     onboarding_max_status_paths: int = 12,
     onboarding_max_top_level_files: int = 24,
@@ -735,7 +628,6 @@ def bootstrap_project(
     allow_global_route_replacement: bool = False,
 ) -> dict[str, Any]:
     project = project.expanduser().resolve()
-    codex_app_heartbeat = normalize_codex_app_heartbeat(codex_app_heartbeat)
     onboarding_connection_validation = normalize_onboarding_connection_validation(
         onboarding_connection_validation
     )
@@ -874,14 +766,6 @@ def bootstrap_project(
         )
 
     candidates = onboarding_candidates(onboarding_scan)
-    heartbeat_required = heartbeat_opt_in_required(
-        onboarding_scan=onboarding_scan,
-        codex_app_heartbeat=codex_app_heartbeat,
-    )
-    host_loop_required = host_loop_activation_required(
-        onboarding_scan=onboarding_scan,
-        codex_app_heartbeat=codex_app_heartbeat,
-    )
     accept_candidate_commands = [
         todo_add_command(
             project=project,
@@ -933,15 +817,10 @@ def bootstrap_project(
                 "onboarding_agent_todo_candidates": candidates,
                 "accept_onboarding_agent_todos": accept_onboarding_agent_todos,
                 "begin_autonomous_advance": begin_autonomous_advance,
-                "codex_app_heartbeat": codex_app_heartbeat,
                 "onboarding_connection_validation": onboarding_connection_validation,
                 "onboarding_acceptance_required": bool(onboarding_scan and not accept_onboarding_agent_todos),
                 "autonomous_advance_choice_required": bool(onboarding_scan and not begin_autonomous_advance),
-                "heartbeat_opt_in_required": heartbeat_required,
-                "host_loop_activation_required": host_loop_required,
-                "heartbeat_opt_in_instruction": (
-                    heartbeat_instruction(codex_app_heartbeat) if onboarding_scan else None
-                ),
+                "host_loop_activation_required": bool(onboarding_scan),
                 "onboarding_todos_written": False,
                 "accept_candidate_commands": accept_candidate_commands,
                 "global_sync": global_sync,
@@ -975,7 +854,6 @@ def bootstrap_project(
                     onboarding_scan=onboarding_scan,
                     accept_onboarding_agent_todos=accept_onboarding_agent_todos,
                     begin_autonomous_advance=begin_autonomous_advance,
-                    codex_app_heartbeat=codex_app_heartbeat,
                     include_connection_validation=include_connection_validation,
                     handoff_mode=declared_handoff_mode,
                 ),
@@ -1013,13 +891,10 @@ def bootstrap_project(
         "onboarding_agent_todo_candidates": candidates,
         "accept_onboarding_agent_todos": accept_onboarding_agent_todos,
         "begin_autonomous_advance": begin_autonomous_advance,
-        "codex_app_heartbeat": codex_app_heartbeat,
         "onboarding_connection_validation": onboarding_connection_validation,
         "onboarding_acceptance_required": bool(onboarding_scan and not accept_onboarding_agent_todos),
         "autonomous_advance_choice_required": bool(onboarding_scan and not begin_autonomous_advance),
-        "heartbeat_opt_in_required": heartbeat_required,
-        "host_loop_activation_required": host_loop_required,
-        "heartbeat_opt_in_instruction": heartbeat_instruction(codex_app_heartbeat) if onboarding_scan else None,
+        "host_loop_activation_required": bool(onboarding_scan),
         "onboarding_todos_written": bool(
             onboarding_scan and state_action in {"created", "replaced"} and not dry_run
         ),
@@ -1077,12 +952,10 @@ def render_bootstrap_markdown(payload: dict[str, Any]) -> str:
         f"- execution_profile: `{execution_profile_text}`",
         f"- onboarding_acceptance_required: `{payload.get('onboarding_acceptance_required')}`",
         f"- autonomous_advance_choice_required: `{payload.get('autonomous_advance_choice_required')}`",
-        f"- codex_app_heartbeat: `{payload.get('codex_app_heartbeat')}`",
         (
             "- onboarding_connection_validation: "
             f"`{payload.get('onboarding_connection_validation')}`"
         ),
-        f"- heartbeat_opt_in_required: `{payload.get('heartbeat_opt_in_required')}`",
         f"- host_loop_activation_required: `{payload.get('host_loop_activation_required')}`",
         f"- onboarding_todos_written: `{payload.get('onboarding_todos_written')}`",
         f"- global_sync: `{(payload.get('global_sync') or {}).get('wrote')}`",
@@ -1168,12 +1041,9 @@ def render_bootstrap_markdown(payload: dict[str, Any]) -> str:
         lines.extend(
             [
                 "",
-                "## Autonomy And Heartbeat Choice",
+                "## Autonomy Choice",
             ]
         )
-        instruction = payload.get("heartbeat_opt_in_instruction")
-        if instruction:
-            lines.append(f"- heartbeat_opt_in_instruction: {instruction}")
         if payload.get("autonomous_advance_choice_required"):
             lines.append(
                 "- Ask the user whether Codex may start autonomous advancement. If autonomous=yes, run the quota "

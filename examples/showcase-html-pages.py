@@ -284,7 +284,7 @@ CASE_DETAILS = {
             "evidence": [
                 ("todo ownership", "`event_sourced_state_contract_v0` 把 `todo_claimed` 定义为 canonical event，记录 ownership、lease 或 `claimed_by`。"),
                 ("review packet", "`loopx/review_packet.py` 在 open-todo rendering 和 handoff ranking 路径中保留 `claimed_by`，让 review packet 能显示 owner。"),
-                ("peer continuation contract", "`docs/heartbeat-automation-prompt.md` 规定 peer 小变更可带 evidence 自合并，其他后续使用 typed continuation。"),
+                ("peer continuation contract", "`docs/quota-allocation.md` 规定调度契约与配额纪律，peer 小变更可带 evidence 自合并，其他后续使用 typed continuation。"),
                 ("CLI smokes", "`examples/control_plane/todo-lifecycle-cli-smoke.py` 和 `examples/control_plane/todo-cli-smoke.py` 覆盖 claim、typed successor、peer self-merge、explicit review handoff 和 same-agent review rejection。"),
             ],
             "mechanism": [
@@ -300,7 +300,7 @@ CASE_DETAILS = {
             "source_refs": [
                 ("event-sourced todo claim", "docs/reference/protocols/event-sourced-state-contract-v0.md"),
                 ("review packet code", "loopx/review_packet.py"),
-                ("peer prompt contract", "docs/heartbeat-automation-prompt.md"),
+                ("peer prompt contract", "docs/quota-allocation.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
             ],
         },
@@ -312,7 +312,7 @@ CASE_DETAILS = {
             "evidence": [
                 ("Todo ownership", "`event_sourced_state_contract_v0` defines `todo_claimed` as a canonical event for ownership, lease, or `claimed_by`."),
                 ("Review packet", "`loopx/review_packet.py` preserves `claimed_by` in open-todo rendering and handoff ranking so review packets can show ownership."),
-                ("Peer continuation contract", "`docs/heartbeat-automation-prompt.md` lets peers self-merge only small validated evidence-backed work and otherwise requires typed continuation."),
+                ("Peer continuation contract", "`docs/quota-allocation.md` governs scheduling and quota discipline; peers self-merge only small validated evidence-backed work and otherwise require typed continuation."),
                 ("CLI smokes", "`examples/control_plane/todo-lifecycle-cli-smoke.py` and `examples/control_plane/todo-cli-smoke.py` cover claims, typed successors, peer self-merge, explicit review handoff, and same-agent review rejection."),
             ],
             "mechanism": [
@@ -328,7 +328,7 @@ CASE_DETAILS = {
             "source_refs": [
                 ("event-sourced todo claim", "docs/reference/protocols/event-sourced-state-contract-v0.md"),
                 ("review packet code", "loopx/review_packet.py"),
-                ("peer prompt contract", "docs/heartbeat-automation-prompt.md"),
+                ("peer prompt contract", "docs/quota-allocation.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
             ],
         },
@@ -341,7 +341,7 @@ CASE_DETAILS = {
             ],
             "evidence": [
                 ("successor path", "`docs/integrations/lark-kanban-control-plane-adapter.md` 明确 real successor 使用 `todo complete --next-*`，replacement 或 narrower split 使用 `todo supersede --next-agent-todo`。"),
-                ("peer completion", "`docs/heartbeat-automation-prompt.md` 要求非平凡完成创建 typed successor todo 或写 no-follow-up rationale。"),
+                ("peer completion", "`docs/quota-allocation.md` 要求非平凡完成创建 typed successor todo 或写 no-follow-up rationale。"),
                 ("CLI validation", "`examples/control_plane/todo-lifecycle-cli-smoke.py` 覆盖 `--next-agent-todo` successor、`todo supersede`、claim 继承、typed continuation、same-agent review rejection 和 peer self-merge evidence。"),
                 ("review shape", "`loopx review-packet` 把当前 open todo、claimed_by 和 handoff 状态打包成 reviewer 可读的 packet。"),
             ],
@@ -357,7 +357,7 @@ CASE_DETAILS = {
             ],
             "source_refs": [
                 ("kanban control-plane adapter", "docs/integrations/lark-kanban-control-plane-adapter.md"),
-                ("heartbeat prompt contract", "docs/heartbeat-automation-prompt.md"),
+                ("heartbeat prompt contract", "docs/quota-allocation.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
                 ("case narrative", "docs/showcases/cases/0623-overnight-project-refactor.md"),
             ],
@@ -369,7 +369,7 @@ CASE_DETAILS = {
             ],
             "evidence": [
                 ("Successor path", "`docs/integrations/lark-kanban-control-plane-adapter.md` says real successors use `todo complete --next-*`, while replacements or narrower splits use `todo supersede --next-agent-todo`."),
-                ("Peer completion", "`docs/heartbeat-automation-prompt.md` requires nontrivial completion to create a typed successor todo or a no-follow-up rationale."),
+                ("Peer completion", "`docs/quota-allocation.md` requires nontrivial completion to create a typed successor todo or a no-follow-up rationale."),
                 ("CLI validation", "`examples/control_plane/todo-lifecycle-cli-smoke.py` covers `--next-agent-todo` successors, `todo supersede`, claim inheritance, typed continuation, same-agent review rejection, and peer self-merge evidence."),
                 ("Review shape", "`loopx review-packet` packages open todos, claimed_by, and handoff state for reviewer consumption."),
             ],
@@ -385,7 +385,7 @@ CASE_DETAILS = {
             ],
             "source_refs": [
                 ("kanban control-plane adapter", "docs/integrations/lark-kanban-control-plane-adapter.md"),
-                ("heartbeat prompt contract", "docs/heartbeat-automation-prompt.md"),
+                ("heartbeat prompt contract", "docs/quota-allocation.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
                 ("case narrative", "docs/showcases/cases/0623-overnight-project-refactor.md"),
             ],

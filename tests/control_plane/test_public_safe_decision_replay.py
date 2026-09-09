@@ -14,9 +14,6 @@ from loopx.control_plane.testing.quota_fixtures import (
     quota_todo_item,
     quota_todo_summary,
 )
-from loopx.control_plane.scheduler.execution_context import (
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.quota import build_quota_should_run, build_quota_slot_spend_event
 
 
@@ -34,9 +31,7 @@ PUBLISH_SCOPE = {
     "granularity": "action",
     "scope_key": "publish_quality_contract",
 }
-APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "codex_app_heartbeat"
-)
+APP_SCHEDULER_CONTEXT = {"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"}
 
 
 def _decision(*, blocking: bool) -> dict:
@@ -240,7 +235,7 @@ def test_other_agent_gate_cannot_inherit_global_operator_gate_authority() -> Non
     other_agent["scenario"] = {
         "quota_state": "operator_gate",
         "safe_bypass": True,
-        "scheduler_runtime_profile": "codex_app_heartbeat",
+        "scheduler_runtime_profile": "generic_cli",
     }
     other_agent["user_todos"] = [
         {

@@ -20,13 +20,6 @@
         }
       ],
       "case_id": "blocking-gate",
-      "invariant_id": "INV-MATCHED-BLOCKING-GATE",
-      "rationale": "A matching blocking user gate owns the exact decision scope, so delivery must stop and the scheduler must wait for the user.",
-      "scenario": {
-        "quota_state": "operator_gate",
-        "scheduler_runtime_profile": "codex_app_heartbeat",
-        "safe_bypass": true
-      },
       "decision": {
         "effective_action": "operator_gate_notify",
         "normal_delivery_allowed": false,
@@ -38,7 +31,7 @@
         "decision_scope_status": "consistent",
         "scheduler_action": "backoff_waiting_for_user",
         "scheduler_cadence_class": "human_gate",
-        "scheduler_interval_minutes": 30,
+        "scheduler_interval_minutes": null,
         "scheduler_reason_code": "interaction_blocking_user_gate"
       },
       "interaction_contract": {
@@ -53,6 +46,13 @@
           "action_required": true,
           "notify": "NOTIFY"
         }
+      },
+      "invariant_id": "INV-MATCHED-BLOCKING-GATE",
+      "rationale": "A matching blocking user gate owns the exact decision scope, so delivery must stop and the scheduler must wait for the user.",
+      "scenario": {
+        "quota_state": "operator_gate",
+        "safe_bypass": true,
+        "scheduler_runtime_profile": "generic_cli"
       },
       "schema_version": "public_safe_decision_case_v0",
       "selected_todo": {
@@ -90,13 +90,6 @@
         }
       ],
       "case_id": "nonblocking-action-with-runnable-work",
-      "invariant_id": "INV-NONBLOCKING-NOTICE-PRESERVES-WORK",
-      "rationale": "A non-blocking user action may be notified, but it cannot cancel independent runnable work owned by the current agent.",
-      "scenario": {
-        "quota_state": "eligible",
-        "scheduler_runtime_profile": "codex_app_heartbeat",
-        "safe_bypass": false
-      },
       "decision": {
         "effective_action": "normal_run",
         "normal_delivery_allowed": true,
@@ -108,7 +101,7 @@
         "decision_scope_status": "consistent",
         "scheduler_action": "run_now",
         "scheduler_cadence_class": "active_work",
-        "scheduler_interval_minutes": 3,
+        "scheduler_interval_minutes": null,
         "scheduler_reason_code": "interaction_agent_attempt_required"
       },
       "interaction_contract": {
@@ -124,6 +117,13 @@
           "non_blocking": true,
           "notify": "NOTIFY"
         }
+      },
+      "invariant_id": "INV-NONBLOCKING-NOTICE-PRESERVES-WORK",
+      "rationale": "A non-blocking user action may be notified, but it cannot cancel independent runnable work owned by the current agent.",
+      "scenario": {
+        "quota_state": "eligible",
+        "safe_bypass": false,
+        "scheduler_runtime_profile": "generic_cli"
       },
       "schema_version": "public_safe_decision_case_v0",
       "selected_todo": {
@@ -168,13 +168,6 @@
         }
       ],
       "case_id": "nonblocking-action-scope-collision",
-      "invariant_id": "INV-NONBLOCKING-SCOPE-CANNOT-SATISFY-GATE",
-      "rationale": "A user_action with the same scope is not approval authority; the contradictory projection must fail closed into bounded repair.",
-      "scenario": {
-        "quota_state": "eligible",
-        "scheduler_runtime_profile": "codex_app_heartbeat",
-        "safe_bypass": false
-      },
       "decision": {
         "effective_action": "todo_decision_scope_projection_repair",
         "normal_delivery_allowed": false,
@@ -186,7 +179,7 @@
         "decision_scope_status": "projection_repair_required",
         "scheduler_action": "run_now",
         "scheduler_cadence_class": "active_work",
-        "scheduler_interval_minutes": 3,
+        "scheduler_interval_minutes": null,
         "scheduler_reason_code": "interaction_agent_attempt_required"
       },
       "interaction_contract": {
@@ -202,6 +195,13 @@
           "non_blocking": true,
           "notify": "NOTIFY"
         }
+      },
+      "invariant_id": "INV-NONBLOCKING-SCOPE-CANNOT-SATISFY-GATE",
+      "rationale": "A user_action with the same scope is not approval authority; the contradictory projection must fail closed into bounded repair.",
+      "scenario": {
+        "quota_state": "eligible",
+        "safe_bypass": false,
+        "scheduler_runtime_profile": "generic_cli"
       },
       "schema_version": "public_safe_decision_case_v0",
       "selected_todo": {
@@ -227,5 +227,6 @@
       ]
     }
   ],
-  "schema_version": "public_safe_decision_replay_v0"
+  "schema_version": "public_safe_decision_replay_v0",
+  "summary": null
 }

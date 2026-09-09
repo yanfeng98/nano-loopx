@@ -73,19 +73,10 @@ def register_heartbeat_control_commands(
         ),
     )
     heartbeat_prompt_parser.add_argument(
-        "--codex-app",
-        action="store_true",
-        help=(
-            "Compact explicit alias for --runtime-profile "
-            "codex_app_heartbeat in generated heartbeat commands."
-        ),
-    )
-    heartbeat_prompt_parser.add_argument(
         "-H",
         "--host-surface",
         choices=[
             "ark_managed_agent",
-            "codex_app",
             "codex_cli",
             "generic_cli",
             "claude_code",

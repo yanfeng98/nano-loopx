@@ -320,7 +320,7 @@ def loop_activation_for_goal(
         if not goals:
             return {
                 "schema_version": "loopx_host_loop_activation_v0",
-                "host_surface": "codex_app_heartbeat",
+                "host_surface": "codex_cli",
                 "status": "unavailable",
                 "activated": False,
                 "recommended_action": (
@@ -334,7 +334,7 @@ def loop_activation_for_goal(
     except Exception as exc:
         return {
             "schema_version": "loopx_host_loop_activation_v0",
-            "host_surface": "codex_app_heartbeat",
+            "host_surface": "codex_cli",
             "status": "error",
             "activated": False,
             "error": str(exc),
@@ -345,11 +345,11 @@ def loop_activation_for_goal(
         }
     return {
         "schema_version": "loopx_host_loop_activation_v0",
-        "host_surface": "codex_app_heartbeat",
+        "host_surface": "codex_cli",
         "status": "unknown",
         "activated": False,
         "recommended_action": (
-            "create or update the Codex App heartbeat automation from loopx heartbeat-prompt"
+            "verify the host loop activation from loopx heartbeat-prompt"
         ),
     }
 
@@ -392,7 +392,7 @@ def register_registry_admin_commands(subparsers: argparse._SubParsersAction) -> 
     )
     bind_thread_parser.add_argument("--goal-id", required=True, help="Goal id already present in the global registry.")
     bind_thread_parser.add_argument("--thread-id", required=True, help="Stable opaque host thread id.")
-    bind_thread_parser.add_argument("--host-surface", required=True, help="Host surface such as codex-app.")
+    bind_thread_parser.add_argument("--host-surface", required=True, help="Host surface such as codex-cli.")
     bind_thread_parser.add_argument("--agent-id", required=True, help="Already registered public-safe agent id.")
     bind_thread_parser.add_argument("--execute", action="store_true", help="Write the binding; otherwise preview only.")
 
@@ -402,7 +402,7 @@ def register_registry_admin_commands(subparsers: argparse._SubParsersAction) -> 
     )
     unbind_thread_parser.add_argument("--goal-id", required=True, help="Goal id already present in the global registry.")
     unbind_thread_parser.add_argument("--thread-id", required=True, help="Stable opaque host thread id.")
-    unbind_thread_parser.add_argument("--host-surface", required=True, help="Host surface such as codex-app.")
+    unbind_thread_parser.add_argument("--host-surface", required=True, help="Host surface such as codex-cli.")
     unbind_thread_parser.add_argument("--agent-id", required=True, help="Expected registered public-safe agent id.")
     unbind_thread_parser.add_argument("--execute", action="store_true", help="Remove the binding; otherwise preview only.")
 

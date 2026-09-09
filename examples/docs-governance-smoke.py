@@ -14,7 +14,6 @@ DOCS = REPO_ROOT / "docs"
 ROOT_DOCS = {
     "README.md",
     "architecture.md",
-    "heartbeat-automation-prompt.md",
     "index.md",
     "integration.md",
     "project-agent-todo-contract.md",
@@ -101,7 +100,6 @@ DOCS_CATALOG_NAV_ALLOWLIST = {
 STABLE_README_DOCS_ENTRY_LINKS = (
     "operations/README.md",
     "quota-allocation.md",
-    "heartbeat-automation-prompt.md",
     "status-data-contract.md",
     "concepts/README.md",
     "product/foundations/README.md",
@@ -542,7 +540,6 @@ def main() -> int:
         "使用与运维": [
             "docs/operations/README.md",
             "docs/quota-allocation.md",
-            "docs/heartbeat-automation-prompt.md",
             "docs/status-data-contract.md",
         ],
         "理解控制面": [
@@ -609,7 +606,6 @@ def main() -> int:
         "docs/product/migrations/README.md",
         "docs/product/roadmaps/README.md",
         "docs/product/runtimes/README.md",
-        "docs/product/runtimes/codex-app/README.md",
         "docs/product/runtimes/codex-cli/README.md",
         "docs/product/surfaces/README.md",
         "docs/product/use-cases/README.md",

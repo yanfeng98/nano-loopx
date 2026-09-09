@@ -12,19 +12,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from loopx.control_plane.scheduler.execution_context import (  # noqa: E402
-    SchedulerRuntimeProfile,
-    scheduler_execution_context_for_runtime_profile,
-)
 from loopx.control_plane.scheduler.scheduler_hint import build_scheduler_hint  # noqa: E402
 from loopx.control_plane.agents.agent_scope_frontier import AgentScopeFrontierAction  # noqa: E402
 from loopx.control_plane.quota.should_run_packet import _scheduler_hint  # noqa: E402
 
 
 AGENT_SCOPE_ACTIONS = [action.value for action in AgentScopeFrontierAction]
-CODEX_APP_SCHEDULER_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-)
+HOSTED_SCHEDULER_CONTEXT = {
+    "host_surface": "local_scheduler",
+    "scheduler_owner": "host_automation",
+    "execution_mode": "hosted_automation",
+    "source": "explicit",
+}
 
 
 def payload(
@@ -87,7 +86,7 @@ def assert_policy_case(
 ) -> None:
     quota_wrapper = _scheduler_hint(
         deepcopy(base_payload),
-        scheduler_execution_context=CODEX_APP_SCHEDULER_CONTEXT,
+        scheduler_execution_context=HOSTED_SCHEDULER_CONTEXT,
     )
     extracted = build_scheduler_hint(
         deepcopy(base_payload),
@@ -97,7 +96,7 @@ def assert_policy_case(
             .get("action_required")
         ),
         agent_scope_frontier_actions=AGENT_SCOPE_ACTIONS,
-        scheduler_execution_context=CODEX_APP_SCHEDULER_CONTEXT,
+        scheduler_execution_context=HOSTED_SCHEDULER_CONTEXT,
     )
     detailed = build_scheduler_hint(
         deepcopy(base_payload),
@@ -108,27 +107,27 @@ def assert_policy_case(
         ),
         agent_scope_frontier_actions=AGENT_SCOPE_ACTIONS,
         include_detail=True,
-        scheduler_execution_context=CODEX_APP_SCHEDULER_CONTEXT,
+        scheduler_execution_context=HOSTED_SCHEDULER_CONTEXT,
     )
     assert extracted == quota_wrapper, (name, extracted, quota_wrapper)
     assert extracted["schema_version"] == "scheduler_hint_v0", (name, extracted)
     assert extracted["source"] == "quota.should-run", (name, extracted)
     assert extracted["action"] == expected_action, (name, extracted)
-    assert extracted["codex_app"]["recommended_rrule"] == expected_rrule, (name, extracted)
-    assert extracted["codex_app"]["host_tool"] == "automation_update", (name, extracted)
-    assert extracted["codex_app"]["host_action"] == "update_current_heartbeat_rrule", (name, extracted)
-    assert extracted["codex_app"]["rrule_source"] == "scheduler_hint.codex_app.recommended_rrule", (
+    assert extracted["codex_cli"]["recommended_rrule"] == expected_rrule, (name, extracted)
+    assert extracted["codex_cli"]["host_tool"] == "automation_update", (name, extracted)
+    assert extracted["codex_cli"]["host_action"] == "update_current_heartbeat_rrule", (name, extracted)
+    assert extracted["codex_cli"]["rrule_source"] == "scheduler_hint.codex_cli.recommended_rrule", (
         name,
         extracted,
     )
-    stateful_backoff = extracted["codex_app"]["stateful_backoff"]
+    stateful_backoff = extracted["codex_cli"]["stateful_backoff"]
     if expected_progression is not None:
-        assert extracted["codex_app"]["example_progression_minutes"] == expected_progression, (
+        assert extracted["codex_cli"]["example_progression_minutes"] == expected_progression, (
             name,
             extracted,
         )
-    assert stateful_backoff["schema_version"] == "codex_app_stateful_backoff_v0", (name, extracted)
-    assert stateful_backoff["state_key"] == "scheduler_hint.codex_app.stateful_backoff", (name, extracted)
+    assert stateful_backoff["schema_version"] == "codex_cli_stateful_backoff_v0", (name, extracted)
+    assert stateful_backoff["state_key"] == "scheduler_hint.codex_cli.stateful_backoff", (name, extracted)
     assert stateful_backoff["apply_needed"] is True, (name, extracted)
     assert stateful_backoff["current_rrule"] == expected_rrule, (name, extracted)
     assert stateful_backoff["state_status"] == "missing", (name, extracted)
@@ -170,8 +169,8 @@ def assert_policy_case(
     assert len(reset["identity_signature"]) == 12, (name, reset)
     reset_detail = detailed["cold_path_detail"]["reset_policy_detail"]
     assert reset_detail["schema_version"] == "scheduler_reset_policy_v0", (name, reset_detail)
-    assert reset_detail["codex_app_tool"] == "automation_update", (name, reset_detail)
-    assert "automation_update" in reset_detail["codex_app_apply"], (name, reset_detail)
+    assert reset_detail["codex_cli_tool"] == "automation_update", (name, reset_detail)
+    assert "automation_update" in reset_detail["codex_cli_apply"], (name, reset_detail)
     assert len(reset_detail["profile_signature"]) == 12, (name, reset_detail)
     assert stateful_backoff["reset_token"] == reset["reset_token"], (name, reset)
     assert stateful_backoff["identity_signature"] == reset["identity_signature"], (name, reset)

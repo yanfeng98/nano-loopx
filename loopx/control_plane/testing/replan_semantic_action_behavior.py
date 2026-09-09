@@ -385,7 +385,7 @@ def _build_fixture(
             "filesystem_read",
             "filesystem_write",
         ],
-        runtime_profile="codex_app_heartbeat",
+        scheduler_execution_context={"host_surface": "local_scheduler", "scheduler_owner": "host_automation", "execution_mode": "hosted_automation", "source": "explicit"},
     )
     quota_guard_command = str(prompt["quota_guard_command"])
     if quota_guard_command not in str(prompt["task_body"]):
@@ -436,7 +436,19 @@ def _is_quota_guard(command: str) -> bool:
         tokens[quota_index : quota_index + 2] == ["quota", "should-run"]
         and argument_value(tokens, "--goal-id") == _FIXTURE_GOAL_ID
         and argument_value(tokens, "--agent-id") == _FIXTURE_AGENT_ID
-        and "--codex-app" in tokens
+        and (
+            (
+                argument_value(tokens, "--runtime-profile") == "generic_cli"
+                or (
+                    argument_value(tokens, "-H") == "local_scheduler"
+                    and argument_value(tokens, "-O") == "host_automation"
+                )
+            )
+            or (
+                argument_value(tokens, "-H") == "local_scheduler"
+                and argument_value(tokens, "-O") == "host_automation"
+            )
+        )
         and argument_value(tokens, "--turn-instance-id")
     )
 

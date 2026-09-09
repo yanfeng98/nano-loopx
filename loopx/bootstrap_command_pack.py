@@ -23,9 +23,6 @@ from .control_plane.goals.start_goal_todo_delta import (
     existing_runnable_agent_frontier,
     todo_authoring_steps,
 )
-from .control_plane.scheduler.execution_context import (
-    GUIDED_START_TURN_RUNTIME_PROFILES,
-)
 from .host_loop_activation import (
     agent_type_for_host_surface,
     build_host_loop_activation_packet,
@@ -60,7 +57,6 @@ HOST_SURFACE_SELECTION_SCHEMA_VERSION = "loopx_host_surface_selection_gate_v0"
 GOAL_CAPABILITY_ROUTE_SCHEMA_VERSION = "loopx_goal_capability_route_v0"
 START_GOAL_CAPABILITY_ROUTES = ("issue-fix",)
 START_GOAL_HOST_SURFACES = (
-    "codex-app",
     "codex-cli-tui",
     "claude-code",
     "opencode",
@@ -342,7 +338,6 @@ def build_start_goal_host_surface_selection_packet(
     )
     normalized_goal_text = " ".join(goal_text.split())
     host_descriptions = {
-        "codex-app": "Codex desktop app with heartbeat automation support",
         "codex-cli-tui": "terminal Codex TUI with visible /goal support",
         "claude-code": "Claude Code with native /loop",
         "opencode": "OpenCode LoopX goal bridge",
@@ -386,8 +381,8 @@ def build_start_goal_host_surface_selection_packet(
             }
         )
     reason = (
-        "host surface is required because Codex App automation, "
-        "Codex CLI, and Ark Managed Agent "
+        "host surface is required because Codex CLI, "
+        "Claude Code, and Ark Managed Agent "
         "have different continuation contracts"
     )
     gate = {
@@ -661,8 +656,7 @@ def _bootstrap_command(
         "  --project . \\",
         f"  --goal-id {shell_arg(goal_id)} \\",
         f"  --adapter-kind {shell_arg(DEFAULT_HANDOFF_ADAPTER_KIND)} \\",
-        f"  --adapter-status {shell_arg(DEFAULT_HANDOFF_ADAPTER_STATUS)} \\",
-        "  --codex-app-heartbeat ask",
+        f"  --adapter-status {shell_arg(DEFAULT_HANDOFF_ADAPTER_STATUS)}",
     ]
     if fine_grained:
         lines[-1] += " \\"
@@ -841,12 +835,6 @@ def build_loopx_bootstrap_command_pack(
     heartbeat_prompt_command = activation_commands.get("heartbeat_prompt")
     heartbeat_prompt_json_command = activation_commands.get("heartbeat_prompt_json")
     scheduler_command_binding = scheduler_command_binding_for_agent_type(agent_type)
-    guided_start_begins_turn = bool(
-        explicit_goal_start
-        and selected_agent_id
-        and scheduler_command_binding.get("runtime_profile")
-        in {profile.value for profile in GUIDED_START_TURN_RUNTIME_PROFILES}
-    )
     quota_guard_command = (
         render_quota_guard_command(
             resolved_goal_id,
@@ -854,7 +842,6 @@ def build_loopx_bootstrap_command_pack(
             runtime_root=command_runtime_root,
             agent_id=str(selected_agent_id) if selected_agent_id else None,
             available_capabilities=available_capabilities,
-            begin_turn=guided_start_begins_turn,
             include_shared_registry=False,
             **scheduler_command_binding,
         )
@@ -1463,18 +1450,7 @@ def build_start_goal_guided_packet(
         if isinstance(selected_capability_route, dict)
         else None
     )
-    scheduler_ack_steps = (
-        [
-            {
-                "id": "scheduler_ack_when_needed",
-                "kind": "scheduler_state",
-                "command_source": "quota.should-run.scheduler_hint.codex_app.ack_hint.cli_args",
-                "purpose": "ack an applied Codex App RRULE without spending quota",
-            }
-        ]
-        if host_surface == "codex-app"
-        else []
-    )
+    scheduler_ack_steps: list[dict[str, str]] = []
     bind_thread_steps = (
         [
             {
@@ -2047,7 +2023,7 @@ Host loop activation is part of setup, not a nice-to-have:
 
 If the host loop is already proven current, skip the mutation. If it is missing,
 unknown, or stale, use the command above to obtain `task_body` and activate the
-right host loop: Codex App automation, Codex CLI `/goal <task_body>`, Claude
+right host loop: Codex CLI `/goal <task_body>`, Claude
 Code `/loop`, OpenCode bridge, or the custom host-loop gate.
 If this session cannot mutate that
 host surface, report the exact gate; do not claim autonomous setup complete.

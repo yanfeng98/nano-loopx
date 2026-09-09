@@ -23,9 +23,7 @@ from loopx.control_plane.quota.heartbeat_receipt import (
     heartbeat_receipt_settlement_todo_id,
 )
 from loopx.control_plane.quota.settlement import (
-    build_codex_app_settlement_plan,
     read_heartbeat_settlement,
-    settlement_step_command,
 )
 from loopx.control_plane.quota.settlement_cli import (
     quota_rollout_replan_obligation_id,
@@ -38,7 +36,6 @@ from loopx.control_plane.scheduler.execution_context import (
 )
 from loopx.control_plane.work_items.interaction_contract import (
     build_interaction_contract,
-    interaction_next_cli_actions,
 )
 from loopx.cli_commands.todo import _completion_settlement_error
 from loopx.rollout_event_log import rollout_event_log_path
@@ -526,161 +523,6 @@ def test_settlement_result_bind_rejects_corrupted_receipts() -> None:
 
         with pytest.raises(RuntimeError, match="receipts shape mismatch"):
             SettlementResult.pure(2).bind(writeback)
-
-
-def test_codex_app_plan_projects_one_identity_across_settlement_steps() -> None:
-    plan = build_codex_app_settlement_plan(
-        goal_id=GOAL_ID,
-        agent_id=AGENT_ID,
-        todo_id=TODO_ID,
-        scoped_cli_args=f" --agent-id {AGENT_ID}",
-        lifecycle_actor_args=f" --agent-id {AGENT_ID}",
-    ).as_dict()
-
-    assert plan["identity"]["todo_id"] == TODO_ID
-    assert plan["identity"]["turn_instance_id"] == "${LOOPX_TURN:?}"
-    assert [step["kind"] for step in plan["ordered_steps"]] == [
-        "validation",
-        "durable_writeback",
-        "quota_spend",
-        "terminal_closeout",
-    ]
-    for kind in (
-        SettlementStepKind.DURABLE_WRITEBACK,
-        SettlementStepKind.QUOTA_SPEND,
-        SettlementStepKind.TERMINAL_CLOSEOUT,
-    ):
-        command = settlement_step_command(plan, kind)
-        assert command is not None
-        assert f"--todo-id {TODO_ID}" in command
-        assert '--turn-instance-id "${LOOPX_TURN:?}"' in command
-    assert plan["host_handoff"]["inside_agent_settlement"] is False
-
-
-@pytest.mark.parametrize(
-    ("todo_id", "replan_obligation_id"),
-    [
-        (None, None),
-        (TODO_ID, "replan-0000000000000001"),
-    ],
-)
-def test_codex_app_plan_rejects_ambiguous_settlement_binding(
-    todo_id: str | None,
-    replan_obligation_id: str | None,
-) -> None:
-    with pytest.raises(ValueError, match="requires exactly one"):
-        build_codex_app_settlement_plan(
-            goal_id=GOAL_ID,
-            agent_id=AGENT_ID,
-            todo_id=todo_id,
-            replan_obligation_id=replan_obligation_id,
-            scoped_cli_args=f" --agent-id {AGENT_ID}",
-            lifecycle_actor_args=f" --agent-id {AGENT_ID}",
-        )
-
-
-def test_standard_codex_app_actions_use_typed_settlement_before_turn_driver() -> None:
-    todo_id = "todo_123456789abc"
-    actions = interaction_next_cli_actions(
-        {
-            "goal_id": GOAL_ID,
-            "agent_identity": {"agent_id": AGENT_ID},
-            "selected_todo": {"todo_id": todo_id},
-        },
-        mode="bounded_delivery",
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
-    )
-
-    assert len(actions) == 2
-    assert actions[0].startswith("loopx refresh-state")
-    assert actions[1].startswith("loopx quota spend-slot")
-    for command in actions:
-        assert f"--todo-id {todo_id}" in command
-        assert '--turn-instance-id "${LOOPX_TURN:?}"' in command
-
-
-def test_codex_app_actions_preserve_a_concrete_admitted_turn_identity() -> None:
-    todo_id = "todo_concrete_turn"
-    turn_instance_id = "guided-start:concrete-turn"
-
-    actions = interaction_next_cli_actions(
-        {
-            "goal_id": GOAL_ID,
-            "agent_identity": {"agent_id": AGENT_ID},
-            "selected_todo": {"todo_id": todo_id},
-        },
-        mode="bounded_delivery",
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
-        turn_instance_id=turn_instance_id,
-    )
-
-    assert len(actions) == 2
-    for command in actions:
-        assert f"--turn-instance-id {turn_instance_id}" in command
-        assert "${LOOPX_TURN:?}" not in command
-
-
-@pytest.mark.parametrize(
-    "profile",
-    (
-        SchedulerRuntimeProfile.ARK_MANAGED_AGENT_GOAL,
-        SchedulerRuntimeProfile.CODEX_CLI_VISIBLE,
-    ),
-)
-def test_unbound_native_goal_actions_preserve_visible_goal_spend_attribution(
-    profile: SchedulerRuntimeProfile,
-) -> None:
-    todo_id = "todo_visible_goal"
-    actions = interaction_next_cli_actions(
-        {
-            "goal_id": GOAL_ID,
-            "agent_identity": {"agent_id": AGENT_ID},
-            "selected_todo": {"todo_id": todo_id},
-        },
-        mode="bounded_delivery",
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            profile
-        ),
-    )
-
-    assert len(actions) == 2
-    assert actions[0].startswith("loopx refresh-state")
-    assert actions[1] == (
-        f"loopx quota spend-slot --goal-id {GOAL_ID} --slots 1 "
-        f"--source visible-goal --execute --agent-id {AGENT_ID}"
-    )
-    assert all("--todo-id" not in command for command in actions)
-    assert all("--turn-instance-id" not in command for command in actions)
-
-
-def test_codex_app_external_observation_settles_only_substantive_writeback() -> None:
-    todo_id = "todo_external_observation"
-    actions = interaction_next_cli_actions(
-        {
-            "goal_id": GOAL_ID,
-            "agent_identity": {"agent_id": AGENT_ID},
-            "selected_todo": {"todo_id": todo_id},
-        },
-        mode="external_evidence_observation",
-        scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            SchedulerRuntimeProfile.CODEX_APP_HEARTBEAT
-        ),
-    )
-
-    assert len(actions) == 3
-    assert actions[0].startswith("read approved")
-    assert actions[1].startswith("on a substantive transition or blocker only:")
-    assert "--delivery-outcome <outcome>" in actions[1]
-    assert f"--todo-id {todo_id}" in actions[1]
-    assert '--turn-instance-id "${LOOPX_TURN:?}"' in actions[1]
-    assert actions[2].startswith("after that accountable writeback receipt only:")
-    assert f"--todo-id {todo_id}" in actions[2]
-    assert '--turn-instance-id "${LOOPX_TURN:?}"' in actions[2]
-    assert "otherwise do not spend for unchanged observation" in actions[2]
 
 
 def _generic_cli_contract_payload(*, replan: bool = False) -> dict:

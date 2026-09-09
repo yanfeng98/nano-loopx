@@ -29,9 +29,9 @@ export const SCHEDULER_STATE_STORE_REQUEST_SCHEMA =
 export const SCHEDULER_STATE_STORE_RESULT_SCHEMA =
   "loopx_scheduler_state_store_result_v0";
 
-export const CODEX_APP_STATEFUL_BACKOFF_STATE_KEY =
-  "scheduler_hint.codex_app.stateful_backoff";
-export const CODEX_APP_SURFACE = "codex_app";
+export const CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY =
+  "scheduler_hint.codex_cli.stateful_backoff";
+export const CODEX_CLI_SURFACE = "codex_cli";
 
 const HOST_UPDATE_FAILURE_CACHE_LIMIT = 4;
 const HOST_UPDATE_FAILURE_TTL_MS = 24 * 60 * 60 * 1_000;
@@ -257,8 +257,8 @@ function positiveIntegerList(value: unknown): number[] | null {
 }
 
 function schedulerScope(params: JsonObject): SchedulerScope {
-  const surface = trimmed(params.surface) || CODEX_APP_SURFACE;
-  const stateKey = trimmed(params.state_key) || CODEX_APP_STATEFUL_BACKOFF_STATE_KEY;
+  const surface = trimmed(params.surface) || CODEX_CLI_SURFACE;
+  const stateKey = trimmed(params.state_key) || CODEX_CLI_STATEFUL_BACKOFF_STATE_KEY;
   return {
     goalId: trimmed(params.goal_id),
     agentId: trimmed(params.agent_id),

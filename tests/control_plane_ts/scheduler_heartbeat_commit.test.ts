@@ -21,8 +21,8 @@ import type { JsonObject } from "../../loopx/control_plane/effect_program.ts";
 const scope = {
   goal_id: "goal-heartbeat",
   agent_id: "agent-heartbeat",
-  surface: "codex_app",
-  state_key: "scheduler_hint.codex_app.stateful_backoff",
+  surface: "codex_cli",
+  state_key: "scheduler_hint.codex_cli.stateful_backoff",
 };
 
 function request(

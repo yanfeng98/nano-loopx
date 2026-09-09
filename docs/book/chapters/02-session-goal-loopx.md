@@ -162,7 +162,7 @@ lease、successor 和 handoff。Per-Agent Vision 则保存某个 peer 当前的 
 acceptance summary 与 replan trigger；它不是另一个 Goal，也不是全局产品愿景。
 
 这使“目标仍 active”与“当前谁可以做哪件事”成为两个问题。Agent id 是工作身份，不是 Host
-身份；`codex-*` 前缀也不能证明任务实际运行在 Codex App 还是 CLI。新 session 可以复用同一
+身份；`codex-*` 前缀也不能证明任务实际运行在哪个 Codex 表面。新 session 可以复用同一
 Goal 的历史与 frontier，同时以 fresh Agent identity 进入；已有 claim 则通过显式 takeover 或
 handoff 处理。
 
@@ -206,12 +206,12 @@ Host 仍然拥有实际唤醒机制。LoopX 输出调度合同，不假装自己
 
 ### 5. 跨 Agent、跨 Host 与恢复
 
-LoopX 的 canonical state 属于项目。Codex App、Codex CLI 或其他受支持 Host 可以读取同一个
+LoopX 的 canonical state 属于项目。Codex CLI 或其他受支持 Host 可以读取同一个
 Goal 边界，而不是各自维护一份“当前进度”。
 
 ```text
-Codex App heartbeat ─┐
-Codex CLI Goal ──────┼──> LoopX project state ──> current Turn packet
+Codex CLI Goal ──────┐
+Hosted heartbeat ─────┼──> LoopX project state ──> current Turn packet
 Other host hook ─────┘
 ```
 
@@ -227,7 +227,6 @@ LoopX 保留同一 control-plane contract，但不同 Host 的启动和唤醒机
 
 | Host surface | 驱动 | 关键限制 |
 | --- | --- | --- |
-| Codex App | `$loopx <task>` + App heartbeat | cadence 需要 RRULE apply/readback/ACK |
 | Codex CLI TUI | generated bootstrap + visible `/goal` | 保持 visible、interruptible |
 | Claude Code | `/loopx` + opt-in native `/loop` adapter | 仍走同一 quota/writeback |
 | OpenCode 1/2 | `/loopx` + opt-in Goal bridge / persistent worker | bridge 或 worker 保持 Host 可见性与停止语义 |
@@ -237,7 +236,7 @@ LoopX 保留同一 control-plane contract，但不同 Host 的启动和唤醒机
 
 表中出现一个 Host 不代表所有 Host 都支持相同 automation API。`host_surface` 未知时，应省略一次
 该参数并使用只读 selection Gate；不要把 Codex CLI 或普通 shell 猜成
-Codex App heartbeat。完整表面、启动方式、停止策略和验证证据以 Runtime Connector Catalog 与
+宿主 heartbeat。完整表面、启动方式、停止策略和验证证据以 Runtime Connector Catalog 与
 对应 Host 文档为准；Dev Book 不复制每个 adapter 的完整 runbook。
 
 ## 如何组合 Codex Goal 与 LoopX
