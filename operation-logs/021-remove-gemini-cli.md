@@ -38,6 +38,8 @@
 - **降级实测**:`normalize_agent_type("gemini")`/`agent_type_for_host_surface("gemini")` → AgentTypeError(11 suggestions);`--surface gemini`/`--gemini-home`/`--host-surface gemini-cli`/`doctor --agent-type gemini-cli` → argparse 错误;`install_slash_commands(gemini_home=…)` → TypeError;`_gemini_home`/`_gemini_cli_activation` 不存在;`agent-onboard --list-agent-types` 11 项;doctor 与 `--agent-type cursor-agent` 正常;`--surface all` dry-run 仍 `["codex","claude-code","opencode"]`。
 - `npm run test:control-plane` 未受影响(TS Effect runtime 环境备注同 020)。
 
+- **复查(第二轮)**:全量 diff 审读无残余/无边界损伤;相邻回归 `test_host_loop_runtime_parity`/`test_agent_onboarding_unconnected_project`/`test_skill_delivery_parity`/`test_thread_agent_binding`/`test_cursor_host_surfaces` 58 全绿;内置 chat bundle 与前端源码零 gemini;程序化 `install_slash_commands(surfaces=["gemini-cli"])`(execute=True 亦)实测 **0 installed、无 summary 键**——未知表面透传为既有设计,无写入无副作用,仅 UI 元数据残留(与 plan 风险记录一致)。
+
 ## 环境备注
 
 TS Effect runtime 服务端在本环境不可用(与 019/020 同源,全量对照以失败文件集合一致为准);`.github/` 缺失致 `test_python_ci_workflow.py` collection error(预存)。**本次移除无 benchmark 臂**(活动 benchmark 树零 gemini 引用);`deprecate/benchmark-legacy` 与 `docs/research` 中的 Gemini 为历史性 Google 产品/模型审计文本,保留;operation-logs 016-018 中 gemini 字串为当时上下文,保留。
