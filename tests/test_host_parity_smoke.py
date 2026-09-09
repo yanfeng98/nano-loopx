@@ -73,12 +73,11 @@ class TestAgentTypeCatalog:
         assert "claude-code" in types
         assert "opencode" in types
         assert "pi" in types
-        assert "gemini-cli" in types
         assert "cursor-agent" in types
         assert "ark-managed-agent" in types
         assert "other-agent" in types
         assert "manual" in types
-        assert len(types) >= 12
+        assert len(types) >= 11
 
         ambiguous = {item["input"]: item["use_one_of"]
                      for item in catalog["ambiguous_inputs"]}
@@ -90,7 +89,6 @@ class TestAgentTypeCatalog:
         ("claude-code", "claude-code"),
         ("opencode", "opencode"),
         ("pi", "pi"),
-        ("gemini", "gemini-cli"),
         ("cursor", "cursor-agent"),
         ("shell", "manual"),
         ("http", "other-agent"),
@@ -104,7 +102,6 @@ class TestAgentTypeCatalog:
         with pytest.raises(AgentTypeError):
             normalize_agent_type("codex-desktop")
         assert normalize_agent_type("pi") == "pi"
-        assert normalize_agent_type("gemini") == "gemini-cli"
 
     def test_host_managed_skill_types(self):
         host = {
@@ -128,7 +125,6 @@ class TestSchedulerBindings:
             "claude-code": "claude_code",
             "opencode": "generic_cli",
             "pi": "generic_cli",
-            "gemini-cli": "generic_cli",
             "cursor-agent": "generic_cli",
         }
         for at, profile in expected.items():
@@ -142,7 +138,7 @@ class TestSchedulerBindings:
     def test_generic_cli_types_share_profile(self):
         profiles = {
             t: scheduler_command_binding_for_agent_type(t)["runtime_profile"]
-            for t in ["opencode", "pi", "gemini-cli", "cursor-agent"]}
+            for t in ["opencode", "pi", "cursor-agent"]}
         assert len(set(profiles.values())) == 1
 
 

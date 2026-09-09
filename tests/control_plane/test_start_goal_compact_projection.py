@@ -870,7 +870,7 @@ def test_cli_codex_tui_reuses_ambient_thread_binding(
                 "--goal-id",
                 GOAL_ID,
                 "--host-surface",
-                "codex-cli",
+                "codex-cli-tui",
                 "--goal-text",
                 GOAL_TEXT,
             ]
@@ -1061,7 +1061,7 @@ def test_start_goal_cli_preserves_explicit_runtime_root_in_registration_command(
                 "--thread-id",
                 "thread-explicit-runtime",
                 "--host-surface",
-                "codex-cli",
+                "codex-cli-tui",
                 "--goal-text",
                 GOAL_TEXT,
             ]
@@ -1269,7 +1269,7 @@ def test_cli_codex_tui_unbound_ambient_thread_requires_lane_selection(
                 "--goal-id",
                 GOAL_ID,
                 "--host-surface",
-                "codex-cli",
+                "codex-cli-tui",
                 "--goal-text",
                 GOAL_TEXT,
             ]
@@ -1538,7 +1538,6 @@ def test_cli_without_host_returns_read_only_host_selection_gate(
         "opencode",
         "opencode2",
         "pi",
-        "gemini-cli",
         "cursor-agent",
         "deepseek-harness",
         "deepseek-harness-native",

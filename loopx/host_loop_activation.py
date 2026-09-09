@@ -38,7 +38,6 @@ def scheduler_command_binding_for_agent_type(
         "opencode": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "opencode2": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "pi": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
-        "gemini-cli": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "cursor-agent": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "deepseek-harness": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
         "deepseek-harness-native": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
@@ -59,7 +58,6 @@ SUPPORTED_AGENT_TYPES = [
     "opencode",
     "opencode2",
     "pi",
-    "gemini-cli",
     "cursor-agent",
     "deepseek-harness",
     "deepseek-harness-native",
@@ -129,21 +127,6 @@ AGENT_TYPE_CATALOG: dict[str, dict[str, Any]] = {
             "pi agent",
             "earendil-pi",
             "earendil pi",
-        ],
-    },
-    "gemini-cli": {
-        "display_name": "Gemini CLI",
-        "host_loop": "agent-driven Gemini CLI loop gated by LoopX quota should-run",
-        "entry": "the LoopX skill installed in GEMINI_HOME/skills",
-        "accepted_inputs": [
-            "gemini-cli",
-            "gemini_cli",
-            "gemini cli",
-            "gemini",
-            "gemini-code",
-            "gemini code",
-            "google-gemini",
-            "google gemini",
         ],
     },
     "cursor-agent": {
@@ -246,8 +229,6 @@ HOST_SURFACE_TO_AGENT_TYPE = {
     "opencode_2": "opencode2",
     "pi": "pi",
     "pi-tui": "pi",
-    "gemini-cli": "gemini-cli",
-    "gemini": "gemini-cli",
     "cursor-agent": "cursor-agent",
     "cursor": "cursor-agent",
     "deepseek-harness": "deepseek-harness",
@@ -378,7 +359,6 @@ def _heartbeat_commands(
         "opencode": "OpenCode visible goal loop gated by LoopX",
         "opencode2": "OpenCode 2 visible goal loop driven by the LoopX worker",
         "pi": "Pi visible goal loop gated by LoopX",
-        "gemini-cli": "Gemini CLI agent loop gated by LoopX",
         "cursor-agent": "Cursor Agent CLI loop gated by LoopX",
         "deepseek-harness": "DeepSeek Harness automation loop gated by LoopX",
         "deepseek-harness-native": "DeepSeek Harness same-session plugin loop gated by LoopX",
@@ -884,17 +864,6 @@ def _skill_facade_cli_activation(
     }
 
 
-def _gemini_cli_activation(commands: dict[str, str], cli_bin: str) -> dict[str, Any]:
-    return _skill_facade_cli_activation(
-        commands,
-        cli_bin,
-        host_label="Gemini CLI",
-        host_surface="gemini_cli_agent_loop",
-        install_surface="gemini",
-        skills_root="GEMINI_HOME/skills",
-    )
-
-
 def _cursor_agent_activation(commands: dict[str, str], cli_bin: str) -> dict[str, Any]:
     return _skill_facade_cli_activation(
         commands,
@@ -1063,8 +1032,6 @@ def build_host_loop_activation_packet(
         surface = _opencode2_activation(commands, cli_bin)
     elif canonical == "pi":
         surface = _pi_activation(commands, cli_bin)
-    elif canonical == "gemini-cli":
-        surface = _gemini_cli_activation(commands, cli_bin)
     elif canonical == "cursor-agent":
         surface = _cursor_agent_activation(commands, cli_bin)
     elif canonical == "deepseek-harness":

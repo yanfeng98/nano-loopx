@@ -164,7 +164,7 @@ def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list
             "argument_hint": "[--fine-grained] [--capability-route issue-fix] [task text]",
             "instructions": [
                 "Visible command arguments: `$ARGUMENTS`.",
-                "Identify the exact current host surface (codex-cli-tui, opencode, opencode2, pi, gemini-cli, cursor-agent, deepseek-harness, or ark-managed-agent).",
+                "Identify the exact current host surface (codex-cli-tui, opencode, opencode2, pi, cursor-agent, deepseek-harness, or ark-managed-agent).",
                 _loopx_start_goal_arguments_instruction(
                     cli_bin=cli_bin,
                     host_surface=None,
@@ -364,12 +364,6 @@ def _claude_home(value: str | None = None) -> Path:
     return Path(raw).expanduser()
 
 
-def _gemini_home(value: str | None = None) -> Path:
-    """Gemini CLI reads user skills from GEMINI_HOME/skills (default ~/.gemini)."""
-    raw = value or os.environ.get("GEMINI_HOME") or str(Path.home() / ".gemini")
-    return Path(raw).expanduser()
-
-
 def _cursor_home(value: str | None = None) -> Path:
     """Cursor CLI reads MCP servers from CURSOR_HOME/mcp.json (default ~/.cursor)."""
     raw = value or os.environ.get("CURSOR_HOME") or str(Path.home() / ".cursor")
@@ -564,8 +558,6 @@ def _normalize_surfaces(surfaces: list[str] | None) -> list[str]:
             candidates = ["codex"]
         elif surface == "codex-cli":
             candidates = ["codex"]
-        elif surface in {"gemini-cli", "gemini-code"}:
-            candidates = ["gemini"]
         elif surface in {"cursor-agent", "cursor-cli"}:
             candidates = ["cursor"]
         else:
@@ -750,7 +742,6 @@ def install_slash_commands(
     codex_home: str | None = None,
     claude_home: str | None = None,
     opencode_home: str | None = None,
-    gemini_home: str | None = None,
     cursor_home: str | None = None,
     pi_project: str | None = None,
 ) -> dict[str, Any]:
@@ -759,7 +750,6 @@ def install_slash_commands(
     codex_root = _codex_home(codex_home)
     claude_root = _claude_home(claude_home)
     opencode_root = _opencode_home(opencode_home)
-    gemini_root = _gemini_home(gemini_home)
     cursor_root = _cursor_home(cursor_home)
     pi_project_root = Path(pi_project or ".").expanduser().resolve()
     installed: list[dict[str, Any]] = []
@@ -950,25 +940,6 @@ def install_slash_commands(
                     "invoke_as": [str(spec["command"])],
                 }
             )
-
-    if "gemini" in effective_surfaces:
-        # Gemini CLI discovers user skills from GEMINI_HOME/skills. Files are
-        # written directly, not through `gemini skills install --consent`: that
-        # command copies from a git URL or an existing local path and the host
-        # owns the copy, so LoopX would lose the managed marker, the per-file
-        # status and the dry run that every other surface reports — and it would
-        # need the `gemini` binary on PATH to install a file it already has.
-        _install_skill_facade(
-            specs=specs,
-            installed=installed,
-            skills_dir=gemini_root / "skills",
-            surface="gemini",
-            host_surfaces=["gemini-cli"],
-            mechanism="gemini_cli_skills",
-            execute=execute,
-            uninstall=uninstall,
-        )
-
     if "cursor" in effective_surfaces:
         # Cursor reads SKILL.md from CURSOR_HOME/skills (its skill roots also
         # include .claude/skills and .codex/skills, but relying on another
@@ -1289,7 +1260,6 @@ def install_slash_commands(
             "codex_prompt_dir": None,
             "codex_skill_dir": str(codex_root / "skills") if "codex" in effective_surfaces else None,
             "claude_skill_dir": str(claude_root / "skills") if "claude-code" in effective_surfaces else None,
-            "gemini_skill_dir": str(gemini_root / "skills") if "gemini" in effective_surfaces else None,
             "cursor_skill_dir": str(cursor_root / "skills") if "cursor" in effective_surfaces else None,
             "cursor_mcp_path": str(cursor_root / "mcp.json") if "cursor" in effective_surfaces else None,
             "opencode_skill_dir": str(opencode_root / "skills") if "opencode" in effective_surfaces else None,
@@ -1310,7 +1280,6 @@ def install_slash_commands(
             "Codex does not currently support user-defined native top-level slash commands; use explicit skill invocation through `$loopx` or `/skills`.",
             "Explicit LoopX command-facade skills use agents/openai.yaml policy allow_implicit_invocation=false and remain distinct from richer workflow skills such as loopx-project.",
             "Claude Code discovers user skills from CLAUDE_HOME/skills and exposes each skill name as a slash command.",
-            "Gemini CLI discovers user skills from GEMINI_HOME/skills with the same SKILL.md front matter; files are written directly because `gemini skills install` copies from a git URL or an existing local path and hands the copy to the host, which would lose the managed marker, per-file status and dry-run reporting every other surface has.",
             "Cursor discovers skills from CURSOR_HOME/skills and has no user-defined slash commands, so the cursor surface installs the skill facade and registers the LoopX MCP server in CURSOR_HOME/mcp.json; run `cursor-agent mcp enable loopx` once to approve it.",
             "OpenCode discovers global skills from OPENCODE_CONFIG_DIR/skills in addition to the static command facade; a command is typed by the user, a skill can be reached by the model itself.",
             "The default all surface installs only OpenCode's static command facade; the executable goal bridge requires --with-goal-bridge.",
@@ -1335,7 +1304,6 @@ def render_slash_command_install_markdown(payload: dict[str, Any]) -> str:
     codex_prompt_dir = payload.get("summary", {}).get("codex_prompt_dir")
     codex_skill_dir = payload.get("summary", {}).get("codex_skill_dir")
     claude_skill_dir = payload.get("summary", {}).get("claude_skill_dir")
-    gemini_skill_dir = payload.get("summary", {}).get("gemini_skill_dir")
     cursor_skill_dir = payload.get("summary", {}).get("cursor_skill_dir")
     opencode_command_dir = payload.get("summary", {}).get("opencode_command_dir")
     opencode_plugin_path = payload.get("summary", {}).get("opencode_plugin_path")
@@ -1345,8 +1313,6 @@ def render_slash_command_install_markdown(payload: dict[str, Any]) -> str:
         lines.append(f"- codex skills: `{codex_skill_dir}`")
     if claude_skill_dir:
         lines.append(f"- claude skills: `{claude_skill_dir}`")
-    if gemini_skill_dir:
-        lines.append(f"- gemini skills: `{gemini_skill_dir}`")
     if cursor_skill_dir:
         lines.append(f"- cursor skills: `{cursor_skill_dir}`")
     if opencode_command_dir:

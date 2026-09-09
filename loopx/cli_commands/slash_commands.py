@@ -56,15 +56,13 @@ def register_slash_commands_command(
             "codex-cli",
             "claude-code",
             "opencode",
-            "gemini",
-            "gemini-cli",
             "cursor",
             "cursor-agent",
             "pi",
         ],
         help=(
             "Host surface to install. Repeatable. Defaults to static command facades "
-            "for Codex, Claude Code, and OpenCode. `gemini`, `cursor` and "
+            "for Codex, Claude Code, and OpenCode. `cursor` and "
             "`pi` are opt-in: they write into those hosts' own homes only when "
             "requested."
         ),
@@ -84,10 +82,6 @@ def register_slash_commands_command(
     parser.add_argument(
         "--claude-home",
         help="Claude Code home for skill installation. Defaults to CLAUDE_HOME or ~/.claude.",
-    )
-    parser.add_argument(
-        "--gemini-home",
-        help="Gemini CLI home for skill installation. Defaults to GEMINI_HOME or ~/.gemini.",
     )
     parser.add_argument(
         "--cursor-home",
@@ -128,7 +122,6 @@ def handle_slash_commands_command(
             codex_home=args.codex_home,
             claude_home=args.claude_home,
             opencode_home=args.opencode_home,
-            gemini_home=args.gemini_home,
             cursor_home=args.cursor_home,
             pi_project=args.pi_project,
         )

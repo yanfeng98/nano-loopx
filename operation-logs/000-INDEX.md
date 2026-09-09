@@ -22,6 +22,7 @@
 | 018 | [018-remove-antigravity-cli.md](018-remove-antigravity-cli.md) | 移除 Antigravity CLI 宿主适配器(13 文件;README 行删除,全量基线对照) |
 | 019 | [019-remove-codex-app-ssh.md](019-remove-codex-app-ssh.md) | 移除 Codex App over SSH 宿主适配器(~60 文件;枚举手术 + scheduler_hint + benchmark ssh-goal 臂完整退役) |
 | 020 | [020-remove-codex-app-desktop-host.md](020-remove-codex-app-desktop-host.md) | 移除 Codex App 桌面宿主接缝(~150 文件;blob 改名 codex_cli + fallback/begin-turn/--codex-app-heartbeat 整套退役,app-server 传输保留) |
+| 021 | [021-remove-gemini-cli.md](021-remove-gemini-cli.md) | 移除 Gemini CLI 宿主(skill-facade;~14 文件;catalog/别名/表面映射整套退役,共享 skill-facade 与 cursor-agent 保留) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。

@@ -1,4 +1,4 @@
-"""End-to-end host contract for the Gemini CLI and cursor-agent surfaces.
+"""End-to-end host contract for the cursor-agent surface.
 
 Installing discoverable files is not the same as being a usable LoopX host. The
 generated `/loopx` facade tells the agent to run `start-goal ... --host-surface
@@ -27,7 +27,7 @@ from loopx.host_loop_activation import (
     scheduler_command_binding_for_agent_type,
 )
 
-NEW_HOSTS = ("gemini-cli", "cursor-agent")
+NEW_HOSTS = ("cursor-agent",)
 
 
 @pytest.mark.parametrize("host_surface", NEW_HOSTS)
@@ -35,7 +35,6 @@ def test_start_goal_accepts_the_new_host_surface(tmp_path: Path, host_surface: s
     payload = start_goal_accepts_surface(host_surface, tmp_path)
     activation = payload["command_pack"]["host_loop_activation"]
     assert activation["host_surface"] == {
-        "gemini-cli": "gemini_cli_agent_loop",
         "cursor-agent": "cursor_agent_loop",
     }[host_surface]
 
@@ -61,11 +60,10 @@ def test_agent_onboarding_setup_command_installs_that_surface(
     env = {
         "PATH": "/usr/bin:/bin",
         "HOME": str(tmp_path / "home"),
-        "GEMINI_HOME": str(tmp_path / "gemini"),
         "CURSOR_HOME": str(tmp_path / "cursor"),
     }
 
-    home = tmp_path / ("gemini" if agent_type == "gemini-cli" else "cursor")
+    home = tmp_path / "cursor"
     onboarding_setup_command_installs(
         agent_type,
         outside,

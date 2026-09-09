@@ -44,8 +44,6 @@ def _surface_install_command(agent_type: str, cli_bin: str, project: str) -> str
             f"{shell_arg(cli_bin)} slash-commands --install --surface opencode "
             "--with-goal-bridge"
         )
-    if agent_type == "gemini-cli":
-        return f"{shell_arg(cli_bin)} slash-commands --install --surface gemini"
     if agent_type == "cursor-agent":
         return f"{shell_arg(cli_bin)} slash-commands --install --surface cursor"
     if agent_type == "pi":
@@ -267,7 +265,6 @@ def _bootstrap_pack_command(
         "claude-code": "claude-code",
         "opencode": "opencode",
         "pi": "pi",
-        "gemini-cli": "gemini-cli",
         "cursor-agent": "cursor-agent",
         "deepseek-harness": "deepseek-harness",
         "deepseek-harness-native": "deepseek-harness-native",
@@ -303,12 +300,6 @@ def _start_instruction(agent_type: str) -> str:
         return "Run `/loopx <task>`; after todo writeback, call `loopx_goal_activate` with the generated heartbeat task body."
     if agent_type == "pi":
         return "Run `/loopx <task>`; after todo writeback, call `loopx_goal_activate` with the generated heartbeat task body."
-    if agent_type == "gemini-cli":
-        return (
-            "Invoke the LoopX skill from `GEMINI_HOME/skills`; after todo writeback, "
-            "carry the generated heartbeat task body as the session objective and "
-            "start every following turn with `quota should-run`."
-        )
     if agent_type == "cursor-agent":
         return (
             "Invoke the LoopX skill from `CURSOR_HOME/skills`; after todo writeback, "
