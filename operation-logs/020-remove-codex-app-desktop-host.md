@@ -51,6 +51,18 @@
 
 TS Effect runtime 服务端在本环境不可用（`effect_runtime.py` spawn 的 node 服务写入 info 后端口拒绝连接；npm test 直跑通过）——**与 019 相同**；全量对照以"失败文件集合一致"为准。`.github/` 缺失导致 `test_python_ci_workflow.py` collection error（预存）。`typecheck:control-plane` 需要 node_modules（未安装，非本次回归）。
 
+## 复查修正（97887786）
+
+用户要求复查后追加的修复：dashboard 前端与后端契约同步（router/chat.ts/model.ts/page.tsx/context-drawer/schedule-row/frontstage 移除 heartbeat.bind 能力、意图路由、"设置 Heartbeat" 按钮与 goal.create 的 heartbeat 参数——否则前端会向后端已删除的动作发请求、Goal 创建因 `_allowed_parameters` 语义必然报错；smoke 断言按新语义重写，router smoke 实测通过）；`starter_bootstrap_registration` 的 `--host-surface` 默认值由与 choices 矛盾的 codex-cli 改为 codex-cli-tui。
+
+## 复查 e2e 冒烟（无 runtime 路径全绿）
+
+bootstrap(real/dry)/connect/status/agent-onboard(list+codex-cli)/preset(list;
+0 codex_app_heartbeat,10 generic_cli)/heartbeat-prompt(fail-closed→注册后
+ok)/start-goal(host_surface_selection gate)/upgrade-plan(--installed-manifest
+CLI str 路径 ok)/bind-agent-thread 全部 EXIT 0;status --project 与基线同拒绝;
+cli-help-manpage-smoke 基线同断言失败(中文 .1 vs 英文 renderer,预存)。
+
 ## 文件统计
 
-~255 修改 + 15 删除 + 1 新增（op-log；`git diff --stat`: 245 文件, +1600/−6800 量级）。
+~255 修改 + 15 删除 + 1 新增 + 复查修正 10 文件（`git diff --stat`: 245 文件, +1600/−6800 量级）。
