@@ -16,7 +16,6 @@ import {
   MoreHorizontal,
   Pause,
   Play,
-  Radio,
   RotateCcw,
   Send,
   Square,
@@ -243,7 +242,7 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
       : selection.kind === "run" ? t("drawer.runDetails")
         : selection.kind === "output" ? t("drawer.titleOutput")
           : selection.kind === "proposal" ? t(selection.item.status === "applied" ? "drawer.titleProposalApplied" : "drawer.titleProposalConfirm")
-            : selection.kind === "schedule" ? (selection.item.scheduleKind === "heartbeat" ? "Heartbeat" : t("drawer.titleSchedule"))
+            : selection.kind === "schedule" ? t("drawer.titleSchedule")
               : t("drawer.goalDetails");
   const goalId = selection.kind === "proposal" ? selection.item.goalId ?? "manager"
       : selection.item.goalId;
@@ -648,7 +647,6 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
               )}
             </section>
             {!readOnly ? <div className="personal-drawer-action-grid">
-              <button className="personal-secondary-action" onClick={() => callbacks.onRequestScheduleConfig?.("heartbeat", selection.item.goalId)} type="button"><Radio size={16} />{t("drawer.setupHeartbeat")}</button>
               <button className="personal-secondary-action" onClick={() => callbacks.onRequestScheduleConfig?.("monitor", selection.item.goalId)} type="button"><CalendarClock size={16} />{t("drawer.scheduleAdd")}</button>
             </div> : null}
             {selection.item.subagentExecution ? <section className="personal-detail-card personal-goal-subagents">
@@ -944,7 +942,7 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
         {selection.kind === "schedule" ? (
           <>
             <section className="personal-detail-card">
-              <small>{selection.item.scheduleKind === "heartbeat" ? "Goal Heartbeat" : "continuous_monitor"} · {selection.item.status ?? "active"}</small>
+              <small>{"continuous_monitor"} · {selection.item.status ?? "active"}</small>
               <h3>{selection.item.label}</h3>
               <p>{selection.item.target ?? selection.item.schedule ?? t("drawer.scheduleDefaultTarget")}</p>
               <dl>
@@ -960,7 +958,7 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
               <button className="personal-secondary-action" onClick={() => void callbacks.onUpdateSchedule?.(selection.item, selection.item.status === "paused" ? "resume" : "pause")} type="button">{selection.item.status === "paused" ? <Play size={16} /> : <Pause size={16} />}{selection.item.status === "paused" ? t("drawer.scheduleResume") : t("drawer.schedulePause")}</button>
               <button className="personal-secondary-action" onClick={() => void callbacks.onUpdateSchedule?.(selection.item, "edit")} type="button"><CalendarClock size={16} />{t("drawer.scheduleEdit")}</button>
             </div> : null}
-            {!readOnly ? <button className="personal-danger-action" onClick={() => void callbacks.onUpdateSchedule?.(selection.item, "stop")} type="button"><Square size={16} />{t("drawer.scheduleStop", { kind: selection.item.scheduleKind === "heartbeat" ? " Heartbeat" : t("drawer.titleSchedule") })}</button> : null}
+            {!readOnly ? <button className="personal-danger-action" onClick={() => void callbacks.onUpdateSchedule?.(selection.item, "stop")} type="button"><Square size={16} />{t("drawer.scheduleStop", { kind: t("drawer.titleSchedule") })}</button> : null}
             <section className="personal-execution-history" aria-labelledby="personal-execution-history-title">
               <h3 id="personal-execution-history-title">{t("drawer.executionHistory")}</h3>
               {selection.item.executionHistory?.length ? (

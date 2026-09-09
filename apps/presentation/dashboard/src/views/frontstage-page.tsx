@@ -2713,7 +2713,7 @@ function DeveloperOnboardingPanel() {
           <div className="text-[11px] font-semibold uppercase tracking-normal text-cyan-200">Quick checks</div>
           <div className="mt-3 space-y-3">
             {[
-              ["identity", "heartbeat uses --agent-id and scoped automation identity"],
+              ["identity", "scheduled automation uses --agent-id and scoped automation identity"],
               ["health", "quota/status agree on user todos, runnable candidates, and gate state"],
               ["workspace", "workspace_guard isolates peer writes from the canonical checkout"],
               ["capability-wait", "missing capabilities stay projected as wait/repair, not silent stalls"],

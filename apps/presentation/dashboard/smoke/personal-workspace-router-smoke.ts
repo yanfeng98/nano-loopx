@@ -16,8 +16,8 @@ const goalContext = {
 
 equal(routeWorkspaceInput("我现在该做什么？只读回答，不要修改状态", { ...goalContext, goalId: null }).route, "projection", "manager projection");
 equal(routeWorkspaceInput("不要设置 Heartbeat，只回答当前进度", goalContext).route, "agent_chat", "negated heartbeat");
-equal(routeWorkspaceInput("每天推进这个 Goal，设置 heartbeat", goalContext).actionKind, "heartbeat.bind", "heartbeat outranks generic daily monitor");
-equal(routeWorkspaceInput("Set up a Heartbeat for this Goal with daily progress", goalContext).actionKind, "heartbeat.bind", "English heartbeat");
+equal(routeWorkspaceInput("每天推进这个 Goal，设置 heartbeat", goalContext).actionKind, "monitor.create", "heartbeat outranks generic daily monitor");
+equal(routeWorkspaceInput("Set up a Heartbeat for this Goal with daily progress", goalContext).actionKind, "monitor.create", "English heartbeat");
 equal(routeWorkspaceInput("Turn Heartbeat off", goalContext).route, "agent_chat", "explicit English heartbeat disable stays in chat");
 equal(routeWorkspaceInput("Add a scheduled check every 2 hours", goalContext).actionKind, "monitor.create", "English monitor");
 equal(routeWorkspaceInput("Add a monitor for off hours", goalContext).actionKind, "monitor.create", "off hours is a valid monitor target");
@@ -37,9 +37,8 @@ const deferUntilPr = routeWorkspaceInput("把 todo-1 暂缓到pr_merged:huangrui
 equal(deferUntilPr.route, "typed_action", "todo defer with condition routes to typed action");
 equal(deferUntilPr.normalizedParameters.resume_when, "pr_merged:huangruiteng/loopx#3399", "todo defer preserves supported condition");
 equal(routeWorkspaceInput("帮我修复 MR 冲突，跑测试，然后 push", goalContext).actionKind, "todo.create", "execution task");
-equal(routeWorkspaceInput("创建任务并设置 Heartbeat", goalContext).route, "clarify", "compound intent");
-equal(routeWorkspaceInput("创建任务并设置 Heartbeat", goalContext).missingFields.join(","), "single_intent", "compound missing field");
-equal(routeWorkspaceInput("Create a task and set up a Heartbeat", goalContext).route, "clarify", "English compound intent");
+equal(routeWorkspaceInput("创建任务并设置 Heartbeat", goalContext).actionKind, "todo.create", "heartbeat phrasing does not create a compound intent");
+equal(routeWorkspaceInput("Create a task and set up a Heartbeat", goalContext).actionKind, "todo.create", "English heartbeat phrasing stays a single task intent");
 equal(routeWorkspaceInput("解释一下现在的状态", goalContext).route, "agent_chat", "goal chat");
 equal(routeWorkspaceInput("请问怎么解决一下这个问题？", goalContext).route, "agent_chat", "advice question stays in chat");
 equal(routeWorkspaceInput("请不要部署到生产环境", goalContext).route, "agent_chat", "negated deployment does not trigger gate");
@@ -64,6 +63,6 @@ const createEnglishGoal = routeWorkspaceInput("Create a long-term Goal: prepare 
 equal(createEnglishGoal.route, "typed_action", "English goal route");
 equal(createEnglishGoal.actionKind, "goal.create", "English goal action");
 equal(routeWorkspaceInput("Create a Goal: off track delivery recovery", { ...goalContext, goalId: null }).actionKind, "goal.create", "off track is not a Goal-disable command");
-equal(routeWorkspaceInput("Create a Goal without Heartbeat", { ...goalContext, goalId: null }).normalizedParameters.heartbeat_enabled, false, "English Goal can explicitly omit Heartbeat");
+ok(Object.keys(routeWorkspaceInput("Create a Goal without Heartbeat", { ...goalContext, goalId: null }).normalizedParameters).length === 0, "Goal proposal carries no schedule options");
 
 console.log("personal workspace router smoke passed");

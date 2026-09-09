@@ -168,7 +168,7 @@ export type WorkspaceOutput = {
 export type WorkspaceChannel = "manager" | "attention" | "running" | "outputs";
 export type WorkspaceGoalTab = "chat" | "tasks" | "files";
 
-export type WorkspaceScheduleKind = "heartbeat" | "monitor";
+export type WorkspaceScheduleKind = "monitor";
 
 export type WorkspaceSchedule = {
   agentId?: string;
@@ -201,7 +201,6 @@ export type WorkspaceActionPreview = {
     | "todo.create"
     | "todo.update"
     | "agent.bind"
-    | "heartbeat.bind"
     | "monitor.create"
     | "monitor.update"
     | "gate.resolve"

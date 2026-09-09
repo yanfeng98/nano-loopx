@@ -410,431 +410,13 @@ function defaultTimeline(model: WorkspaceModel, selectedGoalId: string | null, t
     },
     });
   });
-  const heartbeatProposal = model.timeline?.find((item): item is Extract<WorkspaceTimelineItem, { kind: "proposal" }> =>
-    item.kind === "proposal" && item.proposal.actionKind === "heartbeat.bind" && item.proposal.goalId === goal.goalId);
-  if (heartbeatProposal) {
-    const field = (key: string) => heartbeatProposal.proposal.fields.find((item) => item.key === key)?.value;
-    items.push({
-      id: `schedule:${goal.goalId}:heartbeat`,
-      kind: "schedule",
-      schedule: {
-        agentId: goal.agentId,
-        executionHistory: [],
-        goalId: goal.goalId,
-        label: `${t("schedule.heartbeat")} · ${goal.title}`,
-        nextRunAt: t("drawer.schedulePending"),
-        notificationRule: t("drawer.scheduleDefaultNotification"),
-        schedule: field("cadence") ?? t("schedule.summary"),
-        scheduleId: `${goal.goalId}:heartbeat`,
-        scheduleKind: "heartbeat",
-        status: heartbeatProposal.proposal.status === "applied" ? "active" : "draft",
-        stopCondition: field("stop_condition") ?? t("drawer.scheduleDefaultStop"),
-        timezone: field("timezone") ?? "Asia/Shanghai",
-      },
-    });
-  }
-  return items;
-}
-
-function proposalStatus(status: TypedActionProposal["status"]): WorkspaceActionPreview["status"] {
-  if (status === "preview_ready") return "ready";
-  if (status === "cancelled") return "draft";
-  if (status === "failed") return "error";
-  return status;
-}
-
-function proposalFields(parameters: Record<string, unknown>, t: WorkspaceTranslate) {
-  const fieldLabels: Record<string, string> = {
-    agent_id: t("proposal.field.agentId"),
-    cadence: t("proposal.field.cadence"),
-    completion_criteria: t("proposal.field.completionCriteria"),
-    execution_boundary: t("proposal.field.executionBoundary"),
-    goal_id: t("proposal.field.goalId"),
-    heartbeat: t("proposal.field.heartbeat"),
-    initial_todos: t("proposal.field.initialTodos"),
-    objective: t("proposal.field.objective"),
-    operation: t("proposal.field.operation"),
-    permission: t("proposal.field.permission"),
-    reason: t("proposal.field.reason"),
-    stop_condition: t("proposal.field.stopCondition"),
-    target: t("proposal.field.target"),
-    timezone: t("proposal.field.timezone"),
-    title: t("proposal.field.title"),
-    workspace_ref: t("proposal.field.workspace"),
-  };
-  const priority = ["title", "objective", "completion_criteria", "execution_boundary", "permission", "agent_id", "workspace_ref", "initial_todos", "heartbeat", "stop_condition", "goal_id"];
-  return Object.entries(parameters)
-    .sort(([left], [right]) => {
-      const leftIndex = priority.indexOf(left);
-      const rightIndex = priority.indexOf(right);
-      return (leftIndex < 0 ? priority.length : leftIndex) - (rightIndex < 0 ? priority.length : rightIndex);
-    })
-    .slice(0, 10)
-    .map(([key, value]) => ({
-    key,
-    label: fieldLabels[key] ?? key.replaceAll("_", " "),
-    value: key === "workspace_ref"
-      ? value === "current"
-        ? t("proposal.workspace.current")
-        : t("proposal.workspace.named", { workspace: String(value ?? "current") })
-      : Array.isArray(value) ? value.join(" · ") : typeof value === "object" && value !== null
-      ? JSON.stringify(value)
-      : String(value ?? "—"),
-    }));
-}
-
-type GoalLifecycleOperation = "stop" | "resume" | "delete";
-
-type GoalLifecycleProjection = {
-  goalId: string;
-  next: "active" | "stopped";
-  optimisticApplied: boolean;
-  previous: "active" | "stopped";
-};
-
-function lifecycleOperationFor(proposal: TypedActionProposal): GoalLifecycleOperation | undefined {
-  if (proposal.action_kind !== "goal.lifecycle") return undefined;
-  const operation = proposal.normalized_parameters.operation;
-  return operation === "stop" || operation === "resume" || operation === "delete"
-    ? operation
-    : undefined;
-}
-
-function workspaceProposal(proposal: TypedActionProposal, t: WorkspaceTranslate): WorkspaceActionPreview {
-  const lifecycleOperation = lifecycleOperationFor(proposal);
-  const title = typeof proposal.normalized_parameters.title === "string"
-    ? proposal.normalized_parameters.title
-    : typeof proposal.normalized_parameters.goal_id === "string"
-      ? proposal.normalized_parameters.goal_id
-      : "";
-  const target = typeof proposal.normalized_parameters.target === "string"
-    ? proposal.normalized_parameters.target
-    : "";
-  const localizedSummary = proposal.action_kind === "goal.create"
-    ? t("proposal.summary.goalCreate", { title })
-    : proposal.action_kind === "heartbeat.bind"
-      ? t("proposal.summary.heartbeat")
-      : proposal.action_kind === "monitor.create"
-        ? t("proposal.summary.monitor", { target })
-        : proposal.action_kind === "goal.lifecycle" && lifecycleOperation === "stop"
-          ? t("proposal.summary.lifecycleStop", { title })
-          : proposal.action_kind === "goal.lifecycle" && lifecycleOperation === "delete"
-            ? t("proposal.summary.lifecycleDelete", { title })
-            : proposal.action_kind === "goal.lifecycle"
-              ? t("proposal.summary.lifecycleResume", { title })
-        : proposal.summary;
-  return {
-    actionKind: proposal.action_kind,
-    fields: proposalFields(proposal.normalized_parameters, t),
-    goalId: typeof proposal.normalized_parameters.goal_id === "string" ? proposal.normalized_parameters.goal_id : undefined,
-    impact: proposal.action_kind === "goal.create"
-      ? t("proposal.impact.goalCreate")
-      : proposal.action_kind === "goal.lifecycle" && lifecycleOperation === "stop"
-        ? t("proposal.impact.lifecycleStop")
-        : proposal.action_kind === "goal.lifecycle" && lifecycleOperation === "delete"
-          ? t("proposal.impact.lifecycleDelete")
-        : proposal.action_kind === "goal.lifecycle"
-          ? t("proposal.impact.lifecycleResume")
-      : proposal.permission_classification === "protected"
-      ? t("proposal.impact.protected")
-      : t("proposal.impact.default"),
-    previewId: proposal.proposal_id,
-    lifecycleOperation,
-    gate: proposal.gate ? {
-      kind: String(proposal.gate.kind ?? "protected_action"),
-      nextAction: typeof proposal.gate.next_action === "string" ? proposal.gate.next_action : undefined,
-      summary: String(proposal.gate.summary ?? t("proposal.gate.default")),
-    } : undefined,
-    primaryLabel: proposal.action_kind === "goal.create" ? t("proposal.primary.goalCreate")
-      : proposal.action_kind === "goal.lifecycle" && lifecycleOperation === "stop"
-        ? t("proposal.primary.lifecycleStop")
-        : proposal.action_kind === "goal.lifecycle" && lifecycleOperation === "delete"
-          ? t("proposal.primary.lifecycleDelete")
-        : proposal.action_kind === "goal.lifecycle"
-          ? t("proposal.primary.lifecycleResume")
-      : proposal.action_kind === "todo.create" && proposal.normalized_parameters.start_execution === true
-        ? t("proposal.primary.todoStart")
-        : t("proposal.primary.apply"),
-    status: proposalStatus(proposal.status),
-    title: localizedSummary,
-  };
-}
-
-function compactGoalSlug(value: string) {
-  const ascii = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 42);
-  if (ascii) return ascii;
-  let hash = 2_166_136_261;
-  for (const character of value) {
-    hash ^= character.codePointAt(0) ?? 0;
-    hash = Math.imul(hash, 16_777_619);
-  }
-  return `goal-${(hash >>> 0).toString(36)}`;
-}
-
-function goalTitleFromMessage(message: string, t: WorkspaceTranslate) {
-  const quoted = message.match(/[「“"]([^」”"]{2,80})[」”"]/u)?.[1];
-  if (quoted) return quoted.trim();
-  return message
-    .replace(/^(请|帮我|我想|给我|创建|新建|设置|please|i want to|create|set up)+/iu, "")
-    .replace(/(一个|新的)?\s*(goal|目标)/giu, "")
-    .replace(/[，。！？].*$/u, "")
-    .trim()
-    .slice(0, 80) || t("goal.defaultTitle");
-}
-
-function structuredFieldFromMessage(message: string, labels: string[]) {
-  for (const line of message.split(/\r?\n/u)) {
-    const trimmed = line.trim();
-    for (const label of labels) {
-      const match = trimmed.match(new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\s*[：:]\\s*(.*)$`, "iu"));
-      if (match?.[1]?.trim()) return match[1].trim();
-    }
-  }
-  return "";
-}
-
-function structuredGoalIntentFromMessage(message: string, t: WorkspaceTranslate) {
-  const target = structuredFieldFromMessage(message, ["目标", "Objective"]);
-  const completion = structuredFieldFromMessage(message, ["完成标准", "Completion criteria"]);
-  const boundary = structuredFieldFromMessage(message, ["执行边界（可选）", "执行边界", "边界", "Execution boundary (optional)", "Execution boundary", "Boundary"]);
-  const title = (target || goalTitleFromMessage(message, t)).split(/[。；;\n]/u)[0].trim().slice(0, 80) || t("goal.defaultTitle");
-  const objective = [target || title, completion ? t("goal.objectiveCompletion", { criteria: completion }) : "", boundary ? t("goal.objectiveBoundary", { boundary }) : ""]
-    .filter(Boolean)
-    .join("\n");
-  const readOnly = /(只读|不调用外部工具|不修改(?:仓库|代码|状态)|read.?only|do not (?:call|use) external tools|do not modify (?:repositories|repository|code|state))/iu.test(boundary || message);
-  return {
-    completionCriteria: completion,
-    executionBoundary: boundary,
-    initialTodos: completion ? [t("goal.initialTodo", { criteria: completion })] : [],
-    objective,
-    permission: readOnly ? "read_only" : "workspace_write_on_confirmation",
-    title,
-  };
-}
-
-function cadenceFromMessage(message: string) {
-  const minutes = message.match(/(?:每|every)\s*(\d{1,3})\s*(?:分钟|minutes?)/iu)?.[1];
-  if (minutes) return `${minutes}m`;
-  const hours = message.match(/(?:每|every)\s*(\d{1,2})\s*(?:小时|hours?)/iu)?.[1];
-  if (hours) return `${hours}h`;
-  if (/每小时|every hour|hourly/iu.test(message)) return "1h";
-  if (/每天|每日|早上|上午|daily|every day/iu.test(message)) return "1d";
-  return "1d";
-}
-
-function unsupportedCalendarScheduleReason(message: string, t: WorkspaceTranslate) {
-  if (/(每周|星期|周[一二三四五六日天]|weekly|every\s+(?:mon|tues|wednes|thurs|fri|satur|sun)day|\d{1,2}\s*[：:]\s*\d{2})/iu.test(message)) {
-    return t("schedule.unsupportedCalendar");
-  }
-  return null;
-}
-
-function monitorTargetFromMessage(message: string, t: WorkspaceTranslate) {
-  return structuredFieldFromMessage(message, ["检查内容", "监控内容", "目标", "Check target", "Monitor target", "Target"])
-    || message.replace(/^(?:为当前 Goal |for the current Goal )?(?:添加|配置|创建|add|configure|create)?\s*(?:定时检查|监控|scheduled check|monitor)[：:]?/iu, "").split(/\r?\n/u)[0].trim()
-    || t("schedule.defaultTarget");
-}
-
-function stopConditionFromMessage(message: string) {
-  if (/(mr|pr).{0,8}(合并|merge)/iu.test(message)) return "pr_merged";
-  if (/发布完成|上线完成|release (?:is )?complete|deployment (?:is )?complete/iu.test(message)) return "release_complete";
-  return "goal_complete";
-}
-
-function mentionedAgent(message: string, agents: WorkspaceAgentOption[]) {
-  const normalized = message.toLowerCase();
-  return agents.find((agent) =>
-    normalized.includes(agent.agentId.toLowerCase()) || normalized.includes(agent.label.toLowerCase()));
-}
-
-function todoTextFromMessage(message: string) {
-  const titled = structuredFieldFromMessage(message, ["标题", "任务标题", "Todo 标题"]);
-  const content = structuredFieldFromMessage(message, ["内容", "任务内容", "Todo 内容"]);
-  if (titled) return [titled, content].filter(Boolean).join("：").slice(0, 400);
-  const quoted = message.match(/[「“"]([^」”"]{2,200})[」”"]/u)?.[1];
-  if (quoted) return quoted.trim();
-  return message
-    .replace(/^(请|帮我|给我|为当前 Goal |新增|新建|创建|添加|加上|加一个|记一个)+/u, "")
-    .replace(/^(一个\s*)?(普通\s*)?(todo|待办|任务)(?:\s*到\s*Tasks?)?[：:\s]*/iu, "")
-    .replace(/[。；;，,]\s*(?:不要|不需要|无需|禁止|别|暂不).{0,80}(?:heartbeat|心跳|定时|监控|执行).*$/iu, "")
-    .replace(/[，,]\s*(并且|然后|再)?\s*(交给|分配给|让).+$/u, "")
-    .replace(/\s*(交给|分配给|让)\s+.+$/u, "")
-    .trim()
-    .slice(0, 400) || "推进当前 Goal 的下一项工作";
-}
-
-const acceptedImageTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
-const maxImageAttachmentBytes = 5 * 1024 * 1024;
-const maxImageAttachmentCount = 4;
-
-function readImageAttachment(file: File, t: WorkspaceTranslate): Promise<WorkspaceImageAttachment> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error(t("composer.imageReadError", { name: file.name })));
-    reader.onload = () => resolve({
-      dataUrl: String(reader.result ?? ""),
-      id: crypto.randomUUID(),
-      mimeType: file.type,
-      name: file.name,
-      size: file.size,
-    });
-    reader.readAsDataURL(file);
-  });
-}
-
-export function PersonalWorkspacePage({
-  agents = [{ agentId: "codex", available: true, capability: "代码与项目执行", label: "Codex" }],
-  callbacks = {},
-  goalArchiveLoadState = { error: null, phase: "ready" },
-  model,
-  readOnly = false,
-  selectedAgentId: controlledAgentId,
-  selectedGoalId: controlledGoalId,
-  statusSourceControl,
-}: {
-  agents?: WorkspaceAgentOption[];
-  callbacks?: PersonalWorkspaceCallbacks;
-  goalArchiveLoadState?: WorkspaceGoalArchiveLoadState;
-  model: WorkspaceModel;
-  ownerLabel?: string;
-  readOnly?: boolean;
-  selectedAgentId?: string;
-  selectedGoalId?: string | null;
-  statusSourceControl?: StatusSourceControl;
-}) {
-  const { locale, t } = useWorkspaceI18n();
-  const [localGoalId, setLocalGoalId] = useState<string | null>(controlledGoalId ?? null);
-  const [localAgentId, setLocalAgentId] = useState(controlledAgentId ?? agents.find((agent) => agent.available)?.agentId ?? "codex");
-  const [selection, setSelection] = useState<WorkspaceDrawerSelection | null>(null);
-  const [taskInspectorExpanded, setTaskInspectorExpanded] = useState(false);
-  const [activeSessionRun, setActiveSessionRun] = useState<WorkspaceRun | null>(null);
-  const [proposals, setProposals] = useState<Record<string, WorkspaceActionPreview>>({});
-  const [selectedGoalTab, setSelectedGoalTab] = useState<WorkspaceGoalTab>("chat");
-  const [managerChatOpen, setManagerChatOpen] = useState(false);
-  const [managerConversationReceiptVisible, setManagerConversationReceiptVisible] = useState(false);
-  const [goalConversationReceiptVisible, setGoalConversationReceiptVisible] = useState(false);
-  const [drafts, setDrafts] = useState<Record<string, string>>(() => {
-    try {
-      const raw = window.sessionStorage.getItem("loopx-pw-composer-drafts");
-      const parsed = raw ? JSON.parse(raw) : {};
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-        ? parsed as Record<string, string>
-        : {};
-    } catch {
-      return {};
-    }
-  });
-  const [sending, setSending] = useState(false);
-  const [imageAttachments, setImageAttachments] = useState<WorkspaceImageAttachment[]>([]);
-  const [imageAttachmentError, setImageAttachmentError] = useState<string | null>(null);
-  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
-  const [lifecycleBusyGoalIds, setLifecycleBusyGoalIds] = useState<ReadonlySet<string>>(() => new Set());
-  const [quickCompletingTodoIds, setQuickCompletingTodoIds] = useState<ReadonlySet<string>>(() => new Set());
-  const [refreshState, setRefreshState] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [sessionProposalIds, setSessionProposalIds] = useState<string[]>([]);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<WorkspaceTheme>(readWorkspaceTheme);
-  const [goalContexts, setGoalContexts] = useState<Record<string, GoalRepositoryContext>>({});
-  const [larkConnections, setLarkConnections] = useState<LarkGoalConnection[]>([]);
-  const digestInitRef = useRef(false);
-  const digestSinceRef = useRef(Number.NaN);
-  const composerRef = useRef<HTMLTextAreaElement>(null);
-  const channelScrollRef = useRef<HTMLDivElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const lifecyclePendingGoalIdsRef = useRef(new Set<string>());
-  const quickCompletingTodoIdsRef = useRef(new Set<string>());
-  const [digest, setDigest] = useState<{ attention: number; done: number; failed: number } | null>(null);
-  const selectedGoalId = controlledGoalId === undefined ? localGoalId : controlledGoalId;
-  const selectedAgentId = controlledAgentId ?? localAgentId;
-  const composerDraftKey = `${selectedGoalId ?? "manager"}:${selectedAgentId}`;
-  const composer = drafts[composerDraftKey] ?? "";
-  useEffect(() => {
-    setImageAttachments([]);
-    setImageAttachmentError(null);
-  }, [composerDraftKey]);
-  function setComposerDraft(key: string, value: string) {
-    setDrafts((current) => {
-      const next = { ...current };
-      if (value) {
-        next[key] = value;
-      } else {
-        delete next[key];
-      }
-      try {
-        window.sessionStorage.setItem("loopx-pw-composer-drafts", JSON.stringify(next));
-      } catch {
-        // Storage may be unavailable (private mode); drafts simply stay in memory.
-      }
-      return next;
-    });
-  }
-  function setComposer(value: string) {
-    setComposerDraft(composerDraftKey, value);
-  }
-  function fillQuickPrompt(text: string) {
-    const existing = drafts[composerDraftKey]?.trimEnd();
-    setComposer(existing ? `${existing}\n${text}` : text);
-    window.requestAnimationFrame(() => composerRef.current?.focus());
-  }
-  useEffect(() => {
-    const el = composerRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-  }, [composer]);
-  const workspaceGoals = useMemo(() => model.goals.map((goal) => {
-    const repository = goalContexts[goal.goalId];
-    return repository ? {
-      ...goal,
-      repository: {
-        branch: repository.branch,
-        identity: repository.identity,
-        label: repository.label,
-        readOnly: true as const,
-      },
-    } : goal;
-  }), [goalContexts, model.goals]);
-  const managerNeedsYouCount = useMemo(
-    () => workspaceGoals.filter((goal) => workspaceHomeLaneForGoal(goal) === "needs_you").length,
-    [workspaceGoals],
-  );
-  const managerBlockingCount = useMemo(
-    () => workspaceGoals.filter((goal) =>
-      workspaceHomeLaneForGoal(goal) === "needs_you"
-      && (goal.needsYouBlocking || goal.state === "等你")
-    ).length,
-    [workspaceGoals],
-  );
-  const selectedGoal = workspaceGoals.find((goal) => goal.goalId === selectedGoalId) ?? null;
-  const settingsOpen = selection?.kind === "settings";
   const managerProjectionId = selectedGoalId;
   const items = useMemo(() => {
-    const heartbeatSchedules: WorkspaceTimelineItem[] = Object.values(proposals)
-      .filter((proposal) => proposal.actionKind === "heartbeat.bind" && proposal.goalId && proposal.status === "applied")
-      .map((proposal) => ({
-        id: `schedule:${proposal.goalId}:heartbeat`,
-        kind: "schedule" as const,
-        schedule: {
-          agentId: selectedAgentId,
-          executionHistory: [],
-          goalId: proposal.goalId!,
-          label: proposal.title,
-          nextRunAt: t("drawer.schedulePending"),
-          notificationRule: t("drawer.scheduleDefaultNotification"),
-          schedule: proposal.fields.find((field) => field.key === "cadence")?.value ?? t("schedule.summary"),
-          scheduleId: `${proposal.goalId}:heartbeat`,
-          scheduleKind: "heartbeat" as const,
-          status: proposal.status === "applied" ? "active" as const : "draft" as const,
-          stopCondition: proposal.fields.find((field) => field.key === "stop_condition")?.value ?? t("drawer.scheduleDefaultStop"),
-          timezone: proposal.fields.find((field) => field.key === "timezone")?.value ?? "Asia/Shanghai",
-        },
-      }));
     const merged: WorkspaceTimelineItem[] = [
       ...defaultTimeline(model, managerProjectionId, t),
       ...(model.timeline ?? []),
-      ...heartbeatSchedules,
       ...dedupeProposals(Object.values(proposals))
-        .filter((proposal) => proposal.actionKind !== "heartbeat.bind" || proposal.status !== "applied")
+
         .map((proposal) => ({ id: `proposal:${proposal.previewId}`, kind: "proposal" as const, proposal })),
     ];
     const projected = [...new Map(merged.map((item) => [item.id, item])).values()]
@@ -1137,22 +719,14 @@ export function PersonalWorkspacePage({
     }
   }
 
-  function prepareScheduleDraft(kind: "heartbeat" | "monitor", goalId: string | null) {
-    if (!goalId) {
-      setComposer(kind === "heartbeat"
-        ? t("composer.heartbeatTemplateWithoutGoal")
-        : t("composer.monitorTemplateWithoutGoal"));
-    } else {
-      setComposer(kind === "heartbeat"
-        ? t("composer.heartbeatTemplate")
-        : t("composer.monitorTemplate"));
-    }
+  function prepareScheduleDraft(goalId: string | null) {
+    setComposer(goalId ? t("composer.monitorTemplate") : t("composer.monitorTemplateWithoutGoal"));
     setSelection(null);
     window.requestAnimationFrame(() => composerRef.current?.focus());
   }
 
-  async function requestSchedule(kind: "heartbeat" | "monitor", goalId: string | null, intent = "") {
-    const delegated = await callbacks.onRequestScheduleConfig?.(kind, goalId);
+  async function requestSchedule(goalId: string | null, intent = "") {
+    const delegated = await callbacks.onRequestScheduleConfig?.("monitor", goalId);
     if (delegated) {
       setSessionProposalIds((current) => current.includes(delegated.previewId) ? current : [...current, delegated.previewId]);
       setProposals((current) => ({ ...current, [delegated.previewId]: delegated }));
@@ -1160,21 +734,15 @@ export function PersonalWorkspacePage({
       return;
     }
     if (!goalId) {
-      setComposer(kind === "heartbeat" ? t("composer.heartbeatGoalQuestion") : t("composer.monitorGoalQuestion"));
+      setComposer(t("composer.monitorGoalQuestion"));
       return;
     }
     const timestamp = Date.now().toString(36);
     await createPreview({
-      actionKind: kind === "heartbeat" ? "heartbeat.bind" : "monitor.create",
+      actionKind: "monitor.create",
       context: { kind: "schedule", goal_id: goalId },
-      idempotencyKey: `workspace-${kind}-${goalId}-${timestamp}`,
-      normalizedParameters: kind === "heartbeat" ? {
-        agent_id: selectedAgentId,
-        cadence: cadenceFromMessage(intent),
-        goal_id: goalId,
-        stop_condition: stopConditionFromMessage(intent),
-        timezone: "Asia/Shanghai",
-      } : {
+      idempotencyKey: `workspace-monitor-${goalId}-${timestamp}`,
+      normalizedParameters: {
         agent_id: selectedAgentId,
         cadence: cadenceFromMessage(intent),
         goal_id: goalId,
@@ -1183,9 +751,7 @@ export function PersonalWorkspacePage({
         target_key: `goal-${goalId}`,
         timezone: "Asia/Shanghai",
       },
-      summary: kind === "heartbeat"
-        ? t("proposal.summary.heartbeat")
-        : t("proposal.summary.monitor", { target: monitorTargetFromMessage(intent, t) }),
+      summary: t("proposal.summary.monitor", { target: monitorTargetFromMessage(intent, t) }),
     });
   }
 
@@ -1396,26 +962,25 @@ export function PersonalWorkspacePage({
       });
     },
     onPreviewAction: createPreview,
-    onRequestScheduleConfig: (kind, goalId) => prepareScheduleDraft(kind, goalId),
+    onRequestScheduleConfig: (_kind, goalId) => prepareScheduleDraft(goalId),
     onOpenNotificationSettings: (goalId) => setSelection({ goalId, kind: "settings", tab: "lark" }),
     onFetchNotificationTargets: () => fetchGoalChannelTargets(),
     onSetupGoalChannel: (options) => setupGoalChannel(options),
     onToggleGoalAutoNotify: (options) => configureGoalChannelAutoNotify(options),
     onUpdateSchedule: async (schedule, operation) => {
       const timestamp = Date.now().toString(36);
-      const heartbeat = schedule.scheduleKind === "heartbeat";
       await createPreview({
-        actionKind: heartbeat ? "heartbeat.bind" : "monitor.update",
+        actionKind: "monitor.update",
         context: { kind: "schedule", goal_id: schedule.goalId },
         idempotencyKey: `workspace-monitor-${schedule.scheduleId}-${operation}-${timestamp}`,
         normalizedParameters: {
           agent_id: schedule.agentId ?? selectedAgentId,
-          ...(!heartbeat && operation === "run_now" ? { endpoint_id: selectedAgentId } : {}),
-          ...(operation === "edit" ? { cadence: "2h", ...(heartbeat ? { timezone: schedule.timezone ?? "Asia/Shanghai" } : {}) } : {}),
+          ...(operation === "run_now" ? { endpoint_id: selectedAgentId } : {}),
+          ...(operation === "edit" ? { cadence: "2h" } : {}),
           goal_id: schedule.goalId,
           operation,
-          ...(!heartbeat && operation === "run_now" && schedule.sessionId ? { session_id: schedule.sessionId } : {}),
-          ...(!heartbeat ? { todo_id: schedule.scheduleId } : {}),
+          ...(operation === "run_now" && schedule.sessionId ? { session_id: schedule.sessionId } : {}),
+          ...(operation !== "run_now" ? { todo_id: schedule.scheduleId } : {}),
         },
         summary: operation === "pause" ? `暂停自动运行：${schedule.label}`
           : operation === "resume" ? `恢复自动运行：${schedule.label}`
@@ -1495,11 +1060,6 @@ export function PersonalWorkspacePage({
             completion_criteria: intent.completionCriteria,
             execution_boundary: intent.executionBoundary,
             goal_id: goalId,
-            heartbeat: {
-              cadence: cadenceFromMessage(message),
-              enabled: intentRoute.normalizedParameters.heartbeat_enabled === true,
-              timezone: "Asia/Shanghai",
-            },
             initial_todos: intent.initialTodos,
             objective: intent.objective,
             permission: intent.permission,
@@ -1511,10 +1071,6 @@ export function PersonalWorkspacePage({
         });
         return;
       }
-      if (selectedGoalId && intentRoute.actionKind === "heartbeat.bind") {
-        await requestSchedule("heartbeat", selectedGoalId, message);
-        return;
-      }
       if (selectedGoalId && intentRoute.actionKind === "monitor.create") {
         const scheduleError = unsupportedCalendarScheduleReason(message, t);
         if (scheduleError) {
@@ -1522,7 +1078,7 @@ export function PersonalWorkspacePage({
           setActionFeedback(scheduleError);
           return;
         }
-        await requestSchedule("monitor", selectedGoalId, message);
+        await requestSchedule(selectedGoalId, message);
         return;
       }
       const requestedAgent = mentionedAgent(message, agents);
@@ -1701,8 +1257,7 @@ export function PersonalWorkspacePage({
     <WorkspaceShell
       drawer={drawerSelection ? <ContextDrawer agents={agents} callbacks={effectiveDrawerCallbacks} goalNotifications={model.goalNotifications ?? []} goals={workspaceGoals} inspectorExpanded={taskInspectorExpanded} larkConnections={readOnly ? [] : larkConnections} onClose={() => {
         if (drawerSelection.kind === "proposal"
-          && ["applied", "rejected"].includes(drawerSelection.item.status)
-          && !(drawerSelection.item.actionKind === "heartbeat.bind" && drawerSelection.item.status === "applied")) {
+          && ["applied", "rejected"].includes(drawerSelection.item.status)) {
           setProposals((current) => {
             const next = { ...current };
             delete next[drawerSelection.item.previewId];
@@ -1862,7 +1417,7 @@ export function PersonalWorkspacePage({
               <div className="personal-quick-prompts">
                 <button aria-label={t("composer.nextAction")} className="is-draft" onClick={() => fillQuickPrompt(t("composer.nextActionPrompt"))} title={t("composer.prepareDraft")} type="button"><MessageCircleQuestion size={13} /><span>{t("composer.nextAction")}</span><small className="personal-prompt-subtle">{t("composer.draft")}</small></button>
                 <button className="is-immediate" disabled={sending} onClick={() => void sendMessage(t("composer.agentProgressPrompt"))} title={t("composer.immediate")} type="button"><Send size={13} /><span>{t("composer.agentProgress")}</span><em className="personal-prompt-badge">{t("composer.immediate")}</em></button>
-                <button aria-label={t("composer.monitor")} className="is-draft" onClick={() => prepareScheduleDraft("monitor", selectedGoalId)} title={t("composer.monitorHint")} type="button"><CalendarClock size={13} /><span>{t("composer.monitor")}</span><small className="personal-prompt-subtle">{t("composer.draft")}</small></button>
+                <button aria-label={t("composer.monitor")} className="is-draft" onClick={() => prepareScheduleDraft(selectedGoalId)} title={t("composer.monitorHint")} type="button"><CalendarClock size={13} /><span>{t("composer.monitor")}</span><small className="personal-prompt-subtle">{t("composer.draft")}</small></button>
               </div>
             ) : (
               <div className="personal-quick-prompts">

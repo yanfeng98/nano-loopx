@@ -81,7 +81,7 @@ def register_starter_bootstrap_commands(subparsers: argparse._SubParsersAction) 
     )
     bootstrap_command_pack_parser.add_argument(
         "--host-surface",
-        default="codex-cli",
+        default="codex-cli-tui",
         choices=START_GOAL_HOST_SURFACES,
         help="Host surface where the slash command pack will be exposed.",
     )
