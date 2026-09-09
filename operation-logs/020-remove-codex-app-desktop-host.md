@@ -55,6 +55,20 @@ TS Effect runtime 服务端在本环境不可用（`effect_runtime.py` spawn 的
 
 用户要求复查后追加的修复：dashboard 前端与后端契约同步（router/chat.ts/model.ts/page.tsx/context-drawer/schedule-row/frontstage 移除 heartbeat.bind 能力、意图路由、"设置 Heartbeat" 按钮与 goal.create 的 heartbeat 参数——否则前端会向后端已删除的动作发请求、Goal 创建因 `_allowed_parameters` 语义必然报错；smoke 断言按新语义重写，router smoke 实测通过）；`starter_bootstrap_registration` 的 `--host-surface` 默认值由与 choices 矛盾的 codex-cli 改为 codex-cli-tui。
 
+## 复查修正 2（9fcac2ca：tsc 化修复 + bundle 重建）
+
+用户第二轮复查要求后:97887786 的 page.tsx 替换边界曾损坏组件结构
+(tsc 全量 TS2451/TS2304 大面积报错)。以 2f9a91f8 干净版为基重做
+personal-workspace-page.tsx 心跳移除(每步唯一锚点),并**首次完成前端
+tsc --noEmit 全量 0 error 验证**(此前所有前端修改仅靠静态审查)。
+dashboard smoke:personal-workspace-router/chat-route/goal-order/
+presentation-surface-schema/frontstage-operator-state 通过;home-route/
+frontstage-route/action-packet 三 smoke 的失败断言经 c09b1b4a 源码比对
+为基线即过时项(buildPersonalHomeModel 第三参、README signal strip),
+非本任务回归。重建内置 chat bundle(vite.chat.config.ts):新入口
+index-CAwwD9nG.js 心跳绑定 0 命中,index.html 指向新入口;旧哈希资产
+按 emptyOutDir:false 既有设计保留(防在飞页面白屏)。
+
 ## 复查 e2e 冒烟（无 runtime 路径全绿）
 
 bootstrap(real/dry)/connect/status/agent-onboard(list+codex-cli)/preset(list;
