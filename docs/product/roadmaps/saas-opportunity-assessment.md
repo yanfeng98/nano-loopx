@@ -33,7 +33,7 @@ Discovery、集成、评测与上线可能需要 FDE 进入客户 workflow。协
 | 层次 | Community 与 local-first 契约 | Managed 产品价值 |
 | --- | --- | --- |
 | 语义状态 | goal、todo、gate、decision、evidence、acceptance、quota、handoff、recovery、replan 的开放 schema 与 transition | 高可用状态服务、冲突处理、备份恢复、迁移和托管升级 |
-| 执行 | Codex、Claude Code、Cursor、shell agent 与自定义 worker 的 provider-neutral adapter | Agent fleet 注册、health、策略约束的 wake、Supervisor 调度、恢复和 operator 路由 |
+| 执行 | Codex、Claude Code、shell agent 与自定义 worker 的 provider-neutral adapter | Agent fleet 注册、health、策略约束的 wake、Supervisor 调度、恢复和 operator 路由 |
 | 观测 | 本地 projection、CLI status、导出与可自托管 dashboard surface | 共享 workspace、长期留存、跨 Agent timeline、评测、回放、告警和 review queue |
 | 治理 | 可检查的本地 authority、boundary 与 approval contract | 多租户隔离、RBAC、SSO、审计、配额、数据驻留、签名导出和策略管理 |
 | 交付 | 文档、pack SDK、参考 workflow 与可用的 self-host 路径 | Enterprise Harness、产品化 FDE 部署、BYOC 或 managed operation、SLA、迁移、集成、incident response 和支持 |
@@ -101,7 +101,7 @@ Discovery、集成、评测与上线可能需要 FDE 进入客户 workflow。协
 LoopX 的第一个付费产品因此应当是 **LoopX Enterprise Agent Harness**，而不是一组 schema，也不是另一个模型或 IDE。它应当包含：
 
 - 有版本的 Kernel 与 state service，支持 local、private 与 BYOC profile；
-- Codex、Claude Code、Cursor、shell agent 与客户 worker 的受支持 adapter；
+- Codex、Claude Code、shell agent 与客户 worker 的受支持 adapter；
 - Supervisor 调度、恢复、handoff、quota 与 acceptance；
 - 面向 goal、evidence、review、replay 与 fleet health 的本地或私有 console；
 - 部署自动化、升级、备份恢复、默认 policy 与诊断支持包；

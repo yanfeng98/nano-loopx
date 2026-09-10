@@ -26,10 +26,16 @@ def main() -> int:
     compact_readme = compact(readme)
     compact_no_space_readme = "".join(readme.split())
     compact_demo = compact(demo)
+    # The current fork README ends the Auto Research section at 试用 LoopX; the
+    # 真实项目中的使用 heading this used to split on was removed deliberately.
     auto_research = readme.split("### Auto Research", 1)[1].split(
-        "### 真实项目中的使用", 1
+        "## 试用 LoopX", 1
     )[0]
 
+    # Expectations track the current fork README: the aggregate-claims
+    # paragraph, the 快速开始 anchor and the cross-runtime link were removed
+    # deliberately, while the per-case honesty disclaimers and the docs-side
+    # demo index stay guarded (see the cross_runtime_index assertion below).
     for required in [
         '<div align="center">',
         "docs/assets/loopx-social-preview.png",
@@ -44,19 +50,17 @@ def main() -> int:
         "### 从你已经在用的 Agent 启动",
         "Codex CLI",
         "Claude Code",
-        "Cursor、shell、自有 runner",
-        "docs/product/use-cases/cross-runtime/cross-runtime-impl-review-demo.md",
+        "shell、自有 runner",
         "## 进阶路径",
-        "200+ 小时自然时长",
+        "200+ 小时自然时间窗口",
         "超过 200 小时的公开贡献轨迹",
         "经过脱敏的 owner-run showcase",
-        "不是连续模型执行时长或无人值守的生产自治",
+        "不代表连续算力执行、独立复现、生产结果",
         "docs/assets/long-running-loop-openviking-trajectory.png",
         "docs/assets/long-running-loop-ml-experiment-trajectory.png",
         "### Preset 与 Auto Research",
         "### 审阅 Agent 工作",
         "### App 与 Projection",
-        '<a id="快速开始"></a>',
         '<a id="看几个例子"></a>',
         "## 能力",
         "## 用户群与反馈",
@@ -73,7 +77,7 @@ def main() -> int:
     assert "docs/assets/loopx-logo.png" not in first_screen
 
     for required in [
-        "不是连续模型执行时长或无人值守的生产自治",
+        "不代表连续算力执行、独立复现、生产结果",
         "公司或雇主背书",
         "第三方独立复现",
     ]:

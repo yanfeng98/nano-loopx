@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import contextlib
 import json
 import os
-import sys
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -164,7 +161,7 @@ def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list
             "argument_hint": "[--fine-grained] [--capability-route issue-fix] [task text]",
             "instructions": [
                 "Visible command arguments: `$ARGUMENTS`.",
-                "Identify the exact current host surface (codex-cli-tui, opencode, opencode2, pi, cursor-agent, deepseek-harness, or ark-managed-agent).",
+                "Identify the exact current host surface (codex-cli-tui, opencode, opencode2, pi, deepseek-harness, or ark-managed-agent).",
                 _loopx_start_goal_arguments_instruction(
                     cli_bin=cli_bin,
                     host_surface=None,
@@ -364,12 +361,6 @@ def _claude_home(value: str | None = None) -> Path:
     return Path(raw).expanduser()
 
 
-def _cursor_home(value: str | None = None) -> Path:
-    """Cursor CLI reads MCP servers from CURSOR_HOME/mcp.json (default ~/.cursor)."""
-    raw = value or os.environ.get("CURSOR_HOME") or str(Path.home() / ".cursor")
-    return Path(raw).expanduser()
-
-
 def _opencode_home(value: str | None = None) -> Path:
     raw = value or os.environ.get("OPENCODE_CONFIG_DIR")
     if not raw:
@@ -558,169 +549,12 @@ def _normalize_surfaces(surfaces: list[str] | None) -> list[str]:
             candidates = ["codex"]
         elif surface == "codex-cli":
             candidates = ["codex"]
-        elif surface in {"cursor-agent", "cursor-cli"}:
-            candidates = ["cursor"]
         else:
             candidates = [surface]
         for candidate in candidates:
             if candidate not in normalized:
                 normalized.append(candidate)
     return normalized
-
-
-CURSOR_MCP_KEY = "loopx"
-CURSOR_MCP_MARKER_NAME = ".loopx-managed-mcp.json"
-CURSOR_MCP_MARKER_SCHEMA_VERSION = "loopx_managed_cursor_mcp_v0"
-
-
-def _loopx_mcp_command() -> tuple[str, str] | None:
-    """Interpreter and script for the LoopX stdio MCP server, or None.
-
-    Reuses the Claude adapter's provisioning so all surfaces share one server
-    and one `mcp` dependency. Returns None when `mcp` cannot be provisioned —
-    the caller records that instead of writing a config that would fail to
-    start.
-    """
-    try:
-        from loopx.claude_goal_mode.scripts import install as claude_install
-    except ImportError:
-        return None
-    try:
-        script = claude_install._p("mcp", "loopx_mcp.py")
-        # Provisioning narrates to stdout ("[deps] creating mcp venv …"), which
-        # would land in the middle of `--format json` and make the whole install
-        # result unparseable. The narration is still worth keeping — on stderr.
-        with contextlib.redirect_stdout(sys.stderr):
-            interpreter = claude_install.provision_mcp_python(dry=False)
-    except (OSError, ValueError):
-        # Provisioning shells out to venv and pip; a failure there means the
-        # surface is skipped, never that the whole install run dies.
-        return None
-    if not interpreter or not Path(script).exists():
-        return None
-    if not claude_install._has_mcp(interpreter):
-        return None
-    return str(interpreter), str(script)
-
-
-def _cursor_mcp_marker_path(cursor_root: Path) -> Path:
-    """Sidecar recording the exact `mcp.json` entry LoopX last wrote.
-
-    Markdown surfaces carry `MANAGED_MARKER_PREFIX` inside the file, but
-    `mcp.json` belongs to Cursor's schema, so provenance is kept beside it
-    rather than smuggled into an entry the host has to parse.
-    """
-    return cursor_root / CURSOR_MCP_MARKER_NAME
-
-
-def _read_cursor_mcp_marker(cursor_root: Path) -> dict[str, Any]:
-    try:
-        payload = json.loads(
-            _cursor_mcp_marker_path(cursor_root).read_text(encoding="utf-8")
-        )
-    except (OSError, json.JSONDecodeError):
-        return {}
-    if not isinstance(payload, dict):
-        return {}
-    servers = payload.get("servers")
-    return servers if isinstance(servers, dict) else {}
-
-
-def _write_json_atomic(path: Path, payload: Any) -> None:
-    """Replace `path` in one step, so an interrupted run cannot truncate it."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    mode = path.stat().st_mode if path.exists() else None
-    handle, tmp_name = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.")
-    tmp = Path(tmp_name)
-    try:
-        with os.fdopen(handle, "w", encoding="utf-8") as stream:
-            stream.write(json.dumps(payload, indent=2) + "\n")
-        if mode is not None:
-            os.chmod(tmp, mode & 0o7777)
-        os.replace(tmp, path)
-    except BaseException:
-        tmp.unlink(missing_ok=True)
-        raise
-
-
-def _merge_cursor_mcp(cursor_root: Path, *, uninstall: bool, execute: bool) -> str:
-    """Add or remove the `loopx` entry in CURSOR_HOME/mcp.json — and nothing else.
-
-    `mcp.json` is a user-owned file that LoopX did not create, so every path
-    here fails closed: an unexpected shape is reported instead of normalized, a
-    same-name entry LoopX cannot prove it wrote is left alone, and uninstall
-    removes only an entry that still matches what LoopX recorded. Sharing the
-    `loopx` name with a user's own server is unlikely but cheap to survive;
-    silently replacing that server, or dropping their `mcpServers` list while
-    "merging", is not.
-    """
-    path = cursor_root / "mcp.json"
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
-    except (OSError, json.JSONDecodeError):
-        return "blocked_invalid_cursor_mcp_json"
-    if not isinstance(raw, dict):
-        return "blocked_invalid_cursor_mcp_json"
-    servers = raw.get("mcpServers")
-    if servers is None:
-        servers = {}
-    if not isinstance(servers, dict):
-        # A list-valued or scalar `mcpServers` is not something to overwrite:
-        # either the file follows a shape LoopX does not understand, or it is
-        # damaged. Both are the user's to resolve.
-        return "blocked_invalid_cursor_mcp_json"
-
-    existing = servers.get(CURSOR_MCP_KEY)
-    recorded = _read_cursor_mcp_marker(cursor_root).get(CURSOR_MCP_KEY)
-    # Ownership is only demonstrable when the entry still matches what LoopX
-    # recorded writing. A hand-edited entry counts as the user's from then on.
-    loopx_owned = existing is not None and existing == recorded
-
-    # A marker that no longer describes reality is not just useless, it is
-    # dangerous: once the user deletes or edits the entry, the stale marker
-    # would still vouch for a future same-name entry and authorize deleting
-    # something LoopX never wrote. Ownership has to expire the moment it stops
-    # being demonstrable — and only in execute mode, so a dry run stays a
-    # read-only report.
-    if execute and recorded is not None and not loopx_owned:
-        _cursor_mcp_marker_path(cursor_root).unlink(missing_ok=True)
-
-    if uninstall:
-        if existing is None:
-            return "absent"
-        if not loopx_owned:
-            return "skipped_user_owned_mcp_entry"
-        if not execute:
-            return "would_retire"
-        servers.pop(CURSOR_MCP_KEY, None)
-        raw["mcpServers"] = servers
-        _write_json_atomic(path, raw)
-        _cursor_mcp_marker_path(cursor_root).unlink(missing_ok=True)
-        return "retired"
-
-    if existing is not None and not loopx_owned:
-        return "skipped_user_owned_mcp_entry"
-    if not execute:
-        # A dry run must not touch anything: provisioning `mcp` would create a
-        # venv on disk during a run whose only job is to report what would happen.
-        return "unchanged" if existing is not None else "would_write"
-    command = _loopx_mcp_command()
-    if command is None:
-        return "skipped_mcp_dependency_missing"
-    entry = {"command": command[0], "args": [command[1]]}
-    if existing == entry:
-        return "unchanged"
-    servers[CURSOR_MCP_KEY] = entry
-    raw["mcpServers"] = servers
-    _write_json_atomic(path, raw)
-    _write_json_atomic(
-        _cursor_mcp_marker_path(cursor_root),
-        {
-            "schema_version": CURSOR_MCP_MARKER_SCHEMA_VERSION,
-            "servers": {CURSOR_MCP_KEY: entry},
-        },
-    )
-    return "written"
 
 
 def _pi_extension_path(project_root: Path) -> Path:
@@ -742,7 +576,6 @@ def install_slash_commands(
     codex_home: str | None = None,
     claude_home: str | None = None,
     opencode_home: str | None = None,
-    cursor_home: str | None = None,
     pi_project: str | None = None,
 ) -> dict[str, Any]:
     specs = _command_prompt_specs(cli_bin=cli_bin, include_legacy_aliases=include_legacy_aliases)
@@ -750,7 +583,6 @@ def install_slash_commands(
     codex_root = _codex_home(codex_home)
     claude_root = _claude_home(claude_home)
     opencode_root = _opencode_home(opencode_home)
-    cursor_root = _cursor_home(cursor_home)
     pi_project_root = Path(pi_project or ".").expanduser().resolve()
     installed: list[dict[str, Any]] = []
 
@@ -940,36 +772,6 @@ def install_slash_commands(
                     "invoke_as": [str(spec["command"])],
                 }
             )
-    if "cursor" in effective_surfaces:
-        # Cursor reads SKILL.md from CURSOR_HOME/skills (its skill roots also
-        # include .claude/skills and .codex/skills, but relying on another
-        # host's directory would break the moment that host is uninstalled).
-        _install_skill_facade(
-            specs=specs,
-            installed=installed,
-            skills_dir=cursor_root / "skills",
-            surface="cursor",
-            host_surfaces=["cursor-agent"],
-            mechanism="cursor_skills",
-            execute=execute,
-            uninstall=uninstall,
-        )
-        # `cursor-agent mcp` can list and enable servers but not add them, so
-        # the entry is merged into CURSOR_HOME/mcp.json. Only our own `loopx`
-        # key is touched — a user's other servers are left exactly as they are.
-        status = _merge_cursor_mcp(cursor_root, uninstall=uninstall, execute=execute)
-        installed.append(
-            {
-                "surface": "cursor",
-                "host_surfaces": ["cursor-agent"],
-                "mechanism": "cursor_mcp_server",
-                "command": "loopx",
-                "path": str(cursor_root / "mcp.json"),
-                "status": status,
-                "invoke_as": [],
-            }
-        )
-
     if "opencode" in effective_surfaces:
         # OpenCode reads global skills from OPENCODE_CONFIG_DIR/skills. The
         # static command facade below stays as it is — a command is something
@@ -1260,8 +1062,6 @@ def install_slash_commands(
             "codex_prompt_dir": None,
             "codex_skill_dir": str(codex_root / "skills") if "codex" in effective_surfaces else None,
             "claude_skill_dir": str(claude_root / "skills") if "claude-code" in effective_surfaces else None,
-            "cursor_skill_dir": str(cursor_root / "skills") if "cursor" in effective_surfaces else None,
-            "cursor_mcp_path": str(cursor_root / "mcp.json") if "cursor" in effective_surfaces else None,
             "opencode_skill_dir": str(opencode_root / "skills") if "opencode" in effective_surfaces else None,
             "opencode_command_dir": str(opencode_root / "commands") if "opencode" in effective_surfaces else None,
             "opencode_plugin_path": str(opencode_root / "plugins" / "loopx-goal.js") if "opencode" in effective_surfaces and with_goal_bridge else None,
@@ -1280,7 +1080,6 @@ def install_slash_commands(
             "Codex does not currently support user-defined native top-level slash commands; use explicit skill invocation through `$loopx` or `/skills`.",
             "Explicit LoopX command-facade skills use agents/openai.yaml policy allow_implicit_invocation=false and remain distinct from richer workflow skills such as loopx-project.",
             "Claude Code discovers user skills from CLAUDE_HOME/skills and exposes each skill name as a slash command.",
-            "Cursor discovers skills from CURSOR_HOME/skills and has no user-defined slash commands, so the cursor surface installs the skill facade and registers the LoopX MCP server in CURSOR_HOME/mcp.json; run `cursor-agent mcp enable loopx` once to approve it.",
             "OpenCode discovers global skills from OPENCODE_CONFIG_DIR/skills in addition to the static command facade; a command is typed by the user, a skill can be reached by the model itself.",
             "The default all surface installs only OpenCode's static command facade; the executable goal bridge requires --with-goal-bridge.",
             "The Pi surface is opt-in and installs the self-contained goal extension and its loop runtime into the project's .pi/extensions/; it is not part of the default all surface.",
@@ -1304,7 +1103,6 @@ def render_slash_command_install_markdown(payload: dict[str, Any]) -> str:
     codex_prompt_dir = payload.get("summary", {}).get("codex_prompt_dir")
     codex_skill_dir = payload.get("summary", {}).get("codex_skill_dir")
     claude_skill_dir = payload.get("summary", {}).get("claude_skill_dir")
-    cursor_skill_dir = payload.get("summary", {}).get("cursor_skill_dir")
     opencode_command_dir = payload.get("summary", {}).get("opencode_command_dir")
     opencode_plugin_path = payload.get("summary", {}).get("opencode_plugin_path")
     if codex_prompt_dir:
@@ -1313,8 +1111,6 @@ def render_slash_command_install_markdown(payload: dict[str, Any]) -> str:
         lines.append(f"- codex skills: `{codex_skill_dir}`")
     if claude_skill_dir:
         lines.append(f"- claude skills: `{claude_skill_dir}`")
-    if cursor_skill_dir:
-        lines.append(f"- cursor skills: `{cursor_skill_dir}`")
     if opencode_command_dir:
         lines.append(f"- opencode commands: `{opencode_command_dir}`")
     if opencode_plugin_path:

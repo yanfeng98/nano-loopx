@@ -5,7 +5,7 @@
 
 目标是在一个屏幕内帮助新用户理解 LoopX:
 
-- Codex、Claude Code、Cursor 及类似工具执行 agent Loop。
+- Codex、Claude Code 及类似工具执行 agent Loop。
 - LoopX 让长程 goal 控制面在这些 Loop 之间保持可见:关卡、todos、所有权、安全兜底、运行历史、quota 与证据。
 - 只有展示可复用控制面行为的案例才有用,而不只是"agent 做了工作"。
 

@@ -1014,11 +1014,11 @@ def test_report_generation_is_serialized_with_run_rotation(tmp_path: Path) -> No
 def test_skill_facade_installs_for_skill_facade_surfaces(tmp_path: Path) -> None:
     from loopx.slash_command_install import install_slash_commands
 
-    # The facade spec is host-generic: every skill-facade surface (cursor)
+    # The facade spec is host-generic: every skill-facade surface (opencode)
     # installs it from the same specs list, so proving one surface proves the
     # wiring.
-    home = tmp_path / "cursor-home"
-    payload = install_slash_commands(execute=True, surfaces=["cursor"], cursor_home=str(home))
+    home = tmp_path / "opencode-home"
+    payload = install_slash_commands(execute=True, surfaces=["opencode"], opencode_home=str(home))
     assert payload["ok"] is True
     skill = home / "skills" / "loopx-deepresearch" / "SKILL.md"
     assert skill.is_file()

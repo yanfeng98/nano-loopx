@@ -213,7 +213,7 @@ complete 三种完成度。任务语料通过 GitHub-native 的 task proposal �
 社区化生长，发布确定性 bundle 与 SHA-256 校验；[论文](https://arxiv.org/abs/2608.00267)
 公开，数据集在 [Hugging Face](https://huggingface.co/datasets/LoopsBench/LoopsBench)。
 内置 adapter 覆盖 Oracle、Mini SWE-agent、SWE-agent、OpenHands、Claude Code、
-Cursor、Codex、Qwen Code、Copilot。
+Codex、Qwen Code、Copilot。
 
 **最适合 LoopX 研究的问题**
 

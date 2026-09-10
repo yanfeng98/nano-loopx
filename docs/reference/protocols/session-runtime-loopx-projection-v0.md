@@ -2,7 +2,7 @@
 
 状态：面向只读首屏投影的公开安全契约 v0。
 
-本契约定义外部 agent 运行时如何把可见会话映射进 LoopX，而无需让 LoopX 成为运行时、复制私有 trace 或隐藏用户的主控制界面。它刻意保持运行时中立：Codex CLI、Claude Code、Cursor、自定义 worker 与未来 host 集成都应能投影同一份小而稳定的形状。
+本契约定义外部 agent 运行时如何把可见会话映射进 LoopX，而无需让 LoopX 成为运行时、复制私有 trace 或隐藏用户的主控制界面。它刻意保持运行时中立：Codex CLI、Claude Code、自定义 worker 与未来 host 集成都应能投影同一份小而稳定的形状。
 
 ## 边界
 

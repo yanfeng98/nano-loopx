@@ -6,7 +6,7 @@
 
 **面向长程 Agent 的开放、有状态、Provider-neutral 控制面。**
 
-<sub>在 Codex、Claude Code、Cursor 等 agent harness 之上，持久保存目标、gate、todo、证据、quota 与交接状态。LoopX 负责跨轮次的状态与执行边界，harness 负责有界执行。</sub>
+<sub>在 Codex、Claude Code 等 agent harness 之上，持久保存目标、gate、todo、证据、quota 与交接状态。LoopX 负责跨轮次的状态与执行边界，harness 负责有界执行。</sub>
 
 [产品首页](https://huangruiteng.github.io/loopx/) · [文档](https://huangruiteng.github.io/loopx/docs/) · [开发者手册](https://huangruiteng.github.io/loopx/docs/book/) · [用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg)
 
@@ -82,7 +82,7 @@ LoopX state：objective + gate + todo + scope + evidence + quota
    ├─ 有安全侧路？ ─────────▶ 执行一个有界 agent slice
    │
    ▼
-Codex / Claude Code / Cursor / shell agent 执行一轮
+Codex / Claude Code / shell agent 执行一轮
    │
    ▼
 写回证据 + handoff + next todo ─▶ quota 决定下一次 tick
@@ -219,7 +219,7 @@ loopx start-goal --guided --project . --goal-text "你的长程目标"
 | OpenCode | 安装静态 command facade；recurring goal 显式 opt in `--with-goal-bridge`。 | OpenCode command facade 与显式 goal bridge |
 | Pi | 用 `loopx slash-commands --install --surface pi` 安装 opt-in goal extension，然后在受信任的 Pi 会话里用 `/loopx <任务>`。 | 由 LoopX quota gate 的可见 Pi goal extension（`loopx_goal_activate` + `agent_settled` 续跑） |
 | DeepSeek Harness（dsh） | 安装 [DSH 原生 Plugin](packages/dsh-loopx-plugin/README.md)，在技能选择器中点 `loopx`，然后直接描述任务；[dsh goal-mode adapter](loopx/dsh_goal_mode/README.md) 继续支持 headless turn。 | 原生同会话续跑与 GoalBar，或 headless dsh 工作段；两条路径都遵守 LoopX authority |
-| Cursor、shell、自有 runner | 使用同一 installer 和 `loopx doctor`，再手动连接或由 runner 调用。 | 你的 shell、scheduler 或 runner |
+| shell、自有 runner | 使用同一 installer 和 `loopx doctor`，再手动连接或由 runner 调用。 | 你的 shell、scheduler 或 runner |
 
 可直接粘贴的完整 setup message、host-specific 路由和故障恢复见
 [Getting Started](docs/guides/getting-started.md)。Host 集成还可以查看

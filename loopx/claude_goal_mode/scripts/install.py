@@ -75,8 +75,8 @@ def _venv_python(venv: Path) -> Path:
 
 # The server imports `mcp.server.fastmcp`, which MCP SDK 2.x no longer ships.
 # Checking a bare `import mcp` accepts an interpreter that cannot actually run
-# the server, so registration would write a config that fails to start —
-# `cursor-agent mcp list` reports "Connection failed" and Claude silently drops
+# the server, so registration would write a config that fails to start — the
+# host's mcp list then reports "Connection failed" and Claude silently drops
 # the tools. Probe the module the server really needs.
 MCP_PROBE = "import mcp.server.fastmcp"
 # Upper bound for the same reason; drop it once loopx_mcp.py speaks the 2.x API.

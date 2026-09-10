@@ -115,7 +115,7 @@ Issue/PR solver 试点因此应首先以锚点管理流程出现,而不是作为
 
 ### 执行器 Loop
 
-执行器 Loop 是 Codex、Claude Code、Cursor、终端 agent、基准 runner 或其他有界 worker。它做工作,但它不应是长期真相源。
+执行器 Loop 是 Codex、Claude Code、终端 agent、基准 runner 或其他有界 worker。它做工作,但它不应是长期真相源。
 
 执行器 Loop 应:
 

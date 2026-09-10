@@ -13,7 +13,7 @@
 
 ## Codex CLI 与其他 Agent 设置
 
-如果你已经在用 Codex、Claude Code、Cursor 或其他终端 Agent，在它已工作于项目根
+如果你已经在用 Codex、Claude Code 或其他终端 Agent，在它已工作于项目根
 的情况下粘贴以下内容：
 
 非 Codex Agent 的兼容性检查：Agent 界面至少需要一个控制 hook 供 LoopX 驱动，
@@ -547,7 +547,7 @@ goals/**/ACTIVE_GOAL_STATE.md
 
 ## 从你的 Agent 诊断
 
-用户不应需要手动运行诊断命令。问你的 Codex、Claude Code、Cursor 或终端 Agent：
+用户不应需要手动运行诊断命令。问你的 Codex、Claude Code 或终端 Agent：
 
 ```text
 Diagnose LoopX for this project end to end. Do not ask me to run shell

@@ -56,14 +56,12 @@ def register_slash_commands_command(
             "codex-cli",
             "claude-code",
             "opencode",
-            "cursor",
-            "cursor-agent",
             "pi",
         ],
         help=(
             "Host surface to install. Repeatable. Defaults to static command facades "
-            "for Codex, Claude Code, and OpenCode. `cursor` and "
-            "`pi` are opt-in: they write into those hosts' own homes only when "
+            "for Codex, Claude Code, and OpenCode. `pi` is opt-in: "
+            "it writes into that host's own home only when "
             "requested."
         ),
     )
@@ -82,10 +80,6 @@ def register_slash_commands_command(
     parser.add_argument(
         "--claude-home",
         help="Claude Code home for skill installation. Defaults to CLAUDE_HOME or ~/.claude.",
-    )
-    parser.add_argument(
-        "--cursor-home",
-        help="Cursor CLI home for MCP registration. Defaults to CURSOR_HOME or ~/.cursor.",
     )
     parser.add_argument(
         "--opencode-home",
@@ -122,7 +116,6 @@ def handle_slash_commands_command(
             codex_home=args.codex_home,
             claude_home=args.claude_home,
             opencode_home=args.opencode_home,
-            cursor_home=args.cursor_home,
             pi_project=args.pi_project,
         )
         print_payload(payload, output_format(args), render_slash_command_install_markdown)

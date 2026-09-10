@@ -63,7 +63,7 @@ python3 examples/custom-runtime-minimal-cli-turn-smoke.py
 python3 examples/loopx-turn-fake-host-walkthrough-smoke.py
 ```
 
-路径 B 是可选的。它不取代 Codex、Claude Code、Cursor、shell、Grok Build
+路径 B 是可选的。它不取代 Codex、Claude Code、shell、Grok Build
 等协作式宿主上的路径 A。
 
 ## 自定义 runtime 不应做的事

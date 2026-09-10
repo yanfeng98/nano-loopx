@@ -23,6 +23,7 @@
 | 019 | [019-remove-codex-app-ssh.md](019-remove-codex-app-ssh.md) | 移除 Codex App over SSH 宿主适配器(~60 文件;枚举手术 + scheduler_hint + benchmark ssh-goal 臂完整退役) |
 | 020 | [020-remove-codex-app-desktop-host.md](020-remove-codex-app-desktop-host.md) | 移除 Codex App 桌面宿主接缝(~150 文件;blob 改名 codex_cli + fallback/begin-turn/--codex-app-heartbeat 整套退役,app-server 传输保留) |
 | 021 | [021-remove-gemini-cli.md](021-remove-gemini-cli.md) | 移除 Gemini CLI 宿主(skill-facade;~14 文件;catalog/别名/表面映射整套退役,共享 skill-facade 与 cursor-agent 保留) |
+| 022 | [022-remove-cursor-agent.md](022-remove-cursor-agent.md) | 移除 Cursor 宿主(skill-facade 终结;27 文件 +39/−935;最后 skill-facade 宿主,`_skill_facade_cli_activation` 与 cursor 测试文件整套退役,附带对齐 README smoke) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。

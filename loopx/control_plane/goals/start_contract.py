@@ -86,7 +86,6 @@ def build_goal_start_contract(
                 "claude-code": "Claude Code native `/loop` after `/loopx <task>` arms LoopX",
                 "opencode": "OpenCode `loopx_goal_activate`",
                 "pi": "Pi `loopx_goal_activate`",
-                "cursor-agent": "agent-driven cursor-agent loop; every turn enters through quota should-run",
                 "deepseek-harness-native": "DeepSeek Harness same-session plugin driver; every turn enters through quota should-run",
                 "ark-managed-agent": "one-shot Goal",
                 "manual": "external scheduler or manual quota/status loop",

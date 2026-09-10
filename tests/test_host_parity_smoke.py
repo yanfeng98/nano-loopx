@@ -73,11 +73,10 @@ class TestAgentTypeCatalog:
         assert "claude-code" in types
         assert "opencode" in types
         assert "pi" in types
-        assert "cursor-agent" in types
         assert "ark-managed-agent" in types
         assert "other-agent" in types
         assert "manual" in types
-        assert len(types) >= 11
+        assert len(types) >= 10
 
         ambiguous = {item["input"]: item["use_one_of"]
                      for item in catalog["ambiguous_inputs"]}
@@ -89,7 +88,6 @@ class TestAgentTypeCatalog:
         ("claude-code", "claude-code"),
         ("opencode", "opencode"),
         ("pi", "pi"),
-        ("cursor", "cursor-agent"),
         ("shell", "manual"),
         ("http", "other-agent"),
         ("worker-bridge", "other-agent"),
@@ -125,7 +123,6 @@ class TestSchedulerBindings:
             "claude-code": "claude_code",
             "opencode": "generic_cli",
             "pi": "generic_cli",
-            "cursor-agent": "generic_cli",
         }
         for at, profile in expected.items():
             b = scheduler_command_binding_for_agent_type(at)
@@ -138,7 +135,7 @@ class TestSchedulerBindings:
     def test_generic_cli_types_share_profile(self):
         profiles = {
             t: scheduler_command_binding_for_agent_type(t)["runtime_profile"]
-            for t in ["opencode", "pi", "cursor-agent"]}
+            for t in ["opencode", "pi"]}
         assert len(set(profiles.values())) == 1
 
 

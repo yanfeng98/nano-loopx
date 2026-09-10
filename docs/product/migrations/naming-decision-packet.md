@@ -32,7 +32,7 @@ dynamic goal control plane
 公开故事应是:
 
 > LoopX 是 agent Loop 周围的动态 goal 控制面。Codex、
-> Claude Code、Cursor、终端 agent 与基准 runner 执行有界工作;LoopX 把静态
+> Claude Code、终端 agent 与基准 runner 执行有界工作;LoopX 把静态
 > goal 转化为长程 state:gate、todo、认领、范围、配额、evidence 与交接跨这些
 > Loop 保持可见。
 
@@ -128,7 +128,7 @@ LoopX 不是替代 Codex goal/automation，而是给这些 executor loop
 
 1. 给五位新用户展示 README 或发布帖,不超过一分钟。
 2. 请他们无提示回答三个问题:
-   - LoopX 是在替代 Codex/Claude/Cursor,还是在包装它们?
+   - LoopX 是在替代 Codex/Claude,还是在包装它们?
    - 它解决长程 agent 工作中的什么问题?
    - 关掉页面后他们记得哪句短语?
 3. 比较 `LoopX`、`dynamic goal control plane`、`lifetime-goal control plane` 与 `human-in-the-loop control plane` 的记忆度。
