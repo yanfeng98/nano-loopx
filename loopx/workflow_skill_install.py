@@ -219,7 +219,6 @@ def workflow_skill_install(
     execute: bool = False,
     uninstall: bool = False,
     cli_bin: str = "loopx",
-    host_surface: str | None = None,
 ) -> dict[str, Any]:
     target_root = (skills_dir or default_workflow_skills_dir()).expanduser().resolve()
     source = resolve_workflow_skill_source()
@@ -265,7 +264,6 @@ def workflow_skill_install(
         skills_dir=target_root,
         execute=False,
         cli_bin=cli_bin,
-        host_surface=host_surface,
     )
 
     if not execute:
@@ -276,8 +274,6 @@ def workflow_skill_install(
             "--skills-dir",
             str(target_root),
         ]
-        if host_surface is not None:
-            install_command.extend(["--host-surface", host_surface])
         return {
             "ok": True,
             "schema_version": WORKFLOW_SKILL_INSTALL_SCHEMA_VERSION,
@@ -286,7 +282,6 @@ def workflow_skill_install(
             "source": _public_source(source),
             "before": before,
             "entry": entry_preview,
-            "host_surface": host_surface,
             "install_required": (
                 not before.get("ready")
                 or entry_preview.get("status") != "unchanged"
@@ -317,7 +312,6 @@ def workflow_skill_install(
             skills_dir=target_root,
             execute=True,
             cli_bin=cli_bin,
-            host_surface=host_surface,
         )
         if entry["status"] not in MANAGED_ENTRY_STATUSES:
             return {
@@ -349,7 +343,6 @@ def workflow_skill_install(
         "operation": "install",
         "skills_dir": str(target_root),
         "source": _public_source(source),
-        "host_surface": host_surface,
         "installed": installed,
         "entry": entry,
         "after": after,

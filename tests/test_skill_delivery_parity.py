@@ -234,8 +234,7 @@ class TestCwdIsolation:
 
 class TestSkillDeliveryModes:
     def test_host_managed_types(self):
-        assert HOST_MANAGED_SKILL_AGENT_TYPES == {
-            "deepseek-harness-native", "other-agent"}
+        assert HOST_MANAGED_SKILL_AGENT_TYPES == {"other-agent"}
 
     def test_delivery_mode_per_agent_type(self):
         host_managed = HOST_MANAGED_SKILL_AGENT_TYPES

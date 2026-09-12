@@ -43,8 +43,6 @@ def skill_body(
     surface_label = (
         "slash command"
         if surface == "claude-skills"
-        else "DSH workflow skill"
-        if surface == "dsh-skills"
         else "explicit LoopX command skill"
     )
     return "\n\n".join(

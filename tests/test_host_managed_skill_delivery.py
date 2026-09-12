@@ -4,10 +4,7 @@ import json
 import shutil
 from pathlib import Path
 
-from loopx.agent_onboarding import (
-    REQUIRED_HOST_SKILL_IDS,
-    _skill_delivery_contract,
-)
+from loopx.agent_onboarding import REQUIRED_HOST_SKILL_IDS
 from loopx.skill_install_readback import (
     PACKAGED_HOST_SKILL_IDS,
     SKILL_INSTALL_READBACK_FILENAME,
@@ -33,25 +30,6 @@ def _materialize_workflow_skills(skills_dir: Path) -> None:
         skill_ids=REQUIRED_HOST_SKILL_IDS,
         source_root=REPO_ROOT,
     )
-
-
-def test_onboarding_projects_verified_filesystem_readback(
-    tmp_path: Path,
-) -> None:
-    skills_dir = tmp_path / ".agents" / "skills"
-    _materialize_workflow_skills(skills_dir)
-
-    contract = _skill_delivery_contract(
-        "deepseek-harness-native",
-        host_skills_dir=skills_dir,
-    )
-
-    # A verified filesystem readback surfaces as the projected status; the
-    # host must still report its own runtime loaded-skill readback.
-    assert contract["status"] == "ready_for_host_load"
-    assert contract["mode"] == "host_managed"
-    assert contract["owner"] == "dsh_loopx_plugin"
-    assert contract["host_readback_required"] is True
 
 
 def test_skill_readback_rejects_content_changed_after_install(tmp_path: Path) -> None:

@@ -73,7 +73,7 @@ class TestAgentTypeCatalog:
         assert "pi" in types
         assert "other-agent" in types
         assert "manual" in types
-        assert len(types) >= 7
+        assert len(types) >= 5
 
         ambiguous = {item["input"]: item["use_one_of"]
                      for item in catalog["ambiguous_inputs"]}
@@ -99,7 +99,6 @@ class TestAgentTypeCatalog:
 
     def test_host_managed_skill_types(self):
         host = {
-            "deepseek-harness-native",
             "other-agent",
         }
         for at in SUPPORTED_AGENT_TYPES:
@@ -136,13 +135,12 @@ class TestSchedulerBindings:
 
 class TestTurnHostIdentities:
     def test_supported_hosts(self):
-        assert SUPPORTED_HOSTS == {"codex-cli", "claude-code", "dsh", "generic-cli"}
+        assert SUPPORTED_HOSTS == {"codex-cli", "claude-code", "generic-cli"}
         assert set(SUPPORTED_TURN_HOST_IDENTITIES) == {
             "codex-cli",
             "claude-code",
             "generic-cli",
         }
-        assert "dsh" not in SUPPORTED_TURN_HOST_IDENTITIES
 
     def test_execution_modes(self):
         assert SUPPORTED_EXECUTION_MODES == {"interactive-visible",

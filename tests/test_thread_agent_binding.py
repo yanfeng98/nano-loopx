@@ -119,22 +119,22 @@ def test_project_binding_resolution_returns_one_exact_goal_and_agent(
     assert bind_thread_agent_in_registry(
         registry_path=path,
         goal_id="goal",
-        host_surface="deepseek-harness-native",
-        thread_id="dsh-session-1",
+        host_surface="claude-code",
+        thread_id="claude-session-1",
         agent_id="agent-a",
         execute=True,
     )["ok"] is True
 
     resolved = resolve_registry_thread_agent_binding(
         registry_path=path,
-        host_surface="deepseek-harness-native",
-        thread_id="dsh-session-1",
+        host_surface="claude-code",
+        thread_id="claude-session-1",
     )
     assert resolved == {
         "ok": True,
         "schema_version": "loopx_thread_agent_binding_resolution_v0",
-        "host_surface": "deepseek-harness-native",
-        "thread_id": "dsh-session-1",
+        "host_surface": "claude-code",
+        "thread_id": "claude-session-1",
         "status": "bound",
         "goal_id": "goal",
         "agent_id": "agent-a",
@@ -142,7 +142,7 @@ def test_project_binding_resolution_returns_one_exact_goal_and_agent(
     }
     missing = resolve_registry_thread_agent_binding(
         registry_path=path,
-        host_surface="deepseek-harness-native",
+        host_surface="claude-code",
         thread_id="another-session",
     )
     assert missing["ok"] is True
@@ -154,8 +154,8 @@ def test_resolve_agent_thread_cli_is_read_only_and_path_free(tmp_path: Path) -> 
     assert bind_thread_agent_in_registry(
         registry_path=path,
         goal_id="goal",
-        host_surface="deepseek-harness-native",
-        thread_id="dsh-session-1",
+        host_surface="claude-code",
+        thread_id="claude-session-1",
         agent_id="agent-a",
         execute=True,
     )["ok"] is True
@@ -171,9 +171,9 @@ def test_resolve_agent_thread_cli_is_read_only_and_path_free(tmp_path: Path) -> 
                 "json",
                 "resolve-agent-thread",
                 "--host-surface",
-                "deepseek-harness-native",
+                "claude-code",
                 "--thread-id",
-                "dsh-session-1",
+                "claude-session-1",
             ]
         )
 
@@ -196,13 +196,13 @@ def test_resolve_agent_thread_cli_is_read_only_and_path_free(tmp_path: Path) -> 
                 "json",
                 "resolve-agent-thread",
                 "--thread-link",
-                "codex://threads/dsh-session-1",
+                "codex://threads/claude-session-1",
             ]
         )
     assert link_exit == 0
     linked = json.loads(link_output.getvalue())
     assert linked["status"] == "missing"
-    assert linked["thread_id"] == "dsh-session-1"
+    assert linked["thread_id"] == "claude-session-1"
     assert linked["host_surface"] is None
     assert linked["host_family"] == "codex"
     assert linked["session_locator"]["authority"] == "locator_only"
@@ -216,9 +216,9 @@ def test_resolve_agent_thread_cli_is_read_only_and_path_free(tmp_path: Path) -> 
                 str(path),
                 "resolve-agent-thread",
                 "--host-surface",
-                "deepseek-harness-native",
+                "claude-code",
                 "--thread-id",
-                "dsh-session-1",
+                "claude-session-1",
             ]
         )
     assert markdown_exit == 0
@@ -312,7 +312,7 @@ def test_resolve_codex_deep_link_fails_closed_for_other_host_surfaces(
     with pytest.raises(ThreadBindingRequestError):
         resolve_registry_thread_agent_binding(
             registry_path=path,
-            host_surface="deepseek-harness-native",
+            host_surface="claude-code",
             thread_link="codex://threads/thread-a",
         )
 
@@ -369,9 +369,9 @@ def test_resolve_agent_thread_cli_failure_is_bounded_and_path_free(
                 "json",
                 "resolve-agent-thread",
                 "--host-surface",
-                "deepseek-harness-native",
+                "claude-code",
                 "--thread-id",
-                "dsh-session-1",
+                "claude-session-1",
             ]
         )
 
@@ -398,17 +398,17 @@ def test_resolve_agent_thread_reports_corrupt_authority_as_read_failure(
                 "json",
                 "resolve-agent-thread",
                 "--host-surface",
-                "deepseek-harness-native",
+                "claude-code",
                 "--thread-id",
-                "dsh-session-1",
+                "claude-session-1",
             ]
         )
 
     assert exit_code == 1
     payload = json.loads(output.getvalue())
     assert payload["error_kind"] == "thread_agent_binding_resolution_failed"
-    assert payload["host_surface"] == "deepseek-harness-native"
-    assert payload["thread_id"] == "dsh-session-1"
+    assert payload["host_surface"] == "claude-code"
+    assert payload["thread_id"] == "claude-session-1"
 
 
 def test_resolve_agent_thread_cli_rejects_invalid_identity_without_echoing_it(
@@ -424,7 +424,7 @@ def test_resolve_agent_thread_cli_rejects_invalid_identity_without_echoing_it(
                 "json",
                 "resolve-agent-thread",
                 "--host-surface",
-                "deepseek-harness-native",
+                "claude-code",
                 "--thread-id",
                 "invalid session id",
             ]
@@ -455,7 +455,7 @@ def test_resolve_agent_thread_never_falls_back_to_the_global_registry(
                             "registered_agents": ["global-agent"],
                             "thread_agent_bindings": [
                                 {
-                                    "host_surface": "deepseek-harness-native",
+                                    "host_surface": "claude-code",
                                     "thread_id": "same-session",
                                     "agent_id": "global-agent",
                                 }
@@ -482,7 +482,7 @@ def test_resolve_agent_thread_never_falls_back_to_the_global_registry(
                 "json",
                 "resolve-agent-thread",
                 "--host-surface",
-                "deepseek-harness-native",
+                "claude-code",
                 "--thread-id",
                 "same-session",
             ]
@@ -504,7 +504,7 @@ def test_project_binding_resolution_fails_closed_across_goals(tmp_path: Path) ->
                 "registered_agents": ["agent-a"],
                 "thread_agent_bindings": [
                     {
-                        "host_surface": "deepseek-harness-native",
+                        "host_surface": "claude-code",
                         "thread_id": "same-session",
                         "agent_id": "agent-a",
                     }
@@ -517,7 +517,7 @@ def test_project_binding_resolution_fails_closed_across_goals(tmp_path: Path) ->
                 "registered_agents": ["agent-b"],
                 "thread_agent_bindings": [
                     {
-                        "host_surface": "deepseek-harness-native",
+                        "host_surface": "claude-code",
                         "thread_id": "same-session",
                         "agent_id": "agent-b",
                     }
@@ -529,7 +529,7 @@ def test_project_binding_resolution_fails_closed_across_goals(tmp_path: Path) ->
 
     resolved = resolve_registry_thread_agent_binding(
         registry_path=path,
-        host_surface="deepseek-harness-native",
+        host_surface="claude-code",
         thread_id="same-session",
     )
     assert resolved["ok"] is False

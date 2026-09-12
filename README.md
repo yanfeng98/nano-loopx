@@ -217,19 +217,12 @@ loopx start-goal --guided --project . --goal-text "你的长程目标"
 | Codex CLI | 在项目里启动 `codex`，让它连接并诊断 LoopX，然后用 `$loopx <复杂任务>` 或 `/skills`。 | 可见 `/goal <task_body>`；默认不走隐藏 headless 执行 |
 | Claude Code | 安装 opt-in adapter，然后运行 `/loopx <任务>`，再运行 `/loop`。 | 由 LoopX gate 的原生 Claude Code `/loop` |
 | Pi | 用 `loopx slash-commands --install --surface pi` 安装 opt-in goal extension，然后在受信任的 Pi 会话里用 `/loopx <任务>`。 | 由 LoopX quota gate 的可见 Pi goal extension（`loopx_goal_activate` + `agent_settled` 续跑） |
-| DeepSeek Harness（`deepseek-harness`） | [dsh goal-mode adapter](loopx/dsh_goal_mode/README.md)，启动 goal 时选 `--host-surface deepseek-harness`。 | headless dsh 工作段；每 tick 从 `quota should-run` 进入 |
-| DeepSeek Harness 原生（`deepseek-harness-native`） | 安装 [DSH 原生 Plugin](packages/dsh-loopx-plugin/README.md)，在技能选择器中点 `loopx`，然后直接描述任务（`--host-surface deepseek-harness-native`）。 | 原生同会话续跑与 GoalBar |
 | shell、自有 runner | 使用同一 installer 和 `loopx doctor`，再手动连接或由 runner 调用（`--host-surface shell`，自定义 host 用 `other-agent`）。 | 你的 shell、scheduler 或 runner |
 
 可直接粘贴的完整 setup message、host-specific 路由和故障恢复见
 [Getting Started](docs/guides/getting-started.md)。Host 集成还可以查看
 [Codex CLI packaged install](docs/product/runtimes/codex-cli/codex-cli-packaged-install.md)和
-[Claude Code adapter](loopx/claude_goal_mode/README.md)，以及
-[DeepSeek Harness turn adapter](loopx/dsh_goal_mode/README.md)。
-
-可查看 [60 秒 DSH × LoopX Replan 真实录屏和可复现
-fixture](docs/showcases/cases/dsh-loopx-replan-demo.md)：安装 Plugin、选择一个
-skill、加入新的关键约束，并检查完整保留的决策证据链。
+[Claude Code adapter](loopx/claude_goal_mode/README.md)。
 
 自有 runner 请先看
 [最小自定义 Runtime 示例](docs/guides/minimal-custom-runtime-example.md)

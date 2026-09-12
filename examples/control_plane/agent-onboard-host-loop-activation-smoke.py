@@ -52,14 +52,11 @@ def main() -> int:
     assert agent_type_for_host_surface("codex-cli-tui") == "codex-cli"
     assert agent_type_for_host_surface("pi") == "pi"
     assert agent_type_for_host_surface("pi-tui") == "pi"
-    assert agent_type_for_host_surface("deepseek-harness") == "deepseek-harness"
-    assert agent_type_for_host_surface("dsh") == "deepseek-harness"
 
     codex_cli_app = build_host_loop_activation_packet(agent_type="codex-cli", goal_id="demo")
     codex_cli = build_host_loop_activation_packet(agent_type="codex-cli", goal_id="demo")
     claude_code = build_host_loop_activation_packet(agent_type="claude-code", goal_id="demo")
     pi = build_host_loop_activation_packet(agent_type="pi", goal_id="demo")
-    dsh = build_host_loop_activation_packet(agent_type="deepseek-harness", goal_id="demo")
     assert codex_cli_app["host_mutation"]["host_command"] == "/goal <task_body>", codex_cli_app
     assert codex_cli["host_mutation"]["host_command"] == "/goal <task_body>", codex_cli
     assert claude_code["host_mutation"]["host_command"] == "/loop", claude_code
@@ -70,10 +67,6 @@ def main() -> int:
         "optional compatibility echo; host authority derives the value"
     ), pi
     assert "--runtime-profile generic_cli" in pi["commands"]["heartbeat_prompt"], pi
-    assert dsh["activation_method"] == "external_loop_driver", dsh
-    assert dsh["host_surface"] == "deepseek_harness_automation_loop", dsh
-    assert "--runtime-profile generic_cli" in dsh["commands"]["heartbeat_prompt"], dsh
-    assert "scripts/dsh_turn_host_adapter.py" in dsh["entry_command_hint"], dsh
     gated_activation = build_host_loop_activation_packet(
         agent_type="codex-cli",
         goal_id="multi-agent-demo",

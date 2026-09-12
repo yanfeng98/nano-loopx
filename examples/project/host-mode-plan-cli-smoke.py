@@ -231,7 +231,7 @@ def test_cli_fails_closed_on_bad_intent() -> None:
     assert payload["suggestions"], payload
 
 
-def test_cli_rejects_dsh_as_a_visible_host_identity() -> None:
+def test_cli_rejects_unregistered_identity_as_a_visible_host_identity() -> None:
     proc = run_cli(
         "--format",
         "json",
@@ -243,7 +243,7 @@ def test_cli_rejects_dsh_as_a_visible_host_identity() -> None:
         "--host-capability",
         "visible_session",
         "--host-identity",
-        "dsh",
+        "codex-desktop",
     )
     assert proc.returncode == 2, (proc.stdout, proc.stderr)
     assert "invalid choice" in proc.stderr, proc.stderr
@@ -290,7 +290,7 @@ def main() -> int:
     test_cli_visible_mode_maps_generic_cli_to_visible_loop_connector()
     test_cli_shell_service_fails_closed_without_adapter_and_validator()
     test_cli_fails_closed_on_bad_intent()
-    test_cli_rejects_dsh_as_a_visible_host_identity()
+    test_cli_rejects_unregistered_identity_as_a_visible_host_identity()
     test_cli_reports_missing_capabilities_and_stop_steps()
     test_command_is_discoverable()
     print("host-mode-plan-cli-smoke ok")

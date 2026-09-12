@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import pytest
-
 from loopx.slash_command_install import (
     install_slash_commands,
     materialize_loopx_entry_skill,
@@ -43,7 +41,7 @@ def test_host_materialization_installs_generated_loopx_entry_skill(
         "status": "created",
     }
     assert 'name: "loopx"' in skill_text
-    assert "deepseek-harness" in skill_text
+    assert "codex-cli-tui, claude-code, pi, shell, or other-agent" in skill_text
     assert "--slash-command-arguments" in skill_text
     assert "The CLI, not the model, owns parsing" in skill_text
     assert "Never split or recompose" in skill_text
@@ -62,45 +60,6 @@ def test_host_materialization_installs_generated_loopx_entry_skill(
         skills_dir=skills_dir,
         execute=True,
     )["status"] == "unchanged"
-
-
-def test_host_materialization_can_bind_dsh_native_surface(tmp_path: Path) -> None:
-    skills_dir = tmp_path / "skills"
-
-    materialize_loopx_entry_skill(
-        skills_dir=skills_dir,
-        execute=True,
-        host_surface="deepseek-harness-native",
-    )
-
-    skill_text = (skills_dir / "loopx" / "SKILL.md").read_text(encoding="utf-8")
-    assert "exact current host `deepseek-harness-native`" in skill_text
-    assert "--host-surface deepseek-harness-native" in skill_text
-    assert '--thread-id "$DSH_SESSION_ID"' in skill_text
-    assert "complete original visible user task as `goalText`" in skill_text
-    assert "--goal-text='<shell-escaped complete original visible user task>'" in skill_text
-    assert "no task text becomes shell syntax" in skill_text
-    assert "embedded single quote with the exact sequence `'\"'\"'`" in skill_text
-    assert "does not substitute a `$ARGUMENTS`" in skill_text
-    assert "plugin-provided LoopX model tools" in skill_text
-    assert "resolve-agent-thread" in skill_text
-    assert "never guess or fuzzy-match a Goal or Agent id" in skill_text
-    assert "Visible command arguments: `$ARGUMENTS`." not in skill_text
-    assert "On native Windows" not in skill_text
-    assert "surface=dsh-skills" in skill_text
-    assert "# LoopX CLI Workflow" in skill_text
-    assert "DSH workflow skill" in skill_text
-    assert 'argument-hint: "[task text]"' in skill_text
-    assert "/loopx" not in skill_text
-
-
-def test_host_materialization_rejects_unknown_fixed_surface(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="unsupported fixed LoopX entry host surface"):
-        materialize_loopx_entry_skill(
-            skills_dir=tmp_path / "skills",
-            execute=True,
-            host_surface="guessed-host",
-        )
 
 
 def test_codex_install_upgrades_managed_loopx_facade(tmp_path: Path) -> None:
@@ -122,7 +81,6 @@ def test_codex_install_upgrades_managed_loopx_facade(tmp_path: Path) -> None:
     assert "Treat this as the LoopX `/loopx` explicit LoopX command skill." in skill_text
     assert "--host-surface <exact-current-host>" in skill_text
     assert "Identify the exact current host surface" in skill_text
-    assert "deepseek-harness" in skill_text
     assert "`ordered_steps` and `goal_start_contract` as authoritative" in skill_text
     assert "surface the exact pasteable gate" in skill_text
     assert "follow its exact CLI `interaction_contract` or quota command first" in skill_text

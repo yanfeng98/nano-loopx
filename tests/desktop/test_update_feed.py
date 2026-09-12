@@ -16,7 +16,6 @@ class FeedTests(unittest.TestCase):
         pointer = None
         for tag, prerelease in [
             ("v1.0.0", False),
-            ("dsh-loopx-plugin-v0.1.1-beta.4", False),
             ("v1.1.0-rc.1", True),
             ("v1.1.0", True),
             ("v-plugin-2.0.0", False),

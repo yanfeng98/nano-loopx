@@ -5,8 +5,6 @@
 
 - [集成指南](../integration.md)
 - [Runtime 连接器目录](runtime-connector-catalog.md)
-- [DeepSeek Harness 连接器](deepseek-harness-connector.md)
-- [DeepSeek Harness 控制面适配器](deepseek-harness-control-plane-adapter.md)
 - [Session runtime 控制面适配器](session-runtime-control-plane-adapter.md)
 - [LoopX 控制面桌面外壳](../../apps/desktop/loopx-control-plane/README.md)
 - [Worker Bridge 安装契约](worker-bridge-install-contract.md)

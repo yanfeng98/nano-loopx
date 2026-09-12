@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -21,11 +20,7 @@ from .project_prompt import (
     shell_arg,
 )
 from .registry import read_json, registry_goals
-from .skill_install_readback import (
-    REQUIRED_HOST_SKILL_IDS,
-    configured_host_skills_dir,
-    inspect_skill_install_readback,
-)
+from .skill_install_readback import REQUIRED_HOST_SKILL_IDS
 
 SCHEMA_VERSION = "loopx_agent_onboarding_v0"
 HOST_SKILL_DELIVERY_SCHEMA_VERSION = "loopx_host_skill_delivery_v0"
@@ -91,7 +86,6 @@ def _skill_delivery_contract(
     project: str = ".",
     cli_bin: str = "loopx",
     active_project_skill_ids: list[str] | None = None,
-    host_skills_dir: Path | None = None,
 ) -> dict[str, Any]:
     active_project_skills = list(dict.fromkeys(active_project_skill_ids or []))
     project_surface = _project_skill_surface(agent_type)
@@ -140,51 +134,20 @@ def _skill_delivery_contract(
         *REQUIRED_HOST_SKILL_IDS,
         *active_project_skills,
     ]
-    dsh_native = agent_type == "deepseek-harness-native"
-    filesystem_readback = (
-        inspect_skill_install_readback(
-            skills_dir=host_skills_dir,
-            required_skill_ids=REQUIRED_HOST_SKILL_IDS,
-            source_root=Path(__file__).resolve().parents[1],
-        )
-        if dsh_native
-        else None
-    )
     return {
         "schema_version": HOST_SKILL_DELIVERY_SCHEMA_VERSION,
         "mode": "host_managed",
-        "owner": (
-            "dsh_loopx_plugin"
-            if dsh_native
-            else "custom_agent_host"
-        ),
-        "status": (
-            str(filesystem_readback["status"])
-            if filesystem_readback
-            else "pending_host_readback"
-        ),
+        "owner": "custom_agent_host",
+        "status": "pending_host_readback",
         "codex_skills_root_required": False,
         "required_for_cli_health": False,
         "required_for_loopx_workflow": True,
         "required_skill_ids": required_skill_ids,
         "active_project_skill_ids": active_project_skills,
         "delivery_options": [
-            *(["dsh_loopx_init_command"] if dsh_native else []),
             "host_skill_manifest",
             "prompt_injection",
         ],
-        **(
-            {
-                "preferred_delivery": "dsh_loopx_init_command",
-                "onboarding_role": "read_only_verifier",
-                "onboarding_required_for_install": False,
-                "install_command": "/loopx-init",
-                "entry_host_surface": "deepseek-harness-native",
-                "target_layout": "~/.agents/skills",
-            }
-            if dsh_native
-            else {}
-        ),
         "source_repository": "https://github.com/huangruiteng/loopx",
         "source_directories": [
             f"skills/{skill_id}"
@@ -227,8 +190,6 @@ def _bootstrap_pack_command(
         "codex-cli": "codex-cli-tui",
         "claude-code": "claude-code",
         "pi": "pi",
-        "deepseek-harness": "deepseek-harness",
-        "deepseek-harness-native": "deepseek-harness-native",
         "manual": "shell",
         "other-agent": "other-agent",
     }
@@ -258,20 +219,6 @@ def _start_instruction(agent_type: str) -> str:
         return "Run `/loopx <task>` to arm LoopX, then run native `/loop`."
     if agent_type == "pi":
         return "Run `/loopx <task>`; after todo writeback, call `loopx_goal_activate` with the generated heartbeat task body."
-    if agent_type == "deepseek-harness":
-        return (
-            "Install `loopx[deepseek-harness]`, prepare a dsh cordis.yml, and run "
-            "`loopx turn run-once` with the `loopx.dsh_goal_mode` adapter "
-            "(`python -m loopx.dsh_goal_mode`; the legacy "
-            "`scripts/dsh_turn_host_adapter.py` launcher still works) as the "
-            "generic-cli host adapter; every tick starts from `quota should-run`."
-        )
-    if agent_type == "deepseek-harness-native":
-        return (
-            "Install the DSH LoopX plugin, run `/loopx-init`, then invoke the `loopx` "
-            "skill with the task text. The plugin driver continues the exact live "
-            "DSH session only after `quota should-run` admits another step."
-        )
     if agent_type == "manual":
         return "Use the CLI packet and wire an external scheduler, or run quota/status/todo commands manually."
     return (
@@ -315,7 +262,6 @@ def build_agent_onboarding_packet(
         project=resolved_project,
         cli_bin=cli_bin,
         active_project_skill_ids=active_project_skill_ids,
-        host_skills_dir=configured_host_skills_dir(os.environ),
     )
     registered_agents = registered_agent_ids_from_registry(
         registry_path,

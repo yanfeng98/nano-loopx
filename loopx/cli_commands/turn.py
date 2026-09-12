@@ -53,7 +53,6 @@ from .lark_inbox import (
     build_lark_operator_inbox_urgency_projector,
     dispatch_goal_lark_turn_start_hooks,
 )
-from .turn_dsh_host import build_dsh_host_runner
 from .turn_registration import register_turn_commands as register_turn_commands
 from .turn_inspection import handle_turn_journal_inspection
 from .turn_rendering import (
@@ -930,11 +929,6 @@ def handle_turn_command(
                     return codex_cli_session_binding(runtime_root, turn_envelope)
 
                 session_binding_resolver = resolve_built_in_session_binding
-            elif args.host == "dsh":
-                host_runner = build_dsh_host_runner(
-                    args,
-                    workspace=project,
-                )
 
             payload = run_loopx_turn_once(
                 payload,

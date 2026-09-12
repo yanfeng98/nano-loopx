@@ -219,7 +219,7 @@ def test_pi_alias_resolves_to_goal_loop_connector() -> None:
 
 
 def test_visible_mode_fails_closed_for_unknown_host_identity() -> None:
-    for host_identity in ("not-a-host", "dsh"):
+    for host_identity in ("not-a-host", "codex-desktop"):
         try:
             build_workflow_identity_plan("watch_each_turn", host_identity=host_identity)
         except HostModePlanError as exc:

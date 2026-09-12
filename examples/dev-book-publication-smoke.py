@@ -325,7 +325,6 @@ def main() -> int:
         "chapters/02-session-goal-loopx.md",
         (
             "Pi",
-            "DeepSeek Harness",
             "Runtime Connector Catalog",
         ),
     )

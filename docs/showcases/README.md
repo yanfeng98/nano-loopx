@@ -104,20 +104,6 @@ npm run export:frontstage-share
 
 ## 实验性功能 Demo
 
-### DSH × LoopX:Replan 一个真实决定
-
-[![DSH × LoopX 录屏封面](../assets/showcases/dsh-loopx/dsh-loopx-cover.png)](../assets/showcases/dsh-loopx/dsh-loopx-quickstart-replan.mp4)
-
-[60 秒真实 DSH 录屏](../assets/showcases/dsh-loopx/dsh-loopx-quickstart-replan.mp4)
-从一个明确的 `loopx` 技能选择开始,然后展示一个 serverless 约束
-把日志库决定从 Pino 改为 Roarr,却没有丢失更早的证据。公共 fixture 验证了 3/3 行为,
-并记录了为什么 12 个包变成 4 个。
-
-    python3 examples/dsh-loopx-demo-smoke.py
-
-阅读[案例与证据边界](cases/dsh-loopx-replan-demo.md),或
-[复现 DSH 路径](../../examples/dsh-loopx-demo/README.md)。
-
 ### 从一个有价值的 Loop 开始
 
 如果你想在阅读案例研究之前先看一个轻量级第一个 demo,请从新手预设选择器开始。
@@ -179,7 +165,6 @@ CLI 状态仍然是真相来源,浏览器写入需要明确的本地 opt-in,审�
 | [被阻塞 P0 安全轮换](cases/0617-blocked-p0-safe-rotation.md) | 可复现 demo | 具体用户关卡、安全的 P1/P2 兜底 | 聚焦合成 smoke |
 | [PR 问题自动修复](cases/0624-pr-issue-auto-fix.md) | 可复现 demo | 问题修复工作流、复现、审查者交接 | 公开安全模式案例 |
 | [Agent 对 Agent 的 PR 评论 Loop](cases/0623-agent-to-agent-pr-comments.md) | 可复现 demo | 认领交接、评论、修复、审查包 | 公开安全模式案例 |
-| [DSH × LoopX Replan](cases/dsh-loopx-replan-demo.md) | 可复现录屏 demo | 原生技能选择、持久 Replan、GoalBar 收尾 | 真实 DSH 录屏加确定性公共 fixture |
 
 ## 附录案例
 

@@ -68,7 +68,6 @@ loopx capability show issue-fix --format json
 | 把公开/私有内容信号转成可审阅的 source、角度、草稿、反馈与发布 gate 包 | [Content Operations](content_ops/README.md) |
 | 盘点、归档、迁移并重排 material store,而不丢失 raw source 权威 | [Material Lifecycle](material_lifecycle/README.md) |
 | 在调用方迁移到 outcome 自有能力期间,检查公开安全的外部价值采集兼容路径 | [Value Connectors](value_connectors/README.md) |
-| 单向观察长程 harness 会话,读回完整性 receipt 与 stall/repetition/recovery 投影,且不授予运行时 authority | [Reliability Diagnostics](reliability_diagnostics/README.md) |
 
 ## 贡献者导航与 ownership
 

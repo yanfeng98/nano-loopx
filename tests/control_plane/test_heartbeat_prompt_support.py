@@ -100,7 +100,7 @@ def test_public_facade_still_builds_and_renders_prompts() -> None:
 
 @pytest.mark.parametrize("mode", ["full", "compact", "brief", "thin"])
 def test_exact_turn_identity_is_preserved_across_heartbeat_modes(mode: str) -> None:
-    turn_id = "dsh-turn:2026-08-21T12:34:56Z"
+    turn_id = "codex-turn:2026-08-21T12:34:56Z"
     payload = build_heartbeat_prompt(
         goal_id="loopx-meta",
         agent_id="codex-main-control",

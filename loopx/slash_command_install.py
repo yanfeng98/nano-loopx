@@ -62,60 +62,6 @@ def _loopx_start_goal_arguments_instruction(
     return instruction
 
 
-def _dsh_native_loopx_instructions(*, cli_bin: str) -> list[str]:
-    return [
-        (
-            "This entry skill is installed for the exact current host "
-            "`deepseek-harness-native`; do not infer or substitute another host "
-            "surface."
-        ),
-        (
-            "Treat the complete original visible user task as `goalText`. It is "
-            "the task wording, not a command token, routing envelope, or "
-            "confirmation field. DSH does not substitute a `$ARGUMENTS` "
-            "placeholder."
-        ),
-        (
-            "Use DSH's shell tool to invoke the authoritative LoopX CLI. Never "
-            "call plugin-provided LoopX model tools and never edit a LoopX "
-            "registry directly."
-        ),
-        (
-            "Require the exact non-empty `$DSH_SESSION_ID` supplied by DSH. "
-            "Never synthesize, normalize, or reuse a Session id from prose."
-        ),
-        (
-            "For a concrete task, preserve the complete task wording as one argv "
-            "value. Encode it as one POSIX single-quoted shell word, replacing each "
-            "embedded single quote with the exact sequence `'\"'\"'`, so no task "
-            "text becomes shell syntax. Then run "
-            f'`{cli_bin} start-goal --guided --project . '
-            "--goal-text='<shell-escaped complete original visible user task>' "
-            '--host-surface deepseek-harness-native '
-            '--thread-id "$DSH_SESSION_ID"`. Do not summarize, classify, or '
-            "rewrite the task before this call."
-        ),
-        (
-            "For a status/continuation request with no new task, first run "
-            f'`{cli_bin} --registry .loopx/registry.json --format json '
-            'resolve-agent-thread --host-surface deepseek-harness-native '
-            '--thread-id "$DSH_SESSION_ID"`; do not create a new Goal from an '
-            "empty or inspection-only request."
-        ),
-        (
-            "Treat returned `ordered_steps`, `goal_start_contract`, selection "
-            "gates, identity commands, Todo commands, quota decisions, and "
-            "writeback commands as authoritative. Execute only exact typed CLI "
-            "commands, including the returned thread-binding step, and never "
-            "guess or fuzzy-match a Goal or Agent id."
-        ),
-        (
-            "Use the installed `loopx-project` Skill for advanced LoopX lifecycle "
-            "operations. If no safe typed operation follows from the CLI packet, "
-            "ask the user before mutating authority."
-        ),
-    ]
-
 
 def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list[dict[str, Any]]:
     specs: list[dict[str, Any]] = [
@@ -126,7 +72,7 @@ def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list
             "argument_hint": "[--fine-grained] [--capability-route issue-fix] [task text]",
             "instructions": [
                 "Visible command arguments: `$ARGUMENTS`.",
-                "Identify the exact current host surface (codex-cli-tui, pi, or deepseek-harness).",
+                "Identify the exact current host surface (codex-cli-tui, claude-code, pi, shell, or other-agent).",
                 _loopx_start_goal_arguments_instruction(
                     cli_bin=cli_bin,
                     host_surface=None,
@@ -259,15 +205,9 @@ def materialize_loopx_entry_skill(
     skills_dir: Path,
     execute: bool,
     cli_bin: str = "loopx",
-    host_surface: str | None = None,
 ) -> dict[str, Any]:
     """Materialize the generated ``$loopx`` entry skill into a host skill root."""
 
-    if host_surface not in {
-        None,
-        "deepseek-harness-native",
-    }:
-        raise ValueError(f"unsupported fixed LoopX entry host surface: {host_surface}")
     spec = next(
         item
         for item in _command_prompt_specs(
@@ -276,38 +216,8 @@ def materialize_loopx_entry_skill(
         )
         if item["name"] == "loopx"
     )
-    if host_surface == "deepseek-harness-native":
-        spec = {
-            **spec,
-            "command": "loopx",
-            "title": "LoopX CLI Workflow",
-            "description": (
-                "Use the authoritative LoopX CLI for the current DSH task or "
-                "continuation."
-            ),
-            "argument_hint": "[task text]",
-            "instructions": _dsh_native_loopx_instructions(cli_bin=cli_bin),
-        }
-    elif host_surface:
-        instructions = list(spec["instructions"])
-        instructions[1] = (
-            "This entry skill is installed for the exact current host "
-            f"`{host_surface}`; do not infer or substitute another host surface."
-        )
-        instructions[2] = _loopx_start_goal_arguments_instruction(
-            cli_bin=cli_bin,
-            host_surface=host_surface,
-        )
-        spec = {**spec, "instructions": instructions}
     skill_path = skills_dir / "loopx" / "SKILL.md"
-    content = _command_skill_content(
-        spec,
-        surface=(
-            "dsh-skills"
-            if host_surface == "deepseek-harness-native"
-            else "codex-skills"
-        ),
-    )
+    content = _command_skill_content(spec, surface="codex-skills")
     return {
         "skill_id": "loopx",
         "path": str(skill_path),

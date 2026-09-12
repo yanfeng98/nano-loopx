@@ -56,7 +56,6 @@ loopx turn run-once \
 
 除非它已经实现类型化 stdin/stdout 契约，否则不要直接把自由格式交互命令作为 `--host-adapter-command-json` 传入。对于 Codex CLI 或另一会话式 CLI，适配器在 Turn 请求/结果对象与该 CLI 的 prompt、会话与输出模型之间翻译。原始 transcript 文本、进程退出零与 host 自己的完成主张绝不构成足够验证。
 
-一个 DeepSeek Harness 适配器位于 `loopx.dsh_goal_mode` 子包中（用 `python -m loopx.dsh_goal_mode` 运行；遗留 `scripts/dsh_turn_host_adapter.py` 启动器仍可用）；它使用可选的 `deepseek-harness-sdk` Python 客户端运行一个有界 dsh 会话，并把最终 assistant JSON 消息解析为同一类型化 Turn 结果。优先使用内置 `loopx turn run-once --host dsh` 界面，使结构化 SDK 终态失败到达 Turn Journal。用 `--host generic-cli` 的模块/子进程调用保持为兼容与回滚路径。参见 [DeepSeek Harness connector](../../integrations/deepseek-harness-connector.md)。
 
 ### 任何 Agent CLI 的五个问题
 

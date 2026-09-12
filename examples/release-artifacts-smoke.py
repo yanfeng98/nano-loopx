@@ -166,7 +166,6 @@ def main() -> int:
         "workflow-skills --install --skills-dir",
         "workflow-skills --uninstall --skills-dir",
         'payload["source"]["kind"] == "python_distribution"',
-        "Verify wheel through the DSH managed-runtime install shape",
         '--target "${target}"',
         'loopx-wheel-target-inspect.json',
         'verify_target="${RUNNER_TEMP}/loopx-pypi-target-${version}"',

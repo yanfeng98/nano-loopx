@@ -133,7 +133,6 @@ companion 文件。schema 缩减永远不是顺带清理：RFC 或 PR 必须逐�
     [#3749](https://github.com/huangruiteng/loopx/pull/3749) 与
     [#3755](https://github.com/huangruiteng/loopx/pull/3755) 交付。通用多能力晋升
     仍在评审中。
-- [LoopX Desktop Execution Frontends v0](desktop-execution-frontends-v0.md)
   
   - **RFC 状态：** Draft。
   - **`main` 交付：** 支撑基础已实现。
@@ -189,7 +188,6 @@ companion 文件。schema 缩减永远不是顺带清理：RFC 或 PR 必须逐�
   - **`main` 交付：** 活跃的研究与工程项目。
   - **当前边界：** ALE、LHTB 与 DeepSWE 构成外部效度组合；benchmark 基础与证据
     流程正在建设，但不把研究项目当作运行时协议。
-- [Long-Running Agent Reliability Diagnostics and Governed Delivery v0](long-running-agent-reliability-diagnostics-governed-delivery-v0.md)
   
   - **RFC 状态：** Draft，产品方向与交付契约。
   - **`main` 交付：** 仅方向。

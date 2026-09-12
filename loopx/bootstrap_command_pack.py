@@ -60,8 +60,6 @@ START_GOAL_HOST_SURFACES = (
     "codex-cli-tui",
     "claude-code",
     "pi",
-    "deepseek-harness",
-    "deepseek-harness-native",
     "shell",
     "other-agent",
 )
@@ -336,8 +334,6 @@ def build_start_goal_host_surface_selection_packet(
         "codex-cli-tui": "terminal Codex TUI with visible /goal support",
         "claude-code": "Claude Code with native /loop",
         "pi": "Pi LoopX goal extension",
-        "deepseek-harness": "DeepSeek Harness automation loop through loopx.dsh_goal_mode (compat: scripts/dsh_turn_host_adapter.py)",
-        "deepseek-harness-native": "DeepSeek Harness same-session LoopX skill and plugin driver",
         "shell": "manual shell or an explicitly configured external scheduler",
         "other-agent": "custom agent host using the returned activation contract",
     }

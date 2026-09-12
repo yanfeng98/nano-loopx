@@ -20,7 +20,6 @@ IDENTITY_SELECTION_SCHEMA_VERSION = "loopx_host_loop_identity_selection_v0"
 PI_OPTIONAL_COMPAT_ECHO = "optional compatibility echo; host authority derives the value"
 HOST_MANAGED_SKILL_AGENT_TYPES = frozenset(
     {
-        "deepseek-harness-native",
         "other-agent",
     }
 )
@@ -34,8 +33,6 @@ def scheduler_command_binding_for_agent_type(
         "codex-cli": SchedulerRuntimeProfile.CODEX_CLI_VISIBLE,
         "claude-code": SchedulerRuntimeProfile.CLAUDE_CODE_VISIBLE,
         "pi": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
-        "deepseek-harness": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
-        "deepseek-harness-native": SchedulerRuntimeProfile.GENERIC_CLI_AGENT_LOOP,
     }.get(canonical)
     if runtime_profile is not None:
         return {"runtime_profile": runtime_profile.value}
@@ -50,8 +47,6 @@ SUPPORTED_AGENT_TYPES = [
     "codex-cli",
     "claude-code",
     "pi",
-    "deepseek-harness",
-    "deepseek-harness-native",
     "manual",
     "other-agent",
 ]
@@ -87,30 +82,6 @@ AGENT_TYPE_CATALOG: dict[str, dict[str, Any]] = {
             "pi agent",
             "earendil-pi",
             "earendil pi",
-        ],
-    },
-    "deepseek-harness": {
-        "display_name": "DeepSeek Harness",
-        "host_loop": "DeepSeek Harness headless/automation loop gated by LoopX quota",
-        "entry": "loopx turn run-once with loopx.dsh_goal_mode (python -m loopx.dsh_goal_mode; compat: scripts/dsh_turn_host_adapter.py)",
-        "accepted_inputs": [
-            "deepseek-harness",
-            "deepseek_harness",
-            "deepseek harness",
-            "dsh",
-        ],
-    },
-    "deepseek-harness-native": {
-        "display_name": "DeepSeek Harness (native session)",
-        "host_loop": "DeepSeek Harness same-session loop driven by the LoopX plugin",
-        "entry": "the LoopX skill plus the DSH `/loopx-init` command and same-session driver",
-        "accepted_inputs": [
-            "deepseek-harness-native",
-            "deepseek_harness_native",
-            "deepseek harness native",
-            "dsh-native",
-            "dsh_native",
-            "dsh native",
         ],
     },
     "manual": {
@@ -170,10 +141,6 @@ HOST_SURFACE_TO_AGENT_TYPE = {
     "claude-code": "claude-code",
     "pi": "pi",
     "pi-tui": "pi",
-    "deepseek-harness": "deepseek-harness",
-    "dsh": "deepseek-harness",
-    "deepseek-harness-native": "deepseek-harness-native",
-    "dsh-native": "deepseek-harness-native",
     "shell": "manual",
     "http": "other-agent",
     "worker-bridge": "other-agent",
@@ -295,8 +262,6 @@ def _heartbeat_commands(
         "codex-cli": "Codex CLI /goal visible TUI loop",
         "claude-code": "Claude Code native /loop gated by LoopX",
         "pi": "Pi visible goal loop gated by LoopX",
-        "deepseek-harness": "DeepSeek Harness automation loop gated by LoopX",
-        "deepseek-harness-native": "DeepSeek Harness same-session plugin loop gated by LoopX",
         "manual": "External scheduler or manual shell LoopX poll",
         "other-agent": "Custom agent host loop gated by LoopX",
     }
@@ -623,74 +588,6 @@ def _pi_activation(commands: dict[str, str], cli_bin: str) -> dict[str, Any]:
     }
 
 
-def _deepseek_harness_activation(commands: dict[str, str]) -> dict[str, Any]:
-    return {
-        "host_surface": "deepseek_harness_automation_loop",
-        "entry_command_hint": (
-            "loopx turn run-once --host dsh "
-            "(compat: --host generic-cli with python -m loopx.dsh_goal_mode or "
-            "scripts/dsh_turn_host_adapter.py)"
-        ),
-        "activation_method": "external_loop_driver",
-        "activation_input_command": commands["heartbeat_prompt_json"],
-        "host_mutation": {
-            "owner": "DeepSeek Harness adapter",
-            "host_loop_primitive": "deepseek-harness-sdk",
-            "cli_can_mutate_directly": False,
-            "missing_host_tool_gate": (
-                "DeepSeek Harness SDK or dsh runtime is unavailable; install "
-                "`loopx[deepseek-harness]` and verify the dsh cordis configuration "
-                "before claiming an automation loop."
-            ),
-        },
-        "activation_steps": [
-            "Install the optional DeepSeek Harness SDK (`loopx[deepseek-harness]`).",
-            "Prepare a dsh cordis.yml and any DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL settings.",
-            "Run the heartbeat-prompt JSON command after project state and todos are written.",
-            "Run `loopx turn run-once --host dsh`; use the generic-cli adapter "
-            "command only as a compatibility or rollback path.",
-            "Start every automatic tick from quota should-run and stop when it says stop.",
-        ],
-        "success_criteria": [
-            "The DeepSeek Harness adapter returns a typed loopx_turn_result_v0.",
-            "Structured dsh failures reach the Turn journal without provider prose.",
-            "Independent validation passes before LoopX writes state or spends quota.",
-            "Opaque dsh session roots stay outside public LoopX evidence.",
-        ],
-    }
-
-
-def _deepseek_harness_native_activation(commands: dict[str, str]) -> dict[str, Any]:
-    return {
-        "host_surface": "deepseek_harness_native_same_session",
-        "entry_command_hint": (
-            "install the DSH LoopX plugin, run /loopx-init, then invoke the loopx skill"
-        ),
-        "activation_method": "same_session_plugin_driver",
-        "activation_input_command": commands["heartbeat_prompt_json"],
-        "host_mutation": {
-            "owner": "DSH LoopX plugin",
-            "host_loop_primitive": "exact live Agent.followup",
-            "cli_can_mutate_directly": False,
-            "missing_host_tool_gate": (
-                "The DSH LoopX plugin or its same-session driver is unavailable; install "
-                "the plugin and run `/loopx-init` before claiming an autonomous loop."
-            ),
-        },
-        "activation_steps": [
-            "Install the DSH LoopX plugin and run `/loopx-init`.",
-            "Invoke the installed `loopx` skill with the original task text.",
-            "Bind the exact DSH session while starting or attaching the Goal.",
-            "Let the plugin driver call `quota should-run` before each same-session follow-up.",
-        ],
-        "success_criteria": [
-            "The exact live DSH Agent and session id match the durable LoopX binding.",
-            "Each automatic follow-up has a fresh positive quota decision.",
-            "Human input cancels any reserved automatic follow-up before delivery.",
-        ],
-    }
-
-
 def _manual_activation(commands: dict[str, str]) -> dict[str, Any]:
     return {
         "host_surface": "external_scheduler_or_manual_shell",
@@ -764,10 +661,6 @@ def build_host_loop_activation_packet(
         surface = _claude_code_activation(commands, cli_bin)
     elif canonical == "pi":
         surface = _pi_activation(commands, cli_bin)
-    elif canonical == "deepseek-harness":
-        surface = _deepseek_harness_activation(commands)
-    elif canonical == "deepseek-harness-native":
-        surface = _deepseek_harness_native_activation(commands)
     else:
         surface = _manual_activation(commands)
         if canonical == "other-agent":

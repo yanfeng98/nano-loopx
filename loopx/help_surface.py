@@ -316,7 +316,6 @@ MANPAGE_COMMAND_HELP_ONLY = frozenset(
         "promotion-gate",
         "read-only-map",
         "refresh-state",
-        "reliability-diagnostics",
         "register-authority-source",
         "registry-boundary",
         "reward",

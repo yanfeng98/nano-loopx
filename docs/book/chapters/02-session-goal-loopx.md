@@ -230,7 +230,6 @@ LoopX 保留同一 control-plane contract，但不同 Host 的启动和唤醒机
 | Codex CLI TUI | generated bootstrap + visible `/goal` | 保持 visible、interruptible |
 | Claude Code | `/loopx` + opt-in native `/loop` adapter | 仍走同一 quota/writeback |
 | Pi | opt-in Goal extension + `/loopx` | 绑定保存在项目 `.loopx/`，不获得额外 authority |
-| DeepSeek Harness | native skill + same-session Driver / `loopx turn run-once` | 每段 bounded execution 仍需独立 validation |
 | Shell / other Agent | guided packet + caller-owned runner | 无 runner hook 时由调用方唤醒 |
 
 表中出现一个 Host 不代表所有 Host 都支持相同 automation API。`host_surface` 未知时，应省略一次

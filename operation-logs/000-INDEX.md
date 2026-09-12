@@ -27,6 +27,7 @@
 | 023 | [023-readme-code-reconciliation.md](023-readme-code-reconciliation.md) | README 与代码一致性修复(版本号、host 表补齐、7 条命令陷阱、仓库级死链清零、许可证移除;修复崩溃的 docs-governance-smoke 并补齐两个同源守卫;二轮复查扩至全仓库) |
 | 024 | [024-remove-ark-managed-agent.md](024-remove-ark-managed-agent.md) | 移除 Ark Managed Agent 宿主(42 文件 +236/−1803;`NATIVE_GOAL_RUNTIME_PROFILES` 收缩保留以免打破 Codex 配额记账、必需技能集常量改名、两个 Ark 测试文件改名保留共享测试、`LOOPX_ENTRY_HOST_SURFACE` 机制整删) |
 | 025 | [025-remove-opencode-host.md](025-remove-opencode-host.md) | 移除 OpenCode 宿主(70 文件 +170/−5259;v1 bridge + v2 worker + `.opencode/skills` 投递面;`generic-cli` connector 改名保留以免废掉 Pi、`install_skill_facade` 最后消费者离场、man page 重新生成、先清理本机 22 个托管 facade) |
+| 026 | [026-remove-deepseek-harness.md](026-remove-deepseek-harness.md) | 移除 DeepSeek Harness 全部集成(152 文件 +54/−36028,本系列最大;**三处耦合**——两个 host 变体 + `packages/dsh-loopx-plugin` 51 文件整包 + `reliability-diagnostics` 通用能力随之退役;`turn.py`→`dsh_goal_mode` 是无条件深层依赖、`reliability-diagnostics` 是顶级 CLI 命令且在 manpage help-only 表内、showcase 生成产物重生成、`deepseek-v4-flash` 模型名假阳性) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。
