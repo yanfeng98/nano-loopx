@@ -30,7 +30,6 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 - [State 交互模型](state-interaction-model.md)：用户、Agent 与 state 通道流程。
 - [项目 Agent todo 契约](project-agent-todo-contract.md)：工作、归属、关卡与继续。
 - [配额分配](quota-allocation.md)：`should-run` 与 spend 语义。
-- [Heartbeat 自动化提示](heartbeat-automation-prompt.md)：定时继续契约。
 - [Status 数据契约](status-data-contract.md)：status 与 dashboard payload。
 - [Effect interpreter packet](reference/effect-interpreter-packet.md)：
   针对 `quota should-run` 的 canonical effect-request/interpretation/observation 透镜。
@@ -61,9 +60,7 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
   
 - [贡献指南](../CONTRIBUTING.md)
 - [贡献者任务](development/contributor-tasks.md)
-- [治理](../.github/GOVERNANCE.md)
 - [作者与贡献者](project/authors.md)
-- [许可与 v0.4.8 过渡](project/licensing.md)
 - [项目历史](project/history.md)
 - [名称与商标](project/trademarks.md)
 - [对外品牌使用指南](project/brand-guide.md) 

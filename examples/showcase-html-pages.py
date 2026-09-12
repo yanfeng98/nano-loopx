@@ -279,7 +279,7 @@ CASE_DETAILS = {
         "zh": {
             "context": [
                 "这个案例描述的是 PR review feedback 在多 agent 之间流转时如何不丢 ownership。重点不是聊天记录，而是 comment、claim、handoff、fix、validation、review packet 这条链。",
-                "对用户有价值的是每条反馈都能回答三个问题：谁负责、修复证据在哪里、还需要谁 review。公开仓库里的 event contract、review packet、heartbeat prompt 和 validation fixtures 共同证明这条 handoff 链。",
+                "对用户有价值的是每条反馈都能回答三个问题：谁负责、修复证据在哪里、还需要谁 review。公开仓库里的 event contract、review packet、peer continuation contract 和 validation fixtures 共同证明这条 handoff 链。",
             ],
             "evidence": [
                 ("todo ownership", "`event_sourced_state_contract_v0` 把 `todo_claimed` 定义为 canonical event，记录 ownership、lease 或 `claimed_by`。"),
@@ -300,14 +300,14 @@ CASE_DETAILS = {
             "source_refs": [
                 ("event-sourced todo claim", "docs/reference/protocols/event-sourced-state-contract-v0.md"),
                 ("review packet code", "loopx/review_packet.py"),
-                ("peer prompt contract", "docs/quota-allocation.md"),
+                ("peer continuation contract", "docs/quota-allocation.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
             ],
         },
         "en": {
             "context": [
                 "This case shows how PR review feedback can move across multiple agents without losing ownership. The important chain is comment, claim, handoff, fix, validation, and review packet rather than the chat transcript.",
-                "The user-facing value is that every feedback item can answer three questions: who owns it, where the fix evidence is, and who still needs to review it. Public evidence spans the event contract, review packet, heartbeat prompt, and validation fixtures.",
+                "The user-facing value is that every feedback item can answer three questions: who owns it, where the fix evidence is, and who still needs to review it. Public evidence spans the event contract, review packet, peer continuation contract, and validation fixtures.",
             ],
             "evidence": [
                 ("Todo ownership", "`event_sourced_state_contract_v0` defines `todo_claimed` as a canonical event for ownership, lease, or `claimed_by`."),
@@ -328,7 +328,7 @@ CASE_DETAILS = {
             "source_refs": [
                 ("event-sourced todo claim", "docs/reference/protocols/event-sourced-state-contract-v0.md"),
                 ("review packet code", "loopx/review_packet.py"),
-                ("peer prompt contract", "docs/quota-allocation.md"),
+                ("peer continuation contract", "docs/quota-allocation.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
             ],
         },
@@ -341,7 +341,7 @@ CASE_DETAILS = {
             ],
             "evidence": [
                 ("successor path", "`docs/integrations/lark-kanban-control-plane-adapter.md` 明确 real successor 使用 `todo complete --next-*`，replacement 或 narrower split 使用 `todo supersede --next-agent-todo`。"),
-                ("peer completion", "`docs/quota-allocation.md` 要求非平凡完成创建 typed successor todo 或写 no-follow-up rationale。"),
+                ("peer completion", "`docs/project-agent-todo-contract.md` 要求非平凡完成创建 typed successor todo 或写 no-follow-up rationale。"),
                 ("CLI validation", "`examples/control_plane/todo-lifecycle-cli-smoke.py` 覆盖 `--next-agent-todo` successor、`todo supersede`、claim 继承、typed continuation、same-agent review rejection 和 peer self-merge evidence。"),
                 ("review shape", "`loopx review-packet` 把当前 open todo、claimed_by 和 handoff 状态打包成 reviewer 可读的 packet。"),
             ],
@@ -357,7 +357,7 @@ CASE_DETAILS = {
             ],
             "source_refs": [
                 ("kanban control-plane adapter", "docs/integrations/lark-kanban-control-plane-adapter.md"),
-                ("heartbeat prompt contract", "docs/quota-allocation.md"),
+                ("peer completion contract", "docs/project-agent-todo-contract.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
                 ("case narrative", "docs/showcases/cases/0623-overnight-project-refactor.md"),
             ],
@@ -369,7 +369,7 @@ CASE_DETAILS = {
             ],
             "evidence": [
                 ("Successor path", "`docs/integrations/lark-kanban-control-plane-adapter.md` says real successors use `todo complete --next-*`, while replacements or narrower splits use `todo supersede --next-agent-todo`."),
-                ("Peer completion", "`docs/quota-allocation.md` requires nontrivial completion to create a typed successor todo or a no-follow-up rationale."),
+                ("Peer completion", "`docs/project-agent-todo-contract.md` requires nontrivial completion to create a typed successor todo or a no-follow-up rationale."),
                 ("CLI validation", "`examples/control_plane/todo-lifecycle-cli-smoke.py` covers `--next-agent-todo` successors, `todo supersede`, claim inheritance, typed continuation, same-agent review rejection, and peer self-merge evidence."),
                 ("Review shape", "`loopx review-packet` packages open todos, claimed_by, and handoff state for reviewer consumption."),
             ],
@@ -385,7 +385,7 @@ CASE_DETAILS = {
             ],
             "source_refs": [
                 ("kanban control-plane adapter", "docs/integrations/lark-kanban-control-plane-adapter.md"),
-                ("heartbeat prompt contract", "docs/quota-allocation.md"),
+                ("peer completion contract", "docs/project-agent-todo-contract.md"),
                 ("todo lifecycle smoke", "examples/control_plane/todo-lifecycle-cli-smoke.py"),
                 ("case narrative", "docs/showcases/cases/0623-overnight-project-refactor.md"),
             ],

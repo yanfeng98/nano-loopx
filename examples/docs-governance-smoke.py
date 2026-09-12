@@ -89,7 +89,6 @@ DOCS_CATALOG_NAV_ALLOWLIST = {
     "project/authors.md": "project meta linked from README community section",
     "project/brand-guide.md": "project meta linked from README community section",
     "project/history.md": "project meta linked from README community section",
-    "project/licensing.md": "project meta linked from README community section",
     "project/trademarks.md": "project meta linked from README community section",
     "reference/effect-interpreter-packet.md": "deep packet doc reachable from Reference",
     "research/README.md": "research evidence index; not a top-nav primary",
@@ -393,33 +392,16 @@ def assert_contributor_task_board_is_current() -> None:
 
 def assert_contributor_task_links_are_current() -> None:
     for path in (
-        ".github/ISSUE_TEMPLATE/config.yml",
-        ".github/SUPPORT.md",
         "docs/book/chapters/source-protocol-map.md",
         "docs/book/chapters/source-validation-to-pr.md",
     ):
         assert "docs/development/contributor-tasks.md" in read(path), path
-
-    assert "/docs/development/contributor-tasks.md @huangruiteng" in read(
-        ".github/CODEOWNERS"
-    )
-    for path in (
-        ".github/ISSUE_TEMPLATE/config.yml",
-        ".github/SUPPORT.md",
-        ".github/CODEOWNERS",
-    ):
-        assert "main/CONTRIBUTOR_TASKS.md" not in read(path), path
-        assert "../CONTRIBUTOR_TASKS.md" not in read(path), path
-        assert "/CONTRIBUTOR_TASKS.md @" not in read(path), path
 
 
 def assert_technical_direction_governance_is_current() -> None:
     direction = read("docs/project/technical-directions.md")
     rfc_index = read("docs/architecture/rfcs/README.md")
     tasks = read("docs/development/contributor-tasks.md")
-    issue_template = read(".github/ISSUE_TEMPLATE/contributor-task.yml")
-    pr_template = read(".github/PULL_REQUEST_TEMPLATE.md")
-    governance = read(".github/GOVERNANCE.md")
 
     for required in (
         "长程 Benchmark 与证据",
@@ -456,36 +438,10 @@ def assert_technical_direction_governance_is_current() -> None:
     ):
         assert required in tasks, required
 
-    for content in (issue_template,):
-        for required in (
-            "Long-horizon benchmark evidence",
-            "Operator surface and IM integration",
-            "Shared Goal Authority and cross-host coordination",
-            "Architecture and research incubator",
-        ):
-            assert required in content, required
-
-    for required in (
-        "长程 benchmark 证据",
-        "操作员界面与 IM 集成",
-        "Shared Goal Authority 与跨宿主协调",
-        "架构与研究孵化器",
-    ):
-        assert required in pr_template, required
-
-    for required in (
-        "## 技术方向治理",
-        "direction/*",
-    ):
-        assert required in governance, required
-    assert "不覆盖已合并的运行时与稳定参考契约" in "".join(governance.split())
-
 
 def main() -> int:
     docs_index = read("docs/README.md")
     root_readme = read("README.md")
-    governance = read(".github/GOVERNANCE.md")
-    support = read(".github/SUPPORT.md")
     auto_research_command_path = read("demo/auto_research/README.md")
     codex_cli_tui_loop = read("docs/product/runtimes/codex-cli/codex-cli-tui-loop.md")
     project_agent_contract = read("docs/project-agent-todo-contract.md")
@@ -503,20 +459,6 @@ def main() -> int:
         "COMMUNICATIONS.md",
     ):
         assert not (REPO_ROOT / retired_root_policy).exists(), retired_root_policy
-    for governance_contract in (
-        "## 子系统维护者",
-        "### Lark 集成",
-        "### 共享宿主集成衔接点",
-        "### 变更子系统任命",
-    ):
-        assert governance_contract in governance, governance_contract
-    for support_contract in (
-        "## 选择渠道",
-        "## 官方发布来源",
-        "## 账号真实性",
-        "## 提出有用的请求",
-    ):
-        assert support_contract in support, support_contract
 
     for required in [
         "## 选择你的路径",
@@ -565,7 +507,6 @@ def main() -> int:
         ],
         "项目与社区": [
             "docs/project/technical-directions.md",
-            ".github/GOVERNANCE.md",
             "CONTRIBUTING.md",
             "docs/development/contributor-tasks.md",
             "docs/project/authors.md",

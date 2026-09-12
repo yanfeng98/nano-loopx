@@ -787,8 +787,7 @@ lease 选择当前 owner。写仓库的 peer 在任务或 goal 策略要求时�
 显式 LoopX 证据下自 merge。更高风险工作应创建独立后继或带 `action_kind=review`
 的常规 `independent_handoff`；仅当必须强制执行者分离时使用 `excluded_agents`。
 
-参见 [heartbeat automation prompt](../heartbeat-automation-prompt.md) 与
-[project agent todo contract](../project-agent-todo-contract.md)。
+参见 [project agent todo contract](../project-agent-todo-contract.md)。
 
 ## Dashboard
 
@@ -914,7 +913,6 @@ runtime 证据会记录该跳过。
 - [Attention queue](../operations/attention-queue.md)
 - [Project agent todo contract](../project-agent-todo-contract.md)
 - [Quota allocation](../quota-allocation.md)
-- [Heartbeat automation prompt](../heartbeat-automation-prompt.md)
 - [Long-task cadence hint](../operations/long-task-cadence-policy.md)
 - [Public/private boundary](../public-private-boundary.md)
 - [Benchmark research workspace](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)

@@ -8,7 +8,6 @@
 - [快速上手](../guides/getting-started.md)
 - [项目 Agent todo 契约](../project-agent-todo-contract.md)
 - [配额分配](../quota-allocation.md)
-- [Heartbeat 自动化提示](../heartbeat-automation-prompt.md)
 - [长任务 cadence 策略](long-task-cadence-policy.md)
 - [Attention queue](attention-queue.md)
 

@@ -267,6 +267,11 @@ def main() -> int:
         "私有本地状态或未经审查的轶事",
     ):
         assert phrase in feedback_loop, phrase
+    # The fork README deliberately dropped the 真实项目中的使用 section and its
+    # three external-user highlights (commit c88509106, "strip promotional badges
+    # and external-user cases from fork README"). The underlying case docs stay on
+    # disk and are still guarded by the showcase index assertions below; only the
+    # README-facing promotion is gone, so it is no longer asserted here.
     for phrase in (
         "LoopX 是开放且 Provider-neutral 的轻量 state kernel",
         "https://huangruiteng.github.io/loopx/",
@@ -276,14 +281,8 @@ def main() -> int:
         "### Preset 与 Auto Research",
         "### 审阅 Agent 工作",
         "## 证据",
-        "### 真实项目中的使用",
-        "docs/showcases/cases/independent-cpp-accuracy-long-run.md",
-        "docs/showcases/cases/independent-four-day-unattended-agent.md",
-        "docs/showcases/cases/independent-public-engine-refactor.md",
     ):
         assert phrase in repo_readme, phrase
-    featured_section = repo_readme.split("### 真实项目中的使用", 1)[1].split("## 试用 LoopX", 1)[0]
-    assert featured_section.count("- **外部独立用户") == 3, featured_section
     assert "user-feedback-coverage.md" in showcase_index, showcase_index
     hosted_frontstage = "https://huangruiteng.github.io/loopx/frontstage/"
     assert hosted_frontstage not in repo_readme, (

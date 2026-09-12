@@ -1,8 +1,5 @@
 # Codex App 多订阅与多 Provider 切换 Runbook
 
-> 配套文档：需要长期保留两个独立 App / `CODEX_HOME` 时，参见
-> [Codex 多 App 隔离与运维最佳实践（中文）](../../docs/guides/codex-multi-app-best-practices.md)。
-
 ## 定位
 
 这是 LoopX 维护的 public-safe integration runbook 与 qualification contract。它描述如何在

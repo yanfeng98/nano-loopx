@@ -197,8 +197,7 @@ owner 与 ledger 管理，通过 typed command、projection 或 opaque pointer �
 远程恢复、migration、audit、multi-tenancy 或 HA 等实质 authority/reconciliation
 能力时，独立发行才有意义。若项目将来创建单独授权的 server distribution，它的
 边界应沿着这一可部署的语义权威与持续协调 surface 切分，而不是沿 NoKV adapter 或
-provider-neutral core 切分。本 RFC 既不要求拆仓，也不选择独立 license；当前政策
-仍以 [`LoopX Licensing`](../../project/licensing.md) 为准。
+provider-neutral core 切分。本 RFC 既不要求拆仓，也不选择独立 license。
 
 ### 1.3 按发行边界演进许可证的候选路径
 

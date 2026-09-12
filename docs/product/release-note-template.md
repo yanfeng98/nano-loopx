@@ -91,13 +91,6 @@ loopx doctor
 <详细:文档、迁移、默认值、废弃或兼容性细节,附直接 PR 链接。显式重复持久 state
 迁移决策。>
 
-## 许可证
-
-<当本版本改变许可证时包含此分组。对于 `v0.4.8`,说明:统一开源核心切换为
-Apache-2.0;`v0.4.7` 及更早版本保持 MIT;保留历史 notice;Apache-2.0 继续允许
-商业使用;显式专利框架支持未来企业与生态协作,但不会让历史 MIT 贡献者凭空产生
-追溯性专利授权。链接 `docs/project/licensing.md`。>
-
 <!--
 仅当 tag 范围内存在 @huangruiteng 之外符合条件的贡献者时包含本节。
 把创始人主导权留在这节社区专属部分之外;相关时它已在 Release Decision 中命名。
@@ -195,14 +188,6 @@ loopx doctor
 ### 文档与兼容性
 
 <中文摘要与 PR 链接。>
-
-### 许可证
-
-<当版本改变许可证时镜像英文 Licensing。`v0.4.8` 必须明确：统一开源 core
-切换为 Apache-2.0；`v0.4.7` 及更早版本永久保持 MIT；保留历史 notice；
-Apache-2.0 不限制商业使用；显式专利框架服务于未来企业与生态协作，但不会让
-历史 MIT 贡献凭空产生追溯性的完整 Apache 专利授权。链接
-`docs/project/licensing.md`。>
 
 <!-- 英文存在 Community Contributors 时，保留同一人员、PR 和贡献范围。 -->
 

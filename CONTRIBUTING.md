@@ -8,7 +8,7 @@
 - 改进文档、示例与冒烟测试；
 - 在 issue 或讨论中回答问题；
 - 评审 pull request 并帮助贡献者熟悉评审流程；
-- 遵循[行为准则](CODE_OF_CONDUCT.md)；
+- 遵循社区行为规范；
 - 实现公开任务或修复 bug。
 
 每一件事都有帮助。本指南其余部分涵盖寻找工作、维护公共/私有边界、验证变更
@@ -18,8 +18,8 @@
 
 ## 行为准则
 
-所有参与 LoopX 社区空间（包括维护者与贡献者）的人都应遵循
-[贡献者公约](CODE_OF_CONDUCT.md)。不可接受行为的报告可发送至
+所有参与 LoopX 社区空间（包括维护者与贡献者）的人都应遵循社区行为规范。
+不可接受行为的报告可发送至
 huangrt01@163.com；维护者会及时评审每份报告，并在可行范围内为举报者保密。
 
 ## 寻找工作
@@ -97,10 +97,8 @@ git diff --check
 
 ## 许可与 DCO 签署
 
-LoopX 的统一开源核心基于
-[Apache License 2.0](LICENSE) 许可。除非在提交前明确说明，否则被本仓库
-接受的贡献按 Apache-2.0 提交，不附加额外条款或条件。LoopX 不要求版权转让
-或贡献者许可协议。
+除非在提交前明确说明，否则被本仓库接受的贡献不附加额外条款或条件。
+LoopX 不要求版权转让或贡献者许可协议。
 
 每个 pull request 提交必须通过包含 sign-off 结尾证明
 [Developer Certificate of Origin 1.1](DCO)：
@@ -119,9 +117,6 @@ git commit -s -m "feat: describe the change"
 信息。如果提交缺少该结尾，用 `git commit --amend -s` 修正，或使用交互式
 rebase 签署相关提交，然后更新 pull request 分支。`DCO` pull request 检查
 会拒绝未签名的提交。
-
-`v0.4.7` 及之前的发布仍遵循其原始 MIT 条款。历史通知、专利授权边界与
-open-core 范围参见[许可与 v0.4.8 迁移政策](docs/project/licensing.md)。
 
 ## 实验性功能
 
@@ -173,11 +168,9 @@ todo_id)` 前沿。不透明的可恢复宿主会话是恢复元数据，不是�
 
 ## 治理与归属
 
-仓库角色与决策权限定义在
-[治理](.github/GOVERNANCE.md)。创建者与贡献者归属记录在
-[docs/project/authors.md](docs/project/authors.md)，而按路径划分的维护与
-优先评审指派记录在同一治理文档中。公开 Git 历史记录个人贡献。贡献不会
-自动授予合并或发布权限，agent 或自动化身份不是人类维护者。
+仓库角色与决策权限由 maintainer 维护。创建者与贡献者归属记录在
+[docs/project/authors.md](docs/project/authors.md)。公开 Git 历史记录个人贡献。
+贡献不会自动授予合并或发布权限，agent 或自动化身份不是人类维护者。
 
 命名或打包 fork、集成或托管服务时，遵循项目的
 [名称与标识指南](docs/project/trademarks.md)。

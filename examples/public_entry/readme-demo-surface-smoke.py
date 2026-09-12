@@ -64,7 +64,7 @@ def main() -> int:
         '<a id="看几个例子"></a>',
         "## 能力",
         "## 用户群与反馈",
-        "`0.4.x` 已经是一套可用的长程 Agent 本地控制面",
+        "`1.0.x` 已经是一套可用的长程 Agent 本地控制面",
         "docs/assets/loopx-lark-developer-group.png",
         "docs/assets/loopx-wechat-contact.png",
         "微信：<code>huangrt00</code>",
@@ -94,8 +94,8 @@ def main() -> int:
 
     for required in [
         "`$loopx <复杂任务>`",
-        "`loopx todo claim`",
-        "`loopx review-packet`",
+        "`loopx todo claim --goal-id <goal-id>`",
+        "`loopx review-packet --goal-id <goal-id>`",
     ]:
         assert required in compact_readme, required
 

@@ -15,12 +15,12 @@ LoopX 认可所有被接受的提交作者、合著者、评审者、issue 报�
 
 本文件有意不维护排名或手工抄录的贡献者名单。一个人可能有多个 Git 身份，合著者在简单提交计数中可能不可见，而且仓库历史比周期性快照更准确。
 
-自动化或 agent 身份可能出现在提交来源（provenance）中。除非公开贡献记录同时标识出人类，否则它们不应被解读为人类贡献者或 maintainer。Maintainer authority 定义在 [Governance](../../.github/GOVERNANCE.md)，而不是由作者数量决定。
+自动化或 agent 身份可能出现在提交来源（provenance）中。除非公开贡献记录同时标识出人类，否则它们不应被解读为人类贡献者或 maintainer。Maintainer authority 不由作者数量决定。
 
-## 归属与许可
+## 归属
 
-LoopX 的统一开源核心自 `v0.4.8` 起以 [Apache License 2.0](../../LICENSE) 分发，版权由 LoopX 贡献者就其各自贡献持有。`v0.4.7` 及之前的发布保留其原始 MIT 条款，其许可证文本与版权声明在 [LICENSE-MIT](../../LICENSE-MIT) 中保留。转变边界见 [licensing policy](licensing.md)（许可政策）。
+LoopX 的统一开源核心的版权由 LoopX 贡献者就其各自贡献持有。
 
-本归属文件不转让版权、不要求版权转让，也不改变任一许可证。
+本归属文件不转让版权，也不要求版权转让。
 
 创建者或贡献者归属的更正，欢迎以带公开 evidence 的 pull request 提出。

@@ -15,6 +15,5 @@
 - [多 Agent 产品配方](multi-agent-product-recipe.md)
 - [实验性 planner-worker 模式](planner-worker-experimental.md)
 - [Codex App 多 provider 路由扩展](../../packages/loopx-codex-provider-routing/README.md)
-- [Codex 多 App 隔离与运维最佳实践（中文）](codex-multi-app-best-practices.md)
 
 稳定语义归[参考契约](../reference/README.md)；产品动机归[产品索引](../product/README.md)。

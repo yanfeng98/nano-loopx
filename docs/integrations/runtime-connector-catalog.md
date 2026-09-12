@@ -137,7 +137,6 @@ python3 examples/experiments/planner_worker/runtime-smoke.py
 
 - [宿主模式计划 v0](../reference/protocols/host-mode-plan-v0.md)
 - [LoopX Turn v0](../reference/protocols/loopx-turn-v0.md)
-- [心跳自动化提示](../heartbeat-automation-prompt.md)
 - [宿主集成面 v0](../reference/protocols/host-integration-surface-v0.md)
 - [Computer-use runtime v0](../reference/protocols/computer-use-runtime-v0.md)
 - [Value connectors](../../loopx/capabilities/value_connectors/README.md)

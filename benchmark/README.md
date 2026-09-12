@@ -8,7 +8,7 @@
 2. 当前真实运行实践优先于遗留 LoopX benchmark 抽象;
 3. 只有通用代码与 public-safe 结论进入此目录。
 
-可复用的产品策略留在 [`benchmark-toolkit`](../docs/capabilities/benchmark-toolkit/README.md)。该 toolkit 拥有 provider-neutral 的权限、artifact 与完整性边界。本目录可以包含精简示例与实践笔记,但它不会作为第二个 LoopX Python 包安装,也不授予执行或发布权威。
+可复用的产品策略留在 [`benchmark-toolkit`](../loopx/capabilities/benchmark_toolkit/README.md)。该 toolkit 拥有 provider-neutral 的权限、artifact 与完整性边界。本目录可以包含精简示例与实践笔记,但它不会作为第二个 LoopX Python 包安装,也不授予执行或发布权威。
 
 ## 工程构建图
 

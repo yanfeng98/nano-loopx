@@ -98,15 +98,18 @@ def main() -> int:
         assert mismatch.returncode != 0
         assert "snapshot is incomplete: expected 2, got 1" in mismatch.stderr
 
+    # The fork README drops the trailing License section (the licence files were
+    # removed from this fork), so Star 趋势 is now the final section. The order
+    # assertion and the trailing-section assertion below still hold.
     readme_sections = {
-        ROOT / "README.md": ("## 当前状态", "## Star 趋势", "## License"),
+        ROOT / "README.md": ("## 当前状态", "## Star 趋势"),
     }
     for readme, sections in readme_sections.items():
         text = readme.read_text(encoding="utf-8")
         positions = [text.index(section) for section in sections]
         assert text.count(IMAGE_URL) == 1, readme
         assert "https://github.com/huangruiteng/loopx/stargazers" in text, readme
-        assert 'width="800"' in text[positions[1] : positions[2]], readme
+        assert 'width="800"' in text[positions[1] :], readme
         assert "star-history.dera.page" not in text, readme
         assert positions == sorted(positions), (readme, sections)
         assert "\n## " not in text[positions[-1] + len(sections[-1]) :], readme

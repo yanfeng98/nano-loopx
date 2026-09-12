@@ -37,7 +37,7 @@ LoopX 1.0 将这些长程控制状态汇入 Personal Workspace。你可以在一
 - 配置 Goal 的 Capability，区分机器默认值与 Goal 覆盖，预览变更后再应用；
 - 从关联的飞书会话进行实时 steering、消息排队或异步收件，不丢失 Goal/Agent/Session 路由；
 - 查看交付文件、周期报告与关联证据；
-- 在 Codex、Claude Code、direct-model 等已注册 Agent 会话之间延续工作，
+- 在 Codex、Claude Code、`anthropic-api` / `openai-api` 等已注册 Agent 会话之间延续工作，
   不丢失 Goal 状态与证据；
 - 通过 typed preview、显式确认与 receipt 审阅受保护变更；浏览器只负责投影，
   LoopX state 始终是权威事实源。
@@ -216,10 +216,13 @@ loopx start-goal --guided --project . --goal-text "你的长程目标"
 | --- | --- | --- |
 | Codex CLI | 在项目里启动 `codex`，让它连接并诊断 LoopX，然后用 `$loopx <复杂任务>` 或 `/skills`。 | 可见 `/goal <task_body>`；默认不走隐藏 headless 执行 |
 | Claude Code | 安装 opt-in adapter，然后运行 `/loopx <任务>`，再运行 `/loop`。 | 由 LoopX gate 的原生 Claude Code `/loop` |
-| OpenCode | 安装静态 command facade；recurring goal 显式 opt in `--with-goal-bridge`。 | OpenCode command facade 与显式 goal bridge |
+| OpenCode | 用 `loopx slash-commands --install --surface opencode` 安装静态 command facade；recurring goal 再显式 opt in `--with-goal-bridge`（仅该 surface 生效）。 | OpenCode command facade 与显式 goal bridge |
+| OpenCode 2 | 同一 command facade（`loopx slash-commands --install`）；启动 goal 时选 `--host-surface opencode2`，再从返回的激活 packet 启动 `loopx opencode2-goal-worker --goal-id <goal-id> --directory .`。 | 进程外 goal worker 经 OpenCode 2 HTTP API 驱动会话；worker 自己拥有循环定时器，TUI 关闭后仍存活 |
 | Pi | 用 `loopx slash-commands --install --surface pi` 安装 opt-in goal extension，然后在受信任的 Pi 会话里用 `/loopx <任务>`。 | 由 LoopX quota gate 的可见 Pi goal extension（`loopx_goal_activate` + `agent_settled` 续跑） |
-| DeepSeek Harness（dsh） | 安装 [DSH 原生 Plugin](packages/dsh-loopx-plugin/README.md)，在技能选择器中点 `loopx`，然后直接描述任务；[dsh goal-mode adapter](loopx/dsh_goal_mode/README.md) 继续支持 headless turn。 | 原生同会话续跑与 GoalBar，或 headless dsh 工作段；两条路径都遵守 LoopX authority |
-| shell、自有 runner | 使用同一 installer 和 `loopx doctor`，再手动连接或由 runner 调用。 | 你的 shell、scheduler 或 runner |
+| DeepSeek Harness（`deepseek-harness`） | [dsh goal-mode adapter](loopx/dsh_goal_mode/README.md)，启动 goal 时选 `--host-surface deepseek-harness`。 | headless dsh 工作段；每 tick 从 `quota should-run` 进入 |
+| DeepSeek Harness 原生（`deepseek-harness-native`） | 安装 [DSH 原生 Plugin](packages/dsh-loopx-plugin/README.md)，在技能选择器中点 `loopx`，然后直接描述任务（`--host-surface deepseek-harness-native`）。 | 原生同会话续跑与 GoalBar |
+| Ark Managed Agent（`ark-managed-agent`） | 启动 goal 时选 `--host-surface ark-managed-agent`，走一次性 Goal 提交。 | `goal_prompt_v0` 一次性激活；续跑由 goal runtime 拥有，不经过 turn driver |
+| shell、自有 runner | 使用同一 installer 和 `loopx doctor`，再手动连接或由 runner 调用（`--host-surface shell`，自定义 host 用 `other-agent`）。 | 你的 shell、scheduler 或 runner |
 
 可直接粘贴的完整 setup message、host-specific 路由和故障恢复见
 [Getting Started](docs/guides/getting-started.md)。Host 集成还可以查看
@@ -239,11 +242,11 @@ skill、加入新的关键约束，并检查完整保留的决策证据链。
 核心 tick 很小：
 
 ```text
-loopx quota should-run      # 当前注册 agent 是否应该执行？
-loopx todo claim            # 谁拥有这个 slice？
-loopx todo update           # 发生了什么？
-loopx refresh-state         # 下一轮应该看到什么？
-loopx quota spend-slot      # 为完成并验证的 slice 记账
+loopx quota should-run --goal-id <goal-id>     # 当前注册 agent 是否应该执行？
+loopx todo claim --goal-id <goal-id>           # 谁拥有这个 slice？
+loopx todo update --goal-id <goal-id>          # 发生了什么？
+loopx refresh-state --goal-id <goal-id>        # 下一轮应该看到什么？
+loopx quota spend-slot --goal-id <goal-id>     # 为完成并验证的 slice 记账
 ```
 
 ### 首次运行反馈
@@ -306,14 +309,14 @@ Kernel 把控制面归结为五个用户可以直接行动的问题。每个问�
 
 | Surface | 作用 | 从这里开始 |
 | --- | --- | --- |
-| Goal state 与 status | 跟踪 active state、todo、claim、gate、evidence、run history 和首屏关注点。 | `loopx status`、`loopx diagnose`、`loopx review-packet` |
+| Goal state 与 status | 跟踪 active state、todo、claim、gate、evidence、run history 和首屏关注点。 | `loopx status`、`loopx diagnose`、`loopx review-packet --goal-id <goal-id>` |
 | Quota 与 interaction contract | 决定一轮应该执行、提问、等待、自修复还是静默。 | `loopx quota should-run`、[Quota Allocation](docs/quota-allocation.md) |
-| Agent runtime bridge | 让 Codex CLI、Claude Code 和 generic worker 服从同一 guard。 | `loopx heartbeat-prompt`、`loopx codex-cli-bootstrap-message`、`loopx worker-bridge` |
+| Agent runtime bridge | 让 Codex CLI、Claude Code 和 generic worker 服从同一 guard。 | `loopx heartbeat-prompt --goal-id <goal-id>`、`loopx codex-cli-bootstrap-message`、`loopx worker-bridge contract` |
 | Operator surface | 呈现紧凑状态，但不让浏览器成为状态事实源。 | `loopx serve-status`、[Dashboard](apps/presentation/dashboard/README.md) |
 | Session dash | 启动一个实时单页面板跟踪车队进度：会话、它们的 Goal 与每个 Goal 的状态/todo 进度，带结果统计；原地自动刷新。 | `loopx dash`、[Session dash 设计](docs/product/surfaces/session-dash-panel-design.md) |
-| External projection | 把 todo / gate 投影到协作表面，同时保持 LoopX 权威。 | `loopx lark-kanban`、[Lark Kanban adapter](docs/integrations/lark-kanban-control-plane-adapter.md) |
-| Domain capability | 打包 Issue Fix、内容运营、value connector、ML 实验、benchmark 与 Explore 等可重复泳道。 | `loopx issue-fix`、`loopx content-ops`、`loopx value-connectors`、`loopx ml-experiment`、`loopx benchmark`、[Explore](loopx/capabilities/explore/README.md) |
-| 实验性上下文学习 | 通过 ignored、默认关闭的项目配置，为明确注册的 agent 试用 provider-neutral Reward Memory；OpenViking 是 provider 之一，不是全局依赖。 | `loopx reward-memory experiment-status`、[Reward Memory 中文架构](loopx/capabilities/reward_memory/README.md) |
+| External projection | 把 todo / gate 投影到协作表面，同时保持 LoopX 权威。 | `loopx lark-kanban --help`（命令组）、[Lark Kanban adapter](docs/integrations/lark-kanban-control-plane-adapter.md) |
+| Domain capability | 打包 Issue Fix、内容运营、value connector、ML 实验、benchmark 与 Explore 等可重复泳道。 | `loopx issue-fix --help`、`loopx content-ops --help`、`loopx value-connectors --help`、`loopx ml-experiment --help`、`loopx benchmark --help`（均为命令组）、[Explore](loopx/capabilities/explore/README.md) |
+| 实验性上下文学习 | 通过 ignored、默认关闭的项目配置，为明确注册的 agent 试用 provider-neutral Reward Memory；OpenViking 是 provider 之一，不是全局依赖。 | `loopx reward-memory experiment-status --goal-id <goal-id> --agent-id <agent-id>`、[Reward Memory 中文架构](loopx/capabilities/reward_memory/README.md) |
 | Governance pattern | 沉淀可复用的 routing、gate、evidence、projection 和 planning 形状。 | [Interaction Pattern Catalog](docs/concepts/interaction-pattern-catalog.md)、[State Model](docs/state-interaction-model.md) |
 
 这些能力共同提供 lifetime goal、具体 user gate、经过审计的安全侧路、平级 todo
@@ -399,7 +402,7 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 
 ### 审阅 Agent 工作
 
-`loopx review-packet` 提供 owner-facing 的紧凑视图：决策、证据、验证和未解决 gate。
+`loopx review-packet --goal-id <goal-id>` 提供 owner-facing 的紧凑视图：决策、证据、验证和未解决 gate。
 [Intelligent Management Surface](docs/product/surfaces/intelligent-management-surface.md)
 解释 operator model；[Project-Level Reward Model](docs/product/foundations/project-level-reward-model.md)
 定义产出数量、质量、token cost 和 user attention cost 的保守价值信号。
@@ -431,8 +434,8 @@ loopx quota should-run --goal-id your-project-goal
 preflight failure 和 dry-run preview 不消耗 quota。一个 lane 被 user gate 阻塞时，
 独立审计过的安全侧路可以继续，但不能绕过 gate。
 
-平级 agent 在执行前使用 `loopx todo claim`，验证后使用 `loopx todo update`，
-让 ownership 与证据持续可见。
+平级 agent 在执行前使用 `loopx todo claim --goal-id <goal-id>`，验证后使用
+`loopx todo update --goal-id <goal-id>`，让 ownership 与证据持续可见。
 
 Scheduler cadence 跟随 `quota should-run.scheduler_hint`；hosted-scheduler automation
 通过 payload 返回的 `ack_hint.cli_args` 确认当前 hint。Collision recovery、monitor、
@@ -539,7 +542,6 @@ LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这�
 ### 项目与社区
 
 - [当前技术方向](docs/project/technical-directions.md)
-- [Project Governance](.github/GOVERNANCE.md)
 - [Contributing](CONTRIBUTING.md)与[Contributor Tasks](docs/development/contributor-tasks.md)
 - [Authors and Contributors](docs/project/authors.md)
 - [Project History](docs/project/history.md)
@@ -569,8 +571,6 @@ agent 项目里的反馈：控制面帮到了哪里、哪里太重，哪些 gate
 - 参与社区讨论：可加入 [Discord 社区](https://discord.gg/XmGgQyCFZd)，也可在
   下方直接加入飞书群或通过微信申请入群。
 
-渠道分工、支持边界和官方发布源见 [Support](.github/SUPPORT.md)。
-
 <p align="center">
   <a href="docs/assets/loopx-lark-developer-group.png"><img src="docs/assets/loopx-lark-developer-group.png" alt="LoopX 飞书开发群二维码" width="280"></a>
   <a href="docs/assets/loopx-wechat-contact.png"><img src="docs/assets/loopx-wechat-contact.png" alt="LoopX 微信联系人二维码" width="220"></a>
@@ -585,9 +585,8 @@ agent 项目里的反馈：控制面帮到了哪里、哪里太重，哪些 gate
 [Contributing](CONTRIBUTING.md)，尤其是 public/private 边界、smoke 保留规则和
 benchmark 证据边界。
 
-项目角色与维护权限见 [Governance](.github/GOVERNANCE.md)，创建者与贡献者归属见
-[Authors and Contributors](docs/project/authors.md)，关键公开演进见
-[Project History](docs/project/history.md)，名称与标识使用见
+创建者与贡献者归属见 [Authors and Contributors](docs/project/authors.md)，
+关键公开演进见 [Project History](docs/project/history.md)，名称与标识使用见
 [Name and Marks](docs/project/trademarks.md)。
 
 不要提交 `.loopx/`、`.codex/goals/`、live `ACTIVE_GOAL_STATE.md`、内部链接、
@@ -596,7 +595,7 @@ raw benchmark task/log/trajectory/verifier output、credentials、token、私有
 
 ## 当前状态
 
-`0.4.x` 已经是一套可用的长程 Agent 本地控制面，正在进入更广泛的采用阶段。
+`1.0.x` 已经是一套可用的长程 Agent 本地控制面，正在进入更广泛的采用阶段。
 LoopX 不是完整 agent platform，不是 agent runtime，也不是自治生产控制器。
 
 目前 LoopX 已交付围绕 goal、typed todo / decision scope、平级 claim / lease、
@@ -618,12 +617,5 @@ benchmark 证据、operator surface 与 IM integration、shared-goal 跨 host �
 
 <p align="center">
   <a href="https://github.com/huangruiteng/loopx/stargazers"><img src="https://huangruiteng.github.io/loopx/site-assets/star-history.svg" alt="LoopX GitHub Star 历史趋势，来自已校验快照" width="800"></a><br>
-  <sub>由仓库授权的 workflow 每 6 小时基于 GitHub 官方 stargazer 时间戳生成；仅当拉取条数与 GitHub 当前 Star 总数一致时发布。GitHub 图片缓存可能延迟刷新。</sub>
+  <sub>由上游项目基于 GitHub 官方 stargazer 时间戳生成并发布，仅当拉取条数与 GitHub 当前 Star 总数一致时才发布；本仓库内的确定性渲染脚本见 <code>scripts/render-star-history.py</code>。GitHub 图片缓存可能延迟刷新。</sub>
 </p>
-
-## License
-
-从 `v0.4.8` 起采用 Apache License 2.0，见 [LICENSE](LICENSE) 与
-[NOTICE](NOTICE)。`v0.4.7` 及更早版本永久保留原 MIT 许可；历史许可证全文与
-notice 保存在 [LICENSE-MIT](LICENSE-MIT)。[许可证政策](docs/project/licensing.md)
-说明版本、贡献、专利授权与 open-core 边界。

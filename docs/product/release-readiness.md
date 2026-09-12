@@ -312,8 +312,7 @@ python3 -m pytest tests/test_smoke_suite.py \
   --junitxml smoke-suite.xml
 ```
 
-必需的 [Python 测试工作流](../../.github/workflows/python-tests.yml)
-拥有 Ruff 命名空间选择与包覆盖下限。下限是回归护栏,不是充分覆盖的声明;当持久
+Ruff 命名空间选择与包覆盖下限属于发布检查的一部分。下限是回归护栏,不是充分覆盖的声明;当持久
 行为从子进程 smoke 移入聚焦测试时提高它。
 
 [架构测试](../../tests/architecture/test_control_plane_import_boundaries.py)
