@@ -147,7 +147,6 @@ def _install_environment(
             # surface 对非交互 Goal worker 无关，还会在 readback 写完之后改动
             # 那棵树。
             "LOOPX_INSTALL_SLASH_COMMANDS": "0",
-            "LOOPX_INSTALL_OPENCODE": "0",
             "LOOPX_INSTALL_CLAUDE": "0",
             "LOOPX_SKILL_DEDUPE_OTHER_ROOT": "0",
         }

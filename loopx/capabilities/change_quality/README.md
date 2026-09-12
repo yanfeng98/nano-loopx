@@ -24,7 +24,7 @@ loopx project-skill install \
   --execute
 ```
 
-在那些 surface 上使用 `claude-code` 或 `opencode`。这控制发现,不控制激活。
+在那些 surface 上使用 `claude-code`。这控制发现,不控制激活。
 应用前先预览 goal policy:
 
 ```bash

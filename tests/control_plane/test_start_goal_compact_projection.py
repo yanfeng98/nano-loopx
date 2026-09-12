@@ -1535,8 +1535,6 @@ def test_cli_without_host_returns_read_only_host_selection_gate(
     assert [choice["host_surface"] for choice in choices] == [
         "codex-cli-tui",
         "claude-code",
-        "opencode",
-        "opencode2",
         "pi",
         "deepseek-harness",
         "deepseek-harness-native",

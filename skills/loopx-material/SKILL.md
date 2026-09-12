@@ -20,9 +20,9 @@ loopx project-skill install \
   --execute
 ```
 
-对 Codex 之外的宿主使用 `--surface claude-code` 或 `--surface opencode`；
+对 Codex 之外的宿主使用 `--surface claude-code`；
 重复该标志可在一个事务中安装多个宿主原生副本。受管副本位于
-`.agents/skills/`、`.claude/skills/` 或 `.opencode/skills/`，并通过同一 CLI
+`.agents/skills/` 或 `.claude/skills/`，并通过同一 CLI
 升级或移除。项目本地发现本身不激活 material-store 写入；所选 goal 仍需要
 显式 Material Lifecycle 权限。
 

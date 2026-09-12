@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 MANAGED_MARKER_PREFIX = "<!-- loopx-managed-slash-command:v1"
 LEGACY_UPGRADABLE_SIGNATURES = (
@@ -105,58 +104,3 @@ def retire_managed_file(path: Path, *, execute: bool) -> str | None:
 
 def retire_status(path: Path, *, execute: bool) -> str:
     return retire_managed_file(path, execute=execute) or "absent"
-
-
-def install_skill_facade(
-    *,
-    specs: list[dict[str, Any]],
-    installed: list[dict[str, Any]],
-    skills_dir: Path,
-    surface: str,
-    host_surfaces: list[str],
-    mechanism: str,
-    execute: bool,
-    uninstall: bool,
-    invoke_prefix: str = "",
-    flat: bool = False,
-) -> None:
-    """Write managed command facades in directory or flat host layouts."""
-    for spec in specs:
-        path = (
-            skills_dir / f"{spec['name']}.md"
-            if flat
-            else skills_dir / str(spec["name"]) / "SKILL.md"
-        )
-        if uninstall:
-            installed.append(
-                {
-                    "surface": surface,
-                    "host_surfaces": list(host_surfaces),
-                    "mechanism": mechanism,
-                    "command": spec["command"],
-                    "path": str(path),
-                    "status": retire_status(path, execute=execute),
-                    "invoke_as": [],
-                }
-            )
-            continue
-        content = skill_body(
-            command=str(spec["command"]),
-            title=f"LoopX {spec['command']}",
-            description=str(spec["description"]),
-            argument_hint=str(spec["argument_hint"]),
-            instructions=list(spec["instructions"]),
-            surface="claude-skills",
-            front_matter_name=str(spec["name"]),
-        )
-        installed.append(
-            {
-                "surface": surface,
-                "host_surfaces": list(host_surfaces),
-                "mechanism": mechanism,
-                "command": spec["command"],
-                "path": str(path),
-                "status": target_status(path, content, execute=execute),
-                "invoke_as": [f"{invoke_prefix}{spec['name']}"],
-            }
-        )

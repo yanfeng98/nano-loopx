@@ -2,7 +2,7 @@
 
 
 LoopX 是长时 AI Agent 工作的本地控制面。它保持 objective、gate、todo、evidence、
-quota 与 handoff 稳定，同时让 Codex、Claude Code、OpenCode 或自定义 runner
+quota 与 handoff 稳定，同时让 Codex、Claude Code 或自定义 runner
 执行有界的 turn。
 
 LoopX 新手？从 [Developer Book](/loopx/docs/book/) 的精心双语路径开始，

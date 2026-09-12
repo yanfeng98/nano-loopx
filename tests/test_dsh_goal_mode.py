@@ -90,7 +90,7 @@ def _signed_request(
 
 def test_dsh_goal_mode_is_a_first_class_subpackage() -> None:
     # The subpackage owns the adapter constants and API surface, following the
-    # pi/opencode goal-mode packaging pattern.
+    # pi goal-mode packaging pattern.
     assert dsh_goal_mode.ADAPTER_MODULE == "loopx.dsh_goal_mode"
     assert dsh_goal_mode.LOOPX_TURN_HOST_REQUEST_SCHEMA == "loopx_turn_host_request_v0"
     assert dsh_goal_mode.LOOPX_TURN_RESULT_SCHEMA == "loopx_turn_result_v0"

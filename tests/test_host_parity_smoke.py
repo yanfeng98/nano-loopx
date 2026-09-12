@@ -33,7 +33,6 @@ from loopx.host_mode_planner import (
     SUPPORTED_TURN_HOST_IDENTITIES,
     VISIBLE_CONNECTOR_OVERRIDES,
     VISIBLE_HOST_CONNECTOR_IDS,
-    VISIBLE_OPENCODE_ALIASES,
     VISIBLE_PI_ALIASES,
     HostModePlanError,
     build_host_mode_plan,
@@ -71,11 +70,10 @@ class TestAgentTypeCatalog:
         types = {t["agent_type"] for t in catalog["canonical_agent_types"]}
         assert "codex-cli" in types
         assert "claude-code" in types
-        assert "opencode" in types
         assert "pi" in types
         assert "other-agent" in types
         assert "manual" in types
-        assert len(types) >= 9
+        assert len(types) >= 7
 
         ambiguous = {item["input"]: item["use_one_of"]
                      for item in catalog["ambiguous_inputs"]}
@@ -85,7 +83,6 @@ class TestAgentTypeCatalog:
     @pytest.mark.parametrize("surface,expected", [
         ("codex-cli-tui", "codex-cli"),
         ("claude-code", "claude-code"),
-        ("opencode", "opencode"),
         ("pi", "pi"),
         ("shell", "manual"),
         ("http", "other-agent"),
@@ -118,7 +115,6 @@ class TestSchedulerBindings:
         expected = {
             "codex-cli": "codex_cli",
             "claude-code": "claude_code",
-            "opencode": "generic_cli",
             "pi": "generic_cli",
         }
         for at, profile in expected.items():
@@ -132,7 +128,7 @@ class TestSchedulerBindings:
     def test_generic_cli_types_share_profile(self):
         profiles = {
             t: scheduler_command_binding_for_agent_type(t)["runtime_profile"]
-            for t in ["opencode", "pi"]}
+            for t in ["pi"]}
         assert len(set(profiles.values())) == 1
 
 
@@ -156,13 +152,10 @@ class TestTurnHostIdentities:
         assert VISIBLE_HOST_CONNECTOR_IDS == {
             "codex-cli": "codex_cli_tui",
             "claude-code": "claude_code_loop",
-            "generic-cli": "opencode_goal_loop",
+            "generic-cli": "generic_cli_visible_loop",
         }
 
-    def test_opencode_and_pi_aliases(self):
-        assert VISIBLE_OPENCODE_ALIASES == {
-            "opencode": "generic-cli", "open-code": "generic-cli",
-            "opencode2": "generic-cli", "opencode-2": "generic-cli"}
+    def test_pi_aliases(self):
         assert VISIBLE_PI_ALIASES == {"pi": "generic-cli"}
         assert VISIBLE_CONNECTOR_OVERRIDES == {"pi": "pi_goal_loop"}
 
@@ -197,7 +190,7 @@ class TestHostModePlanRouting:
     @pytest.mark.parametrize("host_id,connector", [
         ("codex-cli", "codex_cli_tui"),
         ("claude-code", "claude_code_loop"),
-        ("generic-cli", "opencode_goal_loop"),
+        ("generic-cli", "generic_cli_visible_loop"),
     ])
     def test_visible_connector_per_host(self, host_id, connector):
         p = build_host_mode_plan(
@@ -208,9 +201,8 @@ class TestHostModePlanRouting:
         assert p["selected_connector_id"] == connector
         assert p["selected_turn_mapping"]["host"] == host_id
 
-    def test_opencode_pi_alias_routing(self):
-        for alias, connector in (("opencode", "opencode_goal_loop"),
-                                  ("pi", "pi_goal_loop")):
+    def test_pi_alias_routing(self):
+        for alias, connector in (("pi", "pi_goal_loop"),):
             p = _plan("watch_each_turn", host_identity=alias)
             assert p["selected_connector_id"] == connector
             assert p["selected_turn_mapping"]["host"] == "generic-cli"

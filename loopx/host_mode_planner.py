@@ -126,9 +126,10 @@ _INTENT_PRIMARY_MODE = {meta["intent"]: mode for mode, meta in _MODE_METADATA.it
 VISIBLE_HOST_CONNECTOR_IDS: dict[str, str] = {
     "codex-cli": "codex_cli_tui",
     "claude-code": "claude_code_loop",
-    # OpenCode runs its visible goal loop through the generic-cli Turn host;
-    # parity lives in the selector/catalog mapping, not a new Turn host kind.
-    "generic-cli": "opencode_goal_loop",
+    # Hosts that run their visible goal loop through the generic-cli Turn host
+    # keep a host-neutral connector id; parity lives in the selector/catalog
+    # mapping, not a new Turn host kind.
+    "generic-cli": "generic_cli_visible_loop",
 }
 
 # Host identities accepted by the public host-mode planner must own a concrete
@@ -137,17 +138,8 @@ VISIBLE_HOST_CONNECTOR_IDS: dict[str, str] = {
 # visible identities merely by registering an execution backend.
 SUPPORTED_TURN_HOST_IDENTITIES = sorted(VISIBLE_HOST_CONNECTOR_IDS)
 
-# Host identities that are valid visible selections but map to the OpenCode
-# goal loop connector rather than their own Turn host kind.
-VISIBLE_OPENCODE_ALIASES: dict[str, str] = {
-    "opencode": "generic-cli",
-    "open-code": "generic-cli",
-    "opencode2": "generic-cli",
-    "opencode-2": "generic-cli",
-}
-
-# Pi runs its visible goal loop through the generic-cli Turn host, same as
-# OpenCode, but keeps its own goal-loop connector identity.
+# Pi runs its visible goal loop through the generic-cli Turn host but keeps
+# its own goal-loop connector identity.
 VISIBLE_PI_ALIASES: dict[str, str] = {
     "pi": "generic-cli",
 }
@@ -269,8 +261,8 @@ def _turn_plan_command(
     if mode == MODE_VISIBLE_TUI:
         # Visible mode requires an explicit, catalog-registered host identity.
         # Without it, a coarse `visible_session` capability cannot distinguish
-        # Codex CLI, Claude Code, or OpenCode, so claiming any concrete host
-        # would fabricate attribution.
+        # Codex CLI from Claude Code, so claiming any concrete host would
+        # fabricate attribution.
         if not host_identity:
             raise HostModePlanError(
                 reason=(
@@ -738,11 +730,10 @@ def build_host_mode_plan(
     if host_identity:
         # Host identities are Turn host kinds and already use dashes
         # (codex-cli, claude-code, generic-cli); normalize case without
-        # converting dashes to underscores. OpenCode and Pi alias onto the
-        # generic-cli Turn host while keeping their own connector identity.
+        # converting dashes to underscores. Pi aliases onto the generic-cli
+        # Turn host while keeping its own connector identity.
         raw_identity = str(host_identity).strip().lower()
-        candidate = VISIBLE_OPENCODE_ALIASES.get(raw_identity, raw_identity)
-        candidate = VISIBLE_PI_ALIASES.get(candidate, candidate)
+        candidate = VISIBLE_PI_ALIASES.get(raw_identity, raw_identity)
         if candidate not in SUPPORTED_TURN_HOST_IDENTITIES:
             raise HostModePlanError(
                 reason=f"unsupported host_identity: {candidate}",

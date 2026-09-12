@@ -69,7 +69,6 @@ def build_slash_command_catalog(
                 "host_loop_activation_by_agent_type": {
                     "codex-cli": "set visible Codex CLI TUI `/goal <task_body>`",
                     "claude-code": "arm LoopX with `/loopx <task>`, then run native `/loop`",
-                    "opencode": "call `loopx_goal_activate`",
                     "pi": "call `loopx_goal_activate`",
                     "manual": "wire an external scheduler or run quota/status manually",
                     "other-agent": "use the custom host loop driver declared by `loopx agent-onboard`",

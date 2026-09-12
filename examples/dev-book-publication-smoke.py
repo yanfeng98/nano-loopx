@@ -324,7 +324,6 @@ def main() -> int:
     assert_zh_concepts(
         "chapters/02-session-goal-loopx.md",
         (
-            "OpenCode 1/2",
             "Pi",
             "DeepSeek Harness",
             "Runtime Connector Catalog",

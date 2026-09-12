@@ -109,7 +109,7 @@ loopx --format json evidence-log --goal-id <goal-id> --agent-id <agent-id> --thi
 | `--thin` | 选择当前唯一的公开安全模式；显式接受它以便生成可读命令。 |
 | 全局 `--format json\|markdown` | 选择 JSON 或紧凑 Markdown 渲染。 |
 
-命令在缺 `goal_id` 或 `agent_id` 时必须失效关闭。`codex` 这类模糊界面值不应静默落入 other-agent 语义；调用方应传已注册 agent id，并在需要时传独立 host 界面，如 `codex-cli`、`opencode` 或 `claude-code`。
+命令在缺 `goal_id` 或 `agent_id` 时必须失效关闭。`codex` 这类模糊界面值不应静默落入 other-agent 语义；调用方应传已注册 agent id，并在需要时传独立 host 界面，如 `codex-cli` 或 `claude-code`。
 
 ## 作用域规则
 

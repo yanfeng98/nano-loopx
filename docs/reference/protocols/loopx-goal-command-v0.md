@@ -21,7 +21,6 @@
 6. 若 host loop 缺失、未知或过期，则激活它：
    - `codex-cli`：把可见 Codex CLI TUI 设为 `/goal <task_body>`。
    - `claude-code`：用 `/loopx <task>` 武装 LoopX，然后运行原生 `/loop`。
-   - `opencode`：从已安装的 LoopX OpenCode bridge 调用 `loopx_goal_activate`；bridge 通过 `quota should-run` 关卡空闲继续与定时器唤醒，且只在已验证终态 no-follow-up 时完成。
    - `pi`：从已安装的 LoopX Pi extension 调用 `loopx_goal_activate`；extension 通过 `quota should-run` 关卡已结算继续与定时器唤醒，且只在已验证终态 no-follow-up 时停止。
    - `manual` / `other-agent`：接入 `loopx agent-onboard` 描述的外部 loop 驱动器。
 7. 若 host 不能修改该界面，报告精确可粘贴 gate，而不是声称自主设置完成。

@@ -347,8 +347,8 @@ export function createEphemeralSessionIdentity() {
   }
 }
 
-// Mirrors the OpenCode bridge probe: LoopX quota should-run is the only
-// continuation authority for the visible goal loop.
+// LoopX quota should-run is the only continuation authority for the visible
+// goal loop.
 export function buildQuotaArgs(binding) {
   const args = []
   if (binding.registryPath) args.push("--registry", binding.registryPath)

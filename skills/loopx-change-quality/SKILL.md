@@ -18,7 +18,7 @@ loopx project-skill install \
   --execute
 ```
 
-对 Codex 之外的宿主使用 `--surface claude-code` 或 `--surface opencode`。
+对 Codex 之外的宿主使用 `--surface claude-code`。
 Skill 发现不激活 capability；在 goal 策略启用前，产品行为保持默认关闭。
 
 CLI 是契约权威。本技能提供宿主无关的评审工作流。仓库指令、测试、lint、类型

@@ -76,14 +76,6 @@ loopx new-project-prompt \
   skills 保持正常隐式行为。
 - Claude Code：`~/.claude/skills/loopx*` 下的轻量用户 skills，因此命令家族可以
   作为 Claude Code slash command 出现，而无需启用 opt-in MCP/hook adapter。
-- OpenCode：`~/.config/opencode/commands/` 下的静态命令文件在重启后暴露原生
-  `/loopx` slash command。可执行 goal bridge（受 LoopX quota 门控的定时空闲延续）
-  需要显式 `--with-goal-bridge` 安装。包装的 goal runtime 将私有重启状态放在每个
-  项目的 `.opencode/goals/` 下；使用持久 bridge 前将该目录加入项目忽略规则。
-- OpenCode 2：同一批静态命令文件服务于 OpenCode 2，goal loop 通过持久的
-  `loopx opencode2-goal-worker` 进程运行，该进程通过 OpenCode 2 HTTP API 驱动
-  会话并拥有 loop 定时器，因此长 run 在 TUI 关闭后仍然存活。OpenCode 1 plugins
-  不能在 OpenCode 2 下运行；见 `loopx/opencode2_goal_mode/README.md`。
 - Pi：`.pi/extensions/loopx-goal.ts` 下的自包含 goal extension（其 loop core 在
   `.pi/extensions/pi-goal-loop-runtime.mjs`）在重启后暴露 `/loopx`，并通过
   `loopx_goal_activate` 运行 quota 门控 goal loop。它通过
@@ -126,8 +118,7 @@ loopx start-goal --guided --project . --goal-text "<goal text>" \
 全局管理器或 PR 评审命令使用 `loopx slash-commands` 打印当前规范命令列表与回退
 CLI 形态。
 
-对应宿主使用 `codex-cli-tui`、`opencode` 或
-`opencode2`。确切宿主未知时，省略
+对应宿主使用 `codex-cli-tui` 或 `pi`。确切宿主未知时，省略
 `--host-surface` 一次：LoopX 返回带精确重跑命令的只读选择 gate，且不写项目状态。
 这防止升级把终端启动静默路由到桌面 App heartbeat。
 
@@ -464,12 +455,11 @@ loopx project-skill install \
 | --- | --- |
 | Codex | `.agents/skills/` |
 | Claude Code | `.claude/skills/` |
-| OpenCode | `.opencode/skills/` |
 
 重复 `--surface` 可在一次事务中为多个宿主安装同一 skill。位置遵循
 [Codex](https://developers.openai.com/codex/skills)、
 [Claude Code](https://code.claude.com/docs/en/slash-commands#where-skills-live)
-与 [OpenCode](https://opencode.ai/docs/skills/#place-files) 文档化的宿主发现契约。
+文档化的宿主发现契约。
 
 安装项目 skill 不授予领域写权限；当前 goal/profile/todo 必须仍激活该能力。用
 `loopx project-skill uninstall --project . --skill <skill-id> --surface codex
@@ -539,7 +529,6 @@ your-project/
 ```gitignore
 .loopx/
 .codex/goals/
-.opencode/goals/
 goals/**/ACTIVE_GOAL_STATE.md
 ```
 

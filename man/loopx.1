@@ -1,6 +1,6 @@
-.TH LOOPX 1 "" "LoopX 1.0.0" "简体中文" "用户命令"
+.TH LOOPX 1 "" "LoopX 1.0.0" "User Commands"
 .SH NAME
-loopx \- 面向长期运行代理工作的控制平面辅助工具
+loopx \- control-plane helper for long-running agent work
 .SH SYNOPSIS
 .B loopx
 [\fB\-\-registry\fR \fIPATH\fR]
@@ -15,249 +15,242 @@ loopx \- 面向长期运行代理工作的控制平面辅助工具
 .br
 .B loopx commands
 .SH DESCRIPTION
-LoopX 通过在代理回合（agent turn）之间保留目标、待办、门控、配额与证据，
-让长期运行的代理工作持续推进。
+LoopX keeps long-running agent work moving by preserving goals, todos, gates,
+quota, and evidence between agent turns.
 .PP
-下面的命令章节由 \fBloopx commands\fR 所使用的同一份规范目录生成。
-各命令特有的标志仍可通过 \fBloopx COMMAND \-\-help\fR 查看。
-.SH 从这里开始
+The command sections below are generated from the same canonical catalog used by
+\fBloopx commands\fR. Command-specific flags remain available through
+\fBloopx COMMAND \-\-help\fR.
+.SH START HERE
 .TP
 \fB/loopx\fR
-请求代理检查 LoopX 状态、门控、待办与下一步行动。
+Ask the agent to inspect LoopX status, gates, todos, and next action.
 .TP
 \fB/loopx <goal text>\fR
-通过代理启动或继续一个具体的长期运行目标。
+Start or continue one concrete long\-running goal through the agent.
 .TP
 \fBloopx doctor\fR
-检查安装、PATH、发布快照、技能与导入健康状态。
+Check install, PATH, release snapshot, skills, and import health.
 .TP
 \fBloopx first\-run\-report\fR
-打印一份本地首次运行回执，以及可选的公开反馈问题链接。
+Print a local first\-run receipt and an optional public feedback issue link.
 .TP
 \fBloopx slash\-commands \-\-install\fR
-刷新宿主斜杠命令提示文件与技能文件。
+Refresh host slash\-command prompt and skill files.
 .TP
 \fBloopx preset list\fR
-显示适合初学者的安全预设与可选的进阶循环启动数据包。
+Show beginner\-safe and opt\-in advanced loop start packets.
 .TP
 \fBloopx ready\-score \-\-goal\-id <goal\-id>\fR
-在不写入徽章的情况下，为安装、状态、配额、调度器、
-待办与证据的就绪度打分。
+Score install, status, quota, scheduler, todo, and evidence readiness without writing badges.
 .TP
 \fBloopx start\-goal \-\-guided \-\-project . \-\-goal\-text "<goal>"\fR
-预览面向同一代理安全的 `/loopx <goal>` 路径的 shell 回退方案。
+Preview the shell fallback for the same agent\-safe `/loopx <goal>` path.
 .TP
 \fBloopx agent\-onboard \-\-agent\-type codex\-cli \-\-project .\fR
-为某一个代理运行时生成精确的宿主循环激活数据包。
+Generate the exact host\-loop activation packet for one agent runtime.
 .TP
 \fBloopx bootstrap\-command\-pack \-\-project .\fR
-生成更低层的宿主交接数据包。
-.SH 日常运维命令
+Generate the lower\-level host handoff packet.
+.SH DAILY OPERATOR COMMANDS
 .TP
 \fBloopx status\fR
-显示目标、门控、关注队列与下一步行动。
+Show goals, gates, attention queue, and next action.
 .TP
 \fBloopx dashboard\fR
-用一条命令启动本地看板、状态服务与 Agent Chat 服务。
+Start the local dashboard, status service, and Agent Chat service with one command.
 .TP
 \fBloopx chat \-\-goal\-id <goal\-id>\fR
-打开 Goal Studio，向只读 Agent 请求一个受限的待办，并在写回前批准其预览。
+Open Goal Studio, ask the read\-only Agent for a bounded Todo, and approve its preview before writeback.
 .TP
 \fBloopx diagnose \-\-goal\-id <goal\-id>\fR
-当行为异常时构造一份精简的证据数据包。
+Build a compact evidence packet when behavior is surprising.
 .TP
 \fBloopx review\-packet \-\-goal\-id <goal\-id>\fR
-渲染一份交接或评审数据包，并附带所需的证据日志读取内容。
+Render a handoff or review packet with any required evidence\-log reads.
 .TP
 \fBloopx goal\-channel \-\-help\fR
-设置、检查、同步或通知绑定到某一个目标的提供者通道。
+Set up, inspect, sync, or notify the provider channel bound to one goal.
 .TP
 \fBloopx goal\-lifecycle \-\-help\fR
-预览、停止或恢复一个目标，而不删除其历史、待办或证据。
+Preview, stop, or resume a Goal without deleting its history, todos, or evidence.
 .TP
 \fBloopx evidence\-log \-\-goal\-id <goal\-id> \-\-agent\-id <agent\-id> \-\-thin\fR
-在重新规划或交接前读取当前代理的精简公开安全账本。
+Read the current agent's thin public\-safe ledger before replan or handoff.
 .TP
 \fBloopx machine\-config \-\-help\fR
-检查类型化的机器策略，预览变更，并应用一个精确的计划修订。
+Inspect typed machine policy, preview changes, and apply an exact plan revision.
 .TP
 \fBloopx todo \-\-help\fR
-显示待办生命周期命令。
+Show todo lifecycle commands.
 .TP
 \fBloopx task\-lease \-\-help\fR
-获取、续期、转移、释放或检查一个强制的按待办租约。
+Acquire, renew, transfer, release, or inspect a hard per\-todo lease.
 .TP
 \fBloopx coordination\-shadow \-\-help\fR
-检查、引导默认关闭的 Stage 2C 文件影子，或对其执行带修订围栏的回滚。
+Inspect, bootstrap, or revision\-fenced rollback the default\-off Stage 2C file shadow.
 .TP
 \fBloopx quota should\-run\fR
-判断下一个代理回合是否应该运行。
+Decide whether the next agent turn should run.
 .TP
 \fBloopx history \-\-goal\-id <goal\-id>\fR
-读取精简的运行历史。
+Read compact run history.
 .TP
 \fBloopx history trajectory\-hygiene \-\-goal\-id <goal\-id> \-\-limit 100\fR
-在无需读取原始会话的情况下，根据精简历史评估
-控制器密度与归因缺口。
-.SH 循环驱动提示
+Measure controller density and attribution gaps from compact history without reading raw sessions.
+.SH LOOP DRIVER HINTS
 .TP
 \fBCodex CLI visible goal\fR
-保持在可见的 TUI 中；需要时使用 `loopx codex\-cli\-bootstrap\-message` 完成设置。
+Stay in the visible TUI; use `loopx codex\-cli\-bootstrap\-message` for setup when needed.
 .TP
 \fBClaude Code /loop\fR
-为 `/loopx` 使用已安装的斜杠技能；仅当原生 `/loop` 需要由 LoopX 门控时才启用适配器。
-.TP
-\fBOpenCode goal bridge\fR
-接入 `\-\-with\-goal\-bridge`，然后使用 `loopx_goal_activate` 绑定受配额门控的桥接。
+Use installed slash skills for `/loopx`; enable the adapter only when native `/loop` should be gated by LoopX.
 .TP
 \fBOther agent or shell\fR
-使用 CLI、任务、自动化、心跳或调度器钩子；否则手动驱动 LoopX。
+Use a CLI, task, automation, heartbeat, or scheduler hook; otherwise drive LoopX manually.
 .TP
 \fBloopx turn plan \-\-goal\-id <goal\-id> \-\-agent\-id <agent\-id>\fR
-在不启动代理、不写入状态的情况下，基于实时 LoopX 状态规划一次受治理的外部宿主回合。
+Plan one governed external\-host turn from live LoopX state without launching an agent or writing state.
 .TP
 \fBloopx host\-mode\-plan \-\-goal\-id <goal\-id> \-\-intent <intent> \-\-host\-capability <capability>\fR
-选择一个安全的宿主模式（可见、隔离无头回合、网关、
-定时器、混合），并显示匹配的回合/配额预览命令。
-.SH 设置与自动化命令
+Select a safe host mode (visible, isolated headless Turn, gateway, timer, hybrid) and show the matching Turn/quota preview commands.
+.SH SETUP AND AUTOMATION COMMANDS
 .TP
 \fBloopx bootstrap / loopx connect\fR
-创建或连接项目本地状态。
+Create or connect project\-local state.
 .TP
 \fBloopx project \-\-help\fR
-注册一个持久的 Project，并绑定、解绑或解析其前台目标。
+Register a durable Project and bind, unbind, or resolve its foreground Goal.
 .TP
 \fBloopx new\-project\-prompt\fR
-生成一段供代理使用的可复制粘贴的项目连接提示。
+Generate a copy\-paste project connection prompt for an agent.
 .TP
 \fBloopx bind\-agent\-thread\fR
-将一个稳定的宿主线程绑定持久化到已注册的 LoopX 代理。
+Persist one stable host thread binding to an already registered LoopX agent.
 .TP
 \fBloopx resolve\-agent\-thread\fR
-从一个不透明（opaque）id 或复制的 Codex 任务深度链接中
-读取一个精确的宿主线程绑定，不修改权威数据。
+Read one exact host thread binding from an opaque id or copied Codex task deep link without mutating authority.
 .TP
 \fBloopx unbind\-agent\-thread\fR
-移除一个精确的宿主线程绑定，而不注销其代理或对等会话。
+Remove one exact host thread binding without unregistering its agent or peer sessions.
 .TP
 \fBloopx codex\-cli\-bootstrap\-message\fR
-生成可见的 Codex CLI TUI 设置消息。
+Generate the visible Codex CLI TUI setup message.
 .TP
 \fBloopx codex\-cli\-tui\-bootstrap\-smoke\-bundle\fR
-生成一份不含转录文稿的 Codex CLI 首次运行冒烟测试数据包。
+Generate a transcript\-free Codex CLI first\-run smoke bundle.
 .TP
 \fBloopx codex\-cli\-visible\-attach\-acceptance\fR
-检查公开安全的可见 Codex CLI 附加证据。
+Check public\-safe visible Codex CLI attach evidence.
 .TP
 \fBloopx heartbeat\-prompt\fR
-生成一份受守护的心跳自动化正文。
+Generate a guarded heartbeat automation body.
 .TP
 \fBloopx supervisor\-prompt\fR
-为可选的仅提案对等监督者生成专用任务正文。
+Generate the dedicated task body for an opt\-in proposal\-only peer supervisor.
 .TP
 \fBloopx supervisor\-observe\fR
-读取一份关于对等状态与证据的公开安全监督者数据包。
+Read one public\-safe supervisor packet over peer status and evidence.
 .TP
 \fBloopx supervisor\-event\fR
-预览、追加或读取监督者提案与宿主执行回执。
+Preview, append, or read supervisor proposals and host execution receipts.
 .TP
 \fBloopx upgrade\-plan\fR
-规划默认心跳升级的传播。
+Plan default heartbeat upgrade propagation.
 .TP
 \fBloopx update [check|plan|apply]\fR
-检查安装归属，然后显式应用归档更新。
+Inspect installation ownership, then explicitly apply archive updates.
 .TP
 \fBloopx project\-skill \-\-help\fR
-在选定的项目代理宿主中安装、检查或移除发行版拥有的技能。
+Install, inspect, or remove release\-owned skills in selected project agent hosts.
 .TP
 \fBloopx workflow\-skills\fR
-检查、安装或移除打包的用户级 LoopX 工作流技能。
-.SH 维护者与适配器命令
+Inspect, install, or remove packaged user\-level LoopX workflow skills.
+.SH MAINTAINER AND ADAPTER COMMANDS
 .TP
 \fBloopx check\fR
-运行契约检查与公开/私有边界检查。
+Run contract and public/private boundary checks.
 .TP
 \fBloopx change\-quality \-\-help\fR
-对照启用的项目策略与回执契约，核定一份精确的最终差异。
+Qualify one exact final diff against an enabled project policy and receipt contract.
 .TP
 \fBloopx integration\-branch \-\-help\fR
-检测已评审源分支的漂移，并重建一个本地集成分支。
+Detect reviewed source\-branch drift and rebuild one local integration branch.
 .TP
 \fBloopx change\-window \-\-help\fR
-应用一个仓库本地的调度，并检查共享账本中被阻塞的未合并工作。
+Apply a repository\-local schedule and inspect blocked unmerged work in the shared ledger.
 .TP
 \fBloopx registry\fR
-检查已注册的目标与适配器。
+Inspect registered goals and adapters.
 .TP
 \fBloopx sync\-global\fR
-将项目状态合并进共享注册表。
+Merge project state into the shared registry.
 .TP
 \fBloopx retire\-global\-goal\fR
-安全地退役显式命名的孤立全局目标路由。
+Safely retire explicitly named orphaned global goal routes.
 .TP
 \fBloopx register\-agent\fR
-注册一个自动化代理。
+Register an automation agent.
 .TP
 \fBloopx lark\-kanban\fR
-将 LoopX 状态投射到飞书/Lark Base 看板。
+Project LoopX state into a Feishu/Lark Base board.
 .TP
 \fBloopx presentation\fR
-打包、回滚并验证提供者中立的静态演示工件。
+Package, roll back, and verify provider\-neutral static presentation artifacts.
 .TP
 \fBloopx explore\fR
-记录探索拓扑（节点、边、发现），并将其投射到飞书/Lark 结果看板。
+Record the exploration topology (nodes, edges, findings) and project it to a Feishu/Lark result board.
 .TP
 \fBloopx extension\fR
-检查并管理经 doctor 验证的子进程扩展激活。
+Inspect and manage doctor\-verified subprocess extension activations.
 .TP
 \fBloopx connector\fR
-列出、注册、排序并记录公开连接器提供者的使用情况。
+List, register, rank, and record usage for public connector providers.
 .TP
 \fBloopx issue\-fix\fR
-构建公开安全的 issue 或 PR 修复工作流数据包。
+Build public\-safe issue or PR fix workflow packets.
 .TP
 \fBloopx review\-batch\fR
-组合提供者中立的有界评审数据包，并绑定精确的决策。
+Compose provider\-neutral bounded review packets and bind exact decisions.
 .TP
 \fBloopx periodic\-report\fR
-解析一个可移植的周度配置文件，评估报告触发器，并组合
-提供者中立的运行回执。
+Resolve a portable weekly profile, evaluate report triggers, and compose provider\-neutral run receipts.
 .TP
 \fBloopx auto\-research\fR
-将公开安全的研究前沿投射出来。
+Project public\-safe research frontiers.
 .TP
 \fBloopx deepresearch\fR
-运行一个受限的、可引用审计的研究账本与报告工作流。
+Run a bounded, citation\-auditable research ledger and report workflow.
 .TP
 \fBloopx agent\-turn\-recall\fR
-为一个获准的自主代理回合准备目标范围的记忆指引。
+Prepare goal\-scoped memory guidance for one admitted autonomous agent turn.
 .TP
 \fBloopx multi\-agent\fR
-启动可见的角色定向 Codex TUI 代理。
+Launch visible role\-scoped Codex TUI agents.
 .TP
 \fBloopx canary\fR
-规划或运行基于目录信息的冒烟配置文件。
+Plan or run catalog\-informed smoke profiles.
 .TP
 \fBloopx promotion\-readiness\fR
-在共享运行时账本中记录发布范围的金丝雀就绪证据。
+Record release\-scoped canary readiness evidence in the shared runtime ledger.
 .TP
 \fBloopx benchmark\fR
-默认使用仅限夹具（fixture）的基准测试运行器骨架。
-.SH 更多信息
+Use fixture\-only benchmark runner skeletons by default.
+.SH MORE
 .TP
 \fBloopx COMMAND \-\-help\fR
-显示单个命令的标志。
+Show flags for one command.
 .TP
 \fBman loopx\fR
-打开这份已安装的手册页。
+Open this installed manual page.
 .TP
 \fBdocs/guides/getting\-started.md#command\-reference\fR
-阅读更长的运维与贡献者指南。
-.SH 安装说明
-LoopX 本地安装器默认将此手册写入
-\fI$HOME/.local/share/man/man1/loopx.1.gz\fR，并在所选的 shell 配置文件中
-将 \fI$HOME/.local/share/man\fR 添加到 MANPATH。
-如果当前 shell 尚未重新加载该配置文件，请运行：
+Read the longer operator and contributor guide.
+.SH INSTALL NOTES
+The LoopX local installer writes this manual to
+\fI$HOME/.local/share/man/man1/loopx.1.gz\fR by default and adds
+\fI$HOME/.local/share/man\fR to MANPATH in the selected shell profile.
+If the current shell has not reloaded that profile, run:
 .PP
 \fBMANPATH=\"$HOME/.local/share/man:${MANPATH:\-}\" man loopx\fR
 .SH SEE ALSO

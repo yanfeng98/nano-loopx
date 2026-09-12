@@ -1009,19 +1009,3 @@ def test_report_generation_is_serialized_with_run_rotation(tmp_path: Path) -> No
     assert len(archive_dirs) == 1
     archived_report = (archive_dirs[0] / "report.md").read_text(encoding="utf-8")
     assert "old question" in archived_report
-
-
-def test_skill_facade_installs_for_skill_facade_surfaces(tmp_path: Path) -> None:
-    from loopx.slash_command_install import install_slash_commands
-
-    # The facade spec is host-generic: every skill-facade surface (opencode)
-    # installs it from the same specs list, so proving one surface proves the
-    # wiring.
-    home = tmp_path / "opencode-home"
-    payload = install_slash_commands(execute=True, surfaces=["opencode"], opencode_home=str(home))
-    assert payload["ok"] is True
-    skill = home / "skills" / "loopx-deepresearch" / "SKILL.md"
-    assert skill.is_file()
-    body = skill.read_text(encoding="utf-8")
-    assert "deepresearch status" in body
-    assert "never fabricate URLs" in body

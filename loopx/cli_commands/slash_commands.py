@@ -55,22 +55,13 @@ def register_slash_commands_command(
             "codex",
             "codex-cli",
             "claude-code",
-            "opencode",
             "pi",
         ],
         help=(
             "Host surface to install. Repeatable. Defaults to static command facades "
-            "for Codex, Claude Code, and OpenCode. `pi` is opt-in: "
+            "for Codex and Claude Code. `pi` is opt-in: "
             "it writes into that host's own home only when "
             "requested."
-        ),
-    )
-    parser.add_argument(
-        "--with-goal-bridge",
-        action="store_true",
-        help=(
-            "Also install or uninstall the executable OpenCode goal bridge. Requires "
-            "an effective OpenCode surface and explicit opt-in."
         ),
     )
     parser.add_argument(
@@ -80,10 +71,6 @@ def register_slash_commands_command(
     parser.add_argument(
         "--claude-home",
         help="Claude Code home for skill installation. Defaults to CLAUDE_HOME or ~/.claude.",
-    )
-    parser.add_argument(
-        "--opencode-home",
-        help="OpenCode config directory. Defaults to OPENCODE_CONFIG_DIR or ~/.config/opencode.",
     )
     parser.add_argument(
         "--pi-project",
@@ -109,13 +96,11 @@ def handle_slash_commands_command(
         payload = install_slash_commands(
             execute=bool((args.install or args.uninstall) and not args.dry_run),
             uninstall=bool(args.uninstall),
-            with_goal_bridge=bool(args.with_goal_bridge),
             surfaces=args.surface,
             cli_bin=args.cli_bin,
             include_legacy_aliases=not bool(args.no_legacy_aliases),
             codex_home=args.codex_home,
             claude_home=args.claude_home,
-            opencode_home=args.opencode_home,
             pi_project=args.pi_project,
         )
         print_payload(payload, output_format(args), render_slash_command_install_markdown)

@@ -216,8 +216,6 @@ loopx start-goal --guided --project . --goal-text "你的长程目标"
 | --- | --- | --- |
 | Codex CLI | 在项目里启动 `codex`，让它连接并诊断 LoopX，然后用 `$loopx <复杂任务>` 或 `/skills`。 | 可见 `/goal <task_body>`；默认不走隐藏 headless 执行 |
 | Claude Code | 安装 opt-in adapter，然后运行 `/loopx <任务>`，再运行 `/loop`。 | 由 LoopX gate 的原生 Claude Code `/loop` |
-| OpenCode | 用 `loopx slash-commands --install --surface opencode` 安装静态 command facade；recurring goal 再显式 opt in `--with-goal-bridge`（仅该 surface 生效）。 | OpenCode command facade 与显式 goal bridge |
-| OpenCode 2 | 同一 command facade（`loopx slash-commands --install`）；启动 goal 时选 `--host-surface opencode2`，再从返回的激活 packet 启动 `loopx opencode2-goal-worker --goal-id <goal-id> --directory .`。 | 进程外 goal worker 经 OpenCode 2 HTTP API 驱动会话；worker 自己拥有循环定时器，TUI 关闭后仍存活 |
 | Pi | 用 `loopx slash-commands --install --surface pi` 安装 opt-in goal extension，然后在受信任的 Pi 会话里用 `/loopx <任务>`。 | 由 LoopX quota gate 的可见 Pi goal extension（`loopx_goal_activate` + `agent_settled` 续跑） |
 | DeepSeek Harness（`deepseek-harness`） | [dsh goal-mode adapter](loopx/dsh_goal_mode/README.md)，启动 goal 时选 `--host-surface deepseek-harness`。 | headless dsh 工作段；每 tick 从 `quota should-run` 进入 |
 | DeepSeek Harness 原生（`deepseek-harness-native`） | 安装 [DSH 原生 Plugin](packages/dsh-loopx-plugin/README.md)，在技能选择器中点 `loopx`，然后直接描述任务（`--host-surface deepseek-harness-native`）。 | 原生同会话续跑与 GoalBar |

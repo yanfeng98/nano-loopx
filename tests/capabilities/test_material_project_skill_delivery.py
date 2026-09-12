@@ -173,12 +173,12 @@ def test_project_skill_uninstall_is_preview_first_and_fails_closed(
     assert not target.exists()
 
 
-def test_generic_delivery_supports_codex_claude_code_opencode_and_pi(
+def test_generic_delivery_supports_codex_claude_code_and_pi(
     tmp_path: Path,
 ) -> None:
     source = _source(tmp_path)
     project = _project(tmp_path)
-    surfaces = ("codex", "claude-code", "opencode", "pi")
+    surfaces = ("codex", "claude-code", "pi")
 
     preview = install_project_skill(
         project,
@@ -230,7 +230,7 @@ def test_multi_surface_readback_failure_rolls_back_every_target(
 ) -> None:
     source = _source(tmp_path)
     project = _project(tmp_path)
-    surfaces = ("codex", "claude-code", "opencode")
+    surfaces = ("codex", "claude-code", "pi")
     real_inspect = project_skill_delivery.inspect_project_skill
     calls = 0
 
@@ -265,7 +265,7 @@ def test_multi_surface_uninstall_readback_failure_restores_every_target(
 ) -> None:
     source = _source(tmp_path)
     project = _project(tmp_path)
-    surfaces = ("codex", "claude-code", "opencode")
+    surfaces = ("codex", "claude-code", "pi")
     install_project_skill(
         project,
         "loopx-material",

@@ -1,8 +1,7 @@
 """Host poll receipts for visible goal loops.
 
-Long-running host loops (OpenCode bridge, OpenCode 2 worker, and other
-generic-CLI drivers) probe `quota should-run` on every settled turn or timer
-wake. When a driver passes `--record-host-poll`, the CLI writes a compact
+Long-running host loops (Pi goal extension and other generic-CLI drivers)
+probe `quota should-run` on every settled turn or timer wake. When a driver passes `--record-host-poll`, the CLI writes a compact
 receipt next to the goal state file so the control plane can distinguish a
 live polling loop from a driver that died mid-wait.
 

@@ -37,11 +37,6 @@ def _surface_install_command(agent_type: str, cli_bin: str, project: str) -> str
         return f"{shell_arg(cli_bin)} slash-commands --install --surface codex"
     if agent_type == "claude-code":
         return f"{shell_arg(cli_bin)} slash-commands --install --surface claude-code"
-    if agent_type == "opencode":
-        return (
-            f"{shell_arg(cli_bin)} slash-commands --install --surface opencode "
-            "--with-goal-bridge"
-        )
     if agent_type == "pi":
         # The slash-commands installer resolves the Pi extension target through
         # --pi-project; pass the resolved project so the command stays correct
@@ -60,8 +55,6 @@ def _project_skill_surface(agent_type: str) -> str | None:
         return "codex"
     if agent_type == "claude-code":
         return "claude-code"
-    if agent_type == "opencode":
-        return "opencode"
     if agent_type == "pi":
         return "pi"
     return None
@@ -233,7 +226,6 @@ def _bootstrap_pack_command(
     surface_by_type = {
         "codex-cli": "codex-cli-tui",
         "claude-code": "claude-code",
-        "opencode": "opencode",
         "pi": "pi",
         "deepseek-harness": "deepseek-harness",
         "deepseek-harness-native": "deepseek-harness-native",
@@ -264,8 +256,6 @@ def _start_instruction(agent_type: str) -> str:
         return "Use `$loopx <task>` or select the LoopX skill from `/skills`; after todos are written, set `/goal <task_body>` in the visible TUI."
     if agent_type == "claude-code":
         return "Run `/loopx <task>` to arm LoopX, then run native `/loop`."
-    if agent_type == "opencode":
-        return "Run `/loopx <task>`; after todo writeback, call `loopx_goal_activate` with the generated heartbeat task body."
     if agent_type == "pi":
         return "Run `/loopx <task>`; after todo writeback, call `loopx_goal_activate` with the generated heartbeat task body."
     if agent_type == "deepseek-harness":

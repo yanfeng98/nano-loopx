@@ -59,8 +59,6 @@ START_GOAL_CAPABILITY_ROUTES = ("issue-fix",)
 START_GOAL_HOST_SURFACES = (
     "codex-cli-tui",
     "claude-code",
-    "opencode",
-    "opencode2",
     "pi",
     "deepseek-harness",
     "deepseek-harness-native",
@@ -337,8 +335,6 @@ def build_start_goal_host_surface_selection_packet(
     host_descriptions = {
         "codex-cli-tui": "terminal Codex TUI with visible /goal support",
         "claude-code": "Claude Code with native /loop",
-        "opencode": "OpenCode LoopX goal bridge",
-        "opencode2": "OpenCode 2 session driven by the LoopX goal worker",
         "pi": "Pi LoopX goal extension",
         "deepseek-harness": "DeepSeek Harness automation loop through loopx.dsh_goal_mode (compat: scripts/dsh_turn_host_adapter.py)",
         "deepseek-harness-native": "DeepSeek Harness same-session LoopX skill and plugin driver",
@@ -2017,7 +2013,7 @@ Host loop activation is part of setup, not a nice-to-have:
 If the host loop is already proven current, skip the mutation. If it is missing,
 unknown, or stale, use the command above to obtain `task_body` and activate the
 right host loop: Codex CLI `/goal <task_body>`, Claude
-Code `/loop`, OpenCode bridge, or the custom host-loop gate.
+Code `/loop` or the custom host-loop gate.
 If this session cannot mutate that
 host surface, report the exact gate; do not claim autonomous setup complete.
 Use `{commands.get("goal_start_agent_onboard_recheck", "")}` only when

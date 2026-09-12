@@ -23,7 +23,6 @@ loopx project-skill install \
   --skill <skill-id> \
   --surface codex \
   --surface claude-code \
-  --surface opencode \
   --execute
 ```
 
@@ -33,12 +32,11 @@ loopx project-skill install \
 | --- | --- |
 | `codex` | `.agents/skills/<skill-id>/` |
 | `claude-code` | `.claude/skills/<skill-id>/` |
-| `opencode` | `.opencode/skills/<skill-id>/` |
 | `pi` | `.pi/skills/<skill-id>/` |
 
 这些位置遵循 [Codex](https://developers.openai.com/codex/skills)、
 [Claude Code](https://code.claude.com/docs/en/slash-commands#where-skills-live)
-与 [OpenCode](https://opencode.ai/docs/skills/#place-files) 记录的 host 发现契约。
+记录的 host 发现契约。
 
 ## 生命周期
 

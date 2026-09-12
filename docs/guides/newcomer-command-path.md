@@ -37,7 +37,6 @@ App 或 CLI。选择与你已使用界面匹配的驱动器：
 | --- | --- | --- |
 | Codex CLI | 从项目根运行 `codex`，然后粘贴 `loopx codex-cli-bootstrap-message --project .` 的输出 | 当前已验证的 Codex CLI 构建不加载用户安装的 `/loopx` 或 `/prompts:loopx` 命令。保持 executor 可见，然后设置生成的 `/goal <thin task_body>`。 |
 | Claude Code | 安装 LoopX，然后 `/loopx <task text>` | 安装器注册轻量 slash-command skills。仅当 Claude Code 原生 `/loop` 应受 LoopX `should_run` 门控时，才启用 opt-in adapter。 |
-| OpenCode | 安装 OpenCode 界面，然后 `/loopx <task text>` | 桥接层写入命令、plugin、runtime 与固定依赖。写入 todos 后调用 `loopx_goal_activate` 绑定 quota 门控的 goal loop。 |
 | 其他 Agent 或 shell | `loopx start-goal --guided --project . --goal-text "<task text>" --host-surface <exact-host>` | 引导包预览 Agent 应执行的同一事务：检查或连接状态、规划 todos、刷新状态、激活宿主 loop、运行 quota，并在需要时 ack scheduler hint。如果界面没有 runner hook，LoopX 可以跟踪状态，但由用户手动驱动。 |
 
 如果你已经拥有 Agent runner 或工作流主管，请改用

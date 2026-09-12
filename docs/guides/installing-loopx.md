@@ -109,7 +109,7 @@ workflow-skill 命令安装丰富的 Codex workflows 与受管 `$loopx` 入口�
 loopx slash-commands --install
 ```
 
-默认命令 facade 集合覆盖 Codex、Claude Code 与 OpenCode。其他界面保持显式；启用前
+默认命令 facade 集合覆盖 Codex 与 Claude Code。其他界面保持显式；启用前
 检查 `loopx slash-commands --help`。宿主集成只改变命令发现方式。它不授予 LoopX
 写仓库、联系外部系统或绕过用户 gate 的权限。
 
