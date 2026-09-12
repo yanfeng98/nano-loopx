@@ -14,7 +14,6 @@ from .host_loop_activation import (
     render_agent_type_catalog_markdown,
     scheduler_command_binding_for_agent_type,
 )
-from .install_contract import NO_CLONE_INSTALL_URL
 from .project_prompt import (
     render_available_capability_args,
     render_codex_cli_install_preflight,
@@ -23,14 +22,13 @@ from .project_prompt import (
 )
 from .registry import read_json, registry_goals
 from .skill_install_readback import (
-    ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
+    REQUIRED_HOST_SKILL_IDS,
     configured_host_skills_dir,
     inspect_skill_install_readback,
 )
 
 SCHEMA_VERSION = "loopx_agent_onboarding_v0"
 HOST_SKILL_DELIVERY_SCHEMA_VERSION = "loopx_host_skill_delivery_v0"
-REQUIRED_HOST_SKILL_IDS = ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS
 CHANGE_QUALITY_SKILL_ID = "loopx-change-quality"
 
 
@@ -149,7 +147,6 @@ def _skill_delivery_contract(
         *REQUIRED_HOST_SKILL_IDS,
         *active_project_skills,
     ]
-    ark_managed_agent = agent_type == "ark-managed-agent"
     dsh_native = agent_type == "deepseek-harness-native"
     filesystem_readback = (
         inspect_skill_install_readback(
@@ -157,16 +154,14 @@ def _skill_delivery_contract(
             required_skill_ids=REQUIRED_HOST_SKILL_IDS,
             source_root=Path(__file__).resolve().parents[1],
         )
-        if ark_managed_agent or dsh_native
+        if dsh_native
         else None
     )
     return {
         "schema_version": HOST_SKILL_DELIVERY_SCHEMA_VERSION,
         "mode": "host_managed",
         "owner": (
-            "loopx_install_script"
-            if ark_managed_agent
-            else "dsh_loopx_plugin"
+            "dsh_loopx_plugin"
             if dsh_native
             else "custom_agent_host"
         ),
@@ -181,44 +176,21 @@ def _skill_delivery_contract(
         "required_skill_ids": required_skill_ids,
         "active_project_skill_ids": active_project_skills,
         "delivery_options": [
-            *(["fixed_install_script"] if ark_managed_agent else []),
             *(["dsh_loopx_init_command"] if dsh_native else []),
             "host_skill_manifest",
             "prompt_injection",
         ],
         **(
             {
-                "preferred_delivery": "fixed_install_script",
+                "preferred_delivery": "dsh_loopx_init_command",
                 "onboarding_role": "read_only_verifier",
                 "onboarding_required_for_install": False,
-                "install_script": "scripts/install-local.sh",
-                "no_clone_install_command": (
-                    f"curl -fsSL {NO_CLONE_INSTALL_URL}"
-                    " | env "
-                    f"LOOPX_SKILLS_DIR={shell_arg(f'{project}/.agents/skills')} "
-                    "LOOPX_ENTRY_HOST_SURFACE=ark-managed-agent "
-                    "LOOPX_INSTALL_SLASH_COMMANDS=0 bash"
-                ),
-                "skills_dir_env": "LOOPX_SKILLS_DIR",
-                "entry_host_surface_env": "LOOPX_ENTRY_HOST_SURFACE",
-                "entry_host_surface": "ark-managed-agent",
-                "target_layout": f"{project}/.agents/skills",
-                "fixed_installer_skill_ids": REQUIRED_HOST_SKILL_IDS,
-                "filesystem_readback": filesystem_readback,
+                "install_command": "/loopx-init",
+                "entry_host_surface": "deepseek-harness-native",
+                "target_layout": "~/.agents/skills",
             }
-            if ark_managed_agent
-            else (
-                {
-                    "preferred_delivery": "dsh_loopx_init_command",
-                    "onboarding_role": "read_only_verifier",
-                    "onboarding_required_for_install": False,
-                    "install_command": "/loopx-init",
-                    "entry_host_surface": "deepseek-harness-native",
-                    "target_layout": "~/.agents/skills",
-                }
-                if dsh_native
-                else {}
-            )
+            if dsh_native
+            else {}
         ),
         "source_repository": "https://github.com/huangruiteng/loopx",
         "source_directories": [
@@ -265,7 +237,6 @@ def _bootstrap_pack_command(
         "pi": "pi",
         "deepseek-harness": "deepseek-harness",
         "deepseek-harness-native": "deepseek-harness-native",
-        "ark-managed-agent": "ark-managed-agent",
         "manual": "shell",
         "other-agent": "other-agent",
     }
@@ -310,11 +281,6 @@ def _start_instruction(agent_type: str) -> str:
             "Install the DSH LoopX plugin, run `/loopx-init`, then invoke the `loopx` "
             "skill with the task text. The plugin driver continues the exact live "
             "DSH session only after `quota should-run` admits another step."
-        )
-    if agent_type == "ark-managed-agent":
-        return (
-            "Use `$loopx <task>` as the ordinary task entry; after its todo "
-            "writeback, submit the generated Goal task body exactly once."
         )
     if agent_type == "manual":
         return "Use the CLI packet and wire an external scheduler, or run quota/status/todo commands manually."

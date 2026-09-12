@@ -46,8 +46,6 @@
 
 ## 运行时与 Host 集成
 
-- [`ark_managed_agent_goal_continuity_qualification_v0`](ark-managed-agent-goal-continuity-qualification-v0.md)：Ark 托管 Agent goal 连续性资格 v0
-- [`ark_managed_agent_issue_fix_qualification_v0`](ark-managed-agent-issue-fix-qualification-v0.md)：Ark 托管 Agent issue-fix 资格 v0
 - [`decision_context_advisory_provider_v0`](decision-context-advisory-provider-v0.md)：扩展支撑的、只读的 Decision Context 咨询召回
 - [`computer_use_runtime_v0`](computer-use-runtime-v0.md)：Computer-use 运行时 v0
 - [`host_integration_plugin_plan_v0`](host-integration-plugin-plan-v0.md)：Host 集成插件计划 v0

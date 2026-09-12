@@ -19,7 +19,6 @@ from .arbitration import (
 )
 from .execution_context import (
     SchedulerExecutionContextResolution,
-    SchedulerOwner,
     apply_scheduler_execution_context,
     resolve_scheduler_execution_context,
 )
@@ -65,13 +64,6 @@ SCHEDULER_BASE_IDENTITY_KEYS = (
 )
 
 
-SCHEDULER_FRONTIER_IDENTITY_KEYS = (
-    "selected_todo.todo_id",
-    "selected_todo.action_kind",
-    "selected_todo.target_key",
-    "selected_todo.claimed_by",
-    "selected_todo.capability_binding_ref",
-)
 SCHEDULER_IDENTITY_KEYS = (
     *SCHEDULER_BASE_IDENTITY_KEYS,
     "recommended_action",
@@ -98,22 +90,11 @@ def _dict_or_empty(value: Any) -> dict[str, Any]:
 def _scheduler_identity_keys(
     *,
     cadence_class: str,
-    execution_context: SchedulerExecutionContextResolution,
 ) -> tuple[str, ...]:
-    base_keys = (
+    return (
         MONITOR_WAIT_IDENTITY_KEYS
         if cadence_class == "monitor_wait"
         else SCHEDULER_IDENTITY_KEYS
-    )
-    context = execution_context.context if execution_context.ok else None
-    if context is None or context.scheduler_owner is not SchedulerOwner.GOAL_RUNTIME:
-        return base_keys
-    if cadence_class == "monitor_wait":
-        return (*base_keys, *SCHEDULER_FRONTIER_IDENTITY_KEYS)
-    return (
-        *base_keys[:-1],
-        *SCHEDULER_FRONTIER_IDENTITY_KEYS,
-        base_keys[-1],
     )
 
 
@@ -158,7 +139,6 @@ def _build_scheduler_stop_hint(
             "unchanged_identity_keys": list(
                 _scheduler_identity_keys(
                     cadence_class=cadence_class,
-                    execution_context=execution_context,
                 )
             ),
         },
@@ -487,7 +467,6 @@ class _SchedulerHintBuilder:
         identity_keys = list(
             _scheduler_identity_keys(
                 cadence_class=cadence_class,
-                execution_context=self.execution_context,
             )
         )
         identity_snapshot = {key: self._identity_value(key) for key in identity_keys}
@@ -849,11 +828,6 @@ class _SchedulerHintBuilder:
         return apply_scheduler_execution_context(
             scheduler_hint,
             self.execution_context,
-            frontier_recheck_after_seconds=(
-                frontier_recheck.get("frontier_recheck_after_seconds")
-                if frontier_recheck
-                else None
-            ),
         )
 
 
@@ -1020,7 +994,6 @@ def build_scheduler_hint(
                 "unchanged_identity_keys": list(
                     _scheduler_identity_keys(
                         cadence_class=cadence_class,
-                        execution_context=execution_context,
                     )
                 ),
             },

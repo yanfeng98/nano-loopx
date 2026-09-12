@@ -110,7 +110,6 @@ def register_quota_command(
         "-H",
         "--host-surface",
         choices=[
-            "ark_managed_agent",
             "codex_cli",
             "generic_cli",
             "claude_code",
@@ -124,7 +123,6 @@ def register_quota_command(
         choices=[
             "host_automation",
             "agent_cli_loop",
-            "goal_runtime",
             "outer_controller",
             "none",
         ],

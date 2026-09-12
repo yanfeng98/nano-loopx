@@ -48,7 +48,7 @@ def register_workflow_skills_command(
     )
     parser.add_argument(
         "--host-surface",
-        choices=["ark-managed-agent", "deepseek-harness-native"],
+        choices=["deepseek-harness-native"],
         help="Generate the managed $loopx entry for one exact host surface.",
     )
     parser.add_argument(

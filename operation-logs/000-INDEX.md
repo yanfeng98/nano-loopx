@@ -25,6 +25,7 @@
 | 021 | [021-remove-gemini-cli.md](021-remove-gemini-cli.md) | 移除 Gemini CLI 宿主(skill-facade;~14 文件;catalog/别名/表面映射整套退役,共享 skill-facade 与 cursor-agent 保留) |
 | 022 | [022-remove-cursor-agent.md](022-remove-cursor-agent.md) | 移除 Cursor 宿主(skill-facade 终结;27 文件 +39/−935;最后 skill-facade 宿主,`_skill_facade_cli_activation` 与 cursor 测试文件整套退役,附带对齐 README smoke) |
 | 023 | [023-readme-code-reconciliation.md](023-readme-code-reconciliation.md) | README 与代码一致性修复(版本号、host 表补齐、7 条命令陷阱、仓库级死链清零、许可证移除;修复崩溃的 docs-governance-smoke 并补齐两个同源守卫;二轮复查扩至全仓库) |
+| 024 | [024-remove-ark-managed-agent.md](024-remove-ark-managed-agent.md) | 移除 Ark Managed Agent 宿主(42 文件 +236/−1803;`NATIVE_GOAL_RUNTIME_PROFILES` 收缩保留以免打破 Codex 配额记账、必需技能集常量改名、两个 Ark 测试文件改名保留共享测试、`LOOPX_ENTRY_HOST_SURFACE` 机制整删) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。

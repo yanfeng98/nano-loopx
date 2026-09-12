@@ -18,7 +18,6 @@ Common environment variables:
   LOOPX_INSTALL_SKILL=0            Skip packaged workflow skills.
   LOOPX_SKILLS_DIR=/path           Install workflow skills into this host-native root.
   LOOPX_SKILL_DEDUPE_OTHER_ROOT=1  Retire managed LoopX skill copies from the alternate well-known root.
-  LOOPX_ENTRY_HOST_SURFACE=...     Bind generated $loopx to an exact host (ark-managed-agent).
   LOOPX_INSTALL_SLASH_COMMANDS=0   Skip Codex and Claude command skills.
   LOOPX_INSTALL_OPENCODE=0         Install the OpenCode goal bridge surface.
   CODEX_HOME=/path                 Override the Codex home directory.
@@ -59,11 +58,6 @@ if [[ "${LOOPX_SKILLS_DIR+x}" == "x" ]]; then
   skills_dir_explicit=1
 fi
 skills_dir="${LOOPX_SKILLS_DIR:-$codex_home/skills}"
-entry_host_surface="${LOOPX_ENTRY_HOST_SURFACE:-}"
-if [[ -n "$entry_host_surface" && "$entry_host_surface" != "ark-managed-agent" ]]; then
-  echo "loopx installer error: unsupported LOOPX_ENTRY_HOST_SURFACE: $entry_host_surface" >&2
-  exit 2
-fi
 man_root="${LOOPX_MAN_ROOT:-$HOME/.local/share/man}"
 man_dir="${LOOPX_MAN_DIR:-$man_root/man1}"
 install_skill="${LOOPX_INSTALL_SKILL:-1}"
@@ -362,16 +356,13 @@ install_workflow_skills() {
         LOOPX_SKILL_INSTALL_IDS="$(printf '%s\n' "${installed_skill_ids[@]}")" \
         LOOPX_SKILL_INSTALLED_AT="$installed_at" \
         LOOPX_SKILL_ENTRY_CLI_BIN="$entry_cli_bin" \
-        LOOPX_SKILL_ENTRY_HOST_SURFACE="$entry_host_surface" \
         PYTHONSAFEPATH=1 \
         PYTHONPATH="$source_root${PYTHONPATH:+:$PYTHONPATH}" \
         "${LOOPX_PYTHON:-python3}" - <<'PY'
 import os
-import sys
 from pathlib import Path
 
 from loopx.skill_install_readback import (
-    SKILL_INSTALL_READBACK_FILENAME,
     retire_duplicate_managed_skills,
     write_skill_install_readback,
 )
@@ -381,24 +372,12 @@ result = materialize_loopx_entry_skill(
     skills_dir=Path(os.environ["LOOPX_SKILL_INSTALL_DIR"]),
     execute=True,
     cli_bin=os.environ["LOOPX_SKILL_ENTRY_CLI_BIN"],
-    host_surface=os.environ.get("LOOPX_SKILL_ENTRY_HOST_SURFACE") or None,
 )
 status = str(result["status"])
 materialized_skill_ids = os.environ["LOOPX_SKILL_INSTALL_IDS"].splitlines()
 managed_statuses = {"created", "updated", "unchanged", "upgraded_legacy_managed"}
 if status in managed_statuses:
     materialized_skill_ids.append("loopx")
-elif os.environ.get("LOOPX_SKILL_ENTRY_HOST_SURFACE"):
-    (
-        Path(os.environ["LOOPX_SKILL_INSTALL_DIR"])
-        / SKILL_INSTALL_READBACK_FILENAME
-    ).unlink(missing_ok=True)
-    print(
-        "loopx installer error: exact-host entry skill was not materialized "
-        f"(status={status}, path={result['path']})",
-        file=sys.stderr,
-    )
-    raise SystemExit(1)
 write_skill_install_readback(
     skills_dir=Path(os.environ["LOOPX_SKILL_INSTALL_DIR"]),
     skill_ids=materialized_skill_ids,
@@ -428,47 +407,6 @@ PY
   rm -rf "$skill_install_lock"
   skill_install_lock_owned=0
   skill_install_lock=""
-}
-
-preflight_workflow_skills() {
-  local skills_source="$1"
-  local source_root="$2"
-  local entry_cli_bin="$3"
-  if [[ "$install_skill" == "0" || ! -d "$skills_source" ]]; then
-    return 0
-  fi
-
-  LOOPX_SKILL_INSTALL_DIR="$skills_dir" \
-    LOOPX_SKILL_ENTRY_CLI_BIN="$entry_cli_bin" \
-    LOOPX_SKILL_ENTRY_HOST_SURFACE="$entry_host_surface" \
-    PYTHONSAFEPATH=1 \
-    PYTHONPATH="$source_root${PYTHONPATH:+:$PYTHONPATH}" \
-    "${LOOPX_PYTHON:-python3}" - <<'PY'
-import os
-import sys
-from pathlib import Path
-
-from loopx.skill_install_readback import SKILL_INSTALL_READBACK_FILENAME
-from loopx.slash_command_install import materialize_loopx_entry_skill
-
-result = materialize_loopx_entry_skill(
-    skills_dir=Path(os.environ["LOOPX_SKILL_INSTALL_DIR"]),
-    execute=False,
-    cli_bin=os.environ["LOOPX_SKILL_ENTRY_CLI_BIN"],
-    host_surface=os.environ.get("LOOPX_SKILL_ENTRY_HOST_SURFACE") or None,
-)
-if os.environ.get("LOOPX_SKILL_ENTRY_HOST_SURFACE") and result["status"] in {
-    "preserved_existing_loopx_skill",
-    "skipped_user_file",
-}:
-    readback = Path(os.environ["LOOPX_SKILL_INSTALL_DIR"]) / SKILL_INSTALL_READBACK_FILENAME
-    print(
-        "loopx installer error: exact-host entry skill cannot be materialized "
-        f"(status={result['status']}, path={result['path']}, readback={readback})",
-        file=sys.stderr,
-    )
-    raise SystemExit(1)
-PY
 }
 
 verify_default_promotion() {
@@ -696,10 +634,6 @@ chmod +x "$release_tmp/scripts/loopx"
 mv "$release_tmp" "$release_dir"
 release_tmp=""
 if ! validate_release_candidate "$release_dir"; then
-  rm -rf "$release_dir"
-  exit 1
-fi
-if ! preflight_workflow_skills "$release_dir/skills" "$release_dir" "$bin_dir/loopx"; then
   rm -rf "$release_dir"
   exit 1
 fi

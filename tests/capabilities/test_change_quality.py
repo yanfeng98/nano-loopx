@@ -31,7 +31,7 @@ from loopx.capabilities.project_skill_delivery import (
     install_project_skill,
     inspect_project_skill,
 )
-from loopx.skill_install_readback import ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS
+from loopx.skill_install_readback import REQUIRED_HOST_SKILL_IDS
 
 
 GOAL_ID = "change-quality-fixture"
@@ -932,7 +932,7 @@ def test_quality_skill_delivery_is_policy_conditional_and_host_neutral(
     tmp_path: Path,
 ) -> None:
     inactive = _skill_delivery_contract("other-agent")
-    assert inactive["required_skill_ids"] == ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS
+    assert inactive["required_skill_ids"] == REQUIRED_HOST_SKILL_IDS
 
     active_custom = _skill_delivery_contract(
         "other-agent",

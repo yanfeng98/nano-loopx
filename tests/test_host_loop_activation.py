@@ -21,7 +21,6 @@ from loopx.project_prompt import render_accountable_progress_refresh_command
 @pytest.mark.parametrize(
     ("agent_type", "runtime_profile"),
     (
-        ("ark-managed-agent", "ark_managed_agent_goal"),
         ("codex-cli", "codex_cli"),
         ("claude-code", "claude_code"),
         ("opencode", "generic_cli"),
@@ -40,7 +39,6 @@ def test_first_class_hosts_bind_one_runtime_profile(
 @pytest.mark.parametrize(
     ("runtime_profile", "expected"),
     (
-        ("ark_managed_agent_goal", True),
         ("codex_cli", True),
         ("generic_cli", False),
         ("claude_code", False),
@@ -165,7 +163,7 @@ def test_deepseek_harness_native_is_distinct_same_session_host() -> None:
 
 @pytest.mark.parametrize(
     "runtime_profile",
-    ("ark_managed_agent_goal",),
+    ("codex_cli",),
 )
 def test_goal_hosts_attribute_spend_to_current_progress_refresh(
     runtime_profile: str,
@@ -229,7 +227,7 @@ def test_heartbeat_prompt_commands_keep_explicit_runtime_root() -> None:
 
 @pytest.mark.parametrize(
     "runtime_profile",
-    ("ark_managed_agent_goal", "codex_cli"),
+    ("codex_cli",),
 )
 def test_goal_hosts_share_narrow_runtime_skill_routing(
     runtime_profile: str,
@@ -268,7 +266,6 @@ def test_goal_hosts_reuse_thin_dispatch_and_stay_compact() -> None:
     )
     goal_hosts = [
         build_heartbeat_prompt(**common, runtime_profile="codex_cli"),
-        build_heartbeat_prompt(**common, runtime_profile="ark_managed_agent_goal"),
     ]
 
     for rule in shared_rules:
@@ -286,23 +283,15 @@ def test_native_codex_goal_wait_rule_matches_blocked_resume_contract() -> None:
         thin=True,
         runtime_profile="codex_cli",
     )["task_body"]
-    managed_body = build_heartbeat_prompt(
-        goal_id="managed-wait-fixture",
-        thin=True,
-        runtime_profile="ark_managed_agent_goal",
-    )["task_body"]
-
     for body in (cli_body,):
         assert "call `update_goal` with `status=blocked`" in body
         assert "Only user `/goal resume`" in body
         assert "reactivates it; rerun quota after resume" in body
-    assert "call `update_goal` with `status=blocked`" not in managed_body
 
 
 @pytest.mark.parametrize(
     ("runtime_profile", "expected_host"),
     (
-        ("ark_managed_agent_goal", "Ark Managed Agent goal prompt"),
         ("codex_cli", "visible Codex /goal task body"),
     ),
 )
@@ -374,7 +363,6 @@ def test_new_agent_onboarding_defaults_to_fresh_identity() -> None:
 @pytest.mark.parametrize(
     "agent_type",
     (
-        "ark-managed-agent",
         "codex-cli",
         "claude-code",
         "opencode",

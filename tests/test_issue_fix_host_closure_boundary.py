@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-from pathlib import Path
 
 import pytest
 
@@ -12,8 +11,6 @@ from loopx.capabilities.issue_fix.feasibility import (
     build_issue_fix_feasibility_packet,
     validate_issue_fix_feasibility_packet,
 )
-from loopx.heartbeat_prompt import build_heartbeat_prompt
-from loopx.host_loop_activation import build_host_loop_activation_packet
 
 
 @pytest.mark.parametrize(
@@ -138,41 +135,3 @@ def test_validated_worker_artifact_does_not_claim_goal_host_closure() -> None:
     assert review_packet["external_issue_comment_performed"] is False
     assert review_packet["external_pr_created"] is False
     assert review_packet["merge_performed"] is False
-
-
-def test_one_shot_host_contract_keeps_goal_closure_with_the_host() -> None:
-    prompt = build_heartbeat_prompt(
-        goal_id="managed-agent-issue-fix-matrix",
-        active_state=Path("/workspace/ACTIVE_GOAL_STATE.md"),
-        thin=True,
-        runtime_profile="ark_managed_agent_goal",
-    )
-    activation = build_host_loop_activation_packet(
-        agent_type="ark-managed-agent",
-        goal_id="managed-agent-issue-fix-matrix",
-        agent_id="managed-agent",
-        registered_agents=["managed-agent"],
-    )
-
-    assert prompt["host_contract"]["activation_mode"] == "goal_once"
-    assert prompt["host_contract"]["goal_runtime_owns_continuation"] is True
-    assert (
-        prompt["host_contract"]["goal_lifecycle_scope"]
-        == "registered_goal_until_terminal"
-    )
-    assert prompt["host_contract"]["phase_handoff_allowed"] is False
-    assert prompt["host_contract"]["loopx_turn_driver_required"] is False
-    assert prompt["host_contract"]["session_state_authoritative"] is False
-    assert len(prompt["task_body"]) <= 4_000
-    task_body = prompt["task_body"]
-    normalized = " ".join(task_body.split())
-    assert "a segment is progress, not a new Goal boundary" in normalized
-    assert "do not create a successor host Goal merely to continue" in normalized
-    assert "refresh the accountable progress record before spending" in normalized
-    assert "Then spend exactly once against that refresh" in normalized
-    assert task_body.index("loopx refresh-state") < task_body.index("quota spend-slot")
-
-    assert activation["activation_method"] == "submit_goal_once"
-    assert activation["host_mutation"]["prompt_field"] == "task_body"
-    assert activation["host_mutation"]["transport_contract"] == "goal_prompt_v0"
-    assert "loopx turn run-once" not in str(activation).lower()

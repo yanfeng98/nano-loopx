@@ -24,11 +24,6 @@ from .python_install_owner import PythonInstallOwner, python_distribution_upgrad
 from .capabilities.project_skill_delivery import discover_project_scoped_skill_ids
 from .registry_writability import probe_registry_write_path
 from .release_manifest import load_release_manifest, release_version_tag
-from .skill_install_readback import (
-    ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
-    configured_host_skills_dir,
-    inspect_skill_install_readback,
-)
 
 
 PROMOTION_READINESS_CLASSIFICATIONS = {
@@ -892,15 +887,6 @@ def collect_doctor(
         and agent_type_uses_host_managed_skills(canonical_agent_type)
     )
     installed_skills_required = not host_managed_skill_delivery
-    host_skill_install_readback = (
-        inspect_skill_install_readback(
-            skills_dir=configured_host_skills_dir(os.environ),
-            required_skill_ids=ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
-            source_root=Path(__file__).resolve().parents[1],
-        )
-        if canonical_agent_type == "ark-managed-agent"
-        else None
-    )
     loopx_path = resolve_command_path("loopx")
     invocation_path = current_script_invocation_path()
     loopx_canary_path = resolve_command_path("loopx-canary")
@@ -1033,8 +1019,6 @@ def collect_doctor(
             )
             else "repair_recommended"
         )
-    elif host_skill_install_readback:
-        skill_delivery_status = str(host_skill_install_readback["status"])
     else:
         skill_delivery_status = "external_readback_required"
     skill_delivery = {
@@ -1046,11 +1030,7 @@ def collect_doctor(
                 else "loopx_surface_installer"
             )
             if installed_skills_required
-            else (
-                "loopx_install_script"
-                if canonical_agent_type == "ark-managed-agent"
-                else "custom_agent_host"
-            )
+            else "custom_agent_host"
         ),
         "mode": "surface_managed" if installed_skills_required else "host_managed",
         "codex_skills_root_applicable": installed_skills_required
@@ -1058,11 +1038,6 @@ def collect_doctor(
         "installed_skills_required_for_freshness": installed_skills_required,
         "skill_roots": [str(root) for root in skill_roots],
         "status": skill_delivery_status,
-        **(
-            {"filesystem_readback": host_skill_install_readback}
-            if host_skill_install_readback
-            else {}
-        ),
     }
     default_global_registry = global_registry_path(DEFAULT_RUNTIME_ROOT)
     global_registry_writability = probe_registry_write_path(default_global_registry, create_parent=True)
@@ -1208,19 +1183,6 @@ def collect_doctor(
                 else ",".join(globally_visible_project_skills)
             ),
         },
-        *(
-            [
-                {
-                    "id": "host_skill_installation_readback",
-                    "required": False,
-                    "ok": bool(host_skill_install_readback.get("ready")),
-                    "applicable": True,
-                    "detail": str(host_skill_install_readback.get("reason")),
-                }
-            ]
-            if host_skill_install_readback
-            else []
-        ),
         {
             "id": "global_registry_writable",
             "required": True,
@@ -1303,12 +1265,7 @@ def collect_doctor(
         "globally_visible_project_skills": globally_visible_project_skills,
         "checks": checks,
         "fix": (
-            "Set `LOOPX_SKILLS_DIR=<PROJECT_WORKSPACE>/.agents/skills` and rerun "
-            f"`{local_install_command(repo_root)}`; then rerun doctor "
-            "with the same environment. Filesystem readback proves materialization; "
-            "the host must still report its runtime loaded-skill readback."
-            if canonical_agent_type == "ark-managed-agent"
-            else (
+            (
                 "Do not infer custom-host skill delivery from `~/.codex/skills`; "
                 "verify the host-managed loaded-skill readback from `loopx agent-onboard`."
             )

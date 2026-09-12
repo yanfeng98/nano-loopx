@@ -42,7 +42,7 @@ PACKAGED_HOST_SKILL_IDS = [
     "loopx-benchmark",
     "loopx-self-repair",
 ]
-ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS = [
+REQUIRED_HOST_SKILL_IDS = [
     "loopx",
     *PACKAGED_HOST_SKILL_IDS,
 ]
@@ -56,7 +56,7 @@ def alternate_loopx_skills_root(skills_dir: Path) -> Path | None:
     """Return the alternate LoopX root that can shadow the target root.
 
     The fixed installer historically wrote the same managed skill set into both
-    ``~/.codex/skills`` and ``~/.agents/skills``. ARK-managed agent sessions and
+    ``~/.codex/skills`` and ``~/.agents/skills``. Host-managed agent sessions and
     Codex sessions can both discover those roots, which duplicates LoopX skills
     in the loaded skill catalog. Callers may explicitly pass an alternate root;
     otherwise this returns the other well-known root when the target is one of

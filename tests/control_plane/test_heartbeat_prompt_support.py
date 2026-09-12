@@ -13,7 +13,6 @@ from loopx.control_plane.heartbeat.budget import (
     prompt_budget_text,
 )
 from loopx.control_plane.heartbeat.host import (
-    uses_ark_managed_agent_goal_host,
     uses_native_goal_host_loop,
 )
 from loopx.heartbeat_prompt import (
@@ -88,13 +87,6 @@ def test_host_detection_prefers_runtime_profile() -> None:
             scheduler_execution_context=None,
         )
         is False
-    )
-    assert (
-        uses_ark_managed_agent_goal_host(
-            runtime_profile="ark_managed_agent_goal",
-            scheduler_execution_context=None,
-        )
-        is True
     )
 
 

@@ -161,7 +161,7 @@ def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list
             "argument_hint": "[--fine-grained] [--capability-route issue-fix] [task text]",
             "instructions": [
                 "Visible command arguments: `$ARGUMENTS`.",
-                "Identify the exact current host surface (codex-cli-tui, opencode, opencode2, pi, deepseek-harness, or ark-managed-agent).",
+                "Identify the exact current host surface (codex-cli-tui, opencode, opencode2, pi, or deepseek-harness).",
                 _loopx_start_goal_arguments_instruction(
                     cli_bin=cli_bin,
                     host_surface=None,
@@ -300,7 +300,6 @@ def materialize_loopx_entry_skill(
 
     if host_surface not in {
         None,
-        "ark-managed-agent",
         "deepseek-harness-native",
     }:
         raise ValueError(f"unsupported fixed LoopX entry host surface: {host_surface}")

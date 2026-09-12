@@ -7,11 +7,9 @@ from enum import Enum
 from typing import Any
 
 SCHEDULER_EXECUTION_CONTEXT_SCHEMA_VERSION = "scheduler_execution_context_v0"
-GOAL_RUNTIME_CONTINUATION_SCHEMA_VERSION = "goal_runtime_continuation_v0"
 
 
 class HostSurface(str, Enum):
-    ARK_MANAGED_AGENT = "ark_managed_agent"
     CODEX_CLI = "codex_cli"
     GENERIC_CLI = "generic_cli"
     CLAUDE_CODE = "claude_code"
@@ -21,7 +19,6 @@ class HostSurface(str, Enum):
 class SchedulerOwner(str, Enum):
     HOST_AUTOMATION = "host_automation"
     AGENT_CLI_LOOP = "agent_cli_loop"
-    GOAL_RUNTIME = "goal_runtime"
     OUTER_CONTROLLER = "outer_controller"
     NONE = "none"
 
@@ -33,45 +30,19 @@ class ExecutionMode(str, Enum):
 
 
 class SchedulerRuntimeProfile(str, Enum):
-    ARK_MANAGED_AGENT_GOAL = "ark_managed_agent_goal"
     CODEX_CLI_VISIBLE = "codex_cli"
     CLAUDE_CODE_VISIBLE = "claude_code"
     GENERIC_CLI_AGENT_LOOP = "generic_cli"
     GENERIC_CLI_OUTER_CONTROLLER = "outer_controller"
 
 
-class GoalRuntimeContinuationDisposition(str, Enum):
-    CONTINUE_NOW = "continue_now"
-    DEFER = "defer"
-    COMPLETE = "complete"
-
-
-GOAL_RUNTIME_DEFER_ACTIONS = frozenset(
-    {
-        "backoff_agent_monitor_only",
-        "backoff_until_fresh_evidence",
-        "backoff_until_material_transition",
-        "backoff_until_reassigned",
-        "backoff_until_state_change",
-        "backoff_waiting_for_user",
-        "repair_interaction_contract_projection",
-    }
-)
-
-
 NATIVE_GOAL_RUNTIME_PROFILES = frozenset(
     {
-        SchedulerRuntimeProfile.ARK_MANAGED_AGENT_GOAL,
         SchedulerRuntimeProfile.CODEX_CLI_VISIBLE,
     }
 )
 
 _SCHEDULER_RUNTIME_PROFILE_CONTEXTS = {
-    SchedulerRuntimeProfile.ARK_MANAGED_AGENT_GOAL: (
-        HostSurface.ARK_MANAGED_AGENT,
-        SchedulerOwner.GOAL_RUNTIME,
-        ExecutionMode.INTERACTIVE,
-    ),
     SchedulerRuntimeProfile.CODEX_CLI_VISIBLE: (
         HostSurface.CODEX_CLI,
         SchedulerOwner.AGENT_CLI_LOOP,
@@ -164,11 +135,6 @@ def _validation_errors(context: SchedulerExecutionContext) -> list[str]:
         HostSurface.GENERIC_CLI,
         HostSurface.CLAUDE_CODE,
     }
-    if context.host_surface is HostSurface.ARK_MANAGED_AGENT:
-        if context.scheduler_owner is not SchedulerOwner.GOAL_RUNTIME:
-            errors.append("ark_managed_agent requires scheduler_owner=goal_runtime")
-        if context.execution_mode is not ExecutionMode.INTERACTIVE:
-            errors.append("ark_managed_agent requires execution_mode=interactive")
     if context.host_surface is HostSurface.LOCAL_SCHEDULER:
         if context.scheduler_owner is not SchedulerOwner.HOST_AUTOMATION:
             errors.append("local_scheduler requires scheduler_owner=host_automation")
@@ -194,11 +160,6 @@ def _validation_errors(context: SchedulerExecutionContext) -> list[str]:
             errors.append("agent_cli_loop requires a CLI host surface")
         if context.execution_mode is ExecutionMode.HOSTED_AUTOMATION:
             errors.append("agent_cli_loop cannot use execution_mode=hosted_automation")
-    if context.scheduler_owner is SchedulerOwner.GOAL_RUNTIME:
-        if context.host_surface is not HostSurface.ARK_MANAGED_AGENT:
-            errors.append("goal_runtime requires host_surface=ark_managed_agent")
-        if context.execution_mode is not ExecutionMode.INTERACTIVE:
-            errors.append("goal_runtime requires execution_mode=interactive")
     if (
         context.execution_mode is ExecutionMode.HOSTED_AUTOMATION
         and context.scheduler_owner is not SchedulerOwner.HOST_AUTOMATION
@@ -393,50 +354,9 @@ def scheduler_execution_context_for_turn(
     )
 
 
-def build_goal_runtime_continuation(
-    scheduler_hint: Mapping[str, Any],
-    *,
-    frontier_recheck_after_seconds: int | None = None,
-) -> dict[str, Any]:
-    action = str(scheduler_hint.get("action") or "")
-    if action == "run_now":
-        disposition = GoalRuntimeContinuationDisposition.CONTINUE_NOW
-    elif action == "stop_until_explicit_resume":
-        disposition = GoalRuntimeContinuationDisposition.COMPLETE
-    elif action in GOAL_RUNTIME_DEFER_ACTIONS:
-        disposition = GoalRuntimeContinuationDisposition.DEFER
-    else:
-        raise ValueError(f"unsupported Goal runtime scheduler action: {action or 'missing'}")
-
-    continuation = {
-        "schema_version": GOAL_RUNTIME_CONTINUATION_SCHEMA_VERSION,
-        "disposition": disposition.value,
-    }
-    if disposition is GoalRuntimeContinuationDisposition.DEFER:
-        if (
-            isinstance(frontier_recheck_after_seconds, int)
-            and frontier_recheck_after_seconds > 0
-        ):
-            continuation["recheck_after_seconds"] = frontier_recheck_after_seconds
-            continuation["recheck_source"] = "frontier_earliest_material_transition"
-        else:
-            host_cadence = scheduler_hint.get("codex_cli")
-            host_cadence = host_cadence if isinstance(host_cadence, Mapping) else {}
-            recommended_interval = host_cadence.get("recommended_interval_minutes")
-            if not isinstance(recommended_interval, int) or recommended_interval <= 0:
-                raise ValueError(
-                    "deferred Goal runtime continuation requires a positive recheck interval"
-                )
-            continuation["recheck_after_seconds"] = recommended_interval * 60
-        continuation["wake_policy"] = "state_change_or_deadline"
-    return continuation
-
-
 def apply_scheduler_execution_context(
     result: dict[str, Any],
     resolution: SchedulerExecutionContextResolution,
-    *,
-    frontier_recheck_after_seconds: int | None = None,
 ) -> dict[str, Any]:
     """Scope a generic cadence hint to the selected runtime owner."""
 
@@ -478,15 +398,6 @@ def apply_scheduler_execution_context(
             cold_path["execution_phase"] = execution_phase
         return result
 
-    goal_runtime_continuation = (
-        build_goal_runtime_continuation(
-            result,
-            frontier_recheck_after_seconds=frontier_recheck_after_seconds,
-        )
-        if context.scheduler_owner is SchedulerOwner.GOAL_RUNTIME
-        else None
-    )
-
     result["execution_context"] = resolution.projection()
     result["codex_cli"] = {
         "applicability": "not_applicable",
@@ -523,6 +434,4 @@ def apply_scheduler_execution_context(
             "selected scheduler owner requires no hosted-scheduler apply or ACK"
         ),
     }
-    if goal_runtime_continuation is not None:
-        result["goal_runtime_continuation"] = goal_runtime_continuation
     return result

@@ -61,7 +61,6 @@ def assert_untrusted_checkout_is_canary_only() -> None:
         skills_dir = Path(tmp) / "workspace" / ".agents" / "skills"
         env["LOOPX_INSTALL_SKILL"] = "1"
         env["LOOPX_SKILLS_DIR"] = str(skills_dir)
-        env["LOOPX_ENTRY_HOST_SURFACE"] = "ark-managed-agent"
         stale_lock = skills_dir / ".loopx-install-lock"
         stale_lock.mkdir(parents=True)
         (stale_lock / "pid").write_text("999999999\n", encoding="utf-8")
@@ -92,8 +91,6 @@ def assert_untrusted_checkout_is_canary_only() -> None:
             path.parent.name for path in skills_dir.glob("*/SKILL.md")
         } == expected_skill_ids
         loopx_entry = (skills_dir / "loopx" / "SKILL.md").read_text(encoding="utf-8")
-        assert "exact current host `ark-managed-agent`" in loopx_entry
-        assert "--host-surface ark-managed-agent" in loopx_entry
         assert f"`{canary} start-goal" in loopx_entry
         assert "`loopx start-goal" not in loopx_entry
         assert not (skills_dir / "loopx-change-quality").exists()
@@ -139,7 +136,6 @@ def assert_exact_host_install_rejects_user_owned_entry_skill() -> None:
         stale_readback.write_text('{"materialized_skill_ids":["loopx"]}\n', encoding="utf-8")
         env["LOOPX_INSTALL_SKILL"] = "1"
         env["LOOPX_SKILLS_DIR"] = str(skills_dir)
-        env["LOOPX_ENTRY_HOST_SURFACE"] = "ark-managed-agent"
 
         install = run_install(
             env,
@@ -188,7 +184,6 @@ def assert_skill_preflight_failure_preserves_default() -> None:
         env["LOOPX_INSTALL_SKILL"] = "1"
         skills_dir = root / "workspace" / ".agents" / "skills"
         env["LOOPX_SKILLS_DIR"] = str(skills_dir)
-        env["LOOPX_ENTRY_HOST_SURFACE"] = "ark-managed-agent"
 
         user_skill = skills_dir / "loopx" / "SKILL.md"
         user_skill.parent.mkdir(parents=True)

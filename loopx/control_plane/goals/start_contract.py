@@ -87,7 +87,6 @@ def build_goal_start_contract(
                 "opencode": "OpenCode `loopx_goal_activate`",
                 "pi": "Pi `loopx_goal_activate`",
                 "deepseek-harness-native": "DeepSeek Harness same-session plugin driver; every turn enters through quota should-run",
-                "ark-managed-agent": "one-shot Goal",
                 "manual": "external scheduler or manual quota/status loop",
                 "other-agent": "custom host loop driver using the returned task body and quota guard",
             },

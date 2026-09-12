@@ -12,7 +12,7 @@ from typing import Any, Iterator, Mapping
 
 from .file_lock import exclusive_file_lock
 from .skill_install_readback import (
-    ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
+    REQUIRED_HOST_SKILL_IDS,
     PACKAGED_HOST_SKILL_IDS,
     PYTHON_DISTRIBUTION_SKILL_INSTALL_MODE,
     PYTHON_DISTRIBUTION_SKILL_INSTALL_OWNER,
@@ -226,7 +226,7 @@ def workflow_skill_install(
     source_root = Path(source["source_root"])
     before = inspect_skill_install_readback(
         skills_dir=target_root,
-        required_skill_ids=ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
+        required_skill_ids=REQUIRED_HOST_SKILL_IDS,
         source_root=source_root,
     )
     if uninstall:
@@ -332,7 +332,7 @@ def workflow_skill_install(
             }
         write_skill_install_readback(
             skills_dir=target_root,
-            skill_ids=ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
+            skill_ids=REQUIRED_HOST_SKILL_IDS,
             source_root=source_root,
             owner=PYTHON_DISTRIBUTION_SKILL_INSTALL_OWNER,
             integration_mode=PYTHON_DISTRIBUTION_SKILL_INSTALL_MODE,
@@ -340,7 +340,7 @@ def workflow_skill_install(
 
     after = inspect_skill_install_readback(
         skills_dir=target_root,
-        required_skill_ids=ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
+        required_skill_ids=REQUIRED_HOST_SKILL_IDS,
         source_root=source_root,
     )
     return {

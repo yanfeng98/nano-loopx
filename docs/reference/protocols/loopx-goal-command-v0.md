@@ -20,7 +20,6 @@
 5. 运行 `refresh-state`。
 6. 若 host loop 缺失、未知或过期，则激活它：
    - `codex-cli`：把可见 Codex CLI TUI 设为 `/goal <task_body>`。
-   - `ark-managed-agent`：把生成的 `<task_body>` 作为原生 Goal 提交一次。Goal 运行时拥有继续与终态评估；不要用 LoopX Turn 包装其内部迭代，也不要在相位边界重提。
    - `claude-code`：用 `/loopx <task>` 武装 LoopX，然后运行原生 `/loop`。
    - `opencode`：从已安装的 LoopX OpenCode bridge 调用 `loopx_goal_activate`；bridge 通过 `quota should-run` 关卡空闲继续与定时器唤醒，且只在已验证终态 no-follow-up 时完成。
    - `pi`：从已安装的 LoopX Pi extension 调用 `loopx_goal_activate`；extension 通过 `quota should-run` 关卡已结算继续与定时器唤醒，且只在已验证终态 no-follow-up 时停止。
@@ -41,18 +40,13 @@ TraeX CLI 接入已移除：`traex-cli` 及其别名不再是可选 host，
 
 `codex` 这类歧义值必须失效关闭，因为 Codex 家族使用不同 host-loop 激活路径。
 
-Codex CLI 与 Ark Managed Agent 构成一个原生 Goal host 家族。它们共享稳定 `loopx_goal_prompt_v0` 正文、4,000 字符 host 预算、每次继续的 `quota should-run` 包、持久化 LoopX writeback 与非 heartbeat 配额记账。它们的继续 owner 仍是显式 host 契约：
+Codex CLI 是 LoopX 的原生 Goal host。它使用稳定 `loopx_goal_prompt_v0` 正文、4,000 字符 host 预算、每次继续的 `quota should-run` 包、持久化 LoopX writeback 与非 heartbeat 配额记账。其继续 owner 由显式 host 契约声明：设置可见 `/goal <task_body>`，在未变化限制后可以调用 `update_goal(status=blocked)`，且只有用户 `/goal resume` 重新激活它。
 
-| 原生 Goal host | 激活 | 继续与阻塞状态 owner |
-| --- | --- | --- |
-| Codex CLI | 设置可见 `/goal <task_body>`。 | 原生 Codex Goal；在未变化限制后可以调用 `update_goal(status=blocked)`，只有用户 `/goal resume` 重新激活它。 |
-| Ark Managed Agent | 一次性提交同一 prompt 家族。 | Managed Agent Goal 运行时及其持久化 journal；LoopX 不得模拟 `/goal resume` 或盲目重提。 |
-
-该家族是 prompt、quota 与状态边界抽象，不是声称所有 host 具有相同传输或生命周期 API。
+该契约是 prompt、quota 与状态边界抽象，不是声称所有 host 具有相同传输或生命周期 API。
 
 可见 Goal 激活捕获任务正文生成时观察到的能力，但该初始列表对长程会话并非穷尽。因此动态能力指引属于 CLI 决策包，而非稳定 Goal prompt。当 `quota should-run` 发现可修复的运行时能力缺口时，`interaction_contract.cli_channel` 返回类型化 `runtime_capability_reentry_v0` 包。每个候选在其实时调用点成功观察后，其精确重新进入命令才可声明 `--available-capability`。
 
-已验证的重新进入调用成为该决策的能力信封。LoopX 随后把相同的会话作用域能力标志投影进后续 refresh、spend、monitor 与 quota 命令。它绝不把那些观察持久化为常驻授予，而凭据等 owner 持有能力保持用户 gate。本契约由本地可见 Goal host 与 Ark Managed Agent Goal 模式共享，无需重新生成 prompt。
+已验证的重新进入调用成为该决策的能力信封。LoopX 随后把相同的会话作用域能力标志投影进后续 refresh、spend、monitor 与 quota 命令。它绝不把那些观察持久化为常驻授予，而凭据等 owner 持有能力保持用户 gate。本契约由本地可见 Goal host 使用，无需重新生成 prompt。
 
 Agent 身份遵循同一失效关闭规则。`agent-onboard` 保留其全新注册路径，而 Codex CLI `start-goal --guided` 在省略 `--thread-id` 时消费环境中的 `CODEX_THREAD_ID`，且可用时必须复用匹配的稳定不透明线程绑定。当存在已注册 lane 时，带绑定的稳定线程 ID 不再当作全新 onboarding：`start-goal` 返回要求选择一个既有 lane 的身份 gate，而只有无已注册 lane 的 goal 或显式 `--new-peer` 才默认全新注册。既有身份是接管选择，绝非隐式自动选择；选择其中一个需要针对该精确 agent 的显式用户意图。存在已注册 lane 时，缺失线程 ID 遵循同一 gate，否则失效关闭，要求显式 `--agent-id`、lane 选择或带 `--new-peer` 的新会话意图。LoopX 以 `bind-agent-thread --execute` 持久化 `(host_surface, goal_id, thread_id) -> agent_id`；后续 `/loopx` 调用在 `start-goal`、heartbeat、quota、refresh-state 与 Todo 命令间复用该绑定身份。预览是咨询性的；todo writeback 需要验证注册与绑定回读。无稳定线程 id 时，调用方必须继续传显式已注册 `--agent-id` 或显式 `--new-peer`。任何受限路径都不得广告无作用域 heartbeat 或 quota 命令。
 

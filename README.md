@@ -221,7 +221,6 @@ loopx start-goal --guided --project . --goal-text "你的长程目标"
 | Pi | 用 `loopx slash-commands --install --surface pi` 安装 opt-in goal extension，然后在受信任的 Pi 会话里用 `/loopx <任务>`。 | 由 LoopX quota gate 的可见 Pi goal extension（`loopx_goal_activate` + `agent_settled` 续跑） |
 | DeepSeek Harness（`deepseek-harness`） | [dsh goal-mode adapter](loopx/dsh_goal_mode/README.md)，启动 goal 时选 `--host-surface deepseek-harness`。 | headless dsh 工作段；每 tick 从 `quota should-run` 进入 |
 | DeepSeek Harness 原生（`deepseek-harness-native`） | 安装 [DSH 原生 Plugin](packages/dsh-loopx-plugin/README.md)，在技能选择器中点 `loopx`，然后直接描述任务（`--host-surface deepseek-harness-native`）。 | 原生同会话续跑与 GoalBar |
-| Ark Managed Agent（`ark-managed-agent`） | 启动 goal 时选 `--host-surface ark-managed-agent`，走一次性 Goal 提交。 | `goal_prompt_v0` 一次性激活；续跑由 goal runtime 拥有，不经过 turn driver |
 | shell、自有 runner | 使用同一 installer 和 `loopx doctor`，再手动连接或由 runner 调用（`--host-surface shell`，自定义 host 用 `other-agent`）。 | 你的 shell、scheduler 或 runner |
 
 可直接粘贴的完整 setup message、host-specific 路由和故障恢复见

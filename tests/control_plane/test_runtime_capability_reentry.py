@@ -16,7 +16,7 @@ from loopx.control_plane.work_items.interaction_contract import (
 GOAL_ID = "runtime-capability-reentry-fixture"
 AGENT_ID = "managed-agent"
 MANAGED_AGENT_CONTEXT = scheduler_execution_context_for_runtime_profile(
-    "ark_managed_agent_goal"
+    "codex_cli"
 )
 
 
@@ -128,7 +128,7 @@ def test_runtime_capability_gap_returns_verified_reentry_packet() -> None:
     assert candidate["command"] == (
         "loopx --format json quota should-run --goal-id "
         f"{GOAL_ID} --agent-id {AGENT_ID} --available-capability shell "
-        "--available-capability network --runtime-profile ark_managed_agent_goal"
+        "--available-capability network --runtime-profile codex_cli"
     )
     assert contract["cli_channel"]["next_cli_actions"] == [candidate["command"]]
     assert contract["cli_channel"]["spend_after_validation"] is False
@@ -161,7 +161,7 @@ def test_runtime_capability_reentry_preserves_visible_goal_turn() -> None:
         f"{GOAL_ID} --agent-id {AGENT_ID} "
         f"--turn-instance-id {turn_instance_id} "
         "--available-capability shell --available-capability network "
-        "--runtime-profile ark_managed_agent_goal"
+        "--runtime-profile codex_cli"
     )
     assert contract["cli_channel"]["next_cli_actions"] == [candidate["command"]]
 

@@ -550,51 +550,8 @@ No spend: gate/wait/dry-run/preflight failure/no-op/duplicate. Stop: private/com
 material, credentials, destructive git, unauthorized production, or repo rules.
 
 {policy_tail}"""
-def render_ark_managed_agent_goal_task_body(
-    *,
-    goal_id: str,
-    active_state: str,
-    cli_preflight: str,
-    pr_review_pre_quota_command: str,
-    quota_guard_command: str,
-    quota_spend_command: str,
-    refresh_state_command: str,
-    progress_refresh_state_command: str,
-    material_queue_rule: str,
-    permission_rule: str,
-    cli_bin: str,
-    agent_scope_instruction: str,
-    expanded_prompt_command: str,
-    compact_prompt_command: str,
-    brief_prompt_command: str,
-    thin_prompt_command: str,
-) -> str:
-    del (
-        cli_preflight,
-        refresh_state_command,
-        cli_bin,
-        expanded_prompt_command,
-        compact_prompt_command,
-        brief_prompt_command,
-        thin_prompt_command,
-    )
-    return _render_goal_task_body(
-        goal_id=goal_id,
-        active_state=active_state,
-        host_preamble=(
-            "in one Goal activation. The Goal runtime owns continuation and inner "
-            "iterations. This is a goal loop, not automation; do not invoke LoopX Turn."
-        ),
-        completion_subject="Goal",
-        pr_review_pre_quota_command=pr_review_pre_quota_command,
-        quota_guard_command=quota_guard_command,
-        quota_spend_command=quota_spend_command,
-        progress_refresh_state_command=progress_refresh_state_command,
-        material_queue_rule=material_queue_rule,
-        permission_rule=permission_rule,
-        agent_scope_instruction=agent_scope_instruction,
-        host_wait_rule="",
-    )
+
+
 def render_thin_heartbeat_task_body(
     *,
     goal_id: str,

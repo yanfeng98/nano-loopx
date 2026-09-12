@@ -73,10 +73,9 @@ class TestAgentTypeCatalog:
         assert "claude-code" in types
         assert "opencode" in types
         assert "pi" in types
-        assert "ark-managed-agent" in types
         assert "other-agent" in types
         assert "manual" in types
-        assert len(types) >= 10
+        assert len(types) >= 9
 
         ambiguous = {item["input"]: item["use_one_of"]
                      for item in catalog["ambiguous_inputs"]}
@@ -103,7 +102,6 @@ class TestAgentTypeCatalog:
 
     def test_host_managed_skill_types(self):
         host = {
-            "ark-managed-agent",
             "deepseek-harness-native",
             "other-agent",
         }
@@ -118,7 +116,6 @@ class TestAgentTypeCatalog:
 class TestSchedulerBindings:
     def test_runtime_profiles(self):
         expected = {
-            "ark-managed-agent": "ark_managed_agent_goal",
             "codex-cli": "codex_cli",
             "claude-code": "claude_code",
             "opencode": "generic_cli",

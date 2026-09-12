@@ -43,7 +43,7 @@ def test_host_materialization_installs_generated_loopx_entry_skill(
         "status": "created",
     }
     assert 'name: "loopx"' in skill_text
-    assert "ark-managed-agent" in skill_text
+    assert "deepseek-harness" in skill_text
     assert "--slash-command-arguments" in skill_text
     assert "The CLI, not the model, owns parsing" in skill_text
     assert "Never split or recompose" in skill_text
@@ -62,32 +62,6 @@ def test_host_materialization_installs_generated_loopx_entry_skill(
         skills_dir=skills_dir,
         execute=True,
     )["status"] == "unchanged"
-
-
-def test_host_materialization_can_bind_exact_managed_agent_surface(
-    tmp_path: Path,
-) -> None:
-    skills_dir = tmp_path / "skills"
-
-    materialize_loopx_entry_skill(
-        skills_dir=skills_dir,
-        execute=True,
-        host_surface="ark-managed-agent",
-    )
-
-    skill_text = (skills_dir / "loopx" / "SKILL.md").read_text(encoding="utf-8")
-    assert "exact current host `ark-managed-agent`" in skill_text
-    assert "--host-surface ark-managed-agent" in skill_text
-    assert "--host-surface <exact-current-host>" not in skill_text
-    assert "--slash-command-arguments" in skill_text
-    assert "The CLI, not the model, owns parsing" in skill_text
-    assert "`ordered_steps` and `goal_start_contract` as authoritative" in skill_text
-    assert "never infer a route" in skill_text
-    assert "verified active LoopX Goal/Agent binding" in skill_text
-    assert "Do not call `start-goal` for an ordinary phase" in skill_text
-    assert "follow its exact CLI `interaction_contract` or quota command first" in skill_text
-    assert "current Todo evidence and the next executable Todo" not in skill_text
-    assert "generic Todos remain scheduling records" not in skill_text
 
 
 def test_host_materialization_can_bind_dsh_native_surface(tmp_path: Path) -> None:
@@ -148,7 +122,7 @@ def test_codex_install_upgrades_managed_loopx_facade(tmp_path: Path) -> None:
     assert "Treat this as the LoopX `/loopx` explicit LoopX command skill." in skill_text
     assert "--host-surface <exact-current-host>" in skill_text
     assert "Identify the exact current host surface" in skill_text
-    assert "ark-managed-agent" in skill_text
+    assert "deepseek-harness" in skill_text
     assert "`ordered_steps` and `goal_start_contract` as authoritative" in skill_text
     assert "surface the exact pasteable gate" in skill_text
     assert "follow its exact CLI `interaction_contract` or quota command first" in skill_text

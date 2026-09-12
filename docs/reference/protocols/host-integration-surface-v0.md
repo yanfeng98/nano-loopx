@@ -30,63 +30,17 @@ Hook 正文应保持像生成的 heartbeat prompt 一样薄。项目策略属于
 
 对于 Codex CLI /goal 可见 TUI 引导，hook 激活必须把可见 TUI 保持为主界面。它可以生成薄 `/goal` 正文或可复制 bootstrap 消息，但不得在没有可见证明与空闲检测契约的情况下静默切换到隐藏 `codex exec`、读取会话 transcript 或声称同 TUI 自动化。
 
-## Ark Managed Agent host
+## Skill 投递与安装器所有权
 
-`ark-managed-agent` 是一次性 goal host，不是 LoopX Turn 驱动器。LoopX 生成一个简短、传输中立的 goal prompt；Managed Agent goal 运行时拥有所有内部迭代与继续。
+安装器是文件系统变更的唯一 owner，其默认目标是 Codex skill 根。Manifest 记录已物化 skill id、来源修订与每 skill 内容摘要，使 `doctor` 与 onboarding 能只读验证投递，而不成为第二安装器。运行任一检查对安装是可选的。文件系统物化不同于 host 的运行时已加载 skill 回读；在声称技能已注入活动 agent 上下文之前，后者仍然必需。
 
-该 prompt 使用与 Codex CLI 可见 goal host 相同的 4,000 字符接口预算与受保护 goal 策略；只有 host 所有权前言不同。
+不信任或脏 checkout 走 canary-only 路径：脚本物化发行所有的 workflow skills，包括生成的 `$loopx` 任务入口 skill，并写入 `.loopx-skill-install.json`，而不把 checkout 提升为默认 `loopx` 可执行文件。仅 canary 安装保持既有默认 skill 根不变。
 
-用以下命令生成 prompt：
-
-```bash
-loopx heartbeat-prompt --thin --goal-id <GOAL_ID> --agent-id <AGENT_ID> \
-  --runtime-profile ark_managed_agent_goal
-```
-
-同一契约通过 `--agent-type ark-managed-agent` 的一等 onboarding 可见。Onboarding 是只读验证器，不是安装器或安装前置条件。因为该 host 不使用 Codex 特定 skill 目录，与 Codex 共享的固定安装器把 LoopX workflow skills 写入 host 原生目标根。打包的 no-clone 路径是：
-
-```bash
-curl -fsSL \
-  https://huangruiteng.github.io/loopx/install.sh \
-  | env LOOPX_SKILLS_DIR=<PROJECT_WORKSPACE>/.agents/skills \
-      LOOPX_ENTRY_HOST_SURFACE=ark-managed-agent \
-      LOOPX_INSTALL_SLASH_COMMANDS=0 bash
-```
-
-对于贡献者 checkout，等价命令是：
-
-```bash
-LOOPX_SKILLS_DIR=<PROJECT_WORKSPACE>/.agents/skills \
-  LOOPX_ENTRY_HOST_SURFACE=ark-managed-agent \
-  LOOPX_INSTALL_SLASH_COMMANDS=0 \
-  <LOOPX_CHECKOUT>/scripts/install-local.sh
-```
-
-这也是不信任或脏 checkout 的受支持 canary 路径。带显式 `LOOPX_SKILLS_DIR` 时，脚本物化发行所有的 workflow skills，包括生成的 `$loopx` 任务入口 skill，并写入 `.loopx-skill-install.json`，而不把 checkout 提升为默认 `loopx` 可执行文件。Managed Agent 的普通任务 Turn 以 `$loopx <task>` 开始；该 skill 在 host 恰好一次提交生成的 Goal 任务正文前写入业务 todo。Controller 不得预置该业务 todo。生成入口 skill 在安装时绑定精确 Managed Agent host，其 start-goal 事务在 bootstrap 检查期间保留该 host、任务文本与声明能力。无显式目标时，仅 canary 安装保持既有默认 skill 根不变。
-
-安装器是 Codex 与 Ark Managed Agent 文件系统变更的唯一 owner。其默认目标是 Codex skill 根；Ark Managed Agent 提供 host 原生 `LOOPX_SKILLS_DIR` 并用 `LOOPX_ENTRY_HOST_SURFACE` 绑定生成入口。Manifest 记录已物化 skill id、来源修订与每 skill 内容摘要，使 `doctor` 与 onboarding 能只读验证投递，而不成为第二安装器。运行任一检查对安装是可选的。用相同 `LOOPX_SKILLS_DIR` 运行检查以报告文件系统回读状态与来源修订。文件系统物化不同于 host 的运行时已加载 skill 回读；在声称技能已注入活动 agent 上下文之前，后者仍然必需。
-
-本地开发与云传输必须发送与 goal prompt 完全相同的 `task_body`。它们可以在端点、认证、会话 id 或线封包上不同，但这些字段不改变 prompt，也不成为 LoopX 策略。Host 没有自动化模式，且不得把每个内层 goal 迭代包装在 `loopx turn run-once` 中。
-
-生成的 `host_contract` 声明激活发生一次、goal 运行时拥有继续、生命周期作用域是注册的 Goal 直到终态、不允许相位交接、host 会话状态非权威、LoopX Turn 驱动器不是必需的。有界投递段落是该 Goal 内的进展，不是在筛选、实现、评审或另一普通相位转换后用 successor host Goal 替换它的许可。持久化策略仍在当前 `quota should-run.interaction_contract`、active state、todos、vision 与 writeback 中。
-
-对于 `--runtime-profile ark_managed_agent_goal`，同一配额读取还发出 schema 为 `goal_runtime_continuation_v0` 的 `scheduler_hint.goal_runtime_continuation`。其处置是 `continue_now`、`defer` 或 `complete`。推迟结果包含有界 `recheck_after_seconds` 与类型化 `wake_policy=state_change_or_deadline`：当持久化前沿写入改变同级 `scheduler_hint.reset_policy` 身份时 host 重跑 quota，或不晚于重新检查截止时间。继续包不重复该身份或 `scheduler_hint.reason_code`；它们的来源引用由 Host 契约声明。截止时间使到期的 monitor 在无推送信号时也可运行；provider 特定的 CI/review 观察仍归其 capability connector 所有。这是机器继续契约。Goal prompt 不被改写来教授等待策略，模型也不被用作机械轮询循环。
-
-状态身份包括所选 Todo id、动作、目标、claim owner 与 capability 绑定引用。因此切换工作或准入权限即使在渲染推荐未变时也会唤醒 Goal；诊断笔记与其他非契约细节不产生唤醒。
-
-当前沿携带显式 `next_due_at` 值时，截止时间是该最早精确到期时间。较粗的 host 节奏仍是自动化关注点，不得把 Goal 运行时唤醒推迟过该边界。
-
-`defer` 是整前沿决策，不是每 PR 等待。安静 CI/review monitor 在任一独立推进 todo 可运行时保持辅助上下文，因此混合前沿投影 `continue_now`。只有无可执行推进、无到期 monitor 的前沿才可进入推迟唤醒策略。
-
-依赖工作步骤只能在物化上游结果越过持久化边界后开始：更新当前 todo 证据与下一个可执行 todo 的任何 scope、验收或非 goal 增量，然后刷新状态并回读 quota。聊天/模型摘要不是持久化状态。
+## 可见 Goal host 的运行时能力重新进入
 
 激活后发现运行时能力不会重新生成 Goal prompt。`quota should-run` 在 `interaction_contract.cli_channel.runtime_capability_reentry` 返回既有 `runtime_capability_reentry_v0` 包，并在 JSON 输出开头附近投影同一包为 `runtime_capability_reentry`。提前复制防止有界工具结果捕获把规范包藏在大诊断之后。
 
 每个候选仍需要成功实时调用点观察，生成的重新进入命令才可声明该能力。后续 `next_cli_actions` 继承已验证会话能力；LoopX 不把该观察持久化为常驻权限授予。
-
-该 host 上的 issue-fix 资格使用分阶段证据契约。已验证补丁证明 worker 路径，而 Goal 满意度必须从 host 单独读取。参见 [ark-managed-agent-issue-fix-qualification-v0](ark-managed-agent-issue-fix-qualification-v0.md)。
-
-暂停、会话替换与模糊失败资格在 [ark-managed-agent-goal-continuity-qualification-v0](ark-managed-agent-goal-continuity-qualification-v0.md) 中定义。特别是，存活的 session id 或存在的 Goal journal 不足以声称恢复；替换 host 必须重建 LoopX 前沿，且 Goal 运行时必须证明 journal rehydrate 而无重复效果。
 
 ## 生命周期读取
 

@@ -10,7 +10,7 @@ import pytest
 from loopx import file_lock
 from loopx import workflow_skill_install as install_module
 from loopx.skill_install_readback import (
-    ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
+    REQUIRED_HOST_SKILL_IDS,
     PACKAGED_HOST_SKILL_IDS,
     PYTHON_DISTRIBUTION_SKILL_INSTALL_MODE,
     PYTHON_DISTRIBUTION_SKILL_INSTALL_OWNER,
@@ -80,7 +80,7 @@ def test_install_is_idempotent_and_uninstall_removes_managed_skills(
     assert installed["ok"] is True
     assert installed["after"]["ready"] is True
     assert sorted(installed["after"]["materialized_skill_ids"]) == sorted(
-        ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS
+        REQUIRED_HOST_SKILL_IDS
     )
     assert set(installed["installed"]) == set(PACKAGED_HOST_SKILL_IDS)
     assert (skills_dir / "loopx-benchmark" / "SKILL.md").is_file()
@@ -105,7 +105,7 @@ def test_install_is_idempotent_and_uninstall_removes_managed_skills(
 
     assert removed["ok"] is True
     assert sorted(removed["result"]["removed"]) == sorted(
-        ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS
+        REQUIRED_HOST_SKILL_IDS
     )
     assert not (skills_dir / SKILL_INSTALL_READBACK_FILENAME).exists()
 

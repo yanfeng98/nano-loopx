@@ -140,7 +140,7 @@ def _invoke_ark_start_goal_cli(
                 "--agent-id",
                 AGENT_ID,
                 "--host-surface",
-                "ark-managed-agent",
+                "codex-cli-tui",
                 *goal_input_args,
             ]
         )
@@ -366,7 +366,7 @@ def test_issue_fix_goal_projects_capability_guard_without_todo_fields(
         goal_id=GOAL_ID,
         agent_id=AGENT_ID,
         cli_bin="loopx",
-        host_surface="ark-managed-agent",
+        host_surface="codex-cli-tui",
         goal_text=(
             "Autonomously deliver review-ready fixes for two distinct open "
             "repository issues in one long-running Goal."
@@ -636,7 +636,7 @@ def test_goal_text_never_selects_capability_route_without_switch(
             goal_id=GOAL_ID,
             agent_id=AGENT_ID,
             cli_bin="loopx",
-            host_surface="ark-managed-agent",
+            host_surface="codex-cli-tui",
             goal_text=goal_text,
             available_capabilities=["network", "issue-fix"],
         )
@@ -654,7 +654,7 @@ def test_goal_text_never_selects_capability_route_without_switch(
         goal_id=GOAL_ID,
         agent_id=AGENT_ID,
         cli_bin="loopx",
-        host_surface="ark-managed-agent",
+        host_surface="codex-cli-tui",
         goal_text="Improve the public onboarding documentation.",
         capability_route="issue-fix",
     )
@@ -672,7 +672,7 @@ def test_explicit_capability_route_survives_compact_detail_readback(
         goal_id=GOAL_ID,
         agent_id=AGENT_ID,
         cli_bin="loopx",
-        host_surface="ark-managed-agent",
+        host_surface="codex-cli-tui",
         goal_text=GOAL_TEXT,
         capability_route="issue-fix",
     )
@@ -695,7 +695,7 @@ def test_bootstrap_message_does_not_reintroduce_semantic_route_selection(
         "goal_id": GOAL_ID,
         "agent_id": AGENT_ID,
         "cli_bin": "loopx",
-        "host_surface": "ark-managed-agent",
+        "host_surface": "codex-cli-tui",
         "goal_text": "Fix https://github.com/owner/repo/issues/42.",
     }
 
@@ -1485,7 +1485,7 @@ def test_start_goal_keeps_the_requested_linked_worktree(
         goal_id=None,
         agent_id=None,
         cli_bin="loopx",
-        host_surface="ark-managed-agent",
+        host_surface="codex-cli-tui",
         goal_text=GOAL_TEXT,
         available_capabilities=["network"],
     )
@@ -1540,7 +1540,6 @@ def test_cli_without_host_returns_read_only_host_selection_gate(
         "pi",
         "deepseek-harness",
         "deepseek-harness-native",
-        "ark-managed-agent",
         "shell",
         "other-agent",
     ]
@@ -1630,59 +1629,6 @@ def test_cli_rejects_ambiguous_or_unsupported_slash_route_input(
     assert exit_code == 2
     assert payload["ok"] is False
     assert expected_error in payload["error"]
-
-
-def test_ark_managed_agent_plans_todos_before_one_shot_goal_activation(
-    tmp_path: Path,
-) -> None:
-    project = _write_connected_project(tmp_path)
-    payload = build_start_goal_guided_packet(
-        project=project,
-        goal_id=GOAL_ID,
-        agent_id=AGENT_ID,
-        cli_bin="loopx",
-        host_surface="ark-managed-agent",
-        goal_text=GOAL_TEXT,
-        available_capabilities=["network"],
-    )
-
-    ordered_step_ids = [
-        step["id"] for step in payload["guided_transaction"]["ordered_steps"]
-    ]
-    activation = payload["command_pack"]["host_loop_activation"]
-    inspect_step = payload["guided_transaction"]["ordered_steps"][0]
-    connect_step = payload["guided_transaction"]["ordered_steps"][1]
-
-    assert ordered_step_ids.index("write_ordered_todos") < ordered_step_ids.index(
-        "activate_host_loop"
-    )
-    assert inspect_step["command_source"] == "#/command_pack/canonical_cli_command"
-    inspect_command = payload["command_pack"]["canonical_cli_command"]
-    assert "--host-surface ark-managed-agent" in inspect_command
-    assert "--available-capability network" in inspect_command
-    assert f"--goal-text '{GOAL_TEXT}'" in inspect_command
-    connect_command = connect_step["command"]
-    assert "\n" in connect_command
-    assert f"--objective {shlex.quote(GOAL_TEXT)}" in connect_command
-    actionable_connect_command = (
-        f"cd {shlex.quote(str(project))} && loopx bootstrap"
-        " --project ."
-        f" --goal-id {GOAL_ID}"
-        f" --objective {shlex.quote(GOAL_TEXT)}"
-        " --adapter-kind read_only_project_map_v0"
-        " --adapter-status connected-read-only"
-        " --no-onboarding-scan"
-    )
-    assert actionable_connect_command in payload["message"]
-    assert "preview the issue-fix route before todo writeback" not in payload["message"]
-    assert activation["agent_type"] == "ark-managed-agent"
-    assert activation["host_surface"] == "ark_managed_agent_goal_mode"
-    assert activation["activation_method"] == "submit_goal_once"
-    assert activation["host_mutation"]["transport_contract"] == "goal_prompt_v0"
-    assert activation["host_mutation"]["prompt_field"] == "task_body"
-    assert "--runtime-profile ark_managed_agent_goal" in (
-        activation["commands"]["heartbeat_prompt"]
-    )
 
 
 def _runnable_todo_add_argv(command_template: str) -> list[str]:

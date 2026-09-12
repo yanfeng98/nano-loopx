@@ -64,7 +64,6 @@ START_GOAL_HOST_SURFACES = (
     "pi",
     "deepseek-harness",
     "deepseek-harness-native",
-    "ark-managed-agent",
     "shell",
     "other-agent",
 )
@@ -343,7 +342,6 @@ def build_start_goal_host_surface_selection_packet(
         "pi": "Pi LoopX goal extension",
         "deepseek-harness": "DeepSeek Harness automation loop through loopx.dsh_goal_mode (compat: scripts/dsh_turn_host_adapter.py)",
         "deepseek-harness-native": "DeepSeek Harness same-session LoopX skill and plugin driver",
-        "ark-managed-agent": "Ark Managed Agent with one-shot Goal submission",
         "shell": "manual shell or an explicitly configured external scheduler",
         "other-agent": "custom agent host using the returned activation contract",
     }
@@ -377,9 +375,8 @@ def build_start_goal_host_surface_selection_packet(
             }
         )
     reason = (
-        "host surface is required because Codex CLI, "
-        "Claude Code, and Ark Managed Agent "
-        "have different continuation contracts"
+        "host surface is required because Codex CLI and "
+        "Claude Code have different continuation contracts"
     )
     gate = {
         "schema_version": HOST_SURFACE_SELECTION_SCHEMA_VERSION,

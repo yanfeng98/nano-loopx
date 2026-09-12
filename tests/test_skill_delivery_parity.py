@@ -15,7 +15,7 @@ import pytest
 
 from loopx.skill_install_readback import (
     PACKAGED_HOST_SKILL_IDS,
-    ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS,
+    REQUIRED_HOST_SKILL_IDS as CANONICAL_REQUIRED_HOST_SKILL_IDS,
     SKILL_INSTALL_READBACK_FILENAME,
     SKILL_INSTALL_READBACK_SCHEMA_VERSION,
     build_skill_install_readback,
@@ -65,9 +65,11 @@ def _write_fixture_skill(skills_dir: Path, skill_id: str, body: str = ""):
 class TestPackagedSkills:
     def test_pr_program_is_packaged(self):
         assert "loopx-pr-program" in PACKAGED_HOST_SKILL_IDS
-        assert "loopx-pr-program" in ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS
+        assert "loopx-pr-program" in CANONICAL_REQUIRED_HOST_SKILL_IDS
         assert "loopx-pr-program" in REQUIRED_HOST_SKILL_IDS
-        assert REQUIRED_HOST_SKILL_IDS is ARK_MANAGED_AGENT_REQUIRED_SKILL_IDS
+        # agent_onboarding re-exports the canonical list, so both names must
+        # resolve to the very same object rather than to equal copies.
+        assert REQUIRED_HOST_SKILL_IDS is CANONICAL_REQUIRED_HOST_SKILL_IDS
 
     def test_benchmark_workflow_is_packaged(self):
         assert "loopx-benchmark" in PACKAGED_HOST_SKILL_IDS
@@ -233,7 +235,7 @@ class TestCwdIsolation:
 class TestSkillDeliveryModes:
     def test_host_managed_types(self):
         assert HOST_MANAGED_SKILL_AGENT_TYPES == {
-            "ark-managed-agent", "deepseek-harness-native", "other-agent"}
+            "deepseek-harness-native", "other-agent"}
 
     def test_delivery_mode_per_agent_type(self):
         host_managed = HOST_MANAGED_SKILL_AGENT_TYPES

@@ -90,7 +90,7 @@ def test_quota_should_run_capability_gate_is_structured_around_decision() -> Non
         goal_id=GOAL_ID,
         available_capabilities=["shell"],
         scheduler_execution_context=scheduler_execution_context_for_runtime_profile(
-            "ark_managed_agent_goal"
+            "codex_cli"
         ),
     )
     turn = interpret_quota_should_run_packet(

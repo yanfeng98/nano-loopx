@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 from ...agent_registry import normalize_registered_agents
-from ...ark_managed_agent_host import build_ark_managed_agent_host_contract
 from ...execution_profile import (
     TURN_GRANULARITY_FINE,
     execution_profile_turn_granularity,
@@ -36,7 +35,6 @@ from .budget import (
 )
 from .host import (
     resolve_exact_heartbeat_turn_identity,
-    uses_ark_managed_agent_goal_host,
     uses_native_goal_host_loop,
 )
 from .rules import (
@@ -45,7 +43,6 @@ from .rules import (
 )
 from .task_body import (
     bind_exact_turn_settlement_task_body,
-    render_ark_managed_agent_goal_task_body,
     render_brief_heartbeat_task_body,
     render_compact_heartbeat_task_body,
     render_heartbeat_task_body,
@@ -77,14 +74,11 @@ FINE_GRAINED_TURN_RULE = (
 
 def _select_task_body_renderer(
     *,
-    ark_managed_agent_goal: bool,
     native_goal_host: bool,
     thin: bool,
     brief: bool,
     compact: bool,
 ) -> Any:
-    if ark_managed_agent_goal:
-        return render_ark_managed_agent_goal_task_body
     if native_goal_host:
         return render_visible_goal_task_body
     if thin:
@@ -244,10 +238,6 @@ def build_heartbeat_prompt(
         runtime_profile=runtime_profile,
         scheduler_execution_context=scheduler_execution_context,
     )
-    ark_managed_agent_goal = uses_ark_managed_agent_goal_host(
-        runtime_profile=runtime_profile,
-        scheduler_execution_context=scheduler_execution_context,
-    )
     effective_resolved_active_state = resolved_active_state or active_state
     active_state_text = str(active_state.expanduser()) if active_state else "the registry-declared active state"
     if active_state:
@@ -334,7 +324,6 @@ def build_heartbeat_prompt(
     )
     cli_preflight = render_cli_preflight(cli_bin=cli_bin)
     task_body_renderer = _select_task_body_renderer(
-        ark_managed_agent_goal=ark_managed_agent_goal,
         native_goal_host=native_goal_host,
         thin=thin,
         brief=brief,
@@ -367,14 +356,9 @@ def build_heartbeat_prompt(
     if fine_grained:
         task_body = f"{task_body}\n\n{FINE_GRAINED_TURN_RULE}"
     if native_goal_host and len(task_body) > NATIVE_GOAL_HOST_MAX_CHARS:
-        host_limit = (
-            "Ark Managed Agent goal prompt"
-            if ark_managed_agent_goal
-            else "visible Codex /goal task body"
-        )
         raise ValueError(
-            f"generated {host_limit} exceeds the 4000-character host budget; "
-            "shorten agent scopes or project-specific prompt rules"
+            "generated visible Codex /goal task body exceeds the 4000-character "
+            "host budget; shorten agent scopes or project-specific prompt rules"
         )
     payload = {
         "ok": True,
@@ -397,11 +381,6 @@ def build_heartbeat_prompt(
         "registered_agents": normalized_registered_agents,
         "runtime_profile": runtime_profile,
         "scheduler_execution_context": scheduler_execution_context,
-        **(
-            {"host_contract": build_ark_managed_agent_host_contract()}
-            if ark_managed_agent_goal
-            else {}
-        ),
         "expanded_prompt_command": commands["expanded_prompt_command"],
         "compact_prompt_command": commands["compact_prompt_command"],
         "brief_prompt_command": commands["brief_prompt_command"],

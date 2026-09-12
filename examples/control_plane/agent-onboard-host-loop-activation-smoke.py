@@ -53,7 +53,6 @@ def main() -> int:
     assert agent_type_for_host_surface("opencode") == "opencode"
     assert agent_type_for_host_surface("pi") == "pi"
     assert agent_type_for_host_surface("pi-tui") == "pi"
-    assert agent_type_for_host_surface("ark-managed-agent") == "ark-managed-agent"
     assert agent_type_for_host_surface("deepseek-harness") == "deepseek-harness"
     assert agent_type_for_host_surface("dsh") == "deepseek-harness"
 
@@ -62,10 +61,6 @@ def main() -> int:
     claude_code = build_host_loop_activation_packet(agent_type="claude-code", goal_id="demo")
     opencode = build_host_loop_activation_packet(agent_type="opencode", goal_id="demo")
     pi = build_host_loop_activation_packet(agent_type="pi", goal_id="demo")
-    ark_managed_agent = build_host_loop_activation_packet(
-        agent_type="ark-managed-agent",
-        goal_id="demo",
-    )
     dsh = build_host_loop_activation_packet(agent_type="deepseek-harness", goal_id="demo")
     assert codex_cli_app["host_mutation"]["host_command"] == "/goal <task_body>", codex_cli_app
     assert codex_cli["host_mutation"]["host_command"] == "/goal <task_body>", codex_cli
@@ -80,8 +75,6 @@ def main() -> int:
         "optional compatibility echo; host authority derives the value"
     ), pi
     assert "--runtime-profile generic_cli" in pi["commands"]["heartbeat_prompt"], pi
-    assert ark_managed_agent["activation_method"] == "submit_goal_once", ark_managed_agent
-    assert ark_managed_agent["host_surface"] == "ark_managed_agent_goal_mode", ark_managed_agent
     assert dsh["activation_method"] == "external_loop_driver", dsh
     assert dsh["host_surface"] == "deepseek_harness_automation_loop", dsh
     assert "--runtime-profile generic_cli" in dsh["commands"]["heartbeat_prompt"], dsh
@@ -131,10 +124,7 @@ def main() -> int:
     assert ambiguous_result.returncode == 2, ambiguous_result.stdout
     ambiguous_payload = json.loads(ambiguous_result.stdout)
     assert ambiguous_payload["ok"] is False, ambiguous_payload
-    assert ambiguous_payload["suggestions"] == [
-        "codex-cli",
-        "codex-cli",
-    ], ambiguous_payload
+    assert ambiguous_payload["suggestions"] == ["codex-cli"], ambiguous_payload
 
     with tempfile.TemporaryDirectory(prefix="loopx-agent-onboard-smoke-") as tmp:
         project = Path(tmp) / "project"

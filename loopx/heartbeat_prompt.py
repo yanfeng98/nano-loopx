@@ -21,7 +21,6 @@ from .control_plane.heartbeat.budget import (
     prompt_budget_text,
 )
 from .control_plane.heartbeat.host import (
-    uses_ark_managed_agent_goal_host,
     uses_native_goal_host_loop,
 )
 from .control_plane.heartbeat.rules import (
@@ -64,7 +63,6 @@ __all__ = [
     "normalize_agent_scope",
     "normalize_agent_scopes",
     "prompt_budget_text",
-    "render_ark_managed_agent_goal_task_body",
     "render_brief_heartbeat_task_body",
     "render_compact_heartbeat_task_body",
     "render_heartbeat_generator_inputs_markdown",
@@ -74,7 +72,6 @@ __all__ = [
     "render_peer_agent_scope_instruction",
     "render_thin_heartbeat_task_body",
     "render_visible_goal_task_body",
-    "uses_ark_managed_agent_goal_host",
     "uses_native_goal_host_loop",
 ]
 
@@ -111,11 +108,6 @@ def render_visible_goal_task_body(**kwargs):
 
 def _render_goal_task_body(**kwargs):
     from .control_plane.heartbeat.task_body import _render_goal_task_body as _impl
-    return _impl(**kwargs)
-
-
-def render_ark_managed_agent_goal_task_body(**kwargs):
-    from .control_plane.heartbeat.task_body import render_ark_managed_agent_goal_task_body as _impl
     return _impl(**kwargs)
 
 
