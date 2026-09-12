@@ -83,6 +83,24 @@
   - 初稿称「仓库根无 `node_modules`」—— 表述失准。仓库内确有 `apps/presentation/dashboard/node_modules`（217 MB，**含 0 个 `.py`**）。norecursedirs 的结论不变（默认集是超集，只可能排除更多），但论证依据改为「收集中性已实测：两侧 `--collect-only` 均为 5597 / 4 errors」（已订正）。
 - **`_is_benchmark_module_path` 的收敛程度经复核后收敛**：两条 `startswith` 分支在唯一调用点（`:585` 只遍历 `loopx/**`）下**均不可达**，唯一活谓词是 `"benchmark_toolkit" in parts`；但该函数是「路径是否归属 benchmark 树」的 policy 谓词，未来若有调用方传仓库相对 `benchmark/...` 路径仍需该子句，故**只去 `deprecate` 分支、保留函数**。
 
+## 第二轮复查（对抗式：换新角度、取新证据）
+
+目标是**找「我的改动是否破坏了什么」**，只采信与首轮不同的角度与证据（首轮已做的不复述）。
+
+| 新角度（首轮未覆盖） | 证据 | 结论 |
+| --- | --- | --- |
+| **全部 6 个 canary profile**（首轮只单独跑了 8 个守卫，未跑套件本身） | 两侧逐 profile 运行 + `FAILED` 集合逐字 `diff` | **6/6 集合一致，0 新增失败**：docs-project-content-ops 8F/65P、canary-runner 2F/9P、core-control-plane 30F/194P、extension-runtime 12P、public-entry-install-release 8F/12P、public-smoke-watch 32F/194P |
+| **`catalog-planner-smoke` 真伪鉴定** | 该 smoke **不在 `tests/` 内**（首轮全量套件覆盖不到它）；在本树与未改动的 `HEAD~1` 两侧各跑一次，归一化路径后 **整体 diff = 0 行** | 既存失败（与 026 记录的 canary 既存失败清单中的 `catalog-planner` 对应），**非本次引入** |
+| **裸 `pytest`（无路径参数）行为** —— `norecursedirs` 表删除唯一未被首轮覆盖的面 | 两侧 `pytest --collect-only -q`：收集数 **5649 = 5649**、ID 集合 `comm` **0 差异**；耗时 **8.21s → 2.02s** | 收集集合不变，且默认 ignore 集恢复后遍历更快（首轮只证明了 `pytest tests/` 这一路径参数下的中性） |
+| **归档的其它标识符**（首轮只扫了 `deprecate/benchmark-legacy` 这一路径前缀，会漏掉不带前缀的引用） | `benchmark-legacy`｜`benchmark_legacy`｜`long-horizon-agent-benchmarks`｜两条被移走 doc 的文件名，逐词全库扫描 | 仅 `mkdocs.yaml:12` 命中（既存悬空条目，见「已知遗留」）；**其余全部 0 命中** |
+| **是否有人 import 我改动的两个符号** | `_is_benchmark_module_path`、`BENCHMARK_SENSITIVE_TOKENS`、`classify_premerge_surfaces` 全仓引用扫描 | 仅同文件内部使用 + `tests/test_public_package_lock_boundary.py`（全量套件已覆盖，两侧一致） |
+| **manpage / 构建产物面** | `render-manpage.py --check man/loopx.1` 两侧一致；`cli-help-manpage-smoke` 通过；`loopx.egg-info/SOURCES.txt` 0 命中 | 无影响 |
+| **产品自检命令** | `loopx doctor`（TS 控制面 `ready`）、`loopx status` 两侧输出**逐字一致** | 运行时无变化；`status` 里的 `runtime_projection_routes: healthy=False` 两侧同值，属环境性既存状态 |
+| **change_quality fixture 是否耦合** | `tests/fixtures/change_quality/{five_pr_calibration,model_shadow_matrix}.json` 里的 `maintainability_ratchet` 命中，均为 `changed_files` 数组中的**文件名**，非 oracle/token 快照 | 与本次改动无耦合 |
+| **文档构建** | `dev-book-publication-smoke`（含 `mkdocs build --strict` 路径）、`docs-asset-integrity-smoke`、`showcase-catalog-smoke` 均绿 | 文档面完整 |
+
+**第二轮结论：未发现任何由本次改动引起的问题。** 上面每一格的两侧比对都是「逐字一致」而非「看起来差不多」。
+
 ## 已知遗留（不在本次范围）
 
 - `examples/repository-hygiene-smoke.py` 的 `LICENSE` 断言失败（HEAD 已存在，需另立条目决定是恢复 LICENSE 还是改断言）。**注意**：该 smoke 的 `scan_public_boundary` 断言在 `LICENSE` 检查之后，因此**在本 fork 从未真正执行过** —— 不要把它当作 boundary 证据，boundary 结论以直调扫描为准。
