@@ -106,9 +106,6 @@ include = ["loopx*"]
   "skills/loopx-self-repair/references/upstream-issue-escalation.md",
 ]
 
-[tool.pytest.ini_options]
-norecursedirs = ["deprecate"]
-
 [tool.coverage.run]
 source = ["loopx"]
 relative_files = true

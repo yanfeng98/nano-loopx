@@ -33,9 +33,7 @@ sidecar 配置。私有启动器可以替换为真实宿主路径,但这些路�
 已在运行的宿主会话,让该确切宿主 claim 并完成排队的 Web 或 Connector 消息。它
 从不启动替代 runtime。宿主会话 id、消息体与响应文件都保持在 owner 本地。
 
-已退役的 benchmark 结果/写回层保留在
-[`deprecate/benchmark-legacy/`](https://github.com/huangruiteng/loopx/blob/main/deprecate/benchmark-legacy/README.md)
-下,供源码考古之用。新的 benchmark 工作应从
+新的 benchmark 工作应从
 [`benchmark/`](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)
 研究工作区开始,并让 runner 与 verifier 语义保持 benchmark 原生。
 

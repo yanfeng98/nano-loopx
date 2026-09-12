@@ -59,14 +59,6 @@ MOVED_PATHS = {
     "docs/protocol-action-packet-router-comparison-v0.md": (
         "docs/reference/protocols/protocol-action-packet-router-comparison-v0.md"
     ),
-    "docs/codex-cli-long-run-benchmark-design.md": (
-        "deprecate/benchmark-legacy/docs/research/long-horizon-agent-benchmarks/"
-        "codex-cli-long-run-benchmark-design.md"
-    ),
-    "docs/codex-cli-long-run-regression.md": (
-        "deprecate/benchmark-legacy/docs/research/long-horizon-agent-benchmarks/"
-        "codex-cli-long-run-regression.md"
-    ),
     "docs/project-skill-delivery.md": (
         "loopx/capabilities/project_skill_delivery/README.md"
     ),
@@ -526,7 +518,6 @@ def main() -> int:
     advanced_docs = root_readme.split("## 进阶文档", 1)[1].split("\n## ", 1)[0]
     for deep_link in [
         "benchmark/README.md",
-        "deprecate/benchmark-legacy/README.md",
         "docs/product/foundations/project-level-reward-model.md",
         "loopx/capabilities/reward_memory/README.md",
     ]:
@@ -641,7 +632,6 @@ def main() -> int:
             read("docs/reference/protocols/README.md"),
             read("docs/research/README.md"),
             read("benchmark/README.md"),
-            read("deprecate/benchmark-legacy/README.md"),
             read("docs/showcases/README.md"),
         ]
     )
@@ -653,7 +643,6 @@ def main() -> int:
             new_path in combined_public_indexes
             or basename in combined_public_indexes
             or new_path.startswith("docs/archive/")
-            or new_path.startswith("deprecate/benchmark-legacy/")
         ), new_path
 
     for required in [

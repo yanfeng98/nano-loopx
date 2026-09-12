@@ -185,9 +185,7 @@ initialize/thread/Goal 附接。Full 模式启动一个 turn 并等待关联的 
 public/private 证据化简已经是本 capability 的一部分;DeepSWE 研究适配器是它的
 第一个活跃调用方。Summary 只携带 typed 计数、状态标签和无内容的通知种类计数。
 它从不重新打开事件 payload,并把消息与工具调用语义标记为 unavailable 而不是
-猜测。缺失、格式错误或不一致的生命周期事实会 fail closed。`deprecate/benchmark-legacy/`
-下命名相似的归档 reducer 是历史证据,不是该 native-runner 契约的依赖或兼容
-入口点。
+猜测。缺失、格式错误或不一致的生命周期事实会 fail closed。
 
 ### Skill 发现与凭据边界
 
@@ -1104,7 +1102,4 @@ loopx benchmark candidate-source-boundary <paths...> --require-clean --format js
 runner、上传、提交、发布或生产 authority。
 
 活跃的 benchmark 研究项目与当前 public-safe 实践位于
-[`benchmark/`](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)。历史 runner
-与单日期研究包保留在
-[`deprecate/benchmark-legacy/`](https://github.com/huangruiteng/loopx/blob/main/deprecate/benchmark-legacy/README.md),
-仅作源码考古。
+[`benchmark/`](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)。

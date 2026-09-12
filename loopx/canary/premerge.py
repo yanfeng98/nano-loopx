@@ -68,7 +68,6 @@ PUBLIC_BOUNDARY_TOKENS = (
 BENCHMARK_SENSITIVE_TOKENS = (
     "benchmark/",
     "loopx/capabilities/benchmark_toolkit/",
-    "deprecate/benchmark-legacy/",
     "loopx/worker_bridge.py",
     "examples/benchmark",
 )

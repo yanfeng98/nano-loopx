@@ -25,5 +25,3 @@
 
 - [`deepswe/README.md`](deepswe/README.md) 记录当前 public-safe 的 DeepSWE 方法:冻结选择、匹配臂权威、原生 Goal 证明、独立验证、无效运行替换与紧凑证据。
 - [`native_codex_goal.py`](native_codex_goal.py) 是 benchmark toolkit 已安装原生 Goal 运行时的兼容导入。可运行的 [`deepswe/run_native_codex_goal.py`](deepswe/run_native_codex_goal.py) 示例把该运行时连接到一个真实 `codex app-server`。Benchmark 家族的 adapter 应导入已安装的运行时及其正式隔离 profile 辅助函数,然后只保留它们自己的隔离、环境桥接、verifier 与 scoring 关注点。该 profile 辅助函数用其已安装 CLI 渲染真实 Goal prompt,并证明 prompt、发现的 skills 与发布快照 CLI 属于同一条固定产品路径。
-
-遗留 runners 与过时包归档在 [`deprecate/benchmark-legacy/`](../deprecate/benchmark-legacy/README.md)。它们只是候选证据,不是新工作的架构。

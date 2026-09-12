@@ -346,7 +346,6 @@ Benchmark 冒烟绝不要求原始任务文本、原始轨迹、原始日志、v
 - 在它们验证已交付的 provider-neutral 能力契约期间，保留工具包权限与完整性
   冒烟。
 - 把 benchmark 原生 runner、适配器、ledger、评分 reducer 与带日期实验包保留在
-  活跃产品界面之外。历史版本属于 `deprecate/benchmark-legacy/`，不是活跃 CI
-  的一部分。
+  活跃产品界面之外，不进入活跃 CI。
 - 仅当它保护稳定的工具包行为时才添加新的活跃 benchmark 冒烟；实验特定验证
   属于研究工作区。

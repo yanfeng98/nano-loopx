@@ -35,7 +35,7 @@ LoopX 文档服务多类读者：试用产品的人、运行长程 goal 的操�
 | `docs/*.md` | 概念、合同、集成、操作与 roadmap 共享一个扁平命名空间 | 只保留已验证的稳定锚点；把低流量文件按属主迁移并修复入站链接 |
 | `docs/product/*.md` | runtime 实验、产品基础、表面与使用案例相互穿插 | 归组到 `foundations/`、`runtimes/`、`surfaces/` 与 `use-cases/` |
 | `docs/reference/protocols/*.md` | 版本化合同扁平且难以扫读 | 先按领域归组索引；迁移文件必须单独做协议路径兼容性评审 |
-| `benchmark/` | 当前 benchmark 研究需要产品包之外的小型 RFC 关联家园 | 协议与公开安全实践留在此处；把过时 runner 归档到 `deprecate/benchmark-legacy/` |
+| `benchmark/` | 当前 benchmark 研究需要产品包之外的小型 RFC 关联家园 | 协议与公开安全实践留在此处；过时 runner 移出活跃交付面 |
 
 这是一次保持覆盖的迁移。独特声明、公开证据与可用链接必须要么留在当前路径，
 要么出现在新的 canonical 索引中。更短的落地页不是删除材料的许可。

@@ -1005,7 +1005,6 @@ promotion 或修改 LoopX default。
 - [WideSearch 数据集](https://huggingface.co/datasets/ByteDance-Seed/WideSearch)
 - [Benchmark 研究工作区](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)
 - [DeepSWE 研究实践](https://github.com/huangruiteng/loopx/blob/main/benchmark/deepswe/README.md)
-- [旧 Benchmark 归档](https://github.com/huangruiteng/loopx/blob/main/deprecate/benchmark-legacy/README.md)
 - [长程 Agent 分层步幅控制 v0](./hierarchical-agent-stride-control-v0.md)
 - [研究型探索控制面 v0](./research-exploration-control-plane-v0.md)
 - [Human Attention Wishlist v0](./human-attention-wishlist-v0.md)
