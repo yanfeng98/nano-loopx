@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -66,6 +67,18 @@ def _quote_local_path(value: str) -> str:
     return shlex.quote(value)
 
 
+def _editable_install_arguments() -> tuple[str, ...]:
+    """Prefer an offline refresh, but never demand a build backend the env lacks.
+
+    A fresh virtualenv on Python 3.12 ships neither setuptools nor wheel, and
+    `--no-build-isolation` fails there with ModuleNotFoundError. Only ask for it when
+    the running interpreter can actually satisfy it.
+    """
+    if importlib.util.find_spec("setuptools") is None:
+        return ("install", "-e", ".", "--no-deps")
+    return ("install", "-e", ".", "--no-deps", "--no-build-isolation")
+
+
 def is_editable_source_checkout(repo_root: Path, release_root: Path | None) -> bool:
     """True when the running LoopX is a git checkout rather than a release snapshot."""
     return release_root is None and (repo_root / ".git").exists()
@@ -91,7 +104,7 @@ def editable_dev_refresh_command(
     lines = [
         f"cd {_quote_local_path(str(repo_root))}",
         f"{_quote_local_path(python_executable or sys.executable)} "
-        "-m pip install -e . --no-deps --no-build-isolation",
+        f"-m pip {' '.join(_editable_install_arguments())}",
     ]
     if include_skills:
         lines.append("loopx workflow-skills --install")

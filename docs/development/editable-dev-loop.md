@@ -87,14 +87,17 @@ loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code �
 
 ## `loopx doctor` 与本 checkout 的已知边界
 
-- **它不是只读的**：会创建 `~/.local/share/loopx` 并写一个探针文件来验证注册表可写。
+- **它不是只读的**：会对全局注册表做一次写探针——在 `~/.codex/loopx/registry.global.json` 旁边
+  写一个临时文件再删掉；若 `~/.codex/loopx` 不存在会先创建该目录（目录会留下，探针文件不会）。
 - 它**只扫 `~/.codex/skills` 与 `~/.agents/skills`，不扫 `~/.claude/skills`**；只给 Claude 装 skill，
   doctor 仍会报 skills 缺失。
 - editable 安装永远不会被识别为 `python_distribution`（PEP 660 的 RECORD 里没有 `loopx/doctor.py`），
   所以 `install_kind` 恒为 `live_checkout`。
 - 本 fork 已把 checkout 场景的升级建议改成**就地刷新命令**：`pip install -e . --no-deps
-  --no-build-isolation` + skills 交付 + `loopx doctor`。`loopx update plan` 对 checkout 报同样的命令，
-  且继续 fail-closed：`apply` 为空，绝不 `git pull`、绝不安装发布快照。
+  --no-build-isolation` + skills 交付 + `loopx doctor`（其中 `--no-build-isolation` 按运行环境
+  自适应：解释器里没有 setuptools 时自动去掉，否则那条命令会以 `ModuleNotFoundError` 失败）。
+  `loopx update plan` 对 checkout 报同样的命令，且继续 fail-closed：`apply` 为空，绝不 `git pull`、
+  绝不安装发布快照。
 - 会看到但**应忽略**：`loopx bootstrap` 的 `install_repair_command` 是面向上游包通道的静态字符串。
 
 ## 陷阱：cwd 遮蔽

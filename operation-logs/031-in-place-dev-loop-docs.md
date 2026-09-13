@@ -168,6 +168,33 @@ smoke。空跑确认：重新在**不改任何文件**的情况下跑门 → `tr
 复查期间 doctor.py 一度到 1497 行（预算 1500，仅剩 3 行余量），已把 canary 提示压成单行，
 最终 **1496 行**。
 
+### 第三轮复查（把上两轮"只推理未执行"的分支真正跑起来 + 验证文档断言）
+
+**执行了三条此前只有推理的路径**：
+
+| 分支 | 手段（全部真跑，非推断） | 结果 |
+| --- | --- | --- |
+| Windows 引号 | `patch.object(os, "name", "nt")` 后调用 `editable_dev_refresh_command` | `cd "C:\Users\dev\nano-loopx"` + `"…python.exe" -m pip …` ✓；POSIX 侧对含空格路径仍产出 `'/home/dev with space/…'` ✓ |
+| canary 提示句 | 伪造 `/tmp/fake-release/scripts/loopx` + PATH 前置的 `loopx-canary` 软链，跑真 `loopx doctor --format json` | `package.canary_root = /tmp/fake-release`，`fix` 结尾出现 "The online canary wrapper stays managed by `scripts/install-local.sh`." ✓ |
+| 无 setuptools | 新建 Python 3.12 全新 venv（仅有 pip），在其中执行同一函数 | 自动降级为 `pip install -e . --no-deps` ✓ |
+
+**验证文档里我自己的断言（一条纠错）**：
+
+- cwd 遮蔽 ✓ 实测：在含空 `loopx/` 子目录的目录里 `import loopx` 解析到**该目录**（`__file__` 为
+  `None`），在 checkout 根则正常解析到 `.../loopx/__init__.py`。
+- `scripts/install-local.sh` 写 `$HOME/.local/bin`（`bin_dir` 默认值，`:48`）并会往 shell profile
+  追加 `export PATH="$HOME/.local/bin:$PATH"`（`:652-656`）✓。
+- **纠错**：`~/.local/share/loopx` **不存在**——初版文档与日志把它写成 doctor 的探针路径，实为
+  `~/.codex/loopx`（`probe_registry_write_path` 在注册表旁写临时文件随即删除，只有目录会被留下）。
+  两处均已更正（见「环境备注」）。
+
+**第三轮发现并修复的问题**：
+
+| # | 问题 | 处置 |
+| --- | --- | --- |
+| 4 | **命令可能在发出它的环境里失败**：`--no-build-isolation` 在无 setuptools 的解释器（全新 3.12 venv）里报 `ModuleNotFoundError: No module named 'setuptools'`，而 LoopX 完全可能是用普通 `pip install -e .` 装进这种 venv 的 | 新增 `_editable_install_arguments()`：运行解释器有 setuptools 才加 `--no-build-isolation`；本机 conda 行为不变。新增单测 `test_editable_refresh_keeps_working_without_a_build_backend`；既有断言改为不依赖运行环境 |
+| 5 | 文档/日志中的路径事实错误（见上） | 两处更正，并在日志留下更正记录 |
+
 ### 既存失败（与本轮无关，均经干净 HEAD 实测对照）
 
 1. `examples/codex-cli-packaged-install-smoke.py`：打 tar 时 `FileNotFoundError: <checkout>/LICENSE`
@@ -203,7 +230,14 @@ smoke。空跑确认：重新在**不改任何文件**的情况下跑门 → `tr
 
 ## 环境备注
 
-`loopx doctor` 首次运行会创建 `~/.local/share/loopx`（探针写路径），本轮验证即是它的首次运行。
+`loopx doctor` 不是只读：它会做一次注册表可写性探针——在
+`~/.codex/loopx/registry.global.json` 旁边写临时文件随即删除；`~/.codex/loopx` 不存在时会先被
+创建（`registry_writability.py:26` 的 `create_parent=True`）。
+
+> **第三轮复查更正**：本日志初版把这条写成了"创建 `~/.local/share/loopx`"。实测该目录
+> **不存在**，它是 `scripts/install-local.sh` 的发布快照根，与 doctor 的探针路径是两回事。
+> 文档 `docs/development/editable-dev-loop.md` 中的同一处已一并更正。
+
 无新增环境性失败。
 
 ## 提交/推送

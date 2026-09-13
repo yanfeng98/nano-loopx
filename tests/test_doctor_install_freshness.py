@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import importlib.util
 import os
 import subprocess
 from pathlib import Path
@@ -420,7 +421,10 @@ def test_editable_checkout_never_recommends_release_channels(tmp_path: Path) -> 
     assert freshness["status"] == "live_checkout"
     for field in ("upgrade_command", "contributor_upgrade_command"):
         command = str(freshness[field])
-        assert "pip install -e . --no-deps --no-build-isolation" in command, command
+        assert "pip install -e . --no-deps" in command, command
+        if importlib.util.find_spec("setuptools") is not None:
+            # Only asked for when the running interpreter can satisfy it.
+            assert "--no-build-isolation" in command, command
         assert command.endswith("loopx doctor"), command
         for forbidden in (
             "scripts/install-local.sh",
@@ -428,6 +432,31 @@ def test_editable_checkout_never_recommends_release_channels(tmp_path: Path) -> 
             "pip install --upgrade loopx",
         ):
             assert forbidden not in command, (field, forbidden, command)
+
+
+def test_editable_refresh_keeps_working_without_a_build_backend(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A fresh 3.12 virtualenv has no setuptools; --no-build-isolation would fail there."""
+
+    from loopx import python_install_owner
+
+    class _NoBuildBackend:
+        @staticmethod
+        def find_spec(name: str) -> None:
+            return None
+
+    monkeypatch.setattr(python_install_owner.importlib, "util", _NoBuildBackend)
+
+    assert python_install_owner._editable_install_arguments() == (
+        "install",
+        "-e",
+        ".",
+        "--no-deps",
+    )
+    command = python_install_owner.editable_dev_refresh_command(Path("/tmp/checkout"))
+    assert "-m pip install -e . --no-deps" in command, command
+    assert "--no-build-isolation" not in command, command
 
 
 def test_release_snapshot_keeps_reporting_the_snapshot_channels(tmp_path: Path) -> None:
