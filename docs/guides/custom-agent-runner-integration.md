@@ -45,10 +45,11 @@ transition policy 可复用时，才值得新增 Capability；外部实现放在
 
 ## 接入 Custom Host
 
-先在拥有项目 workspace 的机器上安装 CLI：
+先在拥有项目 workspace 的机器上安装 CLI。本 fork 的唯一安装方式是把 checkout 就地装成
+editable 安装（见[就地开发闭环](../development/editable-dev-loop.md)）：
 
 ```bash
-python3 -m pip install --upgrade loopx
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx doctor --agent-type other-agent
 ```
 

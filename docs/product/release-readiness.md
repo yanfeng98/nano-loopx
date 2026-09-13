@@ -6,20 +6,22 @@ LoopX 可以快速前进,而不必让每个合并的 PR 都感觉像一次产品
 
 ## 受支持的安装与更新路径
 
-对于首次用户,优选规范 PyPI 发布:
+本 fork 不发布 PyPI 包，也不提供归档安装器；**唯一受支持的安装与更新路径**是把 LoopX checkout
+就地装成 editable 安装，改完即生效（见[就地开发闭环](../development/editable-dev-loop.md)）：
 
 ```bash
-python3 -m pip install --upgrade loopx
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 loopx doctor
 ```
 
 首次安装后重启 agent host,使新交付的 workflow skills 生效。
 
-PyPI 负责常规发布获取与依赖解析。`loopx update
-apply` 使用同一持有环境,然后刷新 LoopX host 材料与读回;它不切换通道。
+对活动源码 checkout，`loopx update plan` 报的就是这条就地刷新命令，且 fail-closed：`apply` 为空，
+绝不 `git pull`、绝不安装发布快照。各激活层的逐层读回与恢复见
+[验证各激活层](../development/editable-dev-loop.md#verify-the-active-layers)。
 
-PyPI 与归档安装使用相同的显式意图流程:
+升级使用相同的显式意图流程（对 checkout，第 3 条是 fail-closed 的空操作）：
 
 ```bash
 loopx update check

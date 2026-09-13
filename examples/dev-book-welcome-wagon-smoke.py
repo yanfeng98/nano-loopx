@@ -47,7 +47,7 @@ SHARED_COMMANDS = (
     "node --version",
     "loopx doctor",
     "git status --short --branch",
-    "python3 -m pip install --upgrade loopx",
+    "cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation",
     "loopx workflow-skills --install",
     "loopx agent-onboard --list-agent-types",
     "loopx doctor --agent-type <agent-type>",

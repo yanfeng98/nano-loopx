@@ -130,16 +130,16 @@ loopx doctor
 
 ## 安装 / 更新
 
-全新 PyPI 用户与现有 PyPI 用户都使用相同的包原生路径:
+本 fork 从 checkout 就地运行，安装与更新走同一条 editable 路径:
 
 ```bash
-python3 -m pip install --upgrade loopx
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 loopx slash-commands --install
 loopx doctor
 ```
 
-所有现有安装都使用显式更新意图;该命令保留活跃的 pip、pipx 或归档 owner:
+更新使用显式意图;对活动源码 checkout，`plan` 报的就是就地刷新命令，`apply` 为空（fail-closed）:
 
 ```bash
 loopx update check

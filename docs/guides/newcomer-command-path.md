@@ -48,7 +48,7 @@ App 或 CLI。选择与你已使用界面匹配的驱动器：
 当 Agent 需要手动 shell 路径，或你要在没有 Agent 驱动第一步的全新终端里配置时：
 
 ```bash
-python3 -m pip install --upgrade loopx
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 loopx doctor
 loopx slash-commands --install

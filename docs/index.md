@@ -48,8 +48,11 @@ LoopX 新手？从 [Developer Book](/loopx/docs/book/) 的精心双语路径开�
 
 ## 快速上手
 
+本 fork 从 LoopX checkout 就地运行——它是唯一支持的安装方式（见[就地开发闭环](development/editable-dev-loop.md)），
+PyPI / pipx / 归档安装器会与它冲突：
+
 ```bash
-python3 -m pip install --upgrade loopx
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 loopx doctor
 

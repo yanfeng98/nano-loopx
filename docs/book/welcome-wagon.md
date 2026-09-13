@@ -76,8 +76,11 @@ LoopX 当前要求 Python 3.11+ 与 Node.js 22.6+。如果 `doctor` 失败，先
 
 ### 1. 安装并检查
 
+本 fork 从 LoopX checkout 就地运行，PyPI / pipx / 归档安装器会与它冲突；唯一支持的安装方式是把
+checkout 装成 editable 安装（见[就地开发闭环](../development/editable-dev-loop.md)）：
+
 ```bash
-python3 -m pip install --upgrade loopx
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 loopx doctor
 ```

@@ -124,17 +124,19 @@ next_action: <one concrete next step>
 - POSIX shell（macOS、Linux 或 WSL2）；
 - 一个已有 Git 项目。
 
-安装 PyPI release 及其 LoopX workflow skills：
+把这个 checkout 装成 editable 安装并交付 LoopX workflow skills：
 
 ```bash
-python3 -m pip install --upgrade loopx
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 loopx doctor
 ```
 
-!!! tip "为什么不先 clone LoopX"
-    普通使用者需要的是已发布 CLI 和 workflow skills，不是 LoopX 源码 checkout。clone-based install 留给希望运行
-    live canary 或贡献 Kernel 的开发者。
+!!! tip "本 fork 为什么反过来"
+    本 fork **唯一支持的安装方式**就是 clone 后装成 editable 安装：checkout 本身就是运行时，改完即生效，
+    没有发布快照这一层。上游的 PyPI / pipx / 归档通道在本 fork 不使用——在同一环境里运行它们会因为
+    `~/.local/bin` 排在 `PATH` 最前而静默接管 `loopx`。详见
+    [就地开发闭环](/loopx/docs/development/editable-dev-loop/)。
 
 `loopx doctor` 是安装事实的入口。不要只以 `which loopx` 成功作为健康证明；doctor 还会检查
 release snapshot、Python import、skill 安装、Host 集成和 TypeScript Effect runtime。运行时由

@@ -140,11 +140,12 @@ fork 与衍生评估按计划执行。对每个有价值的来源，在作者自
 
 ### 5.1 最小接入
 
-要求 Python 3.11+ 与 `curl`、`tar`。无需 clone，先安装再在项目根目录接入：
+要求 Python 3.11+ 与 Node.js 22.6+。本 fork 不分发归档安装器：把 checkout 就地装成 editable
+安装，再在项目根目录接入：
 
 ```bash
-curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash
-export PATH="$HOME/.local/bin:$PATH"
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
+loopx workflow-skills --install
 loopx doctor
 
 cd /path/to/your-project
