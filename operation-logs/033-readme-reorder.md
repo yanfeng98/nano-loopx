@@ -141,3 +141,5 @@ README 的**章节顺序**现在与上游不同,后续合并上游时 README 会
   - 本日志与 `000-INDEX.md` 一个 commit。
 - 推送目标: `origin/260906-dev`(本 fork 惯例为在 `260906-dev` 上直接提交并推送;
   AGENTS.md 的 `codex/` worktree + PR 条款继承自上游,与本 fork 实践不符)。
+
+按用户指示推送：`c9af7d433..90e25a21a`（本批 3 个提交，一次 push）。
