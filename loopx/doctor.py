@@ -20,7 +20,13 @@ from .control_plane.runtime.promotion_readiness import (
 )
 from .install_contract import NO_CLONE_INSTALL_URL
 from .paths import DEFAULT_RUNTIME_ROOT, global_registry_path
-from .python_install_owner import PythonInstallOwner, python_distribution_upgrade_command, resolve_python_install_owner
+from .python_install_owner import (
+    PythonInstallOwner,
+    editable_dev_refresh_command,
+    is_editable_source_checkout,
+    python_distribution_upgrade_command,
+    resolve_python_install_owner,
+)
 from .capabilities.project_skill_delivery import discover_project_scoped_skill_ids
 from .registry_writability import probe_registry_write_path
 from .release_manifest import load_release_manifest, release_version_tag
@@ -526,19 +532,38 @@ def build_install_freshness(
         if doctor_agent_type
         else ""
     )
+    editable_dev_command = (
+        editable_dev_refresh_command(
+            repo_root,
+            doctor_agent_type=doctor_agent_type,
+            include_skills=not externally_managed_skills,
+        )
+        if distribution_install is None
+        and is_editable_source_checkout(repo_root, release_root)
+        else None
+    )
     contributor_upgrade_command = (
-        f"{local_install_command(repo_root, skip_skills=externally_managed_skills)}\n"
-        f"loopx doctor{doctor_agent_arg}"
+        editable_dev_command
+        if editable_dev_command
+        else (
+            f"{local_install_command(repo_root, skip_skills=externally_managed_skills)}\n"
+            f"loopx doctor{doctor_agent_arg}"
+        )
     )
     distribution_owner = PythonInstallOwner(
         str(distribution_install.get("installer") or "unknown"),
         distribution_install.get("installer_environment"),
     ) if distribution_install else None
-    upgrade_command = python_distribution_upgrade_command(
-        owner=distribution_owner,
-        python_executable=sys.executable,
-        doctor_command=f"loopx doctor{doctor_agent_arg}",
-    ) if distribution_owner else no_clone_command
+    if distribution_owner:
+        upgrade_command = python_distribution_upgrade_command(
+            owner=distribution_owner,
+            python_executable=sys.executable,
+            doctor_command=f"loopx doctor{doctor_agent_arg}",
+        )
+    elif editable_dev_command:
+        upgrade_command = editable_dev_command
+    else:
+        upgrade_command = no_clone_command
     manifest_source_git_commit = manifest_source.get("git_commit")
     manifest_source_revision = (
         manifest_source_git_commit
@@ -1277,14 +1302,23 @@ def collect_doctor(
                 f"installation with `{shlex.quote(sys.executable)} -m pip install --upgrade loopx`."
                 if python_distribution.get("available")
                 else (
-                    f"Run `{local_install_command(repo_root, skip_skills=externally_managed_skills)}` "
-                    "and start a new shell. "
-                    + (
-                        f"Ensure `{local_bin}` is on the Windows user PATH."
-                        if os.name == "nt"
-                        else (
-                            f"Or export PATH=\"{local_bin}:$PATH\". For no-clone repair, run "
-                            f"`curl -fsSL {NO_CLONE_INSTALL_URL} | bash`."
+                    (
+                        "Refresh this editable checkout in place:\n"
+                        f"{editable_dev_refresh_command(repo_root, include_skills=not externally_managed_skills)}\n"
+                        "Do not replace it with a release snapshot "
+                        "(`scripts/install-local.sh` or the archive installer)."
+                    )
+                    if is_editable_source_checkout(repo_root, release_root)
+                    else (
+                        f"Run `{local_install_command(repo_root, skip_skills=externally_managed_skills)}` "
+                        "and start a new shell. "
+                        + (
+                            f"Ensure `{local_bin}` is on the Windows user PATH."
+                            if os.name == "nt"
+                            else (
+                                f"Or export PATH=\"{local_bin}:$PATH\". For no-clone repair, run "
+                                f"`curl -fsSL {NO_CLONE_INSTALL_URL} | bash`."
+                            )
                         )
                     )
                 )

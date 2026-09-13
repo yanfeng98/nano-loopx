@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 import shlex
+import sys
 
 
 @dataclass(frozen=True)
@@ -53,3 +54,36 @@ def python_distribution_upgrade_command(
         "loopx slash-commands --install\n"
         f"{doctor_command}"
     )
+
+
+def is_editable_source_checkout(repo_root: Path, release_root: Path | None) -> bool:
+    """True when the running LoopX is a git checkout rather than a release snapshot."""
+    return release_root is None and (repo_root / ".git").exists()
+
+
+def editable_dev_refresh_command(
+    repo_root: Path,
+    *,
+    python_executable: str | None = None,
+    doctor_agent_type: str | None = None,
+    include_skills: bool = True,
+) -> str:
+    """Refresh an editable source checkout in place instead of installing a release.
+
+    This fork develops in place through an editable install, so a checkout must never be
+    pointed at `scripts/install-local.sh` or the archive installer: both copy a release
+    snapshot into `~/.local/bin`, which usually wins the PATH race and silently takes
+    over `loopx`. See operation-logs/031.
+    """
+    doctor_agent_arg = (
+        f" --agent-type {shlex.quote(doctor_agent_type)}" if doctor_agent_type else ""
+    )
+    lines = [
+        f"cd {shlex.quote(str(repo_root))}",
+        f"{shlex.quote(python_executable or sys.executable)} "
+        "-m pip install -e . --no-deps --no-build-isolation",
+    ]
+    if include_skills:
+        lines.append("loopx workflow-skills --install")
+    lines.append(f"loopx doctor{doctor_agent_arg}")
+    return "\n".join(lines)

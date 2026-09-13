@@ -405,6 +405,48 @@ def test_unknown_distribution_installer_has_no_guessed_upgrade_command(tmp_path:
     assert freshness["upgrade_command"] is None
 
 
+def test_editable_checkout_never_recommends_release_channels(tmp_path: Path) -> None:
+    """A git checkout develops in place; install-local.sh would take over `loopx`."""
+
+    (tmp_path / ".git").mkdir()
+
+    freshness = build_install_freshness(
+        command_path=tmp_path / "loopx",
+        release_root=None,
+        repo_root=tmp_path,
+        skills={"loopx-project": {"exists": True, "required_phrases": True}},
+    )
+
+    assert freshness["status"] == "live_checkout"
+    for field in ("upgrade_command", "contributor_upgrade_command"):
+        command = str(freshness[field])
+        assert "pip install -e . --no-deps --no-build-isolation" in command, command
+        assert command.endswith("loopx doctor"), command
+        for forbidden in (
+            "scripts/install-local.sh",
+            "huangruiteng.github.io/loopx/install.sh",
+            "pip install --upgrade loopx",
+        ):
+            assert forbidden not in command, (field, forbidden, command)
+
+
+def test_release_snapshot_keeps_reporting_the_snapshot_channels(tmp_path: Path) -> None:
+    """Only checkout-owned installs change; a release snapshot keeps upstream advice."""
+
+    release_root = tmp_path / "releases" / "20260101T000000Z"
+    release_root.mkdir(parents=True)
+
+    freshness = build_install_freshness(
+        command_path=tmp_path / "loopx",
+        release_root=release_root,
+        repo_root=tmp_path,
+        skills={"loopx-project": {"exists": True, "required_phrases": True}},
+    )
+
+    assert "scripts/install-local.sh" in str(freshness["contributor_upgrade_command"])
+    assert "huangruiteng.github.io/loopx/install.sh" in str(freshness["upgrade_command"])
+
+
 def test_python_distribution_detects_pipx_metadata_owner(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
