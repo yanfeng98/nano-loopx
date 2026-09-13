@@ -182,6 +182,16 @@ def python_distribution_install(module_path: Path) -> dict[str, Any]:
         installed = distribution("loopx")
     except PackageNotFoundError:
         return {"available": False}
+    distribution_root = Path(installed.locate_file("")).resolve()
+    if (distribution_root / "pyproject.toml").is_file() or (
+        distribution_root / ".git"
+    ).exists():
+        # A stale ``*.egg-info`` left in a source tree by a build is not an
+        # installed distribution. ``importlib.metadata`` still finds it when the
+        # checkout is on ``sys.path`` (running ``python3 -m loopx.…`` from the repo
+        # root), which would otherwise report an editable checkout as a managed
+        # Python distribution.
+        return {"available": False}
     installer = (installed.read_text("INSTALLER") or "").strip() or "unknown"
     expected = module_path.resolve()
     owns_module = any(

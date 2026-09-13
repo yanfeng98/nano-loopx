@@ -459,6 +459,32 @@ def test_release_snapshot_keeps_reporting_the_snapshot_channels(tmp_path: Path) 
     assert "huangruiteng.github.io/loopx/install.sh" in str(freshness["upgrade_command"])
 
 
+def test_source_tree_egg_info_is_not_a_managed_distribution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stale `.egg-info` in a checkout must not pass as an installed distribution.
+
+    ``importlib.metadata`` finds it whenever the checkout is on ``sys.path``
+    (running ``python3 -m loopx.cli`` from the repo root), which used to make an
+    editable checkout report ``install_kind: python_distribution``.
+    """
+
+    checkout = tmp_path / "nano-loopx"
+    module_path = checkout / "loopx" / "doctor.py"
+    module_path.parent.mkdir(parents=True)
+    module_path.write_text("# fixture\n", encoding="utf-8")
+    (checkout / "pyproject.toml").write_text(
+        "[project]\nname = \"loopx\"\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        "loopx.doctor.distribution",
+        lambda _name: _FakeDistribution(module_path, checkout),
+    )
+
+    assert python_distribution_install(module_path) == {"available": False}
+
+
 def test_python_distribution_detects_pipx_metadata_owner(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
