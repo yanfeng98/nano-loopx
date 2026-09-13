@@ -19,7 +19,11 @@ from .smoke_profiles import list_smoke_suite_profiles
 
 
 SMOKE_FLEET_HEALTH_SCHEMA_VERSION = "smoke_fleet_health_v0"
-PR_FAST_WORKFLOW = ".github/workflows/python-tests.yml"
+# This fork removed the whole `.github/` tree (commit 6a9bebc75, 2026-09-07), so
+# there is no PR-fast workflow left to prove the declarations against.
+# `PR_FAST_SCRIPTS` survives as a tier label only. Trimming the workflow read
+# rather than restoring the workflow is a deliberate fork decision; see
+# operation-logs/029-retire-ci-only-guards.md.
 PR_FAST_SCRIPTS = (
     "examples/control_plane/cli-output-budget-regression-smoke.py",
 )
@@ -416,12 +420,8 @@ def build_smoke_fleet_health(
                 if script:
                     release_scripts.add(script)
 
+    # Tier label only: the workflow that used to back it does not exist in this fork.
     pr_fast_scripts = set(PR_FAST_SCRIPTS)
-    workflow_path = REPO_ROOT / PR_FAST_WORKFLOW
-    workflow_text = workflow_path.read_text(encoding="utf-8") if workflow_path.is_file() else ""
-    workflow_missing_scripts = sorted(
-        script for script in pr_fast_scripts if script not in workflow_text
-    )
 
     inventory: list[dict[str, Any]] = []
     cadence_counts: Counter[str] = Counter()
@@ -467,16 +467,7 @@ def build_smoke_fleet_health(
         review_limit=review_limit,
     )
     warnings = list(receipt_warnings)
-    if workflow_missing_scripts:
-        warnings.append(
-            {
-                "kind": "pr_fast_workflow_drift",
-                "source": PR_FAST_WORKFLOW,
-                "scripts": workflow_missing_scripts,
-                "message": "declared PR-fast smoke is missing from the workflow",
-            }
-        )
-    ok = bool(inventory_scripts) and not workflow_missing_scripts and not any(
+    ok = bool(inventory_scripts) and not any(
         warning.get("kind") in {"invalid_receipt", "unsupported_receipt", "wrong_suite"}
         for warning in warnings
     )
@@ -499,11 +490,6 @@ def build_smoke_fleet_health(
         "owner_gap_count": len(owner_gap_examples),
         "owner_gap_examples": owner_gap_examples[:review_limit],
         "targeted_owner_counts": dict(sorted(owner_counts.items())),
-        "workflow_contract": {
-            "pr_fast_workflow": PR_FAST_WORKFLOW,
-            "declared_scripts": sorted(pr_fast_scripts),
-            "missing_scripts": workflow_missing_scripts,
-        },
         "contract_reuse": {
             "identical_content_group_count": len(identical_groups),
             "identical_content_groups": identical_groups[:review_limit],

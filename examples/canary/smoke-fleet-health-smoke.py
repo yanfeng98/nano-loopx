@@ -20,7 +20,6 @@ def main() -> int:
     assert scripts
     assert len(scripts) == len(set(scripts))
     assert inventory_payload["cadence_counts"]["daily_full_public"] == len(scripts)
-    assert inventory_payload["workflow_contract"]["missing_scripts"] == []
 
     receipt = {
         "schema_version": "canary_smoke_suite_run_v0",
