@@ -106,8 +106,10 @@ Durable smoke 应保护已交付行为、可复用合同、公开/私有边界�
 贡献者检查项、语义 oracle 示例、公开安全 fixture 规则和合并流程见
 [什么是好的 Smoke](good-smokes.md)。
 
-仓库卫生 smoke 是 LoopX 自身公共 checkout 的薄基线：断言必需跟踪文件存在，
+仓库卫生 smoke 是本 checkout 的薄基线：断言必需跟踪文件存在，
 执行规范的公开/私有边界扫描，并把 release 时间线收紧到每个已发布版本 tag。
+本 fork 已移除上游的公开项目门面（LICENSE、`.github/` 下的安全策略与
+PR/issue 模板），对应的断言随之裁掉。
 
 ```bash
 python3 examples/repository-hygiene-smoke.py

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Thin repository-hygiene smoke for LoopX's own public checkout."""
+"""Thin repository-hygiene smoke for this fork's checkout."""
 
 from __future__ import annotations
 
@@ -15,13 +15,13 @@ sys.path.insert(0, str(REPO_ROOT))
 from loopx.contract import scan_public_boundary  # noqa: E402
 
 
-REQUIRED_TRACKED_FILES = (
-    "LICENSE",
-    "CONTRIBUTING.md",
-)
-SECURITY_FILES = ("SECURITY.md", ".github/SECURITY.md")
-ISSUE_TEMPLATE_DIR = ".github/ISSUE_TEMPLATE/"
-PR_TEMPLATE = ".github/PULL_REQUEST_TEMPLATE.md"
+# This fork deliberately ships without the upstream public-project paperwork: on
+# 2026-09-07 it removed LICENSE / LICENSE-MIT (c88509106) and the whole .github/
+# tree (6a9bebc75) — CI workflows, security policy, pull-request and issue
+# templates. The assertions that required those files are dropped here rather
+# than satisfied with placeholder paperwork; the public/private boundary scan
+# and the release-timeline check below remain the live contract.
+REQUIRED_TRACKED_FILES = ("CONTRIBUTING.md",)
 RELEASE_TIMELINE = REPO_ROOT / "docs" / "product" / "release-readiness.md"
 FIRST_PUBLIC_RELEASE = (0, 1, 3)
 VERSION_TAG_RE = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
@@ -49,21 +49,6 @@ def validate_required_tracked_files(files: set[str]) -> None:
     missing = [name for name in REQUIRED_TRACKED_FILES if name not in files]
     if missing:
         raise AssertionError(f"missing tracked repository-hygiene files: {sorted(missing)}")
-    if not any(name in files for name in SECURITY_FILES):
-        raise AssertionError(
-            "missing tracked security policy; expected one of "
-            + ", ".join(SECURITY_FILES)
-        )
-    if PR_TEMPLATE not in files:
-        raise AssertionError(f"missing tracked pull-request template: {PR_TEMPLATE}")
-    issue_templates = [
-        name
-        for name in files
-        if name.startswith(ISSUE_TEMPLATE_DIR)
-        and name != f"{ISSUE_TEMPLATE_DIR}config.yml"
-    ]
-    if not issue_templates:
-        raise AssertionError(f"missing tracked issue templates under {ISSUE_TEMPLATE_DIR}")
 
 
 def validate_public_private_boundary() -> None:
