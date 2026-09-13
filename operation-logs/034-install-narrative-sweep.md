@@ -100,6 +100,28 @@
 第三角度的结果（无新动作）：渲染后我新增的跨页链接与锚点全部可达；活文档中仅剩三处**故意保留**的
 "不要运行"警告与带偏差横幅的发布/canary 段落。
 
+### 第三轮自查（锚点级校验、提交历史自洽性、premerge）
+
+- **锚点级全库校验**（此前只查文件是否存在）：docs/ 与根 README 的跨文件 `#fragment` 链接
+  **28 条，不可达 0 条**。
+- **逐提交自洽性**（把 8 个提交各 `git archive` 出来单独检查）：7 个提交 0 断链 / 0 断锚；
+  **提交 1（`860f09503`）有 1 处悬空锚点**——它把 getting-started 指向
+  `editable-dev-loop.md#verify-the-active-layers`，而该锚点由提交 2（`cb90d02ad`）才引入。
+  这是本批唯一的历史中点在缺陷，**判定为不重写历史**：本 fork 的惯例是修复前向的"复查修正"提交，
+  且重写会让本日志记录的 8 个 SHA 全部失效；此外两种重排都不更优——把删除提交放前面，getting-started
+  反而会留下指向已删文件的**文件级**悬空链接。窗口深度为 1 个提交、仅存在于未推送的本地历史，
+  当前树 0 悬空。
+- **`loopx canary premerge --from-git-diff --git-diff-base origin/260906-dev`**：本批选中 8 项
+  风险检查，7 通过 + 1 失败（`codex-cli-packaged-install-smoke`）。在基线上逐项重跑同一组：
+  **结论逐项一致**（该 smoke 在基线亦因 `LICENSE` 已删而失败）→ 无新增失败。
+- **产品功能回归**：根 README 提取的 **33 条 `loopx` 调用全部可达（0 FAIL）**；`loopx doctor` → `ok: True`，
+  TypeScript Effect runtime `ready`。
+- **既存站点问题（在基线 clone 上同样复现）**：① `docs/architecture.md` 与 `docs/architecture/README.md`
+  争用同一渲染 URL，导航里的 Architecture 落到后者，`release-readiness.md:323` 的
+  `#current-dependency-budget` 锚点在站点上不可达；② `docs/development/control-plane-course/topic-long-horizon-convergence.md`
+  的 `04-state-substrate.md#core-statedomain-state-与-runtime-artifact` 锚点告警。两者 mkdocs 都只报 INFO，
+  `--strict` 不拦截。
+
 **顺带发现的既有问题（非本批引入，未处理）**：
 
 - `docs/product/release-readiness.md:323` 的 `../architecture.md#current-dependency-budget` 锚点在渲染站点

@@ -115,6 +115,9 @@ loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code �
 `loopx update plan` 对活动源码 checkout 报的就是上面的就地刷新命令，且继续 fail-closed：
 `apply` 为空，绝不 `git pull`、绝不安装发布快照。
 
+表中的独立读回随时可以重跑（它们是恢复入口，不是变更动作）：重跑不会改变安装 owner，
+对 checkout 而言 owner 恒为源码所有权（Git）。
+
 这条清单源自上游安装指南的同一张表，已按 fork 口径改写（上游那版描述 PyPI / pipx / 归档通道，
 在本 fork 不使用）。**发布提醒**：合入 `main` 的代码不等于处于激活状态——对 checkout 而言，
 "激活"只由重跑就地安装与 skills 交付保证，见上面的"什么会立即生效、什么需要重装或重建"表。
