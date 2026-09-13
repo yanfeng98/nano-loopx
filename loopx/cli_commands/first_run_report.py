@@ -5,7 +5,6 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 import platform
 import sys
-from urllib.parse import urlencode
 
 from .. import __version__
 
@@ -15,18 +14,14 @@ PrintPayload = Callable[
     None,
 ]
 
-FIRST_RUN_ISSUE_URL = "https://github.com/huangruiteng/loopx/issues/new"
-FIRST_RUN_ISSUE_TEMPLATE = "first_run.yml"
-
-
-def _issue_url(title: str) -> str:
-    query = urlencode({"template": FIRST_RUN_ISSUE_TEMPLATE, "title": title})
-    return f"{FIRST_RUN_ISSUE_URL}?{query}"
+LOCAL_FEEDBACK_HINT = (
+    "Local only - nothing is sent. This build has no online feedback channel; "
+    "copy the receipt yourself if you want to share it."
+)
 
 
 def collect_first_run_report() -> dict[str, object]:
     os_label = f"{platform.system()} {platform.release()}".strip()
-    title = f"First run: LoopX {__version__} on {os_label} ({platform.machine()})"
     return {
         "schema_version": "first_run_report_v0",
         "loopx_version": __version__,
@@ -34,7 +29,7 @@ def collect_first_run_report() -> dict[str, object]:
         "arch": platform.machine(),
         "python": sys.version.split()[0],
         "reported_at": datetime.now(timezone.utc).isoformat(),
-        "issue_url": _issue_url(title),
+        "feedback_hint": LOCAL_FEEDBACK_HINT,
         "sent": False,
     }
 
@@ -49,8 +44,7 @@ def render_first_run_report_markdown(payload: dict[str, object]) -> str:
         f"- Python: {payload['python']}",
         f"- Generated: {payload['reported_at']}",
         "",
-        "Create an optional public feedback issue:",
-        str(payload["issue_url"]),
+        str(payload["feedback_hint"]),
     ]
     return "\n".join(lines)
 
@@ -60,7 +54,7 @@ def register_first_run_report_command(
 ) -> argparse.ArgumentParser:
     return subparsers.add_parser(
         "first-run-report",
-        help="Print a local first-run receipt and an optional public feedback issue link.",
+        help="Print a local first-run receipt. Nothing is sent and there is no feedback link.",
     )
 
 

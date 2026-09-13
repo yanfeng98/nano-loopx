@@ -69,11 +69,11 @@ Extension 只是可独立版本化和交付的一种路径。
 
 - 正文格式：Markdown；
 - 站点生成器：MkDocs Material；
-- 在线发布：GitHub Pages；
-- LoopX 发布锚点：`v1.0.0`；
+- 站点构建：本地 `mkdocs build`（本仓库不发布在线站点）；
+- 版本锚点：`v1.1.0`；
 - 运行时前提：Python 3.11+ 与 Node.js 22.6+。
 
-协议解释以 LoopX 官方公开合同为事实源。易变化的命令仍以对应发布物、官方文档和当前
+协议解释以本仓库的公开合同文档为事实源。易变化的命令仍以当前安装的版本、仓库内文档和当前
 `--help` 为准；本书负责教学顺序与心智模型，不成为另一份完整命令参考。
 
 `v0.5.4` 已把 Effect Program、Turn settlement、Todo completion、quota delivery routing、

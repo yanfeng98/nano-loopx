@@ -1,6 +1,5 @@
 site_name: LoopX
-site_url: https://huangruiteng.github.io/loopx/docs/
-repo_url: https://github.com/huangruiteng/loopx
+repo_url: https://github.com/yanfeng98/nano-loopx
 edit_uri: edit/main/docs/
 docs_dir: docs
 site_dir: output/docs-site

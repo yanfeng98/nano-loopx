@@ -274,7 +274,7 @@ def main() -> int:
     # README-facing promotion is gone, so it is no longer asserted here.
     for phrase in (
         "LoopX 是开放且 Provider-neutral 的轻量 state kernel",
-        "https://huangruiteng.github.io/loopx/",
+        "https://github.com/yanfeng98/nano-loopx",
         "## 进阶路径",
         "docs/assets/long-running-loop-openviking-trajectory.png",
         "docs/assets/long-running-loop-ml-experiment-trajectory.png",

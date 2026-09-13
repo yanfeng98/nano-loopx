@@ -19,7 +19,7 @@ python3 -m pip install -e . --no-deps --no-build-isolation
 - 验证四件事：
 
 ```bash
-loopx version                                     # 期望输出 `loopx 1.0.0`
+loopx version                                     # 期望输出 `loopx 1.1.0`
 python3 -m pip show loopx | grep -i editable      # 应指向 <checkout>
 command -v loopx                                  # 应是 <python-env>/bin/loopx——它只是 shim
 python3 -c "import loopx; print(loopx.__file__)"  # 应指向 <checkout>/loopx/__init__.py（在 <checkout> 根目录运行）

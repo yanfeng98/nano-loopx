@@ -83,7 +83,7 @@ loopx status
 文档站点是仓库 Markdown 的公开读模型。canonical 源仍是 `docs/` 中的 Markdown，
 而项目本地运行时状态保持被忽略且私有。
 
-- [项目 README](https://github.com/huangruiteng/loopx#readme)
+- [项目 README](https://github.com/yanfeng98/nano-loopx#readme)
 - [公共/私有边界](public-private-boundary.md)
 - [Status 数据契约](status-data-contract.md)
 - [发布就绪](product/release-readiness.md)

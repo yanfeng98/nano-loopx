@@ -8,7 +8,7 @@
 
 <sub>在 Codex、Claude Code 等 agent harness 之上，持久保存目标、gate、todo、证据、quota 与交接状态。LoopX 负责跨轮次的状态与执行边界，harness 负责有界执行。</sub>
 
-[产品首页](https://huangruiteng.github.io/loopx/) · [文档](https://huangruiteng.github.io/loopx/docs/) · [开发者手册](https://huangruiteng.github.io/loopx/docs/book/) · [用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg)
+[文档索引](docs/README.md) · [开发者手册](docs/book/index.md) · [控制面课程](docs/development/control-plane-course/README.md)
 
 </div>
 
@@ -100,13 +100,14 @@ loopx quota spend-slot --goal-id <goal-id>     # 为完成并验证的 slice 记
 
 ### 首次运行反馈
 
-如果 LoopX 帮你跑通了第一个任务，欢迎用一分钟提交一条公开反馈（可选，无任何
-遥测；不要粘贴日志、路径、凭据、内部项目名或 goal 内容）：
+如果 LoopX 帮你跑通了第一个任务，可以运行 `loopx first-run-report` 生成一份**本地**运行回执：
 
-- [首次运行反馈](https://github.com/huangruiteng/loopx/issues/new?template=first_run.yml)
-- [长程使用案例](https://github.com/huangruiteng/loopx/issues/new?template=usage_story.yml)
+```bash
+loopx first-run-report
+```
 
-`loopx first-run-report` 会在本地打印同样的预填链接，不会发送任何数据。
+它只在你本机打印（LoopX 版本、OS、架构、Python），**不发送任何数据，也没有在线反馈入口**。
+要不要把回执分享出去由你决定；分享前不要包含日志、路径、凭据、内部项目名或 goal 内容。
 
 成功连接后应该满足：
 
@@ -417,8 +418,8 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 ### App 与 Projection
 
 - 本地 read-first UI：[Dashboard Guide](apps/presentation/dashboard/README.md)
-- 公开产品概览：[产品首页](https://huangruiteng.github.io/loopx/)
-- 文档门户：[线上文档](https://huangruiteng.github.io/loopx/docs/)
+- 文档门户：[文档索引](docs/README.md)
+- 开发者手册：[Developer Book](docs/book/index.md)
 - 飞书投影：[Lark Kanban Adapter](docs/integrations/lark-kanban-control-plane-adapter.md)
 - 通用 host 集成：[Integration Guide](docs/integration.md)
 - 自有 multi-agent runner：
@@ -456,8 +457,7 @@ LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这�
 
 ## 进阶文档
 
-按当前任务选择入口；[线上文档](https://huangruiteng.github.io/loopx/docs/)
-提供发布后的浏览入口，[完整文档索引](docs/README.md)仍是权威地图。这里仅保留
+按当前任务选择入口；[完整文档索引](docs/README.md)是权威地图。这里仅保留
 精选入口；每个分类索引负责承接更深层的文档和版本化协议。
 
 ### 使用与运维
@@ -542,7 +542,7 @@ agent 项目里的反馈：控制面帮到了哪里、哪里太重，哪些 gate
 仍然不够清楚。
 
 - 可复现 bug、安装问题、功能建议：请提
-  [GitHub Issue](https://github.com/huangruiteng/loopx/issues)。
+  [GitHub Issue](https://github.com/yanfeng98/nano-loopx/issues)。
 - 文档修正、showcase 补充、小型 public-safe 示例：欢迎开 PR。
 - 参与社区讨论：可加入 [Discord 社区](https://discord.gg/XmGgQyCFZd)，也可在
   下方直接加入飞书群或通过微信申请入群。
@@ -580,7 +580,7 @@ loopx check \
 
 ## 当前状态
 
-`1.0.x` 已经是一套可用的长程 Agent 本地控制面，正在进入更广泛的采用阶段。
+`1.1.x` 已经是一套可用的长程 Agent 本地控制面，正在进入更广泛的采用阶段。
 LoopX 不是完整 agent platform，不是 agent runtime，也不是自治生产控制器。
 
 目前 LoopX 已交付围绕 goal、typed todo / decision scope、平级 claim / lease、
@@ -597,10 +597,3 @@ integration 和进阶路径仍是 optional、default-off 或 experimental。Loop
 当前投入按[技术方向地图](docs/project/technical-directions.md)组织：长程
 benchmark 证据、operator surface 与 IM integration、shared-goal 跨 host 协作，以及
 明确分阶段的架构与研究孵化器。
-
-## Star 趋势
-
-<p align="center">
-  <a href="https://github.com/huangruiteng/loopx/stargazers"><img src="https://huangruiteng.github.io/loopx/site-assets/star-history.svg" alt="LoopX GitHub Star 历史趋势，来自已校验快照" width="800"></a><br>
-  <sub>由上游项目基于 GitHub 官方 stargazer 时间戳生成并发布，仅当拉取条数与 GitHub 当前 Star 总数一致时才发布；本仓库内的确定性渲染脚本见 <code>scripts/render-star-history.py</code>。GitHub 图片缓存可能延迟刷新。</sub>
-</p>

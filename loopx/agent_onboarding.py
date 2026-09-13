@@ -148,7 +148,7 @@ def _skill_delivery_contract(
             "host_skill_manifest",
             "prompt_injection",
         ],
-        "source_repository": "https://github.com/huangruiteng/loopx",
+        "source_repository": "https://github.com/yanfeng98/nano-loopx",
         "source_directories": [
             f"skills/{skill_id}"
             for skill_id in required_skill_ids

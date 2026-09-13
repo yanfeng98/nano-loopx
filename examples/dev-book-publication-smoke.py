@@ -270,11 +270,11 @@ def main() -> int:
     migration_baseline_tag = "v0.5.4"
     release_markers = {
         "index.md": (
-            f"LoopX 发布锚点：`{release_tag}`",
+            f"版本锚点：`{release_tag}`",
             "TypeScript Control-Plane Migration RFC",
         ),
         "chapters/00-reading-guide.md": (
-            f"release `{release_tag}`",
+            f"版本锚点 `{release_tag}`",
             "transaction-payoff phase",
         ),
     }
@@ -299,7 +299,7 @@ def main() -> int:
     assert_zh_concepts(
         "index.md",
         (
-            f"LoopX 发布锚点：`{release_tag}`",
+            f"版本锚点：`{release_tag}`",
             "运行时前提：Python 3.11+ 与 Node.js 22.6+",
             "TypeScript owner",
             "这不是两套可独立演进的 控制面",
