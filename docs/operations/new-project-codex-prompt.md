@@ -52,17 +52,18 @@ loopx new-project-prompt \
 2. 是否允许你从接受的 todo 开始自主推进。
 
 0. 先确认当前 shell 能调用 LoopX CLI；如果提示 `loopx`
-   不在 PATH，运行本机安装脚本再继续：
+   不在 PATH，从 LoopX checkout 做就地 editable 安装再继续（不要用
+   `scripts/install-local.sh` 或 PyPI/归档通道，它们会接管就地安装）：
 
    ```bash
    export PATH="$HOME/.local/bin:$PATH"
-   install_script="$HOME/loopx/scripts/install-local.sh"
    if ! command -v loopx >/dev/null 2>&1; then
-     if [ -x "$install_script" ]; then
-       "$install_script"
-       export PATH="$HOME/.local/bin:$PATH"
+     checkout="${LOOPX_CHECKOUT:-$HOME/nano-loopx}"
+     if [ -f "$checkout/pyproject.toml" ]; then
+       (cd "$checkout" && python3 -m pip install -e . --no-deps --no-build-isolation)
+       loopx workflow-skills --install
      else
-       echo "loopx is not on PATH; clone the LoopX repo and run scripts/install-local.sh" >&2
+       echo "loopx is not on PATH; clone the LoopX checkout and install it editable" >&2
        exit 1
      fi
    fi

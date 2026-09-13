@@ -134,8 +134,8 @@ loopx doctor
 
 !!! tip "本 fork 为什么反过来"
     本 fork **唯一支持的安装方式**就是 clone 后装成 editable 安装：checkout 本身就是运行时，改完即生效，
-    没有发布快照这一层。上游的 PyPI / pipx / 归档通道在本 fork 不使用——在同一环境里运行它们会因为
-    `~/.local/bin` 排在 `PATH` 最前而静默接管 `loopx`。详见
+    没有发布快照这一层。PyPI / pipx 通道在本 fork 不使用；发布快照 / 归档通道（`scripts/install-local.sh`）
+    保留给发布工作，在就地开发环境里运行它同样会因为 `~/.local/bin` 排在 `PATH` 最前而静默接管 `loopx`。详见
     [就地开发闭环](/loopx/docs/development/editable-dev-loop/)。
 
 `loopx doctor` 是安装事实的入口。不要只以 `which loopx` 成功作为健康证明；doctor 还会检查

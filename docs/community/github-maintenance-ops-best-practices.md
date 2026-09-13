@@ -140,8 +140,8 @@ fork 与衍生评估按计划执行。对每个有价值的来源，在作者自
 
 ### 5.1 最小接入
 
-要求 Python 3.11+ 与 Node.js 22.6+。本 fork 不分发归档安装器：把 checkout 就地装成 editable
-安装，再在项目根目录接入：
+要求 Python 3.11+ 与 Node.js 22.6+。本 fork 的日常接入走就地 editable 安装（归档安装器属发布通道，
+不在开发环境使用）：把 checkout 装成 editable 安装，再在项目根目录接入：
 
 ```bash
 cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation

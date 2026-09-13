@@ -6,8 +6,9 @@ LoopX 可以快速前进,而不必让每个合并的 PR 都感觉像一次产品
 
 ## 受支持的安装与更新路径
 
-本 fork 不发布 PyPI 包，也不提供归档安装器；**唯一受支持的安装与更新路径**是把 LoopX checkout
-就地装成 editable 安装，改完即生效（见[就地开发闭环](../development/editable-dev-loop.md)）：
+本 fork 不发布 PyPI 包；**唯一受支持的安装与更新路径**是把 LoopX checkout 就地装成 editable
+安装，改完即生效（见[就地开发闭环](../development/editable-dev-loop.md)）。发布快照与归档通道
+（`scripts/install-local.sh`）保留给发布/canary 工作，不作为开发或用户安装路径：
 
 ```bash
 cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation

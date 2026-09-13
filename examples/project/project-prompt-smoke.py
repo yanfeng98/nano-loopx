@@ -106,7 +106,6 @@ HANDOFF_MUST_HAVE = (
 def assert_quota_guard(text: str) -> None:
     normalized = " ".join(text.split())
     assert 'export PATH="$HOME/.local/bin:$PATH"' in text, text
-    assert 'install_script="$HOME/loopx/scripts/install-local.sh"' in text, text
     assert "loopx doctor >/dev/null" in text, text
     assert 'loopx --format json --registry "$HOME/.codex/loopx/registry.global.json" quota should-run --goal-id' in text, text
     assert "--runtime-profile outer_controller" in normalized, text
@@ -187,7 +186,14 @@ def main() -> int:
     assert prompt.index(quota_spend) < prompt.rindex(state_only_refresh), prompt
     assert "不要默认或拔高成 `multi_surface` / `outcome_progress`" in prompt, prompt
     assert_quota_guard(payload["prompt"])
-    assert_quota_guard(DOC.read_text(encoding="utf-8"))
+    prompt_doc = DOC.read_text(encoding="utf-8")
+    assert_quota_guard(prompt_doc)
+    # The shipped prompt doc installs from the checkout; the CLI-generated
+    # prompts still carry the upstream repair command from product code.
+    assert (
+        "python3 -m pip install -e . --no-deps --no-build-isolation"
+        in prompt_doc
+    ), prompt_doc
 
     cli_json = json.loads(run_cli("--format", "json", *cli_prompt_args()))
     assert cli_json["quota_guard_command"] == payload["quota_guard_command"], cli_json
