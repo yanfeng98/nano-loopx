@@ -143,4 +143,10 @@
 
 ## 提交/推送
 
-<!-- COMMIT_NOTE -->
+3 个提交，按评审逻辑拆分（守卫退役 / 文档 / 日志），均带 DCO 结尾：
+
+- `89e5e215a` test: retire CI-only guards invalidated by this fork's .github removal
+- `4b39a392b` docs: state that the fast gate has no CI carrier in this fork
+- `af704f2a3` docs: record operation log 029 (CI-only guard retirement)
+
+按用户指示推送：`8ee7d9701..61abe071f`（含 030 的 4 个提交，一次 push 完成）。

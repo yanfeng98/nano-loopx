@@ -128,3 +128,14 @@ smoke 发现机制是**glob**（`loopx/canary/runner.py` 文档串：bounded to
 无新增环境性失败。全量 pytest 的 3 个 collection error 与本机 site-packages 同名 `tests`
 包遮蔽同源（见 029「环境备注」），与本轮无关。本轮验证产生的 `output/`（mkdocs 构建产物，
 45MB）与 `/tmp` 副本已清理；`git worktree` 基线用后即删。
+
+## 提交/推送
+
+4 个提交，按评审逻辑拆分（smoke 退役 / install smoke 修复 / 文档 / 日志）：
+
+- `408b3a089` test: retire the canary smokes that read this fork's deleted .github
+- `566982775` fix: repair install-local-smoke assertions stale since op 020
+- `8155d92b3` docs: point the update-notes and frontstage pages at fork reality
+- `61abe071f` docs: record operation log 030 (workflow-reading smoke retirement)
+
+按用户指示推送：`8ee7d9701..61abe071f`（与 029 的 3 个提交合并为一次 push）。
