@@ -168,30 +168,31 @@ deterministic CPU evaluator、dev / held-out 命令均在仓库内。可按
 要求：Python 3.11+ 与 Node.js 22.6+。使用 console scripts 已加入 `PATH` 的
 Python 环境；macOS 和 Linux 使用 POSIX shell，原生 Windows 使用 PowerShell 7。
 Node.js 运行 LoopX 自动启动、空闲退出的 TypeScript Effect core，无需手工维护 daemon。
-Git 仅用于源码贡献与 clone/canary 工作流。
 
-无需 clone，直接从 PyPI 安装：
+本仓库就是运行时：把它装成 editable 安装，改完的代码立即生效——没有构建、没有拷贝、
+没有第二份安装。
 
 ```bash
-python3 -m pip install --upgrade loopx
-loopx workflow-skills --install
-loopx doctor
+git clone git@github.com:yanfeng98/nano-loopx.git ~/nano-loopx
+cd ~/nano-loopx
+python3 -m pip install -e . --no-deps --no-build-isolation
+
+# 把 workflow skill 交付给 Agent 宿主（复制语义：改 skills/ 或每产生一个新 commit 都要重跑）
+loopx workflow-skills --install                                  # Codex CLI，默认根 ~/.codex/skills
+loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code 必须显式指定
 ```
 
-已有安装可使用 `loopx update plan` 与 `loopx update apply`；LoopX 会保留检测到
-的 pip、pipx 或 archive owner，不会在升级时暗中切换安装渠道。
+首次安装后重启 Agent host，使其重新加载 workflow skills。`loopx/control_plane/**/*.ts` 由
+Node 直接执行，改完即生效，不需要 npm 构建。活改 / 需要重装 / 需要重建的判定表、skills 的
+重跑时机，以及最短的"改 → 验证"闭环，见
+[就地开发闭环](docs/development/editable-dev-loop.md)。
 
-原生 Windows PowerShell 7 可直接使用同一 PyPI release，不需要 POSIX 兼容层：
-
-```powershell
-py -3.11 -m pip install --upgrade loopx
-loopx workflow-skills --install
-loopx doctor
-```
-
-首次安装后重启 Agent host，使其重新加载 workflow skills。`pipx`、host command
-surfaces、原生 Windows checkout 安装、升级、回滚、卸载与 archive fallback 见
-[Installing LoopX](docs/guides/installing-loopx.md)。
+**本 fork 只走就地 editable 开发通道**：不要在同一个环境里运行 PyPI/pipx 安装
+（`python3 -m pip install --upgrade loopx`、`pipx install loopx`）、`scripts/install-local.sh`
+或归档安装器（`curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash`）——它们会生成
+第二份 `loopx`，而 `~/.local/bin` 通常在 `PATH` 上排在 editable 安装之前，等于静默接管你的
+开发环境。上游的安装、升级、回滚、卸载与 archive fallback 说明保留在
+[Installing LoopX](docs/guides/installing-loopx.md)，仅供合并上游时对照。
 
 然后在项目根目录连接：
 
@@ -257,13 +258,10 @@ loopx quota spend-slot --goal-id <goal-id>     # 为完成并验证的 slice 记
 - 有可见 Loop driver，或 agent 给出精确 activation 指令；
 - 本地 runtime state 被 ignore，而不是提交。
 
-Clone 安装只面向需要 live canary wrapper 的贡献者：
-
-```bash
-git clone https://github.com/huangruiteng/loopx ~/loopx
-~/loopx/scripts/install-local.sh
-loopx doctor
-```
+需要 live canary wrapper（发布快照 + `loopx-canary` + 本地 man page）的上游发布/canary 通道才使用
+`scripts/install-local.sh`：它把 checkout 复制成 `~/.local/share/loopx/releases/<release-id>` 快照，
+并在 `~/.local/bin` 写 wrapper。**本 fork 的就地开发不需要它**，而且在同一环境里运行它会接管
+`loopx`。见[就地开发闭环](docs/development/editable-dev-loop.md)。
 
 ## 能力
 
@@ -516,6 +514,8 @@ LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这�
 
 - [Developer Guide](docs/development/README.md)：贡献者工作流、benchmark 开发、
   文档布局和质量 gate。
+- [就地开发闭环](docs/development/editable-dev-loop.md)：把本 checkout 装成 editable 安装，
+  最短"改 → 验证"路径与活改 / 重装 / 重建判定。
 - [Reference and Protocols](docs/reference/README.md)：稳定契约和版本化实现协议，
   包括 host command 与 reward memory architecture。
 - [控制面开发者 9 讲](docs/development/control-plane-course/README.md)。

@@ -1,5 +1,23 @@
 # 安装 LoopX
 
+**本 fork 偏差（2026-09-07 起的 fork 决策）：本页余下内容描述上游的 PyPI / pipx / 归档
+快照发布通道；本 fork 的日常开发不使用它，而是把 checkout 就地装成 editable 安装。就地
+开发闭环见[就地开发闭环](../development/editable-dev-loop.md)。合并上游时保留本段说明。**
+
+本 fork 的就地开发安装：
+
+```bash
+cd <checkout>
+python3 -m pip install -e . --no-deps --no-build-isolation
+loopx workflow-skills --install                                  # Codex CLI，默认根 ~/.codex/skills
+loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code 必须显式指定
+loopx doctor
+```
+
+---
+
+以下为上游原文。
+
 PyPI 是 LoopX 的默认发布通道。在激活的虚拟环境、受管的用户环境或另一个 console
 脚本已位于 `PATH` 上且使用 Python 3.11 及更高版本的环境中安装：
 
@@ -181,9 +199,10 @@ loopx doctor
 等待对应发布，而不是尝试把已安装的发行版切换到 `main`。
 
 对于由其他 Python 包管理器拥有的安装，`update plan` 报告该 owner 及其命令；
-LoopX fail closed，而不是猜测 pip 变更。对于活动源码 checkout，它报告贡献者
-安装器，绝不执行 `git pull` 或改写工作区。源码获取与仓库变更始终是显式的人类或
-授权 Agent 动作。
+LoopX fail closed，而不是猜测 pip 变更。对于活动源码 checkout，它报告**就地 editable
+刷新命令**（`pip install -e . --no-deps --no-build-isolation` 加宿主材料刷新），**不**报告
+`scripts/install-local.sh` 或归档安装器，也绝不执行 `git pull` 或改写工作区。源码获取与
+仓库变更始终是显式的人类或授权 Agent 动作。**（本 fork 偏差，上游为报告贡献者安装器。）**
 
 `loopx doctor` 对这条路径报告 `install_kind: python_distribution`，并在打包
 skills 缺失或过期时返回同一 pip 原生修复序列。它还验证控制面升级被视为健康之前
@@ -234,5 +253,6 @@ python3 -m pip uninstall loopx
 两个宿主卸载器都保留 LoopX 安装后内容被修改过的同名文件。项目本地的 `.loopx/`、
 `.codex/goals/`、证据与 runtime 状态不会被包卸载删除。
 
-需要在线 canary 的贡献者应使用真实 checkout 与 `scripts/install-local.sh`；见
+需要在线 canary 的贡献者应使用真实 checkout 与 `scripts/install-local.sh`（**就地开发不需要
+它**，见[就地开发闭环](../development/editable-dev-loop.md)）；见
 [开始使用](getting-started.md)。

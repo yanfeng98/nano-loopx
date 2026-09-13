@@ -313,15 +313,26 @@ PyPI 环境保持包管理器拥有，归档快照保持 LoopX 拥有，活动�
 
 ## 贡献者安装
 
-要开发 LoopX 本身或测试在线 canary wrapper 时，安装一个共享本地 checkout：
+本 fork 的贡献者路径是把 checkout 就地装成 editable 安装——不需要 clone 第二份，也不使用
+发布通道：
 
 ```bash
-git clone https://github.com/huangruiteng/loopx ~/loopx
-~/loopx/scripts/install-local.sh
+cd <checkout>
+python3 -m pip install -e . --no-deps --no-build-isolation
+loopx workflow-skills --install                                  # Codex CLI，默认根 ~/.codex/skills
+loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code 必须显式指定
 loopx doctor
 ```
 
-checkout 安装器创建：
+`-e` 让 `loopx` 始终执行工作区代码，改完 `.py` 直接重跑命令就是验证；
+`loopx/control_plane/**/*.ts` 由 Node 直接执行，改完即生效。最短"改 → 验证"闭环、活改 /
+重装 / 重建判定、skills 重跑时机与 `doctor` 的边界见
+[就地开发闭环](../development/editable-dev-loop.md)。
+
+需要发布快照 + 在线 canary wrapper（`~/.local/bin/loopx-canary`、本地 man page、
+`~/.local/share/loopx/releases/<id>`）的上游发布/canary 通道才使用 `scripts/install-local.sh`。
+**在就地开发环境里运行它是危险的**：`~/.local/bin` 实测排在本机 `PATH` 最前，它生成的
+wrapper 会静默接管 `loopx`。该安装器创建：
 
 - `~/.local/bin/loopx`，指向稳定本地发布快照；
 - `~/.local/bin/loopx-canary`，指向在线 checkout；
@@ -338,6 +349,12 @@ checkout 安装器创建：
 控制器。
 
 ## 全局 Skill 安装、更新、修复与清理
+
+**本 fork 偏差：本节描述的 `scripts/install-local.sh` 通道面向"发布快照 + canary wrapper"，
+不是就地开发路径——在 editable 开发环境里运行它会静默接管 `loopx`（`~/.local/bin` 实测排在
+本机 `PATH` 最前）。就地开发的"更新"只有 `git pull` 之后重跑 editable 安装，见
+[就地开发闭环](../development/editable-dev-loop.md)。`loopx update apply` 对 live checkout
+继续 fail-closed：`apply` 为空。以下保留上游原文供对照。**
 
 `scripts/install-local.sh` 管理三个可复用本地界面：
 

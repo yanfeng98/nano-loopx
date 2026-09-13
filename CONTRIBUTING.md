@@ -69,15 +69,20 @@ quota、todo/gate、onboarding、agent 面向输出或发布行为之前，阅�
 冒烟之前，使用双语[良好冒烟指南](docs/development/good-smokes.md)定义其持久
 不变量、独立 oracle、节奏与公开安全 fixture 边界。
 
-安装并校验检出：
+把本 checkout 装成 editable 安装并校验：
 
 ```bash
-git clone https://github.com/huangruiteng/loopx ~/loopx
-~/loopx/scripts/install-local.sh
-export PATH="$HOME/.local/bin:$PATH"
+cd <checkout>
+python3 -m pip install -e . --no-deps --no-build-isolation
+loopx workflow-skills --install                                  # Codex CLI，默认根 ~/.codex/skills
+loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code 必须显式指定
 loopx doctor
-loopx demo
 ```
+
+`-e` 让 `loopx` 始终执行工作区里的代码：改完直接重跑命令就是验证。活改 / 需要重装 /
+需要重建的判定表、skills 的重跑时机、`doctor` 与 checkout 的已知边界，以及**会替换开发环境
+的命令**（`scripts/install-local.sh`、归档安装器、PyPI 升级），见
+[就地开发闭环](docs/development/editable-dev-loop.md)。
 
 常用聚焦检查：
 

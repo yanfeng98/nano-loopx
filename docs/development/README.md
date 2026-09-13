@@ -23,12 +23,15 @@
    [公开/私有边界](../public-private-boundary.md)。
 9. 新增或移动公开文档前，遵循
    [文档布局规则](documentation-layout.md)。
+10. 在 checkout 里就地开发（editable 安装、活改/重装/重建判定、skills 重跑时机）见
+    [就地开发闭环](editable-dev-loop.md)。
 
 ## 核心参考
 
 | 领域 | 文档 |
 | --- | --- |
 | 当前战略方向 | [Technical directions](../project/technical-directions.md) |
+| 就地开发闭环 | [Editable dev loop](editable-dev-loop.md) |
 | 开发者学习路径 | [Developer Book](/loopx/docs/book/) |
 | 控制面代码领读 | [Eleven-lecture developer course](control-plane-course/README.md) |
 | 质量分层与命令 | [Testing and quality](testing-and-quality.md) |
