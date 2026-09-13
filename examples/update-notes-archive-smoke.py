@@ -13,7 +13,10 @@ DOCS_INDEX = ROOT / "docs" / "README.md"
 NOTES_DIR = ROOT / "docs" / "update-notes"
 NOTES_INDEX = NOTES_DIR / "README.md"
 AUTOMATION = NOTES_DIR / "automation.md"
-WORKFLOW = ROOT / ".github" / "workflows" / "update-notes.yml"
+# The `.github/workflows/update-notes.yml` assertions were dropped here: this fork
+# removed the whole `.github/` tree in 6a9bebc75 (operation-logs/029-030), so there
+# is no workflow left to assert against. The generator and the public docs stay
+# covered below.
 GENERATOR = ROOT / "scripts" / "update_notes_release_job.py"
 QUALITY_SMOKE = ROOT / "examples" / "update-notes-generator-quality-smoke.py"
 NOTE_FILE_RE = re.compile(r"\d{4}-\d{2}-\d{2}-to-\d{4}-\d{2}-\d{2}\.md$")
@@ -105,17 +108,7 @@ def validate_automation_plan() -> None:
 
 
 def validate_project_automation() -> None:
-    workflow = read(WORKFLOW)
     generator = read(GENERATOR)
-    assert_contains(workflow, "schedule:", "update notes workflow")
-    assert_contains(workflow, "workflow_dispatch:", "update notes workflow")
-    assert_contains(workflow, "fetch-depth: 0", "update notes workflow")
-    assert_contains(workflow, "scripts/update_notes_release_job.py", "update notes workflow")
-    assert_contains(workflow, "actions/upload-artifact@", "update notes workflow")
-    assert_contains(workflow, "contents: read", "update notes workflow")
-    assert_not_contains(workflow, "create-pull-request", "update notes workflow")
-    assert_not_contains(workflow, "pull-requests: write", "update notes workflow")
-    assert_contains(workflow, "examples/update-notes-generator-quality-smoke.py", "update notes workflow")
     assert_contains(generator, "def infer_next_window", "update notes generator")
     assert_contains(generator, "def collect_commits", "update notes generator")
     assert_contains(generator, "--first-parent", "update notes generator")
@@ -131,7 +124,6 @@ def main() -> None:
         DOCS_INDEX,
         NOTES_INDEX,
         AUTOMATION,
-        WORKFLOW,
         GENERATOR,
         QUALITY_SMOKE,
         *note_files(),
