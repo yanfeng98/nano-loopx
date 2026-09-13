@@ -81,6 +81,33 @@
 - **活文档残留**：PyPI / pipx / curl 安装命令只剩三处**故意保留**的"不要运行"警告
   （`README.md`、`editable-dev-loop.md`）。
 
+### 第二轮自查（换角度：文案自身是否自洽、渲染锚点、遗漏站点）
+
+前一轮查的是"守卫是否变红"，第二轮换三个角度，发现并修掉 **2 个我自己引入的缺陷**：
+
+1. **6 处与仓库事实矛盾的过度断言**：改写里写了"本 fork **不提供**归档安装器 / canary wrapper /
+   发布快照通道"，但 `scripts/install-local.sh` 与 `scripts/install-from-github.sh` 都在仓库里，
+   README 明说 canary 路由保留给发布工作（只禁止在开发环境里运行）。已改为真实口径：
+   开发与用户安装 = editable；发布快照/归档 = 发布与 canary 工作、需隔离运行
+   （涉及 `codex-cli-packaged-install.md` ×4、`release-readiness.md`、`chapters/05`、
+   `github-maintenance-ops`）。
+2. **`docs/operations/new-project-codex-prompt.md` 是可粘贴提示，却把 agent 指向
+   `$HOME/loopx/scripts/install-local.sh`**（与已修的三份 onboarding 粘贴消息同类，此前漏掉）。
+   已改为从 checkout 就地安装；其守卫 `examples/project/project-prompt-smoke.py` 把该命令断言在
+   **共享**的 `assert_quota_guard()` 里（CLI 生成的 payload 也走这个函数），故把该断言移出共享函数、
+   改为只对文档的 editable 行断言，产品 payload 的期望保持不变。
+
+第三角度的结果（无新动作）：渲染后我新增的跨页链接与锚点全部可达；活文档中仅剩三处**故意保留**的
+"不要运行"警告与带偏差横幅的发布/canary 段落。
+
+**顺带发现的既有问题（非本批引入，未处理）**：
+
+- `docs/product/release-readiness.md:323` 的 `../architecture.md#current-dependency-budget` 锚点在渲染站点
+  中不可达（`docs/architecture.md` 与 `docs/architecture/README.md` 争用同一 URL，落点是后者）——
+  基线快照中同样存在，`mkdocs --strict` 与 `docs-governance` 的链接检查（会剥离片段）都不覆盖锚点。
+- `examples/project/project-prompt-smoke.py` 在基线与当前树上同点失败（CLI 生成 payload 的中文漂移断言，
+  在文档断言之前触发），属既存红灯。
+
 ## 已知遗留（未处理）
 
 1. **产品代码仍输出上游通道命令**：`loopx codex-cli-bootstrap-message` 的 `install_repair_command`、
@@ -101,5 +128,7 @@
 - `a4ee852fe` test: retarget the release-readiness install-guide guard
 - `fb7ea43c3` docs: close the PyPI install path in the remaining user-facing docs
 - `6206319ee` docs: rewrite the Codex CLI attach docs for the in-place checkout
+- `4ba704533` docs: correct the channel claims and the new-project prompt after review
+  （第二轮自查的修正）
 
 按用户指示**只提交，不推送**；推送目标为 `origin/260906-dev`。
