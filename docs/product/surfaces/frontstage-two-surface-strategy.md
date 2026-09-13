@@ -70,8 +70,11 @@ Ops surface 应更安静、更密集。它应追求扫读、对比、重复动�
 - 用 `examples/showcase-catalog-smoke.py` 验证 catalog 形态与案例声明；
 - 变更时验证静态原型或动画契约；
 - 用 `npm run smoke:frontstage-share-bundle` 验证分享/导出隐私；
-- 用 `examples/frontstage-pages-workflow-smoke.py` 验证 Pages workflow 安全；
 - 对变更 docs/examples 用 `loopx check` 做公开边界扫描。
+
+本 fork 已移除 `.github/`（2026-09-07，`6a9bebc75`），因此原先第 4 条
+`examples/frontstage-pages-workflow-smoke.py`（验证 Pages workflow 安全）随该
+workflow 一起退役。
 
 Ops 控制面变更应验证：
 

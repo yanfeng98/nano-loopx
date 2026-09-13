@@ -34,3 +34,6 @@ LoopX 每两周发布一份 public-safe 更新说明。说明概括公开仓库�
 见 [每两周更新说明自动化](automation.md) 推荐的发布路径。简短版本：
 `.github/workflows/update-notes.yml` 运行一个独立的只读 release-note job，上传可审查的草稿
 artifact；草稿就绪时由人打开 PR。这不是活跃 LoopX heartbeat 内部的自定义逻辑。
+
+**本 fork 已移除整个 `.github/`（2026-09-07，`6a9bebc75`），该 workflow 不再随仓库提供**；
+`scripts/update_notes_release_job.py` 仍在，可由自有 CI 或手动触发。
