@@ -191,10 +191,10 @@ def test_generated_starter_installs_and_runs_through_managed_lifecycle(
     venv.EnvBuilder(
         with_pip=True,
         system_site_packages=True,
-        symlinks=os.name != "nt",
+        symlinks=True,
     ).create(environment)
-    binary_dir = environment / ("Scripts" if os.name == "nt" else "bin")
-    python = binary_dir / ("python.exe" if os.name == "nt" else "python")
+    binary_dir = environment / "bin"
+    python = binary_dir / "python"
     wheel_dir = tmp_path / "wheelhouse"
     wheel_dir.mkdir()
     uv = shutil.which("uv")

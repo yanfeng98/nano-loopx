@@ -134,7 +134,6 @@ def test_scheduler_state_same_key_writes_remain_atomic_across_python_callers(
     _shutdown_runtime()
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX process termination probe")
 def test_scheduler_state_retry_recovers_after_runtime_crash(
     tmp_path: Path,
     monkeypatch,

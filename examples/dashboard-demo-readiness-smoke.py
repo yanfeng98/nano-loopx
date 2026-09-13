@@ -72,7 +72,7 @@ def ensure_dashboard_dependencies(env: dict[str, str]) -> bool:
             "before running apps/presentation/dashboard smokes"
         )
         return False
-    tsc_bin = DASHBOARD_DIR / "node_modules" / ".bin" / ("tsc.cmd" if os.name == "nt" else "tsc")
+    tsc_bin = DASHBOARD_DIR / "node_modules" / ".bin" / "tsc"
     if not tsc_bin.exists():
         print(
             "dashboard npm dependencies are missing; run "

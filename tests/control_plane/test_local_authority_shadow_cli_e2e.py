@@ -7,7 +7,6 @@ import subprocess
 import sys
 import time
 
-import pytest
 
 from loopx.file_lock import exclusive_file_lock
 
@@ -270,7 +269,6 @@ def test_product_cli_candidate_failure_preserves_the_primary_lifecycle_commit(
     assert str(result["todo_id"]) in state.read_text(encoding="utf-8")
 
 
-@pytest.mark.skipif(os.name == "nt", reason="requires POSIX cross-process flock and SIGKILL")
 def test_product_cli_loses_capture_between_commit_and_observer_then_refreshes_snapshot(
     tmp_path: Path,
 ) -> None:

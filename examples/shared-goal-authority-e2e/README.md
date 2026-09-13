@@ -9,7 +9,7 @@ python examples/shared-goal-authority-e2e/ladder.py --stage 2c1 --report-json la
 python examples/shared-goal-authority-e2e/ladder.py --list
 ```
 
-pytest 投影是 `tests/control_plane/test_shared_goal_authority_e2e.py`;在那里,未验证行以 `unverified: <reason>` 跳过,POSIX 专用行在 Windows 上跳过。五条断言已由 `tests/control_plane/test_local_authority_shadow_cli_e2e.py` 通过同一产品路径固定的 `s2c1.*` 行(配置往返、默认关闭隔离、候选失败、崩溃间隙、双运行时根)在默认 CI 投影中跳过,以保持在 pytest job 预算内;`LOOPX_LADDER_FULL=1` 让它们在 pytest 中运行,而示例 runner 总是运行每一行。
+pytest 投影是 `tests/control_plane/test_shared_goal_authority_e2e.py`;在那里,未验证行以 `unverified: <reason>` 跳过。五条断言已由 `tests/control_plane/test_local_authority_shadow_cli_e2e.py` 通过同一产品路径固定的 `s2c1.*` 行(配置往返、默认关闭隔离、候选失败、崩溃间隙、双运行时根)在默认 CI 投影中跳过,以保持在 pytest job 预算内;`LOOPX_LADDER_FULL=1` 让它们在 pytest 中运行,而示例 runner 总是运行每一行。
 
 ## 行
 
@@ -39,7 +39,6 @@ pytest 投影是 `tests/control_plane/test_shared_goal_authority_e2e.py`;在那�
 | `env:nokv_legacy` | `NOKV_COORDINATION_LIVE=1` 以及 `NOKV_ETCD`、`NOKV_ETCD_PREFIX`、`NOKV_ROOT_ID`、`NOKV_BUCKET`、`NOKV_OBJECT_ENDPOINT`、`NOKV_OBJECT_ROOT`、`NOKV_OBJECT_KEY`、`NOKV_OBJECT_SECRET`;`nokv` SDK 可导入 | `nokv_live_env_missing`、`nokv_coordination_live_not_enabled`、`nokv_sdk_missing` |
 | `env:nokv_authority` | `LOOPX_NOKV_AUTHORITY_LIVE=1`(该探针写入持久测试数据)、`LOOPX_NOKV_AUTHORITY_CONFIG_JSON`(被忽略的 NoKV 客户端配置的绝对路径)、`LOOPX_NOKV_AUTHORITY_PYTHON`(解析出 NoKV SDK 0.11.0 的 Python 可执行文件的绝对路径)、`LOOPX_NOKV_AUTHORITY_WORKBENCH`(一个既有 workbench);`PATH` 上的 `node` | `nokv_authority_env_missing`、`loopx_nokv_authority_live_not_enabled`、`nokv_authority_config_missing`、`nokv_authority_python_missing`、`node_missing` |
 
-POSIX 专用行在 Windows 上报告 `unverified/posix_only`。
 
 ## 报告与退出策略
 

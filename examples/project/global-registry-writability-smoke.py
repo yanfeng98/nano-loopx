@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 import tempfile
@@ -173,9 +172,6 @@ def assert_register_agent_fails_before_source_write(root: Path) -> None:
 
 
 def main() -> int:
-    if os.name == "nt":
-        print("global-registry-writability-smoke skipped on Windows")
-        return 0
     with tempfile.TemporaryDirectory(prefix="loopx-global-writability-smoke-") as tmp:
         root = Path(tmp)
         assert_sync_reports_write_denied(root / "sync")

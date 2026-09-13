@@ -357,7 +357,7 @@ def main() -> int:
         "chapters/05-connect-existing-project.md",
         (
             "Node.js 22.6",
-            "Windows PowerShell 7",
+            "POSIX shell",
             "loopx doctor --deep",
             "用户不需要手工维护 daemon",
             "`missing`、`unsupported` 或 `probe_failed`",

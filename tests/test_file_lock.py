@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-from types import SimpleNamespace
 
 import pytest
 
@@ -18,15 +17,14 @@ from loopx.file_lock import (
     fcntl,
     lock_holder_path,
     lock_incident_path,
-    msvcrt,
     try_exclusive_file_lock,
 )
 from loopx.presentation.markdown import append_operator_action_markdown
 
 
 pytestmark = pytest.mark.skipif(
-    fcntl is None and msvcrt is None,
-    reason="a supported kernel file-lock backend is required",
+    fcntl is None,
+    reason="the fcntl kernel file-lock backend is required",
 )
 
 
@@ -184,20 +182,6 @@ def test_cross_runtime_lock_respects_a_live_typescript_holder(tmp_path: Path) ->
             timeout_seconds=0,
             operation="task-lease-release",
         )
-
-
-def test_cross_runtime_windows_pid_probe_is_non_signaling(monkeypatch) -> None:
-    calls: list[int] = []
-
-    def probe(pid: int) -> bool:
-        calls.append(pid)
-        return True
-
-    monkeypatch.setattr(file_lock, "os", SimpleNamespace(name="nt"))
-    monkeypatch.setattr(file_lock, "_windows_process_is_alive", probe)
-
-    assert file_lock._effect_mutation_process_is_alive(1234) is True
-    assert calls == [1234]
 
 
 def test_cross_runtime_lock_reclaims_a_dead_typescript_holder(tmp_path: Path) -> None:

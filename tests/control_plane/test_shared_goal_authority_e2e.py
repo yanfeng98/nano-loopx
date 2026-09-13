@@ -81,10 +81,6 @@ def _row_parameters() -> Iterator[object]:
     full_ladder = os.environ.get(FULL_LADDER_VARIABLE) == "1"
     for row in ladder.LADDER_ROWS:
         marks = []
-        if row.posix_only:
-            marks.append(
-                pytest.mark.skipif(os.name == "nt", reason="requires POSIX cross-process flock and SIGKILL")
-            )
         if row.id in CLI_E2E_COVERED_ROW_IDS and not full_ladder:
             marks.append(pytest.mark.skip(reason=CLI_E2E_COVERAGE_REASON))
         yield pytest.param(row, id=row.id, marks=marks)

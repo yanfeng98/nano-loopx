@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -437,10 +436,6 @@ def test_restart_managed_loopx_services_restarts_only_loopx_launchagents(
     assert all(call[0] == "launchctl" for call in calls)
 
 
-@pytest.mark.skipif(
-    os.name == "nt",
-    reason="archive snapshot updates require the POSIX installer path",
-)
 def test_successful_update_revalidates_enabled_extensions(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -487,14 +482,3 @@ def test_successful_update_revalidates_enabled_extensions(
     ]
 
 
-@pytest.mark.skipif(os.name != "nt", reason="native Windows update boundary")
-def test_windows_execute_update_fails_closed_without_launching_bash() -> None:
-    payload = {"ok": True, "source": {}, "plan": {}}
-
-    with mock.patch("loopx.self_update.subprocess.run") as run:
-        updated = execute_update_plan(payload)
-
-    run.assert_not_called()
-    assert updated["ok"] is False
-    assert updated["execution"]["status"] == "unsupported_platform"
-    assert "install-windows.ps1" in updated["recommended_action"]

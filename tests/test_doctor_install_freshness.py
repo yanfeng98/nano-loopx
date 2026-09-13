@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import importlib.util
-import os
 import subprocess
 from pathlib import Path
 
@@ -206,14 +205,10 @@ def test_main_channel_upgrade_command_preserves_source_ref(tmp_path: Path) -> No
     )
 
     command = str(freshness["no_clone_upgrade_command"])
-    if os.name == "nt":
-        assert "pwsh -NoLogo -NoProfile -File" in command
-        assert "install-windows.ps1" in command
-    else:
-        assert (
-            "curl -fsSL https://huangruiteng.github.io/loopx/install.sh "
-            "| env LOOPX_REF=main bash"
-        ) in command
+    assert (
+        "curl -fsSL https://huangruiteng.github.io/loopx/install.sh "
+        "| env LOOPX_REF=main bash"
+    ) in command
     assert freshness["upgrade_command"] == command
 
 
@@ -231,10 +226,7 @@ def test_stable_channel_upgrade_command_keeps_public_default(tmp_path: Path) -> 
 
     command = str(freshness["no_clone_upgrade_command"])
     assert "LOOPX_REF=" not in command
-    if os.name == "nt":
-        assert "install-windows.ps1" in command
-    else:
-        assert "huangruiteng.github.io/loopx/install.sh | bash" in command
+    assert "huangruiteng.github.io/loopx/install.sh | bash" in command
     assert freshness["upgrade_command"] == command
 
 
@@ -278,12 +270,7 @@ def test_other_agent_freshness_does_not_require_codex_skill_directory(
     assert freshness["requires_upgrade"] is False
     assert freshness["installed_skills_required"] is False
     assert freshness["doctor_after_upgrade"] == "loopx doctor --agent-type other-agent"
-    expected_suffix = (
-        "loopx doctor --agent-type 'other-agent'"
-        if os.name == "nt"
-        else "loopx doctor --agent-type other-agent"
-    )
-    assert str(freshness["upgrade_command"]).endswith(expected_suffix)
+    assert str(freshness["upgrade_command"]).endswith("loopx doctor --agent-type other-agent")
 
 
 def test_external_agents_skill_root_is_accepted_without_copying(tmp_path: Path) -> None:
@@ -305,9 +292,8 @@ def test_external_agents_skill_root_is_accepted_without_copying(tmp_path: Path) 
     assert all(skill["route_count"] == 1 for skill in skills.values())
     assert freshness["status"] == "live_checkout"
     assert freshness["externally_managed_skills"] is True
-    expected_skip = "-SkipSkills" if os.name == "nt" else "LOOPX_INSTALL_SKILL=0"
-    assert expected_skip in str(freshness["upgrade_command"])
-    assert expected_skip in str(freshness["contributor_upgrade_command"])
+    assert "LOOPX_INSTALL_SKILL=0" in str(freshness["upgrade_command"])
+    assert "LOOPX_INSTALL_SKILL=0" in str(freshness["contributor_upgrade_command"])
 
 
 def test_duplicate_skill_routes_fail_closed(tmp_path: Path) -> None:
@@ -356,10 +342,7 @@ def test_python_distribution_uses_pip_native_upgrade_path(tmp_path: Path) -> Non
     assert freshness["python_distribution_version"] == "0.4.8"
     assert "-m pip install --upgrade loopx" in str(freshness["upgrade_command"])
     assert "loopx workflow-skills --install" in str(freshness["upgrade_command"])
-    if os.name == "nt":
-        assert "install-windows.ps1" in str(freshness["no_clone_upgrade_command"])
-    else:
-        assert "huangruiteng.github.io" in str(freshness["no_clone_upgrade_command"])
+    assert "huangruiteng.github.io" in str(freshness["no_clone_upgrade_command"])
 
 
 def test_pipx_distribution_preserves_the_pipx_owner(tmp_path: Path) -> None:
