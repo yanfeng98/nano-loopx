@@ -30,6 +30,7 @@
 | 026 | [026-remove-deepseek-harness.md](026-remove-deepseek-harness.md) | 移除 DeepSeek Harness 全部集成(152 文件 +54/−36028,本系列最大;**三处耦合**——两个 host 变体 + `packages/dsh-loopx-plugin` 51 文件整包 + `reliability-diagnostics` 通用能力随之退役;`turn.py`→`dsh_goal_mode` 是无条件深层依赖、`reliability-diagnostics` 是顶级 CLI 命令且在 manpage help-only 表内、showcase 生成产物重生成、`deepseek-v4-flash` 模型名假阳性) |
 | 027 | [027-remove-deprecate-benchmark-legacy.md](027-remove-deprecate-benchmark-legacy.md) | 移除 `deprecate/`(上游 benchmark 重置遗留归档;481 文件整目录删除 + 10 文件修改;139 个文件 import 的目标已在重置中删除故为死代码,唯一硬破坏面是上游 `docs-governance-smoke.py` 的 3 处断言/读取、唯一静默断链是 `benchmark/README.md` 相对链接;**norecursedirs 整表删除而非改空列表**、canary token 自我触发、`deprecated_source_count` 类假阳性) |
 | 028 | [028-trim-repository-hygiene-smoke.md](028-trim-repository-hygiene-smoke.md) | 裁剪 repository-hygiene smoke 的公开门面断言(4 项因 `c88509106` 删 LICENSE、`6a9bebc75` 删整个 `.github/` 而必然失败,且它在首个断言即抛错 → 其后 boundary 扫描在本 fork **从未执行过**;按用户决定只裁守卫、**不恢复许可证**,并接受与上游分叉;裁剪后 smoke 转绿、boundary 首次真正跑通;许可证未恢复的风险记录在案) |
+| 029 | [029-retire-ci-only-guards.md](029-retire-ci-only-guards.md) | 退役 `.github/` 删除遗留的 CI-only 守卫(删 2 个只断言已删 workflow 的测试文件 + 裁 `smoke_health.py` 的 `PR_FAST_WORKFLOW`/`workflow_contract` 契约 + 同步 `testing-and-quality.md`;关键症状是 `test_python_ci_workflow.py` **收集期抛错致 pytest 整场中断、6.8 秒 canary 测试一个没跑**;按用户决定退役而非恢复 `.github/`;另盘点出 6 个在册 canary smoke 同因失效,留待 030) |
 
 - 全部操作在 `260906-dev` 分支完成。
 - 时间轴: 001 → 002(用户澄清"只保留中文") → 003(自查) → 004(用户发现落后 7 commits) → 005(自查) → 006(用户发现落后 3 commits)。
