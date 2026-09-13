@@ -174,3 +174,16 @@
 
 无新增环境性失败。本机 `os.name == "posix"`，所有被删分支此前均未执行；WSL2 同样是 `posix`，
 故本次移除不改变本机任何运行路径。
+
+## 提交/推送
+
+5 个提交，按评审逻辑拆分（产品代码 / 测试 / 文档 / 日志 / 复查修正）：
+
+- `deaa365d1` refactor: drop Windows support from the CLI and runtime
+- `33770459b` test: drop Windows-only coverage and re-target POSIX expectations
+- `4148122a4` docs: drop Windows guidance from the live documentation
+- `0d75b8aa4` docs: record operation log 032 (Windows support removal)
+- `6cddb04f6` docs: keep the benchmark containment protocol intact after review
+
+按用户指示推送：`e685f97a3..f98199c1b`（与 031 的 5 个提交合并为一次 push，
+共 11 个提交；`f98199c1b` 为第五轮复查的文档修正）。
