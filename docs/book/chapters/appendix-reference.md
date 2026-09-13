@@ -159,15 +159,25 @@ loopx backup-state --project . --execute
 
 备份包含本地 runtime、项目状态和可达 registry，是 private recovery material，不应提交或公开。
 
-如果新 release 出现阻塞问题，先读当前 `loopx update --help`，再选择已记录的 release id 或：
+如果新的安装出现阻塞问题，回滚就是把**上一个安装**放回去——本 fork 没有发布快照通道，也没有可回滚的
+在线版本，所以旧产物由你自己保管：
 
 ```bash
-loopx update --rollback previous
+# wheel 安装：装回上一个 wheel 文件
+<venv>/bin/python -m pip install --force-reinstall --no-deps <previous-wheel>
+<venv>/bin/loopx workflow-skills --install
+<venv>/bin/loopx doctor
+
+# checkout 开发：回到上一个已知可用的提交
+git -C <checkout> checkout <previous-revision>
+python3 -m pip install -e . --no-deps --no-build-isolation
+loopx workflow-skills --install
 loopx doctor
 ```
 
-回滚只恢复 LoopX release snapshot。已经由新版本写入的项目状态、外部 effect 或独立 Extension
-package 可能需要各自的 migration/rollback；不要把 wrapper 回滚描述成全系统回滚。
+`loopx update check|plan` 会按当前安装形态打印它建议的命令（wheel 安装给 wheel 重装，checkout 给就地
+刷新）。回滚只恢复 LoopX 本体；已经由新版本写入的项目状态、外部 effect 或独立 Extension package
+可能需要各自的 migration/rollback；不要把回滚描述成全系统回滚。
 
 ## Scheduler 收敛入口
 

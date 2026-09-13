@@ -21,17 +21,14 @@ from .control_plane.runtime.promotion_readiness import (
 from .install_contract import NO_CLONE_INSTALL_URL
 from .paths import DEFAULT_RUNTIME_ROOT, global_registry_path
 from .python_install_owner import (
-    INSTALL_PATH_EDITABLE_CHECKOUT,
-    INSTALL_PATH_UNKNOWN,
-    PythonInstallOwner,
     classify_install_path,
+    distribution_upgrade_command,
     editable_dev_refresh_command,
+    install_identity_fields,
     is_editable_source_checkout,
     local_wheel_path,
-    python_distribution_upgrade_command,
     read_direct_url,
     resolve_python_install_owner,
-    wheel_reinstall_command,
 )
 from .capabilities.project_skill_delivery import discover_project_scoped_skill_ids
 from .registry_writability import probe_registry_write_path
@@ -547,23 +544,9 @@ def build_install_freshness(
             f"loopx doctor{doctor_agent_arg}"
         )
     )
-    distribution_owner = PythonInstallOwner(
-        str(distribution_install.get("installer") or "unknown"),
-        distribution_install.get("installer_environment"),
-    ) if distribution_install else None
-    if distribution_owner:
-        # A local-wheel install upgrades by reinstalling that wheel file; only an
-        # index install (which this fork does not ship) falls back to the
-        # package-manager channel.
-        upgrade_command = wheel_reinstall_command(
-            owner=distribution_owner,
-            python_executable=sys.executable,
-            doctor_command=f"loopx doctor{doctor_agent_arg}",
-            wheel_path=(
-                distribution_install.get("wheel_path") if distribution_install else None
-            ),
-        ) or python_distribution_upgrade_command(
-            owner=distribution_owner,
+    if distribution_install:
+        upgrade_command = distribution_upgrade_command(
+            distribution_install=distribution_install,
             python_executable=sys.executable,
             doctor_command=f"loopx doctor{doctor_agent_arg}",
         )
@@ -639,21 +622,11 @@ def build_install_freshness(
         "contributor_upgrade_command": contributor_upgrade_command,
         "doctor_after_upgrade": f"loopx doctor{doctor_agent_arg}",
         "installed_skills_required": require_installed_skills,
-        "install_kind": (
-            "python_distribution" if distribution_install else "release_or_checkout"
-        ),
-        # Where the running install came from: an editable checkout, a local wheel
-        # file, or (unsupported here) an index. install_kind stays the coarse
-        # python_distribution / release_or_checkout split for existing consumers.
-        "install_path": (
-            distribution_install.get("install_path")
-            if distribution_install
-            else INSTALL_PATH_EDITABLE_CHECKOUT
-            if editable_dev_command
-            else INSTALL_PATH_UNKNOWN
-        ),
-        "wheel_path": (
-            distribution_install.get("wheel_path") if distribution_install else None
+        # install_kind stays the coarse python_distribution / release_or_checkout
+        # split; install_path names where the running install actually came from
+        # (editable checkout, local wheel file, or an unsupported index install).
+        **install_identity_fields(
+            distribution_install, editable=bool(editable_dev_command)
         ),
         "python_distribution_version": (
             distribution_install.get("version") if distribution_install else None
@@ -1447,6 +1420,8 @@ def render_doctor_markdown(payload: dict[str, Any]) -> str:
                 f"- schema_version: `{freshness.get('schema_version')}`",
                 f"- status: `{freshness.get('status')}`",
                 f"- install_kind: `{freshness.get('install_kind')}`",
+                f"- install_path: `{freshness.get('install_path')}`",
+                f"- wheel_path: `{freshness.get('wheel_path')}`",
                 f"- requires_upgrade: `{freshness.get('requires_upgrade')}`",
                 f"- current_version: `{freshness.get('current_version')}`",
                 f"- current_version_tag: `{freshness.get('current_version_tag')}`",

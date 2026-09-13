@@ -144,6 +144,64 @@ def python_distribution_upgrade_command(
     )
 
 
+def distribution_upgrade_command(
+    *,
+    distribution_install: Mapping[str, Any] | None,
+    python_executable: str,
+    doctor_command: str,
+) -> str | None:
+    """Upgrade advice for a pip-managed install: the recorded wheel first.
+
+    Only a package-index install (which this fork does not publish) falls back to
+    the owner's own upgrade channel.
+    """
+
+    if not isinstance(distribution_install, Mapping):
+        return None
+    owner = PythonInstallOwner(
+        str(distribution_install.get("installer") or "unknown"),
+        distribution_install.get("installer_environment"),
+    )
+    return wheel_reinstall_command(
+        owner=owner,
+        python_executable=python_executable,
+        doctor_command=doctor_command,
+        wheel_path=(
+            str(distribution_install["wheel_path"])
+            if distribution_install.get("wheel_path")
+            else None
+        ),
+    ) or python_distribution_upgrade_command(
+        owner=owner,
+        python_executable=python_executable,
+        doctor_command=doctor_command,
+    )
+
+
+def install_identity_fields(
+    distribution_install: Mapping[str, Any] | None,
+    *,
+    editable: bool,
+) -> dict[str, Any]:
+    """The install-kind/install-path block shared by doctor payloads."""
+
+    return {
+        "install_kind": "python_distribution" if distribution_install else "release_or_checkout",
+        "install_path": (
+            distribution_install.get("install_path")
+            if isinstance(distribution_install, Mapping)
+            else INSTALL_PATH_EDITABLE_CHECKOUT
+            if editable
+            else INSTALL_PATH_UNKNOWN
+        ),
+        "wheel_path": (
+            distribution_install.get("wheel_path")
+            if isinstance(distribution_install, Mapping)
+            else None
+        ),
+    }
+
+
 def _quote_local_path(value: str) -> str:
     """Quote a path for the shell the emitted command will be pasted into."""
     return shlex.quote(value)

@@ -152,6 +152,23 @@ def main() -> int:
             assert forbidden not in upgrade, upgrade
         print(f"doctor install_path ok: {freshness['install_path']} -> {freshness['wheel_path']}")
 
+        # `loopx update` must treat this as a local wheel install it can reapply,
+        # and must not name any index, hosted installer or retired script.
+        update_plan = run(
+            [str(bin_dir / "loopx"), "update", "plan", "--format", "json"],
+            env=venv_env,
+            cwd=root,
+        )
+        plan_payload = json.loads(update_plan.stdout)
+        plan_lifecycle = plan_payload["install_lifecycle"]
+        assert plan_lifecycle["owner"] == "local_wheel_install", plan_lifecycle
+        assert plan_lifecycle["execution_driver"] == "python_pip", plan_lifecycle
+        assert plan_payload["plan"]["apply_supported"] is True, plan_payload
+        assert plan_payload["commands"]["apply"] == "loopx update apply", plan_payload
+        for forbidden in ("huangruiteng", "install.sh", "codeload", "pip install --upgrade loopx"):
+            assert forbidden not in update_plan.stdout, forbidden
+        print("loopx update plan ok: local_wheel_install")
+
         run([str(bin_dir / "loopx"), "workflow-skills", "--install"], env=venv_env)
         installed_skill = home / ".codex" / "skills" / "loopx-project" / "SKILL.md"
         assert installed_skill.is_file(), installed_skill
