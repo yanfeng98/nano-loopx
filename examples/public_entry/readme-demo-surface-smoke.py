@@ -26,11 +26,10 @@ def main() -> int:
     compact_readme = compact(readme)
     compact_no_space_readme = "".join(readme.split())
     compact_demo = compact(demo)
-    # The current fork README ends the Auto Research section at 试用 LoopX; the
-    # 真实项目中的使用 heading this used to split on was removed deliberately.
-    auto_research = readme.split("### Auto Research", 1)[1].split(
-        "## 试用 LoopX", 1
-    )[0]
+    # The fork README orders 试用 LoopX first, so the 证据 section (and with it
+    # Auto Research) no longer ends at a named section. Bound the slice at the
+    # next H2 heading instead of at "## 试用 LoopX".
+    auto_research = readme.split("### Auto Research", 1)[1].split("\n## ", 1)[0]
 
     # Expectations track the current fork README: the aggregate-claims
     # paragraph, the 快速开始 anchor and the cross-runtime link were removed
