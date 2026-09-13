@@ -122,6 +122,22 @@
   的 `04-state-substrate.md#core-statedomain-state-与-runtime-artifact` 锚点告警。两者 mkdocs 都只报 INFO，
   `--strict` 不拦截。
 
+### 第四轮自查（pytest 层 + 修正双树方法自身的盲点）
+
+- **pytest 全套**（`-n 4`，5572 项）：当前树 `5 failed / 5567 passed / 19 skipped / 3 errors`，与基线
+  **逐项一致**（同一组 5 个失败 + 同一组 3 个 collection error）→ **测试层零差异**。
+- **发现并修正了自己验证方法的盲点**：基线跑在 `/tmp` 的 git clone 里，其 `origin` 是**本地路径**
+  而非 SSH URL；`tests/control_plane/test_quota_settlement_cli.py` 会从仓库 remote 推导工作区 git 身份，
+  于是本地路径 remote 让其中 2 条测试**确定性失败**。取证：把当前 HEAD 也克隆一份同样失败，而同一份
+  内容在真实仓库目录里通过；把 clone 的 remote 改成 `git@github.com:yanfeng98/nano-loopx.git` 后立即
+  27/27 通过（机制确认）。修正基线环境后重跑全套：基线 `5 failed / 5567 passed / 3 errors`，与当前树
+  完全一致。此前所有"FAIL/FAIL 既存"结论在修正后的基线上逐条复核，**8 项全部同因**。
+  → 教训：基线复制必须在**影响被测行为的维度上等价**（remote、路径、git 状态），否则会得到
+  方向性偏差的结论。
+- 其余新检查：渲染后的四层表格是真表格（4 表头 / 4 数据行 / 恢复列含 fork 口径）；
+  `operation-logs/000-INDEX.md` 34 条链接 0 断链；仓库无实验残留（仅既有 ignored 缓存目录）；
+  `loopx canary smoke-suite --suite full-public --no-execute` 仍匹配 494 项检查。
+
 **顺带发现的既有问题（非本批引入，未处理）**：
 
 - `docs/product/release-readiness.md:323` 的 `../architecture.md#current-dependency-budget` 锚点在渲染站点
