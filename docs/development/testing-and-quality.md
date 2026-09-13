@@ -70,11 +70,14 @@ python -m pytest -q
 git diff --check
 ```
 
-`.github/workflows/python-tests.yml` 会在相关 Python PR 上运行这条快速通道。
+上游由 `.github/workflows/python-tests.yml` 在相关 Python PR 上运行这条快速通道；
+**本 fork 已移除整个 `.github/`（2026-09-07，`6a9bebc75`），这条快速通道没有
+CI 承载者，只能在本地或隔离沙箱手工运行**（见下文「Smoke 与 Canary」）。
 它刻意不包含真实模型调用和 full smoke catalog，因此普通迭代不依赖凭证、网络
 时延、模型服务可用性或两小时级测试矩阵。
 
-Linux 全套测试分到两台 hosted runner，每台保留两个 xdist worker。`pytest-split`
+以下分片细节描述的是**上游 CI（本 fork 不存在）**，保留以便合并上游时对照。
+上游把 Linux 全套测试分到两台 hosted runner，每台保留两个 xdist worker。`pytest-split`
 按完整 collection 分片；没有历史耗时时，等权测试交替分配。lint、类型检查和 CLI
 预算独立执行。必需的 `pytest` 汇总检查会拒绝失败／跳过的分片和缺失的 coverage，
 合并后再执行原有 19.6% 门槛；不要求单个分片达到全套覆盖率。coverage 使用相对路径，
