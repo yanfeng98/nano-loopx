@@ -4,7 +4,6 @@
 指南面向开始使用或运维 LoopX 的人，是任务导向的路径。
 
 - [开始使用](getting-started.md)
-- [安装 LoopX](installing-loopx.md)
 - [新手命令路径](newcomer-command-path.md)
 - [最小自定义 runtime 示例](minimal-custom-runtime-example.md)
 - [最小自定义 runtime 示例（中文）](minimal-custom-runtime-example.md)

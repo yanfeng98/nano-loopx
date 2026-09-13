@@ -37,7 +37,7 @@ provider 保持关闭,直到其逐扩展 doctor 结果被修复且命令通过�
 
 不要把包获取、host 材料交付、核心运行时激活与已启用扩展就绪度合并为一个"已安装"
 声明。
-[安装指南的活动层检查清单](../guides/installing-loopx.md#verify-the-active-layers)
+[就地开发闭环的活动层检查清单](../development/editable-dev-loop.md#verify-the-active-layers)
 为每层命名了读回与恢复命令。
 
 对于 pip 或 pipx 发行,apply 委托给该 owner。对于归档快照,apply 默认使用公开

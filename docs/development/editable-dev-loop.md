@@ -1,8 +1,8 @@
 # 就地开发闭环（Editable Dev Loop）
 
 本页描述**本 fork 唯一支持的开发方式**：把这个 checkout 装成 editable 安装，改完就地验证。
-它替代了上游的安装叙述——上游的 PyPI / pipx / 归档快照通道在本 fork 不使用，原文保留在
-[安装 LoopX](../guides/installing-loopx.md) 仅供合并上游时对照。
+它替代了上游的安装叙述——上游的 PyPI / pipx / 归档快照通道在本 fork 不使用，那份上游原文
+**不保留在本仓库**（需要对照时用 `git show upstream/main:docs/guides/installing-loopx.md`）。
 
 ## 一次性准备
 
@@ -100,6 +100,25 @@ loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code �
   绝不安装发布快照。
 - 会看到但**应忽略**：`loopx bootstrap` 的 `install_repair_command` 是面向上游包通道的静态字符串。
 
+## 验证各激活层 {#verify-the-active-layers}
+
+一轮升级不会因为某一层退出码为 0 就算完成——包、宿主材料、受管 runtime 与扩展各自可能独立过期。
+逐层读回，并且只把读回成功当作那一层的证据：
+
+| 层 | Readback | 成功证明什么 | 未就绪时的恢复 |
+| --- | --- | --- | --- |
+| 安装 owner 与包 | `loopx update check` | 无变更地识别活动可执行文件、包 owner、新鲜度与下一步动作。 | 遵循报告给出的 owner 命令；不要在同一个环境里混用 editable、pip、pipx 与归档路径。对本 checkout，owner 命令就是上面的就地刷新三连。 |
+| 宿主材料 | `loopx --format json doctor` | `skill_delivery.status` 描述活动宿主使用的 workflow-skill 投递。 | 重跑 `loopx workflow-skills --install`（Claude Code 需显式 `--skills-dir ~/.claude/skills`），按需再刷新 `loopx slash-commands --install`，然后重启宿主。 |
+| 受管 Effect runtime | `loopx doctor --deep` | 打包的 TypeScript Effect runtime 能启动并应答深度探测；空闲退出的 `stopped` 生命周期仍是健康的。 | 按 doctor 建议处理；不要用第二条 Python 规则路径替代。 |
+| 已启用扩展 | `loopx extension doctor --all-enabled --execute --format json` | 每个启用扩展都有当前 runtime 身份并通过就绪检查。 | 修复点名的 provider 或扩展并重跑其 doctor；失败的 provider 保持闭合。 |
+
+`loopx update plan` 对活动源码 checkout 报的就是上面的就地刷新命令，且继续 fail-closed：
+`apply` 为空，绝不 `git pull`、绝不安装发布快照。
+
+这条清单源自上游安装指南的同一张表，已按 fork 口径改写（上游那版描述 PyPI / pipx / 归档通道，
+在本 fork 不使用）。**发布提醒**：合入 `main` 的代码不等于处于激活状态——对 checkout 而言，
+"激活"只由重跑就地安装与 skills 交付保证，见上面的"什么会立即生效、什么需要重装或重建"表。
+
 ## 陷阱：cwd 遮蔽
 
 editable finder 被追加到 `sys.meta_path` **末尾**，所以在**包含 `loopx/` 子目录**的目录里运行
@@ -125,4 +144,7 @@ editable finder 被追加到 `sys.meta_path` **末尾**，所以在**包含 `loo
 
 本页、README 的试用段、`CONTRIBUTING.md` 的本地开发段、`docs/guides/getting-started.md` 的贡献者
 安装段都是 fork 版本；合并上游时以本 fork 版本为准（上游会带回 PyPI 安装叙述）。
-`docs/guides/installing-loopx.md` 保留上游原文并加偏差标注，便于对照。
+上游的安装指南（PyPI / pipx / 归档通道）**已从本仓库删除**：它作为活文档会与"唯一支持的开发方式"
+冲突，且文档站把它挂在 Getting Started 组当作安装入口。需要对照上游原文时用
+`git show upstream/main:docs/guides/installing-loopx.md`；其中唯一仍然活着的活动层检查清单已按
+fork 口径收进本页的[验证各激活层](#verify-the-active-layers)。

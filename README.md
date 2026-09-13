@@ -49,8 +49,8 @@ Node 直接执行，改完即生效，不需要 npm 构建。活改 / 需要重�
 （`python3 -m pip install --upgrade loopx`、`pipx install loopx`）、`scripts/install-local.sh`
 或归档安装器（`curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash`）——它们会生成
 第二份 `loopx`，而 `~/.local/bin` 通常在 `PATH` 上排在 editable 安装之前，等于静默接管你的
-开发环境。上游的安装、升级、回滚、卸载与 archive fallback 说明保留在
-[Installing LoopX](docs/guides/installing-loopx.md)，仅供合并上游时对照。
+开发环境。上游的安装、升级、回滚、卸载与 archive fallback 说明**不保留在本仓库**——需要对照时
+用 `git show upstream/main:docs/guides/installing-loopx.md`。
 
 然后在项目根目录连接：
 

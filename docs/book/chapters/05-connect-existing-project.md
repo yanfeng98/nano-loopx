@@ -149,7 +149,7 @@ loopx doctor --deep
 ```
 
 完整的安装、升级与回滚命令见
-[Installing LoopX](/loopx/docs/guides/installing-loopx/)；本 fork 只在 Linux 与 WSL2 上运行。
+[就地开发闭环](/loopx/docs/development/editable-dev-loop/)；本 fork 只在 Linux 与 WSL2 上运行。
 
 ## 3. 建立忽略规则
 
