@@ -312,12 +312,17 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
         "canary_profile_id": "install-update",
         "owner_paths": [
             "loopx/self_update.py",
+            "loopx/python_install_owner.py",
+            "scripts/build-wheel.sh",
             "scripts/install-from-github.sh",
             "scripts/install-local.sh",
         ],
         "semantic_oracle": {
             "source_kind": "specification",
-            "refs": ["docs/product/runtimes/codex-cli/codex-cli-packaged-install.md"],
+            "refs": [
+                "docs/product/runtimes/codex-cli/codex-cli-packaged-install.md",
+                "docs/guides/offline-wheel-install.md",
+            ],
             "independence_rationale": (
                 "The packaged-install contract defines provenance, rollback, and no-system-mutation "
                 "requirements independently of installer output."
@@ -328,7 +333,10 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
                 "tests/test_doctor_install_freshness.py",
                 "tests/test_slash_command_install.py",
             ),
-            "durable_smoke": _covered("examples/install-local-smoke.py"),
+            "durable_smoke": _covered(
+                "examples/install-local-smoke.py",
+                "examples/wheel-install-smoke.py",
+            ),
             "catalog_canary": _covered("install-update"),
             "host_upgrade": _covered("examples/loopx-update-smoke.py"),
             "model_behavior": _not_applicable(

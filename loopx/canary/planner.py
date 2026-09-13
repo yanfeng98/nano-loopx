@@ -236,6 +236,11 @@ CURRENT_REPO_PROFILES: tuple[dict[str, Any], ...] = (
         ),
         "checks": [
             {
+                "command": "python3 examples/wheel-install-smoke.py",
+                "tier": "default",
+                "reason": "builds the wheel offline and verifies the installed distribution carries the control plane, skills and canary assets",
+            },
+            {
                 "command": "python3 examples/install-local-smoke.py",
                 "tier": "default",
                 "reason": "guards the local installer wrapper, skill installation, and install freshness reporting",

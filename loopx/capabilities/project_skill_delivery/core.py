@@ -6,7 +6,8 @@ import os
 import re
 import shutil
 import tempfile
-from pathlib import Path
+from importlib.metadata import PackageNotFoundError, distribution
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 from loopx import __version__
@@ -44,8 +45,37 @@ def _normalize_surfaces(surfaces: Iterable[str] | None) -> tuple[str, ...]:
 
 
 def canonical_project_skill_source(skill_id: str) -> Path:
+    """Resolve a project-scoped skill from the checkout or an installed wheel.
+
+    A source checkout keeps ``<repo>/skills/<id>``. A wheel install ships the same
+    trees as ``share/loopx/skills/<id>`` data files, so a checkout-only lookup would
+    resolve to ``site-packages/skills/<id>`` and fail. Try the checkout first (it may
+    be ahead of the installed copy), then the packaged roots.
+    """
     normalized = _normalize_skill_id(skill_id)
+    for root in _project_skill_roots():
+        candidate = root / normalized
+        if (candidate / "SKILL.md").is_file():
+            return candidate
+    # Nothing found: name the checkout path so the caller's error message stays concrete.
     return Path(__file__).resolve().parents[3] / "skills" / normalized
+
+
+def _project_skill_roots() -> tuple[Path, ...]:
+    roots: list[Path] = [Path(__file__).resolve().parents[3] / "skills"]
+    try:
+        installed = distribution("loopx")
+    except PackageNotFoundError:
+        return tuple(roots)
+    for item in installed.files or ():
+        posix = PurePosixPath(item.as_posix())
+        if not posix.as_posix().endswith("share/loopx/skills/loopx-project/SKILL.md"):
+            continue
+        return (*roots, Path(item.locate()).resolve().parents[1])
+    # pip rewrites wheel data-file RECORD rows into the prefix; fall back to the
+    # distribution root (also covers ``pip install --target`` layouts).
+    distribution_root = Path(installed.locate_file("")).resolve()
+    return (*roots, distribution_root / "share" / "loopx" / "skills")
 
 
 def project_skill_target(

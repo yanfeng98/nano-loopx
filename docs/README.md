@@ -9,7 +9,8 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 
 | 你想... | 从这里开始 | 继续看 |
 | --- | --- | --- |
-| 安装前了解 LoopX | [公共主页](https://huangruiteng.github.io/loopx/) | [项目 README](../README.md) |
+| 安装前了解 LoopX | [项目 README](../README.md) | [就地开发闭环](development/editable-dev-loop.md) |
+| 离线安装（发给别人） | [离线 wheel 安装](guides/offline-wheel-install.md) | [快速上手](guides/getting-started.md) |
 | 跟随精心编排的开发者课程 | [Developer Book](/loopx/docs/book/) | |
 | 在仓库里试用 LoopX | [快速上手](guides/getting-started.md) | [新手上手命令路径](guides/newcomer-command-path.md) |
 | 运行或恢复一个长寿命目标 | [运维](operations/README.md) | [集成指南](integration.md) |
@@ -34,7 +35,7 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 - [Effect interpreter packet](reference/effect-interpreter-packet.md)：
   针对 `quota should-run` 的 canonical effect-request/interpretation/observation 透镜。
 - [公共/私有边界](public-private-boundary.md)：可保留或可发布的内容。
-- [发布就绪](product/release-readiness.md)：支持的 v0.x 安装、兼容性与晋升关卡。
+- [发布就绪](product/release-readiness.md)：支持的安装路径、兼容性与晋升关卡。
 
 ## 按主题浏览
 
