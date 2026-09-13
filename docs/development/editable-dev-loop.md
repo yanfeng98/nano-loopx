@@ -16,18 +16,22 @@ python3 -m pip install -e . --no-deps --no-build-isolation
 - `--no-deps --no-build-isolation` 让这条命令完全离线：`pyproject.toml` 的 `dependencies`
   为空，构建后端 `setuptools` 已随环境提供。换到没有 setuptools 的环境时去掉
   `--no-build-isolation`（代价是联网取构建依赖）。
-- 验证三件事：
+- 验证四件事：
 
 ```bash
 loopx version                                     # 期望输出 `loopx 1.0.0`
 python3 -m pip show loopx | grep -i editable      # 应指向 <checkout>
 command -v loopx                                  # 应是 <python-env>/bin/loopx——它只是 shim
-python3 -c "import loopx; print(loopx.__file__)"  # 应指向 <checkout>/loopx/__init__.py（真正执行的代码）
+python3 -c "import loopx; print(loopx.__file__)"  # 应指向 <checkout>/loopx/__init__.py（在 <checkout> 根目录运行）
 ```
 
 后两条要一起看：console script 永远在**解释器的 bin** 下（`<python-env>/bin/loopx`），它本身不含代码，
 真正被 import 的是 checkout 里的 `loopx/`。只有 `command -v` 为 `<python-env>/bin/loopx` **且**
 `import loopx` 落在 `<checkout>` 下，才是健康的 editable 安装。
+
+两条的抗遮蔽能力不同，所以都要跑：console script 的 `sys.path[0]` 是它的 bin 目录，**不受 cwd 影响**；
+而 `python3 -c` 的 `sys.path[0]` 是 cwd，在含 `loopx/` 子目录的目录里会 import 到那一份（见下面的
+[cwd 遮蔽](#cwd-shadowing)），所以最后一条要在 `<checkout>` 根目录跑。
 
 **反直觉点**：`pip show loopx` 的 `Version` 可能落后于 `loopx version`。运行时版本是
 `loopx/__init__.py` 里的字面量，包元数据只在你跑过安装命令时才刷新——两者不一致不代表装坏了。
@@ -98,8 +102,9 @@ loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code �
   doctor 仍会报 skills 缺失。
 - editable 安装永远不会被识别为 `python_distribution`（PEP 660 的 RECORD 里没有 `loopx/doctor.py`），
   所以 `## Install Freshness` 段的 `install_kind` 恒为 `release_or_checkout`。**容易混淆的是同一段的
-  `status`——它才是 `live_checkout`**（判据是"当前命令不是带时间戳的发布快照"）。两者是两个字段，
-  别把 `live_checkout` 当成 `install_kind` 的取值。
+  `status`——本 checkout 上它是 `live_checkout`**（判据是"当前命令不是带时间戳的发布快照"；该字段
+  另有 `missing` / `stale` / `fresh` / `unknown` 等取值）。两者是两个字段，别把 `live_checkout`
+  当成 `install_kind` 的取值。
 - 本 fork 已把 checkout 场景的升级建议改成**就地刷新命令**：`pip install -e . --no-deps
   --no-build-isolation` + skills 交付 + `loopx doctor`（其中 `--no-build-isolation` 按运行环境
   自适应：解释器里没有 setuptools 时自动去掉，否则那条命令会以 `ModuleNotFoundError` 失败）。
@@ -129,7 +134,7 @@ loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code �
 在本 fork 不使用）。**发布提醒**：合入 `main` 的代码不等于处于激活状态——对 checkout 而言，
 "激活"只由重跑就地安装与 skills 交付保证，见上面的"什么会立即生效、什么需要重装或重建"表。
 
-## 陷阱：cwd 遮蔽
+## 陷阱：cwd 遮蔽 {#cwd-shadowing}
 
 editable finder 被追加到 `sys.meta_path` **末尾**，所以在**包含 `loopx/` 子目录**的目录里运行
 `python3 -m loopx.…` 或 `python3 -c "import loopx"` 时，`PathFinder` 会先命中当前目录，import 到的

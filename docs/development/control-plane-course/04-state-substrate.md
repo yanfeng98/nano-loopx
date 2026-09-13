@@ -273,7 +273,7 @@ projection_synced
 
 Status 不是写入口。Dashboard、Lark kanban、review packet 都应该消费 status 或其他 public-safe projection，而不是反向解析私有源文件再写回。
 
-## Core State、Domain State 与 Runtime Artifact
+## Core State、Domain State 与 Runtime Artifact {#core-state-domain-state-runtime-artifact}
 
 前面的五类状态面主要解释跨场景生命周期。领域扩展还需要一层紧凑事实，但不能
 因此把 Issue-Fix、Explore 或 ML Experiment 的字段塞进通用 todo/quota 状态机。

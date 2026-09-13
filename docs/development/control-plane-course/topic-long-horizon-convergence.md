@@ -173,7 +173,7 @@ def translate_domain_observation(kernel_snapshot, provider, pack):
 schema 和 proposal 属于 pack，最终是否执行仍由 Kernel 判断。
 
 一小时分享讲到这条边界即可。需要设计新 pack 时，再深入
-[第 4 讲：Core State、Domain State 与 Runtime Artifact](04-state-substrate.md#core-statedomain-state-与-runtime-artifact)、
+[第 4 讲：Core State、Domain State 与 Runtime Artifact](04-state-substrate.md#core-state-domain-state-runtime-artifact)、
 [Domain Capability Packs](../../product/domain-capability-packs.md)和
 [Issue-Fix State Kernel × Domain State 案例](../../../loopx/capabilities/issue_fix/docs/state-kernel-domain-state-case-study.md)。
 
