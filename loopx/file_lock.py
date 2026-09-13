@@ -21,35 +21,12 @@ try:  # pragma: no cover - exercised on POSIX hosts in integration smokes.
 except ImportError:  # pragma: no cover
     fcntl = None
 
-try:  # pragma: no cover - imported only on Windows hosts.
-    msvcrt: Any = importlib.import_module("msvcrt")
-except ImportError:  # pragma: no cover
-    msvcrt = None
-
-
-def _prepare_windows_lock(lock_file: TextIO) -> None:
-    lock_file.seek(0, 2)
-    if lock_file.tell() == 0:
-        lock_file.write("0")
-        lock_file.flush()
-    lock_file.seek(0)
-
 
 def _try_acquire_kernel_lock(lock_file: TextIO) -> bool:
-    if fcntl is not None:
-        try:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as exc:
-            if not _lock_is_busy(exc):
-                raise
-            return False
-        return True
-    if msvcrt is None:
-        raise RuntimeError("no supported file-lock backend is available")
-
-    _prepare_windows_lock(lock_file)
+    if fcntl is None:
+        raise RuntimeError("fcntl is required for file locking on this platform")
     try:
-        msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError as exc:
         if not _lock_is_busy(exc):
             raise
@@ -60,9 +37,6 @@ def _try_acquire_kernel_lock(lock_file: TextIO) -> bool:
 def _release_kernel_lock(lock_file: TextIO) -> None:
     if fcntl is not None:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-    elif msvcrt is not None:
-        lock_file.seek(0)
-        msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
 
 
 LOCK_ACQUIRE_TIMEOUT_ERROR_CODE = "lock_acquire_timeout"
@@ -123,10 +97,7 @@ def _lock_path(path: Path) -> Path:
 
 
 def lock_holder_path(path: Path) -> Path:
-    lock_path = _lock_path(path)
-    if os.name == "nt":
-        return lock_path.with_name(f"{lock_path.name}.holder.json")
-    return lock_path
+    return _lock_path(path)
 
 
 def lock_incident_path(path: Path) -> Path:
@@ -450,8 +421,7 @@ def try_exclusive_file_lock(
 ) -> Iterator[Path | None]:
     """Try once to hold a sibling lock file for single-flight work.
 
-    ``None`` means another process already owns the lock. POSIX uses ``flock``;
-    Windows uses the standard-library ``msvcrt`` byte-range lock.
+    ``None`` means another process already owns the lock. Locking uses ``flock``.
     """
 
     lock_path = _lock_path(path)
@@ -502,14 +472,10 @@ def _effect_mutation_claim_path(path: Path, token: str) -> Path:
 
 
 def process_is_alive(pid: object) -> bool:
-    """Probe a process without sending signals or console control events."""
+    """Probe a process without sending signals."""
 
     if isinstance(pid, bool) or not isinstance(pid, int) or pid <= 0:
         return False
-    if os.name == "nt":
-        # Windows signal 0 is CTRL_C_EVENT, not the side-effect-free POSIX
-        # existence probe provided by kill(pid, 0).
-        return _windows_process_is_alive(pid)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -519,35 +485,6 @@ def process_is_alive(pid: object) -> bool:
     except OSError as exc:
         return exc.errno == errno.EPERM
     return True
-
-
-def _windows_process_is_alive(pid: int) -> bool:
-    """Probe a Windows process without sending a console control event."""
-
-    import ctypes
-    from ctypes import wintypes
-
-    synchronize = 0x00100000
-    wait_timeout = 0x00000102
-    error_access_denied = 5
-    kernel32 = getattr(ctypes, "WinDLL")("kernel32", use_last_error=True)
-    open_process = kernel32.OpenProcess
-    open_process.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-    open_process.restype = wintypes.HANDLE
-    wait_for_single_object = kernel32.WaitForSingleObject
-    wait_for_single_object.argtypes = [wintypes.HANDLE, wintypes.DWORD]
-    wait_for_single_object.restype = wintypes.DWORD
-    close_handle = kernel32.CloseHandle
-    close_handle.argtypes = [wintypes.HANDLE]
-    close_handle.restype = wintypes.BOOL
-
-    handle = open_process(synchronize, False, pid)
-    if not handle:
-        return bool(getattr(ctypes, "get_last_error")() == error_access_denied)
-    try:
-        return bool(wait_for_single_object(handle, 0) == wait_timeout)
-    finally:
-        close_handle(handle)
 
 
 def _effect_mutation_process_is_alive(pid: object) -> bool:
@@ -584,7 +521,7 @@ class _EffectMutationClaim:
 
 
 def _effect_file_identity_from_stat(info: os.stat_result) -> tuple[int, int, int, int]:
-    """Capture a replacement-resistant identity on POSIX and Windows."""
+    """Capture a replacement-resistant identity from the stat record."""
 
     return (
         int(getattr(info, "st_dev", 0)),
@@ -629,9 +566,9 @@ def _same_effect_file_identity(
     # Two all-zero identities are ambiguous and must fail closed.
     if left[2] or right[2]:
         return left[2] != 0 and right[2] != 0 and left[2] == right[2]
-    # Some Windows filesystems expose no device/inode or birth marker.  ctime
-    # is the last available creation-like marker; two zero identities are not
-    # safe to compare.
+    # Some filesystems expose no device/inode or birth marker.  ctime is the
+    # last available creation-like marker; two zero identities are not safe to
+    # compare.
     return left[3] != 0 and right[3] != 0 and left[3] == right[3]
 
 

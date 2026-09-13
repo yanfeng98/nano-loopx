@@ -398,8 +398,6 @@ def cli_env(workspace: CliWorkspace) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(REPO_ROOT)
     env["HOME"] = str(workspace.home)
-    if os.name == "nt":
-        env["USERPROFILE"] = str(workspace.home)
     return env
 
 

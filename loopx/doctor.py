@@ -89,18 +89,7 @@ class GitRevisionRelation(str, Enum):
     UNKNOWN = "unknown"
 
 
-def _powershell_literal(value: str | Path) -> str:
-    return "'" + str(value).replace("'", "''") + "'"
-
-
 def local_install_command(repo_root: Path, *, skip_skills: bool = False) -> str:
-    if os.name == "nt":
-        return (
-            "pwsh -NoLogo -NoProfile -File "
-            f"{_powershell_literal(repo_root / 'scripts' / 'install-windows.ps1')} "
-            f"-Python {_powershell_literal(sys.executable)}"
-            + (" -SkipSkills" if skip_skills else "")
-        )
     command = str(repo_root / "scripts" / "install-local.sh")
     return f"LOOPX_INSTALL_SKILL=0 {command}" if skip_skills else command
 
@@ -111,17 +100,6 @@ def no_clone_upgrade_command(
     doctor_agent_type: str | None = None,
     skip_skills: bool = False,
 ) -> str:
-    if os.name == "nt":
-        repo_root = Path(__file__).resolve().parents[1]
-        doctor_agent_arg = (
-            f" --agent-type {_powershell_literal(doctor_agent_type)}"
-            if doctor_agent_type
-            else ""
-        )
-        return (
-            f"{local_install_command(repo_root, skip_skills=skip_skills)}\n"
-            f"loopx doctor{doctor_agent_arg}"
-        )
     ref = str(source_ref or "").strip()
     installer = f"curl -fsSL {NO_CLONE_INSTALL_URL}"
     doctor_agent_arg = (
@@ -925,12 +903,8 @@ def collect_doctor(
     python_distribution = python_distribution_install(module_path)
     package_dir = module_path.parent
     repo_root = package_dir.parent
-    install_script = repo_root / "scripts" / (
-        "install-windows.ps1" if os.name == "nt" else "install-local.sh"
-    )
-    wrapper_script = repo_root / "scripts" / (
-        "loopx.ps1" if os.name == "nt" else "loopx"
-    )
+    install_script = repo_root / "scripts" / "install-local.sh"
+    wrapper_script = repo_root / "scripts" / "loopx"
     active_release_root_text = os.environ.get("LOOPX_RELEASE_ROOT")
     release_root = (
         Path(active_release_root_text).expanduser().resolve()
@@ -1317,14 +1291,8 @@ def collect_doctor(
                     else (
                         f"Run `{local_install_command(repo_root, skip_skills=externally_managed_skills)}` "
                         "and start a new shell. "
-                        + (
-                            f"Ensure `{local_bin}` is on the Windows user PATH."
-                            if os.name == "nt"
-                            else (
-                                f"Or export PATH=\"{local_bin}:$PATH\". For no-clone repair, run "
-                                f"`curl -fsSL {NO_CLONE_INSTALL_URL} | bash`."
-                            )
-                        )
+                        f"Or export PATH=\"{local_bin}:$PATH\". For no-clone repair, run "
+                        f"`curl -fsSL {NO_CLONE_INSTALL_URL} | bash`."
                     )
                 )
             )

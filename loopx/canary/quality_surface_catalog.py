@@ -169,8 +169,8 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
                 "examples/control_plane/monitor-scheduler-contract-smoke.py",
             ),
             "catalog_canary": _covered("scheduler-ack-route"),
-            "host_upgrade": _covered(
-                "tests/test_windows_install.py",
+            "host_upgrade": _not_applicable(
+                "This fork runs on Linux and WSL2 only; the Windows installer surface was removed."
             ),
             "model_behavior": _not_applicable(
                 "Route binding and ACK state progression are deterministic safety invariants."

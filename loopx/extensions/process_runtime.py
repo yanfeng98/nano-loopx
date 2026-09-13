@@ -47,39 +47,8 @@ def _terminate_posix_process_group(process: subprocess.Popen[bytes]) -> None:
         process.wait()
 
 
-def _terminate_windows_process_tree(process: subprocess.Popen[bytes]) -> None:
-    if process.poll() is not None:
-        return
-    subprocess.run(
-        ["taskkill", "/PID", str(process.pid), "/T"],
-        check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    if _wait_for_process(process, _PROCESS_TERMINATE_GRACE_SECONDS):
-        return
-    subprocess.run(
-        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-        check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    process.wait()
-
-
 def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
-    if os.name == "posix":
-        _terminate_posix_process_group(process)
-        return
-    if os.name == "nt":  # pragma: no cover - exercised on Windows hosts.
-        _terminate_windows_process_tree(process)
-        return
-    if process.poll() is not None:  # pragma: no cover - unsupported platform fallback.
-        return
-    process.terminate()
-    if not _wait_for_process(process, _PROCESS_TERMINATE_GRACE_SECONDS):
-        process.kill()
-        process.wait()
+    _terminate_posix_process_group(process)
 
 
 def run_capped_process(
@@ -93,11 +62,9 @@ def run_capped_process(
 ) -> CappedProcessResult:
     """Run a provider while bounding both output streams during execution."""
 
-    process_options: dict[str, object] = {}
-    if os.name == "posix":
-        process_options["start_new_session"] = True
-    elif os.name == "nt":  # pragma: no cover - exercised on Windows hosts.
-        process_options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    # Give the provider its own session so the whole process group can be
+    # terminated as a tree.
+    process_options: dict[str, object] = {"start_new_session": True}
     process = subprocess.Popen(
         list(argv),
         stdin=subprocess.PIPE,

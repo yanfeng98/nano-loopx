@@ -87,8 +87,6 @@ from ..control_plane.turn_driver.journal_store import (
 
 
 def _fsync_parent_directory(path: Path) -> None:
-    if os.name != "posix":  # pragma: no cover - Windows has no directory fsync
-        return
     descriptor = os.open(path.parent, os.O_RDONLY)
     try:
         os.fsync(descriptor)

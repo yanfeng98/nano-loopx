@@ -182,13 +182,6 @@ def _command_prompt_specs(*, cli_bin: str, include_legacy_aliases: bool) -> list
 
 def _command_skill_content(spec: dict[str, Any], *, surface: str) -> str:
     instructions = list(spec["instructions"])
-    if surface == "codex-skills":
-        instructions.insert(
-            0,
-            "On native Windows, run the installed PowerShell 7 entry as `loopx` "
-            "from PowerShell; from another executor use `pwsh.exe -NoLogo "
-            "-NoProfile -File \"$HOME/.local/bin/loopx.ps1\" <arguments>`.",
-        )
     return _skill_body(
         command=str(spec["command"]),
         title=str(spec.get("title") or f"LoopX {spec['command']}"),

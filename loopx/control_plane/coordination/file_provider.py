@@ -14,9 +14,7 @@ fsync the file, atomically rename it over the document, then fsync the parent
 directory so the rename itself is durable. ``applied`` is returned only after
 the whole sequence converges; any storage fault inside the sequence surfaces
 as ``ambiguous`` so the authority reloads and trusts only its atomically
-stored receipt index. On Windows there is no directory-handle fsync; the
-rename's durability there follows platform semantics and the directory step
-is a no-op.
+stored receipt index. The directory fsync makes the rename itself durable.
 """
 
 from __future__ import annotations
@@ -65,8 +63,7 @@ def _write_all(descriptor: int, payload: bytes) -> None:
 # The commit-sequence steps below are module seams on purpose: fault
 # injection in tests targets the provider's own document commit without
 # touching the global os attributes that loopx.file_lock's holder
-# bookkeeping also uses (its Windows sidecar path calls os.fsync and
-# os.replace of its own).
+# bookkeeping also uses (it calls os.fsync and os.replace of its own).
 
 
 def _fsync_file(descriptor: int) -> None:

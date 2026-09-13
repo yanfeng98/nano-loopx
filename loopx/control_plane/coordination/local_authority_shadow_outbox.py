@@ -104,8 +104,6 @@ def entry_file_name(seq: int, entry_id: str, phase: str) -> str:
 
 
 def _fsync_directory(directory: Path) -> None:
-    if os.name == "nt":
-        return
     descriptor = os.open(directory, os.O_RDONLY)
     try:
         os.fsync(descriptor)

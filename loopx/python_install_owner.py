@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import importlib.util
 import json
-import os
 from pathlib import Path
 import shlex
 import sys
@@ -60,10 +59,6 @@ def python_distribution_upgrade_command(
 
 def _quote_local_path(value: str) -> str:
     """Quote a path for the shell the emitted command will be pasted into."""
-    if os.name == "nt":
-        # cmd.exe and PowerShell both accept double-quoted paths; shlex's single
-        # quotes would only survive in PowerShell.
-        return f'"{value}"'
     return shlex.quote(value)
 
 

@@ -234,8 +234,6 @@ def _log(line: str) -> None:
 
 
 def _shell_argv(command: str) -> list[str]:
-    if os.name == "nt":  # pragma: no cover - exercised on Windows hosts.
-        return [os.environ.get("COMSPEC", "cmd.exe"), "/d", "/s", "/c", command]
     return ["/bin/sh", "-c", command]
 
 

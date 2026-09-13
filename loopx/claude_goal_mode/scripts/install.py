@@ -68,9 +68,7 @@ def hardening_block() -> dict:
 # ---- MCP dependency provisioning --------------------------------------------
 
 def _venv_python(venv: Path) -> Path:
-    sub = "Scripts" if sys.platform == "win32" else "bin"
-    exe = "python.exe" if sys.platform == "win32" else "python"
-    return venv / sub / exe
+    return venv / "bin" / "python"
 
 
 # The server imports `mcp.server.fastmcp`, which MCP SDK 2.x no longer ships.

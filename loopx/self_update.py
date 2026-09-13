@@ -100,12 +100,6 @@ def _source_config(
 
 
 def _command_for_source(source: dict[str, Any]) -> str:
-    if os.name == "nt":
-        return (
-            "Native Windows automatic archive update is not available. "
-            "Update a trusted LoopX checkout, then run its "
-            "`scripts/install-windows.ps1` with PowerShell 7."
-        )
     return _update_action_command(UpdateAction.APPLY, source)
 
 
@@ -395,13 +389,9 @@ def _install_lifecycle(doctor_payload: dict[str, Any]) -> dict[str, Any]:
     installer_environment = None
     if install_kind == "release_snapshot":
         owner = "loopx_release_snapshot"
-        apply_supported = os.name != "nt"
-        execution_driver = "archive_snapshot" if apply_supported else None
-        reason = (
-            "LoopX owns this archive release snapshot and can atomically replace it"
-            if apply_supported
-            else "native Windows snapshot updates remain owned by install-windows.ps1"
-        )
+        apply_supported = True
+        execution_driver = "archive_snapshot"
+        reason = "LoopX owns this archive release snapshot and can atomically replace it"
         owner_command = None
     elif install_kind == "python_distribution":
         owner = "python_package_manager"
@@ -1069,18 +1059,6 @@ def execute_update_plan(
             "reason": lifecycle.get("reason"),
         }
         return updated
-    if os.name == "nt":
-        updated = dict(payload)
-        updated["execution"] = {
-            "status": "unsupported_platform",
-            "reason": (
-                "native Windows automatic archive update is not available; "
-                "rerun scripts/install-windows.ps1 from an updated trusted checkout"
-            ),
-        }
-        updated["ok"] = False
-        updated["recommended_action"] = updated["execution"]["reason"]
-        return updated
     source = payload.get("source") if isinstance(payload.get("source"), dict) else {}
     installer_url = str(source.get("installer_url") or NO_CLONE_INSTALL_URL)
     plan = payload.get("plan") if isinstance(payload.get("plan"), dict) else {}
@@ -1182,18 +1160,6 @@ def execute_rollback_plan(
     timeout_seconds: int = 600,
     home: Path | None = None,
 ) -> dict[str, Any]:
-    if os.name == "nt":
-        updated = dict(payload)
-        updated["ok"] = False
-        updated["execution"] = {
-            "status": "unsupported_platform",
-            "reason": (
-                "native Windows automatic rollback is not available; "
-                "rerun scripts/install-windows.ps1 for the selected trusted checkout"
-            ),
-        }
-        updated["recommended_action"] = updated["execution"]["reason"]
-        return updated
     plan = payload.get("plan") if isinstance(payload.get("plan"), dict) else {}
     selected_release_root = plan.get("selected_release_root")
     if not payload.get("ok") or not selected_release_root:

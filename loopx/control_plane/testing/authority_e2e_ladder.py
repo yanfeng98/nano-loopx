@@ -769,8 +769,6 @@ def run_row(
     started = time.monotonic()
     env: Mapping[str, str] = dict(os.environ) if environ is None else environ
     forbidden = default_forbidden_tokens([root], env)
-    if row.posix_only and os.name == "nt":
-        return RowResult(row, "unverified", "posix_only", {"platform": os.name}, 0)
     gate = gate_unverified_reason(row.gate, env)
     if gate is not None:
         return RowResult(row, "unverified", gate[0], gate[1], 0)
