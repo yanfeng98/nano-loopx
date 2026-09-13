@@ -3,11 +3,11 @@
 
 状态：产品路径与发布彩排。
 
-LoopX 应该先让人觉得简单，再让人觉得强大。初次使用 Codex CLI 的用户应当能留在 TUI 里、粘贴一条消息，然后看到当前 goal 状态、gates、todos 与下一个安全动作，而无需先克隆这个仓库或阅读 LoopX 内部。
+LoopX 应该先让人觉得简单，再让人觉得强大。初次使用 Codex CLI 的用户应当能留在 TUI 里、粘贴一条消息，然后看到当前 goal 状态、gates、todos 与下一个安全动作，而无需阅读 LoopX 内部（安装本身就是 clone checkout 并就地装成 editable）。
 
-该路径连接三个已发布的 surface：
+该路径连接三个 surface：
 
-1. PyPI 安装/更新，带打包 workflow skills 与归档兜底；
+1. 从 checkout 就地的 editable 安装/更新，带打包 workflow skills；
 2. 一条消息的 Codex CLI TUI 引导；
 3. 供之后可见自动化使用的 proof-capture 夹具。
 
@@ -19,9 +19,9 @@ LoopX 应该先让人觉得简单，再让人觉得强大。初次使用 Codex C
 2. 粘贴一条开始消息：
 
    ```text
-   Start LoopX for this repo. If `loopx` is missing, install it from PyPI,
-   install the packaged workflow skills, then connect this project. Show
-   me the current goal, concrete user gate if any, top todos, and next safe
+   Start LoopX for this repo. If `loopx` is missing, set it up from the LoopX
+   checkout, install the packaged workflow skills, then connect this project.
+   Show me the current goal, concrete user gate if any, top todos, and next safe
    action before running longer work. Keep me in this Codex CLI TUI unless I
    explicitly accept a headless fallback. After I paste this, begin the Goal
    Harness loop; do not stop after only explaining what LoopX is.
@@ -30,7 +30,7 @@ LoopX 应该先让人觉得简单，再让人觉得强大。初次使用 Codex C
 3. Agent 在需要时安装或修复 LoopX，使用：
 
    ```bash
-   python3 -m pip install --upgrade loopx
+   cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
    loopx workflow-skills --install
    loopx doctor
    ```

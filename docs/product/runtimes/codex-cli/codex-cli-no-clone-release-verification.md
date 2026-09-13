@@ -1,9 +1,15 @@
 # Codex CLI 无克隆发布验证
 
 
-状态：发布验证说明。
+状态：发布验证说明（上游归档通道；本 fork 作为发布/canary 机制保留）。
 
 只有当已发布的命令 surface 与文档相符时，Codex CLI 首次运行路径才能宣传为偏好的交互路径。用户不必先克隆 LoopX 就能从项目仓库尝试它。
+
+**本 fork 偏差**：这篇文章验证的是**上游 no-clone 归档安装通道**。本 fork 的日常开发与用户安装
+**不使用**它——唯一支持的安装方式是把 checkout 装成 editable 安装（见
+[就地开发闭环](../../../development/editable-dev-loop.md)），在同一环境里跑归档安装器或
+`scripts/install-local.sh` 会静默接管 `loopx`。保留本页与其验证器，是因为发布快照晋升与 canary
+通道仍属发布工作的一部分；下面"PyPI 保持默认"的表述描述的是上游产品形态，不是本 fork 的形态。
 
 ## 验证形态
 

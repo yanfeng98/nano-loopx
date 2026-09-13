@@ -40,11 +40,11 @@ def assert_doc() -> None:
 
     must_have = (
         "Codex CLI 首次运行彩排",
-        "PyPI 安装/更新，带打包 workflow skills 与归档兜底",
+        "从 checkout 就地的 editable 安装/更新，带打包 workflow skills",
         "一条消息的 Codex CLI TUI 引导",
         "供之后可见自动化使用的 proof-capture 夹具",
         "Start LoopX for this repo",
-        "python3 -m pip install --upgrade loopx",
+        "cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation",
         "loopx workflow-skills --install",
         "loopx codex-cli-bootstrap-message --project . --goal-id <goal-id> --message-only",
         "loopx codex-cli-tui-bootstrap-smoke-bundle",
@@ -74,7 +74,7 @@ def assert_indexes() -> None:
     assert link in product, product
     assert "product/README.md" in docs, docs
     assert f"../product/runtimes/codex-cli/{link}" in getting_started, getting_started
-    assert "PyPI" in product, product
+    assert "就地 editable 安装" in product, product
     assert "单消息 TUI 引导" in product, product
     assert "证明捕获夹具" in getting_started, getting_started
 
