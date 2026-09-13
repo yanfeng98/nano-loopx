@@ -261,7 +261,15 @@ def main() -> int:
             capture_output=True,
             text=True,
         )
-        assert "outer host turn identity" in fallback_help.stdout, fallback_help.stdout
+        # This used to assert the Codex App fallback receipt-identity note ("outer
+        # host turn identity"), whose text lived in scripts/codex_app_apply_rrule.py.
+        # This fork retired that host in 2f9a91f89 (operation-logs/020), so the
+        # assertion now anchors on the CLI's own banner: the installed wrapper
+        # still has to reach the release tree and print the real help.
+        assert (
+            "LoopX keeps long-running agent work moving with durable state and evidence."
+            in fallback_help.stdout
+        ), fallback_help.stdout
         release_python = release_root / ".loopx-python"
         assert release_python.read_text(encoding="utf-8").strip() == sys.executable
         assert (release_root / "loopx" / "cli.py").is_file(), release_root
@@ -274,9 +282,13 @@ def main() -> int:
         assert dashboard_page.is_file(), dashboard_page
         assert action_packet.is_file(), action_packet
         assert not dashboard_node_modules.exists(), dashboard_node_modules
-        assert (release_root / ".github" / "workflows" / "update-notes.yml").is_file(), release_root
+        # Two assertions were dropped here: the release tree no longer carries
+        # .github/workflows/update-notes.yml or LICENSE, because this fork removed
+        # both (c88509106, 6a9bebc75). scripts/install-local.sh copies each of them
+        # through a guarded copy_path(), so a missing source is skipped rather than
+        # fatal; docs/development/contributor-tasks.md below is the surviving
+        # payload-marker check.
         assert (release_root / "docs/development/contributor-tasks.md").is_file(), release_root
-        assert (release_root / "LICENSE").is_file(), release_root
         release_manifest_path = release_root / "release.json"
         assert release_manifest_path.is_file(), release_manifest_path
         release_manifest = json.loads(release_manifest_path.read_text(encoding="utf-8"))
