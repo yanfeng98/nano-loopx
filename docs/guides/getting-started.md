@@ -23,9 +23,10 @@ loop/scheduler。没有这些时，请改用手动 shell 命令；LoopX 可以�
 
 ```text
 Connect the current project to LoopX.
-Do not clone the LoopX repository for ordinary use. If `loopx` is not on PATH,
-install it from PyPI with Python 3.11+:
-python3 -m pip install --upgrade loopx
+Do not clone the LoopX repository for ordinary use, and do not install it from
+PyPI. This environment runs LoopX from an in-place editable checkout; if
+`loopx` is not on PATH, set it up from that checkout:
+cd <checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 
 Then run `loopx doctor`. Work only from the current project root:
@@ -162,9 +163,10 @@ Loop 在运行。此后，只要 CLI 暴露安全会话附加原语，自动化�
 
 ```text
 Connect this repo to LoopX from this visible Codex CLI TUI. Do not clone the
-LoopX repository for ordinary use. If `loopx` is not on PATH, install it from
-PyPI with Python 3.11+:
-python3 -m pip install --upgrade loopx
+LoopX repository for ordinary use, and do not install it from PyPI. This
+environment runs LoopX from an in-place editable checkout; if `loopx` is not on
+PATH, set it up from that checkout:
+cd <checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 
 Then run `loopx doctor`. Work only from this project root: if LoopX state
@@ -285,33 +287,18 @@ python3 examples/fresh-clone-quickstart-smoke.py
 
 ## 安装与升级
 
-不 clone 仓库，从 PyPI 安装当前发布：
+本 fork 只在 Linux 与 WSL2 上运行。**唯一支持的安装与升级方式**是把 checkout 就地装成 editable
+安装，命令见下一节[贡献者安装](#contributor-install)；升级就是 `git` 拉取新代码后重跑同一条命令。
 
-```bash
-python3 -m pip install --upgrade loopx
-loopx workflow-skills --install
-loopx doctor
-```
+`loopx update check` 对活动源码 checkout 报的正是那条就地刷新命令，且继续 fail-closed：`apply`
+为空，绝不 `git pull`、绝不安装发布快照。各激活层（包 owner、宿主材料、Effect runtime、扩展）的
+逐层读回与恢复见[就地开发闭环](../development/editable-dev-loop.md#verify-the-active-layers)。
 
-wheel 包含 CLI 与可复用 LoopX workflow skills。
-`workflow-skills --install` 把这些 skills 落地到 `~/.codex/skills` 并写入 revision
-readback。首次安装后重启宿主，让它重新加载它们。受管环境、宿主界面、回滚与归档
-回退细节见[安装 LoopX](installing-loopx.md)。
+不要在同一个环境里运行 PyPI / pipx 安装、`scripts/install-local.sh` 或 curl 归档安装器：`~/.local/bin`
+通常排在 `PATH` 最前，它们会生成第二份 `loopx` 并静默接管你的开发环境。上游这些通道的说明原文
+不再保留在仓库内，需要对照时用 `git show upstream/main:docs/guides/installing-loopx.md`。
 
-对 PyPI 安装，升级包然后从同一发行版刷新宿主材料：
-
-```bash
-python3 -m pip install --upgrade loopx
-loopx workflow-skills --install
-loopx slash-commands --install
-loopx doctor
-```
-
-GitHub Pages 归档安装器仍作为回退可用。`loopx update` 现在投影活动安装 owner：
-PyPI 环境保持包管理器拥有，归档快照保持 LoopX 拥有，活动源码 checkout 保持 Git
-拥有。
-
-## 贡献者安装
+## 贡献者安装 {#contributor-install}
 
 本 fork 的贡献者路径是把 checkout 就地装成 editable 安装——不需要 clone 第二份，也不使用
 发布通道：

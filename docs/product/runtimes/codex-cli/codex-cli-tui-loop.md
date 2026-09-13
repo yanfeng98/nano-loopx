@@ -17,9 +17,10 @@ LoopX 应该让 Codex CLI 易于采用，同时不夺走用户已经信任的交
 
 ```text
 Connect this repo to LoopX from this visible Codex CLI TUI. Do not clone the
-LoopX repository for ordinary use. If `loopx` is not on PATH, install or repair
-it from PyPI with Python 3.11+:
-python3 -m pip install --upgrade loopx
+LoopX repository for ordinary use, and do not install or repair it from PyPI.
+This environment runs LoopX from an in-place editable checkout; if `loopx` is
+not on PATH, set it up from that checkout:
+cd <checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 loopx workflow-skills --install
 
 Then run `loopx doctor`. Work only from this project root: if LoopX state
