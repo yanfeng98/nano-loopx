@@ -1,3 +1,11 @@
+"""Guards for `loopx update` in the two-path world.
+
+This fork supports an in-place editable checkout and a locally built wheel file.
+`loopx update` never touches the network: a local wheel install is reapplied from
+the wheel file pip recorded, a checkout is refreshed in place by the operator, and
+anything else is reported as unsupported instead of being guessed at.
+"""
+
 from __future__ import annotations
 
 import json
@@ -19,167 +27,59 @@ from loopx.self_update import (
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-INSTALLED_COMMIT = "1" * 40
-TARGET_COMMIT = "2" * 40
-
-
-class FakeVersionResponse:
-    def __init__(self) -> None:
-        self.body = f'__version__ = "{__version__}"\n'.encode()
-
-    def __enter__(self) -> FakeVersionResponse:
-        return self
-
-    def __exit__(self, *_args: object) -> None:
-        return None
-
-    def read(self, limit: int) -> bytes:
-        return self.body[:limit]
+WHEEL = "/tmp/dist/loopx-1.1.0-py3-none-any.whl"
+FORBIDDEN_FRAGMENTS = (
+    "huangruiteng",
+    "install.sh",
+    "github.io",
+    "codeload",
+    "pip install --upgrade loopx",
+    "pipx upgrade",
+    "install-local.sh",
+    "git pull",
+)
 
 
 def doctor_payload(
     *,
-    installed_commit: str | None = INSTALLED_COMMIT,
-    target_commit: str | None = TARGET_COMMIT,
-    relation: str = "installed_behind",
-    source_ref: str = "main",
+    install_path: str | None = "local_wheel",
+    installer: str = "pip",
+    environment: str | None = None,
+    wheel: str | None = WHEEL,
+    upgrade_command: str | None = None,
 ) -> dict[str, object]:
     return {
-        "path": {
-            "loopx": "/home/user/.local/bin/loopx",
-            "loopx_realpath": "/home/user/.local/share/loopx/releases/fixture/scripts/loopx",
-        },
-        "package": {
-            "release_root": "/home/user/.local/share/loopx/releases/fixture",
-        },
+        "path": {"loopx": "/managed/venv/bin/loopx"},
+        "package": {"install_kind": "python_distribution"},
         "install_freshness": {
-            "status": "stale" if relation == "installed_behind" else "fresh",
-            "requires_upgrade": relation == "installed_behind",
+            "status": "python_distribution",
+            "requires_upgrade": False,
             "current_version": __version__,
-            "release_id": "fixture",
-            "manifest_package_version": __version__,
-            "manifest_package_version_matches_runtime": True,
-            "manifest_source_repo": "example/loopx",
-            "manifest_source_ref": source_ref,
-            "manifest_source_git_commit": installed_commit,
-            "freshness_source_label": f"example/loopx@{source_ref}",
-            "freshness_source_git_commit": target_commit,
-            "manifest_source_freshness_relation": relation,
-        },
-        "release_manifest": {
-            "available": True,
-            "manifest": {
-                "source": {
-                    "repo": "example/loopx",
-                    "ref": source_ref,
-                    "git_commit": installed_commit,
-                }
-            },
+            "current_version_tag": f"v{__version__}",
+            "install_kind": "python_distribution",
+            "install_path": install_path,
+            "wheel_path": wheel,
+            "python_distribution_installer": installer,
+            "python_distribution_installer_environment": environment,
+            "upgrade_command": upgrade_command,
+            "contributor_upgrade_command": None,
+            "reason": "LoopX is installed as a managed Python distribution",
         },
     }
 
 
-def build_check(doctor: dict[str, object], *, ref: str = "main") -> dict[str, object]:
-    with mock.patch("loopx.self_update.urlopen", return_value=FakeVersionResponse()):
-        return build_update_plan(
-            repo="example/loopx",
-            ref=ref,
-            check_only=True,
-            doctor_payload=doctor,
-        )
-
-
-def test_same_version_older_commit_requires_release_or_install_successor() -> None:
-    payload = build_check(doctor_payload())
-
-    assert payload["source_version_check"]["matches_current"] is True
-    activation = payload["runtime_activation_qualification"]
-    assert activation["decision"] == "release_or_install_successor_required"
-    assert activation["runtime_active"] is False
-    assert activation["installed_source_commit"] == INSTALLED_COMMIT
-    assert activation["target_source_commit"] == TARGET_COMMIT
-    assert activation["successor"] == {
-        "required": True,
-        "kind": "release_or_install",
-    }
-    assert "project a release/install successor" in payload["recommended_action"]
-
-
-def test_equal_commit_proves_runtime_active() -> None:
-    payload = build_check(
-        doctor_payload(target_commit=INSTALLED_COMMIT, relation="same")
+def wheel_upgrade_command(installer: str = "pip") -> str:
+    first = (
+        f"pipx install --force {WHEEL}"
+        if installer == "pipx"
+        else f"{sys.executable} -m pip install --force-reinstall --no-deps {WHEEL}"
     )
-
-    activation = payload["runtime_activation_qualification"]
-    assert activation["decision"] == "runtime_active"
-    assert activation["runtime_active"] is True
-    assert activation["source_identity_matches"] is True
-    assert activation["successor"] == {"required": False, "kind": None}
-
-
-def test_missing_commit_lineage_never_proves_runtime_active() -> None:
-    payload = build_check(doctor_payload(target_commit=None, relation="same"))
-
-    activation = payload["runtime_activation_qualification"]
-    assert activation["decision"] == "activation_qualification_required"
-    assert activation["runtime_active"] is None
-    assert activation["successor"] == {
-        "required": True,
-        "kind": "activation_qualification",
-    }
-
-
-def test_different_selected_source_never_reuses_unrelated_lineage() -> None:
-    payload = build_check(
-        doctor_payload(
-            target_commit=INSTALLED_COMMIT, relation="same", source_ref="stable"
-        ),
-        ref="main",
+    return (
+        f"{first}\n"
+        "loopx workflow-skills --install\n"
+        "loopx slash-commands --install\n"
+        "loopx doctor"
     )
-
-    activation = payload["runtime_activation_qualification"]
-    assert activation["decision"] == "activation_qualification_required"
-    assert activation["runtime_active"] is None
-    assert activation["source_identity_matches"] is False
-    assert activation["qualified_source"]["ref"] == "stable"
-    assert activation["selected_source"]["ref"] == "main"
-
-
-def test_cli_check_qualifies_explicit_installed_doctor_snapshot(tmp_path: Path) -> None:
-    doctor_path = tmp_path / "installed-doctor.json"
-    doctor_path.write_text(json.dumps(doctor_payload()), encoding="utf-8")
-
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "loopx.cli",
-            "update",
-            "check",
-            "--format",
-            "json",
-            "--repo",
-            "example/loopx",
-            "--ref",
-            "main",
-            "--archive-url",
-            "https://example.invalid/loopx.tar.gz",
-            "--installed-doctor-json",
-            str(doctor_path),
-        ],
-        cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-
-    assert result.returncode == 0, (result.stdout, result.stderr)
-    payload = json.loads(result.stdout)
-    assert payload["installed_doctor_source"] == "explicit_json"
-    activation = payload["runtime_activation_qualification"]
-    assert activation["decision"] == "release_or_install_successor_required"
-    assert activation["installed_source_commit"] == INSTALLED_COMMIT
-    assert activation["target_source_commit"] == TARGET_COMMIT
 
 
 def test_update_actions_are_explicit_and_legacy_flags_remain_compatible() -> None:
@@ -195,52 +95,29 @@ def test_update_actions_are_explicit_and_legacy_flags_remain_compatible() -> Non
         resolve_update_action("check", execute=True)
 
 
-def test_python_distribution_apply_uses_the_owning_interpreter_pip() -> None:
-    doctor = doctor_payload()
-    doctor["package"] = {
-        "install_kind": "python_distribution",
-        "release_root": None,
-    }
-    doctor["install_freshness"]["install_kind"] = "python_distribution"
-    doctor["install_freshness"]["python_distribution_installer"] = "pip"
-    doctor["install_freshness"]["upgrade_command"] = (
-        "/managed/python -m pip install --upgrade loopx\n"
-        "loopx workflow-skills --install\n"
-        "loopx slash-commands --install\n"
-        "loopx doctor"
-    )
+def test_local_wheel_plan_reinstalls_the_recorded_wheel_file() -> None:
+    doctor = doctor_payload(upgrade_command=wheel_upgrade_command())
 
+    payload = build_update_plan(action="plan", doctor_payload=doctor)
+
+    lifecycle = payload["install_lifecycle"]
+    assert lifecycle["owner"] == "local_wheel_install"
+    assert lifecycle["execution_driver"] == "python_pip"
+    assert lifecycle["wheel_path"] == WHEEL
+    assert payload["commands"]["apply"] == "loopx update apply"
+    assert payload["plan"]["apply_supported"] is True
+    assert payload["plan"]["backup"]["available"] is False
+    assert payload["plan"]["install_command"] == lifecycle["owner_upgrade_command"]
+    rendered = json.dumps(payload)
+    for fragment in FORBIDDEN_FRAGMENTS:
+        assert fragment not in rendered, fragment
+
+
+def test_local_wheel_apply_runs_pip_force_reinstall() -> None:
+    doctor = doctor_payload(upgrade_command=wheel_upgrade_command())
     payload = build_update_plan(action="apply", doctor_payload=doctor)
 
-    assert payload["ok"] is True
-    assert payload["requested_action"] == "apply"
-    assert payload["changes_applied"] is False
-    assert payload["install_lifecycle"] == {
-        "install_kind": "python_distribution",
-        "owner": "python_package_manager",
-        "loopx_apply_supported": True,
-        "execution_driver": "python_pip",
-        "package_manager": "pip",
-        "package_manager_environment": None,
-        "reason": (
-            "LoopX can ask the owning Python interpreter's pip to upgrade the same environment"
-        ),
-        "owner_upgrade_command": doctor["install_freshness"]["upgrade_command"],
-    }
-    assert payload["commands"]["apply"] == "loopx update apply"
-    assert payload["commands"]["owner_upgrade"].startswith("/managed/python -m pip")
-    assert payload["plan"]["install_command"] == payload["commands"]["owner_upgrade"]
-    assert payload["plan"]["mutates_release_install"] is True
-    assert payload["plan"]["backup"]["rollback_version"] == __version__
-    assert f"loopx=={__version__}" in payload["plan"]["backup"]["rollback_command"]
-    assert payload["error"] is None
-
-    passed = subprocess.CompletedProcess(
-        args=[],
-        returncode=0,
-        stdout='{"ok": true}',
-        stderr="",
-    )
+    passed = subprocess.CompletedProcess(args=[], returncode=0, stdout="{}", stderr="")
     with (
         mock.patch(
             "loopx.self_update.subprocess.run",
@@ -262,31 +139,24 @@ def test_python_distribution_apply_uses_the_owning_interpreter_pip() -> None:
         "-m",
         "pip",
         "install",
-        "--upgrade",
-        "loopx",
+        "--force-reinstall",
+        "--no-deps",
+        WHEEL,
     ]
     assert run.call_args_list[1].args[0][3:5] == ["workflow-skills", "--install"]
     assert run.call_args_list[2].args[0][3:5] == ["slash-commands", "--install"]
 
 
-def test_pipx_distribution_apply_preserves_the_pipx_environment() -> None:
-    doctor = doctor_payload()
-    doctor["package"] = {"install_kind": "python_distribution"}
-    doctor["install_freshness"].update(
-        {
-            "install_kind": "python_distribution",
-            "python_distribution_installer": "pipx",
-            "python_distribution_installer_environment": "loopx-preview",
-            "upgrade_command": "pipx upgrade loopx-preview\nloopx doctor",
-        }
+def test_pipx_local_wheel_apply_uses_pipx_install_force() -> None:
+    doctor = doctor_payload(
+        installer="pipx",
+        environment="loopx-preview",
+        upgrade_command=wheel_upgrade_command("pipx"),
     )
     payload = build_update_plan(action="apply", doctor_payload=doctor)
 
     assert payload["install_lifecycle"]["execution_driver"] == "python_pipx"
-    assert (
-        payload["install_lifecycle"]["package_manager_environment"] == "loopx-preview"
-    )
-    assert payload["plan"]["backup"]["available"] is False
+    assert payload["install_lifecycle"]["package_manager_environment"] == "loopx-preview"
 
     passed = subprocess.CompletedProcess([], 0, '{"ok": true}', "")
     with (
@@ -302,19 +172,43 @@ def test_pipx_distribution_apply_preserves_the_pipx_environment() -> None:
         result = execute_update_plan(payload)
 
     assert result["ok"] is True
-    assert run.call_args_list[0].args[0] == ["pipx", "upgrade", "loopx-preview"]
+    assert run.call_args_list[0].args[0] == ["pipx", "install", "--force", WHEEL]
+
+
+def test_apply_without_a_recorded_wheel_fails_closed() -> None:
+    doctor = doctor_payload(wheel=None)
+    payload = build_update_plan(action="apply", doctor_payload=doctor)
+
+    # Without a recorded wheel file there is no local path to reinstall, so the
+    # install is reported as undetermined rather than guessed at.
+    assert payload["install_lifecycle"]["owner"] == "unknown_install"
+    assert payload["plan"]["apply_supported"] is False
+    assert payload["commands"]["apply"] is None
+
+    # And even a hand-built plan never invents an install command.
+    forged = {
+        "install_lifecycle": {
+            "execution_driver": "python_pip",
+            "owner": "local_wheel_install",
+            "wheel_path": None,
+        },
+        "plan": {"backup": {}},
+    }
+    updated = execute_update_plan(forged)
+    assert updated["ok"] is False
+    assert updated["execution"]["status"] == "missing_wheel_source"
 
 
 def test_live_checkout_apply_never_mutates_git_or_switches_install_channels() -> None:
-    doctor = doctor_payload()
-    doctor["package"] = {"install_kind": "live_checkout", "release_root": None}
-    # Production shape for a live checkout: doctor emits an in-place editable refresh
-    # rather than scripts/install-local.sh (see operation-logs/031).
-    doctor["install_freshness"]["contributor_upgrade_command"] = (
-        "cd /workspace/loopx\n"
-        "/workspace/venv/bin/python -m pip install -e . --no-deps --no-build-isolation\n"
-        "loopx workflow-skills --install\n"
-        "loopx doctor"
+    doctor = doctor_payload(
+        install_path="editable_checkout",
+        wheel=None,
+        upgrade_command=(
+            "cd /workspace/loopx\n"
+            "/workspace/venv/bin/python -m pip install -e . --no-deps --no-build-isolation\n"
+            "loopx workflow-skills --install\n"
+            "loopx doctor"
+        ),
     )
 
     payload = build_update_plan(action="apply", doctor_payload=doctor)
@@ -323,31 +217,29 @@ def test_live_checkout_apply_never_mutates_git_or_switches_install_channels() ->
     assert payload["install_lifecycle"]["owner"] == "source_checkout"
     assert payload["install_lifecycle"]["execution_driver"] is None
     assert payload["commands"]["apply"] is None
-    assert payload["plan"]["install_command"].startswith("cd /workspace/loopx\n")
-    assert "git pull" not in payload["plan"]["install_command"]
-    assert "install-local.sh" not in payload["plan"]["install_command"]
+    install_command = payload["plan"]["install_command"]
+    assert install_command.startswith("cd /workspace/loopx\n")
+    assert "pip install -e ." in install_command
     assert payload["changes_applied"] is False
+    for fragment in FORBIDDEN_FRAGMENTS:
+        assert fragment not in install_command, fragment
 
 
-def test_unknown_package_manager_apply_fails_without_guessing_pip() -> None:
-    doctor = doctor_payload()
-    doctor["package"] = {"install_kind": "python_distribution"}
-    doctor["install_freshness"].update(
-        {
-            "install_kind": "python_distribution",
-            "python_distribution_installer": "custom-manager",
-            "upgrade_command": None,
-        }
-    )
+def test_index_install_is_unsupported_and_names_no_index() -> None:
+    doctor = doctor_payload(install_path="index_install", wheel=None)
 
     payload = build_update_plan(action="apply", doctor_payload=doctor)
 
     assert payload["ok"] is False
+    assert payload["install_lifecycle"]["owner"] == "unsupported_index_install"
     assert payload["install_lifecycle"]["execution_driver"] is None
     assert payload["commands"]["apply"] is None
     assert payload["commands"]["owner_upgrade"] is None
     assert payload["next_action"]["command"] is None
-    assert "pip install" not in payload["recommended_action"]
+    assert "does not publish to a package index" in payload["recommended_action"]
+    rendered = json.dumps(payload)
+    for fragment in FORBIDDEN_FRAGMENTS:
+        assert fragment not in rendered, fragment
 
 
 def test_cli_rejects_conflicting_named_and_legacy_actions() -> None:
@@ -372,34 +264,6 @@ def test_cli_rejects_conflicting_named_and_legacy_actions() -> None:
     payload = json.loads(result.stdout)
     assert payload["changes_applied"] is False
     assert "conflicts with the legacy option" in payload["error"]
-
-
-def test_cli_rejects_installed_doctor_snapshot_outside_check(tmp_path: Path) -> None:
-    doctor_path = tmp_path / "installed-doctor.json"
-    doctor_path.write_text(json.dumps(doctor_payload()), encoding="utf-8")
-
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "loopx.cli",
-            "update",
-            "--format",
-            "json",
-            "--dry-run",
-            "--installed-doctor-json",
-            str(doctor_path),
-        ],
-        cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-
-    assert result.returncode == 1, (result.stdout, result.stderr)
-    payload = json.loads(result.stdout)
-    assert payload["ok"] is False
-    assert payload["error"] == "--installed-doctor-json requires `loopx update check`"
 
 
 def test_restart_managed_loopx_services_restarts_only_loopx_launchagents(
@@ -437,48 +301,50 @@ def test_restart_managed_loopx_services_restarts_only_loopx_launchagents(
 
 
 def test_successful_update_revalidates_enabled_extensions(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     payload = {
-        "source": {"installer_url": "https://example.invalid/install.sh"},
+        "install_lifecycle": {
+            "execution_driver": "python_pip",
+            "owner": "local_wheel_install",
+            "wheel_path": WHEEL,
+        },
         "plan": {"backup": {}},
     }
-    completed = [
-        subprocess.CompletedProcess([], 0, "200", ""),
-        subprocess.CompletedProcess([], 0, "installed", ""),
-        subprocess.CompletedProcess([], 0, '{"ok": true}', ""),
-        subprocess.CompletedProcess([], 0, '{"ok": true}', ""),
-    ]
     calls: list[list[str]] = []
 
     def fake_run(
         args: list[str], **_kwargs: object
     ) -> subprocess.CompletedProcess[str]:
         calls.append(list(args))
-        if args[0] == "curl":
-            Path(args[args.index("--output") + 1]).write_text("echo installed")
-        return completed[len(calls) - 1]
+        return subprocess.CompletedProcess(args, 0, '{"ok": true}', "")
 
-    monkeypatch.setattr(Path, "home", staticmethod(lambda: tmp_path))
-    monkeypatch.setattr(
-        "loopx.self_update._installer_env_for_source",
-        lambda *_args, **_kwargs: {},
-    )
     monkeypatch.setattr("loopx.self_update.subprocess.run", fake_run)
+    monkeypatch.setattr(
+        "loopx.self_update.restart_managed_loopx_services", lambda: []
+    )
 
     updated = execute_update_plan(payload)
 
     assert updated["ok"] is True
-    assert updated["execution"]["extension_doctor_returncode"] == 0
-    assert calls[3] == [
-        str(tmp_path / ".local" / "bin" / "loopx"),
-        "--format",
-        "json",
+    assert updated["execution"]["install_returncode"] == 0
+    assert calls[0] == [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--force-reinstall",
+        "--no-deps",
+        WHEEL,
+    ]
+    assert calls[-1] == [
+        sys.executable,
+        "-m",
+        "loopx.cli",
         "extension",
         "doctor",
         "--all-enabled",
         "--execute",
+        "--format",
+        "json",
     ]
-
-

@@ -43,9 +43,7 @@ from ..registry import (
 )
 from ..self_update import (
     UpdateAction,
-    build_rollback_plan,
     build_update_plan,
-    execute_rollback_plan,
     execute_update_plan,
     render_update_plan_markdown,
     resolve_update_action,
@@ -178,8 +176,8 @@ def register_support_control_commands(
         help="Inspect or apply an update using the active installation owner.",
         description=(
             "Use `update check` for a read-only freshness probe, `update plan` for the "
-            "full no-write plan, or `update apply` for an explicit archive-snapshot "
-            "mutation. Bare `update` remains a read-only plan."
+            "full no-write plan, or `update apply` to reinstall the recorded local wheel. "
+            "Bare `update` remains a read-only plan. No network is involved."
         ),
     )
     add_subcommand_format(update_parser)
@@ -204,30 +202,6 @@ def register_support_control_commands(
         "--execute",
         action="store_true",
         help="Compatibility alias for `loopx update apply`; prefer the explicit action.",
-    )
-    update_mode.add_argument(
-        "--rollback",
-        metavar="RELEASE_ID",
-        help="Repoint the user-local loopx command to a release id, or use `previous` for the prior snapshot.",
-    )
-    update_parser.add_argument(
-        "--repo",
-        help="GitHub repo owner/name used by the installer archive. Defaults to LOOPX_REPO or huangruiteng/loopx.",
-    )
-    update_parser.add_argument(
-        "--ref",
-        help="Git ref used by the installer archive. Defaults to LOOPX_REF or stable.",
-    )
-    update_parser.add_argument(
-        "--archive-url",
-        help="Explicit tarball URL passed to the installer as LOOPX_ARCHIVE_URL.",
-    )
-    update_parser.add_argument(
-        "--installed-doctor-json",
-        help=(
-            "Local JSON output from the installed `loopx --format json doctor`; "
-            "valid only with --check for source-versus-installed qualification."
-        ),
     )
     update_parser.add_argument(
         "--timeout-seconds",
@@ -743,45 +717,16 @@ def handle_support_control_command(
                 dry_run=args.dry_run,
                 execute=args.execute,
             )
-            if args.rollback and args.update_action:
-                raise ValueError(
-                    "update rollback cannot be combined with check, plan, or apply"
-                )
-            if args.installed_doctor_json and update_action is not UpdateAction.CHECK:
-                raise ValueError(
-                    "--installed-doctor-json requires `loopx update check`"
-                )
-            if args.rollback:
-                payload = build_rollback_plan(release_id=args.rollback)
-                payload = execute_rollback_plan(
+            payload = build_update_plan(
+                action=update_action,
+            )
+            payload["installed_doctor_source"] = "current_runtime"
+            if update_action is UpdateAction.APPLY and payload.get("plan", {}).get(
+                "apply_supported"
+            ):
+                payload = execute_update_plan(
                     payload, timeout_seconds=args.timeout_seconds
                 )
-            else:
-                doctor_payload = None
-                if args.installed_doctor_json:
-                    doctor_path = Path(args.installed_doctor_json).expanduser()
-                    loaded_doctor = json.loads(doctor_path.read_text(encoding="utf-8"))
-                    if not isinstance(loaded_doctor, dict):
-                        raise ValueError(
-                            "--installed-doctor-json must contain a JSON object"
-                        )
-                    doctor_payload = loaded_doctor
-                payload = build_update_plan(
-                    repo=args.repo,
-                    ref=args.ref,
-                    archive_url=args.archive_url,
-                    action=update_action,
-                    doctor_payload=doctor_payload,
-                )
-                payload["installed_doctor_source"] = (
-                    "explicit_json" if doctor_payload is not None else "current_runtime"
-                )
-                if update_action is UpdateAction.APPLY and payload.get("plan", {}).get(
-                    "apply_supported"
-                ):
-                    payload = execute_update_plan(
-                        payload, timeout_seconds=args.timeout_seconds
-                    )
         except Exception as exc:
             payload = {
                 "ok": False,
