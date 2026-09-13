@@ -68,56 +68,6 @@ loopx workflow-skills --install
 loopx doctor
 ```
 
-## 原生 Windows PowerShell 7
-
-PyPI 发行版也是原生 Windows 默认路径。在 PowerShell 7 中使用 Python 3.11+
-解释器，并验证已安装的 console 脚本：
-
-```powershell
-py -3.11 -m pip install --upgrade loopx
-loopx workflow-skills --install
-loopx doctor
-```
-
-需要不可变快照（来自可信 checkout）的贡献者与操作者，可以在没有 Bash、POSIX
-symlink 或 WSL 的情况下安装原生 PowerShell launcher：
-
-```powershell
-git clone https://github.com/huangruiteng/loopx.git "$HOME/loopx"
-Set-Location "$HOME/loopx"
-pwsh -NoLogo -NoProfile -File .\scripts\install-windows.ps1 `
-  -Python (Get-Command python).Source `
-  -AddToUserPath
-loopx doctor --deep
-```
-
-快照安装器在晋升前验证 candidate，写入原子发布指针，并默认把 `loopx.ps1` 及其
-release-pointer sidecar 放在 `$HOME/.local/bin`。`-InstallRoot`、`-BinDir` 与
-`-SkillsDir` 保持为显式覆盖；新 shell 通过 sidecar 发现自定义安装，无需
-`LOOPX_CURRENT_RELEASE_FILE`。当另一个可信宿主管理器拥有 LoopX skill 文件时使用
-`-SkipSkills`；当不允许修改 PATH 时省略 `-AddToUserPath`。
-
-原生快照 `loopx update` 与自动回滚都 fail closed。要升级或回滚，检出目标可信
-revision，重跑 `scripts/install-windows.ps1`，然后验证 `loopx doctor --deep`。
-先前的 release 目录仍留在所选安装根下，直到操作者移除；手工改动指针不是受支持的
-回滚路径。
-
-移除原生快照前，在 launcher 仍可用时运行受管宿主卸载器，然后移除 launcher 文件
-与快照根：
-
-```powershell
-loopx slash-commands --uninstall
-loopx workflow-skills --uninstall
-Remove-Item -LiteralPath "$HOME/.local/bin/loopx.ps1" -ErrorAction SilentlyContinue
-Remove-Item -LiteralPath "$HOME/.local/bin/loopx-current-release.json" -ErrorAction SilentlyContinue
-Remove-Item -LiteralPath "$HOME/.local/share/loopx" -Recurse -Force -ErrorAction SilentlyContinue
-```
-
-如果安装使用了 `-AddToUserPath`，卸载后通过 Windows 环境变量从 Windows 用户 PATH
-中移除所选的 `BinDir`。安装与 PATH opt-in 只暴露本地命令与 skill 文件。它们不授予
-仓库、网络、凭证、外部系统或 merge 权限；卸载也不删除项目本地的 `.loopx/`、
-`.codex/goals/` 或证据状态。
-
 ## 宿主命令界面
 
 workflow-skill 命令安装丰富的 Codex workflows 与受管 `$loopx` 入口。只为需要它们的

@@ -166,7 +166,7 @@ deterministic CPU evaluator、dev / held-out 命令均在仓库内。可按
 ## 试用 LoopX
 
 要求：Python 3.11+ 与 Node.js 22.6+。使用 console scripts 已加入 `PATH` 的
-Python 环境；macOS 和 Linux 使用 POSIX shell，原生 Windows 使用 PowerShell 7。
+Python 环境；本 fork 只在 Linux 与 WSL2 上运行，使用 POSIX shell。
 Node.js 运行 LoopX 自动启动、空闲退出的 TypeScript Effect core，无需手工维护 daemon。
 
 本仓库就是运行时：把它装成 editable 安装，改完的代码立即生效——没有构建、没有拷贝、

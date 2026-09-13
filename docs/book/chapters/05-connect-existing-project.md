@@ -121,7 +121,7 @@ next_action: <one concrete next step>
 
 - Python 3.11 或更高版本；
 - Node.js 22.6 或更高版本，用于 LoopX 自动管理的 TypeScript Effect runtime；
-- macOS/Linux shell，或 Windows PowerShell 7；
+- POSIX shell（macOS、Linux 或 WSL2）；
 - 一个已有 Git 项目。
 
 安装 PyPI release 及其 LoopX workflow skills：
@@ -148,8 +148,8 @@ node --version
 loopx doctor --deep
 ```
 
-原生 Windows 的完整安装、升级与回滚命令见
-[Installing LoopX](/loopx/docs/guides/installing-loopx/)；不要为了套用 POSIX 示例而要求 WSL。
+完整的安装、升级与回滚命令见
+[Installing LoopX](/loopx/docs/guides/installing-loopx/)；本 fork 只在 Linux 与 WSL2 上运行。
 
 ## 3. 建立忽略规则
 

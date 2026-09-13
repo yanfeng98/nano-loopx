@@ -184,8 +184,8 @@ loopx quota scheduler-ack-current \
 这段命令展示稳定的 public shape。持续运行的 host 应原样执行当前
 `ack_hint.cli_args`，不要自行拼参数。生成的命令还带有内部
 `--scheduler-host-facts-chunk` 与 `--turn-instance-id`。前者封装有版本且有大小上限的
-proposal/host facts，后者绑定产生该 hint 的 `quota should-run` receipt。Unix、Windows
-和 wheel console launcher 只有同时看到这两项绑定，才会把精确 ACK/failure command
+proposal/host facts，后者绑定产生该 hint 的 `quota should-run` receipt。Unix 和 wheel
+console launcher 只有同时看到这两项绑定，才会把精确 ACK/failure command
 直接交给 native TypeScript transaction。手工输入且没有 receipt binding 的命令继续走
 Python compatibility path。
 
