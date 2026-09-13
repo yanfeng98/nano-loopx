@@ -54,8 +54,8 @@ python3 examples/<focused>-smoke.py
 | `loopx/**/*.py`（CLI、内核、doctor…） | **无**，直接重跑 | editable 安装把 `loopx` 映射到 checkout |
 | `loopx/control_plane/**/*.ts`、`*.json` | **无** | Node ≥ 22.6 用 `--experimental-strip-types` 直接执行：无构建步骤、无 npm 依赖 |
 | `loopx/web/chat/**`（已提交的构建产物） | **无** | 产物随代码一起在 checkout 里 |
-| 新增**带 `__init__.py`** 的子包 | **无** | 子模块走常规 import |
-| 新增**不带 `__init__.py`** 的 namespace 目录 | 重装 editable | editable finder 的命名空间表是安装时静态枚举的 |
+| 新增 `loopx/` 下的子目录（带或不带 `__init__.py`） | **无** | 实测可导入：editable 把 `loopx` 映射到 checkout，子模块走常规 import |
+| 新增 `loopx` 之外的**顶层包** | 重装 editable | finder 的包映射表（`MAPPING`）在安装时静态生成，只含 `loopx`；实测新建顶层包在重装前 `ModuleNotFoundError` |
 | `pyproject.toml`（`version`、`[project.scripts]`、package-data） | 重装 editable | console script 与元数据由安装器生成 |
 | `skills/**` | 重跑 skills 安装（见下节） | skills 是复制，不是链接 |
 | `apps/presentation/dashboard/src/**`（前端源码） | `cd apps/presentation/dashboard && npm run build:chat` | `loopx dashboard` 读的是 `loopx/web/chat/`；产物被 git 跟踪，重建会产生 git diff（只重建 chat 即可，完整 `npm run build` 是 dashboard + chat） |
