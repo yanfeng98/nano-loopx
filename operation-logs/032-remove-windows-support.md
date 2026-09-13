@@ -18,6 +18,8 @@
 | `docs/archive/**`、`docs/plans/**`、`docs/superpowers/plans/**`、`docs/product/release-readiness.md` 的历史版本条目、`docs/architecture/rfcs/**`、`docs/community/ecosystem-adoption.md`、`docs/book/chapters/source-validation-to-pr.md` 的复盘叙述 | **历史记录**，不是当前行为描述；按 020/027/028/029/030 的既有口径保留 |
 | `file_lock.py` 的 stat-identity 降级路径（st_dev/st_ino 全零时退回 birthtime/ctime） | 不是 Windows 专有分支，是"stat 字段缺失"的**通用 fail-closed 降级**（也覆盖部分网络文件系统）；仅把注释里的 Windows 归因改为平台中立 |
 | `control_plane/testing/authority_e2e_ladder.py` 的 `posix_only` 字段 | 该字段是**行元数据**且出现在序列化 payload 里；本轮只删掉"在 Windows 上判 unverified"的判断，字段保留（它仍然准确描述这些行的验证范围） |
+| `loopx/capabilities/benchmark_toolkit/external_agent.py:44-55` 的 `_SOLVER_ENVIRONMENT_ALLOWLIST`（含 `COMSPEC`、`PATHEXT`、`SYSTEMDRIVE`、`SYSTEMROOT`、`WINDIR`） | 这是**求解器进程可见环境变量的白名单**（公开安全面）：删掉 Windows 变量不会让本机行为变好，却会改变"哪些环境变量可以转发给外部求解器"这一校验语义 |
+| `loopx/capabilities/benchmark_toolkit/external_agent.py:40` 的 `_CONTAINMENT_KINDS` 中的 `windows_job_object` | **协议枚举值**（`external_agent_containment_v1` 请求可声明的 containment 类型之一）。本机无适配器声明它，但缩小公开协议会拒绝上游风格的合法请求；按"识别型输入 ≠ 移植分支"保留 |
 | `apps/desktop/loopx-control-plane/src-tauri/src/bundled_runtime.rs` 对 `scripts/install-windows.ps1` 的引用 | 桌面壳按用户决策不动 → 该引用现在**悬空**，见「已知悬空引用」 |
 
 ## 变更清单
@@ -129,6 +131,31 @@
 
 > 注：这两条 budget smoke 此前从未被 015–031 的门选中（它们只在 diff 触及 CLI 输出面时才入选），
 > 因此本 op 是**首次**把它们暴露出来——属"发现"而非"引入"。
+
+### 第四轮复查（更宽的面 + 高风险改动专项）
+
+本轮新角度与结果：
+
+1. **更宽的 Windows API 扫描**（前几轮未搜的关键词：`COMSPEC`、`cmd.exe`、`CREATE_NO_WINDOW`、
+   `DETACHED_PROCESS`、`STARTUPINFO`、`CTRL_C_EVENT`、`SIGBREAK`、`WinDLL`、`winreg`、
+   `os.startfile`、`LOCALAPPDATA`、`USERPROFILE`、`PATHEXT`、`O_BINARY`、`stat.st_file_attributes`、
+   `ntpath`、`.cmd`）→ 仅命中 `external_agent.py` 的两处，已按"识别型/协议面"保留（见上表）。
+   另核实：dashboard 构建产物 `loopx/web/chat/assets/*.js` 无 `win32`/平台分支；`man/loopx.1`
+   与 `loopx commands` 输出 **0** 处 Windows/PowerShell 提及。
+2. **删代码后的死代码检查**：`_wait_for_process`、`_PROCESS_TERMINATE_GRACE_SECONDS`、
+   `_terminate_posix_process_group` 仍被使用（`process_runtime.py:40/161` 等）；
+   `_prepare_windows_lock`、`msvcrt`、`_windows_process_is_alive` 已彻底消失（0 引用）。
+3. **进程组终止的安全性专项**（本 op 风险最高的一处）：`_terminate_process_tree` 现在**无条件**调用
+   `_terminate_posix_process_group`，而后者是 `os.killpg(process.pid, …)`。核实两点后确认安全：
+   ① 该模块只有一个 `Popen(` 创建点，且 `start_new_session=True` 已固定为唯一路径 → 子进程是新
+   session leader，`pid == pgid`，信号只落在它自己的进程组，**不会误伤父进程**；② 无外部 Popen
+   进入该路径。覆盖：`tests/extensions/test_process_runtime.py` 等 4 个受影响的测试文件
+   **74 passed**。
+4. **catalog 改动合法性**：`host_upgrade` 由 `_covered("tests/test_windows_install.py")` 改为
+   `_not_applicable(...)` 后，`quality-surface-catalog-smoke` 与 `catalog-run-e2e-smoke` 均通过。
+5. **本轮修正一处我自己造成的不一致**：本 op 早些时候我把 `benchmark_toolkit/README.md` 的
+   "…虚拟机或 Windows Job Object"改掉了，但代码仍接受该枚举值 → **已恢复该措辞**，让文档与
+   协议一致（保留决定见上表）。
 
 ## 已知悬空引用（按用户决策未处理）
 

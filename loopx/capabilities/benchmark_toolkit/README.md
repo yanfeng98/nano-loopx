@@ -29,7 +29,7 @@ loopx benchmark agent-phase \
 而不是扩大这个通用边界。
 
 执行还要求 `external_agent_containment_v1` 请求对象。Runner 必须拥有不可逃逸的
-containment,如容器、cgroup v2、PID namespace 或虚拟机,
+containment,如容器、cgroup v2、PID namespace、虚拟机或 Windows Job Object,
 并声明 `timeout_owner=runner` 与
 `termination_postcondition=drained_before_result_consumption`。请求还必须携带
 runner 自有的 `external_agent_containment_verification_v1` receipt 引用,状态为
