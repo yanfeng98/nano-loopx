@@ -15,7 +15,9 @@ TEMPLATE = ROOT / "docs" / "product" / "release-note-template.md"
 README = ROOT / "README.md"
 DOCS_INDEX = ROOT / "docs" / "README.md"
 PRODUCT_INDEX = ROOT / "docs" / "product" / "README.md"
-INSTALL_GUIDE = ROOT / "docs" / "guides" / "installing-loopx.md"
+# The upstream install guide was removed from this fork; its still-live
+# active-layer checklist moved into the editable dev loop doc.
+ACTIVE_LAYER_DOC = ROOT / "docs" / "development" / "editable-dev-loop.md"
 
 FORBIDDEN_PUBLIC_STRINGS = [
     "/Users/",
@@ -365,7 +367,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    for path in [DOC, TEMPLATE, README, DOCS_INDEX, PRODUCT_INDEX, INSTALL_GUIDE]:
+    for path in [DOC, TEMPLATE, README, DOCS_INDEX, PRODUCT_INDEX, ACTIVE_LAYER_DOC]:
         validate_boundary(path)
 
     doc = compact(read(DOC))
@@ -458,17 +460,17 @@ def main() -> None:
     ]:
         assert_contains(doc, required, "release-readiness doc")
 
-    install_guide = compact(read(INSTALL_GUIDE))
+    active_layer_doc = compact(read(ACTIVE_LAYER_DOC))
     for required in [
-        "### Verify The Active Layers",
+        "## 验证各激活层",
+        "{#verify-the-active-layers}",
         "loopx update check",
         "skill_delivery.status",
         "loopx doctor --deep",
         "loopx extension doctor --all-enabled --execute --format json",
-        "runtime_activation_qualification",
-        "ordinary pip and pipx users should stay on the tagged package channel",
+        "不要在同一个环境里混用 editable、pip、pipx 与归档路径",
     ]:
-        assert_contains(install_guide, required, "installation guide")
+        assert_contains(active_layer_doc, required, "active-layer doc")
 
     root_readme = read(README)
     docs_index = read(DOCS_INDEX)
