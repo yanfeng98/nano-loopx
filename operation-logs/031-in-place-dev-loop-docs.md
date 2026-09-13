@@ -122,7 +122,10 @@ cwd 遮蔽陷阱 → **不要运行的命令表** → 与上游合并的处置�
   - public boundary：扫描 12 个改动路径 + 全仓库 → `ok`。
 - **全量 pytest（改后 vs 改前基线）**：`5 failed / 5566 passed / 25 skipped / 3 errors`
   vs `5 failed / 5564 passed / 25 skipped / 3 errors` → **失败集合 `diff` 为空**，
-  `passed` 差额 **+2** 恰为新增的两个用例。
+  `passed` 差额 **+2** 恰为新增的两个用例。第二轮复查修复后又完整跑了一遍（`after2`）：
+  `5 / 5566 / 25 / 3`，与改前基线与首轮改后**两次 `diff` 均为空**。
+- **premerge 门（复查修复后重跑）**：仍是 catalog canaries 8 条 7 过 1 失败（同一条既存失败），
+  risk profile 8/8、direct checks、public boundary 全通过。
 - **`mkdocs build --strict`**：exit 0（仅 2 条既有的 MkDocs-2 弃用横幅）。
 - **editable 语义自证**：本轮全部代码改动**没有重装**，`loopx doctor` / `loopx update plan` /
   `loopx workflow-skills --format json` 立即反映新代码——这本身就是"改完即生效"的实测证据。
@@ -135,15 +138,49 @@ cwd 遮蔽陷阱 → **不要运行的命令表** → 与上游合并的处置�
 smoke。空跑确认：重新在**不改任何文件**的情况下跑门 → `tracked_side_effect_failure_count: 0`，
 `tracked_after - tracked_before` 为空。结论：这个字段只能在"跑门期间零编辑"的前提下解读。
 
-### 既存失败（与本轮无关，均经干净 HEAD worktree 实测对照）
+### 对抗式复查（第二轮，换角度取证）
+
+**三个新角度**（每个都带可复现证据，不重复首轮检查）：
+
+1. **判据的语义边界**（函数级探针，不改仓库）：`is_editable_source_checkout` 在真 checkout →
+   `True`、给了发布快照 → `False`、目录无 `.git` → `False`；并核实
+   `repo_root = Path(__file__).resolve().parent.parent`（`doctor.py:927`）确实是 **LoopX 自己的
+   checkout**，**不是**用户项目目录——否则判据会在任何 git 项目里误触发，那是灾难性错误。
+   同时确认 `release_root` 来自默认命令的解析结果（`command_release_root`）或
+   `LOOPX_RELEASE_ROOT` 覆盖，故"快照安装"不会被误判为 checkout。
+2. **穷举消费面**：全库 12 个引用 `install_freshness` 的文件逐个排查——
+   `loopx/ready_score.py` 只读 `status` 字段（与本次改的字段无关，`ready-score-smoke` 绿）；
+   `upgrade_hint` 只在 `install-local-smoke` 做 dict 同一性断言；`payload["fix"]` 只被 markdown
+   渲染器读取。补跑三条此前**未跑过**的守卫：`ready-score-smoke` ✅、
+   `agent-onboard-host-loop-activation-smoke` ✅、`release/release-version-contract-smoke` ✅。
+3. **命令可执行性**：把 doctor 输出的第二条命令原样实跑
+   （`python3 -m pip install -e . --no-deps --no-build-isolation --dry-run`）→
+   `Would install loopx-1.0.0`、exit 0、无 tracked 变动。
+
+**复查发现并修复的 3 个问题**：
+
+| # | 问题 | 处置 |
+| --- | --- | --- |
+| 1 | **Windows 上的引号不成立**：`shlex.quote` 产出单引号，cmd.exe 不认（模块内 `doctor.py` 的 `local_install_command` / `no_clone_upgrade_command` 都有 `os.name == "nt"` 分支，新函数却没有） | 新增 `_quote_local_path`：nt 用双引号（cmd 与 PowerShell 都接受），POSIX 仍走 `shlex.quote`。**nt 分支本机无法执行**，属推理性修复，已在代码注释说明 |
+| 2 | **测试夹具失真**：`tests/test_self_update_runtime_activation.py` 仍注入旧的 `install-local.sh` 形状，不再代表生产形态 | 夹具改为生产形状（`cd …` + pip -e + skills + doctor），并补 `assert "install-local.sh" not in install_command` |
+| 3 | **我的改动造成信息损失**：canary 用户原本能从 `## Fix` 看到 `scripts/install-local.sh`，改后完全消失 | `fix` 文本在 `canary_root` 存在时追加一句「在线 canary wrapper 仍由 `scripts/install-local.sh` 管理」。本机无 canary → 该分支未端到端执行，只做了表达式级合成探针 |
+
+复查期间 doctor.py 一度到 1497 行（预算 1500，仅剩 3 行余量），已把 canary 提示压成单行，
+最终 **1496 行**。
+
+### 既存失败（与本轮无关，均经干净 HEAD 实测对照）
 
 1. `examples/codex-cli-packaged-install-smoke.py`：打 tar 时 `FileNotFoundError: <checkout>/LICENSE`
    （该 smoke 的打包清单仍列 `LICENSE`，而本 fork 已在 `c88509106` 删除它）。
    基线与本树**同为 exit=1**，连续 3 次复现稳定。
 2. `examples/codex-cli-bootstrap-message-smoke.py`：要求生成消息含 `heartbeat automation`，
    该短语在生成器里已不存在；基线与本树同为 exit=1。
+3. `examples/release/codex-cli-no-clone-release-verification-smoke.py`（第二轮复查新发现）：
+   要求 `docs/product/runtimes/codex-cli/codex-cli-no-clone-release-verification.md` 含标题
+   `Codex CLI No-Clone Release Verification`——该短语**全库仅存在于断言自身**。
+   在真基线 `e685f97a3` worktree 上 exit=1 逐字复现，且本轮从未改过它读的三个文件。
 
-两条都属 030 那样的"fork 既存失效"清单，本轮**未动**（超出本次批准范围）。
+三条都属 030 那样的"fork 既存失效"清单，本轮**未动**（超出本次批准范围）。
 
 ## 有意不改
 

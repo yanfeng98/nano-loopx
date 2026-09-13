@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 import shlex
 import sys
@@ -56,6 +57,15 @@ def python_distribution_upgrade_command(
     )
 
 
+def _quote_local_path(value: str) -> str:
+    """Quote a path for the shell the emitted command will be pasted into."""
+    if os.name == "nt":
+        # cmd.exe and PowerShell both accept double-quoted paths; shlex's single
+        # quotes would only survive in PowerShell.
+        return f'"{value}"'
+    return shlex.quote(value)
+
+
 def is_editable_source_checkout(repo_root: Path, release_root: Path | None) -> bool:
     """True when the running LoopX is a git checkout rather than a release snapshot."""
     return release_root is None and (repo_root / ".git").exists()
@@ -79,8 +89,8 @@ def editable_dev_refresh_command(
         f" --agent-type {shlex.quote(doctor_agent_type)}" if doctor_agent_type else ""
     )
     lines = [
-        f"cd {shlex.quote(str(repo_root))}",
-        f"{shlex.quote(python_executable or sys.executable)} "
+        f"cd {_quote_local_path(str(repo_root))}",
+        f"{_quote_local_path(python_executable or sys.executable)} "
         "-m pip install -e . --no-deps --no-build-isolation",
     ]
     if include_skills:

@@ -309,8 +309,13 @@ def test_pipx_distribution_apply_preserves_the_pipx_environment() -> None:
 def test_live_checkout_apply_never_mutates_git_or_switches_install_channels() -> None:
     doctor = doctor_payload()
     doctor["package"] = {"install_kind": "live_checkout", "release_root": None}
+    # Production shape for a live checkout: doctor emits an in-place editable refresh
+    # rather than scripts/install-local.sh (see operation-logs/031).
     doctor["install_freshness"]["contributor_upgrade_command"] = (
-        "/workspace/loopx/scripts/install-local.sh\nloopx doctor"
+        "cd /workspace/loopx\n"
+        "/workspace/venv/bin/python -m pip install -e . --no-deps --no-build-isolation\n"
+        "loopx workflow-skills --install\n"
+        "loopx doctor"
     )
 
     payload = build_update_plan(action="apply", doctor_payload=doctor)
@@ -319,8 +324,9 @@ def test_live_checkout_apply_never_mutates_git_or_switches_install_channels() ->
     assert payload["install_lifecycle"]["owner"] == "source_checkout"
     assert payload["install_lifecycle"]["execution_driver"] is None
     assert payload["commands"]["apply"] is None
-    assert payload["plan"]["install_command"].startswith("/workspace/loopx/")
+    assert payload["plan"]["install_command"].startswith("cd /workspace/loopx\n")
     assert "git pull" not in payload["plan"]["install_command"]
+    assert "install-local.sh" not in payload["plan"]["install_command"]
     assert payload["changes_applied"] is False
 
 

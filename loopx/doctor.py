@@ -1307,6 +1307,11 @@ def collect_doctor(
                         f"{editable_dev_refresh_command(repo_root, include_skills=not externally_managed_skills)}\n"
                         "Do not replace it with a release snapshot "
                         "(`scripts/install-local.sh` or the archive installer)."
+                        + (
+                            " The online canary wrapper stays managed by `scripts/install-local.sh`."
+                            if canary_root
+                            else ""
+                        )
                     )
                     if is_editable_source_checkout(repo_root, release_root)
                     else (
