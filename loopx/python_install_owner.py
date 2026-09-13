@@ -1,17 +1,104 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import importlib.util
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shlex
 import sys
+from typing import Any
+from urllib.parse import unquote, urlparse
+
+
+INSTALL_PATH_EDITABLE_CHECKOUT = "editable_checkout"
+INSTALL_PATH_LOCAL_WHEEL = "local_wheel"
+INSTALL_PATH_INDEX_INSTALL = "index_install"
+INSTALL_PATH_UNKNOWN = "unknown"
 
 
 @dataclass(frozen=True)
 class PythonInstallOwner:
     manager: str
     environment: str | None = None
+
+
+def read_direct_url(files: Iterable[Any] | None) -> dict[str, Any] | None:
+    """Read the PEP 610 ``direct_url.json`` recorded next to a distribution.
+
+    pip writes it for any install that did not come from an index, which is how a
+    local wheel or an editable checkout can be told apart from a package fetched
+    by name.
+    """
+
+    for item in files or ():
+        posix = PurePosixPath(str(item))
+        if not posix.as_posix().endswith("direct_url.json"):
+            continue
+        try:
+            payload = json.loads(Path(item.locate()).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+        return payload if isinstance(payload, dict) else None
+    return None
+
+
+def classify_install_path(direct_url: Mapping[str, Any] | None) -> str:
+    """Classify where the running LoopX came from."""
+
+    if not isinstance(direct_url, Mapping):
+        return INSTALL_PATH_UNKNOWN
+    dir_info = direct_url.get("dir_info")
+    if isinstance(dir_info, Mapping) and dir_info.get("editable"):
+        return INSTALL_PATH_EDITABLE_CHECKOUT
+    url = str(direct_url.get("url") or "")
+    if url.startswith("file://") and urlparse(url).path.endswith(".whl"):
+        return INSTALL_PATH_LOCAL_WHEEL
+    if direct_url.get("vcs_info") is None and url.startswith(("http://", "https://")):
+        return INSTALL_PATH_INDEX_INSTALL
+    return INSTALL_PATH_UNKNOWN
+
+
+def local_wheel_path(direct_url: Mapping[str, Any] | None) -> str | None:
+    """Return the wheel file a local install came from, if pip recorded one."""
+
+    if classify_install_path(direct_url) != INSTALL_PATH_LOCAL_WHEEL:
+        return None
+    return unquote(urlparse(str(direct_url["url"])).path)
+
+
+def wheel_reinstall_command(
+    *,
+    owner: PythonInstallOwner,
+    python_executable: str,
+    doctor_command: str,
+    wheel_path: str | None,
+    include_skills: bool = True,
+) -> str | None:
+    """Reinstall from a local wheel file. No index, no network.
+
+    ``pipx`` is treated as an installation *tool* for the same wheel path rather
+    than as a separate channel. Returns None when there is nothing concrete to
+    point at, so callers stay fail-closed instead of guessing a path.
+    """
+
+    if not wheel_path:
+        return None
+    if owner.manager == "pipx":
+        package_command = f"pipx install --force {_quote_local_path(wheel_path)}"
+    elif owner.manager == "pip":
+        package_command = (
+            f"{_quote_local_path(python_executable)} -m pip install "
+            f"--force-reinstall --no-deps {_quote_local_path(wheel_path)}"
+        )
+    else:
+        return None
+    lines = [package_command]
+    if include_skills:
+        lines.append("loopx workflow-skills --install")
+        lines.append("loopx slash-commands --install")
+    lines.append(doctor_command)
+    return "\n".join(lines)
 
 
 def resolve_python_install_owner(

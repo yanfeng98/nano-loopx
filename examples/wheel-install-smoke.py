@@ -141,6 +141,17 @@ def main() -> int:
         assert freshness["install_kind"] == "python_distribution", freshness
         print(f"doctor install_kind ok: {freshness['install_kind']}")
 
+        # The two-path vocabulary: a local wheel is reported as such, and the
+        # upgrade advice points back at the wheel file instead of an index.
+        assert freshness["install_path"] == "local_wheel", freshness
+        assert str(freshness["wheel_path"]).endswith(".whl"), freshness
+        upgrade = str(freshness["upgrade_command"])
+        assert "--force-reinstall" in upgrade, upgrade
+        assert freshness["wheel_path"] in upgrade, upgrade
+        for forbidden in ("huangruiteng", "install.sh", "github.io", "pip install --upgrade loopx"):
+            assert forbidden not in upgrade, upgrade
+        print(f"doctor install_path ok: {freshness['install_path']} -> {freshness['wheel_path']}")
+
         run([str(bin_dir / "loopx"), "workflow-skills", "--install"], env=venv_env)
         installed_skill = home / ".codex" / "skills" / "loopx-project" / "SKILL.md"
         assert installed_skill.is_file(), installed_skill

@@ -21,11 +21,17 @@ from .control_plane.runtime.promotion_readiness import (
 from .install_contract import NO_CLONE_INSTALL_URL
 from .paths import DEFAULT_RUNTIME_ROOT, global_registry_path
 from .python_install_owner import (
+    INSTALL_PATH_EDITABLE_CHECKOUT,
+    INSTALL_PATH_UNKNOWN,
     PythonInstallOwner,
+    classify_install_path,
     editable_dev_refresh_command,
     is_editable_source_checkout,
+    local_wheel_path,
     python_distribution_upgrade_command,
+    read_direct_url,
     resolve_python_install_owner,
+    wheel_reinstall_command,
 )
 from .capabilities.project_skill_delivery import discover_project_scoped_skill_ids
 from .registry_writability import probe_registry_write_path
@@ -186,12 +192,15 @@ def python_distribution_install(module_path: Path) -> dict[str, Any]:
     if not owns_module:
         return {"available": False}
     owner = resolve_python_install_owner(default_installer=installer, prefix=Path(sys.prefix))
+    direct_url = read_direct_url(installed.files)
     return {
         "available": True,
         "kind": "python_distribution",
         "version": installed.version,
         "installer": owner.manager,
         "installer_environment": owner.environment,
+        "install_path": classify_install_path(direct_url),
+        "wheel_path": local_wheel_path(direct_url),
         "root": str(Path(installed.locate_file("")).resolve()),
     }
 
@@ -533,7 +542,17 @@ def build_install_freshness(
         distribution_install.get("installer_environment"),
     ) if distribution_install else None
     if distribution_owner:
-        upgrade_command = python_distribution_upgrade_command(
+        # A local-wheel install upgrades by reinstalling that wheel file; only an
+        # index install (which this fork does not ship) falls back to the
+        # package-manager channel.
+        upgrade_command = wheel_reinstall_command(
+            owner=distribution_owner,
+            python_executable=sys.executable,
+            doctor_command=f"loopx doctor{doctor_agent_arg}",
+            wheel_path=(
+                distribution_install.get("wheel_path") if distribution_install else None
+            ),
+        ) or python_distribution_upgrade_command(
             owner=distribution_owner,
             python_executable=sys.executable,
             doctor_command=f"loopx doctor{doctor_agent_arg}",
@@ -612,6 +631,19 @@ def build_install_freshness(
         "installed_skills_required": require_installed_skills,
         "install_kind": (
             "python_distribution" if distribution_install else "release_or_checkout"
+        ),
+        # Where the running install came from: an editable checkout, a local wheel
+        # file, or (unsupported here) an index. install_kind stays the coarse
+        # python_distribution / release_or_checkout split for existing consumers.
+        "install_path": (
+            distribution_install.get("install_path")
+            if distribution_install
+            else INSTALL_PATH_EDITABLE_CHECKOUT
+            if editable_dev_command
+            else INSTALL_PATH_UNKNOWN
+        ),
+        "wheel_path": (
+            distribution_install.get("wheel_path") if distribution_install else None
         ),
         "python_distribution_version": (
             distribution_install.get("version") if distribution_install else None
