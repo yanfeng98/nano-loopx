@@ -21,148 +21,6 @@ LoopX 是开放且 Provider-neutral 的轻量 state kernel，也是 local-first
 
 > 让 Loop 持续向前，让关键判断留在人手里。
 
-## 认识个人 Agent 工作区
-
-把长程目标收进同一个 local-first 工作区。Goal、待关注事项、对话、任务、
-文件、定时计划与恢复状态跨天数、跨重启、跨 harness 保持持久。重新打开项目时，
-可以检查上一轮的状态与证据，再继续下一项允许执行的工作。
-
-<a href="docs/assets/personal-workspace/loopx-dashboard-launch.mp4">
-  <img src="docs/assets/personal-workspace/workspace-1.0.webp" alt="LoopX 工作区：用户决策、Agent 任务、持续监控与完成记录" width="960">
-</a>
-
-LoopX 1.0 将这些长程控制状态汇入 Personal Workspace。你可以在一个页面中：
-
-- 看清哪些事项正在等你、执行中、观察中、已安排或已停止；
-- 配置 Goal 的 Capability，区分机器默认值与 Goal 覆盖，预览变更后再应用；
-- 从关联的飞书会话进行实时 steering、消息排队或异步收件，不丢失 Goal/Agent/Session 路由；
-- 查看交付文件、周期报告与关联证据；
-- 在 Codex、Claude Code、`anthropic-api` / `openai-api` 等已注册 Agent 会话之间延续工作，
-  不丢失 Goal 状态与证据；
-- 通过 typed preview、显式确认与 receipt 审阅受保护变更；浏览器只负责投影，
-  LoopX state 始终是权威事实源。
-
-```bash
-loopx dashboard
-```
-
-`loopx dashboard` 是受支持的浏览器 / PWA 启动方式。也可从
-[1.0 Release](https://github.com/huangruiteng/loopx/releases/tag/v1.0.0) 下载桌面预览版，
-复用同一组 loopback 服务与 Goal 状态。Apple Silicon macOS 支持签名 App 更新，
-将桌面壳与内置运行时配套升级，并提供修复与恢复入口；需要 Python 3.11+，
-App 为 ad-hoc 签名，尚未 notarize。Windows 预览版目前手动更新，需单独安装 CLI。
-[桌面安装、更新与源码开发指南](apps/desktop/loopx-control-plane/README.md)。
-
-<img src="docs/assets/personal-workspace/capability-1.0.webp" alt="工作区实录：配置子任务数量上限与允许的职责范围" width="960">
-
-在源码 checkout 中运行 `python -m demo.workspace serve`，可探索社区活动、家庭能源比较
-和社区网站发布三个复杂项目；每个项目有四个工作角色、18 项任务、两项决策与两项观察。
-上图来自这份可复现工作区。[场景与回放说明](demo/workspace/README.md)。
-
-[观看 32 秒完整演示](docs/assets/personal-workspace/loopx-dashboard-launch.mp4)
-· [阅读工作区指南](docs/guides/personal-workspace-user-guide.md)
-· [开始五分钟体验](docs/guides/personal-workspace-trial-guide.md)
-
-## 为什么需要 LoopX
-
-一个 agent 可以在单次会话里完成任务。长程工作更难：目标会变化，用户决策会出现，
-证据会过期，平级 agent 会交接，scheduler 也可能在已经没有有效状态迁移时继续消耗。
-聊天记忆和定时器不足以治理这些问题。
-
-LoopX 把长期控制状态留在同一层紧凑状态里：
-
-```text
-目标 / issue / project
-   │
-   ▼
-LoopX state：objective + gate + todo + scope + evidence + quota
-   │
-   ├─ 需要人类判断？ ── 是 ─▶ 提出具体问题并等待
-   │
-   ├─ 有安全侧路？ ─────────▶ 执行一个有界 agent slice
-   │
-   ▼
-Codex / Claude Code / shell agent 执行一轮
-   │
-   ▼
-写回证据 + handoff + next todo ─▶ quota 决定下一次 tick
-```
-
-Agent runtime 负责执行，LoopX 负责治理跨运行延续的控制状态，让工程、
-研究、discovery 和运营 Loop 能持续推进。它不是又一个 agent framework，也不是
-绑定某一 Provider 的编排 runtime。
-
-![LoopX control-plane board](docs/assets/control-plane-board.svg)
-
-一个形象化理解是：LoopX 是
-**[面向长程 Agent 的可执行看板](docs/development/control-plane-course/00-concept-primer.md)**。
-卡片带有稳定身份、权限、证据和 continuation；移动卡片要经过 claim、gate、
-monitor、validate、writeback 等 typed operator。看板是 projection，LoopX state
-才是事实源。
-
-注册 agent 彼此平级。todo claim、lease、任务边界、能力门和 typed continuation
-共同决定下一步谁执行，不需要一个长期拥有全局权限的 leader agent。
-
-LoopX 适合：
-
-- 多天或多周的工程、研究、benchmark、实验目标；
-- 需要跨轮保留 scope、证据和 review 状态的 issue / PR Loop；
-- recurring heartbeat 或 monitor-style agent 工作；
-- 带 owner、安全、发布或私有数据 gate 的项目；
-- 需要 ownership、lease 和 handoff 的平级 agent team；
-- 需要把进展、阻塞和反馈入口清晰呈现给非技术用户的创作、研究或运营工作。
-
-LoopX 不是生产自动化控制器。危险权限、生产写入、公开发布和最终 ownership
-仍由人类负责。
-
-<a id="看几个例子"></a>
-
-## 证据
-
-### 开源 Issue Fix
-
-**超过 200 小时的公开贡献轨迹：Focused PR 交付与可复用修复知识互相反哺。**
-
-<a href="docs/assets/long-running-loop-openviking-trajectory.png">
-  <img src="docs/assets/long-running-loop-openviking-trajectory.png" alt="开源 Issue Fix 轨迹：连接 Focused PR 交付与 LoopX 通用能力沉淀" width="760">
-</a>
-
-LoopX 的创建者以
-[OpenViking contributor](https://github.com/volcengine/OpenViking/pulls?q=is%3Apr+author%3Ahuangruiteng)
-身份把这条路径用于持续的 issue-to-PR 修复。图中公开贡献序列从首个 PR 创建到
-最后一次所示 review 或 update，跨越 200+ 小时。
-[Issue-Fix 能力说明](loopx/capabilities/issue_fix/README.md)把 rolling
-repository context、带 revision 的修复知识和 reviewer-facing preference
-分开管理；所链接 PR 与当前 checkout 的源码、测试始终具有最高权威。
-
-### Auto ML Experiment
-
-**经过脱敏的 owner-run showcase：超过 200 小时的实验轨迹把假设、matched
-evidence、无效谱系、运行中复现和 promote / stop gate 留在同一张图中。**
-
-<a href="docs/assets/long-running-loop-ml-experiment-trajectory.png">
-  <img src="docs/assets/long-running-loop-ml-experiment-trajectory.png" alt="Auto ML Experiment 轨迹：实验谱系、证据门和晋级决策" width="760">
-</a>
-
-这张 public-safe graph 保留了该 200+ 小时自然时间窗口中的决策谱系。它是
-owner-run showcase，不代表连续算力执行、独立复现、生产结果，也不代表公司或
-雇主背书；脱敏后的图片本身不足以让第三方独立复现实验。
-
-### Auto Research
-
-**可复现的公开 KNN demo：Proposer、executor、evaluator/promoter 并行迭代，
-todo、quota、证据与 targeted wake 同屏可见。**
-
-<a href="docs/assets/auto-research-multi-agent-showcase.png">
-  <img src="docs/assets/auto-research-multi-agent-showcase.png" alt="Auto Research 多 Agent 工作区：proposer、executor、evaluator/promoter、todo、quota、证据与 targeted wake 同屏推进">
-</a>
-
-这张截图来自 LoopX 内置的 exact-KNN demo。公开 task、可编辑与受保护文件、
-deterministic CPU evaluator、dev / held-out 命令均在仓库内。可按
-[showcase walkthrough](docs/product/use-cases/auto-research/decentralized-auto-research-showcase.md)
-或 [demo 命令路径](demo/auto_research/README.md)复现工作流；它是 demo
-结果，不是生产研究结论。
-
 ## 试用 LoopX
 
 要求：Python 3.11+ 与 Node.js 22.6+。使用 console scripts 已加入 `PATH` 的
@@ -263,6 +121,119 @@ loopx quota spend-slot --goal-id <goal-id>     # 为完成并验证的 slice 记
 并在 `~/.local/bin` 写 wrapper。**本 fork 的就地开发不需要它**，而且在同一环境里运行它会接管
 `loopx`。见[就地开发闭环](docs/development/editable-dev-loop.md)。
 
+## 日常操作与恢复
+
+日常检查从这三个命令开始：
+
+```bash
+loopx status
+loopx history --goal-id your-project-goal
+loopx quota should-run --goal-id your-project-goal
+```
+
+自动轮次必须先检查 quota，只有完成验证与 writeback 后才记录 spend。静默 skip、
+preflight failure 和 dry-run preview 不消耗 quota。一个 lane 被 user gate 阻塞时，
+独立审计过的安全侧路可以继续，但不能绕过 gate。
+
+平级 agent 在执行前使用 `loopx todo claim --goal-id <goal-id>`，验证后使用
+`loopx todo update --goal-id <goal-id>`，让 ownership 与证据持续可见。
+
+Scheduler cadence 跟随 `quota should-run.scheduler_hint`；hosted-scheduler automation
+通过 payload 返回的 `ack_hint.cli_args` 确认当前 hint。Collision recovery、monitor、
+self-repair 和精确 operator 命令统一维护在
+[Getting Started](docs/guides/getting-started.md)、
+[Quota Allocation](docs/quota-allocation.md)和
+[Long-Task Cadence Policy](docs/operations/long-task-cadence-policy.md)。
+
+## 认识个人 Agent 工作区
+
+把长程目标收进同一个 local-first 工作区。Goal、待关注事项、对话、任务、
+文件、定时计划与恢复状态跨天数、跨重启、跨 harness 保持持久。重新打开项目时，
+可以检查上一轮的状态与证据，再继续下一项允许执行的工作。
+
+<a href="docs/assets/personal-workspace/loopx-dashboard-launch.mp4">
+  <img src="docs/assets/personal-workspace/workspace-1.0.webp" alt="LoopX 工作区：用户决策、Agent 任务、持续监控与完成记录" width="960">
+</a>
+
+LoopX 1.0 将这些长程控制状态汇入 Personal Workspace。你可以在一个页面中：
+
+- 看清哪些事项正在等你、执行中、观察中、已安排或已停止；
+- 配置 Goal 的 Capability，区分机器默认值与 Goal 覆盖，预览变更后再应用；
+- 从关联的飞书会话进行实时 steering、消息排队或异步收件，不丢失 Goal/Agent/Session 路由；
+- 查看交付文件、周期报告与关联证据；
+- 在 Codex、Claude Code、`anthropic-api` / `openai-api` 等已注册 Agent 会话之间延续工作，
+  不丢失 Goal 状态与证据；
+- 通过 typed preview、显式确认与 receipt 审阅受保护变更；浏览器只负责投影，
+  LoopX state 始终是权威事实源。
+
+```bash
+loopx dashboard
+```
+
+`loopx dashboard` 是受支持的浏览器 / PWA 启动方式。
+
+<img src="docs/assets/personal-workspace/capability-1.0.webp" alt="工作区实录：配置子任务数量上限与允许的职责范围" width="960">
+
+在源码 checkout 中运行 `python -m demo.workspace serve`，可探索社区活动、家庭能源比较
+和社区网站发布三个复杂项目；每个项目有四个工作角色、18 项任务、两项决策与两项观察。
+上图来自这份可复现工作区。[场景与回放说明](demo/workspace/README.md)。
+
+[观看 32 秒完整演示](docs/assets/personal-workspace/loopx-dashboard-launch.mp4)
+· [阅读工作区指南](docs/guides/personal-workspace-user-guide.md)
+· [开始五分钟体验](docs/guides/personal-workspace-trial-guide.md)
+
+## 为什么需要 LoopX
+
+一个 agent 可以在单次会话里完成任务。长程工作更难：目标会变化，用户决策会出现，
+证据会过期，平级 agent 会交接，scheduler 也可能在已经没有有效状态迁移时继续消耗。
+聊天记忆和定时器不足以治理这些问题。
+
+LoopX 把长期控制状态留在同一层紧凑状态里：
+
+```text
+目标 / issue / project
+   │
+   ▼
+LoopX state：objective + gate + todo + scope + evidence + quota
+   │
+   ├─ 需要人类判断？ ── 是 ─▶ 提出具体问题并等待
+   │
+   ├─ 有安全侧路？ ─────────▶ 执行一个有界 agent slice
+   │
+   ▼
+Codex / Claude Code / shell agent 执行一轮
+   │
+   ▼
+写回证据 + handoff + next todo ─▶ quota 决定下一次 tick
+```
+
+Agent runtime 负责执行，LoopX 负责治理跨运行延续的控制状态，让工程、
+研究、discovery 和运营 Loop 能持续推进。它不是又一个 agent framework，也不是
+绑定某一 Provider 的编排 runtime。
+
+![LoopX control-plane board](docs/assets/control-plane-board.svg)
+
+一个形象化理解是：LoopX 是
+**[面向长程 Agent 的可执行看板](docs/development/control-plane-course/00-concept-primer.md)**。
+卡片带有稳定身份、权限、证据和 continuation；移动卡片要经过 claim、gate、
+monitor、validate、writeback 等 typed operator。看板是 projection，LoopX state
+才是事实源。
+
+注册 agent 彼此平级。todo claim、lease、任务边界、能力门和 typed continuation
+共同决定下一步谁执行，不需要一个长期拥有全局权限的 leader agent。
+
+LoopX 适合：
+
+- 多天或多周的工程、研究、benchmark、实验目标；
+- 需要跨轮保留 scope、证据和 review 状态的 issue / PR Loop；
+- recurring heartbeat 或 monitor-style agent 工作；
+- 带 owner、安全、发布或私有数据 gate 的项目；
+- 需要 ownership、lease 和 handoff 的平级 agent team；
+- 需要把进展、阻塞和反馈入口清晰呈现给非技术用户的创作、研究或运营工作。
+
+LoopX 不是生产自动化控制器。危险权限、生产写入、公开发布和最终 ownership
+仍由人类负责。
+
 ## 能力
 
 LoopX 显式保留架构边界，使同一个受治理结果在更换 Agent harness 或外部 Provider
@@ -345,6 +316,54 @@ provider 的打包和生命周期，不是另一个控制面 owner。详见
 [核心架构](docs/architecture.md)与
 [Extension / Capability 参考](docs/reference/extensions.md)。
 
+<a id="看几个例子"></a>
+
+## 证据
+
+### 开源 Issue Fix
+
+**超过 200 小时的公开贡献轨迹：Focused PR 交付与可复用修复知识互相反哺。**
+
+<a href="docs/assets/long-running-loop-openviking-trajectory.png">
+  <img src="docs/assets/long-running-loop-openviking-trajectory.png" alt="开源 Issue Fix 轨迹：连接 Focused PR 交付与 LoopX 通用能力沉淀" width="760">
+</a>
+
+LoopX 的创建者以
+[OpenViking contributor](https://github.com/volcengine/OpenViking/pulls?q=is%3Apr+author%3Ahuangruiteng)
+身份把这条路径用于持续的 issue-to-PR 修复。图中公开贡献序列从首个 PR 创建到
+最后一次所示 review 或 update，跨越 200+ 小时。
+[Issue-Fix 能力说明](loopx/capabilities/issue_fix/README.md)把 rolling
+repository context、带 revision 的修复知识和 reviewer-facing preference
+分开管理；所链接 PR 与当前 checkout 的源码、测试始终具有最高权威。
+
+### Auto ML Experiment
+
+**经过脱敏的 owner-run showcase：超过 200 小时的实验轨迹把假设、matched
+evidence、无效谱系、运行中复现和 promote / stop gate 留在同一张图中。**
+
+<a href="docs/assets/long-running-loop-ml-experiment-trajectory.png">
+  <img src="docs/assets/long-running-loop-ml-experiment-trajectory.png" alt="Auto ML Experiment 轨迹：实验谱系、证据门和晋级决策" width="760">
+</a>
+
+这张 public-safe graph 保留了该 200+ 小时自然时间窗口中的决策谱系。它是
+owner-run showcase，不代表连续算力执行、独立复现、生产结果，也不代表公司或
+雇主背书；脱敏后的图片本身不足以让第三方独立复现实验。
+
+### Auto Research
+
+**可复现的公开 KNN demo：Proposer、executor、evaluator/promoter 并行迭代，
+todo、quota、证据与 targeted wake 同屏可见。**
+
+<a href="docs/assets/auto-research-multi-agent-showcase.png">
+  <img src="docs/assets/auto-research-multi-agent-showcase.png" alt="Auto Research 多 Agent 工作区：proposer、executor、evaluator/promoter、todo、quota、证据与 targeted wake 同屏推进">
+</a>
+
+这张截图来自 LoopX 内置的 exact-KNN demo。公开 task、可编辑与受保护文件、
+deterministic CPU evaluator、dev / held-out 命令均在仓库内。可按
+[showcase walkthrough](docs/product/use-cases/auto-research/decentralized-auto-research-showcase.md)
+或 [demo 命令路径](demo/auto_research/README.md)复现工作流；它是 demo
+结果，不是生产研究结论。
+
 ## 进阶路径
 
 第一次有用的 Loop 不依赖全部可选能力。只有工作真正需要时再开启这些路径。
@@ -407,39 +426,6 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
   再看 [Custom Runner 集成指南](docs/guides/custom-agent-runner-integration.md)
 
 可选 projection 让状态更易检查，但不会成为新的事实源。
-
-### 日常操作与恢复
-
-日常检查从这三个命令开始：
-
-```bash
-loopx status
-loopx history --goal-id your-project-goal
-loopx quota should-run --goal-id your-project-goal
-```
-
-自动轮次必须先检查 quota，只有完成验证与 writeback 后才记录 spend。静默 skip、
-preflight failure 和 dry-run preview 不消耗 quota。一个 lane 被 user gate 阻塞时，
-独立审计过的安全侧路可以继续，但不能绕过 gate。
-
-平级 agent 在执行前使用 `loopx todo claim --goal-id <goal-id>`，验证后使用
-`loopx todo update --goal-id <goal-id>`，让 ownership 与证据持续可见。
-
-Scheduler cadence 跟随 `quota should-run.scheduler_hint`；hosted-scheduler automation
-通过 payload 返回的 `ack_hint.cli_args` 确认当前 hint。Collision recovery、monitor、
-self-repair 和精确 operator 命令统一维护在
-[Getting Started](docs/guides/getting-started.md)、
-[Quota Allocation](docs/quota-allocation.md)和
-[Long-Task Cadence Policy](docs/operations/long-task-cadence-policy.md)。
-
-公开发布前运行：
-
-```bash
-loopx check \
-  --scan-path README.md \
-  --scan-path docs/ \
-  --scan-path examples/
-```
 
 ## 当前技术方向
 
@@ -582,6 +568,15 @@ benchmark 证据边界。
 不要提交 `.loopx/`、`.codex/goals/`、live `ACTIVE_GOAL_STATE.md`、内部链接、
 raw benchmark task/log/trajectory/verifier output、credentials、token、私有路径或
 未脱敏的用户与团队信息。
+
+公开发布前运行：
+
+```bash
+loopx check \
+  --scan-path README.md \
+  --scan-path docs/ \
+  --scan-path examples/
+```
 
 ## 当前状态
 
