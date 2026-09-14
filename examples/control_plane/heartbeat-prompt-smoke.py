@@ -851,7 +851,10 @@ def main() -> int:
     assert "if absent say" not in compact_doc, compact_doc
     for phrase in (
         'export PATH="$HOME/.local/bin:$PATH"',
-        "in-place editable checkout",
+        # The generated prompt names path one with the wording of its own
+        # preflight ("use the LoopX checkout ..."), not the shorter
+        # INSTALL_PATHS_HINT phrasing the docs use.
+        "use the LoopX checkout",
         "locally built wheel",
         "Generic LoopX lifecycle",
         "Keep project-specific branching out of the automation prompt",
@@ -1008,7 +1011,11 @@ def main() -> int:
     assert "scheduler_hint" in getting_started, getting_started
     assert "loopx heartbeat-prompt --thin" in getting_started, getting_started
     assert "loopx heartbeat-prompt --compact" in getting_started, getting_started
-    assert "loopx-canary" in getting_started, getting_started
+    # The release-snapshot / canary wrapper channel was retired with the two-path
+    # fork (operation logs 036 and 037), so the doc must describe the two install
+    # kinds `loopx doctor` resolves instead of the removed wrapper.
+    assert "editable_checkout" in getting_started, getting_started
+    assert "local_wheel" in getting_started, getting_started
     assert "release snapshot" in getting_started, getting_started
     assert "execution_obligation" in getting_started, getting_started
     assert "safe-bypass or self-repair hints" in getting_started, getting_started

@@ -2,12 +2,9 @@
 from __future__ import annotations
 
 import argparse
-import gzip
-import os
 import re
 import subprocess
 import sys
-import tempfile
 import tomllib
 from pathlib import Path
 
@@ -145,134 +142,6 @@ def assert_catalog_is_present(man_text: str) -> None:
             assert purpose.replace("-", r"\-") in man_text, purpose
 
 
-def assert_installer_manpage_surface() -> None:
-    script = REPO_ROOT / "scripts" / "install-local.sh"
-    subprocess.run(["bash", "-n", str(script)], check=True)
-
-    with tempfile.TemporaryDirectory(prefix="loopx-help-manpage-smoke-") as raw_tmp:
-        tmp = Path(raw_tmp)
-        home = tmp / "home"
-        bin_dir = home / ".local" / "bin"
-        man_root = home / ".local" / "share" / "man"
-        profile = home / ".zshrc"
-        home.mkdir()
-        env = {
-            **os.environ,
-            "HOME": str(home),
-            "CODEX_HOME": str(home / ".codex"),
-            "LOOPX_BIN_DIR": str(bin_dir),
-            "LOOPX_RELEASES_DIR": str(home / ".local" / "share" / "loopx" / "releases"),
-            "LOOPX_SHELL_PROFILE": str(profile),
-            "LOOPX_INSTALL_SKILL": "0",
-            "LOOPX_INSTALL_CANARY": "0",
-            "LOOPX_PYTHON": sys.executable,
-            "LOOPX_PROMOTE_DEFAULT": "1",
-            "LOOPX_RELEASE_ID": "help-manpage-smoke-release",
-            "PATH": os.environ.get("PATH", ""),
-            "SHELL": "/bin/zsh",
-        }
-
-        help_result = subprocess.run(
-            [str(script), "--help"],
-            cwd=REPO_ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-        )
-        assert help_result.returncode == 0, help_result
-        assert "Usage: install-local.sh [--help]" in help_result.stdout, help_result.stdout
-        assert "positional arguments are not supported" in help_result.stdout, help_result.stdout
-        assert help_result.stderr == "", help_result.stderr
-        assert not bin_dir.exists(), bin_dir
-        assert not man_root.exists(), man_root
-        assert not profile.exists(), profile
-        assert not Path(env["CODEX_HOME"]).exists(), env["CODEX_HOME"]
-        assert not Path(env["LOOPX_RELEASES_DIR"]).exists(), env["LOOPX_RELEASES_DIR"]
-
-        unknown_result = subprocess.run(
-            [str(script), "--unknown"],
-            cwd=REPO_ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-        )
-        assert unknown_result.returncode == 2, unknown_result
-        assert unknown_result.stdout == "", unknown_result.stdout
-        assert "loopx installer error: unknown argument: --unknown" in unknown_result.stderr
-        assert "Usage: install-local.sh [--help]" in unknown_result.stderr
-        assert not bin_dir.exists(), bin_dir
-        assert not man_root.exists(), man_root
-        assert not profile.exists(), profile
-        assert not Path(env["CODEX_HOME"]).exists(), env["CODEX_HOME"]
-        assert not Path(env["LOOPX_RELEASES_DIR"]).exists(), env["LOOPX_RELEASES_DIR"]
-
-        install = subprocess.run(
-            [str(script)],
-            cwd=REPO_ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-        )
-        assert install.returncode == 0, (
-            install.returncode,
-            install.stdout,
-            install.stderr,
-        )
-        assert f"- manpage: {man_root / 'man1' / 'loopx.1.gz'}" in install.stdout, install.stdout
-
-        installed_help = subprocess.run(
-            [str(bin_dir / "loopx")],
-            cwd=tmp,
-            env=env,
-            text=True,
-            capture_output=True,
-        )
-        assert installed_help.returncode == 0, (
-            installed_help.returncode,
-            installed_help.stdout,
-            installed_help.stderr,
-        )
-        assert_concise_default_help(installed_help.stdout)
-        assert installed_help.stderr == "", installed_help.stderr
-
-        manpage = man_root / "man1" / "loopx.1.gz"
-        assert manpage.is_file(), manpage
-        with gzip.open(manpage, "rt", encoding="utf-8") as handle:
-            man_text = handle.read()
-        assert man_text == render_manpage(), man_text
-        assert_catalog_is_present(man_text)
-        compact_man_text = " ".join(man_text.split())
-        assert ".TH LOOPX 1" in man_text, man_text
-        assert ".SH LOOP DRIVER HINTS" in man_text, man_text
-        assert "loopx commands" in man_text, man_text
-        assert "loopx extension" in man_text, man_text
-        assert r"loopx evidence\-log \-\-goal\-id" in man_text, man_text
-        assert "before replan or handoff" in compact_man_text, man_text
-        assert r"loopx COMMAND \-\-help" in man_text, man_text
-
-        profile_text = profile.read_text(encoding="utf-8")
-        assert 'export MANPATH="$HOME/.local/share/man:${MANPATH:-}"' in profile_text, profile_text
-
-        man = subprocess.run(
-            ["man", "-M", str(man_root), "loopx"],
-            cwd=tmp,
-            env={**env, "MANPAGER": "cat", "PAGER": "cat"},
-            text=True,
-            capture_output=True,
-        )
-        rendered_man = "\n".join(part for part in (man.stdout, man.stderr) if part)
-        # man implementations insert presentation-only Unicode hyphens when
-        # wrapping words. Remove those line-break artifacts before checking
-        # the rendered semantics.
-        dehyphenated_man = re.sub(r"[-\u2010-\u2015]\s+", "", rendered_man)
-        compact_rendered_man = " ".join(dehyphenated_man.split())
-        compact_rendered_man = re.sub(r"[-\u2010-\u2015]", "", compact_rendered_man)
-        assert "LOOPX(1)" in rendered_man, (man.returncode, man.stdout, man.stderr)
-        assert "LoopX keeps longrunning agent work moving" in compact_rendered_man, (
-            rendered_man
-        )
-        assert "heartbeat automation" in compact_rendered_man, rendered_man
-
 
 def main() -> int:
     assert_default_help_surface()
@@ -280,7 +149,6 @@ def main() -> int:
     assert_top_level_commands_are_explicitly_classified()
     assert_extension_capabilities_stay_out_of_core_manual()
     assert_checked_in_manpage_surface()
-    assert_installer_manpage_surface()
     print("cli-help-manpage-smoke ok")
     return 0
 

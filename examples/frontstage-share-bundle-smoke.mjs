@@ -198,7 +198,7 @@ for (const forbidden of [
 }
 for (const promptContract of [
   "Connect the current project to LoopX",
-  "Do not clone LoopX",
+  "Clone the fork",
   "README Quick Start",
   "no-clone installer",
   "loopx doctor",

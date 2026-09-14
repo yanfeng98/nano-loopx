@@ -38,7 +38,7 @@ const mlEvidenceUrl = new URL(
 const setupPrompts: Record<Language, string> = {
   en: `Connect the current project to LoopX: https://github.com/yanfeng98/nano-loopx
 
-Do not clone LoopX. Follow the README Quick Start to use the no-clone installer and \`loopx doctor\`, then reuse or \`loopx connect/bootstrap\` the current project state.
+Clone the fork and follow the README Quick Start to install it in place; a host without a checkout uses the locally built wheel. There is no no-clone installer and no package index. Run \`loopx doctor\`, then reuse or \`loopx connect/bootstrap\` the current project state.
 
 After setup, first report the project connection status, current user gate, top agent todo, next safe action, and available commands.
 
@@ -46,8 +46,9 @@ Then I will use \`/loopx <complex task>\` to begin real work.
 When you receive \`/loopx <goal text>\`, first provide a concise ordered plan, then write it as P0/P1/P2 todos so I can see what needs to be done, what is blocked by a gate, and what the next safe action is.`,
   zh: `把当前项目接入 LoopX: https://github.com/yanfeng98/nano-loopx
 
-不要 clone LoopX；按 README Quick Start 使用 no-clone installer、
-\`loopx doctor\`，复用或 \`loopx connect/bootstrap\` 当前项目状态。
+clone 本 fork 后按 README Quick Start 就地安装；没有 checkout 的主机用本地构建的 wheel。
+本 fork 没有 no-clone installer，也不发布到包索引。跑 \`loopx doctor\`，复用或
+\`loopx connect/bootstrap\` 当前项目状态。
 
 接入后先汇报：项目连接状态、当前 user gate、top agent todo、
 next safe action，以及可用命令。
@@ -160,9 +161,9 @@ const content = {
     quickstart: {
       eyebrow: "Manual fallback",
       title: "Prefer the shell? Install LoopX manually.",
-      body: "Use this path when your current agent cannot run shell commands. The same official installer registers lightweight command entries for supported hosts.",
+      body: "Use this path when your current agent cannot run shell commands. This fork ships no installer: install the checkout in place, or reinstall the locally built wheel on a host that has no checkout.",
       guide: "Read the Quick Start",
-      inspect: "Inspect installer",
+      inspect: "Read the install guide",
       setup: "Setup options",
     },
     footer: "Keep the loop moving. Keep the judgment human.",
@@ -261,9 +262,9 @@ const content = {
     quickstart: {
       eyebrow: "手动备用方案",
       title: "更习惯终端？可以手动安装 LoopX。",
-      body: "当你使用的 Agent 无法执行 Shell 命令时使用这条路径。同一官方安装器会为受支持的 Host 注册轻量命令入口。",
+      body: "当你使用的 Agent 无法执行 Shell 命令时使用这条路径。本 fork 不提供安装器：就地安装 checkout，或在没有 checkout 的主机上重装本地构建的 wheel。",
       guide: "阅读快速开始",
-      inspect: "查看安装脚本",
+      inspect: "查看安装说明",
       setup: "设置方式",
     },
     footer: "让闭环持续运转，让判断始终属于人。",
@@ -1085,7 +1086,7 @@ export function App() {
                 <a href="https://github.com/yanfeng98/nano-loopx#quick-start">
                   {copy.quickstart.guide} <ArrowRight size={14} />
                 </a>
-                <a href="https://github.com/yanfeng98/nano-loopx/blob/main/docs/guides/offline-wheel-install.sh">
+                <a href="https://github.com/yanfeng98/nano-loopx/blob/main/docs/guides/offline-wheel-install.md">
                   {copy.quickstart.inspect} <ExternalLink size={13} />
                 </a>
               </div>

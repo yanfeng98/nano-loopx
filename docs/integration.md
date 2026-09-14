@@ -37,11 +37,11 @@ loopx-canary heartbeat-prompt \
   --brief \
   --cli-bin loopx-canary \
   --goal-id <CANARY_GOAL_ID>
-
-# canary 观察看起来健康后，把 checkout 晋升为默认。
-~/loopx/scripts/install-local.sh
-loopx doctor
 ```
+
+本 fork 已移除把 checkout 晋升为默认的发布快照通道（`scripts/install-local.sh`，见 op 036），
+所以一条 canary 观察线现在只产出 heartbeat 任务体，不再有"晋升为默认"这一步；
+可安装的路径只有就地 editable checkout 与本地构建的 wheel 两条。
 
 然后项目可以调用：
 
