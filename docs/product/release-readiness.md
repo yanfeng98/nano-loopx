@@ -43,113 +43,40 @@ provider 保持关闭,直到其逐扩展 doctor 结果被修复且命令通过�
 [就地开发闭环的活动层检查清单](../development/editable-dev-loop.md#verify-the-active-layers)
 为每层命名了读回与恢复命令。
 
-对于 pip 或 pipx 发行,apply 委托给该 owner。对于归档快照,apply 默认使用公开
-`stable` 引用并保留原子快照回滚。仅对维护者/开发归档资格确认使用
-`loopx update plan --ref main` 与 `loopx update apply
---ref main`。当归档包装器损坏到无法运行自己的更新器时,重新运行 curl 安装器仍是
-修复路径。
+`loopx update` 只有两种形态（对应上面的两条安装路径）：本地 wheel 安装会重装它**记录的那个 wheel
+文件**，checkout 则由 operator 就地刷新（`apply` 为空，fail-closed）。本 fork 没有归档快照、没有
+`stable` 引用、也没有 canary wrapper 通道——`--ref` / `--archive-url` / `--rollback` 这些旗标随发布
+快照通道在 op 036 中一起移除了。
 
-对于贡献者,保持 clone-plus-canary 路径:
-
-```bash
-git clone https://github.com/huangruiteng/loopx ~/loopx
-bash scripts/build-wheel.sh
-loopx doctor
-loopx-canary doctor
-```
-
-PyPI 路径与 clone-plus-canary / 无 clone 归档路径在本 fork 都已退役；下面保留的叙述仅作历史与上游对照,
-恢复回退。
-
-在提升一个稳定的安装/更新建议之前,维护者必须把公开 `stable` 引用移动到通过本
-gate 的发布提交。当 `stable` 缺失或过时时,不要声称稳定通道就绪。
-
-## 原子本地提升失败矩阵
-
-（已退役）本地 clone 安装曾通过 `scripts/install-local.sh` 提升。默认可执行文件切换曾是原子
-符号链接替换,仅在候选发布目录通过深度 `loopx doctor` 校验及任何必要的
-workflow-skill 预检后运行。贡献者应把下面矩阵视为安全失败契约;不要发明第二条
-提升路径,也不要声称失败的候选成为活跃默认。
-
-已交付覆盖位于
-（这两个冒烟已随发布快照通道在 op 036 中退役：`release-promotion-concurrency-smoke.py`
-与 `local-install-promotion-boundary-smoke.py`。）原断言涵盖锁、等待与预切换拒绝，以及仅 canary 边界、
-显式覆盖与 skill 预检停止)。
-
-| 情形 | 何时发生 | 在默认符号链接切换之前? | 等待方/恢复行为 | 贡献者停止点 |
-| --- | --- | --- | --- | --- |
-| 提升守卫被持有 | 另一安装持有 `releases/.install-guard` | 是:等待方尚未保留或切换 | 等待方轮询 flock;被阻塞期间不得创建竞争的 `.install-lock`。Owner 解锁后,等待方获取守卫并完成 | 重试是安全的。不要删除活跃守卫或绕过它强制提升 |
-| 活跃遗留锁 owner | `releases/.install-lock` 命名一个活跃 PID | 是:超时的等待方永远不进入候选构建或切换 | 等待方以 `timed out waiting for another local install` 超时;活跃 owner 锁与 PID 文件保持不动 | 停止并等待活跃安装器,或请求维护者。不要收割活跃 owner 的锁 |
-| 空或死锁遗留锁 | 锁目录没有有效活跃 PID | 是:新 owner 发布其 PID 前被收割 | 等待方收割被中断的锁,然后获取所有权并继续 | 安全的自动恢复。无需维护者动作 |
-| 并发同秒安装 | 两个提升安装以共享 release-id 种子竞争 | 部分:每个等待方在自身切换前在守卫/锁下串行化 | 每次运行获得不同的发布目录(`id`、`id-2`、…);两者完成后保留一个经审计的默认符号链接 | 把不同 release id 视为预期。不要中途手工编辑发布目录名 |
-| 不完整候选(doctor 失败) | 候选包无法通过深度 doctor 或必需的包根检查 | 是:候选目录被删除;先前默认目标被保留 | 不发生等待方切换。仅在 checkout 完整且 doctor 干净后重跑 | 停止提升。修复 checkout;不要设置 `LOOPX_PROMOTE_DEFAULT=1` 绕过 doctor |
-| Skill 预检被阻塞 | 精确 host 入口 skill 无法物化(例如用户拥有的冲突 skill) | 是:发布候选被移除;现有默认二进制保持不变 | 失败局限于安装尝试本身;没有部分默认提升 | 停止。解决 skill 所有权冲突,或先不带该 skill 界面重试 |
-| 不受信任的 checkout(自动模式) | Checkout 脏、不在批准的默认引用上,或否则不受信任 | 默认时为是:安装器从不构建提升的发布快照 | 安装器以仅 canary 退出(`promotion mode: canary_only_untrusted_checkout`),保持现有默认可执行文件不动,并可能刷新 `loopx-canary` | 使用 `loopx-canary` 校验。除非你明确批准该 checkout 为维护者拥有的默认,否则不要设置 `LOOPX_PROMOTE_DEFAULT=1` |
-| 显式覆盖 | 在否则不受信任的 checkout 上设置 `LOOPX_PROMOTE_DEFAULT=1` | 否:这是候选校验后的刻意识别切换路径 | 提升在 `release.json` 与 doctor 来源中可审计为 `explicit_override` | 贡献者边界到此为止。显式默认提升、移动公开 `stable`、打 tag 与 PyPI 发布仍为维护者专属 |
-
-贡献者安全的默认行为:
-
-- 从普通功能 checkout 优先做仅 canary 安装。
-- 把任何列为"在默认符号链接切换之前"的失败视为前一默认仍必须存活的证明。
-- 当等待方在活跃 owner 上超时,停止;恢复属于该 owner 完成或维护者回收真正死锁。
-- 不要文档化、脚本化或 smoke 化一条在没有 `LOOPX_PROMOTE_DEFAULT=1` 加显式维护者批准的情况下移动 `stable`、发布包或声称默认提升的贡献者路径。
+**回滚 = 放回上一个安装**：保留上一个 wheel 文件，或把 checkout 切回上一个已知可用的提交，然后重跑
+该路径的安装命令并跑 `loopx doctor`。本 fork 不做在线版本钉选，也没有"上一条发布快照"可退。
 
 ## 已合并不等于运行时活动
 
-合并后检查证明所测源提交上的行为。它不证明已安装的 LoopX 运行时包含该提交。
-当修复在最新命名版本之后到达 `main` 时,这一区别很重要:包版本可能仍匹配,而
-已安装的源提交落后。
+合并后检查证明所测源提交上的行为；它不证明已安装的 LoopX 运行时包含该提交。当修复在版本之后到达
+`main` 时这一区别很重要：包版本可能仍匹配，而已安装的源提交落后。
 
-对归档维护者资格确认使用 `loopx update check --ref main`。其
-`runtime_activation_qualification` 结果把 release-manifest 源提交与 `loopx doctor`
-报告的受信来源血缘比较:
+本 fork 用两条本地证据回答"我现在跑的是哪一份"：
 
-- `runtime_active` 意味着已安装提交就是目标提交或包含它;
-- `release_or_install_successor_required` 意味着已安装提交落后或发散,因此必须显式保持发布/安装后继;
-- `activation_qualification_required` 意味着提交血缘不可用或属于不同的 `repo/ref`;运行时活动声明必须失败关闭,直到身份被刷新。
+- `loopx doctor` 的 `install_path`（`editable_checkout` 或 `local_wheel`）与 `wheel_path`；
+- checkout 场景下的 `manifest_source_*` 血缘：release manifest 记录的源提交对比 `loopx doctor`
+  报告的可信来源。
 
-在最新 `main` 校验后关闭 PR monitor 是有效的,但除非此凭据为 `runtime_active`,
-否则收尾不得声称该修复在已安装运行时中活动。发布仍是单独的维护者动作。当资格
-确认命令本身从更新的源代码运行时,请用 `--installed-doctor-json` 传入旧版已安装 CLI
-的本地快照;此选项是只读的,仅由 `update check` 接受。
+在最新 `main` 校验后关闭 PR monitor 是有效的，但除非证据表明**已安装的运行时就是修复后的源码**
+（editable checkout 且工作区与该提交一致，或该 wheel 由该提交构建），否则收尾不得声称修复在已安装
+运行时中活动。
 
 ## 命名版本契约
 
-LoopX v0.x 版本从 GitHub 打 tag 并构建。发布工作流把产物发布到 GitHub Releases,
-并在其 Trusted Publisher gate 通过时发布到 PyPI;每次稳定提升仍需一个包版本名。
-版本来源是 `loopx.__version__`,由 `pyproject.toml` 镜像;该版本期望的公开 tag 是
-`vX.Y.Z`。
+版本来源是 `loopx.__version__`，由 `pyproject.toml` 镜像；期望的 tag 形如 `vX.Y.Z`（当前 `v1.1.0`）。
+本 fork 不发布到 PyPI、不构建签名归档，也不提供在线升级通道，所以"命名版本"只在本仓库内生效：
 
-移动 `stable` 前,维护者应:
-
-- 当用户可见的发布行为变化时,同时提升 `loopx.__version__` 与 `pyproject.toml`;
-- 创建或验证匹配的 Git tag,例如 `v0.1.3`;
-- 发布 canary 通过后,把 `stable` fast-forward 到该 tagged 提交;
-- 确认 `release.json`、`loopx doctor` 与 `loopx update check` 报告相同的包版本与 tag;
-- 告诉现有用户先运行 `loopx update check`,当检查推荐或他们想要刷新到命名稳定发布时再运行 `loopx update apply`。
-
-发布工作流从 tagged 提交构建 wheel 与 source distribution。其发布资产包含规范的
-`SHA256SUMS` 文件,且 GitHub 为两个包与校验清单记录构建来源证明。安装前验证下载的
-bundle:
-
-```bash
-sha256sum --check SHA256SUMS
-gh attestation verify loopx-X.Y.Z-py3-none-any.whl --repo huangruiteng/loopx
-gh attestation verify loopx-X.Y.Z.tar.gz --repo huangruiteng/loopx
-```
-
-校验和证明下载字节与发布清单匹配。单独的 attestation 把这些字节绑定到仓库、
-工作流、提交与构建事件;两种机制都不声称包无漏洞。
-
-PyPI 发布是同一构建的显式、失败关闭扩展。发布工作流仅在维护者配置了以下全部条件
-时才发布:
-
-- 名为 `loopx`、带 `huangruiteng/loopx` 与 `.github/workflows/release-artifacts.yml` 的 Trusted Publisher 的 PyPI 项目;
-- 名为 `pypi` 且匹配 Trusted Publisher 配置的受保护 GitHub 环境;
-- 仓库变量 `PYPI_PUBLISH_ENABLED=true`。
-
-不要添加长期 PyPI token。缺上述任一条件时,GitHub Release 包及其验证材料仍会生成,
-而 PyPI 任务保持跳过。
+- 当用户可见行为变化时，同时提升 `loopx.__version__` 与 `pyproject.toml`；
+- 用 `python3 scripts/release_artifacts.py expected-tag` 核验两者一致（不一致会直接报错）；
+- 需要对外分发时，用 `bash scripts/build-wheel.sh` 构建 wheel 并**自行保管**该文件——它就是回滚与
+  再分发的依据（见[离线 wheel 安装](../guides/offline-wheel-install.md)）；
+- `loopx doctor` 与 `loopx update check` 只报告本地安装的版本与形态；需要确认某个提交的内容时，
+  看当前 checkout 的 git 历史，而不是找外部发布源比对。
 
 ## 公开发布时间线
 
@@ -201,12 +128,12 @@ PyPI 发布是同一构建的显式、失败关闭扩展。发布工作流仅在
 - `v0.5.3` 于 2026-08-27:匹配 `v0.5.3` tag 的 host 触达与自主延续可靠性发布。LoopX 添加 ZCode 与 Antigravity CLI Goal 界面、有界引文驱动的深研工作流与显式 Pi 任务租约门面;它还加强 Lark 收件箱路由与追赶、类型化 Todo/quota/scheduler 结算、仓库交付准入与运行时启动恢复。
 - `v0.5.4` 于 2026-09-03:匹配 `v0.5.4` tag 的类型化控制面与受治理工作流发布。LoopX 把更多 Todo、task-lease、quota、scheduler、Vision 与重规划事务移到 TypeScript owner 之后;推进分阶段文件、PostgreSQL 与 NoKV 共享权威 provider;完成周期报告生命周期;让 DSH plugin 一步就绪;并添加公开安全基准研究投影而不授予上传权威。
 
-当提升新的公开发布时,仅在匹配的 tag、发布说明、stable 引用、更新路径与聚焦发布
+当准备一个新的对外分发时,仅在匹配的 tag、发布说明、更新路径与聚焦发布
 canary 一致后在此添加。
 
 ## 兼容 gate
 
-在提升发布快照或公开指南告诉用户依赖新界面之前,运行覆盖所触界面的最小 gate:
+在对外分发或公开指南告诉用户依赖新界面之前,运行覆盖所触界面的最小 gate:
 
 ```bash
 python3 -m py_compile loopx/*.py
@@ -259,7 +186,7 @@ loopx canary release-qualification \
 
 默认 dashboard 策略是 `--dashboard-mode=auto`:源 checkout 在
 `apps/presentation/dashboard` 存在时运行 dashboard 演示就绪度,而省略该 dashboard
-应用的已安装发布快照跳过该可选界面,并在 canary 输出中保持该省略可见。当
+已安装的运行时跳过该可选界面时,在 canary 输出中保持该省略可见。当
 dashboard/frontstage 本身被提升时使用 `--dashboard-mode=require`;仅当发布边界刻意
 排除 dashboard 应用时使用 `--dashboard-mode=skip`。
 
@@ -325,7 +252,7 @@ Ruff 命名空间选择与包覆盖下限属于发布检查的一部分。下限
 gate 变绿。
 
 如果源 checkout 安装了可选前端依赖,dashboard 就绪度可以包含在同一 canary 中。
-如果发布快照省略 dashboard 应用,canary 应优雅降级并记录该边界,而不是让无关的
+如果当前安装省略 dashboard 应用,canary 应优雅降级并记录该边界,而不是让无关的
 CLI/install 提升失败,或悄然把 dashboard 路径当作已覆盖。
 
 ## 可安全依赖的内容
@@ -366,14 +293,9 @@ CLI/install 提升失败,或悄然把 dashboard 路径当作已覆盖。
 `**如何验证：**` 与 `**贡献者：**` 镜像同样决策。摘要是决策辅助,不是对下方
 详细产品分组、逐声明 PR evidence、可选能力生命周期或精确提交校验 evidence 的替代。
 
-优先保留用户可见的产品变更。当上一与当前 tag 之间的合并 PR 包含项目创始人
-`@huangruiteng` 以外的社区贡献者时,在英文产品分组之后、兼容性、校验或更新材料之前
-添加显眼的 `## Community Contributors` 部分。链接每个符合条件的 GitHub handle 与
-相关 pull requests,总结具体贡献,适用时点名外部或首次贡献者。
-
-不要在本节列出或致谢 `@huangruiteng`;创始人主导权蕴含在每个 LoopX 发布中。
-当 tag 范围没有符合条件的社区贡献时省略本节。贡献者认可必须补充发布叙述,而不是
-替代或先于其产品亮点。
+优先保留用户可见的产品变更。当上一与当前范围之间有外部社区贡献时，在英文产品分组之后、
+兼容性、校验或更新材料之前添加显眼的 `## Community Contributors` 部分，链接每个符合条件的
+handle 与相关 pull requests，并总结具体贡献；没有符合条件的贡献时省略本节。
 
 从 tag 到 tag 的 Git 范围与合并 PR 元数据构建列表,而不是提交显示名或未经评审的
 生成变更日志。即使同一 pull request 在产品分组下再次链接,归因也是发布契约的一部分。
@@ -393,8 +315,8 @@ CLI/install 提升失败,或悄然把 dashboard 路径当作已覆盖。
 **基准与集成**与**文档与兼容性**。中文文案可以更短,但不得把几个分组塌缩成一个
 泛化亮点列表、省略非空英文分组或弱化贡献者归因。
 
-在每个非空分组内,每条实质性声明必须带一个或多个直接 GitHub pull request 链接,
-如 `[#2051](https://github.com/huangruiteng/loopx/pull/2051)`。末尾的 compare 链接
+在每个非空分组内,每条实质性声明必须带一个或多个直接 pull request 链接（本仓库的 PR）。
+末尾的 compare 链接
 仍有用,但它不替代逐声明 PR 归因。避免仅以裸 PR 范围作为 evidence,因为范围可能
 隐藏被省略或无关的变更。
 

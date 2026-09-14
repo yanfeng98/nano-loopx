@@ -143,38 +143,9 @@ def main() -> int:
         assert rejected.returncode == 2, rejected
         assert "unexpected files" in rejected.stderr, rejected.stderr
 
-    workflow = (ROOT / ".github" / "workflows" / "release-artifacts.yml").read_text(
-        encoding="utf-8"
-    )
-    required_contract = (
-        "release:\n    types: [published]",
-        "python scripts/release_artifacts.py validate-tag",
-        "python scripts/release_artifacts.py normalize-sdist",
-        "python scripts/release_artifacts.py write-checksums",
-        "python scripts/release_artifacts.py verify-checksums",
-        "uses: actions/attest@v4",
-        "gh release upload",
-        "vars.PYPI_PUBLISH_ENABLED == 'true'",
-        "environment:\n      name: pypi",
-        "pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33",
-        "Verify the published package from PyPI",
-        "--index-url https://pypi.org/simple",
-        '"loopx==${version}"',
-        'test "$(PYTHONPATH="${verify_target}" python -m loopx.cli --version)" =',
-        "workflow-skills --install --skills-dir",
-        "workflow-skills --uninstall --skills-dir",
-        'payload["source"]["kind"] == "python_distribution"',
-        '--target "${target}"',
-        'loopx-wheel-target-inspect.json',
-        'verify_target="${RUNNER_TEMP}/loopx-pypi-target-${version}"',
-        'loopx-pypi-workflow-skills.json',
-        '"schema_version": "quota_settlement_plan_v1"',
-        '"identity": journal_identity.as_dict()',
-    )
-    for text in required_contract:
-        assert text in workflow, text
-    assert "password:" not in workflow
-    assert "--clobber" not in workflow
+    # The upstream release workflow (.github/workflows/release-artifacts.yml) and the
+    # PyPI publishing channel were removed from this fork (operation logs 027/036), so
+    # there is no workflow file left to cross-check against the artifact contract.
 
     print("release-artifacts-smoke ok")
     return 0
