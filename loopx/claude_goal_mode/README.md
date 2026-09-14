@@ -19,16 +19,10 @@ transcript 判断完成状态，与 LoopX 的确定性 gate 冲突）。
 作用域更受推荐（它只触碰该项目的 `.claude/`），**user** 作用域会在安装时明确
 告知，因为它影响你所有的 Claude Code 项目。
 
-### A. 通过 LoopX 安装器（opt-in 环境变量，user 作用域）
+### 安装命令（显式作用域，推荐 project）
 
-```bash
-LOOPX_INSTALL_CLAUDE=1 scripts/install-local.sh
-```
-
-安装 MCP server + `/loopx` 命令到 **user** 作用域。**没有 hooks。** 不设置
-`LOOPX_INSTALL_CLAUDE=1` 时安装器完全跳过该适配器。
-
-### B. 直接安装，带显式作用域（推荐 project）
+该适配器没有"一键安装器"这条通道：本 fork 只有就地 editable 安装与本地 wheel 两条安装路径，
+适配器始终由你显式调用 `install.py`。
 
 ```bash
 # 仅本项目（推荐）

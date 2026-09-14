@@ -145,13 +145,16 @@ editable finder 被追加到 `sys.meta_path` **末尾**，所以在**包含 `loo
 
 | 命令 | 后果 |
 | --- | --- |
-| `scripts/install-local.sh` | 把 checkout 复制成 `~/.local/share/loopx/releases/<id>` 发布快照，并在 `~/.local/bin` 写 wrapper。**实测本机 `PATH` 里 `~/.local/bin` 排在最前**，于是 `loopx` 被静默接管 |
-| `curl -fsSL https://huangruiteng.github.io/loopx/install.sh \| bash` | 同上，且装的是上游发布版 |
-| `python3 -m pip install --upgrade loopx`、`pipx install loopx` | 往同一解释器装 PyPI 发布版，覆盖 editable 指向 |
-| 把 `LOOPX_RELEASE_ROOT` 指向某个 release 目录 | 让 doctor 误判安装形态 |
+| `python3 -m pip install --upgrade loopx`、`pipx install loopx` | 往同一解释器装 PyPI 发布版（上游那份），覆盖 editable 指向 |
+| 从旧文档复制来的 `curl -fsSL https://huangruiteng.github.io/loopx/install.sh \| bash` | 装的是**上游发布版**，并在 `~/.local/bin` 写 wrapper；**实测本机 `PATH` 里 `~/.local/bin` 排在最前**，于是 `loopx` 被静默接管 |
+| 把 `LOOPX_RELEASE_ROOT` 指向某个目录 | 让 doctor 误判安装形态 |
 | 仓库根的 `npm run test:control-plane`、`typecheck:control-plane` | 需要根 `node_modules`（未安装）。只验单个 TS 测试用 `node --no-warnings --experimental-strip-types --test tests/control_plane_ts/<file>.test.ts`（`postgresql_authority_store.integration.test.ts` 需真实 PostgreSQL） |
 
-若已经误跑：删掉 `~/.local/bin/loopx` 与 `loopx-canary`，检查 shell profile 里的
+**本 fork 已移除发布快照 / canary 通道**：`scripts/install-local.sh` 与
+`scripts/install-from-github.sh` 不再存在（见 operation log 036），所以不要再尝试运行它们——
+若历史上误跑过，按下面的恢复步骤清理。
+
+若已经误跑（历史上装过 wrapper）：删掉 `~/.local/bin/loopx` 与 `loopx-canary`，检查 shell profile 里的
 `export PATH="$HOME/.local/bin:$PATH"`，并用 `loopx workflow-skills --uninstall --skills-dir <root>`
 回收 skill 副本。
 

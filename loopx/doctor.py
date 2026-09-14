@@ -18,10 +18,11 @@ from .control_plane.runtime.promotion_readiness import (
     PROMOTION_READINESS_CLASSIFICATION,
     PROMOTION_READINESS_RUNTIME_INDEX,
 )
-from .install_contract import NO_CLONE_INSTALL_URL
 from .paths import DEFAULT_RUNTIME_ROOT, global_registry_path
+from .install_contract import INSTALL_PATHS_HINT
 from .python_install_owner import (
     classify_install_path,
+    current_refresh_command,
     distribution_upgrade_command,
     editable_dev_refresh_command,
     install_identity_fields,
@@ -90,40 +91,6 @@ class GitRevisionRelation(str, Enum):
     INSTALLED_BEHIND = "installed_behind"
     DIVERGED = "diverged"
     UNKNOWN = "unknown"
-
-
-def local_install_command(repo_root: Path, *, skip_skills: bool = False) -> str:
-    command = str(repo_root / "scripts" / "install-local.sh")
-    return f"LOOPX_INSTALL_SKILL=0 {command}" if skip_skills else command
-
-
-def no_clone_upgrade_command(
-    source_ref: Any = None,
-    *,
-    doctor_agent_type: str | None = None,
-    skip_skills: bool = False,
-) -> str:
-    ref = str(source_ref or "").strip()
-    installer = f"curl -fsSL {NO_CLONE_INSTALL_URL}"
-    doctor_agent_arg = (
-        f" --agent-type {shlex.quote(doctor_agent_type)}"
-        if doctor_agent_type
-        else ""
-    )
-    install_env: list[str] = []
-    if ref and ref != "stable":
-        install_env.append(f"LOOPX_REF={shlex.quote(ref)}")
-    if skip_skills:
-        install_env.append("LOOPX_INSTALL_SKILL=0")
-    if install_env:
-        installer = f"{installer} | env {' '.join(install_env)} bash"
-    else:
-        installer = f"{installer} | bash"
-    return (
-        f"{installer}\n"
-        'export PATH="$HOME/.local/bin:$PATH"\n'
-        f"loopx doctor{doctor_agent_arg}"
-    )
 
 
 def user_local_bin() -> Path:
@@ -516,11 +483,6 @@ def build_install_freshness(
     manifest_source = (
         manifest_body.get("source") if isinstance(manifest_body.get("source"), dict) else {}
     )
-    no_clone_command = no_clone_upgrade_command(
-        manifest_source.get("ref"),
-        doctor_agent_type=doctor_agent_type,
-        skip_skills=externally_managed_skills,
-    )
     doctor_agent_arg = (
         f" --agent-type {shlex.quote(doctor_agent_type)}"
         if doctor_agent_type
@@ -536,24 +498,28 @@ def build_install_freshness(
         and is_editable_source_checkout(repo_root, release_root)
         else None
     )
-    contributor_upgrade_command = (
-        editable_dev_command
-        if editable_dev_command
-        else (
-            f"{local_install_command(repo_root, skip_skills=externally_managed_skills)}\n"
-            f"loopx doctor{doctor_agent_arg}"
-        )
-    )
+    contributor_upgrade_command = editable_dev_command
     if distribution_install:
-        upgrade_command = distribution_upgrade_command(
-            distribution_install=distribution_install,
-            python_executable=sys.executable,
-            doctor_command=f"loopx doctor{doctor_agent_arg}",
+        # Wheel installs reinstall their recorded wheel. A package-index install
+        # (unsupported here) and an unknown manager get the two-path hint rather
+        # than any index advice.
+        upgrade_command = (
+            distribution_upgrade_command(
+                distribution_install=distribution_install,
+                python_executable=sys.executable,
+                doctor_command=f"loopx doctor{doctor_agent_arg}",
+            )
+            or INSTALL_PATHS_HINT
         )
     elif editable_dev_command:
         upgrade_command = editable_dev_command
     else:
-        upgrade_command = no_clone_command
+        # Neither a pip-managed install nor an editable checkout: name the two
+        # supported paths instead of pointing at a channel this fork retired.
+        upgrade_command = current_refresh_command(
+            doctor_agent_type=doctor_agent_type,
+            include_skills=not externally_managed_skills,
+        ) or INSTALL_PATHS_HINT
     manifest_source_git_commit = manifest_source.get("git_commit")
     manifest_source_revision = (
         manifest_source_git_commit
@@ -618,7 +584,6 @@ def build_install_freshness(
         "release_id": release_id,
         "release_age_hours": age_hours,
         "upgrade_command": upgrade_command,
-        "no_clone_upgrade_command": no_clone_command,
         "contributor_upgrade_command": contributor_upgrade_command,
         "doctor_after_upgrade": f"loopx doctor{doctor_agent_arg}",
         "installed_skills_required": require_installed_skills,
@@ -918,7 +883,6 @@ def collect_doctor(
     python_distribution = python_distribution_install(module_path)
     package_dir = module_path.parent
     repo_root = package_dir.parent
-    install_script = repo_root / "scripts" / "install-local.sh"
     wrapper_script = repo_root / "scripts" / "loopx"
     active_release_root_text = os.environ.get("LOOPX_RELEASE_ROOT")
     release_root = (
@@ -1139,12 +1103,6 @@ def collect_doctor(
             "detail": str(module_path),
         },
         {
-            "id": "install_script_exists",
-            "required": False,
-            "ok": install_script.exists(),
-            "detail": str(install_script),
-        },
-        {
             "id": "wrapper_script_exists",
             "required": False,
             "ok": wrapper_script.exists(),
@@ -1247,7 +1205,6 @@ def collect_doctor(
             "repo_root": str(repo_root),
             "release_root": str(release_root) if release_root else None,
             "canary_root": str(canary_root) if canary_root else None,
-            "install_script": str(install_script),
             "wrapper_script": str(wrapper_script),
             "release_manifest_path": release_manifest.get("path"),
             "install_kind": (
@@ -1287,27 +1244,18 @@ def collect_doctor(
             and agent_type_uses_host_managed_skills(canonical_agent_type)
             else (
                 "Run `loopx workflow-skills --install`, then "
-                "`loopx slash-commands --install`, and rerun doctor. Upgrade this "
-                f"installation with `{shlex.quote(sys.executable)} -m pip install --upgrade loopx`."
+                "`loopx slash-commands --install`, and rerun doctor. Repair this "
+                f"installation with:\n{current_refresh_command(include_skills=not externally_managed_skills) or INSTALL_PATHS_HINT}"
                 if python_distribution.get("available")
                 else (
-                    (
-                        "Refresh this editable checkout in place:\n"
-                        f"{editable_dev_refresh_command(repo_root, include_skills=not externally_managed_skills)}\n"
-                        "Do not replace it with a release snapshot "
-                        "(`scripts/install-local.sh` or the archive installer)."
-                        + (
-                            " The online canary wrapper stays managed by `scripts/install-local.sh`."
-                            if canary_root
-                            else ""
-                        )
-                    )
+                    "Refresh this editable checkout in place:\n"
+                    f"{editable_dev_refresh_command(repo_root, include_skills=not externally_managed_skills)}"
                     if is_editable_source_checkout(repo_root, release_root)
                     else (
-                        f"Run `{local_install_command(repo_root, skip_skills=externally_managed_skills)}` "
-                        "and start a new shell. "
-                        f"Or export PATH=\"{local_bin}:$PATH\". For no-clone repair, run "
-                        f"`curl -fsSL {NO_CLONE_INSTALL_URL} | bash`."
+                        f"`loopx` is on PATH as {shlex.quote(str(local_bin))}; export "
+                        f'PATH="{local_bin}:$PATH" if a new shell cannot find it. '
+                        "This install could not be classified - it is neither an "
+                        f"editable checkout nor a local wheel.\n{INSTALL_PATHS_HINT}"
                     )
                 )
             )

@@ -281,7 +281,7 @@ def assert_promotion_gate_summary_markdown() -> None:
             "can_promote": False,
             "should_warn": True,
             "non_blocking": True,
-            "recommended_action": "python3 examples/canary/canary-promotion-readiness-smoke.py",
+            "recommended_action": "release-snapshot promotion was retired in this fork (operation log 036): installs come from an editable checkout or a local wheel, so there is nothing to promote",
             "warning_message": "promotion-readiness evidence is missing; generated_at=none",
             "readiness": {
                 "freshness_status": "missing",
@@ -307,7 +307,7 @@ def assert_promotion_gate_summary_markdown() -> None:
     assert "should_warn=True" in warning_markdown, warning_markdown
     assert "freshness=missing" in warning_markdown, warning_markdown
     assert "requires_readiness_run=True" in warning_markdown, warning_markdown
-    assert "action=python3 examples/canary/canary-promotion-readiness-smoke.py" in warning_markdown, warning_markdown
+    assert "release-snapshot promotion was retired" in warning_markdown, warning_markdown
     assert "warning: promotion-readiness evidence is missing; generated_at=none" in warning_markdown, warning_markdown
 
 
@@ -424,7 +424,7 @@ def assert_promotion_readiness_warning_in_quota_guard() -> None:
     stale_markdown = render_quota_should_run_markdown(stale_payload)
     assert "promotion_readiness_warning: status=stale requires_readiness_run=True" in stale_markdown, stale_markdown
     assert (
-        "promotion_readiness_action: python3 examples/canary/canary-promotion-readiness-smoke.py"
+        "promotion_readiness_action: release-snapshot promotion was retired in this fork (operation log 036): installs come from an editable checkout or a local wheel, so there is nothing to promote"
         in stale_markdown
     ), stale_markdown
     assert "promotion-readiness-smoke.py --no-write-evidence" not in stale_markdown, stale_markdown
@@ -454,7 +454,7 @@ def assert_promotion_readiness_warning_in_quota_guard() -> None:
     missing_markdown = render_quota_should_run_markdown(missing_payload)
     assert "promotion_readiness_warning: status=missing requires_readiness_run=True" in missing_markdown, missing_markdown
     assert (
-        "promotion_readiness_action: python3 examples/canary/canary-promotion-readiness-smoke.py"
+        "promotion_readiness_action: release-snapshot promotion was retired in this fork (operation log 036): installs come from an editable checkout or a local wheel, so there is nothing to promote"
         in missing_markdown
     ), missing_markdown
     assert "promotion-readiness-smoke.py --no-write-evidence" not in missing_markdown, missing_markdown

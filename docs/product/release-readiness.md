@@ -6,9 +6,9 @@ LoopX 可以快速前进,而不必让每个合并的 PR 都感觉像一次产品
 
 ## 受支持的安装与更新路径
 
-本 fork 不发布 PyPI 包；**唯一受支持的安装与更新路径**是把 LoopX checkout 就地装成 editable
-安装，改完即生效（见[就地开发闭环](../development/editable-dev-loop.md)）。发布快照与归档通道
-（`scripts/install-local.sh`）保留给发布/canary 工作，不作为开发或用户安装路径：
+本 fork 不发布 PyPI 包，也没有发布快照 / canary 通道（`scripts/install-local.sh` 与
+`scripts/install-from-github.sh` 已在 op 036 中移除）。**两条受支持的安装路径**是就地 editable
+安装（开发用）与本地构建的 wheel（发给别人用，见[离线 wheel 安装](../guides/offline-wheel-install.md)）：
 
 ```bash
 cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
@@ -53,12 +53,12 @@ provider 保持关闭,直到其逐扩展 doctor 结果被修复且命令通过�
 
 ```bash
 git clone https://github.com/huangruiteng/loopx ~/loopx
-~/loopx/scripts/install-local.sh
+bash scripts/build-wheel.sh
 loopx doctor
 loopx-canary doctor
 ```
 
-PyPI 路径是用户默认路径。Clone-plus-canary 路径是维护者校验路径,无 clone 归档是
+PyPI 路径与 clone-plus-canary / 无 clone 归档路径在本 fork 都已退役；下面保留的叙述仅作历史与上游对照,
 恢复回退。
 
 在提升一个稳定的安装/更新建议之前,维护者必须把公开 `stable` 引用移动到通过本
@@ -66,14 +66,14 @@ gate 的发布提交。当 `stable` 缺失或过时时,不要声称稳定通道�
 
 ## 原子本地提升失败矩阵
 
-本地 clone 安装通过 `scripts/install-local.sh` 提升。默认可执行文件切换是原子
+（已退役）本地 clone 安装曾通过 `scripts/install-local.sh` 提升。默认可执行文件切换曾是原子
 符号链接替换,仅在候选发布目录通过深度 `loopx doctor` 校验及任何必要的
 workflow-skill 预检后运行。贡献者应把下面矩阵视为安全失败契约;不要发明第二条
 提升路径,也不要声称失败的候选成为活跃默认。
 
 已交付覆盖位于
-`examples/release/release-promotion-concurrency-smoke.py`(锁、等待与预切换拒绝)与
-`examples/release/local-install-promotion-boundary-smoke.py`(仅 canary 边界、
+（这两个冒烟已随发布快照通道在 op 036 中退役：`release-promotion-concurrency-smoke.py`
+与 `local-install-promotion-boundary-smoke.py`。）原断言涵盖锁、等待与预切换拒绝，以及仅 canary 边界、
 显式覆盖与 skill 预检停止)。
 
 | 情形 | 何时发生 | 在默认符号链接切换之前? | 等待方/恢复行为 | 贡献者停止点 |
@@ -210,7 +210,6 @@ canary 一致后在此添加。
 
 ```bash
 python3 -m py_compile loopx/*.py
-python3 examples/release/codex-cli-no-clone-release-verification-smoke.py
 python3 examples/fresh-clone-quickstart-smoke.py
 python3 examples/loopx-update-smoke.py
 python3 examples/release/release-version-contract-smoke.py
@@ -256,7 +255,6 @@ loopx canary release-qualification \
 默认提升 canary 是:
 
 ```bash
-python3 examples/canary/canary-promotion-readiness-smoke.py --no-write-evidence
 ```
 
 默认 dashboard 策略是 `--dashboard-mode=auto`:源 checkout 在
@@ -268,7 +266,6 @@ dashboard/frontstage 本身被提升时使用 `--dashboard-mode=require`;仅当�
 仅当你刻意想追加新鲜提升就绪度 evidence 时使用写回形式:
 
 ```bash
-python3 examples/canary/canary-promotion-readiness-smoke.py
 ```
 
 对于更广泛的源 checkout 回归,保持 `loopx canary smoke-suite` 为真相源。本地与
@@ -469,7 +466,6 @@ python3 examples/release/release-readiness-doc-smoke.py \
 ## 相关文档
 
 - [Codex CLI 打包安装路径](runtimes/codex-cli/codex-cli-packaged-install.md)
-- [Codex CLI 无 clone 发布验证](runtimes/codex-cli/codex-cli-no-clone-release-verification.md)
 - [快速开始](../guides/getting-started.md)
 - [更新说明](../update-notes/README.md)
 - [公开/私有边界](../public-private-boundary.md)

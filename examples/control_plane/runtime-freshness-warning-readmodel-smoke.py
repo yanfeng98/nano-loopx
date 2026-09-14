@@ -125,7 +125,7 @@ def assert_promotion_readiness_warning() -> None:
     assert warning["goal_id"] == TARGET_GOAL, warning
     assert warning["json_exists"] is True, warning
     assert warning["message"].endswith(
-        "python3 examples/canary/canary-promotion-readiness-smoke.py"
+        "release-snapshot promotion was retired in this fork (operation log 036): installs come from an editable checkout or a local wheel, so there is nothing to promote"
     ), warning
     assert "--no-write-evidence" not in warning["message"], warning
 
@@ -143,7 +143,7 @@ def assert_promotion_readiness_warning() -> None:
     assert missing_warning["available"] is False, missing_warning
     assert missing_warning["reason"] == "no canary promotion readiness run found in sampled history"
     assert missing_warning["message"].endswith(
-        "python3 examples/canary/canary-promotion-readiness-smoke.py"
+        "release-snapshot promotion was retired in this fork (operation log 036): installs come from an editable checkout or a local wheel, so there is nothing to promote"
     ), missing_warning
     assert "--no-write-evidence" not in missing_warning["message"], missing_warning
 

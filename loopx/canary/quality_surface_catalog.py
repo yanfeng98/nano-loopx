@@ -289,7 +289,6 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
                 "tests/test_doctor_install_freshness.py",
             ),
             "durable_smoke": _covered(
-                "examples/canary/canary-promotion-readiness-smoke.py",
                 "examples/release/exact-release-commit-qualification-smoke.py",
             ),
             "catalog_canary": _covered("release-promotion"),
@@ -314,8 +313,6 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
             "loopx/self_update.py",
             "loopx/python_install_owner.py",
             "scripts/build-wheel.sh",
-            "scripts/install-from-github.sh",
-            "scripts/install-local.sh",
         ],
         "semantic_oracle": {
             "source_kind": "specification",
@@ -333,10 +330,7 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
                 "tests/test_doctor_install_freshness.py",
                 "tests/test_slash_command_install.py",
             ),
-            "durable_smoke": _covered(
-                "examples/install-local-smoke.py",
-                "examples/wheel-install-smoke.py",
-            ),
+            "durable_smoke": _covered("examples/wheel-install-smoke.py"),
             "catalog_canary": _covered("install-update"),
             "host_upgrade": _covered("examples/loopx-update-smoke.py"),
             "model_behavior": _not_applicable(
@@ -415,7 +409,7 @@ QUALITY_SURFACE_CATALOG: tuple[dict[str, Any], ...] = (
             "catalog_canary": _covered(
                 "lark-goal-channel-human-gate-delivery"
             ),
-            "host_upgrade": _covered("examples/install-local-smoke.py"),
+            "host_upgrade": _covered("examples/loopx-update-smoke.py"),
             "model_behavior": _not_applicable(
                 "Gate selection and provider delivery safety are deterministic "
                 "control-plane and transport contracts."

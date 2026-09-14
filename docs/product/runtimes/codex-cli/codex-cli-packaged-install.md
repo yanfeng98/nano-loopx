@@ -80,9 +80,10 @@ Effect runtime、已启用扩展）的逐层读回与恢复见
 ## 贡献者路径
 
 贡献者就用同一份 checkout：见[就地开发闭环](../../../development/editable-dev-loop.md)。
-`scripts/install-local.sh`（→ 发布快照 + `~/.local/bin/loopx-canary`）仍然存在，但**属于发布/canary
-工作**，只应在明确要验证发布快照时、在与开发环境隔离的机器或 HOME 里运行；就地开发用它会被静默接管。
-上游那篇教程（`git clone huangruiteng/loopx && scripts/install-local.sh`）的原文不再保留在仓库内。
+`scripts/install-local.sh` 与 `scripts/install-from-github.sh` 已在 op 036 中移除，本 fork 不再有
+canary wrapper 或发布快照通道；要发给别人就用本地构建的 wheel
+（[离线 wheel 安装](../../../guides/offline-wheel-install.md)）。上游那篇教程
+（`git clone huangruiteng/loopx && scripts/install-local.sh`）的原文也不再保留在仓库内。
 
 ## 未来打包
 

@@ -470,7 +470,7 @@ examples/control_plane/hot-path-interface-budget-smoke.py` 或等效显式漂移
 ## 晋升 Gate JSON
 
 `loopx promotion-gate --format json` 是本地发布晋升的紧凑机器可读 gate。
-它读取与 `doctor`、`status` 与 `install-local.sh` 相同的仅追加就绪事件，
+它读取与 `doctor`、`status` 相同的仅追加就绪事件（发布快照通道已在 op 036 中退役），
 然后返回小操作结果，脚本可以断言而无需解析安装器 stderr。
 
 该命令只读且非阻塞。`can_promote=false` 表示安装器应在晋升前警告，
@@ -530,7 +530,7 @@ loopx promotion-readiness record \
   "can_promote": false,
   "should_warn": true,
   "non_blocking": true,
-  "recommended_action": "python3 examples/canary/canary-promotion-readiness-smoke.py",
+  "recommended_action": "release-snapshot promotion was retired in this fork (operation log 036)",
   "warning_message": "promotion-readiness evidence is stale; ...",
   "readiness": {
     "freshness_status": "stale",
@@ -540,7 +540,7 @@ loopx promotion-readiness record \
 ```
 
 `warning_message` 刻意人类面向且可能变化。它存在让
-`scripts/install-local.sh` 保留 operator 警告，但自动化应优先上面的结构化字段。
+发布快照通道已退役（op 036）；自动化应优先上面的结构化字段。
 
 ## 全局 Registry 健康
 
@@ -1799,7 +1799,7 @@ fallback。它找到最新 `canary_promotion_readiness_smoke_group` 事件，
   刻意省略与成功检查永不无区别。
 
 该投影不晋升任何东西，也不替代 LoopX 运行时根下的仅追加发布产物。
-`scripts/install-local.sh` 消费同一就绪事实只打印非阻塞警告；operator 仍应运行
+发布快照通道曾消费同一就绪事实并只打印非阻塞警告（已在 op 036 中退役）；operator 仍应运行
 `loopx doctor` 或 canary-promotion readiness smoke 获取确切本地发布证据。
 
 ## 决策新鲜度摘要
@@ -1836,7 +1836,7 @@ promotion-readiness 证据缺失、过期或未知时消费为 `promotion_readin
 但让 heartbeat worker 报告在新鲜 canary promotion-readiness 证据写入共享运行时
 发布 ledger 前不应晋升发布快照。这使发布就绪留在可查询控制面状态，
 而不是依赖 dashboard 散文、`doctor` 输出或聊天线程。警告消息点名写回命令
-`python3 examples/canary/canary-promotion-readiness-smoke.py`。带
+（发布快照晋升已在 op 036 中退役）。带
 `--no-write-evidence` 的 run 验证 canary 而不刷新该持久投影，无法清除警告。
 
 ## Usage 摘要

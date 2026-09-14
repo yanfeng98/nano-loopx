@@ -725,7 +725,8 @@ def main() -> int:
         "quota should-run.goal_boundary",
         "update loopx heartbeat-prompt so all projects inherit it",
         'export PATH="$HOME/.local/bin:$PATH"',
-        'install_script="$HOME/loopx/scripts/install-local.sh"',
+        "in-place editable checkout",
+        "locally built wheel",
         "loopx doctor >/dev/null",
         'loopx --format json --registry "$HOME/.codex/loopx/registry.global.json" quota should-run --goal-id <GOAL_ID>',
         "project non-basic capabilities that are actually present",
@@ -850,7 +851,8 @@ def main() -> int:
     assert "if absent say" not in compact_doc, compact_doc
     for phrase in (
         'export PATH="$HOME/.local/bin:$PATH"',
-        'install_script="$HOME/loopx/scripts/install-local.sh"',
+        "in-place editable checkout",
+        "locally built wheel",
         "Generic LoopX lifecycle",
         "Keep project-specific branching out of the automation prompt",
         "Put local policy in registry, active-state sections, adapter output",

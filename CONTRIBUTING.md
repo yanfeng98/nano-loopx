@@ -81,7 +81,7 @@ loopx doctor
 
 `-e` 让 `loopx` 始终执行工作区里的代码：改完直接重跑命令就是验证。活改 / 需要重装 /
 需要重建的判定表、skills 的重跑时机、`doctor` 与 checkout 的已知边界，以及**会替换开发环境
-的命令**（`scripts/install-local.sh`、归档安装器、PyPI 升级），见
+的命令**（归档安装器、PyPI 升级；`scripts/install-local.sh` 已在 op 036 中移除），见
 [就地开发闭环](docs/development/editable-dev-loop.md)。
 
 常用聚焦检查：

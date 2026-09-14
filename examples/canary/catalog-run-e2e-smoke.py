@@ -20,14 +20,15 @@ from loopx.canary.runner import (  # noqa: E402
 )
 
 
-def assert_release_readiness_gets_no_write_argument() -> None:
-    normalized = normalize_canary_command("python3 examples/canary/canary-promotion-readiness-smoke.py")
+def assert_no_write_arguments_are_injected() -> None:
+    # The canary promotion smoke that carried the release-readiness no-write args
+    # was retired with the release-snapshot channel; the dashboard demo smoke is
+    # the surviving script in NO_WRITE_ARGS_BY_SCRIPT.
+    normalized = normalize_canary_command(
+        "python3 examples/dashboard-demo-readiness-smoke.py"
+    )
     assert normalized["ok"] is True, normalized
-    assert "--no-write-evidence" in normalized["argv"], normalized
-    assert normalized["injected_args"] == [
-        "--no-write-evidence",
-        "--dashboard-mode=skip",
-    ], normalized
+    assert normalized["injected_args"] == ["--skip-browser"], normalized
 
 
 def assert_preview_does_not_execute_or_write() -> None:
@@ -71,7 +72,7 @@ def assert_profile_fixture_executes() -> None:
 
 def assert_install_update_preview_stays_dashboard_free() -> None:
     payload = build_catalog_canary_run(
-        changed_files=["loopx/doctor.py", "examples/install-local-smoke.py"],
+        changed_files=["loopx/doctor.py", "examples/wheel-install-smoke.py"],
         max_checks_per_profile=3,
         check_limit=4,
         execute=False,
@@ -81,7 +82,7 @@ def assert_install_update_preview_stays_dashboard_free() -> None:
     assert "install-update" in profile_ids, payload
     assert "release-promotion" not in profile_ids, payload
     commands = [check["command"] for check in payload["selected_checks"]]
-    assert "python3 examples/install-local-smoke.py" in commands, payload
+    assert "python3 examples/wheel-install-smoke.py" in commands, payload
     assert "python3 examples/loopx-update-smoke.py" in commands, payload
     assert all("canary-promotion-readiness-smoke.py" not in command for command in commands), payload
     assert all("dashboard-demo-readiness-smoke.py" not in command for command in commands), payload
@@ -173,7 +174,7 @@ def assert_cli_run_executes_catalog_selected_check() -> None:
 
 
 def main() -> int:
-    assert_release_readiness_gets_no_write_argument()
+    assert_no_write_arguments_are_injected()
     assert_preview_does_not_execute_or_write()
     assert_profile_fixture_executes()
     assert_install_update_preview_stays_dashboard_free()

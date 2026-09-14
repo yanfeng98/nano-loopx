@@ -95,7 +95,7 @@ def assert_cli_surfaces_align() -> None:
     assert not message.startswith("/goal "), message
     assert "setup/bootstrap instruction" in normalized, message
     assert "/goal <thin task_body>" in normalized, message
-    assert "python3 -m pip install --upgrade loopx" in normalized, message
+    assert "python3 -m pip install -e . --no-deps --no-build-isolation" in normalized, message
     assert "workflow-skills --install" in normalized, message
     assert "Codex CLI TUI" in normalized, message
     assert "quota should-run" in normalized, message

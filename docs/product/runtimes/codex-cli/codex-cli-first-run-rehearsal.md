@@ -62,8 +62,8 @@ loopx codex-cli-tui-bootstrap-smoke-bundle \
   --agent-id <agent-id>
 ```
 
-该 bundle 检查安装-修复命令、粘贴块、quota guard、有界写回与 spend 命令形态。它不是首次用户步骤。在晋升前验证打包安装器与新建项目命令 surface 与该路径一致时，使用
-[无克隆发布验证](codex-cli-no-clone-release-verification.md)。
+该 bundle 检查安装-修复命令、粘贴块、quota guard、有界写回与 spend 命令形态。它不是首次用户步骤。
+（上游那个 no-clone 归档通道验证已在 op 036 中随发布快照通道一起退役。）
 
 ## 后续自动化 gate
 

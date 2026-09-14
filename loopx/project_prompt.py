@@ -10,7 +10,6 @@ from .control_plane.scheduler.execution_context import (
     render_scheduler_execution_args,
 )
 from .control_plane.todos.contract import normalize_required_capabilities
-from .install_contract import NO_CLONE_INSTALL_URL
 
 DEFAULT_HANDOFF_OBJECTIVE = "<OBJECTIVE_FROM_GOAL_DOC>"
 DEFAULT_HANDOFF_DOMAIN = "<DOMAIN>"
@@ -112,16 +111,11 @@ def render_available_capability_args(values: Any) -> str:
 def render_cli_preflight(*, cli_bin: str = "loopx") -> str:
     cli_bin_arg = shell_arg(cli_bin)
     return f"""export PATH="$HOME/.local/bin:$PATH"
-install_script="$HOME/loopx/scripts/install-local.sh"
 if ! command -v {cli_bin_arg} >/dev/null 2>&1; then
-  if [ -x "$install_script" ]; then
-    "$install_script"
-    export PATH="$HOME/.local/bin:$PATH"
-  else
-    echo "loopx is not on PATH; clone the LoopX repo and run scripts/install-local.sh" >&2
-    exit 1
-  fi
+  echo "loopx is not on PATH: use the LoopX checkout (cd <checkout> && python3 -m pip install -e . --no-deps --no-build-isolation) or a locally built wheel (scripts/build-wheel.sh, then pip install --force-reinstall --no-deps dist/loopx-<version>-py3-none-any.whl). No index, no installer." >&2
+  exit 1
 fi
+{cli_bin_arg} workflow-skills --install
 {cli_bin_arg} doctor >/dev/null"""
 
 
@@ -138,21 +132,10 @@ def render_codex_cli_install_preflight(
     )
     return f"""export PATH="$HOME/.local/bin:$PATH"
 if ! command -v {cli_bin_arg} >/dev/null 2>&1; then
-  if command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
-    python3 -m pip install --upgrade loopx
-    if command -v {cli_bin_arg} >/dev/null 2>&1; then
-      {cli_bin_arg} workflow-skills --install --cli-bin {cli_bin_arg}
-    fi
-  fi
-  if ! command -v {cli_bin_arg} >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then
-    curl -fsSL {NO_CLONE_INSTALL_URL} | bash
-    export PATH="$HOME/.local/bin:$PATH"
-  fi
-  if ! command -v {cli_bin_arg} >/dev/null 2>&1; then
-    echo "loopx is not on PATH; use a Python 3.11+ environment, the archive fallback, or a contributor checkout" >&2
-    exit 1
-  fi
+  echo "loopx is not on PATH: use the LoopX checkout (cd <checkout> && python3 -m pip install -e . --no-deps --no-build-isolation) or a locally built wheel (scripts/build-wheel.sh, then pip install --force-reinstall --no-deps dist/loopx-<version>-py3-none-any.whl). No index, no installer." >&2
+  exit 1
 fi
+{cli_bin_arg} workflow-skills --install
 {cli_bin_arg} doctor{doctor_agent_arg} >/dev/null"""
 
 
@@ -748,9 +731,9 @@ Success criteria for this first setup turn:
 - Do not do longer delivery work in the setup turn unless I explicitly ask; the
   configured thin loop owns later quota/spend delivery turns.
 
-1. Ensure the LoopX CLI works. Prefer the no-clone GitHub archive
-installer; do not ask me to clone the LoopX repo just to try the first
-run:
+1. Ensure the LoopX CLI works. This fork installs from an in-place editable
+checkout or a locally built wheel; it publishes nothing to a package index
+and hosts no installer:
 
 ```bash
 {cli_preflight}
@@ -1111,8 +1094,8 @@ Copy the block below into Codex CLI TUI from the project repo.
 
 ## Fresh Repo Install Repair
 
-The generated message uses the no-clone GitHub archive installer before asking
-for a contributor clone:
+The generated message names the two supported install paths (editable checkout
+or locally built wheel) before asking for a contributor clone:
 
 ```bash
 {payload.get("install_repair_command", "")}

@@ -45,12 +45,12 @@ Node 直接执行，改完即生效，不需要 npm 构建。活改 / 需要重�
 重跑时机，以及最短的"改 → 验证"闭环，见
 [就地开发闭环](docs/development/editable-dev-loop.md)。
 
-**本 fork 只走就地 editable 开发通道**：不要在同一个环境里运行 PyPI/pipx 安装
-（`python3 -m pip install --upgrade loopx`、`pipx install loopx`）、`scripts/install-local.sh`
-或归档安装器（`curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash`）——它们会生成
-第二份 `loopx`，而 `~/.local/bin` 通常在 `PATH` 上排在 editable 安装之前，等于静默接管你的
-开发环境。上游的安装、升级、回滚、卸载与 archive fallback 说明**不保留在本仓库**——需要对照时
-用 `git show upstream/main:docs/guides/installing-loopx.md`。
+**本 fork 只走这两条安装通道**：就地 editable 安装（开发/自己用）与本地构建的 wheel
+（发给别人，见[离线 wheel 安装](docs/guides/offline-wheel-install.md)）。不要在同一个环境里运行
+PyPI/pipx 安装（`python3 -m pip install --upgrade loopx`、`pipx install loopx`），也不要运行从旧文档
+复制来的归档安装器（`curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash`）——它们会生成
+第二份 `loopx`，而 `~/.local/bin` 通常在 `PATH` 上排在 editable 安装之前，等于静默接管你的开发环境。
+`scripts/install-local.sh` / `scripts/install-from-github.sh` 已在 op 036 中移除。
 
 然后在项目根目录连接：
 
@@ -117,10 +117,10 @@ loopx first-run-report
 - 有可见 Loop driver，或 agent 给出精确 activation 指令；
 - 本地 runtime state 被 ignore，而不是提交。
 
-需要 live canary wrapper（发布快照 + `loopx-canary` + 本地 man page）的上游发布/canary 通道才使用
-`scripts/install-local.sh`：它把 checkout 复制成 `~/.local/share/loopx/releases/<release-id>` 快照，
-并在 `~/.local/bin` 写 wrapper。**本 fork 的就地开发不需要它**，而且在同一环境里运行它会接管
-`loopx`。见[就地开发闭环](docs/development/editable-dev-loop.md)。
+**本 fork 没有发布快照 / canary wrapper 通道**（`scripts/install-local.sh` 与
+`scripts/install-from-github.sh` 已在 op 036 中移除）。需要发给别人的安装就用本地构建的 wheel：
+见[离线 wheel 安装](docs/guides/offline-wheel-install.md)。开发环境的刷新走
+[就地开发闭环](docs/development/editable-dev-loop.md)。
 
 ## 日常操作与恢复
 

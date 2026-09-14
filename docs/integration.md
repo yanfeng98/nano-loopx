@@ -9,18 +9,16 @@ LoopX 应作为共享本地基座使用，而不是复制进每个项目。
 
 ```bash
 git clone <repo-url> ~/loopx
-~/loopx/scripts/install-local.sh
+cd ~/loopx && python3 -m pip install -e . --no-deps --no-build-isolation
+loopx workflow-skills --install
 loopx doctor
 ```
 
-安装器把当前 checkout 发布为本地发布快照，并把该快照链接到 `~/.local/bin/loopx`。
-它还安装一个 `loopx-canary` wrapper，为选定的灰度上线 goal controller 指向活
-checkout。这让默认自动化保持稳定，同时允许一个 canary goal 在晋升前验证
-prompt/运行时变更。安装器在 bin 目录缺失于 `PATH` 时把其加入当前 shell profile，
-并在 `~/.codex/skills` 安装 `loopx-project` Codex skill 的快照，
-使未来项目 Agent 使用同一连接工作流。在任何项目文件夹用 `loopx doctor` 检查
-解析的命令路径、符号链接目标、发布快照、canary wrapper、已安装 skill 的
-delivery-hint 状态、wrapper 脚本与 Python 导入健康。
+本 fork 只有两条安装路径：这份就地 editable 安装（开发用），以及本地构建的 wheel
+（发给没有 checkout 的机器，见[离线 wheel 安装](guides/offline-wheel-install.md)）。
+历史上那个"把 checkout 发布成 `~/.local/bin` 快照 + `loopx-canary` wrapper"的安装器通道
+（`scripts/install-local.sh`）已在 op 036 中移除。在任何项目文件夹用 `loopx doctor` 检查
+解析的命令路径、`install_path`、已安装 skill 的 delivery-hint 状态与 Python 导入健康。
 
 ## 全局 Skill 策略
 
@@ -28,8 +26,8 @@ LoopX 产品行为属于已安装的全局 Codex skills，而不是某个仓库�
 保持全局 skills 窄且版本化：它们应教 LoopX 连接、quota/state/todo writeback、
 自修复与 todo succession 等通用产品契约。项目状态、benchmark 特定选择、私有材料
 与一次性 operator 决策留在 registry、active state、run history 或项目文档。
-当一个循环行为应改进每个未来 worker 时，更新仓库 skill 源并运行
-`scripts/install-local.sh`；当它只适用于本仓库的贡献卫生时，留在 `AGENTS.md`。
+当一个循环行为应改进每个未来 worker 时，更新仓库 skill 源并重跑
+`loopx workflow-skills --install`；当它只适用于本仓库的贡献卫生时，留在 `AGENTS.md`。
 
 灰度上线流程：
 

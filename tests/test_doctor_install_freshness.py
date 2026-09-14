@@ -192,42 +192,34 @@ def test_trusted_main_ref_stales_older_default_release(tmp_path: Path) -> None:
     assert "is behind loopx/loopx@main" in str(freshness["reason"])
 
 
-def test_main_channel_upgrade_command_preserves_source_ref(tmp_path: Path) -> None:
-    current = "a" * 40
-    freshness = _freshness(
-        tmp_path,
-        installed_commit=current,
-        comparison_commit=current,
-        revision_relation="same",
-        freshness_commit=current,
-        freshness_relation="same",
-        source_ref="main",
+def test_unclassified_install_advertises_the_two_paths(tmp_path: Path) -> None:
+    """A snapshot-style install (no distribution, no checkout) gets the two-path hint.
+
+    The archive/canary upgrade channel was removed in operation log 036, so nothing
+    may name a hosted installer or a package index any more.
+    """
+
+    freshness = build_install_freshness(
+        command_path=tmp_path / "loopx",
+        release_root=None,
+        repo_root=tmp_path,
+        skills={"loopx-project": {"exists": True, "required_phrases": True}},
     )
 
-    command = str(freshness["no_clone_upgrade_command"])
-    assert (
-        "curl -fsSL https://huangruiteng.github.io/loopx/install.sh "
-        "| env LOOPX_REF=main bash"
-    ) in command
-    assert freshness["upgrade_command"] == command
-
-
-def test_stable_channel_upgrade_command_keeps_public_default(tmp_path: Path) -> None:
-    current = "a" * 40
-    freshness = _freshness(
-        tmp_path,
-        installed_commit=current,
-        comparison_commit=current,
-        revision_relation="same",
-        freshness_commit=current,
-        freshness_relation="same",
-        source_ref="stable",
-    )
-
-    command = str(freshness["no_clone_upgrade_command"])
-    assert "LOOPX_REF=" not in command
-    assert "huangruiteng.github.io/loopx/install.sh | bash" in command
-    assert freshness["upgrade_command"] == command
+    assert "no_clone_upgrade_command" not in freshness
+    command = str(freshness["upgrade_command"])
+    # The advice describes the install that is running: either the in-place
+    # editable refresh or the two-path hint. Neither may name a retired channel.
+    assert "pip install -e ." in command or "editable checkout" in command, command
+    for forbidden in (
+        "huangruiteng",
+        "install.sh",
+        "codeload",
+        "pip install --upgrade loopx",
+        "pipx upgrade",
+        "scripts/install-local.sh",
+    ):
+        assert forbidden not in command, (forbidden, command)
 
 
 def test_unknown_canary_relation_does_not_stale_current_default_release(
@@ -292,8 +284,9 @@ def test_external_agents_skill_root_is_accepted_without_copying(tmp_path: Path) 
     assert all(skill["route_count"] == 1 for skill in skills.values())
     assert freshness["status"] == "live_checkout"
     assert freshness["externally_managed_skills"] is True
-    assert "LOOPX_INSTALL_SKILL=0" in str(freshness["upgrade_command"])
-    assert "LOOPX_INSTALL_SKILL=0" in str(freshness["contributor_upgrade_command"])
+    # Externally managed skills are not re-delivered by the refresh command.
+    assert "workflow-skills --install" not in str(freshness["upgrade_command"])
+    assert "workflow-skills --install" not in str(freshness["contributor_upgrade_command"])
 
 
 def test_duplicate_skill_routes_fail_closed(tmp_path: Path) -> None:
@@ -317,7 +310,9 @@ def test_duplicate_skill_routes_fail_closed(tmp_path: Path) -> None:
     assert freshness["externally_managed_skills"] is False
 
 
-def test_python_distribution_uses_pip_native_upgrade_path(tmp_path: Path) -> None:
+def test_python_distribution_without_a_recorded_wheel_gets_the_hint(
+    tmp_path: Path,
+) -> None:
     freshness = build_install_freshness(
         command_path=tmp_path / "loopx",
         release_root=None,
@@ -340,9 +335,33 @@ def test_python_distribution_uses_pip_native_upgrade_path(tmp_path: Path) -> Non
     assert freshness["requires_upgrade"] is False
     assert freshness["install_kind"] == "python_distribution"
     assert freshness["python_distribution_version"] == "0.4.8"
-    assert "-m pip install --upgrade loopx" in str(freshness["upgrade_command"])
-    assert "loopx workflow-skills --install" in str(freshness["upgrade_command"])
-    assert "huangruiteng.github.io" in str(freshness["no_clone_upgrade_command"])
+    # No recorded wheel and no index channel: the hint names the two paths.
+    assert "editable checkout" in str(freshness["upgrade_command"])
+    assert "install.sh" not in str(freshness["upgrade_command"])
+
+
+def test_local_wheel_distribution_reinstalls_the_recorded_wheel(tmp_path: Path) -> None:
+    wheel = "/tmp/dist/loopx-1.1.0-py3-none-any.whl"
+    freshness = build_install_freshness(
+        command_path=tmp_path / "loopx",
+        release_root=None,
+        repo_root=tmp_path,
+        skills={"loopx-project": {"exists": True, "required_phrases": True}},
+        python_distribution={
+            "available": True,
+            "kind": "python_distribution",
+            "version": "1.1.0",
+            "installer": "pip",
+            "install_path": "local_wheel",
+            "wheel_path": wheel,
+        },
+    )
+
+    assert freshness["install_path"] == "local_wheel"
+    assert freshness["wheel_path"] == wheel
+    command = str(freshness["upgrade_command"])
+    assert f"--force-reinstall --no-deps {wheel}" in command, command
+    assert command.endswith("loopx doctor"), command
 
 
 def test_pipx_distribution_preserves_the_pipx_owner(tmp_path: Path) -> None:
@@ -367,11 +386,31 @@ def test_pipx_distribution_preserves_the_pipx_owner(tmp_path: Path) -> None:
 
     assert freshness["python_distribution_installer"] == "pipx"
     assert freshness["python_distribution_installer_environment"] == "loopx-preview"
-    assert freshness["upgrade_command"].startswith("pipx upgrade loopx-preview\n")
-    assert "python -m pip" not in freshness["upgrade_command"]
+    # pipx is the tool for the same wheel path, not a separate channel; without a
+    # recorded wheel the advice is the two-path hint, never `pipx upgrade`.
+    assert "pipx upgrade" not in str(freshness["upgrade_command"])
+    wheel_freshness = build_install_freshness(
+        command_path=tmp_path / "loopx",
+        release_root=None,
+        repo_root=tmp_path,
+        skills={"loopx-project": {"exists": True, "required_phrases": True}},
+        python_distribution={
+            "available": True,
+            "kind": "python_distribution",
+            "version": "1.1.0",
+            "installer": "pipx",
+            "installer_environment": "loopx-preview",
+            "install_path": "local_wheel",
+            "wheel_path": "/tmp/dist/loopx-1.1.0-py3-none-any.whl",
+        },
+    )
+    assert str(wheel_freshness["upgrade_command"]).startswith(
+        "pipx install --force /tmp/dist/loopx-1.1.0-py3-none-any.whl\n"
+    )
+    assert "python -m pip" not in str(wheel_freshness["upgrade_command"])
 
 
-def test_unknown_distribution_installer_has_no_guessed_upgrade_command(tmp_path: Path) -> None:
+def test_unknown_distribution_installer_gets_no_index_command(tmp_path: Path) -> None:
     freshness = build_install_freshness(
         command_path=tmp_path / "loopx",
         release_root=None,
@@ -386,7 +425,10 @@ def test_unknown_distribution_installer_has_no_guessed_upgrade_command(tmp_path:
     )
 
     assert freshness["python_distribution_installer"] == "custom-manager"
-    assert freshness["upgrade_command"] is None
+    command = str(freshness["upgrade_command"])
+    assert "custom-manager" not in command
+    assert "pip install --upgrade loopx" not in command
+    assert "editable checkout" in command
 
 
 def test_editable_checkout_never_recommends_release_channels(tmp_path: Path) -> None:
@@ -442,8 +484,8 @@ def test_editable_refresh_keeps_working_without_a_build_backend(
     assert "--no-build-isolation" not in command, command
 
 
-def test_release_snapshot_keeps_reporting_the_snapshot_channels(tmp_path: Path) -> None:
-    """Only checkout-owned installs change; a release snapshot keeps upstream advice."""
+def test_release_snapshot_no_longer_advertises_a_channel(tmp_path: Path) -> None:
+    """Release snapshots and their channels were removed (operation log 036)."""
 
     release_root = tmp_path / "releases" / "20260101T000000Z"
     release_root.mkdir(parents=True)
@@ -455,8 +497,11 @@ def test_release_snapshot_keeps_reporting_the_snapshot_channels(tmp_path: Path) 
         skills={"loopx-project": {"exists": True, "required_phrases": True}},
     )
 
-    assert "scripts/install-local.sh" in str(freshness["contributor_upgrade_command"])
-    assert "huangruiteng.github.io/loopx/install.sh" in str(freshness["upgrade_command"])
+    for field in ("upgrade_command", "contributor_upgrade_command"):
+        command = str(freshness[field])
+        assert "scripts/install-local.sh" not in command, command
+        assert "huangruiteng" not in command, command
+        assert "install.sh" not in command, command
 
 
 def test_source_tree_egg_info_is_not_a_managed_distribution(
@@ -577,7 +622,10 @@ def test_python_distribution_missing_skills_recommends_repair(tmp_path: Path) ->
 
     assert freshness["status"] == "repair_recommended"
     assert freshness["requires_upgrade"] is True
-    assert "loopx workflow-skills --install" in str(freshness["upgrade_command"])
+    repair = str(freshness["upgrade_command"])
+    assert "editable checkout" in repair, repair
+    assert "wheel" in repair, repair
+    assert "pip install --upgrade loopx" not in repair, repair
 
 
 def test_trusted_release_ref_matches_manifest_repository(tmp_path: Path) -> None:

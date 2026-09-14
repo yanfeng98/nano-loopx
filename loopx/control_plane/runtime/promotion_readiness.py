@@ -23,10 +23,7 @@ PROMOTION_READINESS_PROXY_NOTE = (
     "canary readiness from runtime ledger or legacy goal history; exact evidence stays "
     "in append-only artifacts"
 )
-PROMOTION_READINESS_WRITEBACK_COMMAND = (
-    "python3 examples/canary/canary-promotion-readiness-smoke.py"
-)
-PROMOTION_READINESS_WARNING_MESSAGE = PROMOTION_READINESS_WRITEBACK_COMMAND
+PROMOTION_READINESS_WARNING_MESSAGE = "release-snapshot promotion was retired in this fork (operation log 036): installs come from an editable checkout or a local wheel, so there is nothing to promote"
 
 ParseTimestamp = Callable[[Any], Any]
 FreshnessBuilder = Callable[[dict[str, Any]], dict[str, Any]]

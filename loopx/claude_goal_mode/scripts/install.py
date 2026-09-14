@@ -2,7 +2,7 @@
 """Install the loopx Claude Code adapter — EXPLICIT, scoped, opt-in.
 
 This is NOT run by the default loopx installer. It is invoked deliberately
-(`LOOPX_INSTALL_CLAUDE=1 scripts/install-local.sh`, or directly). It installs the
+(directly). It installs the
 minimum: the loopx **MCP server** (the control-plane tools) + the **`/loopx`**
 slash command. The run loop is Claude Code's native `/loop`; loopx only provides
 the `should_run` protocol, so NO global hooks are wired by default.

@@ -294,9 +294,9 @@ python3 examples/fresh-clone-quickstart-smoke.py
 为空，绝不 `git pull`、绝不安装发布快照。各激活层（包 owner、宿主材料、Effect runtime、扩展）的
 逐层读回与恢复见[就地开发闭环](../development/editable-dev-loop.md#verify-the-active-layers)。
 
-不要在同一个环境里运行 PyPI / pipx 安装、`scripts/install-local.sh` 或 curl 归档安装器：`~/.local/bin`
-通常排在 `PATH` 最前，它们会生成第二份 `loopx` 并静默接管你的开发环境。上游这些通道的说明原文
-不再保留在仓库内，需要对照时用 `git show upstream/main:docs/guides/installing-loopx.md`。
+不要在同一个环境里运行 PyPI / pipx 安装，也不要运行从旧文档复制来的 curl 归档安装器：`~/.local/bin`
+通常排在 `PATH` 最前，它们会生成第二份 `loopx` 并静默接管你的开发环境。发布快照 / canary wrapper 通道
+（含 `scripts/install-local.sh`、`scripts/install-from-github.sh`）已在 op 036 中移除。
 
 ## 贡献者安装 {#contributor-install}
 
@@ -316,187 +316,11 @@ loopx doctor
 重装 / 重建判定、skills 重跑时机与 `doctor` 的边界见
 [就地开发闭环](../development/editable-dev-loop.md)。
 
-需要发布快照 + 在线 canary wrapper（`~/.local/bin/loopx-canary`、本地 man page、
-`~/.local/share/loopx/releases/<id>`）的上游发布/canary 通道才使用 `scripts/install-local.sh`。
-**在就地开发环境里运行它是危险的**：`~/.local/bin` 实测排在本机 `PATH` 最前，它生成的
-wrapper 会静默接管 `loopx`。该安装器创建：
-
-- `~/.local/bin/loopx`，指向稳定本地发布快照；
-- `~/.local/bin/loopx-canary`，指向在线 checkout；
-- `~/.local/share/man/man1/loopx.1.gz`，使 shell profile 重载后 `man loopx`
-  打开简短操作者手册；
-- `~/.codex/skills` 下可复用的全局 LoopX Codex skills；
-- 项目级 skills 的规范来源，它们不全局安装。
-
-这些全局 skills 是可复用 LoopX 连接与控制面行为的预期产品界面。只应存在于所选
-仓库的能力 workflows 改用受管项目 skills。项目专属状态与私有决策留在本地 registry
-与活动 goal 文件中。
-
-在把 checkout 晋升为默认本地发布前，先用 canary wrapper 运行一两个选定的
-控制器。
-
-## 全局 Skill 安装、更新、修复与清理
-
-**本 fork 偏差：本节描述的 `scripts/install-local.sh` 通道面向"发布快照 + canary wrapper"，
-不是就地开发路径——在 editable 开发环境里运行它会静默接管 `loopx`（`~/.local/bin` 实测排在
-本机 `PATH` 最前）。就地开发的"更新"只有 `git pull` 之后重跑 editable 安装，见
-[就地开发闭环](../development/editable-dev-loop.md)。`loopx update apply` 对 live checkout
-继续 fail-closed：`apply` 为空。以下保留上游原文供对照。**
-
-`scripts/install-local.sh` 管理三个可复用本地界面：
-
-- `~/.local/bin` 下的 CLI wrappers；
-- `~/.local/share/man` 下的本地手册页；
-- `~/.codex/skills` 下的 LoopX Codex skills。
-
-使用命名更新动作，让只读检查与变更可见：
-
-```bash
-loopx update check
-loopx update plan
-loopx update apply
-```
-
-在 PyPI 安装上，apply 使用拥有它的 pip 或 pipx 环境，然后刷新宿主材料与
-readbacks。在归档安装上，它原子替换发布快照。该命令绝不 pull 或改写在线 checkout；
-显式更新 Git 并重跑贡献者安装器。
-
-对贡献者 checkout，重跑安装器从当前干净的 `origin/main` checkout 更新两个界面：
-
-```bash
-cd ~/loopx
-git pull --ff-only
-./scripts/install-local.sh
-loopx doctor
-```
-
-安装器把默认晋升当作发布边界。干净 checkout 位于 `origin/main` 时自动晋升。
-脏 checkout 或另一分支只更新 `loopx-canary`，而默认 CLI、已安装 skills 与手册
-保持不动。验证该 checkout 后，显式晋升：
-
-```bash
-LOOPX_PROMOTE_DEFAULT=1 ./scripts/install-local.sh
-```
-
-发布 manifest 与 `loopx doctor` 记录晋升来自 trusted-main 路径、受信 GitHub 归档
-还是显式覆盖。
-
-在把在线 checkout 变成默认发布快照之前，用 `loopx-canary` 测试。`loopx doctor`
-报告默认 wrapper 是否指向发布快照、canary wrapper 是否指向在线 checkout，以及
-所需 skills 是否已安装。
-
-如果某 Agent 说它找不到 LoopX，按此顺序修复：
-
-1. 确保 `~/.local/bin` 在 `PATH` 上。
-2. 在干净的 `origin/main` 上重跑 `~/loopx/scripts/install-local.sh`；从任何其他
-   checkout 使用 `loopx-canary`，直到显式晋升。
-3. 运行 `loopx doctor`。
-4. 如果循环自动化过期，用
-   `loopx heartbeat-prompt --thin --goal-id <goal-id> --agent-id <agent-id> --agent-scope "<scope>"`
-   重新生成。
-
-可复用 skills 有意只做狭窄工作：
-
-| Skill | 用它做 | 不要用它做 |
-| --- | --- | --- |
-| `loopx-project` | 连接项目、读取 status/quota/history、诊断 LoopX、生成 heartbeat/review 包与刷新状态。 | 默认读取私有项目文档或取代 CLI 作为事实来源。 |
-| `loopx-pr-program` | 协调多 PR/MR 交付项目、保留需求/依赖优先级、维护路线图与监控材料变更。 | 深度逐 PR 评审、provider 专属获取、批准、评论、重定向、关闭或 merge。 |
-| `loopx-pr-review` | 运行 `/loopx-pr-review`、保留 `loopx pr-review` 包与引导逐 PR 五区块评审。 | 批准、评论、merge、自 merge 或管理员绕过 PR。 |
-| `loopx-doc-registry` | 注册持久项目材料与脱敏的权威来源元数据。 | 把原始 doc 正文、内部 URL 或私有评论复制进公开仓库 docs。 |
-| `loopx-benchmark` | 通过内置 `benchmark-toolkit` 契约运行、监控与分析 LoopX 管理的 benchmark 实验。 | 随意讨论 benchmark、普通微基准测试，或把 skill 发现当作 runner、凭证或私有证据权威。 |
-| `loopx-material` | 运维一个显式激活项目的无损材料清单、生命周期、ranked-entry 重建、有界 rerank、owner 门控应用与回滚。 | 普通一次性阅读、项目专属来源发现，或只因项目 skill 可被发现就改动材料存储。 |
-| `loopx-change-quality` | 评审一个确切最终 diff，可选应用一个有界安全修复，并记录策略强制 receipt。 | 在 goal 策略禁用时行动、递归评审评审者，或取代项目原生验证器。 |
-| `loopx-self-repair` | 修复意外的控制面行为、过期投影、微小 Turn 或矛盾 guard 载荷。 | 降低 gate、在缺失权威周围猜测，或提交私有 runtime 状态。 |
-
-当一个交付 goal 横跨多个 PR 或 MR 且队列需要长期协调时，调用 `$loopx-pr-program`。
-该 skill 接受 provider-neutral 快照、保留一个分组的 LoopX monitor，且仅对材料
-变更更新路线图投影。运行 `loopx doctor` 读回已安装 skill，并用其捆绑的
-`scripts/diff_snapshot.py --current <snapshot.json>` 命令验证首个基线。安装该 skill
-不授予源码控制读或写权限，不安装 provider adapter；获取仍由授权宿主环境负责。
-要禁用该 workflow，停止调用它并只移除 `~/.codex/skills/loopx-pr-program`；重跑
-安装器恢复发布拥有的副本。
-
-Auto-research 角色指引是 worker 本地的：可见 worker launcher 在投影角色 profile、
-quota 包与 frontier 条目后拥有 `loopx-auto-research` playbook 本身。它不是作为
-全局 LoopX skill 安装的。
-
-保持三层分离：
-
-- **全局 skill 行为**归 `skills/`，安装到 `~/.codex/skills`。
-- **项目状态**归 `.loopx/`、`.codex/goals/` 与 `~/.codex/loopx`；除非有意提交
-  脱敏夹具，否则保持本地。
-- **仓库规则**归 `AGENTS.md`、`CONTRIBUTING.md` 与公开 docs。它们可以约束本仓库
-  的贡献者与 Agent，但不应静默成为每个项目的全局 skill 策略。
-
-`loopx-material` 与 `loopx-change-quality` 遵循**发布拥有来源、项目管理交付、
-goal 限定激活**。全局安装器把它们放在 LoopX 发布中的规范来源，但不把任一 skill
-发布到 `~/.codex/skills`。通用生命周期与宿主界面契约记录在
-[Project Skill Delivery](../../loopx/capabilities/project_skill_delivery/README.md)。
-仅为一个已连接项目启用发现：
-
-```bash
-loopx project-skill install \
-  --project . \
-  --skill loopx-material \
-  --surface codex \
-  --execute
-loopx project-skill status \
-  --project . \
-  --skill loopx-material \
-  --surface codex
-
-# Install only when the goal enables change_quality_qualification.
-loopx project-skill install \
-  --project . \
-  --skill loopx-change-quality \
-  --surface codex \
-  --execute
-```
-
-宿主原生项目根：
-
-| 界面 | 受管项目根 |
-| --- | --- |
-| Codex | `.agents/skills/` |
-| Claude Code | `.claude/skills/` |
-
-重复 `--surface` 可在一次事务中为多个宿主安装同一 skill。位置遵循
-[Codex](https://developers.openai.com/codex/skills)、
-[Claude Code](https://code.claude.com/docs/en/slash-commands#where-skills-live)
-文档化的宿主发现契约。
-
-安装项目 skill 不授予领域写权限；当前 goal/profile/todo 必须仍激活该能力。用
-`loopx project-skill uninstall --project . --skill <skill-id> --surface codex
---execute` 移除受管副本。未受管或本地修改的副本 fail closed。
-
-只断开当前项目与 LoopX 的连接时，从该项目根使用项目本地卸载命令。它默认 dry-run
-预览，拒绝直接操作共享全局 registry：
-
-```bash
-loopx uninstall-project
-loopx uninstall-project --goal-id <goal-id> --archive-state --execute
-```
-
-仅当全局条目的 `source_registry` 指回该项目时，`uninstall-project` 才把所选 goal
-从 `.loopx/registry.json` 与共享全局 registry 中移除。它不卸载 LoopX CLI，不删除
-其他项目的 runtime 历史。传 `--archive-state` 可把该项目
-`.codex/goals/<goal-id>/` 目录移到 `.loopx/archived-project-state/` 下，而不是留在
-原位。
-
-手动清理可复用 LoopX CLI 与 skill 界面时，只移除你打算丢弃的部分：
-
-```bash
-rm -f ~/.local/bin/loopx ~/.local/bin/loopx-canary
-rm -rf ~/.codex/skills/loopx-project \
-       ~/.codex/skills/loopx-pr-program \
-       ~/.codex/skills/loopx-pr-review \
-       ~/.codex/skills/loopx-doc-registry \
-       ~/.codex/skills/loopx-benchmark \
-       ~/.codex/skills/loopx-self-repair
-```
-
-这不归档已连接项目状态或 runtime 历史。仅当你有意退役这些本地项目记录时才归档
-或移除 `.loopx/`、`.codex/goals/` 与 `~/.codex/loopx`。
+**本 fork 没有发布快照 / canary wrapper 通道**：`scripts/install-local.sh` 与
+`scripts/install-from-github.sh` 已在 op 036 中移除。要安装到另一台机器（没有 checkout），
+用本地构建的 wheel，见[离线 wheel 安装](offline-wheel-install.md)；开发环境就用上面的就地
+editable 安装。`loopx update check|plan` 会按当前安装形态打印它建议的刷新命令，`loopx doctor`
+的 `install_path` 会告诉你当前是 `editable_checkout` 还是 `local_wheel`。
 
 ## 手动连接项目
 

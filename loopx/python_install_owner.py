@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import importlib.util
+from importlib.metadata import PackageNotFoundError, distribution
 import json
 from pathlib import Path, PurePosixPath
 import shlex
@@ -124,36 +125,17 @@ def resolve_python_install_owner(
     return PythonInstallOwner(manager="pipx", environment=environment)
 
 
-def python_distribution_upgrade_command(
-    *,
-    owner: PythonInstallOwner,
-    python_executable: str,
-    doctor_command: str,
-) -> str | None:
-    if owner.manager == "pipx":
-        package_command = f"pipx upgrade {shlex.quote(owner.environment or 'loopx')}"
-    elif owner.manager == "pip":
-        package_command = f"{shlex.quote(python_executable)} -m pip install --upgrade loopx"
-    else:
-        return None
-    return (
-        f"{package_command}\n"
-        "loopx workflow-skills --install\n"
-        "loopx slash-commands --install\n"
-        f"{doctor_command}"
-    )
-
-
 def distribution_upgrade_command(
     *,
     distribution_install: Mapping[str, Any] | None,
     python_executable: str,
     doctor_command: str,
 ) -> str | None:
-    """Upgrade advice for a pip-managed install: the recorded wheel first.
+    """Upgrade advice for a pip-managed install: the recorded wheel, or nothing.
 
-    Only a package-index install (which this fork does not publish) falls back to
-    the owner's own upgrade channel.
+    A package-index install has no supported upgrade path in this fork, so the
+    caller gets ``None`` and falls back to INSTALL_PATHS_HINT rather than being told
+    to reach an index.
     """
 
     if not isinstance(distribution_install, Mapping):
@@ -171,10 +153,6 @@ def distribution_upgrade_command(
             if distribution_install.get("wheel_path")
             else None
         ),
-    ) or python_distribution_upgrade_command(
-        owner=owner,
-        python_executable=python_executable,
-        doctor_command=doctor_command,
     )
 
 
@@ -200,6 +178,91 @@ def install_identity_fields(
             else None
         ),
     }
+
+
+def detect_running_install() -> dict[str, Any]:
+    """Classify the install that is running this interpreter.
+
+    ``install_path`` is one of the INSTALL_PATH_* constants; ``repo_root`` is the
+    checkout root or the distribution root (``site-packages``), and ``owner`` is
+    set whenever an installed distribution was found.
+    """
+
+    # parents[0] is the ``loopx`` package directory, parents[1] the checkout root
+    # (or site-packages for a wheel install).
+    repo_root = Path(__file__).resolve().parents[1]
+    try:
+        installed = distribution("loopx")
+    except PackageNotFoundError:
+        installed = None
+    direct_url = read_direct_url(installed.files) if installed is not None else None
+    install_path = classify_install_path(direct_url)
+    if (
+        install_path == INSTALL_PATH_UNKNOWN
+        and (repo_root / ".git").exists()
+        and (repo_root / "pyproject.toml").is_file()
+    ):
+        install_path = INSTALL_PATH_EDITABLE_CHECKOUT
+    owner = None
+    if installed is not None:
+        installer = (installed.read_text("INSTALLER") or "").strip() or "unknown"
+        owner = resolve_python_install_owner(default_installer=installer, prefix=Path(sys.prefix))
+    return {
+        "install_path": install_path,
+        "wheel_path": local_wheel_path(direct_url),
+        "owner": owner,
+        "repo_root": repo_root,
+    }
+
+
+def wheel_convention_path(version: str) -> str:
+    """Where ``scripts/build-wheel.sh`` puts the wheel for a version."""
+
+    return f"dist/loopx-{version}-py3-none-any.whl"
+
+
+INSTALL_PATHS_HINT = (
+    "This fork supports two install paths: (1) an in-place editable checkout "
+    "(cd <checkout> && python3 -m pip install -e . --no-deps --no-build-isolation), or "
+    "(2) a locally built wheel (bash scripts/build-wheel.sh, then "
+    "python3 -m pip install --force-reinstall --no-deps dist/loopx-<version>-py3-none-any.whl). "
+    "It publishes nothing to a package index and hosts no installer."
+)
+
+
+def current_refresh_command(
+    *,
+    doctor_agent_type: str | None = None,
+    include_skills: bool = True,
+) -> str | None:
+    """Refresh command for the install that is running right now.
+
+    The editable triple for a checkout, the wheel reinstall for a local wheel, and
+    ``None`` when the running install cannot be classified - callers then fall back
+    to INSTALL_PATHS_HINT instead of guessing a channel.
+    """
+
+    state = detect_running_install()
+    doctor_command = (
+        f"loopx doctor --agent-type {shlex.quote(doctor_agent_type)}"
+        if doctor_agent_type
+        else "loopx doctor"
+    )
+    if state["install_path"] == INSTALL_PATH_EDITABLE_CHECKOUT:
+        return editable_dev_refresh_command(
+            state["repo_root"],
+            doctor_agent_type=doctor_agent_type,
+            include_skills=include_skills,
+        )
+    if state["install_path"] == INSTALL_PATH_LOCAL_WHEEL and state["owner"] is not None:
+        return wheel_reinstall_command(
+            owner=state["owner"],
+            python_executable=sys.executable,
+            doctor_command=doctor_command,
+            wheel_path=state["wheel_path"],
+            include_skills=include_skills,
+        )
+    return None
 
 
 def _quote_local_path(value: str) -> str:
@@ -233,10 +296,10 @@ def editable_dev_refresh_command(
 ) -> str:
     """Refresh an editable source checkout in place instead of installing a release.
 
-    This fork develops in place through an editable install, so a checkout must never be
-    pointed at `scripts/install-local.sh` or the archive installer: both copy a release
-    snapshot into `~/.local/bin`, which usually wins the PATH race and silently takes
-    over `loopx`. See operation-logs/031.
+    This fork develops in place through an editable install. The retired
+    `scripts/install-local.sh` and archive installer used to copy a release snapshot
+    into `~/.local/bin`, which wins the PATH race and silently takes over `loopx`;
+    both were removed in operation log 036.
     """
     doctor_agent_arg = (
         f" --agent-type {shlex.quote(doctor_agent_type)}" if doctor_agent_type else ""

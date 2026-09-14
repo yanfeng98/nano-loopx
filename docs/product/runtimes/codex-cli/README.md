@@ -8,7 +8,6 @@ Codex CLI 是头等 LoopX host。首选产品路径以一条可见 TUI 消息开
 - [TUI 优先的 LoopX Loop](codex-cli-tui-loop.md):一条可见 TUI 消息启动 LoopX,以会话附加自动化作为首选后续。
 - [打包安装](codex-cli-packaged-install.md):就地 editable 安装、更新与开始路径;发布/canary 通道保留给发布工作,不用于开发环境。
 - [首次运行演练](codex-cli-first-run-rehearsal.md):连接就地 editable 安装、单消息 TUI 引导与证明捕获 fixture。
-- [无 clone 发布验证](codex-cli-no-clone-release-verification.md):验证上游归档安装器通道(本 fork 把它作为发布/canary 机制保留,**不是**开发或用户安装路径)。
 - [LoopX Turn 快速开始](loopx-turn-codex-cli-quickstart.md):带一个适配器、一个验证器、一条命令与类型化结果的有界隔离 headless 路径。
 
 ## 可见会话 evidence

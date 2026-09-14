@@ -179,28 +179,7 @@ Explore 状态中记录材料性实验迁移，然后刷新主管投影。
 
 ## 预检
 
-在项目工作前一次性解析宿主命令。在原生 Windows PowerShell 7 上，把已安装的
-`loopx.ps1` 目录保留在 Windows 用户 `PATH` 中并运行：
-
-```powershell
-loopx doctor
-```
-
-当当前 Windows 执行器不是 PowerShell 时，显式调用 PowerShell 7 保留同一入口：
-
-```text
-pwsh.exe -NoLogo -NoProfile -File "$HOME/.local/bin/loopx.ps1" doctor
-```
-
-如果 Windows 入口缺失，从 PowerShell 7 运行受信任检出安装器，然后启动新的宿主
-进程以继承用户 `PATH`：
-
-```powershell
-pwsh -NoLogo -NoProfile -File .\scripts\install-windows.ps1 -Python (Get-Command python).Source -AddToUserPath
-loopx doctor
-```
-
-在 POSIX 主机上使用现有 shell 入口：
+在项目工作前一次性解析宿主命令（本 fork 只在 Linux/WSL2 上运行，使用 POSIX shell）：
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -210,12 +189,11 @@ loopx doctor
 如果 `loopx` 不在 PATH 上：
 
 ```bash
-install_script="$HOME/loopx/scripts/install-local.sh"
-if [ -x "$install_script" ]; then
-  "$install_script"
-  export PATH="$HOME/.local/bin:$PATH"
-fi
+# 两条安装路径（详见 docs/guides/offline-wheel-install.md）：
+cd <checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
+loopx workflow-skills --install
 loopx doctor
+# 或本地 wheel：bash scripts/build-wheel.sh，再 pip install --force-reinstall --no-deps dist/loopx-<version>-py3-none-any.whl
 ```
 
 如果仍失败，报告精确缺失部分，不要假装连接成功。
@@ -273,16 +251,9 @@ loopx --format json --registry "$HOME/.codex/loopx/registry.global.json" quota s
 
 如果默认 `loopx` 负载与刚合并的源码检出或
 `PYTHONPATH=<checkout> python3 -m loopx.cli ...` 交叉检查矛盾，暂停交付，
-在信任 quota 前运行 `loopx doctor`。已安装命令通常是 release snapshot 包装器，
-所以自行合并的修复可能需要用 `loopx update --execute --ref main` 或干净 main
-检出的 `scripts/install-local.sh` 从最新可信 `origin/main` 刷新本地安装；
-刷新后重跑默认 `loopx` 命令，且只在运行时负载匹配修复后的源码行为时消耗
-quota。脏或非 main 检出默认仅用于 canary。只有检出已通过其晋升验证且默认替换
-是有意写入后，才用 `LOOPX_PROMOTE_DEFAULT=1 scripts/install-local.sh`。
-
-在原生 Windows 上，自动归档更新与回滚是失败关闭的。更新可信检出，重跑
-`scripts/install-windows.ps1`，并在消耗 quota 前用 `loopx doctor --deep` 验证
-新发布。
+在信任 quota 前运行 `loopx doctor`。本 fork 没有 release snapshot / canary
+wrapper 通道：刷新就是重跑对应路径的安装命令，`loopx update check|plan` 会按当前安装形态
+打印确切命令。刷新后重跑默认 `loopx` 命令，且只在运行时负载匹配修复后的源码行为时消耗 quota。
 
 如果响应是 `state=operator_gate`，把它视为用户/控制器交互，而不是静默跳过。
 存在时读取 `gate_prompt`、`operator_question`、`recommended_action`、

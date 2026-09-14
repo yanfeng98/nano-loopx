@@ -53,7 +53,7 @@ loopx new-project-prompt \
 
 0. 先确认当前 shell 能调用 LoopX CLI；如果提示 `loopx`
    不在 PATH，从 LoopX checkout 做就地 editable 安装再继续（不要用
-   `scripts/install-local.sh` 或 PyPI/归档通道，它们会接管就地安装）：
+   PyPI/归档通道，或历史上那个发布快照通道——它们都会接管就地安装）：
 
    ```bash
    export PATH="$HOME/.local/bin:$PATH"

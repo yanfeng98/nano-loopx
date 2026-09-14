@@ -102,7 +102,6 @@ const siteDir = resolve(outDir, "site");
 assertExists(resolve(siteDir, "index.html"));
 assertExists(resolve(siteDir, "frontstage/index.html"));
 assertExists(resolve(siteDir, "benchmarks/swe-marathon/index.html"));
-assertExists(resolve(siteDir, "install.sh"));
 assertExists(resolve(siteDir, "status.frontstage-share.json"));
 assertExists(resolve(outDir, "README.md"));
 assertExists(resolve(outDir, "frontstage-share-manifest.json"));
@@ -136,11 +135,8 @@ for (const [label, name] of [
   if (!name) throw new Error(`missing compiled ${label} asset`);
   assertExists(resolve(siteDir, "site-assets", name));
 }
-const publishedInstaller = await readFile(resolve(siteDir, "install.sh"), "utf8");
-const canonicalInstaller = await readFile(resolve(repoRoot, "scripts/install-from-github.sh"), "utf8");
-if (publishedInstaller !== canonicalInstaller) {
-  throw new Error("published installer must be byte-identical to scripts/install-from-github.sh");
-}
+// The no-clone archive installer was removed with the release-snapshot channel
+// (operation log 036); the share bundle no longer publishes one.
 const homepageSource = await readFile(resolve(repoRoot, "apps/presentation/site/src/App.tsx"), "utf8");
 const homepageStyles = await readFile(resolve(repoRoot, "apps/presentation/site/src/styles.css"), "utf8");
 const benchmarkHtml = await readFile(resolve(siteDir, "benchmarks/swe-marathon/index.html"), "utf8");
@@ -261,8 +257,7 @@ if (manifest.base !== "/loopx/") {
 if (
   manifest.homepage_entry !== "site/index.html" ||
   manifest.swe_marathon_brief_entry !== "site/benchmarks/swe-marathon/index.html" ||
-  manifest.frontstage_entry !== "site/frontstage/index.html" ||
-  manifest.installer_entry !== "site/install.sh"
+  manifest.frontstage_entry !== "site/frontstage/index.html"
 ) {
   throw new Error(`manifest entries mismatch: ${JSON.stringify(manifest)}`);
 }
@@ -271,9 +266,6 @@ if (manifest.content_sources?.public_homepage !== "apps/presentation/site") {
 }
 if (manifest.content_sources?.swe_marathon_brief !== "benchmark/swe-marathon") {
   throw new Error(`manifest benchmark brief source mismatch: ${JSON.stringify(manifest.content_sources)}`);
-}
-if (manifest.content_sources?.installer_script !== "scripts/install-from-github.sh") {
-  throw new Error(`manifest installer source mismatch: ${JSON.stringify(manifest.content_sources)}`);
 }
 const homepageEvidenceAssets = manifest.content_sources?.homepage_evidence_assets ?? [];
 for (const assetPath of [

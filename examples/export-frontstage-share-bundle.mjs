@@ -15,7 +15,6 @@ const statusFileName = "status.frontstage-share.json";
 const manifestFileName = "frontstage-share-manifest.json";
 const showcaseCatalogPath = "docs/showcases/showcase-catalog.json";
 const projectionFixturePath = "examples/goal-channel-frontstage-fixture.py";
-const installerScriptPath = "scripts/install-from-github.sh";
 const homepageEvidenceAssets = [
   "docs/assets/long-running-loop-openviking-trajectory.png",
   "docs/assets/long-running-loop-ml-experiment-trajectory.png",
@@ -105,7 +104,6 @@ async function copyHomepage(siteDir, base) {
   ], { cwd: homepageDir });
   await cp(buildDir, siteDir, { force: true, recursive: true });
   await rm(buildDir, { force: true, recursive: true });
-  await copyFile(resolve(repoRoot, installerScriptPath), resolve(siteDir, "install.sh"));
 }
 
 async function copyPublicSiteRoutes(siteDir) {
@@ -292,12 +290,10 @@ async function writeManifest(outDir, base, interactivePages) {
     status_fixture: `site/${statusFileName}`,
     homepage_entry: "site/index.html",
     swe_marathon_brief_entry: "site/benchmarks/swe-marathon/index.html",
-    installer_entry: "site/install.sh",
     frontstage_entry: "site/frontstage/index.html",
     content_sources: {
       public_homepage: "apps/presentation/site",
       swe_marathon_brief: "benchmark/swe-marathon",
-      installer_script: installerScriptPath,
       homepage_evidence_assets: homepageEvidenceAssets,
       primary_public_story: showcaseCatalogPath,
       interactive_case_pages: interactivePages,

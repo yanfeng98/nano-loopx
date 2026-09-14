@@ -16,7 +16,7 @@ from .doctor import add_promotion_readiness_freshness, latest_promotion_readines
 from .history import load_registry, write_reserved_run_artifacts
 from .paths import resolve_runtime_root
 
-PROMOTION_GATE_ACTION = "python3 examples/canary/canary-promotion-readiness-smoke.py"
+PROMOTION_GATE_ACTION = "release-snapshot promotion was retired in this fork (operation log 036): installs come from an editable checkout or a local wheel, so there is nothing to promote"
 
 
 def _render_promotion_readiness_record_markdown(payload: dict[str, Any]) -> str:
