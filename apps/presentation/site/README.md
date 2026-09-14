@@ -1,6 +1,6 @@
 # LoopX 公共网站
 
-此目录拥有在 GitHub Pages 站点根目录发布的 React/Vite、public-safe [LoopX 首页](https://huangruiteng.github.io/loopx/)。frontstage 导出器把该应用构建到 Pages 根目录,并在 `/frontstage/` 发布编译后的 dashboard。
+此目录拥有 React/Vite、public-safe LoopX 首页源码（可本地 `npm run build` 构建；本 fork 不发布到 GitHub Pages）。上游曾把它发布在 https://huangruiteng.github.io/loopx/)。frontstage 导出器把该应用构建到 Pages 根目录,并在 `/frontstage/` 发布编译后的 dashboard。
 
 Vite 的 base path 由导出器提供,因此链接与资源在仓库 Pages base(`/loopx/`)与根 base 本地预览中都能工作。
 

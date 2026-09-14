@@ -77,7 +77,7 @@ resolve_status_command() {
   elif command -v loopx-canary >/dev/null 2>&1; then
     command -v loopx-canary
   else
-    echo "loopx is not installed; run scripts/install-local.sh first." >&2
+    echo "loopx is not installed; install it from the LoopX checkout (python3 -m pip install -e . --no-deps --no-build-isolation) or from a locally built wheel." >&2
     exit 1
   fi
 }

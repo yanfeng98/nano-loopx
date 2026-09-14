@@ -19,7 +19,7 @@ const armOrder = ["plain", "goal", "codex-cli", "heartbeat"] as const;
 const publicAnalysisUrl =
   "https://github.com/huangruiteng/loopx/pull/3887#issuecomment-5535839229";
 const repositoryStudyUrl =
-  "https://github.com/huangruiteng/loopx/tree/main/benchmark/swe-marathon";
+  "https://github.com/yanfeng98/nano-loopx/tree/main/benchmark/swe-marathon";
 const researchContributors = [
   { handle: "BouwenZhou", href: "https://bouwenzhou.github.io/" },
   { handle: "piaji-68", href: "https://github.com/piaji-68" },

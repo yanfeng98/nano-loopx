@@ -36,7 +36,7 @@ const mlEvidenceUrl = new URL(
 ).href;
 
 const setupPrompts: Record<Language, string> = {
-  en: `Connect the current project to LoopX: https://github.com/huangruiteng/loopx
+  en: `Connect the current project to LoopX: https://github.com/yanfeng98/nano-loopx
 
 Do not clone LoopX. Follow the README Quick Start to use the no-clone installer and \`loopx doctor\`, then reuse or \`loopx connect/bootstrap\` the current project state.
 
@@ -44,7 +44,7 @@ After setup, first report the project connection status, current user gate, top 
 
 Then I will use \`/loopx <complex task>\` to begin real work.
 When you receive \`/loopx <goal text>\`, first provide a concise ordered plan, then write it as P0/P1/P2 todos so I can see what needs to be done, what is blocked by a gate, and what the next safe action is.`,
-  zh: `把当前项目接入 LoopX: https://github.com/huangruiteng/loopx
+  zh: `把当前项目接入 LoopX: https://github.com/yanfeng98/nano-loopx
 
 不要 clone LoopX；按 README Quick Start 使用 no-clone installer、
 \`loopx doctor\`，复用或 \`loopx connect/bootstrap\` 当前项目状态。
@@ -58,7 +58,7 @@ P0/P1/P2 todos，让我能看到当前要做什么、什么被 gate 卡住、
 下一步安全动作是什么。`,
 };
 
-const shellSetupCommand = `curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash
+const shellSetupCommand = `cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 export PATH="$HOME/.local/bin:$PATH"
 loopx doctor
 cd /path/to/your-project
@@ -809,7 +809,7 @@ export function App() {
           >
             {language === "en" ? "中文" : "EN"}
           </button>
-          <a className="github-button" href="https://github.com/huangruiteng/loopx">
+          <a className="github-button" href="https://github.com/yanfeng98/nano-loopx">
             <GitHubIcon />
             GitHub
           </a>
@@ -835,7 +835,7 @@ export function App() {
               {language === "zh" ? "案例" : "Showcases"}
             </a>
             <a href={`${basePath}docs/`}>Docs</a>
-            <a href="https://github.com/huangruiteng/loopx">GitHub</a>
+            <a href="https://github.com/yanfeng98/nano-loopx">GitHub</a>
           </nav>
         ) : null}
       </header>
@@ -1070,7 +1070,7 @@ export function App() {
               </div>
               <pre>
                 <code>
-                  <b>$</b> curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash{"\n"}
+                  <b>$</b> cd &lt;loopx-checkout&gt; &amp;&amp; python3 -m pip install -e . --no-deps --no-build-isolation{"\n"}
                   <b>$</b> export PATH="$HOME/.local/bin:$PATH"{"\n"}
                   <b>$</b> loopx doctor{"\n"}
                   <b>$</b> cd /path/to/your-project{"\n"}
@@ -1082,10 +1082,10 @@ export function App() {
                 </code>
               </pre>
               <div className="quickstart-links">
-                <a href="https://github.com/huangruiteng/loopx#quick-start">
+                <a href="https://github.com/yanfeng98/nano-loopx#quick-start">
                   {copy.quickstart.guide} <ArrowRight size={14} />
                 </a>
-                <a href="https://github.com/huangruiteng/loopx/blob/main/scripts/install-from-github.sh">
+                <a href="https://github.com/yanfeng98/nano-loopx/blob/main/docs/guides/offline-wheel-install.sh">
                   {copy.quickstart.inspect} <ExternalLink size={13} />
                 </a>
               </div>
@@ -1101,7 +1101,7 @@ export function App() {
         </a>
         <p>{copy.footer}</p>
         <nav>
-          <a href="https://github.com/huangruiteng/loopx">GitHub</a>
+          <a href="https://github.com/yanfeng98/nano-loopx">GitHub</a>
           <a href={`${basePath}benchmarks/swe-marathon/${language === "zh" ? "?lang=zh" : ""}`}>Research</a>
           <a href={`${basePath}frontstage/`}>Frontstage</a>
           <a href={`${basePath}docs/`}>Docs</a>

@@ -82,7 +82,7 @@ export LOOPX_RUNTIME_ROOT="$HOME/.codex/loopx"
 必要时安装或修复 CLI:
 
 ```bash
-curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash
+cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
 export PATH="$HOME/.local/bin:$PATH"
 loopx doctor
 ```

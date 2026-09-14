@@ -72,7 +72,7 @@ def validate_compact_ranking(module) -> None:
     ranked = grouped["Issue-fix workflow"]
     assert [item.pr_number for item in ranked] == [38, 39, 40], ranked
     bullets = module.bulletize(ranked, limit=2)
-    assert bullets[0].startswith("- [#38](https://github.com/huangruiteng/loopx/pull/38)"), bullets
+    assert bullets[0].startswith("- [#38](https://github.com/yanfeng98/nano-loopx/pull/38)"), bullets
     assert bullets[-1] == "- ...and 1 more merged PR in this theme.", bullets
     note = module.render_note(
         module.Window(module.parse_date("2026-07-01"), module.parse_date("2026-07-14")),
