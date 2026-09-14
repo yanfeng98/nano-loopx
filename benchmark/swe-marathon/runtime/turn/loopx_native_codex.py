@@ -13,9 +13,10 @@ wrapper, not this product.
 The real path, all of it LoopX's:
 
     profile install (modes/profile_install.py)
-                                      scripts/install-local.sh builds a release
-                                      snapshot and installs the LoopX skills
-                                      into a profile-owned CODEX_HOME
+                                      builds the wheel offline, installs the
+                                      distribution into an isolated profile, and
+                                      materializes the LoopX skills into a
+                                      profile-owned CODEX_HOME
     loopx bootstrap                   LoopX writes .loopx/registry.json and
                                       .codex/goals/<id>/ACTIVE_GOAL_STATE.md,
                                       with its own execution profile
@@ -39,12 +40,14 @@ skills gate is armed.  That is the intended contrast -- the same host, the same
 transaction, LoopX present or absent.
 
 The profile is built on the host and shipped, rather than installed in the
-container: `install-local.sh` is offline (no pip, npm, curl, wget, git clone or
-apt in 872 lines, so the sandbox is not the obstacle), but it verifies that its
-source tree is a clean checkout, and the container receives a tarball of the
-`loopx` package with no `.git` to verify.  Building it once on the host keeps
-`source_clean` a real claim.  Both sides use the same absolute path so the
-release snapshot's symlinks stay valid.
+container: the build needs the source checkout, and the container receives a
+tarball of it with no `.git` to verify.  Building it once on the host keeps
+`source_clean` a real claim.  What lands in the profile is pure Python -- the
+installed distribution plus the repo's own `scripts/loopx` launcher -- so the
+only host-specific record is the build interpreter in `.loopx-python`, and the
+container exports `LOOPX_PYTHON` to override it before any CLI call.  Both
+sides use the same absolute path so the launcher and the profile's symlinks
+stay valid.
 
 Usage:
 
@@ -87,7 +90,7 @@ _OBJECTIVE_FILE = f"{_REMOTE_DIR}/loopx_objective.txt"
 
 def build_host_profile(loopx_root: str = _LOOPX_ROOT,
                        profile_root: str = _PROFILE_ROOT) -> dict:
-    """Install the formal release snapshot once, on the host.
+    """Install the isolated profile once, on the host.
 
     Reuses an existing profile: the installer refuses a non-empty target on
     purpose, because mixing installation revisions would invalidate the
@@ -189,7 +192,7 @@ class LoopxNativeCodex(GoalCodex):
                 # not exist in the task image, which made every CLI call exit 2
                 # with "configured Python executable not found".  LOOPX_PYTHON
                 # redirects the launcher at the container's own interpreter
-                # without reinstalling, so the release snapshot stays the one
+                # without reinstalling, so the staged profile stays the one
                 # whose cleanliness was proven on the host.
                 f"cd {shlex.quote(_PROJECT)} && "
                 "export LOOPX_PYTHON=\"$(command -v python3)\" && "

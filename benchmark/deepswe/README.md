@@ -98,11 +98,11 @@ turn = run_native_goal_process_until_terminal(
 
 1. 该 profile 渲染出的 Goal 正文;
 2. LoopX skills 安装进 app-server 使用的确切 `CODEX_HOME`;
-3. 该 Goal 正文点名的 LoopX 发布快照 CLI。
+3. 该 profile 里那个 `loopx` CLI 确实存在。
 
 第 1 项由已安装的 loopx CLI 以显式 runtime profile 渲染
-(`loopx heartbeat-prompt --thin ...`);第 2、3 项由 runner 用 LoopX 自带的
-`scripts/install-local.sh` 准备(共享实现见
+(`loopx heartbeat-prompt --thin ...`);第 2、3 项由 runner 从源树离线构建 wheel、
+把发行版铺进隔离 profile 准备(共享实现见
 [`benchmark/swe-marathon/runtime/modes/profile_install.py`](../swe-marathon/runtime/modes/profile_install.py)),
 并以 `loopx.skill_install_readback` 校验安装回读。不要把 `SKILL.md` 文件复制进
 runner 镜像。app-server 必须保持在无凭据的环境上:通过
