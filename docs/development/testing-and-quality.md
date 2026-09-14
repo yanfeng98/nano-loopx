@@ -346,7 +346,7 @@ reasoning、timeout 与重复次数。任一不匹配或不完整都 fail closed
 
 当前 benchmark 研究遵循
 [研究 RFC](../architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md)，
-并在仓库级 [benchmark workspace](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)
+并在仓库级 [benchmark workspace](../../benchmark/README.md)
 中沉淀。旧 release reducer 已归档，不再属于 active CLI 或 release qualification surface。
 
 ## 按风险审阅

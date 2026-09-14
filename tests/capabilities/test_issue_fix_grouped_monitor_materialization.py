@@ -90,8 +90,8 @@ def _packet(
     number: int,
     *,
     state: str = "OPEN",
-    owner: str = "huangruiteng",
-    repo: str = "loopx",
+    owner: str = "yanfeng98",
+    repo: str = "nano-loopx",
 ) -> dict:
     status_rollup = (
         [{"name": "integration", "status": "IN_PROGRESS"}]
@@ -138,7 +138,7 @@ def test_grouped_monitor_materialization_is_one_per_bucket_and_retires_empty_buc
     )
     active = state.read_text(encoding="utf-8")
     assert active.count("task_class=continuous_monitor") == 1
-    assert "target_key=github-pr-state-huangruiteng--loopx-checks-pending" in active
+    assert "target_key=github-pr-state-yanfeng98--nano-loopx-checks-pending" in active
     assert "cadence=30m" in active
     encoded_next_due_at = created["next_due_at"].replace("+", "%2B")
     assert f"next_due_at={encoded_next_due_at}" in active
@@ -174,7 +174,7 @@ def test_grouped_monitor_materialization_is_one_per_bucket_and_retires_empty_buc
     assert "status=done" in final_state
     assert (
         "evidence=Issue-fix%20PR%20lifecycle%20bucket%20"
-        "github-pr-state-huangruiteng--loopx-checks-pending%20is%20empty."
+        "github-pr-state-yanfeng98--nano-loopx-checks-pending%20is%20empty."
     ) in final_state
 
     upsert_issue_fix_pr_lifecycle_ledger_jsonl(ledger, _packet(103))
@@ -217,7 +217,7 @@ def test_grouped_monitors_are_isolated_per_repository(tmp_path: Path) -> None:
     assert result["active_member_count"] == 2
     active = state.read_text(encoding="utf-8")
     assert active.count("task_class=continuous_monitor") == 2
-    assert "target_key=github-pr-state-huangruiteng--loopx-checks-pending" in active
+    assert "target_key=github-pr-state-yanfeng98--nano-loopx-checks-pending" in active
     assert "target_key=github-pr-state-openai--codex-checks-pending" in active
 
 
@@ -399,7 +399,7 @@ def test_pr_lifecycle_execute_materializes_pending_monitor_and_keeps_goal_runnab
                     "issue-fix",
                     "pr-lifecycle",
                     "--url",
-                    "https://github.com/huangruiteng/loopx/pull/101",
+                    "https://github.com/yanfeng98/nano-loopx/pull/101",
                     "--metadata-json",
                     str(metadata),
                     "--goal-id",
@@ -438,7 +438,7 @@ def test_pr_lifecycle_execute_materializes_pending_monitor_and_keeps_goal_runnab
     assert payload["todo_write_performed"] is True
     active = state.read_text(encoding="utf-8")
     assert active.count("task_class=continuous_monitor") == 1
-    assert "target_key=github-pr-state-huangruiteng--loopx-checks-pending" in active
+    assert "target_key=github-pr-state-yanfeng98--nano-loopx-checks-pending" in active
     assert "task_class=advancement_task" in active
 
 
@@ -449,7 +449,7 @@ def test_pr_lifecycle_execute_fetches_public_metadata_by_default(
     project, state, registry = _fixture(tmp_path)
 
     def fake_fetch(reference: dict, *, timeout_seconds: int) -> dict:
-        assert reference["repo"] == "huangruiteng/loopx"
+        assert reference["repo"] == "yanfeng98/nano-loopx"
         assert timeout_seconds == 10
         return {
             "state": "OPEN",
@@ -475,7 +475,7 @@ def test_pr_lifecycle_execute_fetches_public_metadata_by_default(
                     "issue-fix",
                     "pr-lifecycle",
                     "--url",
-                    "https://github.com/huangruiteng/loopx/pull/101",
+                    "https://github.com/yanfeng98/nano-loopx/pull/101",
                     "--goal-id",
                     GOAL_ID,
                     "--project",

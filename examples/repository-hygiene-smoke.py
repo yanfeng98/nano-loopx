@@ -25,6 +25,8 @@ REQUIRED_TRACKED_FILES = ("CONTRIBUTING.md",)
 RELEASE_TIMELINE = REPO_ROOT / "docs" / "product" / "release-readiness.md"
 FIRST_PUBLIC_RELEASE = (0, 1, 3)
 VERSION_TAG_RE = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+# A "`v0.2.6` 于 2026-07-16" style release entry.
+DATED_VERSION_ENTRY = re.compile(r"`v\d+\.\d+\.\d+`\s*于\s*20\d\d")
 
 
 def tracked_files() -> set[str]:
@@ -87,13 +89,24 @@ def release_tags() -> list[str]:
 
 
 def validate_release_timeline() -> None:
+    """The named-version contract must describe only releases this fork cut.
+
+    With tags present the document has to carry an entry for each of them. With no
+    tags the document must carry none: a dated version entry that no tag backs is a
+    release history borrowed from somewhere else, which is the failure this guards.
+    """
+
     if not RELEASE_TIMELINE.is_file():
         raise AssertionError(f"missing release timeline: {RELEASE_TIMELINE.relative_to(REPO_ROOT)}")
     timeline = RELEASE_TIMELINE.read_text(encoding="utf-8")
     tags = release_tags()
     if not tags:
-        if "于 20" not in timeline:
-            raise AssertionError("release timeline has no dated version entries")
+        dated = DATED_VERSION_ENTRY.findall(timeline)
+        if dated:
+            raise AssertionError(
+                "release-readiness names dated versions this repository never tagged: "
+                + ", ".join(sorted(set(dated)))
+            )
         return
     missing = [tag for tag in tags if f"`{tag}`" not in timeline]
     if missing:

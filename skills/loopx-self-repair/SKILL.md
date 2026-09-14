@@ -52,13 +52,13 @@ description: Diagnose and repair LoopX control-plane drift or agent behavior dri
 7. **写回教训。** 更新活动 goal 状态、docs、贡献者任务或本技能，使下次
    相同的失败模式可见。
 
-## 上游 Issue 升级
+## 公开 Issue 升级
 
 公开 GitHub issue 是可选的最终升级，不是 self-repair 的默认副产品。仅当负责层
 是可复用的 LoopX 产品、CLI、skill、安装器或控制面缺口，且持久的上级跟踪在本地
 修复或 PR 之外提供价值时才考虑。
 
-发布任何内容前阅读 `references/upstream-issue-escalation.md`。调用本技能
+发布任何内容前阅读 `references/issue-escalation.md`。调用本技能
 绝不授予发布许可。守卫路径必须：
 
 1. 拒绝私有、项目特定、仅支持与安全敏感的报告；
@@ -124,7 +124,7 @@ Action 变更、replan 或终态关闭必须回到严格语义 checkpoint。
 
 - 已知症状到修复映射，阅读 `references/repair-patterns.md`。
 - 受守卫的公开 GitHub issue 升级，阅读
-  `references/upstream-issue-escalation.md`。
+  `references/issue-escalation.md`。
 - 用户/agent/状态通道语义，阅读
   `../../docs/state-interaction-model.md` 与
   `../../docs/concepts/interaction-pattern-catalog.md`。

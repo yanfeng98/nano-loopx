@@ -1,8 +1,7 @@
 # 就地开发闭环（Editable Dev Loop）
 
 本页描述**本 fork 唯一支持的开发方式**：把这个 checkout 装成 editable 安装，改完就地验证。
-它替代了上游的安装叙述——上游的 PyPI / pipx / 归档快照通道在本 fork 不使用，那份上游原文
-**不保留在本仓库**（需要对照时用 `git show upstream/main:docs/guides/installing-loopx.md`）。
+对外分发走另一条路——本地构建的 wheel，见[离线 wheel 安装](../guides/offline-wheel-install.md)。
 
 ## 一次性准备
 
@@ -110,7 +109,6 @@ loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code �
   自适应：解释器里没有 setuptools 时自动去掉，否则那条命令会以 `ModuleNotFoundError` 失败）。
   `loopx update plan` 对 checkout 报同样的命令，且继续 fail-closed：`apply` 为空，绝不 `git pull`、
   绝不安装发布快照。
-- 会看到但**应忽略**：`loopx bootstrap` 的 `install_repair_command` 是面向上游包通道的静态字符串。
 
 ## 验证各激活层 {#verify-the-active-layers}
 
@@ -130,8 +128,7 @@ loopx workflow-skills --install --skills-dir ~/.claude/skills    # Claude Code �
 表中的独立读回随时可以重跑（它们是恢复入口，不是变更动作）：重跑不会改变安装 owner，
 对 checkout 而言 owner 恒为源码所有权（Git）。
 
-这条清单源自上游安装指南的同一张表，已按 fork 口径改写（上游那版描述 PyPI / pipx / 归档通道，
-在本 fork 不使用）。**发布提醒**：合入 `main` 的代码不等于处于激活状态——对 checkout 而言，
+**发布提醒**：合入 `main` 的代码不等于处于激活状态——对 checkout 而言，
 "激活"只由重跑就地安装与 skills 交付保证，见上面的"什么会立即生效、什么需要重装或重建"表。
 
 ## 陷阱：cwd 遮蔽 {#cwd-shadowing}
@@ -140,29 +137,3 @@ editable finder 被追加到 `sys.meta_path` **末尾**，所以在**包含 `loo
 `python3 -m loopx.…` 或 `python3 -c "import loopx"` 时，`PathFinder` 会先命中当前目录，import 到的
 不是你的安装。验证请统一用 console script `loopx`（它的 `sys.path[0]` 是 bin 目录，不受影响）；
 必须用 `python3 -m` 时，在 checkout 根目录运行。
-
-## 不要运行这些（会替换或复制你的开发环境）
-
-| 命令 | 后果 |
-| --- | --- |
-| `python3 -m pip install --upgrade loopx`、`pipx install loopx` | 往同一解释器装 PyPI 发布版（上游那份），覆盖 editable 指向 |
-| 从旧文档复制来的 `curl -fsSL https://huangruiteng.github.io/loopx/install.sh \| bash` | 装的是**上游发布版**，并在 `~/.local/bin` 写 wrapper；**实测本机 `PATH` 里 `~/.local/bin` 排在最前**，于是 `loopx` 被静默接管 |
-| 把 `LOOPX_RELEASE_ROOT` 指向某个目录 | 让 doctor 误判安装形态 |
-| 仓库根的 `npm run test:control-plane`、`typecheck:control-plane` | 需要根 `node_modules`（未安装）。只验单个 TS 测试用 `node --no-warnings --experimental-strip-types --test tests/control_plane_ts/<file>.test.ts`（`postgresql_authority_store.integration.test.ts` 需真实 PostgreSQL） |
-
-**本 fork 已移除发布快照 / canary 通道**：`scripts/install-local.sh` 与
-`scripts/install-from-github.sh` 不再存在（见 operation log 036），所以不要再尝试运行它们——
-若历史上误跑过，按下面的恢复步骤清理。
-
-若已经误跑（历史上装过 wrapper）：删掉 `~/.local/bin/loopx` 与 `loopx-canary`，检查 shell profile 里的
-`export PATH="$HOME/.local/bin:$PATH"`，并用 `loopx workflow-skills --uninstall --skills-dir <root>`
-回收 skill 副本。
-
-## 与上游合并
-
-本页、README 的试用段、`CONTRIBUTING.md` 的本地开发段、`docs/guides/getting-started.md` 的贡献者
-安装段都是 fork 版本；合并上游时以本 fork 版本为准（上游会带回 PyPI 安装叙述）。
-上游的安装指南（PyPI / pipx / 归档通道）**已从本仓库删除**：它作为活文档会与"唯一支持的开发方式"
-冲突，且文档站把它挂在 Getting Started 组当作安装入口。需要对照上游原文时用
-`git show upstream/main:docs/guides/installing-loopx.md`；其中唯一仍然活着的活动层检查清单已按
-fork 口径收进本页的[验证各激活层](#verify-the-active-layers)。

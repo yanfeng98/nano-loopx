@@ -183,7 +183,7 @@ Lean 的价值不是“让 agent 写更多形式化文本”，而是对少量�
 成为可检查对象**。
 
 Goal-frontier replan 就是一个例子（见
-[PR #2320](https://github.com/huangruiteng/loopx/pull/2320)）。它需要同时回答：已有 obligation 是否继续有效、handoff
+PR #2320）。它需要同时回答：已有 obligation 是否继续有效、handoff
 gate 是否占据下一 transition、是否已有可运行 successor、当前 agent 的 vision 是否缺少
 满足项、monitor-only frontier 是否耗尽。重构后的核心先冻结输入 facts，再执行 first-match：
 

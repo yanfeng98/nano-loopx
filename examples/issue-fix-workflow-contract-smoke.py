@@ -170,7 +170,7 @@ def main() -> int:
         "raw": "raw provider response payload",
     }
     metadata = build_content_ops_issue_fix_metadata_preview_packet(
-        url="https://github.com/huangruiteng/loopx/issues/123",
+        url="https://github.com/yanfeng98/nano-loopx/issues/123",
         provider_payload=provider_payload,
     )
     assert metadata["ok"] is True, metadata
@@ -189,7 +189,7 @@ def main() -> int:
     assert_public_safe(metadata)
 
     intake = build_content_ops_issue_fix_intake_packet(
-        repo="huangruiteng/loopx",
+        repo="yanfeng98/nano-loopx",
         issue_ref="issue_123",
     )
     assert intake["ok"] is True, intake
@@ -205,7 +205,7 @@ def main() -> int:
 
     dry_run = build_issue_fix_caller_repo_branch_packet(
         repo_path="/not/read/in/dry/run",
-        url="https://github.com/huangruiteng/loopx/issues/123",
+        url="https://github.com/yanfeng98/nano-loopx/issues/123",
         base_branch="main",
         validation_label="python test_calculator.py",
         execute=False,

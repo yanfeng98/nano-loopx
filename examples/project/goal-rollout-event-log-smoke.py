@@ -185,7 +185,7 @@ def main() -> None:
             unblocks=["todo_406bb256efd8"],
             handoff_to="codex-product-capability",
             commit_ref="abcdef1",
-            pr_ref="huangruiteng/loopx#551",
+            pr_ref="yanfeng98/nano-loopx#551",
             revert_of="event_superseded_public",
             status="eligible",
             summary="Quota allowed one bounded rollout event-log slice.",
@@ -214,7 +214,7 @@ def main() -> None:
         }, event
         assert event["code_refs"] == {
             "commit_ref": "abcdef1",
-            "pr_ref": "huangruiteng/loopx#551",
+            "pr_ref": "yanfeng98/nano-loopx#551",
             "revert_of": "event_superseded_public",
         }, event
 
@@ -249,7 +249,7 @@ def main() -> None:
             "--commit-ref",
             "bcdef12",
             "--pr-ref",
-            "huangruiteng/loopx#552",
+            "yanfeng98/nano-loopx#552",
             "--summary",
             "Compact case result reduced to public-safe failure attribution.",
             "--artifact-ref",
@@ -267,7 +267,7 @@ def main() -> None:
         ), result_event
         assert result_event["code_refs"] == {
             "commit_ref": "bcdef12",
-            "pr_ref": "huangruiteng/loopx#552",
+            "pr_ref": "yanfeng98/nano-loopx#552",
         }, result_event
         assert_boundary(result_event)
 
@@ -306,7 +306,7 @@ def main() -> None:
         assert latest_view["lane"]["lane_id"] == "main-control", latest_view
         assert latest_view["state_transition"]["to_state"] == "eligible", latest_view
         assert latest_view["causality"]["gate_id"] == "gate_owner_scope", latest_view
-        assert latest_view["code_refs"]["pr_ref"] == "huangruiteng/loopx#551", latest_view
+        assert latest_view["code_refs"]["pr_ref"] == "yanfeng98/nano-loopx#551", latest_view
         assert latest_view["handoff"]["to_agent_id"] == (
             "codex-product-capability"
         ), latest_view

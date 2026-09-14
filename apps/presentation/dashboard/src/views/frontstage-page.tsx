@@ -353,11 +353,13 @@ function showcaseCaseHref(item?: ShowcaseFrontstageCase) {
   if (!item) {
     return undefined;
   }
+  // This fork hosts no case site: a case is a file in this repository, so both
+  // fields resolve to a blob path here rather than to a published page.
   if (item.interactive_page) {
-    return `https://huangruiteng.github.io/loopx/${item.interactive_page}`;
+    return `https://github.com/yanfeng98/nano-loopx/blob/main/${item.interactive_page}`;
   }
   if (item.case_page) {
-    return `https://github.com/huangruiteng/loopx/blob/main/${item.case_page}`;
+    return `https://github.com/yanfeng98/nano-loopx/blob/main/${item.case_page}`;
   }
   return undefined;
 }
@@ -2871,13 +2873,13 @@ function FrontstageRoute({
                     </a>
                     <a
                       className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm"
-                      href="https://github.com/huangruiteng/loopx#quick-start"
+                      href="https://github.com/yanfeng98/nano-loopx#quick-start"
                     >
                       Quick Start
                     </a>
                     <a
                       className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm"
-                      href="https://github.com/huangruiteng/loopx/issues"
+                      href="https://github.com/yanfeng98/nano-loopx/issues"
                     >
                       Share feedback
                     </a>

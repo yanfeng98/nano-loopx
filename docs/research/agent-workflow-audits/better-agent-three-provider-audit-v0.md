@@ -6,7 +6,7 @@
 **并行运行 provider 特定检查，但任何共享树（shared-tree）实现都要串行化在父级评审
 gate 之后。当一个专业 lane 不再贡献 provider 特定证据时，停止它。**
 
-这是针对 [LoopX issue #670](https://github.com/huangruiteng/loopx/issues/670) 中提出的合成
+这是针对 LoopX issue #670 中提出的合成
 workflow 的仅元数据审计设计。它不是一条证据，不能说明 Better Agent 的运行已经表现出重复
 工作、陈旧状态或冲突变更。
 

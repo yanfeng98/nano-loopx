@@ -474,7 +474,7 @@ def assert_material_transition_followup() -> None:
     with tempfile.TemporaryDirectory(prefix="loopx-monitor-poll-material-") as tmp:
         registry_path, state_file = write_fixture(
             Path(tmp),
-            monitor_task_repository="git:github.com/huangruiteng/loopx",
+            monitor_task_repository="git:github.com/yanfeng98/nano-loopx",
         )
         assert_due_monitor_selected(registry_path)
 
@@ -557,7 +557,7 @@ def assert_material_transition_followup() -> None:
             "--next-action-kind",
             "review_material_transition",
             "--next-task-repository",
-            "git:github.com/huangruiteng/loopx",
+            "git:github.com/yanfeng98/nano-loopx",
             "--next-required-capability",
             "network",
             "--next-required-capability",
@@ -581,7 +581,7 @@ def assert_material_transition_followup() -> None:
         assert successors, agent_todos(state_file)
         assert successors[0]["task_class"] == "advancement_task", successors[0]
         assert successors[0]["action_kind"] == "review_material_transition", successors[0]
-        assert successors[0]["task_repository"] == "git:github.com/huangruiteng/loopx", successors[0]
+        assert successors[0]["task_repository"] == "git:github.com/yanfeng98/nano-loopx", successors[0]
         assert successors[0]["continuation_policy"] == "independent_handoff", successors[0]
         assert successors[0]["required_capabilities"] == [
             "network",
@@ -596,7 +596,7 @@ def assert_material_transition_followup() -> None:
         assert payload["successor_todo_ids"] == [successor_id], payload
         receipt = payload["successor_receipts"][0]
         assert receipt["todo_id"] == successor_id, receipt
-        assert receipt["task_repository"] == "git:github.com/huangruiteng/loopx", receipt
+        assert receipt["task_repository"] == "git:github.com/yanfeng98/nano-loopx", receipt
         assert receipt["target_key"] == expected_target_key, receipt
         assert writeback["successor_receipts"] == payload["successor_receipts"], writeback
         records = monitor_poll_records(registry_path)

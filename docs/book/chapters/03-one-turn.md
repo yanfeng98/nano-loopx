@@ -44,7 +44,7 @@ registry and goal boundary
 
 ## 三个 Channel 可以同时成立
 
-[`loopx_interaction_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/quota-allocation.md)
+[`loopx_interaction_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/quota-allocation.md)
 把一轮义务拆成三个视角：
 
 ### User channel
@@ -300,7 +300,7 @@ Proposal 也不是 effect。一个协议声明“建议 publish”不会自动�
 ## TurnEnvelope 与 LoopX Turn
 
 完整 quota decision 可能包含大量诊断信息。可选的
-[`loopx_turn_envelope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/turn-envelope-v0.md)
+[`loopx_turn_envelope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/turn-envelope-v0.md)
 把已经计算出的 decision 压缩成 bounded read model，保留：
 
 - selected Todo 与 effective action；
@@ -312,7 +312,7 @@ Proposal 也不是 effect。一个协议声明“建议 publish”不会自动�
 
 TurnEnvelope 是 projection，不重新选择工作，也不改变 quota semantics。
 
-[`LoopX Turn`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/loopx-turn-v0.md)
+[`LoopX Turn`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/loopx-turn-v0.md)
 进一步定义可选的 governed transaction：
 
 ```text

@@ -37,7 +37,7 @@ LoopX 正在被其他开源项目采样、集成和再实现。本页是这份�
   （[issue #285](https://github.com/XSpoonAi/spoon-core/issues/285)）。
   状态：计划中。
 - **OpenViking / NoKV**——已确认合作伙伴；见
-  [README 合作伙伴项目](https://github.com/huangruiteng/loopx/blob/main/README.md#合作伙伴项目)。
+  [README 合作伙伴项目](../../README.md#合作伙伴项目)。
 
 ## 2. 采样与借鉴
 
@@ -104,7 +104,7 @@ LoopX 正在被其他开源项目采样、集成和再实现。本页是这份�
 ## 维护 {#维护}
 
 - 每周扫描（7d）由 LoopX value-explorer monitor
-  （`github-loopx-mention-scan`）执行：`gh search code "huangruiteng/loopx"`、
+  （`github-loopx-mention-scan`）执行：`gh search code "yanfeng98/nano-loopx"`、
   `gh search issues loopx`、`gh search prs loopx`、`gh search repos loopx`。
 - 每次扫描后，通过 pull request 更新本文件；material transition 另行创建
   具体跟进 todo。

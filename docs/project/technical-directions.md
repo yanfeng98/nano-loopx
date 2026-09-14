@@ -17,7 +17,7 @@
 - direction tracker 记录结果目标、边界和实质决策。只有另行拆出的有界 issue 或
   task-board 条目才可以被认领。
 - 置顶的
-  [当前技术方向与已知限制](https://github.com/huangruiteng/loopx/discussions/2851)
+  当前技术方向与已知限制
   Discussion 是本文面向社区的投影。
 
 统一使用以下成熟度词汇：
@@ -34,7 +34,7 @@
 
 Goal、typed todo、quota、scheduler hint、evidence、Effect Program settlement、
 recovery 与 host parity 是所有战略方向共用的底座。其可靠性工作继续通过
-[Contributor Task Board](https://github.com/huangruiteng/loopx/blob/main/docs/development/contributor-tasks.md)
+[Contributor Task Board](../development/contributor-tasks.md)
 和 `control-plane` label
 推进；这是持续的产品 hardening，不是另一套方向事实源。
 
@@ -42,10 +42,10 @@ recovery 与 host parity 是所有战略方向共用的底座。其可靠性工�
 
 | 方向 | 目标 | 阶段 | 从这里开始 |
 | --- | --- | --- | --- |
-| 长程 Benchmark 与证据 | 产出 benchmark-native、可复现的长程能力证据，并用受控任务研究机制。 | Active research | [Tracker #3243](https://github.com/huangruiteng/loopx/issues/3243) · [RFC](../architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md) |
-| Operator Surface 与 IM Integration | 通过一致的 operator workspace，让 goal、session、decision、evidence 和有界协作清晰可操作。 | 在 integration branch 孵化 | [Tracker #3244](https://github.com/huangruiteng/loopx/issues/3244) · [integration branch](https://github.com/huangruiteng/loopx/tree/frontend-control-plane-im-prototype-rfc) |
-| Shared Goal Authority 与跨 Host 协作 | 让多 host 围绕显式共享 goal 协作，同时避免 provider 或 host session 变成控制面权威。 | Draft contract / provider qualification | [Tracker #3245](https://github.com/huangruiteng/loopx/issues/3245) · [RFC](../architecture/rfcs/shared-goal-authority-state-provider-v0.md) |
-| 架构与研究孵化器 | 在扩大生产代码范围之前验证架构演进与研究机制。 | 混合成熟度，见下表 | [Tracker #3246](https://github.com/huangruiteng/loopx/issues/3246) · [RFC 索引](../architecture/rfcs/README.md) |
+| 长程 Benchmark 与证据 | 产出 benchmark-native、可复现的长程能力证据，并用受控任务研究机制。 | Active research | Tracker #3243 · [RFC](../architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md) |
+| Operator Surface 与 IM Integration | 通过一致的 operator workspace，让 goal、session、decision、evidence 和有界协作清晰可操作。 | 在 integration branch 孵化 | Tracker #3244 · [integration branch](https://github.com/yanfeng98/nano-loopx/tree/frontend-control-plane-im-prototype-rfc) |
+| Shared Goal Authority 与跨 Host 协作 | 让多 host 围绕显式共享 goal 协作，同时避免 provider 或 host session 变成控制面权威。 | Draft contract / provider qualification | Tracker #3245 · [RFC](../architecture/rfcs/shared-goal-authority-state-provider-v0.md) |
+| 架构与研究孵化器 | 在扩大生产代码范围之前验证架构演进与研究机制。 | 混合成熟度，见下表 | Tracker #3246 · [RFC 索引](../architecture/rfcs/README.md) |
 
 ## 长程 Benchmark 与证据
 
@@ -67,9 +67,9 @@ trajectory、verifier output、upload、官方 scoring 和未公开比较仍由 
 
 当前前端与 IM 工作是孵化计划，不是 `main` 已交付行为。主要实现包是由
 [`@maxliux5`](https://github.com/maxliux5)主导的
-[#3167](https://github.com/huangruiteng/loopx/pull/3167)，基于
-[`frontend-control-plane-im-prototype-rfc`](https://github.com/huangruiteng/loopx/tree/frontend-control-plane-im-prototype-rfc)
-集成分支。[#3200](https://github.com/huangruiteng/loopx/pull/3200) 是另一项仍处于
+#3167，基于
+[`frontend-control-plane-im-prototype-rfc`](https://github.com/yanfeng98/nano-loopx/tree/frontend-control-plane-im-prototype-rfc)
+集成分支。#3200 是另一项仍处于
 requested changes 的 event-driven 提案。
 
 进入 `main` 的 promotion ledger 为：
@@ -82,7 +82,7 @@ requested changes 的 event-driven 提案。
    public fixture 或浏览器状态。
 
 `@maxliux5` 是当前 implementation lead，不代表仓库级 maintainer 任命。Lark 专属
-路径遵循[项目治理](https://github.com/huangruiteng/loopx/blob/main/.github/GOVERNANCE.md)
+路径遵循项目治理
 记录的 subsystem review route；
 跨子域和 mainline 晋级决策仍由 lead maintainer 负责。
 
@@ -105,11 +105,11 @@ replay。真实 NoKV qualification、renew/reclaim、distributed quota、认证�
 | --- | --- | --- | --- |
 | Effect Program 与 settlement algebra | Accepted / runtime hardening | [RFC](../architecture/rfcs/agent-loop-effect-interpreter-v0.md) | 改善共享 typed contract 与 negative coverage；明确 scheduler ownership 和 domain-local ACK 语义。 |
 | TypeScript 控制面迁移 | Accepted / transaction-payoff 阶段 | [RFC](../architecture/rfcs/typescript-control-plane-migration-v0.md) | Cut over 完整 transaction，删除 Python 语义/facade 债务，并报告 bridge traffic 与迁移经济性；delivery/vision 决策保持 domain-local reducer，不泛化成 generic Effect Program step。 |
-| 分层 Agent stride | Active research | [#3203](https://github.com/huangruiteng/loopx/issues/3203) | 引入 adaptive selection 前先验证 read-only 与 shadow evidence。 |
+| 分层 Agent stride | Active research | #3203 | 引入 adaptive selection 前先验证 read-only 与 shadow evidence。 |
 | 研究型探索控制面 | Draft / typed frontier | [RFC](../architecture/rfcs/research-exploration-control-plane-v0.md) | 保持 Explore、goal-frontier 和 execution authority 分离。 |
-| Human Attention Wishlist | Draft / non-blocking sidecar | [#3179](https://github.com/huangruiteng/loopx/issues/3179) | 不改变 user gate、selected work、quota 或 notification authority。 |
+| Human Attention Wishlist | Draft / non-blocking sidecar | #3179 | 不改变 user gate、selected work、quota 或 notification authority。 |
 | Goal artifact lifecycle projection | Draft / read model | [RFC](../architecture/rfcs/goal-artifact-lifecycle-projection-v0.md) | 先以 read-only 方式推导 milestone 与合法 next transition。 |
-| 结果后 memory utility | Draft / research | [#3214](https://github.com/huangruiteng/loopx/issues/3214) | 只在 verified outcome 后归因；retrieval 与 model judgment 保持 advisory。 |
+| 结果后 memory utility | Draft / research | #3214 | 只在 verified outcome 后归因；retrieval 与 model judgment 保持 advisory。 |
 | Goal Channel 与 Agent IM/OpenViking 边界 | Draft / integration exploration | [RFC 索引](../architecture/rfcs/README.md) | delivery、durable control state 与 scoped context 分属不同 owner。 |
 
 探索只有在具备真实 caller 或兼容契约、达成一致的最小切片和聚焦 qualification 后，
@@ -119,7 +119,7 @@ module 或重复 authority。
 ## 贡献与治理闭环
 
 1. 选择最接近的 direction tracker，阅读当前阶段与边界。
-2. 在 [Contributor Task Board](https://github.com/huangruiteng/loopx/blob/main/docs/development/contributor-tasks.md)
+2. 在 [Contributor Task Board](../development/contributor-tasks.md)
    寻找有界任务；如果没有，
    用 contributor task 模板创建 issue，写明方向、目标 base branch、最小切片、
    non-goal 与验证方式。

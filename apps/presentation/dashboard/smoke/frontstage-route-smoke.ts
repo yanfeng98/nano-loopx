@@ -261,8 +261,8 @@ includes(frontstageSource, 'data-testid="frontstage-showcase-spotlight-case-page
 includes(frontstageSource, "Open selected case page", "showcase spotlight case page copy");
 includes(frontstageSource, "docs/showcases/showcase-catalog.json", "showcase catalog source copy");
 includes(frontstageSource, "Open case page", "case page outbound link");
-includes(frontstageSource, "github.com/huangruiteng/loopx/blob/main", "public GitHub case page links");
-includes(frontstageSource, "huangruiteng.github.io/loopx", "hosted interactive case links");
+includes(frontstageSource, "github.com/yanfeng98/nano-loopx/blob/main", "public GitHub case page links");
+excludes(frontstageSource, ".github.io", "hosted case site host");
 includes(frontstageSource, "None in browser", "public browser write boundary");
 includes(frontstageSource, "LoopX CLI and append-only history remain the control plane", "public control-plane boundary");
 excludes(frontstageSource, "<form", "write form");

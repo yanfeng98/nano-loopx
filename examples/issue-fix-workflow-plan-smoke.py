@@ -195,7 +195,7 @@ def assert_workflow_shape(payload: dict[str, Any]) -> None:
 
 def main() -> int:
     packet = build_issue_fix_workflow_plan_packet(
-        url="https://github.com/huangruiteng/loopx/issues/123",
+        url="https://github.com/yanfeng98/nano-loopx/issues/123",
         validation_label="python3 examples/focused-smoke.py",
     )
     assert_workflow_shape(packet)
@@ -227,7 +227,7 @@ def main() -> int:
                 "issue-fix",
                 "workflow-plan",
                 "--url",
-                "https://github.com/huangruiteng/loopx/issues/123",
+                "https://github.com/yanfeng98/nano-loopx/issues/123",
                 "--metadata-json",
                 str(metadata_path),
                 "--repo-path",
@@ -259,7 +259,7 @@ def main() -> int:
             "issue-fix",
             "workflow-plan",
             "--url",
-            "https://github.com/huangruiteng/loopx/issues/123",
+            "https://github.com/yanfeng98/nano-loopx/issues/123",
         ],
         cwd=ROOT,
         text=True,

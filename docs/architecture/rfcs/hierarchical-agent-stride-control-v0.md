@@ -6,7 +6,7 @@
 | 日期 | 2026-08-15 |
 | 作者 | LoopX maintainers |
 | 范围 | Effect 反馈、有界交付、权限升级、模型资格验证与长程效率 |
-| Tracking issue | [#3203](https://github.com/huangruiteng/loopx/issues/3203) |
+| Tracking issue | #3203 |
 | 源码基线 | LoopX `8b8e7b248` |
 
 > 语言说明：

@@ -2,7 +2,7 @@
 
 - 状态：集成提案草案
 - 日期：2026-09-01
-- 跟踪 Issue：[#3792](https://github.com/huangruiteng/loopx/issues/3792)
+- 跟踪 Issue：#3792
 - 决策边界：LoopX 是否以及如何把历史 Agent Session 作为 Replan 与 Turn Admission 的有界证据
 - Capability Owner：现有 `agent-turn-recall`
 - Provider ID：提议中的可选 `obelisk-session-evidence`

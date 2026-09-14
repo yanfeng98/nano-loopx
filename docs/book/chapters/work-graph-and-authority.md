@@ -26,7 +26,7 @@ Todo 不是普通 checklist。它和 Gate、dependency、claim、capability、wo
 | Agent Vision | `agent_id` | 这个 peer 当前承担什么方向、scope、acceptance summary 与 replan trigger |
 
 Vision 不是泛化的产品愿景，也不是自由格式 scratchpad。
-[`goal_vision_replan_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)
+[`goal_vision_replan_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)
 将它定义为 bounded、per-Agent 的执行路由状态。它可以包含：
 
 - `role_scope`；
@@ -93,7 +93,7 @@ open todos
 - capability available 不等于获得 authority；
 - Todo done 不等于 Goal complete。
 
-[`task_graph_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md)
+[`task_graph_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md)
 可以把这些关系渲染成图，但图本身仍是 read-only projection。真正的状态变化继续通过 Todo、Gate、
 refresh 与 event protocols。
 
@@ -128,7 +128,7 @@ LoopX 的 live multi-agent 模型是 **equal peer**。Agent id 是工作身份�
 
 ## Gate 是 scoped authority
 
-[`decision_scope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)
+[`decision_scope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)
 要求 user/controller decision 说明：
 
 - `kind`：例如 `private_read`、`write_scope`、`resource`、`production`、`public_claim` 或
@@ -247,7 +247,7 @@ continuation_policy = independent_handoff | same_agent_non_delivery
 `task_repository` 是不含凭据的 repository identity。它选择 workspace isolation 的目标仓库，**不授予写权限**，
 也不替代 claim、lease、Goal boundary 或 repository maintainer policy。
 
-当前 [`peer_agent_runtime_v1`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md)
+当前 [`peer_agent_runtime_v1`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md)
 与 `workspace_guard` 要求：当 selected Todo 要写 repository state 时，执行者必须位于 origin 与
 `task_repository` 匹配的 linked independent worktree。匹配 repository 只是必要条件；canonical
 checkout 仍可能被 guard 拒绝。
@@ -315,15 +315,15 @@ claim、workspace guard、Gate 和 writeback 仍逐 Todo 生效。跨设备在�
 
 需要修改工作图或权限语义时，优先按问题读取协议：
 
-- [`task_graph_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md)：
+- [`task_graph_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md)：
   依赖、Gate、validation、repair 与 handoff 的只读图；
-- [`decision_scope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)：
+- [`decision_scope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)：
   Gate 覆盖关系与 fail-closed 行为；
-- [`goal_vision_replan_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)：
+- [`goal_vision_replan_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)：
   per-Agent Vision、checkpoint 与 replan；
-- [Peer Agent Runtime v1](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md)：
+- [Peer Agent Runtime v1](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md)：
   equal peer、continuation 与 identity；
-- [Host Integration Surface](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/host-integration-surface-v0.md)：
+- [Host Integration Surface](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/host-integration-surface-v0.md)：
   claim、optional lease、capability 与 Host 边界。
 
 如果改动涉及 equal peer、lifecycle authority、handoff、dependency 或 successor，继续阅读

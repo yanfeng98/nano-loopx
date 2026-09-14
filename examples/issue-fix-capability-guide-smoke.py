@@ -81,9 +81,9 @@ def main() -> int:
         "https://github.com/volcengine/OpenViking/pull/3148",
         "https://github.com/volcengine/OpenViking/issues/3152",
         "https://github.com/volcengine/OpenViking/pull/3176",
-        "https://github.com/huangruiteng/loopx/pull/1784",
-        "https://github.com/huangruiteng/loopx/pull/1883",
-        "https://github.com/huangruiteng/loopx/pull/1887",
+        "#1784",
+        "#1883",
+        "#1887",
         "resume_when=pr_merged:#123",
         "pr_merge",
         "issue_fix_reusable_knowledge_input_v0",
@@ -98,9 +98,9 @@ def main() -> int:
         "python3 examples/issue-fix-reviewer-notification-sink-smoke.py",
         "explore_graph.enabled",
         "explore_harness.enabled",
-        "https://github.com/huangruiteng/loopx/pull/1991",
-        "https://github.com/huangruiteng/loopx/pull/1995",
-        "https://github.com/huangruiteng/loopx/pull/2000",
+        "#1991",
+        "#1995",
+        "#2000",
     )
     assert_markers(guide, shared_markers)
     assert_markers(

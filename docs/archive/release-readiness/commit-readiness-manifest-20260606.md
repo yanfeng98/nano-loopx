@@ -211,7 +211,7 @@ dashboard `dist/`、私有项目证据、凭据或生产标识符。
 结果:
 
 - 分支已推送到 `origin/codex/release-readiness-hardening`;
-- draft PR:https://github.com/huangruiteng/loopx/pull/1;
+- draft PR:pull request 草稿已推送到该分支;
 - PR 标题:`[codex] Harden release readiness control plane`。
 
 发布备注:draft PR 有意叠在当前本地 `main` 谱系上。相对 `origin/main`,它包含

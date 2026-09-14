@@ -46,11 +46,8 @@ Node 直接执行，改完即生效，不需要 npm 构建。活改 / 需要重�
 [就地开发闭环](docs/development/editable-dev-loop.md)。
 
 **本 fork 只走这两条安装通道**：就地 editable 安装（开发/自己用）与本地构建的 wheel
-（发给别人，见[离线 wheel 安装](docs/guides/offline-wheel-install.md)）。不要在同一个环境里运行
-PyPI/pipx 安装（`python3 -m pip install --upgrade loopx`、`pipx install loopx`），也不要运行从旧文档
-复制来的归档安装器（`curl -fsSL https://huangruiteng.github.io/loopx/install.sh | bash`）——它们会生成
-第二份 `loopx`，而 `~/.local/bin` 通常在 `PATH` 上排在 editable 安装之前，等于静默接管你的开发环境。
-`scripts/install-local.sh` / `scripts/install-from-github.sh` 已在 op 036 中移除。
+（发给别人，见[离线 wheel 安装](docs/guides/offline-wheel-install.md)）。两条都不经过包索引，
+也不联网取安装包。
 
 然后在项目根目录连接：
 
@@ -329,9 +326,7 @@ provider 的打包和生命周期，不是另一个控制面 owner。详见
   <img src="docs/assets/long-running-loop-openviking-trajectory.png" alt="开源 Issue Fix 轨迹：连接 Focused PR 交付与 LoopX 通用能力沉淀" width="760">
 </a>
 
-LoopX 的创建者以
-[OpenViking contributor](https://github.com/volcengine/OpenViking/pulls?q=is%3Apr+author%3Ahuangruiteng)
-身份把这条路径用于持续的 issue-to-PR 修复。图中公开贡献序列从首个 PR 创建到
+这条路径在持续的 issue-to-PR 修复中被反复使用。图中公开贡献序列从首个 PR 创建到
 最后一次所示 review 或 update，跨越 200+ 小时。
 [Issue-Fix 能力说明](loopx/capabilities/issue_fix/README.md)把 rolling
 repository context、带 revision 的修复知识和 reviewer-facing preference
@@ -436,23 +431,17 @@ LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这�
 
 - **长程 Benchmark 与证据：**在互补 benchmark 环境中建立可复现的能力证据，
   并开展受控的机制研究。
-  [方向 Tracker](https://github.com/huangruiteng/loopx/issues/3243)
 - **Operator Surface 与 IM Integration：**建设 operator workspace、session
-  record 与有界协作表面；当前在专用 integration branch 孵化，由 `@maxliux5`
-  作为 implementation lead。
-  [方向 Tracker](https://github.com/huangruiteng/loopx/issues/3244)
+  record 与有界协作表面；当前在专用 integration branch 孵化。
 - **Shared Goal Authority 与跨 Host 协作：**为显式共享 goal 提供
   provider-neutral 协调；NoKV 是尚未晋级的 provider candidate，而不是新的控制面
   权威。
-  [方向 Tracker](https://github.com/huangruiteng/loopx/issues/3245)
 - **架构与研究孵化器：**以明确不同的成熟度推进 Effect Program hardening、
   TypeScript parity migration、hierarchical stride、research exploration、human
   attention、artifact lifecycle 与 memory utility。
-  [方向 Tracker](https://github.com/huangruiteng/loopx/issues/3246)
 
 完整阶段、promotion gate、贡献者安全切片和 ownership 边界见
-[当前技术方向地图](docs/project/technical-directions.md)；社区讨论使用置顶的
-[GitHub Discussion](https://github.com/huangruiteng/loopx/discussions/2851)。核心控制面
+[当前技术方向地图](docs/project/technical-directions.md)。核心控制面
 可靠性继续作为这些计划共同的底座。
 
 ## 进阶文档

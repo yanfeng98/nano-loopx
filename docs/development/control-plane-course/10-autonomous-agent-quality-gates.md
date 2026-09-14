@@ -349,7 +349,7 @@ if replan_decision_allowed:
 
 这里测试的不是一份当前 JSON，而是两条独立 invariant：monitor 停滞按 target identity
 累计；runnable advancement 在工作选择上优先于 monitor-derived replan。
-仓库用 [issue #2272](https://github.com/huangruiteng/loopx/issues/2272) 记录过对应回归：
+仓库用 issue #2272 记录过对应回归：
 M1、M2 交错 poll 时，错误的全局计数会让某条 lane 永远达不到 replan 阈值。下文的
 public-safe replay 用独立 counter 和可执行 advancement 反例验证修复后的状态模型。
 
@@ -599,7 +599,7 @@ ready，返回值仍固定 `automatic_release_promotion_allowed=False`，owner d
 
 ## 组合案例七：行为保持的规则优先级重构
 
-在 [PR #2320](https://github.com/huangruiteng/loopx/pull/2320) 中，goal-frontier replan
+在 PR #2320 中，goal-frontier replan
 从隐式 `if` 链提取成 ordered rules；它没有新增 public payload，
 但它仍是 high-risk change：一次顺序漂移就可能让 agent 在已有工作时错误 replan，或在
 frontier 耗尽时永久等待。第 9 讲解释了实现结构；这里关注门禁怎样证明“移动了政策，但

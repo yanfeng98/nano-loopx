@@ -124,7 +124,7 @@ def assert_packet_shape(packet: dict[str, Any]) -> None:
 
 def main() -> int:
     merged = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1715",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1715",
         provider_payload={
             "state": "MERGED",
             "reviewDecision": "REVIEW_REQUIRED",
@@ -147,7 +147,7 @@ def main() -> int:
     assert merged["grouped_monitor_projection"]["target_key"] is None
 
     failing = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1715",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1715",
         provider_payload={
             "state": "OPEN",
             "reviewDecision": "REVIEW_REQUIRED",
@@ -165,7 +165,7 @@ def main() -> int:
     assert failing["grouped_monitor_projection"]["state_bucket"] == "checks_failed"
 
     requested = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1715",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1715",
         provider_payload={
             "state": "OPEN",
             "reviewDecision": "CHANGES_REQUESTED",
@@ -181,7 +181,7 @@ def main() -> int:
     )
 
     blocked_pending = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1715",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1715",
         provider_payload={
             "state": "OPEN",
             "reviewDecision": "REVIEW_REQUIRED",
@@ -196,11 +196,11 @@ def main() -> int:
     )
     assert blocked_pending["transition"]["material_change"] is False
     assert blocked_pending["grouped_monitor_projection"]["target_key"] == (
-        "github-pr-state-huangruiteng--loopx-checks-pending"
+        "github-pr-state-yanfeng98--nano-loopx-checks-pending"
     )
 
     stale = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1715",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1715",
         provider_payload={
             "state": "OPEN",
             "reviewDecision": "REVIEW_REQUIRED",
@@ -216,7 +216,7 @@ def main() -> int:
     assert stale["grouped_monitor_projection"]["state_bucket"] == "branch_blocked"
 
     quiet = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1715",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1715",
         issue_ref="issues_1700",
         provider_payload={
             "state": "OPEN",
@@ -239,15 +239,15 @@ def main() -> int:
         quiet["grouped_monitor_projection"]
         | {
             "state_bucket": "review_required",
-            "target_key": "github-pr-state-huangruiteng--loopx-review-required",
+            "target_key": "github-pr-state-yanfeng98--nano-loopx-review-required",
             "action_kind": "issue_fix_pr_state_review_required_monitor",
-            "member_key": "huangruiteng/loopx#1715",
+            "member_key": "yanfeng98/nano-loopx#1715",
             "member_operation": "upsert",
             "materialize_nonempty_bucket_monitor": True,
         }
     )
     same_bucket_peer = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1717",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1717",
         provider_payload={
             "state": "OPEN",
             "reviewDecision": "REVIEW_REQUIRED",
@@ -264,7 +264,7 @@ def main() -> int:
     )
 
     approved = build_issue_fix_pr_lifecycle_monitor_packet(
-        url="https://github.com/huangruiteng/loopx/pull/1716",
+        url="https://github.com/yanfeng98/nano-loopx/pull/1716",
         provider_payload={
             "state": "OPEN",
             "reviewDecision": "APPROVED",
@@ -275,17 +275,17 @@ def main() -> int:
     assert_packet_shape(approved)
     assert approved["grouped_monitor_projection"]["state_bucket"] == "ready_to_merge"
     assert approved["grouped_monitor_projection"]["target_key"] == (
-        "github-pr-state-huangruiteng--loopx-ready-to-merge"
+        "github-pr-state-yanfeng98--nano-loopx-ready-to-merge"
     )
     for alias in ("#1700", "issue_1700", "issues/1700", "issue 1700"):
         alias_packet = build_issue_fix_pr_lifecycle_monitor_packet(
-            url="https://github.com/huangruiteng/loopx/pull/1715",
+            url="https://github.com/yanfeng98/nano-loopx/pull/1715",
             issue_ref=alias,
             provider_payload={"state": "OPEN"},
         )
         assert alias_packet["observation"]["issue_ref"] == "issues_1700", alias_packet
     repo_ref = build_issue_fix_pr_lifecycle_monitor_packet(
-        repo="huangruiteng/loopx",
+        repo="yanfeng98/nano-loopx",
         pr_ref="pull_1715",
         provider_payload={
             "state": "OPEN",
@@ -355,7 +355,7 @@ def main() -> int:
             goal_id="example-goal",
         )
         key = issue_fix_pr_lifecycle_ledger_key(quiet)
-        assert key == {"repo": "huangruiteng/loopx", "pr_ref": "pull_1715"}
+        assert key == {"repo": "yanfeng98/nano-loopx", "pr_ref": "pull_1715"}
         result = upsert_issue_fix_pr_lifecycle_ledger_jsonl(ledger, quiet)
         assert result["status"] == "inserted", result
         first_inode = ledger.stat().st_ino
@@ -395,7 +395,7 @@ def main() -> int:
                 "issue-fix",
                 "pr-lifecycle",
                 "--url",
-                "https://github.com/huangruiteng/loopx/pull/1715",
+                "https://github.com/yanfeng98/nano-loopx/pull/1715",
                 "--metadata-json",
                 str(metadata_path),
                 "--issue-ref",
@@ -435,7 +435,7 @@ def main() -> int:
                 "issue-fix",
                 "pr-lifecycle",
                 "--url",
-                "https://github.com/huangruiteng/loopx/pull/1715",
+                "https://github.com/yanfeng98/nano-loopx/pull/1715",
                 "--metadata-json",
                 str(metadata_path),
                 "--generated-at",
@@ -491,7 +491,7 @@ def main() -> int:
             "issue-fix",
             "pr-gate-reconcile",
             "--url",
-            "https://github.com/huangruiteng/loopx/pull/1716",
+            "https://github.com/yanfeng98/nano-loopx/pull/1716",
             "--goal-id",
             "example-goal",
             "--todo-id",
@@ -588,7 +588,7 @@ def main() -> int:
             "issue-fix",
             "pr-review-reconcile",
             "--url",
-            "https://github.com/huangruiteng/loopx/pull/1716",
+            "https://github.com/yanfeng98/nano-loopx/pull/1716",
             "--goal-id",
             "example-goal",
             "--todo-id",
@@ -715,7 +715,7 @@ def main() -> int:
             "issue-fix",
             "pr-lifecycle",
             "--url",
-            "https://github.com/huangruiteng/loopx/pull/1715",
+            "https://github.com/yanfeng98/nano-loopx/pull/1715",
             "--metadata-json",
             str(merged_metadata_path),
             "--goal-id",
@@ -755,19 +755,19 @@ def main() -> int:
         assert len(merge_events) == 2, rollout_events
         assert {
             event["code_refs"]["pr_ref"] for event in merge_events
-        } == {"huangruiteng/loopx#1715", "huangruiteng/loopx#1716"}
+        } == {"yanfeng98/nano-loopx#1715", "yanfeng98/nano-loopx#1716"}
         parsed = parse_active_state_todos(
             "## Agent Todo\n\n"
             "- [ ] Resume after merge.\n"
             "  <!-- loopx:todo todo_id=todo_resume status=open "
             "task_class=advancement_task "
-            "task_repository=git:github.com/huangruiteng/loopx "
+            "task_repository=git:github.com/yanfeng98/nano-loopx "
             "resume_when=pr_merged:#1715 -->\n",
             rollout_events=rollout_events,
         )
         resume_item = parsed["agent_todos"]["items"][0]
         assert resume_item["resume_ready"] is True, resume_item
-        assert resume_item["resume_condition"]["matched_pr_ref"] == "huangruiteng/loopx#1715"
+        assert resume_item["resume_condition"]["matched_pr_ref"] == "yanfeng98/nano-loopx#1715"
 
         material_result = upsert_issue_fix_pr_lifecycle_ledger_jsonl(ledger, failing)
         assert material_result["status"] == "updated", material_result

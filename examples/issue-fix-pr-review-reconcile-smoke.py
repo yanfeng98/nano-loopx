@@ -29,7 +29,7 @@ from loopx.status import parse_active_state_todos  # noqa: E402
 from loopx.todos import update_goal_todo  # noqa: E402
 
 
-PR_URL = "https://github.com/huangruiteng/loopx/pull/1716"
+PR_URL = "https://github.com/yanfeng98/nano-loopx/pull/1716"
 
 
 def record_ack(
@@ -237,7 +237,7 @@ def main() -> int:
             "build_issue_fix_pr_lifecycle_monitor_packet",
             return_value={
                 "observation": {
-                    "repo": "huangruiteng/loopx",
+                    "repo": "yanfeng98/nano-loopx",
                     "number": 1716,
                     "permalink": PR_URL,
                     "state": "MERGED",

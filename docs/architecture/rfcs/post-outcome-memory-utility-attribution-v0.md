@@ -2,7 +2,7 @@
 
 - 状态：草案，等待 maintainer review
 - 日期：2026-08-15
-- 跟踪 issue：[#3214](https://github.com/huangruiteng/loopx/issues/3214)
+- 跟踪 issue：#3214
 - 决策边界：LoopX 如何在工作结果可验证之后，把结果归因到此前召回的记忆，并产出有界的效用投影
 - 能力所有者：现有 `reward_memory`
 - Provider 边界：可选 evaluator provider 与 context-provider adapter，包括 OpenViking

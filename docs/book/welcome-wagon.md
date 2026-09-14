@@ -77,7 +77,7 @@ LoopX 当前要求 Python 3.11+ 与 Node.js 22.6+。如果 `doctor` 失败，先
 ### 1. 安装并检查
 
 本 fork 从 LoopX checkout 就地运行，PyPI / pipx / 归档安装器会与它冲突；唯一支持的安装方式是把
-checkout 装成 editable 安装（见[就地开发闭环](../development/editable-dev-loop.md)）：
+checkout 装成 editable 安装（见[就地开发闭环](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/editable-dev-loop.md)）：
 
 ```bash
 cd <loopx-checkout> && python3 -m pip install -e . --no-deps --no-build-isolation
@@ -139,11 +139,11 @@ loopx first-run-report
 
 | 你的情况 | 使用入口 | 应包含 |
 | --- | --- | --- |
-| 第一次安装或连接 | [First-run feedback](https://github.com/huangruiteng/loopx/issues/new?template=first_run.yml) | 版本、OS、Host、完成步骤 |
-| 运行了数小时或数天 | [Usage story](https://github.com/huangruiteng/loopx/issues/new?template=usage_story.yml) | 时长、使用能力、恢复方式、结果 |
-| 可复现错误 | [Bug report](https://github.com/huangruiteng/loopx/issues/new?template=bug_report.yml) | 最小复现、期望、实际、脱敏诊断 |
-| 使用或设计问题 | [GitHub Q&A](https://github.com/huangruiteng/loopx/discussions/categories/q-a) | 目标、当前版本、已尝试路径 |
-| 可公开工作流或成果 | [Show and tell](https://github.com/huangruiteng/loopx/discussions/categories/show-and-tell) | 真实运行方式、证据与限制 |
+| 第一次安装或连接 | [First-run feedback](https://github.com/yanfeng98/nano-loopx/issues/new) | 版本、OS、Host、完成步骤 |
+| 运行了数小时或数天 | [Usage story](https://github.com/yanfeng98/nano-loopx/issues/new) | 时长、使用能力、恢复方式、结果 |
+| 可复现错误 | [Bug report](https://github.com/yanfeng98/nano-loopx/issues/new) | 最小复现、期望、实际、脱敏诊断 |
+| 使用或设计问题 | [GitHub Q&A](https://github.com/yanfeng98/nano-loopx/discussions) | 目标、当前版本、已尝试路径 |
+| 可公开工作流或成果 | [Show and tell](https://github.com/yanfeng98/nano-loopx/discussions) | 真实运行方式、证据与限制 |
 
 如果只是想先与其他使用者交流，可以加入
 [Discord](https://discord.gg/XmGgQyCFZd)。聊天适合探索；最终 bug、决定和可复现结论应回到
@@ -161,11 +161,11 @@ Issue、Discussion、PR 或版本化文档。
    shipped、incubating、research、draft 还是 held；
 2. [Contributor Task Board](/loopx/docs/development/contributor-tasks/)：选择 `Starter / Good First`
    或已有共识的 bounded task；
-3. [CONTRIBUTING](https://github.com/huangruiteng/loopx/blob/main/CONTRIBUTING.md)：安装、DCO、
+3. [CONTRIBUTING](https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md)：安装、DCO、
    public/private boundary 和验证要求。
 
 任务板是动态事实源。本书不会复制“当前可认领任务”列表；如果任务没有关联 Issue，先用
-[Contributor task 表单](https://github.com/huangruiteng/loopx/issues/new?template=contributor-task.yml)
+[Contributor task 表单](https://github.com/yanfeng98/nano-loopx/issues/new)
 建立公开协作边界。
 
 <!-- welcome-wagon:claim-bounded-slice -->
@@ -252,7 +252,7 @@ problem
 
 不要只贴一大段日志，也不要只说“不能用”。好的问题让其他人能复现、判断 owner，并给出下一条
 可执行动作。渠道与响应边界见
-[LoopX Support](https://github.com/huangruiteng/loopx/blob/main/.github/SUPPORT.md)。
+LoopX Support。
 
 ## 你的下一站 {#next-stop}
 

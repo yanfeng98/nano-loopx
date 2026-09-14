@@ -62,9 +62,9 @@ companion 文件。schema 缩减永远不是顺带清理：RFC 或 PR 必须逐�
   - **当前边界：** 可恢复的共享权威基础、文件后端参考路径、NoKV shadow/recovery
     证据、TypeScript store 契约、PostgreSQL candidate/conformance 覆盖，以及
     default-off 的本地 shadow/cutover 基础已合入 `main`
-    ([#3529](https://github.com/huangruiteng/loopx/pull/3529)，
-    [#3669](https://github.com/huangruiteng/loopx/pull/3669)，
-    [#3798](https://github.com/huangruiteng/loopx/pull/3798))。尚无 provider-first
+    (#3529，
+    #3669，
+    #3798)。尚无 provider-first
     的运行时晋升或远程共享权威服务交付。
 - [Shared Goal Alignment and Governed Amendment Protocol v0](shared-goal-alignment-and-governed-amendment-v0.md)
   
@@ -87,22 +87,22 @@ companion 文件。schema 缩减永远不是顺带清理：RFC 或 PR 必须逐�
   - **RFC 状态：** Draft，maintainer 评审中。
   - **`main` 交付：** 部分实现。
   - **当前边界：** M2 的显式组合投影与 successor 绑定已合入
-    [#3173](https://github.com/huangruiteng/loopx/pull/3173)。规范观察契约、
+    #3173。规范观察契约、
     共享写时 gate、模型选择与推断触发器尚未晋升。
 - [Hierarchical Agent Stride Control v0](hierarchical-agent-stride-control-v0.md)
   
   - **RFC 状态：** Draft，研究提案。
   - **`main` 交付：** M1 观察切片已实现。
   - **当前边界：** 只读 stride 观察及其合成边界夹具已合入
-    [#3207](https://github.com/huangruiteng/loopx/pull/3207) 与
-    [#3290](https://github.com/huangruiteng/loopx/pull/3290)。自适应 effect、
+    #3207 与
+    #3290。自适应 effect、
     交付与权威 stride 选择仍停留在研究阶段。
 - [Post-Outcome Memory Utility Attribution v0](post-outcome-memory-utility-attribution-v0.md)
   
   - **RFC 状态：** Draft，maintainer 评审中。
   - **`main` 交付：** Stage 1 已实现。
   - **当前边界：**
-    [#3280](https://github.com/huangruiteng/loopx/pull/3280) 在不改变检索排序的
+    #3280 在不改变检索排序的
     前提下把 utility 观察绑定到已验证结果。Reducer/读投影、provider readback、
     排序影响与试点晋升仍未解决。
 - [Obelisk Session Evidence Provider v0](obelisk-session-evidence-provider-v0.md)
@@ -119,8 +119,8 @@ companion 文件。schema 缩减永远不是顺带清理：RFC 或 PR 必须逐�
   - **`main` 交付：** 已实现，opt-in。
   - **当前边界：** provider-neutral 的 turn-start 读取契约与 Lark ACK/replay 路径
     已合入
-    [#3678](https://github.com/huangruiteng/loopx/pull/3678) 与
-    [#3733](https://github.com/huangruiteng/loopx/pull/3733)；没有任何 provider 被
+    #3678 与
+    #3733；没有任何 provider 被
     隐式启用。
 - [Provider-Neutral Post-Writeback Capability Hooks v0](provider-neutral-post-writeback-capability-hooks-v0.md)
   
@@ -128,10 +128,10 @@ companion 文件。schema 缩减永远不是顺带清理：RFC 或 PR 必须逐�
   - **`main` 交付：** 首个端到端纵向切片已实现。
   - **当前边界：** periodic-report producer、持久 intent 生命周期、终态 closeout
     dispatch、consumer 与已批准的 Goal Channel 投递已通过
-    [#3691](https://github.com/huangruiteng/loopx/pull/3691)、
-    [#3748](https://github.com/huangruiteng/loopx/pull/3748)、
-    [#3749](https://github.com/huangruiteng/loopx/pull/3749) 与
-    [#3755](https://github.com/huangruiteng/loopx/pull/3755) 交付。通用多能力晋升
+    #3691、
+    #3748、
+    #3749 与
+    #3755 交付。通用多能力晋升
     仍在评审中。
   
   - **RFC 状态：** Draft。
@@ -158,7 +158,7 @@ companion 文件。schema 缩减永远不是顺带清理：RFC 或 PR 必须逐�
   - **RFC 状态：** Draft。
   - **`main` 交付：** 核心切片已实现。
   - **当前边界：** Codex usage 捕获、归一化聚合与 dashboard 展示已合入
-    [#3117](https://github.com/huangruiteng/loopx/pull/3117)；更广的 runtime/provider
+    #3117；更广的 runtime/provider
     覆盖与成本语义仍不完整。
 - [Intelligent Review and Dynamic Presentation Surfaces v0](intelligent-review-presentation-surfaces-v0.md)
   

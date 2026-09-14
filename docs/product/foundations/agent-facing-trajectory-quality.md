@@ -129,36 +129,36 @@ Agent-facing 优化不能扩大读取或发布范围：
 
 ### 单一动作入口与热路径压缩
 
-[PR #1651](https://github.com/huangruiteng/loopx/pull/1651) 将 `interaction_contract.agent_channel.primary_action` 收口为 quota turn 的单一可执行入口，并保留 compact resolution trace。
+PR #1651 将 `interaction_contract.agent_channel.primary_action` 收口为 quota turn 的单一可执行入口，并保留 compact resolution trace。
 
 随后几次改动逐步把 display-heavy 信息移出 Agent 热路径：
 
-- [PR #1694](https://github.com/huangruiteng/loopx/pull/1694) 压缩 quota todo summary，同时保留 counts 和 representative lane items；
-- [PR #1712](https://github.com/huangruiteng/loopx/pull/1712) 压缩 quota execute response，完整 dry-run 诊断保持不变；
-- [PR #1716](https://github.com/huangruiteng/loopx/pull/1716) 只压缩 agent-lane status 的 item detail，cold path 和 project asset 保持完整。
+- PR #1694 压缩 quota todo summary，同时保留 counts 和 representative lane items；
+- PR #1712 压缩 quota execute response，完整 dry-run 诊断保持不变；
+- PR #1716 只压缩 agent-lane status 的 item detail，cold path 和 project asset 保持完整。
 
 ### 轨迹质量只读审计
 
-[PR #1893](https://github.com/huangruiteng/loopx/pull/1893) 增加 `loopx history trajectory-hygiene`，在不读取原始会话和运行产物的前提下，给出 controller density、non-material density、重复 action 与 attribution coverage。
+PR #1893 增加 `loopx history trajectory-hygiene`，在不读取原始会话和运行产物的前提下，给出 controller density、non-material density、重复 action 与 attribution coverage。
 
 ### Bounded TurnEnvelope
 
-[PR #1894](https://github.com/huangruiteng/loopx/pull/1894) 增加 opt-in TurnEnvelope 和 8 KiB budget。它只投影已经完成的 quota decision，不改变默认执行路径。
+PR #1894 增加 opt-in TurnEnvelope 和 8 KiB budget。它只投影已经完成的 quota decision，不改变默认执行路径。
 
-[PR #1897](https://github.com/huangruiteng/loopx/pull/1897) 增加 Contract Capsule 与 action-signature parity，补回 execution obligation、work lane、automation liveness、vision/handoff 等容易在压缩中丢失的契约。
+PR #1897 增加 Contract Capsule 与 action-signature parity，补回 execution obligation、work lane、automation liveness、vision/handoff 等容易在压缩中丢失的契约。
 
-[PR #1898](https://github.com/huangruiteng/loopx/pull/1898) 让 TurnEnvelope 从结构化 contract 重建 `protocol_action_packet`。只有字段级 parity 成立时才省略重复 summary；不一致时保留 residue 或完整 summary。
+PR #1898 让 TurnEnvelope 从结构化 contract 重建 `protocol_action_packet`。只有字段级 parity 成立时才省略重复 summary；不一致时保留 residue 或完整 summary。
 
 ### Claim 与 lease 的行为正确性
 
 Agent-facing 质量也包含控制面给出的 ownership 是否可信。近期改动校正了几类“看起来可执行，实际约束不成立”的状态：
 
-- [PR #1932](https://github.com/huangruiteng/loopx/pull/1932) 明确 soft claim 与 opt-in hard lease 的能力边界；
-- [PR #1935](https://github.com/huangruiteng/loopx/pull/1935) 移除未生效的 soft-claim TTL 表象；
-- [PR #1936](https://github.com/huangruiteng/loopx/pull/1936) 让非 open todo 的 hard lease 失效；
-- [PR #1938](https://github.com/huangruiteng/loopx/pull/1938) 修复 glob scope 与具体子路径的冲突漏判；
-- [PR #1939](https://github.com/huangruiteng/loopx/pull/1939) 拒绝 idempotency key 在变更 scope/TTL 后返回假成功；
-- [PR #1940](https://github.com/huangruiteng/loopx/pull/1940) 让 soft claim 严格遵守 `Open -> Claimed` 状态迁移。
+- PR #1932 明确 soft claim 与 opt-in hard lease 的能力边界；
+- PR #1935 移除未生效的 soft-claim TTL 表象；
+- PR #1936 让非 open todo 的 hard lease 失效；
+- PR #1938 修复 glob scope 与具体子路径的冲突漏判；
+- PR #1939 拒绝 idempotency key 在变更 scope/TTL 后返回假成功；
+- PR #1940 让 soft claim 严格遵守 `Open -> Claimed` 状态迁移。
 
 这些改动不追求更大的状态机，而是让 Agent-facing contract 与真实可执行状态一致。
 

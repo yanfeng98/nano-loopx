@@ -24,7 +24,7 @@ def _fixture() -> dict:
     external = make_fact(
         fact_type="external_discussion",
         source="github",
-        source_url="https://github.com/huangruiteng/loopx/issues/1",
+        source_url="https://github.com/yanfeng98/nano-loopx/issues/1",
         title="Question: how do I set a stop condition?",
         author="external-user",
         published_at="2026-08-17T00:00:00Z",
@@ -32,9 +32,9 @@ def _fixture() -> dict:
     maintainer = make_fact(
         fact_type="maintainer_signal",
         source="github",
-        source_url="https://github.com/huangruiteng/loopx/issues/2",
+        source_url="https://github.com/yanfeng98/nano-loopx/issues/2",
         title="RFC: typed handoff packets",
-        author="huangruiteng",
+        author="yanfeng98",
         published_at="2026-08-16T00:00:00Z",
     )
     ecosystem = make_fact(
@@ -58,7 +58,7 @@ def _fixture() -> dict:
     duplicate = make_fact(
         fact_type="external_discussion",
         source="github",
-        source_url="https://github.com/huangruiteng/loopx/issues/1",
+        source_url="https://github.com/yanfeng98/nano-loopx/issues/1",
         title="Question: how do I set a stop condition?",
         author="external-user",
         published_at="2026-08-17T00:00:00Z",
@@ -68,7 +68,7 @@ def _fixture() -> dict:
         "schema_version": SCAN_SCHEMA_VERSION,
         "scan_at": "2026-08-17T00:00:00+00:00",
         "window_days": 14,
-        "repo": {"owner": "huangruiteng", "name": "loopx"},
+        "repo": {"owner": "yanfeng98", "name": "nano-loopx"},
         "stats": {
             "raw_facts": 5,
             "deduped_facts": len(facts),
@@ -131,7 +131,7 @@ def _run_offline() -> int:
         return 1
 
     md = render_markdown(fixture)
-    if "## External discussions" not in md or "https://github.com/huangruiteng/loopx/issues/1" not in md:
+    if "## External discussions" not in md or "https://github.com/yanfeng98/nano-loopx/issues/1" not in md:
         print("FAIL: markdown digest missing external discussion section", file=sys.stderr)
         return 1
     if "## Public adoption & recommendations" not in md or "we-standardize-on-loopx" not in md:

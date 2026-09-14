@@ -21,8 +21,8 @@ def main() -> None:
     assert normalize_todo_status("completed") is None
     assert normalize_todo_resume_when("pr_merged:#532") == "pr_merged:#532"
     assert (
-        normalize_todo_resume_when("pr_merged:huangruiteng/loopx#532")
-        == "pr_merged:huangruiteng/loopx#532"
+        normalize_todo_resume_when("pr_merged:yanfeng98/nano-loopx#532")
+        == "pr_merged:yanfeng98/nano-loopx#532"
     )
     assert todo_done_for_status("done")
     assert not todo_done_for_status("completed")

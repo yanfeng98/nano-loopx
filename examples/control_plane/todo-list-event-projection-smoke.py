@@ -33,7 +33,7 @@ EVENT_GATE_TODO_ID = "todo_event_non_delivery_gate"
 EVENT_SUCCESSOR_TODO_ID = "todo_event_same_agent_successor"
 EVENT_ATOMIC_SOURCE_TODO_ID = "todo_event_atomic_handoff_source"
 EVENT_ATOMIC_SUCCESSOR_TEXT = "Independently review the event-projected delivery"
-SUCCESSOR_REPOSITORY = "git:github.com/huangruiteng/loopx"
+SUCCESSOR_REPOSITORY = "git:github.com/yanfeng98/nano-loopx"
 SUCCESSOR_CAPABILITIES = ["network", "external_evidence_poll"]
 
 

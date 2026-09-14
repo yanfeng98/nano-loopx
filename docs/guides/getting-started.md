@@ -294,9 +294,7 @@ python3 examples/fresh-clone-quickstart-smoke.py
 为空，绝不 `git pull`、绝不安装发布快照。各激活层（包 owner、宿主材料、Effect runtime、扩展）的
 逐层读回与恢复见[就地开发闭环](../development/editable-dev-loop.md#verify-the-active-layers)。
 
-不要在同一个环境里运行 PyPI / pipx 安装，也不要运行从旧文档复制来的 curl 归档安装器：`~/.local/bin`
-通常排在 `PATH` 最前，它们会生成第二份 `loopx` 并静默接管你的开发环境。发布快照 / canary wrapper 通道
-（含 `scripts/install-local.sh`、`scripts/install-from-github.sh`）已在 op 036 中移除。
+需要对外分发时构建 wheel，见[离线 wheel 安装](offline-wheel-install.md)。
 
 ## 贡献者安装 {#contributor-install}
 
@@ -650,7 +648,7 @@ loopx serve-status --global-registry --port 8766 --limit 80
 - 什么边界还不能跨越。
 
 参见
-[apps/presentation/dashboard/README.md](https://github.com/huangruiteng/loopx/blob/main/apps/presentation/dashboard/README.md)。
+[apps/presentation/dashboard/README.md](../../apps/presentation/dashboard/README.md)。
 
 ## 公开 / 私有边界
 
@@ -722,7 +720,7 @@ runtime 证据会记录该跳过。
 
 从这里开始：
 
-- [Documentation index](https://github.com/huangruiteng/loopx/blob/main/docs/README.md)
+- [Documentation index](../)
 - [Showcase catalog](../showcases/README.md)
 - [State interaction model](../state-interaction-model.md)
 - [Interaction pattern catalog](../concepts/interaction-pattern-catalog.md)
@@ -732,10 +730,10 @@ runtime 证据会记录该跳过。
 - [Quota allocation](../quota-allocation.md)
 - [Long-task cadence hint](../operations/long-task-cadence-policy.md)
 - [Public/private boundary](../public-private-boundary.md)
-- [Benchmark research workspace](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)
+- [Benchmark research workspace](../../benchmark/README.md)
 - [Dashboard status contract](../status-data-contract.md)
 - [Codex peer task orchestration](../integrations/codex-subagent-orchestration.md)
-- [DeepSWE research practice](https://github.com/huangruiteng/loopx/blob/main/benchmark/deepswe/README.md)
+- [DeepSWE research practice](../../benchmark/deepswe/README.md)
 
 ## 命令参考 {#command-reference}
 

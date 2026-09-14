@@ -46,7 +46,7 @@ observable problem = no runnable rerun todo after the unblock signal landed
 公开证据足以重现这个控制面矛盾:
 
 ```bash
-gh pr view 1680 --repo huangruiteng/loopx \
+gh pr view 1680 --repo yanfeng98/nano-loopx \
   --json state,mergedAt,reviewDecision,headRefName,mergeCommit
 
 loopx --format json quota should-run \

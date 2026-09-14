@@ -50,8 +50,8 @@ monitor 契约，承担维护者工作中重复但需要判断的部分：
 
 公开证据：生态采纳清单
 （[`ecosystem-adoption.md`](ecosystem-adoption.md)）、TypeScript 迁移 RFC
-（[#3225](https://github.com/huangruiteng/loopx/issues/3225)、
-[#3226](https://github.com/huangruiteng/loopx/pull/3226)）、content-ops
+（#3225、
+#3226）、content-ops
 能力。
 
 ### 模式 C：Issue→PR Bot
@@ -186,8 +186,8 @@ loopx value-connectors source-map --format json    # connector-first source map
 | 循环 | 监控（`target_key`） | cadence | 做什么 |
 | --- | --- | --- | --- |
 | 维护 | GitHub issue intake（`github-open-issue-intake`） | 6h | 新 issue 分类并路由 |
-| 维护 | Open PR review queue（`github:huangruiteng/loopx:open-pr-review-queue`） | 3m | 扫 PR 队列，门禁通过才评审 |
-| 维护 | Public smoke quality repair（`github:huangruiteng/loopx:public-smoke-quality`） | 15m | 发现并修复 public smoke 失败 |
+| 维护 | Open PR review queue（`github:yanfeng98/nano-loopx:open-pr-review-queue`） | 3m | 扫 PR 队列，门禁通过才评审 |
+| 维护 | Public smoke quality repair（`github:yanfeng98/nano-loopx:public-smoke-quality`） | 15m | 发现并修复 public smoke 失败 |
 | 维护 | Non-benchmark quality watch（`public-nonbenchmark-quality-watch`） | 6h | 观察 benchmark 之外的质量回归 |
 | 维护 | Repository quality（`repository-quality-monitor`） | 14d | README 首屏、quickstart、公开边界扫描 |
 | 维护 | Community feedback funnel（`community-feedback-funnel`） | 14d | 反馈入口与 triage 对齐 |
@@ -272,11 +272,11 @@ item 走 source → angle → draft → feedback → publish gate → readback�
 
 - 生态采纳清单：[`ecosystem-adoption.md`](ecosystem-adoption.md)
 - TypeScript 迁移 RFC：issue
-  [#3225](https://github.com/huangruiteng/loopx/issues/3225)、RFC PR
-  [#3226](https://github.com/huangruiteng/loopx/pull/3226)
+  #3225、RFC PR
+  #3226
 - Issue-fix 能力：
   [`loopx/capabilities/issue_fix/README.md`](../../loopx/capabilities/issue_fix/README.md)
 - Content-ops 能力：
   [`loopx/capabilities/content_ops/README.md`](../../loopx/capabilities/content_ops/README.md)
 - v0.4.5 至 v0.4.7：
-  [releases](https://github.com/huangruiteng/loopx/releases)
+  [releases](https://github.com/yanfeng98/nano-loopx/releases)

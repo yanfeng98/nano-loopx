@@ -19,7 +19,7 @@
       "docs/product/surfaces/frontstage-dashboard-interaction-baseline.md"
     ],
     "source_prs": [
-      "https://github.com/huangruiteng/loopx/pull/617"
+      "https://github.com/yanfeng98/nano-loopx/pull/617"
     ],
     "source_policy": "Compact public-safe metadata only; this fixture is not a source-of-truth event ledger."
   },
@@ -154,7 +154,7 @@
       },
       "code_refs": {
         "commit_ref": "bd05500",
-        "pr_ref": "huangruiteng/loopx#617"
+        "pr_ref": "yanfeng98/nano-loopx#617"
       },
       "status": "ready",
       "classification": "long_horizon_protocol_contract_ready",
@@ -166,7 +166,7 @@
       "source_refs": [
         {
           "kind": "pull_request",
-          "ref": "https://github.com/huangruiteng/loopx/pull/617"
+          "ref": "https://github.com/yanfeng98/nano-loopx/pull/617"
         }
       ],
       "boundary": {
@@ -473,7 +473,7 @@
       "confidence": "observed",
       "display_hint": "solid_edge",
       "evidence_refs": [
-        "https://github.com/huangruiteng/loopx/pull/617"
+        "https://github.com/yanfeng98/nano-loopx/pull/617"
       ]
     },
     {

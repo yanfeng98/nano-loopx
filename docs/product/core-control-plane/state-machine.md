@@ -7,13 +7,13 @@ LoopX 没有一台巨型状态机。它有一小组协作机器,这些机器从�
 
 - [`state-definitions.md`](state-definitions.md):源 state 体与派生的运行时名称;
 - [`interaction-catalog.md`](interaction-catalog.md):可复用的交互模式;
-- [`loopx/control_plane/todos/contract.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/todos/contract.py):todo 状态、任务类别、决策范围、恢复、认领与 monitor 元数据字段;
-- [`loopx/quota.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/quota.py):`quota should-run`、运行时状态、`effective_action`、`interaction_contract`、花费与 monitor 轮询契约;
-- [`loopx/control_plane/scheduler/scheduler_hint.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/scheduler/scheduler_hint.py):节奏/退避/重置令牌行为;
+- [`loopx/control_plane/todos/contract.py`](../../../loopx/control_plane/todos/contract.py):todo 状态、任务类别、决策范围、恢复、认领与 monitor 元数据字段;
+- [`loopx/quota.py`](../../../loopx/quota.py):`quota should-run`、运行时状态、`effective_action`、`interaction_contract`、花费与 monitor 轮询契约;
+- [`loopx/control_plane/scheduler/scheduler_hint.py`](../../../loopx/control_plane/scheduler/scheduler_hint.py):节奏/退避/重置令牌行为;
 - [`goal_vision_replan_contract_v0`](../../reference/protocols/goal-vision-replan-contract-v0.md):有界的逐 agent 愿景、重规划转换与 goal 路由投影;
-- [`loopx/control_plane/todos/handoff_gate.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/control_plane/todos/handoff_gate.py) 中的跨 agent 交接 gate 状态;
-- [`loopx/project_map.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/project_map.py) 与
-  [`loopx/bootstrap.py`](https://github.com/huangruiteng/loopx/blob/main/loopx/bootstrap.py):项目注册、只读地图选择加入、全局同步与 host-loop 激活。
+- [`loopx/control_plane/todos/handoff_gate.py`](../../../loopx/control_plane/todos/handoff_gate.py) 中的跨 agent 交接 gate 状态;
+- [`loopx/project_map.py`](../../../loopx/project_map.py) 与
+  [`loopx/bootstrap.py`](../../../loopx/bootstrap.py):项目注册、只读地图选择加入、全局同步与 host-loop 激活。
 
 ## 机器如何组合
 

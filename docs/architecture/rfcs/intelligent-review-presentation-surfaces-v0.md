@@ -5,9 +5,9 @@
 - 日期：2026-09-01
 - 范围：定义一个 provider-neutral 的 typed interaction projection，用于筛选、展示、审阅和反馈控制面的重要变化，并为卡片、对比、图、报告、Dashboard 与持续演进的文档提供有界 presentation plan；不新增 source store、authority grant、provider effect、通知调度器、万能 renderer，也不要求必须依赖模型
 - Source baseline：LoopX `546bf6967`
-- Tracking issue：[#3786](https://github.com/huangruiteng/loopx/issues/3786)
-- 相关技术方向：[#3244](https://github.com/huangruiteng/loopx/issues/3244)
-- 第一个垂直案例：[#3785](https://github.com/huangruiteng/loopx/pull/3785)
+- Tracking issue：#3786
+- 相关技术方向：#3244
+- 第一个垂直案例：#3785
 - 语言说明：[英文版](./intelligent-review-presentation-surfaces-v0.md) 与本中文版是语义镜像；两者有语义差异即视为缺陷。
 
 ---

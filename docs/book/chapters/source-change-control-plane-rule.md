@@ -46,8 +46,8 @@ problem
 | Breaking migration | 旧输入或输出不再合法 | 显式版本、迁移 reader、release 与 stop gate |
 
 本章案例属于第一类。现有
-[`decision_scope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)
-已经规定 Gate 是 scoped authority；[State Machines](https://github.com/huangruiteng/loopx/blob/main/docs/product/core-control-plane/state-machine.md)
+[`decision_scope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)
+已经规定 Gate 是 scoped authority；[State Machines](https://github.com/yanfeng98/nano-loopx/blob/main/docs/product/core-control-plane/state-machine.md)
 也把 ambiguous scope 导向 repair。
 
 如果实现把它变成全局 wait，应该修实现，而不是新增一个“允许全局猜测”的兼容字段。

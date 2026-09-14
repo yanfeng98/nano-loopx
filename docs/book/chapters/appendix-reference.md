@@ -34,24 +34,24 @@
 
 | 要解决的问题 | 优先阅读 |
 | --- | --- |
-| `/loopx <goal text>`、Goal selection、fresh Agent identity 与 Host activation | [`loopx_goal_command_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/loopx-goal-command-v0.md) |
-| 长程 Agent source/projection、并发 lane 与 lifecycle | [`long_horizon_agent_state_protocol_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/long-horizon-agent-state-protocol-v0.md) |
-| Replan/handoff 前的 Agent-scoped chronology | [`agent_scoped_evidence_ledger_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/agent-scoped-evidence-ledger-v0.md) |
-| Canonical event、replay 与 privacy | [`event_sourced_state_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/event-sourced-state-contract-v0.md) |
-| Active-state workbench 的 typed read model | [`active_state_structured_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/active-state-structured-projection-v0.md) |
-| Todo、Gate、dependency 与 handoff 图 | [`task_graph_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md) |
-| Gate coverage 与 scoped authority | [`decision_scope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/decision-scope-v0.md) |
-| Per-Agent Vision 与 replan | [`goal_vision_replan_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md) |
-| Equal peer、claim 与 continuation | [`peer_agent_runtime_v1`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md) |
-| 一轮 governed execution（experimental） | [`loopx_turn_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/loopx-turn-v0.md) |
-| 已仲裁 decision 的 opt-in bounded projection | [`turn_envelope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/turn-envelope-v0.md) |
-| Host capability、controlled write 与 fallback | [`host_integration_surface_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/host-integration-surface-v0.md) |
-| Session runtime 的只读一屏投影 | [`session_runtime_loopx_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/session-runtime-loopx-projection-v0.md) |
-| Session runtime metadata writeback（draft） | [`session_runtime_controlled_writeback_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/session-runtime-controlled-writeback-v0.md) |
-| Revision、idempotency 与本地写正确性 | [`local_state_write_correctness_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/local-state-write-correctness-v0.md) |
+| `/loopx <goal text>`、Goal selection、fresh Agent identity 与 Host activation | [`loopx_goal_command_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/loopx-goal-command-v0.md) |
+| 长程 Agent source/projection、并发 lane 与 lifecycle | [`long_horizon_agent_state_protocol_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/long-horizon-agent-state-protocol-v0.md) |
+| Replan/handoff 前的 Agent-scoped chronology | [`agent_scoped_evidence_ledger_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/agent-scoped-evidence-ledger-v0.md) |
+| Canonical event、replay 与 privacy | [`event_sourced_state_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/event-sourced-state-contract-v0.md) |
+| Active-state workbench 的 typed read model | [`active_state_structured_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/active-state-structured-projection-v0.md) |
+| Todo、Gate、dependency 与 handoff 图 | [`task_graph_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md) |
+| Gate coverage 与 scoped authority | [`decision_scope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/decision-scope-v0.md) |
+| Per-Agent Vision 与 replan | [`goal_vision_replan_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md) |
+| Equal peer、claim 与 continuation | [`peer_agent_runtime_v1`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md) |
+| 一轮 governed execution（experimental） | [`loopx_turn_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/loopx-turn-v0.md) |
+| 已仲裁 decision 的 opt-in bounded projection | [`turn_envelope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/turn-envelope-v0.md) |
+| Host capability、controlled write 与 fallback | [`host_integration_surface_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/host-integration-surface-v0.md) |
+| Session runtime 的只读一屏投影 | [`session_runtime_loopx_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/session-runtime-loopx-projection-v0.md) |
+| Session runtime metadata writeback（draft） | [`session_runtime_controlled_writeback_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/session-runtime-controlled-writeback-v0.md) |
+| Revision、idempotency 与本地写正确性 | [`local_state_write_correctness_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/local-state-write-correctness-v0.md) |
 
 完整协议目录仍以
-[LoopX Protocol Contracts](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/README.md)
+[LoopX Protocol Contracts](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/README.md)
 为准。
 
 ## 常用只读入口
@@ -211,14 +211,14 @@ loopx extension rollback <extension-id>
 
 ## 源码贡献入口
 
-- [Contributor Task Board](https://github.com/huangruiteng/loopx/blob/main/docs/development/contributor-tasks.md)
-- [Contributing](https://github.com/huangruiteng/loopx/blob/main/CONTRIBUTING.md)
-- [Control-Plane Developer Course](https://github.com/huangruiteng/loopx/tree/main/docs/development/control-plane-course)
-- [Core Control-Plane Graphs](https://github.com/huangruiteng/loopx/tree/main/docs/product/core-control-plane)
-- [Testing and Quality](https://github.com/huangruiteng/loopx/blob/main/docs/development/testing-and-quality.md)
+- [Contributor Task Board](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md)
+- [Contributing](https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md)
+- [Control-Plane Developer Course](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/control-plane-course)
+- [Core Control-Plane Graphs](https://github.com/yanfeng98/nano-loopx/blob/main/docs/product/core-control-plane)
+- [Testing and Quality](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/testing-and-quality.md)
 
 ## 官方入口
 
-- [LoopX repository](https://github.com/huangruiteng/loopx)
-- [Getting Started](https://github.com/huangruiteng/loopx/blob/main/docs/guides/getting-started.md)
-- [Extensions and Capabilities](https://github.com/huangruiteng/loopx/blob/main/docs/reference/extensions.md)
+- [LoopX repository](https://github.com/yanfeng98/nano-loopx)
+- [Getting Started](https://github.com/yanfeng98/nano-loopx/blob/main/docs/guides/getting-started.md)
+- [Extensions and Capabilities](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/extensions.md)

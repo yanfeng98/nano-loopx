@@ -5,8 +5,8 @@
 第二个 launcher，也不要在未经 maintainer 预览的情况下修改 README 首屏。
 
 运行时控制转移在
-[#2786](https://github.com/huangruiteng/loopx/pull/2786) 交付（相关
-[#2783](https://github.com/huangruiteng/loopx/issues/2783)）。本指南是 GH-C43 的
+#2786 交付（相关
+#2783）。本指南是 GH-C43 的
 操作者侧证明路径。
 
 规范命令路径：

@@ -1,7 +1,7 @@
-# 受守卫的上游 Issue 升级
+# 受守卫的公开 Issue 升级
 
 
-使用此路由把已确认、可复用的 LoopX 产品缺口变成紧凑的上游 issue，而不泄漏
+使用此路由把已确认、可复用的 LoopX 产品缺口变成紧凑的公开 issue，而不泄漏
 用户项目状态或制造 issue 刷屏。调用 self-repair 是诊断同意，不是发布同意。
 
 ## 1. 认定候选
@@ -68,11 +68,11 @@ loopx check --scan-path "$draft_file"
 
 ## 4. 创建前搜索
 
-在规范上游仓库中按 fingerprint 标记搜索已打开与已关闭的 issue：
+在规范仓库中按 fingerprint 标记搜索已打开与已关闭的 issue：
 
 ```bash
 gh issue list \
-  --repo huangruiteng/loopx \
+  --repo yanfeng98/nano-loopx \
   --state all \
   --search "$fingerprint in:body" \
   --limit 20 \
@@ -89,7 +89,7 @@ gh issue list \
 ```bash
 gh auth status
 gh issue create \
-  --repo huangruiteng/loopx \
+  --repo yanfeng98/nano-loopx \
   --title "$title" \
   --body-file "$draft_file"
 ```

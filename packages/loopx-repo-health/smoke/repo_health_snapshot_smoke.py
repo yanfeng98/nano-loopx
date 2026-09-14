@@ -24,8 +24,8 @@ def _fixture() -> dict:
         "schema_version": SNAPSHOT_SCHEMA_VERSION,
         "captured_at": "2026-08-17T00:00:00+00:00",
         "repo": {
-            "owner": "huangruiteng",
-            "name": "loopx",
+            "owner": "yanfeng98",
+            "name": "nano-loopx",
             "license": "Apache-2.0",
             "created_at": "2026-05-31T14:58:56Z",
             "pushed_at": "2026-08-16T17:44:43Z",
@@ -120,9 +120,9 @@ def _run_offline() -> int:
         "/wiki/Home",
         "/blob/main/docs/guide.md",
         "/tree/main/docs",
-        "/huangruiteng/loopx/blob/main/README.md",
-        "/huangruiteng/loopx/blob/main/docs/guides/getting-started.md",
-        "/huangruiteng/loopx/tree/main/docs",
+        "/yanfeng98/nano-loopx/blob/main/README.md",
+        "/yanfeng98/nano-loopx/blob/main/docs/guides/getting-started.md",
+        "/yanfeng98/nano-loopx/tree/main/docs",
     ]
     for path in docs_examples:
         if not is_docs_path(path):
@@ -134,9 +134,9 @@ def _run_offline() -> int:
         "/",
         "/blob/main/loopx/cli.py",
         "/releases",
-        "/huangruiteng/loopx",
-        "/huangruiteng/loopx/pulls",
-        "/huangruiteng/loopx/blob/main/loopx/cli.py",
+        "/yanfeng98/nano-loopx",
+        "/yanfeng98/nano-loopx/pulls",
+        "/yanfeng98/nano-loopx/blob/main/loopx/cli.py",
     ]
     for path in non_docs_examples:
         if is_docs_path(path):
@@ -144,7 +144,7 @@ def _run_offline() -> int:
             return 1
 
     md = render_markdown(fixture)
-    if "Repo Health: huangruiteng/loopx" not in md or "| stars | 4804 |" not in md:
+    if "Repo Health: yanfeng98/nano-loopx" not in md or "| stars | 4804 |" not in md:
         print("FAIL: markdown projection missing expected rows", file=sys.stderr)
         return 1
     if "| docs_views | 26613 | 16321 |" not in md or "| /docs/architecture.md |" not in md:

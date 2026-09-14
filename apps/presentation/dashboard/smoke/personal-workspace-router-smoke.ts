@@ -33,9 +33,9 @@ equal(routeWorkspaceInput("把 todo-1 标记完成", goalContext).actionKind, "t
 const deferMissingCondition = routeWorkspaceInput("把 todo-1 暂缓", goalContext);
 equal(deferMissingCondition.route, "clarify", "todo defer without condition clarifies");
 equal(deferMissingCondition.missingFields.join(","), "resume_when", "todo defer names missing resume condition");
-const deferUntilPr = routeWorkspaceInput("把 todo-1 暂缓到pr_merged:huangruiteng/loopx#3399", goalContext);
+const deferUntilPr = routeWorkspaceInput("把 todo-1 暂缓到pr_merged:yanfeng98/nano-loopx#3399", goalContext);
 equal(deferUntilPr.route, "typed_action", "todo defer with condition routes to typed action");
-equal(deferUntilPr.normalizedParameters.resume_when, "pr_merged:huangruiteng/loopx#3399", "todo defer preserves supported condition");
+equal(deferUntilPr.normalizedParameters.resume_when, "pr_merged:yanfeng98/nano-loopx#3399", "todo defer preserves supported condition");
 equal(routeWorkspaceInput("帮我修复 MR 冲突，跑测试，然后 push", goalContext).actionKind, "todo.create", "execution task");
 equal(routeWorkspaceInput("创建任务并设置 Heartbeat", goalContext).actionKind, "todo.create", "heartbeat phrasing does not create a compound intent");
 equal(routeWorkspaceInput("Create a task and set up a Heartbeat", goalContext).actionKind, "todo.create", "English heartbeat phrasing stays a single task intent");

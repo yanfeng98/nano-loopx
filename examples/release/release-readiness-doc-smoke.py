@@ -422,7 +422,7 @@ def main() -> None:
         "after the English product groups",
         "tag-to-tag Git range and merged pull-request metadata",
         "external or first-time contributors",
-        "Do not list or thank `@huangruiteng`",
+        "没有合格贡献者时,两种语言的分节一并省略。",
         "founder stewardship is implicit",
         "Omit the section when the tag range contains no eligible community contribution",
         "`### 社区贡献者` after the Chinese product groups",

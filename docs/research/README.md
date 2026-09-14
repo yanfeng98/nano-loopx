@@ -4,7 +4,7 @@
 本区域存放公开研究与可检视的证据。它不是当前产品行为的事实源；稳定的结论应当通过源链接
 提升到 product、architecture 或 reference 文档中。
 
-- [Benchmark research workspace](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)：当前协议、
+- [Benchmark research workspace](../../benchmark/README.md)：当前协议、
   benchmark 特定实践与指导性研究 RFC 的链接。
 - [Agent workflow audits](agent-workflow-audits/)：对外部 Agent 工作流形态的有界评审。
 

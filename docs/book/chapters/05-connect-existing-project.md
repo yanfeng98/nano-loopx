@@ -333,7 +333,7 @@ Todo 中的 `required_capabilities` 表示执行前必须已有的能力；`targ
 `loopx-finance-value-discovery` 为例，它是独立分发的零权限 Extension；只有你已经获得包含
 `packages/loopx-finance-value-discovery/` 的 LoopX 源码 checkout 或等价 provider 源码包时，
 Agent 才能安装。源码与 manifest 位于 LoopX 官方仓库的
-[`packages/loopx-finance-value-discovery`](https://github.com/huangruiteng/loopx/tree/main/packages/loopx-finance-value-discovery)。
+[`packages/loopx-finance-value-discovery`](https://github.com/yanfeng98/nano-loopx/blob/main/packages/loopx-finance-value-discovery)。
 
 把这段补充到接入提示词：
 

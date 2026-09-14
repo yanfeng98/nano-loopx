@@ -4,7 +4,7 @@
 |---|---|
 | 状态 | Draft，等待 maintainer 评审 |
 | 日期 | 2026-08-26 |
-| 跟踪 issue | [#3479](https://github.com/huangruiteng/loopx/issues/3479) |
+| 跟踪 issue | #3479 |
 | 源码基线 | LoopX `11824ef5f` |
 | 决策边界 | 已安装 capability 如何在成功 durable writeback 后提出有边界的后续工作，同时不加入主事务、也不获得 effect 权限 |
 | Core owner | Turn settlement 与 capability-hook 生命周期 |

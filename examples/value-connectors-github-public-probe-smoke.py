@@ -220,7 +220,7 @@ def main() -> int:
                 "value-connectors",
                 "github-public-probe",
                 "--url",
-                "https://github.com/huangruiteng/loopx/issues/670",
+                "https://github.com/yanfeng98/nano-loopx/issues/670",
             ]
         ).stdout
     )
@@ -241,7 +241,7 @@ def main() -> int:
                 "author_association": "NONE",
                 "created_at": "2026-06-25T06:54:50Z",
                 "updated_at": "2026-06-25T06:54:50Z",
-                "url": "https://github.com/huangruiteng/loopx/issues/670#issuecomment-1",
+                "url": "https://github.com/yanfeng98/nano-loopx/issues/670#issuecomment-1",
                 "body": "comment body that must stay gated",
                 "raw": "raw provider payload",
             },
@@ -250,7 +250,7 @@ def main() -> int:
                 "author_association": "MEMBER",
                 "created_at": "2026-06-25T07:10:00Z",
                 "updated_at": "2026-06-25T07:10:00Z",
-                "url": "https://github.com/huangruiteng/loopx/issues/670#issuecomment-2",
+                "url": "https://github.com/yanfeng98/nano-loopx/issues/670#issuecomment-2",
                 "body": "comment body text",
             },
         ]
@@ -266,9 +266,9 @@ def main() -> int:
                     "value-connectors",
                     "github-reply-monitor",
                     "--issue-url",
-                    "https://github.com/huangruiteng/loopx/issues/670",
+                    "https://github.com/yanfeng98/nano-loopx/issues/670",
                     "--after-comment-url",
-                    "https://github.com/huangruiteng/loopx/issues/670#issuecomment-1",
+                    "https://github.com/yanfeng98/nano-loopx/issues/670#issuecomment-1",
                     "--metadata-json",
                     str(reply_path),
                 ]
@@ -302,7 +302,7 @@ def main() -> int:
                     "import sys",
                     "argv = sys.argv[1:]",
                     "assert argv[:2] == ['api', '-H'], argv",
-                    "assert 'repos/huangruiteng/loopx/issues/670/comments?per_page=100' in argv, argv",
+                    "assert 'repos/yanfeng98/nano-loopx/issues/670/comments?per_page=100' in argv, argv",
                     "assert '--jq' in argv, argv",
                     "json.dump([",
                     "  {",
@@ -310,7 +310,7 @@ def main() -> int:
                     "    'author_association': 'NONE',",
                     "    'created_at': '2026-06-25T06:54:50Z',",
                     "    'updated_at': '2026-06-25T06:54:50Z',",
-                    "    'url': 'https://github.com/huangruiteng/loopx/issues/670#issuecomment-1',",
+                    "    'url': 'https://github.com/yanfeng98/nano-loopx/issues/670#issuecomment-1',",
                     "  }",
                     "], sys.stdout)",
                     "sys.stdout.write('\\n')",
@@ -328,9 +328,9 @@ def main() -> int:
                     "value-connectors",
                     "github-reply-monitor",
                     "--issue-url",
-                    "https://github.com/huangruiteng/loopx/issues/670",
+                    "https://github.com/yanfeng98/nano-loopx/issues/670",
                     "--after-comment-url",
-                    "https://github.com/huangruiteng/loopx/issues/670#issuecomment-1",
+                    "https://github.com/yanfeng98/nano-loopx/issues/670#issuecomment-1",
                     "--fetch-metadata",
                 ],
                 env=live_env,
@@ -562,7 +562,7 @@ def main() -> int:
             "value-connectors",
             "github-public-probe",
             "--url",
-            "https://github.com/huangruiteng/loopx/issues/670",
+            "https://github.com/yanfeng98/nano-loopx/issues/670",
         ]
     ).stdout
     assert "LoopX GitHub Public Channel Probe" in markdown, markdown
@@ -584,9 +584,9 @@ def main() -> int:
             "value-connectors",
             "github-reply-monitor",
             "--issue-url",
-            "https://github.com/huangruiteng/loopx/issues/670",
+            "https://github.com/yanfeng98/nano-loopx/issues/670",
             "--after-comment-url",
-            "https://github.com/huangruiteng/loopx/issues/670#issuecomment-1",
+            "https://github.com/yanfeng98/nano-loopx/issues/670#issuecomment-1",
         ]
     ).stdout
     assert "LoopX GitHub Public Reply Monitor" in reply_markdown, reply_markdown

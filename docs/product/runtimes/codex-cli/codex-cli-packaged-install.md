@@ -11,8 +11,7 @@ LoopX 应该易于从用户已经打开的工具里接纳。对 Codex CLI 用户
 4. 回到同一个 TUI，带上当前目标、gate、todo 与下一个安全动作。
 
 本 fork 的安装就是 clone 这个仓库并就地装成 editable——不存在需要绕开的门槛，也不走 PyPI wheel
-与归档快照通道（后者属发布/canary 工作，见"贡献者路径"）。上游这些通道的原文不再保留在仓库内，
-需要对照时用 `git show upstream/main:docs/product/runtimes/codex-cli/codex-cli-packaged-install.md`。
+与归档快照通道（后者属发布/canary 工作，见"贡献者路径"）。那些通道的原文不保留在仓库内。
 
 ## 当前用户路径
 
@@ -82,11 +81,10 @@ Effect runtime、已启用扩展）的逐层读回与恢复见
 贡献者就用同一份 checkout：见[就地开发闭环](../../../development/editable-dev-loop.md)。
 `scripts/install-local.sh` 与 `scripts/install-from-github.sh` 已在 op 036 中移除，本 fork 不再有
 canary wrapper 或发布快照通道；要发给别人就用本地构建的 wheel
-（[离线 wheel 安装](../../../guides/offline-wheel-install.md)）。上游那篇教程
-（`git clone huangruiteng/loopx && scripts/install-local.sh`）的原文也不再保留在仓库内。
+（[离线 wheel 安装](../../../guides/offline-wheel-install.md)）。`git clone <checkout> &&
+scripts/install-local.sh` 那条教程的原文也不再保留在仓库内。
 
 ## 未来打包
 
-本 fork 不做通道扩展：没有 PyPI、Homebrew、签名归档或 release manifest 计划
-（上游的后续通道设想用 `git show upstream/main:docs/product/runtimes/codex-cli/codex-cli-packaged-install.md` 对照）。
+本 fork 不做通道扩展：没有 PyPI、Homebrew、签名归档或 release manifest 计划。
 第一个产品胜点保持不变：用户粘贴一条消息就能获得可用的本地控制面。

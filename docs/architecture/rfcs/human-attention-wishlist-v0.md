@@ -5,7 +5,7 @@
 - 日期：2026-08-14
 - 范围：一个类型化、非阻塞的人类注意力子类型，以及有界的 agent 写入 sidecar；不新增 capability、任务存储、权限授予、调度器或 quota lane
 - 基线：LoopX `4e4c03621`
-- 跟踪 issue：[#3179](https://github.com/huangruiteng/loopx/issues/3179)
+- 跟踪 issue：#3179
 - 语言说明：[英文版](./human-attention-wishlist-v0.md)与本中文版互为语义镜像，差异视为缺陷。
 
 ---

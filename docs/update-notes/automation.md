@@ -18,7 +18,7 @@ LoopX heartbeat 推动活跃 goals 前进。它读取 quota、gates、todos、sc
 
 ## 推荐的形态
 
-使用一个专用的 release-note job 上传可审查的草稿 artifact。上游仓库曾随附第一版
+使用一个专用的 release-note job 上传可审查的草稿 artifact。本仓库早期曾随附第一版
 `.github/workflows/update-notes.yml`，由 `scripts/update_notes_release_job.py` 支撑；**本 fork 已移除
 整个 `.github/`（2026-09-07，`6a9bebc75`），该 workflow 不再随仓库提供，生成器脚本仍在**。
 未来生成器稳定后，`loopx update-notes` CLI 子命令可以包装同一个契约。

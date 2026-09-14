@@ -1,7 +1,5 @@
 # SWE-Marathon：codex × LoopX 评测
 
-> [打开双语可视化研究简报](https://huangruiteng.github.io/loopx/benchmarks/swe-marathon/)：以高信息密度方式呈现实验 setting、结果、轨迹机制、证据边界与下一轮实验建议。
-
 裸 `codex`、codex 原生 `goal`、以及两种 LoopX 接入模式在 SWE-Marathon v1.1（Harbor）15 个任务上的对照。
 模型 `GPT-5.6 Sol`，思考深度 `high`；agent 预算压至任务时限的 ~30%（`agent_timeout_multiplier=0.3`）；共 60 trial（15×4，每格 1）。
 目标是在长程领域产出可复算的一手对照，为"无人自动化默认姿势"提供评测证据。

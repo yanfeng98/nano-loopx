@@ -110,13 +110,13 @@ contract。只有未来可能使用的 provider、runner 或 projection，先留
 
 主要入口：
 
-- [`event_sourced_state_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/event-sourced-state-contract-v0.md)：
+- [`event_sourced_state_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/event-sourced-state-contract-v0.md)：
   append-only event、replay、idempotency 与 privacy partition；
-- [`active_state_structured_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/active-state-structured-projection-v0.md)：
+- [`active_state_structured_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/active-state-structured-projection-v0.md)：
   从 active-state workbench 生成 typed、read-only projection；
-- [`task_graph_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md)：
+- [`task_graph_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/task-graph-projection-v0.md)：
   以只读图表达 Todo、Gate、dependency、validation 与 handoff；
-- [`local_state_write_correctness_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/local-state-write-correctness-v0.md)：
+- [`local_state_write_correctness_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/local-state-write-correctness-v0.md)：
   revision、lock、idempotency key、conflict 与 durable write。
 
 适合从这组协议开始的任务包括：
@@ -138,11 +138,11 @@ UI 增加一份可编辑状态。
 
 主要入口：
 
-- [`decision_scope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)：
+- [`decision_scope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/decision-scope-v0.md)：
   Gate 的 kind、granularity、scope coverage 与 fail-closed 行为；
-- [`goal_vision_replan_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)：
+- [`goal_vision_replan_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)：
   per-Agent Vision、checkpoint、replan 与 bounded route；
-- [`peer_agent_runtime_v1`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md)：
+- [`peer_agent_runtime_v1`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/peer-agent-runtime-v1.md)：
   equal peer identity、claim、continuation 与协作边界。
 
 适合从这组协议开始的任务包括：
@@ -164,13 +164,13 @@ UI 增加一份可编辑状态。
 
 主要入口：
 
-- [`turn_envelope_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/turn-envelope-v0.md)：
+- [`turn_envelope_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/turn-envelope-v0.md)：
   在已完成的 quota decision 上提供 bounded next-action read model；
-- [`protocol_action_packet_decision_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/protocol-action-packet-decision-v0.md)：
+- [`protocol_action_packet_decision_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/protocol-action-packet-decision-v0.md)：
   action packet 的决策语义；
-- [Status Data Contract](https://github.com/huangruiteng/loopx/blob/main/docs/status-data-contract.md)：
+- [Status Data Contract](https://github.com/yanfeng98/nano-loopx/blob/main/docs/status-data-contract.md)：
   status、attention 与 operator-facing 数据边界；
-- [State Machines](https://github.com/huangruiteng/loopx/blob/main/docs/product/core-control-plane/state-machine.md)：
+- [State Machines](https://github.com/yanfeng98/nano-loopx/blob/main/docs/product/core-control-plane/state-machine.md)：
   Todo、Gate、Quota、Evidence 和 Scheduler 如何组合。
 
 这组协议的核心不是一个 `should_run` 布尔值，而是有优先级的最终合同：
@@ -194,15 +194,15 @@ channel 压成一个布尔值，会同时损坏交互和调度。
 
 主要入口：
 
-- [`loopx_turn_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/loopx-turn-v0.md)：
+- [`loopx_turn_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/loopx-turn-v0.md)：
   experimental 的 decide、execute、validate、writeback 与 spend transaction；
-- [`session_runtime_loopx_projection_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/session-runtime-loopx-projection-v0.md)：
+- [`session_runtime_loopx_projection_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/session-runtime-loopx-projection-v0.md)：
   外部 runtime 到 LoopX 的 read-only first-screen projection；
-- [`session_runtime_controlled_writeback_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/session-runtime-controlled-writeback-v0.md)：
+- [`session_runtime_controlled_writeback_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/session-runtime-controlled-writeback-v0.md)：
   session runtime metadata controlled writeback 的 draft 边界；
-- [`host_integration_surface_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/host-integration-surface-v0.md)：
+- [`host_integration_surface_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/host-integration-surface-v0.md)：
   Host lifecycle read、CLI-equivalent controlled write、能力声明和 fallback；
-- [`rollback_packet_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/rollback-packet-v0.md)：
+- [`rollback_packet_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/rollback-packet-v0.md)：
   补偿、回滚与证据链。
 
 这里要保持三个责任分离：
@@ -224,13 +224,13 @@ proof。
 
 主要入口：
 
-- [`model_behavior_qualification_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/model-behavior-qualification-v0.md)：
+- [`model_behavior_qualification_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/model-behavior-qualification-v0.md)：
   何时需要真实模型行为验证；
-- [Benchmark 研究 RFC](https://github.com/huangruiteng/loopx/blob/main/docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md)：
+- [Benchmark 研究 RFC](https://github.com/yanfeng98/nano-loopx/blob/main/docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md)：
   如何保证研究双臂可比并由独立 outcome evidence 支撑；
-- [Testing and Quality](https://github.com/huangruiteng/loopx/blob/main/docs/development/testing-and-quality.md)：
+- [Testing and Quality](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/testing-and-quality.md)：
   unit、contract、smoke、decision replay、canary 与 release gate；
-- [Public/Private Boundary](https://github.com/huangruiteng/loopx/blob/main/docs/public-private-boundary.md)：
+- [Public/Private Boundary](https://github.com/yanfeng98/nano-loopx/blob/main/docs/public-private-boundary.md)：
   哪些证据可以进入公开仓库。
 
 这不是最后才补的“测试部分”。协议卡中的 forbidden outcome 和 expected receipt 会直接决定验证形态。
@@ -323,7 +323,7 @@ contract。`loopx/extensions/` 也不是“所有外部集成”的收纳箱：�
 外部开发者不应从本地 maintainer state 猜工作。公开入口是：
 
 1. 阅读
-   [Contributor Task Board](https://github.com/huangruiteng/loopx/blob/main/docs/development/contributor-tasks.md)；
+   [Contributor Task Board](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md)；
 2. 选择 `Starter`、`Focused` 或已达成设计共识的任务；
 3. 阅读任务涉及的协议和 validation；
 4. 在关联 Issue 中声明准备处理的最小切片；
@@ -358,7 +358,7 @@ contract。`loopx/extensions/` 也不是“所有外部集成”的收纳箱：�
 <!-- community-casebook:question-before-fix -->
 
 **问题也可以是贡献。** 在
-[“怎么给任务设置停止点？”](https://github.com/huangruiteng/loopx/discussions/3069)
+“怎么给任务设置停止点？”
 中，用户报告的是“任务完成后仍空转”。在确认它属于产品缺陷前，社区先把问题拆成 Goal
 acceptance、terminal closure、quota budget 与 monitor cadence 四个可检查假设。好的 Q&A
 不是立刻猜一处代码，而是把模糊体验变成最小诊断路径。
@@ -366,7 +366,7 @@ acceptance、terminal closure、quota budget 与 monitor cadence 四个可检查
 <!-- community-casebook:user-idea-to-contract -->
 
 **方法论建议先映射已有合同。**
-[“look back and retain”](https://github.com/huangruiteng/loopx/issues/2353)
+“look back and retain”
 从用户长期使用经验出发，提出 Agent 应解释路线为什么改变、哪些旧工作仍有效。讨论没有直接创建
 第二套 memory 系统，而是先对照 evidence log、Vision acceptance 与 `goal_path_delta_v0`，再确认
 剩余语义缺口。这类 Issue 可以在不写代码的情况下改进产品方向。
@@ -374,13 +374,13 @@ acceptance、terminal closure、quota budget 与 monitor cadence 四个可检查
 <!-- community-casebook:claim-before-code -->
 
 **认领要先收窄 authority。**
-[Pi `task_lease_v0` 任务](https://github.com/huangruiteng/loopx/issues/3549)
+Pi `task_lease_v0` 任务
 把 existing capability owner、Host facade、in-scope、non-goals、目标 base branch 与验证命令写在
 实现之前。它没有把“Pi 需要 lease 操作”扩张成新的 scheduler、存储或自动 lease lifecycle。
 
 这些记录只是学习样本，不是当前任务状态的副本。准备参与时仍要重新打开 Issue，确认它尚未被
 关闭、改向或认领，并以
-[Contributor Task Board](https://github.com/huangruiteng/loopx/blob/main/docs/development/contributor-tasks.md)
+[Contributor Task Board](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md)
 为当前公开入口；`Maintainer-owned` 工作只能请求独立 helper slice，不能平行复刻。
 <!-- community-casebook:signal-to-bounded-work:end -->
 
@@ -391,14 +391,14 @@ acceptance、terminal closure、quota budget 与 monitor cadence 四个可检查
 <!-- community-casebook:rfc-review-lab:start -->
 <!-- community-casebook:rfc-status -->
 
-先从 [RFC Index](https://github.com/huangruiteng/loopx/blob/main/docs/architecture/rfcs/README.md)
+先从 [RFC Index](https://github.com/yanfeng98/nano-loopx/blob/main/docs/architecture/rfcs/README.md)
 读取正式状态。`Accepted`、`Active research`、`Draft` 与 `Draft integration proposal` 允许的动作
 不同；一份 RFC 或 Discussion 存在，不等于某个实现已经发布，也不自动生成可认领任务。
 
 <!-- community-casebook:rfc-community-proposal -->
 
 例如社区 Discussion
-[#3157](https://github.com/huangruiteng/loopx/discussions/3157)
+#3157
 提出 event-driven control plane 与统一 policy decision。评审时不要从“目录是否漂亮”开始，应先问：
 
 1. 当前 quota、scheduler、event store 与 worker 的 canonical authority / owner 分别是谁？
@@ -411,7 +411,7 @@ acceptance、terminal closure、quota budget 与 monitor cadence 四个可检查
 
 一份有用的 RFC review 应输出 `accept`、`revise`、`require_evidence` 或 `defer` 之类的明确
 disposition，并指出 owner、下一产物与复核条件。需要跨方向同步讨论时，可以进入
-[Open Strategy Review](https://github.com/huangruiteng/loopx/blob/main/docs/community/open-strategy-reviews.md)；
+[Open Strategy Review](https://github.com/yanfeng98/nano-loopx/blob/main/docs/community/open-strategy-reviews.md)；
 会议不会替代版本化 RFC、bounded Issue、PR review 或 maintainer authority。
 <!-- community-casebook:rfc-review-lab:end -->
 

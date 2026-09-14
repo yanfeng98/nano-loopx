@@ -96,7 +96,7 @@ def main() -> int:
                 "content-ops",
                 "issue-fix-metadata-preview",
                 "--url",
-                "https://github.com/huangruiteng/loopx/issues/123",
+                "https://github.com/yanfeng98/nano-loopx/issues/123",
                 "--metadata-json",
                 str(payload_path),
             ]
@@ -119,7 +119,7 @@ def main() -> int:
     metadata = payload["github_metadata_preview"]
     assert metadata["schema_version"] == GITHUB_ISSUE_METADATA_PREVIEW_SCHEMA_VERSION
     assert metadata["provider_mode"] == "mocked_metadata", metadata
-    assert metadata["repo"] == "huangruiteng/loopx", metadata
+    assert metadata["repo"] == "yanfeng98/nano-loopx", metadata
     assert metadata["issue_ref"] == "issues_123", metadata
     assert metadata["kind"] == "issue", metadata
     assert metadata["number"] == 123, metadata
@@ -192,7 +192,7 @@ def main() -> int:
                     "import sys",
                     "argv = sys.argv[1:]",
                     "assert argv[:2] == ['api', '-H'], argv",
-                    "assert 'repos/huangruiteng/loopx/issues/123' in argv, argv",
+                    "assert 'repos/yanfeng98/nano-loopx/issues/123' in argv, argv",
                     "assert '--jq' in argv, argv",
                     "json.dump({",
                     "  'number': 123,",
@@ -219,7 +219,7 @@ def main() -> int:
                     "content-ops",
                     "issue-fix-metadata-preview",
                     "--url",
-                    "https://github.com/huangruiteng/loopx/issues/123",
+                    "https://github.com/yanfeng98/nano-loopx/issues/123",
                     "--fetch-metadata",
                 ],
                 env=live_env,
@@ -248,7 +248,7 @@ def main() -> int:
             "content-ops",
             "issue-fix-metadata-preview",
             "--url",
-            "https://github.com/huangruiteng/loopx/issues/123",
+            "https://github.com/yanfeng98/nano-loopx/issues/123",
             "--metadata-json",
             "-",
             "--fetch-metadata",
@@ -273,7 +273,7 @@ def main() -> int:
             "content-ops",
             "issue-fix-metadata-preview",
             "--url",
-            "https://github.com/huangruiteng/loopx/issues/123?debug=1",
+            "https://github.com/yanfeng98/nano-loopx/issues/123?debug=1",
         ],
         check=False,
     )

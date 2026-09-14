@@ -123,40 +123,46 @@ def assert_community_casebook() -> None:
     assert semantic_checkpoints(protocol_map_zh) == expected_protocol_checkpoints
     assert semantic_checkpoints(validation_zh) == expected_validation_checkpoints
 
-    for zh_text, section_id, required_targets in (
+    # Case sections cite the artifacts they are built on. Every citation that
+    # pointed at a former upstream pull request or discussion is now prose: this
+    # fork has no such artifact, so the section names it in text only.
+    for zh_text, section_id, required_targets, required_refs in (
         (
             protocol_map_zh,
             "signal-to-bounded-work",
             (
-                "https://github.com/huangruiteng/loopx/discussions/3069",
-                "https://github.com/huangruiteng/loopx/issues/2353",
-                "https://github.com/huangruiteng/loopx/issues/3549",
-                "https://github.com/huangruiteng/loopx/blob/main/docs/development/contributor-tasks.md",
+                "https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md",
             ),
+            (),
         ),
         (
             protocol_map_zh,
             "rfc-review-lab",
             (
-                "https://github.com/huangruiteng/loopx/blob/main/docs/architecture/rfcs/README.md",
-                "https://github.com/huangruiteng/loopx/discussions/3157",
-                "https://github.com/huangruiteng/loopx/blob/main/docs/community/open-strategy-reviews.md",
+                "https://github.com/yanfeng98/nano-loopx/blob/main/docs/architecture/rfcs/README.md",
+                "https://github.com/yanfeng98/nano-loopx/blob/main/docs/community/open-strategy-reviews.md",
             ),
+            ("#3157",),
         ),
         (
             validation_zh,
             "small-pr",
-            ("https://github.com/huangruiteng/loopx/pull/3540",),
+            (),
+            ("PR #3540",),
         ),
         (
             validation_zh,
             "review-repair",
-            ("https://github.com/huangruiteng/loopx/pull/3529",),
+            (),
+            ("PR #3529",),
         ),
     ):
-        zh_targets = markdown_link_targets(marked_section(zh_text, section_id))
+        section = marked_section(zh_text, section_id)
+        zh_targets = markdown_link_targets(section)
         for target in required_targets:
             assert zh_targets.count(target) == 1, target
+        for ref in required_refs:
+            assert ref in compact(section), ref
 
 
 def validate_rendered_site(site_dir: Path) -> None:

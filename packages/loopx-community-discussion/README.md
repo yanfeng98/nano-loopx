@@ -35,8 +35,8 @@ loopx extension run loopx-community-discussion --input-json examples/request.jso
 
 ```bash
 loopx-community-discussion --doctor
-loopx-community-discussion scan --owner huangruiteng --repo loopx --days 14 --format json
-loopx-community-discussion scan --owner huangruiteng --repo loopx --days 14 --format md
+loopx-community-discussion scan --owner yanfeng98 --repo nano-loopx --days 14 --format json
+loopx-community-discussion scan --owner yanfeng98 --repo nano-loopx --days 14 --format md
 ```
 
 `schemas/fact.schema.json`、`schemas/scan.schema.json` 以及请求/响应 schema 是带版本号的 wire 契约。provider 在返回结果前会对照 `community_discussion_scan_v0` 验证自己的输出。

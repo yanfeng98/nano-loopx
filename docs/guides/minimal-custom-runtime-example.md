@@ -3,7 +3,7 @@
 
 LoopX 对 agent loop 保持中立，但大多数宿主**不需要**实现 typed runtime
 adapter。本页对应
-[issue #2835](https://github.com/huangruiteng/loopx/issues/2835)
+issue #2835
 要求的最短接入契约。
 
 有两种接入深度。除非你需要程序化的 commit/replay/recovery，否则从路径 A 开始。
@@ -79,4 +79,4 @@ python3 examples/loopx-turn-fake-host-walkthrough-smoke.py
 - [Custom agent runner integration](custom-agent-runner-integration.md)
 - [Runtime connector catalog](../integrations/runtime-connector-catalog.md)
 - [Host integration surface v0](../reference/protocols/host-integration-surface-v0.md)
-- [LoopX Turn fake-host walkthrough smoke](https://github.com/huangruiteng/loopx/blob/main/examples/loopx-turn-fake-host-walkthrough-smoke.py)
+- [LoopX Turn fake-host walkthrough smoke](../../examples/loopx-turn-fake-host-walkthrough-smoke.py)

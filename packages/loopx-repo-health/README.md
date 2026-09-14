@@ -56,8 +56,8 @@ loopx extension run loopx-repo-health --input-json examples/request.json --execu
 
 ```bash
 loopx-repo-health --doctor
-loopx-repo-health snapshot --owner huangruiteng --repo loopx --format json
-loopx-repo-health snapshot --owner huangruiteng --repo loopx --format md
+loopx-repo-health snapshot --owner yanfeng98 --repo nano-loopx --format json
+loopx-repo-health snapshot --owner yanfeng98 --repo nano-loopx --format md
 ```
 
 `schemas/request.schema.json` 与 `schemas/response.schema.json` 是带版本号的 wire 契约。provider 在返回结果前会对照 `repo_health_snapshot_v0` 验证自己的输出。

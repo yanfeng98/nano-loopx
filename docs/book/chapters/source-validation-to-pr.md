@@ -44,7 +44,7 @@ independent invariant
 
 ## 六层质量证据
 
-[Testing and Quality](https://github.com/huangruiteng/loopx/blob/main/docs/development/testing-and-quality.md)
+[Testing and Quality](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/testing-and-quality.md)
 定义了 LoopX 当前的质量分层。本书按外部贡献者的任务重新组织如下。
 
 ### 1. Unit 与 Contract
@@ -434,7 +434,7 @@ What remains owner-held?
 ## 关联 Issue 与公开任务
 
 非 trivial 工作优先关联
-[Contributor Task Board](https://github.com/huangruiteng/loopx/blob/main/docs/development/contributor-tasks.md)
+[Contributor Task Board](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md)
 或 GitHub Issue：
 
 - 在开始大改前声明准备处理的 slice；
@@ -482,7 +482,7 @@ Issue 是公开协作边界，不是把本地 Goal state 整体粘贴上去的�
 
 ### 案例一：把一个 CLI 不一致修成完整小 PR
 
-[PR #3540](https://github.com/huangruiteng/loopx/pull/3540)
+PR #3540
 来自一次真实 first-run/deep-use 观察：`loopx --format json doctor` 可以工作，但更符合用户直觉的
 `loopx doctor --format json` 会在 argparse 阶段失败。贡献者没有新建第二套 renderer，而是复用
 现有 subcommand format contract。
@@ -516,7 +516,7 @@ Issue 是公开协作边界，不是把本地 Goal state 整体粘贴上去的�
 
 ### 案例二：用反例评审高风险状态写入
 
-[PR #3529](https://github.com/huangruiteng/loopx/pull/3529)
+PR #3529
 把 shared-goal coordination 的 aggregate head、file provider 和 `claim_work` executor 做成一个
 provider-neutral Stage 2 切片。第一版已有大量正向测试，但 reviewer 仍构造了更强的非法状态：
 partial write 被误报为 `applied`、损坏 receipt 导致未分类异常、超大 TTL 越过 typed boundary、

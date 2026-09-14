@@ -421,7 +421,7 @@ GitHub 报告 MERGED
 ```
 
 Merged PR 不会直接执行任意 callback，rollout event 也不会授予新的 write authority。
-[LoopX PR #1883](https://github.com/huangruiteng/loopx/pull/1883) 是该 contract 的实现与
+LoopX PR #1883 是该 contract 的实现与
 回归证据。
 
 ### 8. Terminal closeout 与可重复性
@@ -654,15 +654,15 @@ validation query 也找回了 focused test surface；但 causal query 较弱，�
 对 patch 的 authority 为 0，陈旧或未验证结果不进入紧凑 repository context。在更多独立
 issue 证明更强价值之前，rolling-main retrieval 继续保持可选与 fail-open。
 
-Pilot 也推动了通用 LoopX 修复：[PR
-#1784](https://github.com/huangruiteng/loopx/pull/1784) 建立早期控制面基础，[PR
-#1883](https://github.com/huangruiteng/loopx/pull/1883) 让 merged PR evidence 恢复依赖 todo，
-[PR #1887](https://github.com/huangruiteng/loopx/pull/1887) 则把 reusable repository
-knowledge 与 audit-only delivery outcome 分开。后续 [PR
-#1991](https://github.com/huangruiteng/loopx/pull/1991) 提供 provider-neutral
-semantic-preference hook，[PR #1995](https://github.com/huangruiteng/loopx/pull/1995)
-把 Explore Graph 变成独立自动开关，[PR
-#2000](https://github.com/huangruiteng/loopx/pull/2000) 则补齐通用 host-managed Lark
+Pilot 也推动了通用 LoopX 修复：PR
+#1784 建立早期控制面基础，PR
+#1883 让 merged PR evidence 恢复依赖 todo，
+PR #1887 则把 reusable repository
+knowledge 与 audit-only delivery outcome 分开。后续 PR
+#1991 提供 provider-neutral
+semantic-preference hook，PR #1995
+把 Explore Graph 变成独立自动开关，PR
+#2000 则补齐通用 host-managed Lark
 event collector lifecycle。权威依据是已合并 revision 与 focused smoke，而不是 pilot 叙事。
 
 ## Roadmap

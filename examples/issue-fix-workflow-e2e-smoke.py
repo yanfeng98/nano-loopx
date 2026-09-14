@@ -83,7 +83,7 @@ def test_metadata_to_ordered_todos_and_gates() -> None:
     }
 
     metadata = build_content_ops_issue_fix_metadata_preview_packet(
-        url="https://github.com/huangruiteng/loopx/issues/123",
+        url="https://github.com/yanfeng98/nano-loopx/issues/123",
         provider_payload=provider_payload,
     )
     assert metadata["ok"] is True, metadata
@@ -115,7 +115,7 @@ def test_metadata_to_ordered_todos_and_gates() -> None:
     assert "private log read" in private_gate["blocks"], private_gate
 
     plan = build_issue_fix_workflow_plan_packet(
-        url="https://github.com/huangruiteng/loopx/issues/123",
+        url="https://github.com/yanfeng98/nano-loopx/issues/123",
         provider_payload=provider_payload,
         validation_label="python3 examples/focused-smoke.py",
     )
@@ -153,7 +153,7 @@ def test_metadata_to_ordered_todos_and_gates() -> None:
     assert "no_followup" in post_pr["decisions"], post_pr
 
     decision = build_issue_fix_feasibility_packet(
-        url="https://github.com/huangruiteng/loopx/issues/123",
+        url="https://github.com/yanfeng98/nano-loopx/issues/123",
         reproduction_status="planned",
         reproduction_label="focused repro plan",
         scope_class="bounded",
@@ -177,7 +177,7 @@ def test_metadata_to_ordered_todos_and_gates() -> None:
 
 def test_validation_and_review_packet_readiness() -> None:
     acceptance = build_issue_fix_acceptance_fixture_packet(
-        url="https://github.com/huangruiteng/loopx/issues/123"
+        url="https://github.com/yanfeng98/nano-loopx/issues/123"
     )
     assert acceptance["ok"] is True, acceptance
     artifact = acceptance["validated_fix_artifact"]
@@ -191,7 +191,7 @@ def test_validation_and_review_packet_readiness() -> None:
     assert artifact["review_packet"]["merge_performed"] is False, artifact
 
     branch = build_issue_fix_repo_branch_fixture_packet(
-        url="https://github.com/huangruiteng/loopx/issues/123"
+        url="https://github.com/yanfeng98/nano-loopx/issues/123"
     )
     assert branch["ok"] is True, branch
     branch_artifact = branch["validated_fix_artifact"]

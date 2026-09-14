@@ -1,7 +1,7 @@
 # RFC：共享 Goal 对齐与受治理 Amendment 协议（v0）
 
 - 状态：草案；维护者评审中
-- 跟踪 Issue：[#3836](https://github.com/huangruiteng/loopx/issues/3836)
+- 跟踪 Issue：#3836
 - 日期：2026-09-02
 - 最后更新：2026-09-05
 - 范围：多个对等 Agent 围绕同一个共享 Goal 协作，同时保留 canonical
@@ -80,7 +80,7 @@ LoopX 已经能较好地协调执行：
 - action-scoped cross-owner Todo lifecycle grant；
 - provider-neutral coordination CAS 与 receipt 基础。
 
-[#3693](https://github.com/huangruiteng/loopx/pull/3693) 是这一层的正向、
+#3693 是这一层的正向、
 边界明确的修复：它避免共享 `Next Action` prose 遮蔽精确 settlement-bound 或当前
 Agent 的 Todo。它没有定义共享 Goal 对齐，也没有定义共享语义 amendment authority。
 

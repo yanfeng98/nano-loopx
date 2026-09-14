@@ -40,7 +40,7 @@ from todo_lifecycle_fixtures import (  # noqa: E402
 )
 
 
-SUCCESSOR_REPOSITORY = "git:github.com/huangruiteng/loopx"
+SUCCESSOR_REPOSITORY = "git:github.com/yanfeng98/nano-loopx"
 SUCCESSOR_CAPABILITIES = ["network", "external_evidence_poll"]
 
 

@@ -10,8 +10,8 @@ Covers:
                      authoring is projected as a typed Todo delta instead of an
                      unconditional ``write_ordered_todos`` step.
 
-See: https://github.com/huangruiteng/loopx/issues/3092
-Fix: https://github.com/huangruiteng/loopx/pull/3093
+See: https://github.com/yanfeng98/nano-loopx/issues/3092
+Fix: https://github.com/yanfeng98/nano-loopx/pull/3093
 """
 
 from __future__ import annotations

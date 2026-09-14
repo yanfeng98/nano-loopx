@@ -71,7 +71,7 @@ def test_pr_list_keeps_nested_details_in_bounded_per_pr_reads(monkeypatch) -> No
 
     monkeypatch.setattr(pr_review_module, "_run_gh_json", fake)
     scan = pr_review_module.scan_github_pull_requests(
-        repo="huangruiteng/loopx",
+        repo="yanfeng98/nano-loopx",
         limit=10,
         state_filter="open",
     )
@@ -109,7 +109,7 @@ def test_pr_list_failed_check_lookup_leaves_rollup_absent(monkeypatch) -> None:
 
     monkeypatch.setattr(pr_review_module, "_run_gh_json", fake)
     scan = pr_review_module.scan_github_pull_requests(
-        repo="huangruiteng/loopx",
+        repo="yanfeng98/nano-loopx",
         limit=10,
         state_filter="open",
     )

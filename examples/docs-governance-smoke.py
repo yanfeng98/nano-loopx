@@ -387,7 +387,12 @@ def assert_contributor_task_links_are_current() -> None:
         "docs/book/chapters/source-protocol-map.md",
         "docs/book/chapters/source-validation-to-pr.md",
     ):
-        assert "docs/development/contributor-tasks.md" in read(path), path
+        # The book links out to this repository's own blob path: a relative link
+        # would escape the Developer Book's docs_dir and break its MkDocs build.
+        assert (
+            "https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md"
+            in read(path)
+        ), path
 
 
 def assert_technical_direction_governance_is_current() -> None:

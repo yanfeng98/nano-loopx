@@ -987,7 +987,7 @@ Turn 后记账协议：
 ```
 
 公共 fixture 是
-[`examples/quota-slot-spend-event.example.json`](https://github.com/huangruiteng/loopx/blob/main/examples/quota-slot-spend-event.example.json)。
+[`examples/quota-slot-spend-event.example.json`](../examples/quota-slot-spend-event.example.json)。
 
 验证规则：
 

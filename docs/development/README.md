@@ -6,7 +6,7 @@
 
 ## 从这里开始
 
-1. 先阅读[贡献指南](https://github.com/huangruiteng/loopx/blob/main/CONTRIBUTING.md)，了解仓库边界和 PR 检查项。
+1. 先阅读[贡献指南](../../CONTRIBUTING.md)，了解仓库边界和 PR 检查项。
 2. 阅读[当前技术方向](../project/technical-directions.md)，选择活跃计划、了解
    成熟度并找到对应 tracker。
 3. 按顺序阅读[开发者手册](/loopx/docs/book/)，从控制面基础到项目接入和开发者贡献。
@@ -41,7 +41,7 @@
 | Quota 与 spend 语义 | [Quota allocation](../quota-allocation.md) |
 | 模型行为影子验证 | [Model behavior qualification v0](../reference/protocols/model-behavior-qualification-v0.md) |
 | 发布晋级 | [Release readiness](../product/release-readiness.md) |
-| Benchmark 研究 | [Benchmark workspace](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md) · [Research RFC](../architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md) |
+| Benchmark 研究 | [Benchmark workspace](../../benchmark/README.md) · [Research RFC](../architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.md) |
 
 ## 变更闭环
 

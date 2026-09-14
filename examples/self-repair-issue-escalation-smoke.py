@@ -13,7 +13,7 @@ REFERENCE = (
     / "skills"
     / "loopx-self-repair"
     / "references"
-    / "upstream-issue-escalation.md"
+    / "issue-escalation.md"
 )
 
 
@@ -29,8 +29,8 @@ def main() -> int:
     require(
         skill,
         [
-            "## 上游 Issue 升级",
-            "references/upstream-issue-escalation.md",
+            "## 公开 Issue 升级",
+            "references/issue-escalation.md",
             "绝不授予发布许可",
             "搜索已打开与已关闭的 issue",
             "每个修复轮次最多创建一个 issue",
@@ -49,6 +49,7 @@ def main() -> int:
             "--state all",
             "gh auth status",
             "gh issue create",
+            "--repo yanfeng98/nano-loopx",
             "每个修复轮次最多创建一个 issue",
             "upstream_issue_deduplicated",
             "upstream_issue_opened",
@@ -63,7 +64,11 @@ def main() -> int:
         "duplicate search and auth must precede issue creation"
     )
 
-    print("self-repair-upstream-issue-escalation-smoke ok")
+    # The escalation route must target this repository, never a former upstream.
+    assert "huangruiteng" not in reference, reference
+    assert "huangruiteng" not in skill, skill
+
+    print("self-repair-issue-escalation-smoke ok")
     return 0
 
 

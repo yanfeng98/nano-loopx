@@ -59,7 +59,7 @@ def _reconcile(registry: Path, state: Path, *, agent_id: str | None) -> dict:
         todo_id="todo_merge_gate_2298",
         agent_id=agent_id,
         project=state.parent,
-        url="https://github.com/huangruiteng/loopx/pull/2298",
+        url="https://github.com/yanfeng98/nano-loopx/pull/2298",
         provider_payload={
             "state": "MERGED",
             "mergedAt": "2026-07-18T00:00:00Z",

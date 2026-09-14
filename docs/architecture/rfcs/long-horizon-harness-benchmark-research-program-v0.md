@@ -662,7 +662,7 @@ characterize native subset run 与官方 result reduction 后才新增 Pier/Harb
 5. 报告 code change、verifier、cost、token 与 step，不把 task solution 留在 reusable state。
 6. 任一 arm 成为 claim-eligible 前，完成 authority-parity 与 anti-cheating audit；
 7. 采用 controller-owned Todo completion validation 与 accountable settlement，复用
-   [PR #3229](https://github.com/huangruiteng/loopx/pull/3229) 已证明的通用 invariant。
+   PR #3229 已证明的通用 invariant。
 
 DeepSWE 也是第 7.1 节 benchmark capability 的第一孵化环境。pilot 应一次提炼一个 cohesive、
 经过测试的 seam；不能整体保留 legacy benchmark 目录，也不能在真实 call site 提出需求前
@@ -1003,8 +1003,8 @@ promotion 或修改 LoopX default。
 - [WideSearch 仓库](https://github.com/ByteDance-Seed/WideSearch)
 - [WideSearch 论文](https://arxiv.org/abs/2508.07999)
 - [WideSearch 数据集](https://huggingface.co/datasets/ByteDance-Seed/WideSearch)
-- [Benchmark 研究工作区](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)
-- [DeepSWE 研究实践](https://github.com/huangruiteng/loopx/blob/main/benchmark/deepswe/README.md)
+- [Benchmark 研究工作区](../../../benchmark/README.md)
+- [DeepSWE 研究实践](../../../benchmark/deepswe/README.md)
 - [长程 Agent 分层步幅控制 v0](./hierarchical-agent-stride-control-v0.md)
 - [研究型探索控制面 v0](./research-exploration-control-plane-v0.md)
 - [Human Attention Wishlist v0](./human-attention-wishlist-v0.md)

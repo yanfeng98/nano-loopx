@@ -20,8 +20,7 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 | 构建或评审 LoopX | [开发者指南](development/README.md) | [测试与质量](development/testing-and-quality.md) |
 | 检查真实结果 | [展示案例](showcases/README.md) | [研究与证据](research/README.md) |
 
-[公共主页](https://huangruiteng.github.io/loopx/)是最短的产品概览。
-[项目 README](../README.md) 保留源码链接的快速上手与能力地图，
+[项目 README](../README.md) 是最短的产品概览，保留源码链接的快速上手与能力地图，
 而[公共用户手册](https://my.feishu.cn/wiki/CaL5wMk9ui17ngkWzeUcMlAYnZg)提供
 更长的上手路径。
 

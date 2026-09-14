@@ -75,7 +75,7 @@ def state_text() -> str:
         f"- [-] {DEFERRED_TODO}\n"
         "  <!-- loopx:todo todo_id=todo_deferred_surface status=deferred task_class=advancement_task claimed_by=codex-product-capability resume_when=todo_done:todo_done_cli -->\n"
         f"- [-] {PR_DEFERRED_TODO}\n"
-        "  <!-- loopx:todo todo_id=todo_pr_deferred status=deferred task_class=advancement_task claimed_by=codex-side-bypass task_repository=git:github.com/huangruiteng/loopx resume_when=pr_merged:#532 -->\n"
+        "  <!-- loopx:todo todo_id=todo_pr_deferred status=deferred task_class=advancement_task claimed_by=codex-side-bypass task_repository=git:github.com/yanfeng98/nano-loopx resume_when=pr_merged:#532 -->\n"
         f"- [ ] {SECOND_OPEN_TODO}\n"
         "  <!-- loopx:todo todo_id=todo_handoff_review status=open task_class=advancement_task action_kind=review_pr continuation_policy=independent_handoff claimed_by=codex-reviewer excluded_agents=codex-builder evidence=smoke_handoff_note -->\n\n"
         "## Completed Work Archive\n\n"
@@ -191,11 +191,11 @@ def assert_parseable_agent_todos(agent_todos: dict, *, hot_path: bool = False) -
     assert pr_deferred["resume_ready"] is True, pr_deferred
     assert pr_deferred["resume_condition"]["kind"] == "pr_merged", pr_deferred
     assert pr_deferred["resume_condition"]["pr_number"] == 532, pr_deferred
-    assert pr_deferred["resume_condition"]["pr_repo"] == "huangruiteng/loopx", pr_deferred
+    assert pr_deferred["resume_condition"]["pr_repo"] == "yanfeng98/nano-loopx", pr_deferred
     assert pr_deferred["resume_condition"]["repository_binding_source"] == (
         "task_repository"
     ), pr_deferred
-    assert pr_deferred["resume_condition"]["matched_pr_ref"] == "huangruiteng/loopx#532", pr_deferred
+    assert pr_deferred["resume_condition"]["matched_pr_ref"] == "yanfeng98/nano-loopx#532", pr_deferred
     resume_candidate_ids = {item["todo_id"] for item in agent_todos["deferred_resume_candidates"]}
     assert {"todo_deferred_surface", "todo_pr_deferred"} <= resume_candidate_ids, agent_todos
     if "items" in agent_todos:
@@ -213,7 +213,7 @@ def pr_merged_event() -> dict:
     return build_rollout_event(
         goal_id=GOAL_ID,
         event_kind="pr_merge",
-        pr_ref="huangruiteng/loopx#532",
+        pr_ref="yanfeng98/nano-loopx#532",
         status="ready",
         summary="PR #532 merged and can resume dependent deferred todos.",
     )
@@ -234,11 +234,11 @@ def assert_pr_resume_repository_binding() -> None:
         "## Agent Todo\n\n"
         "- [-] Bind an unqualified PR to the task repository.\n"
         "  <!-- loopx:todo todo_id=todo_bound status=deferred "
-        "task_class=advancement_task task_repository=git:github.com/huangruiteng/loopx "
+        "task_class=advancement_task task_repository=git:github.com/yanfeng98/nano-loopx "
         "resume_when=pr_merged:#532 -->\n"
         "- [-] Honor an explicitly qualified cross-repository dependency.\n"
         "  <!-- loopx:todo todo_id=todo_qualified status=deferred "
-        "task_class=advancement_task task_repository=git:github.com/huangruiteng/loopx "
+        "task_class=advancement_task task_repository=git:github.com/yanfeng98/nano-loopx "
         "resume_when=pr_merged:example/another-repo#532 -->\n"
         "- [-] Fail closed when an unqualified dependency has no repository binding.\n"
         "  <!-- loopx:todo todo_id=todo_ambiguous status=deferred "
@@ -251,7 +251,7 @@ def assert_pr_resume_repository_binding() -> None:
 
     bound = items["todo_bound"]
     assert bound["resume_ready"] is True, bound
-    assert bound["resume_condition"]["matched_pr_ref"] == "huangruiteng/loopx#532", bound
+    assert bound["resume_condition"]["matched_pr_ref"] == "yanfeng98/nano-loopx#532", bound
     assert bound["resume_condition"]["repository_binding_source"] == "task_repository", bound
 
     qualified = items["todo_qualified"]
@@ -269,7 +269,7 @@ def assert_pr_resume_repository_binding() -> None:
     ), ambiguous
     assert ambiguous["resume_condition"]["candidate_pr_refs"] == [
         "example/another-repo#532",
-        "huangruiteng/loopx#532",
+        "yanfeng98/nano-loopx#532",
     ], ambiguous
 
 
@@ -313,7 +313,7 @@ def main() -> int:
         listed_pr_deferred = todo_list_payload["todo"]
         assert listed_pr_deferred["resume_ready"] is True, todo_list_payload
         assert listed_pr_deferred["resume_condition"]["matched_pr_ref"] == (
-            "huangruiteng/loopx#532"
+            "yanfeng98/nano-loopx#532"
         ), todo_list_payload
         indexed_handoff = next(
             row

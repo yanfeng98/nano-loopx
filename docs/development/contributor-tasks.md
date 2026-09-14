@@ -38,10 +38,10 @@ canonical 的[技术方向地图](../project/technical-directions.md)说明结�
 
 | 方向 | 当前阶段 | 贡献者入口 | 边界 |
 | --- | --- | --- | --- |
-| 长程 Benchmark 与证据 | Active research | [#3243](https://github.com/huangruiteng/loopx/issues/3243) | 工作在公开安全 fixture、treatment integrity、reducer 与文档上；live case 与评分保持 maintainer 专属。 |
-| Operator Surface 与 IM 集成 | 在 `frontend-control-plane-im-prototype-rfc` 上孵化 | [#3244](https://github.com/huangruiteng/loopx/issues/3244) | 说明目标基础分支；UI 仍是投影，晋级 `main` 是分批进行的。 |
-| 共享 Goal 权威与跨 Host 协调 | Stage 2 切块已交付（aggregate head、file provider、`claim_work` executor）；NoKV 仍是未晋级候选 | [#3245](https://github.com/huangruiteng/loopx/issues/3245) | 切块保持 provider-neutral 与 file-backed；不产生第二个 scheduler 或写权威。 |
-| 架构与研究孵化器 | 按 RFC 混合推进 | [#3246](https://github.com/huangruiteng/loopx/issues/3246) | 阅读每个探索方向的阶段；仅一份 RFC 不代表实现可认领。 |
+| 长程 Benchmark 与证据 | Active research | #3243 | 工作在公开安全 fixture、treatment integrity、reducer 与文档上；live case 与评分保持 maintainer 专属。 |
+| Operator Surface 与 IM 集成 | 在 `frontend-control-plane-im-prototype-rfc` 上孵化 | #3244 | 说明目标基础分支；UI 仍是投影，晋级 `main` 是分批进行的。 |
+| 共享 Goal 权威与跨 Host 协调 | Stage 2 切块已交付（aggregate head、file provider、`claim_work` executor）；NoKV 仍是未晋级候选 | #3245 | 切块保持 provider-neutral 与 file-backed；不产生第二个 scheduler 或写权威。 |
+| 架构与研究孵化器 | 按 RFC 混合推进 | #3246 | 阅读每个探索方向的阶段；仅一份 RFC 不代表实现可认领。 |
 
 核心控制面可靠性仍是共享的已交付底座。Effect Program hardening、已验证 transition、
 恢复、可观测性、可维护性与贡献者体验，通过下方聚焦行与现有 `control-plane` 标签持续

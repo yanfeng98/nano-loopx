@@ -48,21 +48,21 @@ SSH 运行面的演进；CPA PR 承载进入在线 data plane 的通用修复。
 
 | Repository | PR | 状态 | 沉淀内容 |
 | --- | --- | --- | --- |
-| LoopX | [#3011](https://github.com/huangruiteng/loopx/pull/3011) | merged | 建立 Codex App 多 provider switching runbook |
-| LoopX | [#3132](https://github.com/huangruiteng/loopx/pull/3132) | merged | 补齐 context window 与 compaction parity |
-| LoopX | [#3265](https://github.com/huangruiteng/loopx/pull/3265) | merged | 将文档归位到 capability / guide ownership 结构 |
-| LoopX | [#3462](https://github.com/huangruiteng/loopx/pull/3462) | merged | 多 App 隔离、工具生态与演进方向 |
-| LoopX | [#3563](https://github.com/huangruiteng/loopx/pull/3563) | merged | 明确 CPA、AgentSwap、CC Switch 的在线/离线边界 |
-| LoopX | [#3573](https://github.com/huangruiteng/loopx/pull/3573) | merged | 记录 provider routing qualification |
-| LoopX | [#3575](https://github.com/huangruiteng/loopx/pull/3575) | merged | 提供 SSH reverse egress supervisor、恢复语义和 offline smoke |
-| LoopX | [#3576](https://github.com/huangruiteng/loopx/pull/3576) | merged | 记录 CPA upstream qualification |
-| LoopX | [#3585](https://github.com/huangruiteng/loopx/pull/3585) | merged | 固化 pinned CPA self-use routing 与回滚边界 |
-| LoopX | [#3665](https://github.com/huangruiteng/loopx/pull/3665) | merged | 沉淀 CPA + Codex App 分层重试与延迟门禁 |
-| LoopX | [#3711](https://github.com/huangruiteng/loopx/pull/3711) | merged | 将 runbook、脚本迁移清单、无密配置和资格 contract 升级为独立 extension |
-| LoopX | [#3737](https://github.com/huangruiteng/loopx/pull/3737) | merged | 增加 Luna，并把 A/B 选择收敛为同一账号环的首选入口 |
-| LoopX | [#3804](https://github.com/huangruiteng/loopx/pull/3804) | merged | 将宿主身份、路由选择、额度与真实 attempt chain 投影为无密运行状态 |
-| LoopX | [#3805](https://github.com/huangruiteng/loopx/pull/3805) | merged | 生成显式 Fast sibling rows，固化 `fast/` request normalization、默认 tier 与 A/B-only fallback |
-| LoopX | [#3828](https://github.com/huangruiteng/loopx/pull/3828) | merged | 把多 PR 整合候选、exact-head 漂移检测与可回滚部署顺序纳入 extension |
+| LoopX | #3011 | merged | 建立 Codex App 多 provider switching runbook |
+| LoopX | #3132 | merged | 补齐 context window 与 compaction parity |
+| LoopX | #3265 | merged | 将文档归位到 capability / guide ownership 结构 |
+| LoopX | #3462 | merged | 多 App 隔离、工具生态与演进方向 |
+| LoopX | #3563 | merged | 明确 CPA、AgentSwap、CC Switch 的在线/离线边界 |
+| LoopX | #3573 | merged | 记录 provider routing qualification |
+| LoopX | #3575 | merged | 提供 SSH reverse egress supervisor、恢复语义和 offline smoke |
+| LoopX | #3576 | merged | 记录 CPA upstream qualification |
+| LoopX | #3585 | merged | 固化 pinned CPA self-use routing 与回滚边界 |
+| LoopX | #3665 | merged | 沉淀 CPA + Codex App 分层重试与延迟门禁 |
+| LoopX | #3711 | merged | 将 runbook、脚本迁移清单、无密配置和资格 contract 升级为独立 extension |
+| LoopX | #3737 | merged | 增加 Luna，并把 A/B 选择收敛为同一账号环的首选入口 |
+| LoopX | #3804 | merged | 将宿主身份、路由选择、额度与真实 attempt chain 投影为无密运行状态 |
+| LoopX | #3805 | merged | 生成显式 Fast sibling rows，固化 `fast/` request normalization、默认 tier 与 A/B-only fallback |
+| LoopX | #3828 | merged | 把多 PR 整合候选、exact-head 漂移检测与可回滚部署顺序纳入 extension |
 | CLIProxyAPI | [#5211](https://github.com/router-for-me/CLIProxyAPI/pull/5211) | merged | 被动观测 per-auth quota header 与最近请求计数；management 原始身份字段仍须由 operator adapter 脱敏 |
 | CLIProxyAPI | [#5410](https://github.com/router-for-me/CLIProxyAPI/pull/5410) | open / review required | provider-bound Responses history、`additional_tools` 与 Ark SSE normalizer；替代被自动关闭且无法 reopen 的 #5220 |
 | CLIProxyAPI | [#5261](https://github.com/router-for-me/CLIProxyAPI/pull/5261) | open / review required | ChatGPT uTLS HTTP/2 连接池、TLS session resumption 与异常重建 |
@@ -88,7 +88,7 @@ SSH 运行面的演进；CPA PR 承载进入在线 data plane 的通用修复。
 ### 持久整合候选
 
 四个公开 PR 与两个 operator-owned public-safe compatibility patches 通过
-[`codex/integrated-dev`](https://github.com/huangruiteng/CLIProxyAPI/tree/codex/integrated-dev)
+[`codex/integrated-dev`](https://github.com/yanfeng98/CLIProxyAPI/tree/codex/integrated-dev)
 按依赖顺序组合：history/SSE → uTLS transport → modality admission/normalizer → route fallback
 → delimiterless SSE / orphan host-output repair → bounded rate-limit waits。当前锁定 base 为
 `origin/dev@18e01a7`，候选 head 为 `b005af16b8049bfbcc70b5a592c557ec9387b47d`。这只是可回滚的 self-use candidate，不是
@@ -298,7 +298,7 @@ recent activity。reset 本身仍是 operator-owned effect，成功后交给 `qu
 ```sh
 git clone https://github.com/router-for-me/CLIProxyAPI.git
 cd CLIProxyAPI
-git remote add self-use https://github.com/huangruiteng/CLIProxyAPI.git
+git remote add self-use https://github.com/yanfeng98/CLIProxyAPI.git
 git fetch self-use codex/integrated-dev
 git checkout --detach b005af16b8049bfbcc70b5a592c557ec9387b47d
 go build -o ./bin/cliproxyapi ./cmd/server

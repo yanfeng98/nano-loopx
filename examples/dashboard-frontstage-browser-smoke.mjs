@@ -729,7 +729,7 @@ async function main() {
       const spotlightCaseHref = await desktopPage
         .locator('[data-testid="frontstage-showcase-spotlight-case-page"]')
         .getAttribute("href");
-      if (!spotlightCaseHref?.includes("huangruiteng.github.io/loopx/docs/showcases/")) {
+      if (!spotlightCaseHref?.includes("yanfeng98.github.io/loopx/docs/showcases/")) {
         throw new Error(`Showcase spotlight case link points outside public showcases: ${spotlightCaseHref}`);
       }
       await desktopPage.locator('[data-testid="frontstage-showcase-search"]').fill("self-iteration");

@@ -49,10 +49,10 @@ mutation 或 metamorphic case，使关键规则一旦被反转就会失败。例
    选择；
 6. 重跑聚焦条目以及 fleet/catalog 检查，证明清单没有覆盖缺口。
 
-仓库中的 smoke-fleet health 工作 [#2259](https://github.com/huangruiteng/loopx/pull/2259)
-确立了“只生成审阅候选”的规则；scheduler 清理 [#2265](https://github.com/huangruiteng/loopx/pull/2265)
+仓库中的 smoke-fleet health 工作 #2259
+确立了“只生成审阅候选”的规则；scheduler 清理 #2265
 移除了嵌套执行，同时保留独立 qualification profile；todo 清理
-[#2115](https://github.com/huangruiteng/loopx/pull/2115) 展示了互补做法：共享 harness
+#2115 展示了互补做法：共享 harness
 基础设施，但保留每个 smoke 的合同。
 
 不要仅因 integrated smoke 很慢就删除它。应先测量成本来自哪些阶段，并证明较小测试

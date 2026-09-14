@@ -16,10 +16,10 @@ type Language = "en" | "zh";
 type Arm = (typeof benchmarkData.arms)[number];
 
 const armOrder = ["plain", "goal", "codex-cli", "heartbeat"] as const;
-const publicAnalysisUrl =
-  "https://github.com/huangruiteng/loopx/pull/3887#issuecomment-5535839229";
 const repositoryStudyUrl =
   "https://github.com/yanfeng98/nano-loopx/tree/main/benchmark/swe-marathon";
+const caseInsightsUrl =
+  "https://github.com/yanfeng98/nano-loopx/blob/main/benchmark/swe-marathon/case_insights.json";
 const researchContributors = [
   { handle: "BouwenZhou", href: "https://bouwenzhou.github.io/" },
   { handle: "piaji-68", href: "https://github.com/piaji-68" },
@@ -274,7 +274,7 @@ export function SweMarathonBrief() {
           </div>
           <blockquote>
             <p>“{c.quote}”</p>
-            <cite><a href={publicAnalysisUrl} target="_blank" rel="noreferrer">{c.quoteBy} <ExternalLink size={12} /></a></cite>
+            <cite><a href={caseInsightsUrl} target="_blank" rel="noreferrer">{c.quoteBy} <ExternalLink size={12} /></a></cite>
           </blockquote>
         </section>
 

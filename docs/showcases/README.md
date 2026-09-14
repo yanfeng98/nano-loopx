@@ -45,8 +45,7 @@ LoopX 让一个 agent 在四天窗口内持续做有用工作,并保留了一个
 
 [阅读案例并检查全部七个 PR](cases/independent-public-engine-refactor.md)。
 
-打开[托管的案例展示索引](https://huangruiteng.github.io/loopx/docs/showcases/index.html),
-查看双语可视化案例界面。
+双语可视化案例界面由[展示案例目录](showcase-catalog.json)驱动,在本仓库内构建。
 [反馈覆盖地图](user-feedback-coverage.md)记录了每一个输入簇,包括被刻意未提升为成功案例的有用信号。
 
 ## 案例包含什么
@@ -87,9 +86,9 @@ npm run export:frontstage-share
 ```
 
 这会写入 `/tmp/loopx-frontstage-share-bundle`,包含静态
-[公共首页](https://huangruiteng.github.io/loopx/)、编译后的仪表盘、一个
+公共首页、编译后的仪表盘、一个
 脱敏的 `goal_channel_projection_v0` 状态 fixture、直接的 `/frontstage/`
-静态路由支持,以及一个 manifest。GitHub Pages 发布的是这个生成工件,而不是实时 registry 文件或本地状态导出。交互式仪表盘路由仍然是导出者兼容界面,而不是被推广的公共入口。新用户应从首页开始;公共案例、
+静态路由支持,以及一个 manifest。分发的是这个生成工件,而不是实时 registry 文件或本地状态导出。交互式仪表盘路由仍然是导出者兼容界面,而不是被推广的公共入口。新用户应从首页开始;公共案例、
 效率证据与公共边界来自本目录,而实时本地 `statusUrl` 数据流只属于明确的运维模式检查。
 动画案例展示资产从
 [公共 storyboard 工件](showcase-animation-storyboard.json)开始。保持

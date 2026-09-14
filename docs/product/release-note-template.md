@@ -92,8 +92,8 @@ loopx doctor
 迁移决策。>
 
 <!--
-仅当 tag 范围内存在 @huangruiteng 之外符合条件的贡献者时包含本节。
-把创始人主导权留在这节社区专属部分之外;相关时它已在 Release Decision 中命名。
+仅当 tag 范围内存在 @yanfeng98 之外符合条件的贡献者时包含本节。
+把维护者主导权留在这节社区专属部分之外;相关时它已在 Release Decision 中命名。
 -->
 
 ## 社区贡献者
@@ -119,7 +119,7 @@ loopx doctor
 
 **权限边界:** <不授予的写入、合并、provider、隐私或 host 权力。>
 
-**文档:** https://github.com/huangruiteng/loopx/blob/vX.Y.Z/<canonical-doc>
+**文档:** https://github.com/yanfeng98/nano-loopx/blob/vX.Y.Z/<canonical-doc>
 
 ```bash
 <启用命令>
@@ -211,4 +211,4 @@ loopx doctor
 - Tag target: `<full-commit-sha>`.
 - 通过的精确提交检查,包括失败或跳过,不夸大受托管、真实模型、基准或长程 evidence。
 
-对比:https://github.com/huangruiteng/loopx/compare/vPREVIOUS...vX.Y.Z
+对比:https://github.com/yanfeng98/nano-loopx/compare/vPREVIOUS...vX.Y.Z

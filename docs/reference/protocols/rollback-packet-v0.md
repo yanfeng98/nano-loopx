@@ -31,7 +31,7 @@ LoopX 中的回滚比 `git revert` 更广。长程任务可能需要补偿仓库
   "scope": {
     "repository_refs": {
       "commit_refs": ["abcdef1"],
-      "pr_refs": ["huangruiteng/loopx#617"]
+      "pr_refs": ["yanfeng98/nano-loopx#617"]
     },
     "todo_ids": ["todo_public_boundary_repair"],
     "external_resource_refs": ["github_support_request"],

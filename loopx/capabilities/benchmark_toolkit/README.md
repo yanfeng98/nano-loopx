@@ -1102,4 +1102,4 @@ loopx benchmark candidate-source-boundary <paths...> --require-clean --format js
 runner、上传、提交、发布或生产 authority。
 
 活跃的 benchmark 研究项目与当前 public-safe 实践位于
-[`benchmark/`](https://github.com/huangruiteng/loopx/blob/main/benchmark/README.md)。
+[`benchmark/`](../../../benchmark/README.md)。

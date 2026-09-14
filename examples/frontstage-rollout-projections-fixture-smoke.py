@@ -116,7 +116,7 @@ def main() -> int:
     assert sum(1 for node in pr_batch_nodes if node["state"] == "closed") == 1, pr_batch_nodes
     for node in nodes:
         assert node["confidence"] in ALLOWED_CONFIDENCE, node
-        assert node["url"].startswith("https://github.com/huangruiteng/loopx/pull/"), node
+        assert node["url"].startswith("https://github.com/yanfeng98/nano-loopx/pull/"), node
     for node in pr_batch_nodes:
         assert node["started_at"].startswith("2026-06-27T"), node
         assert node["completed_at"].startswith("2026-06-27T"), node

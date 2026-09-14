@@ -18,11 +18,12 @@ NOISE_TERMS = (
 )
 
 STRONG_TERMS = (
-    "huangruiteng",
+    "yanfeng98",
+    "nano-loopx",
     "loop engineering",
     "agent control plane",
     "local-first agent",
-    "github.com/huangruiteng/loopx",
+    "github.com/yanfeng98/nano-loopx",
     "loopx project",
     "loopx repo",
 )

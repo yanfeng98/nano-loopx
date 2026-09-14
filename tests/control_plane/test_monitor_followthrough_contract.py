@@ -98,7 +98,7 @@ def _create_independent_delivery_worktree(
             "remote",
             "add",
             "origin",
-            "https://github.com/huangruiteng/loopx.git",
+            "https://github.com/yanfeng98/nano-loopx.git",
         ],
         cwd=project,
         check=True,
@@ -329,13 +329,13 @@ def test_material_poll_reloads_status_and_projects_declared_successor(
         "--next-action-kind",
         "validate_release_head",
         "--next-task-repository",
-        "git:github.com/huangruiteng/loopx",
+        "git:github.com/yanfeng98/nano-loopx",
         "--next-required-capability",
         "network",
         "--next-continuation-policy",
         "same_agent_non_delivery",
         "--next-target-key",
-        "release-head:huangruiteng/loopx#42@merged-42",
+        "release-head:yanfeng98/nano-loopx#42@merged-42",
         "--next-claimed-by",
         AGENT_ID,
         "--execute",
@@ -346,10 +346,10 @@ def test_material_poll_reloads_status_and_projects_declared_successor(
     successor = result["todo_writeback"]["next_todos"][0]
     assert successor["status"] == "open"
     assert successor["action_kind"] == "validate_release_head"
-    assert successor["task_repository"] == "git:github.com/huangruiteng/loopx"
+    assert successor["task_repository"] == "git:github.com/yanfeng98/nano-loopx"
     assert successor["continuation_policy"] == "same_agent_non_delivery"
     assert successor["required_capabilities"] == ["network"]
-    assert successor["target_key"] == "release-head:huangruiteng/loopx#42@merged-42"
+    assert successor["target_key"] == "release-head:yanfeng98/nano-loopx#42@merged-42"
     assert result["successor_todo_ids"] == [successor["todo_id"]]
     assert result["after"]["selected_todo"]["todo_id"] == successor["todo_id"]
     authoring = result["authoring_contract"]
@@ -631,7 +631,7 @@ def test_same_turn_should_run_settles_polled_monitor_before_successor_reselectio
         "--next-action-kind",
         "validate_release_head",
         "--next-task-repository",
-        "git:github.com/huangruiteng/loopx",
+        "git:github.com/yanfeng98/nano-loopx",
         "--next-required-capability",
         "network",
         "--next-continuation-policy",

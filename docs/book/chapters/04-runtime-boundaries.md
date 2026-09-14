@@ -201,7 +201,7 @@ detect mismatch
 
 ## Vision Checkpoint 与 Acceptance Gap
 
-[`goal_vision_replan_contract_v0`](https://github.com/huangruiteng/loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)
+[`goal_vision_replan_contract_v0`](https://github.com/yanfeng98/nano-loopx/blob/main/docs/reference/protocols/goal-vision-replan-contract-v0.md)
 要求需要 Vision 的 Agent 在 material refresh 时说明：
 
 - Vision 被 patch；

@@ -2426,12 +2426,12 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     await taskRow.click();
     taskManagement = page.locator("details.personal-task-management");
     await taskManagement.locator("summary").click();
-    await page.getByLabel("Todo 暂缓恢复条件").fill("pr_merged:huangruiteng/loopx#3399");
+    await page.getByLabel("Todo 暂缓恢复条件").fill("pr_merged:yanfeng98/nano-loopx#3399");
     await page.screenshot({ path: resolve(outputDir, "todo-defer-resume-condition.png"), fullPage: false, animations: "disabled" });
     await taskManagement.locator(".personal-inline-resume-when").getByRole("button", { name: "检查暂缓" }).click();
     await page.getByText("确认执行").waitFor({ state: "visible" });
     const explicitDefer = api.actionPreviews.findLast((preview) => preview.action_kind === "todo.update" && preview.normalized_parameters.operation === "defer");
-    if (explicitDefer?.normalized_parameters.resume_when !== "pr_merged:huangruiteng/loopx#3399") throw new Error(`Todo defer did not preserve its supported resume condition: ${JSON.stringify(explicitDefer)}`);
+    if (explicitDefer?.normalized_parameters.resume_when !== "pr_merged:yanfeng98/nano-loopx#3399") throw new Error(`Todo defer did not preserve its supported resume condition: ${JSON.stringify(explicitDefer)}`);
     if (JSON.stringify(api.actionPreviews).includes("owner_resume")) throw new Error("Personal Workspace emitted the unsupported owner_resume sentinel");
     await page.getByRole("button", { name: "关闭", exact: true }).click();
     for (const [label, actionKind, operation, managementAction] of [
