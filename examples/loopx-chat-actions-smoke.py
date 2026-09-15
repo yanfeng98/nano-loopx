@@ -399,41 +399,35 @@ def assert_http_action_api(root: Path) -> None:
         assert new_state.read_text(encoding="utf-8").count("Verify the new Goal projection") == 1
         assert len(runtime_controller.opened_sessions) == 2
 
-        code, heartbeat_goal_preview = request_json(
+        code, goal_preview = request_json(
             f"{base_url}/api/actions/preview",
             method="POST",
             body={
                 "action_kind": "goal.create",
-                "summary": "Create a Goal with a heartbeat child Gate",
+                "summary": "Create a Goal that needs host activation",
                 "normalized_parameters": {
                     "goal_id": "scheduled-goal",
                     "title": "Scheduled Goal",
                     "objective": "Create the Goal before requesting host scheduling.",
                     "agent_id": "codex",
                     "workspace_ref": "current",
-                    "heartbeat": {
-                        "enabled": True,
-                        "cadence": "daily",
-                        "timezone": "Asia/Shanghai",
-                    },
                     "stop_condition": "goal_complete",
                     "initial_todos": ["Verify scheduled Goal readiness"],
                 },
                 "context": {"kind": "goal", "goal_id": "goal-one"},
-                "idempotency_key": "http-goal-with-heartbeat",
+                "idempotency_key": "http-goal-create",
             },
         )
-        assert code == 201, heartbeat_goal_preview
-        code, heartbeat_goal_applied = request_json(
-            f"{base_url}/api/actions/{heartbeat_goal_preview['proposal']['proposal_id']}/apply",
+        assert code == 201, goal_preview
+        code, goal_applied = request_json(
+            f"{base_url}/api/actions/{goal_preview['proposal']['proposal_id']}/apply",
             method="POST",
             body={},
         )
-        assert code in {200, 202}, heartbeat_goal_applied
-        assert heartbeat_goal_applied["proposal"]["status"] == "applied", heartbeat_goal_applied
-        assert heartbeat_goal_applied["proposal"]["receipt"]["child_gate"]["kind"] == "host_activation_required"
-        steps = heartbeat_goal_applied["proposal"]["receipt"]["step_receipts"]
-        assert "goal_bootstrapped" in steps and "heartbeat_gate_ready" in steps, steps
+        assert code in {200, 202}, goal_applied
+        assert goal_applied["proposal"]["status"] == "applied", goal_applied
+        steps = goal_applied["proposal"]["receipt"]["step_receipts"]
+        assert "goal_bootstrapped" in steps, steps
         assert any(goal["id"] == "scheduled-goal" for goal in json.loads(registry_path.read_text())["goals"])
 
         code, unavailable_agent = request_json(

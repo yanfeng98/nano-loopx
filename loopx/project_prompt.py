@@ -986,7 +986,7 @@ def render_prompt_text(
 ```
 
    只把输出的 handoff 交给目标项目 agent；完整 review packet 留给 operator view / evidence drill-down。
-7. 如果要给这个项目设置 recurring host heartbeat，先生成 task body，再把输出复制进 automation：
+7. 如果要给这个项目设置 recurring 宿主 heartbeat，先生成 task body，再把输出复制进 automation：
 
 ```bash
 {cli_bin} heartbeat-prompt --goal-id {goal_id} --active-state .codex/goals/{goal_id}/ACTIVE_GOAL_STATE.md

@@ -16,15 +16,15 @@ def main() -> None:
     wrapper_smoke = WRAPPER_SMOKE.read_text(encoding="utf-8")
 
     required = [
-        "Keep `protocol_action_packet_v0` as the hot-path protocol simplification",
+        "保留 `protocol_action_packet_v0` 作为 `quota should-run` 的热路径协议简化契约",
         "`llm=no_api`",
-        "Use the Codex CLI wrapper only as an explicit cold-path sidecar experiment.",
-        "Defer direct LLM API wiring",
-        "should not call Codex CLI",
-        "default smoke path fake/no-model",
-        "must not persist raw stderr",
-        "Terminal-Bench/Harbor execution",
-        "environment readiness lane",
+        "只把 Codex CLI 包装器作为显式的冷路径 sidecar 实验",
+        "将直接 LLM API 接入推迟",
+        "它们不应调用 Codex CLI",
+        "默认 smoke 路径保持假/无模型",
+        "它不得持久化原始 stderr",
+        "Terminal-Bench/Harbor 执行环境",
+        "环境就绪 lane",
     ]
     for needle in required:
         assert needle in text, needle
@@ -32,8 +32,8 @@ def main() -> None:
     assert "--real-codex-cli" in wrapper_smoke
     assert "real_codex_cli_probe" in wrapper_smoke
     assert "fake_codex_cli_contract" in wrapper_smoke
-    assert text.index("## Decision") < text.index("## Evidence") < text.index("## Operating Rule")
-    assert text.index("## Operating Rule") < text.index("## Next Work")
+    assert text.index("## 决策") < text.index("## 证据") < text.index("## 运行规则")
+    assert text.index("## 运行规则") < text.index("## 后续工作")
     print("protocol-action-packet-decision-smoke ok")
 
 

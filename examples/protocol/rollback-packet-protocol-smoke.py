@@ -90,9 +90,9 @@ def main() -> int:
 
     for needle in [
         "rollback_packet_v0",
-        "Commit And Todo Linkage",
+        "提交与 Todo 关联",
         "history_rewrite",
-        "explicit user or maintainer approval",
+        "显式用户或 maintainer 批准",
         "support_request",
         "todo_compensation",
         "python3 examples/protocol/rollback-packet-protocol-smoke.py",

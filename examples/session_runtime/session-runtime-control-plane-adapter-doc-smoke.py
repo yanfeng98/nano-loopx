@@ -28,14 +28,14 @@ def main() -> int:
     require(
         doc,
         [
-            "The host session log is the raw fact source.",
-            "LoopX run history is a\ncompact control projection.",
-            "Phase 1: Read-Only Projection",
-            "Phase 2: Controlled Writeback",
+            "宿主会话日志是原始事实来源。",
+            "LoopX 运行历史是紧凑控制投影。",
+            "阶段 1:只读投影",
+            "阶段 2:受控写回",
             "build_session_runtime_readonly_projection",
             "python3 examples/session_runtime/session-runtime-readonly-projection-smoke.py",
-            "quota decision as a scheduler hint, not billing",
-            "These metrics are goal-control metrics, not model-quality scores.",
+            "作为 scheduler 提示的配额决策,而不是计费",
+            "这些指标是 goal 控制指标,不是模型质量分数。",
         ],
         source=DOC,
     )
@@ -46,14 +46,14 @@ def main() -> int:
     )
     require(
         integrations_index,
-        ["Session runtime control-plane adapter"],
+        ["Session runtime 控制面适配器"],
         source=INTEGRATIONS_INDEX,
     )
     require(
         architecture,
         [
-            "session-runtime platforms",
-            "goal-level control projection",
+            "会话运行时平台",
+            "目标级控制投影",
             "session-runtime-control-plane-adapter.md",
         ],
         source=ARCHITECTURE,
@@ -62,8 +62,8 @@ def main() -> int:
         contributor_tasks,
         [
             "GH-C35",
-            "provider-neutral external-host adapter",
-            "raw transcripts, credentials, billing, permissions",
+            "provider-neutral 外部 host adapter",
+            "原始转写、凭据、计费、权限",
         ],
         source=CONTRIBUTOR_TASKS,
     )

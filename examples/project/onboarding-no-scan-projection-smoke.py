@@ -73,7 +73,6 @@ def main() -> int:
             "read_only_project_map_v0",
             "--adapter-status",
             "connected-read-only",
-            "no",
             "--no-onboarding-scan",
             "--no-global-sync",
         )
@@ -137,7 +136,6 @@ def main() -> int:
             "read_only_project_map_v0",
             "--adapter-status",
             "connected-read-only",
-            "no",
             "--no-onboarding-scan",
             "--onboarding-connection-validation",
             "provider-prevalidated",
@@ -196,7 +194,6 @@ def main() -> int:
             "domain_fixture_v0",
             "--adapter-status",
             "connected-read-only",
-            "no",
             "--no-onboarding-scan",
             "--no-global-sync",
         )

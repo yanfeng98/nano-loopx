@@ -246,7 +246,7 @@ def outcome_packet(
             ),
             "verification_references": [
                 "pyproject.toml",
-                "LICENSE",
+                "README.md",
             ],
         },
     }

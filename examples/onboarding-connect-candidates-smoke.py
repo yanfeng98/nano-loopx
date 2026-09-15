@@ -119,9 +119,7 @@ def assert_default_onboarding(project: Path, runtime: Path) -> None:
     assert "validation_plan" in candidate_kinds, candidates
     assert payload["onboarding_acceptance_required"] is True, payload
     assert payload["autonomous_advance_choice_required"] is True, payload
-    assert payload["heartbeat_opt_in_required"] is True, payload
     assert payload["host_loop_activation_required"] is True, payload
-    assert "heartbeat=yes" in payload["heartbeat_opt_in_instruction"], payload
     assert payload["onboarding_todos_written"] is True, payload
     assert len(payload["accept_candidate_commands"]) == len(candidates), payload
 
@@ -174,7 +172,6 @@ def assert_preauthorized_onboarding(project: Path, runtime: Path) -> None:
         "README.md",
         "--accept-onboarding-agent-todos",
         "--begin-autonomous-advance",
-        "yes",
         "--no-global-sync",
     )
     assert payload["ok"] is True, payload
@@ -198,8 +195,13 @@ def assert_preauthorized_onboarding(project: Path, runtime: Path) -> None:
     assert_todos_share_state_timestamp(text, agent_items)
 
 
-def assert_autonomy_preauth_still_requires_heartbeat_choice(project: Path, runtime: Path) -> None:
-    goal_id = "onboarding-smoke-autonomy-with-heartbeat-gate"
+def assert_autonomy_preauth_allows_normal_run(project: Path, runtime: Path) -> None:
+    """Pre-authorized onboarding plus autonomous advance reaches a normal run.
+
+    The separate heartbeat opt-in was removed with the Codex App heartbeat host
+    seam, so pre-authorization no longer leaves a user gate behind.
+    """
+    goal_id = "onboarding-smoke-autonomy-preauth"
     payload = run_cli(
         "--runtime-root",
         str(runtime),
@@ -209,7 +211,7 @@ def assert_autonomy_preauth_still_requires_heartbeat_choice(project: Path, runti
         "--goal-id",
         goal_id,
         "--objective",
-        "Exercise autonomous preauthorization without heartbeat preauthorization.",
+        "Exercise autonomous preauthorization reaching a normal run.",
         "--goal-doc",
         "README.md",
         "--accept-onboarding-agent-todos",
@@ -217,19 +219,16 @@ def assert_autonomy_preauth_still_requires_heartbeat_choice(project: Path, runti
         "--no-global-sync",
     )
     assert payload["ok"] is True, payload
-    assert payload["codex_cli_heartbeat"] == "ask", payload
     assert payload["onboarding_acceptance_required"] is False, payload
     assert payload["autonomous_advance_choice_required"] is False, payload
-    assert payload["heartbeat_opt_in_required"] is True, payload
     assert payload["host_loop_activation_required"] is True, payload
-    assert "heartbeat=yes" in payload["heartbeat_opt_in_instruction"], payload
 
     registry_path = project / ".loopx" / "registry.json"
     quota_payload = run_cli("--registry", str(registry_path), "quota", "should-run", "--goal-id", goal_id)
-    assert quota_payload["effective_action"] == "operator_gate_notify", quota_payload
-    assert quota_payload["normal_delivery_allowed"] is False, quota_payload
-    assert quota_payload["requires_user_action"] is True, quota_payload
-    assert quota_payload["interaction_contract"]["user_channel"]["notify"] == "NOTIFY", quota_payload
+    assert quota_payload["effective_action"] == "normal_run", quota_payload
+    assert quota_payload["normal_delivery_allowed"] is True, quota_payload
+    assert quota_payload["requires_user_action"] is False, quota_payload
+    assert quota_payload["interaction_contract"]["user_channel"]["notify"] == "DONT_NOTIFY", quota_payload
 
     text = state_text(project, goal_id)
     assert "Candidate agent todos: `accepted and written into Agent Todo`" in text, text
@@ -238,9 +237,13 @@ def assert_autonomy_preauth_still_requires_heartbeat_choice(project: Path, runti
     todos = parse_active_state_todos(text)
     user_items = todos.get("user_todos", {}).get("items", [])
     agent_items = todos["agent_todos"]["items"]
-    assert len(user_items) == 1, user_items
-    assert action_kinds(user_items) == {"onboarding_decision"}, user_items
-    assert "onboarding_todo_review" in action_kinds(agent_items), agent_items
+    # Pre-authorization leaves no user gate behind, so no onboarding_decision todo
+    # is written; the accepted onboarding candidates become the agent todos that
+    # carry the work forward.
+    assert user_items == [], user_items
+    assert {"repo_status_review", "commit_summary", "validation_plan"} <= action_kinds(
+        agent_items
+    ), agent_items
     assert_todos_share_state_timestamp(text, user_items + agent_items)
 
 
@@ -251,7 +254,7 @@ def main() -> int:
         project = make_project(root, "fixture-project")
         assert_default_onboarding(project, runtime)
         assert_preauthorized_onboarding(project, runtime)
-        assert_autonomy_preauth_still_requires_heartbeat_choice(project, runtime)
+        assert_autonomy_preauth_allows_normal_run(project, runtime)
 
     print("onboarding-connect-candidates-smoke ok")
     return 0

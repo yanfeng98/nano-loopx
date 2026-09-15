@@ -119,10 +119,10 @@ def assert_doc_contract() -> None:
     text = DOC.read_text(encoding="utf-8")
     for marker in (
         "registry-boundary",
-        "project-local private registry",
-        "shared global-local registry",
-        "public-safe projection",
-        "do not push runtime registry files to GitHub",
+        "项目本地私有注册表",
+        "共享全局-本地注册表",
+        "public-safe 投影",
+        "不要把运行时注册表文件 push 到 GitHub",
     ):
         assert marker in text, marker
 

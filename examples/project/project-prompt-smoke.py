@@ -80,8 +80,7 @@ SPEND_MUST_HAVE = (
     "不要重复执行。",
 )
 HEARTBEAT_PROMPT_MUST_HAVE = (
-    "如果要给这个项目设置 recurring host heartbeat",
-    "默认每 3 分钟一次",
+    "如果要给这个项目设置 recurring 宿主 heartbeat",
     "loopx heartbeat-prompt",
     "--active-state .codex/goals/",
     "再把输出复制进 automation",

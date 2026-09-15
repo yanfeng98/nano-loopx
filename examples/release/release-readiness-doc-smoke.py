@@ -30,40 +30,26 @@ FORBIDDEN_PUBLIC_STRINGS = [
     "ACTIVE_GOAL_STATE.md:",
 ]
 
-ENGLISH_USAGE_HEADING = "## Optional Capability Activation & Use"
-CHINESE_USAGE_HEADING = "### 可选能力启用与使用"
-ENGLISH_DECISION_HEADING = "## Release Decision"
-CHINESE_DECISION_HEADING = "### 升级决策"
-ENGLISH_DECISION_FIELDS = (
-    "**Who should upgrade:**",
-    "**What this release solves:**",
-    "**Breaking changes:**",
-    "**How to verify:**",
-    "**Contributors:**",
+# Release notes are single-language (Chinese). The upstream bilingual contract was
+# retired with the template rewrite: the primary sections and the former 中文摘要
+# mirror were duplicates of each other once both were Chinese.
+DECISION_HEADING = "## 发布决策"
+DECISION_FIELDS = (
+    "**谁需要升级:**",
+    "**本版本解决了什么:**",
+    "**破坏性变更:**",
+    "**如何验证:**",
+    "**贡献者:**",
 )
-CHINESE_DECISION_FIELDS = (
-    "**谁需要升级：**",
-    "**解决了什么：**",
-    "**是否有破坏性变更：**",
-    "**如何验证：**",
-    "**贡献者：**",
+USAGE_HEADING = "## 可选能力启用与使用"
+USAGE_FIELDS = (
+    "**启用:**",
+    "**验证:**",
+    "**停用 / 回退:**",
+    "**权限边界:**",
+    "**文档:**",
 )
-ENGLISH_NO_CHANGES = "No new optional capability activation is introduced in this release."
-CHINESE_NO_CHANGES = "本版本未新增可选能力启用入口。"
-ENGLISH_USAGE_FIELDS = (
-    "**Activation:**",
-    "**Validation:**",
-    "**Disable / rollback:**",
-    "**Authority boundary:**",
-    "**Docs:**",
-)
-CHINESE_USAGE_FIELDS = (
-    "**启用：**",
-    "**验证：**",
-    "**停用 / 回退：**",
-    "**权限边界：**",
-    "**文档：**",
-)
+NO_CHANGES = "本版本未引入新的可选能力启用入口。"
 
 
 def read(path: Path) -> str:
@@ -147,40 +133,24 @@ def decision_field_value(decision: str, field: str, language: str) -> str:
 
 
 def validate_release_decision(body: str) -> None:
-    english = section(body, ENGLISH_DECISION_HEADING)
-    english_values = {
-        field: decision_field_value(english, field, "English")
-        for field in ENGLISH_DECISION_FIELDS
+    decision = section(body, DECISION_HEADING)
+    values = {
+        field: decision_field_value(decision, field, "release decision")
+        for field in DECISION_FIELDS
     }
-    breaking = english_values["**Breaking changes:**"].casefold()
-    if not re.match(r"^(no|yes)\b", breaking):
-        raise AssertionError("English breaking decision must start with 'No.' or 'Yes.'")
-    contributors = english_values["**Contributors:**"].casefold()
-    if "@" not in contributors and "no community contribution" not in contributors:
-        raise AssertionError(
-            "English contributors decision must name a handle or explicitly state "
-            "that there was no community contribution"
-        )
-    if "```bash" not in english:
-        raise AssertionError("English release decision has no runnable verification block")
-
-    chinese_summary = section(body, "## 中文摘要")
-    chinese = section(chinese_summary, CHINESE_DECISION_HEADING)
-    chinese_values = {
-        field: decision_field_value(chinese, field, "Chinese")
-        for field in CHINESE_DECISION_FIELDS
-    }
-    breaking_zh = chinese_values["**是否有破坏性变更：**"]
-    if not breaking_zh.startswith(("无", "有", "否", "是")):
-        raise AssertionError("Chinese breaking decision must start with 无/有/否/是")
-    contributors_zh = chinese_values["**贡献者：**"]
-    if "@" not in contributors_zh and not any(
-        phrase in contributors_zh for phrase in ("无社区贡献", "没有社区贡献")
+    breaking = values["**破坏性变更:**"]
+    if not breaking.startswith(("无", "有", "否", "是")):
+        raise AssertionError("breaking decision must start with 无/有/否/是")
+    contributors = values["**贡献者:**"]
+    if "@" not in contributors and not any(
+        phrase in contributors for phrase in ("无社区贡献", "没有社区贡献")
     ):
         raise AssertionError(
-            "Chinese contributors decision must name a handle or explicitly state "
+            "contributors decision must name a handle or explicitly state "
             "that there was no community contribution"
         )
+    if "```bash" not in decision:
+        raise AssertionError("release decision has no runnable verification block")
 
 
 def validate_release_notes(
@@ -195,17 +165,14 @@ def validate_release_notes(
         raise AssertionError("release notes contain an unbalanced fenced code block")
 
     validate_release_decision(body)
-    english = section(body, ENGLISH_USAGE_HEADING)
-    chinese_summary = section(body, "## 中文摘要")
-    chinese = section(chinese_summary, CHINESE_USAGE_HEADING)
+    usage = section(body, USAGE_HEADING)
 
     if expect_no_optional_capability_changes:
         if surfaces:
             raise AssertionError(
                 "--expect-no-optional-capability-changes cannot be combined with --surface"
             )
-        assert_contains(english, ENGLISH_NO_CHANGES, "English no-change declaration")
-        assert_contains(chinese, CHINESE_NO_CHANGES, "Chinese no-change declaration")
+        assert_contains(usage, NO_CHANGES, "no-change declaration")
         return
 
     if not surfaces:
@@ -219,76 +186,46 @@ def validate_release_notes(
 
     for surface in surfaces:
         validate_surface_entry(
-            usage_section=english,
+            usage_section=usage,
             heading=f"### {surface}",
-            required_fields=ENGLISH_USAGE_FIELDS,
-            language="English",
-        )
-        validate_surface_entry(
-            usage_section=chinese,
-            heading=f"#### {surface}",
-            required_fields=CHINESE_USAGE_FIELDS,
-            language="Chinese",
+            required_fields=USAGE_FIELDS,
+            language="release notes",
         )
 
 
 def validate_release_notes_gate_self_test() -> None:
-    def fixture(english_usage: str, chinese_usage: str) -> str:
+    def fixture(usage: str) -> str:
         return f"""# Example
 
-{ENGLISH_DECISION_HEADING}
-**Who should upgrade:** Operators affected by the scheduler fix should upgrade now.
-**What this release solves:** It prevents a due monitor from missing its next wake.
-**Breaking changes:** No. Existing persisted state remains compatible.
-**How to verify:** Run the following identity and behavior checks after updating.
-**Contributors:** Maintainer @example prepared this release; no community contribution was included.
+{DECISION_HEADING}
+**谁需要升级:** 受 scheduler 修复影响的 operator 应立即升级。
+**本版本解决了什么:** 本版本避免到期 monitor 错过下一次唤醒。
+**破坏性变更:** 无。已有持久状态保持兼容。
+**如何验证:** 升级后运行下方 identity 与 behavior 检查。
+**贡献者:** 由 maintainer @example 准备，本版本无社区贡献。
 ```bash
 loopx --version
 loopx doctor
 ```
 
-{ENGLISH_USAGE_HEADING}
+{USAGE_HEADING}
 
-{english_usage}
-
-## Validation
-
-## 中文摘要
-
-{CHINESE_DECISION_HEADING}
-**谁需要升级：**受 scheduler 修复影响的 operator 应立即升级。
-**解决了什么：**本版本避免到期 monitor 错过下一次唤醒。
-**是否有破坏性变更：**无。已有持久状态保持兼容。
-**如何验证：**升级后运行上方 identity 与 behavior 检查。
-**贡献者：**由 maintainer @example 准备，本版本无社区贡献。
-
-{CHINESE_USAGE_HEADING}
-
-{chinese_usage}
+{usage}
 
 ### 验证
 """
     valid = fixture(
         """### Example Surface
-**Activation:** Enable the example.
-**Validation:** Read it back.
-**Disable / rollback:** Disable the example.
-**Authority boundary:** No authority is granted.
-**Docs:** https://example.com/docs.
+**启用:** 启用示例。
+**验证:** 读回示例。
+**停用 / 回退:** 停用示例。
+**权限边界:** 不授予额外权限。
+**文档:** https://example.com/docs。
 ```bash
 loopx example --check
-```""",
-        """#### Example Surface
-**启用：**启用示例。
-**验证：**读回示例。
-**停用 / 回退：**停用示例。
-**权限边界：**不授予额外权限。
-**文档：**https://example.com/docs。
-```bash
-loopx example --check
-```""",
+```"""
     )
-    no_changes = fixture(ENGLISH_NO_CHANGES, CHINESE_NO_CHANGES)
+    no_changes = fixture(NO_CHANGES)
 
     def assert_rejected(path: Path, body: str, message: str) -> None:
         path.write_text(body, encoding="utf-8")
@@ -320,14 +257,14 @@ loopx example --check
         )
         assert_rejected(
             tmp_path / "missing-rollback.md",
-            valid.replace("**Disable / rollback:**", "", 1),
+            valid.replace("**停用 / 回退:**", "", 1),
             "release-note gate accepted a missing rollback field",
         )
         assert_rejected(
             tmp_path / "ambiguous-breaking.md",
             valid.replace(
-                "**Breaking changes:** No.",
-                "**Breaking changes:** Review compatibility notes.",
+                "**破坏性变更:** 无。",
+                "**破坏性变更:** 查看兼容性说明。",
                 1,
             ),
             "release-note gate accepted an ambiguous breaking decision",
@@ -335,9 +272,8 @@ loopx example --check
         assert_rejected(
             tmp_path / "missing-contributors.md",
             valid.replace(
-                "**Contributors:** Maintainer @example prepared this release; "
-                "no community contribution was included.",
-                "**Contributors:** See the commit history.",
+                "**贡献者:** 由 maintainer @example 准备，本版本无社区贡献。",
+                "**贡献者:** 见提交历史。",
                 1,
             ),
             "release-note gate accepted an unspecified contributor decision",
@@ -372,87 +308,59 @@ def main() -> None:
 
     doc = compact(read(DOC))
     for required in [
-        "Status: v0.x maintainer contract.",
-        "## Supported Install And Update Paths",
+        "状态:v0.x 维护者契约。",
+        "## 受支持的安装与更新路径",
         "loopx update check",
         "loopx update plan",
         "loopx update apply",
-        "package acquisition, host-material delivery, core runtime activation",
-        "installation guide's active-layer checklist",
-        "## Atomic Local Promotion Failure Matrix",
-        "Before default symlink swap?",
-        "canary_only_untrusted_checkout",
-        "explicit_override",
-        "## Named Version Contract",
-        "LoopX v0.x releases are tagged and built from GitHub",
-        "when its Trusted Publisher gate passes, PyPI",
-        "The version source is `loopx.__version__`, mirrored by `pyproject.toml`",
+        "包获取、host 材料交付、核心运行时激活",
+        "就地开发闭环的活动层检查清单",
+        "## 命名版本契约",
+        "版本来源是 `loopx.__version__`，由 `pyproject.toml` 镜像",
         "examples/release/release-version-contract-smoke.py",
-        "## Compatibility Gate",
+        "## 兼容 gate",
         "examples/release/release-readiness-doc-smoke.py",
         "loopx canary release-qualification",
         "exact_release_commit_qualification_manifest_v0",
-        "same Git commit, Git tree id, package version, and version tag",
-        "## Canary Model",
-        "catalog-informed readiness slice",
-        "near-E2E",
-        "do not add new IPs solely to describe a validation bundle",
+        "相同 Git 提交、Git tree id、包版本与版本 tag",
+        "## Canary 模型",
+        "目录知情的就绪度切片",
+        "近 E2E",
+        "不要仅为描述校验 bundle 而添加新 IP",
         "python3 -m loopx.cli canary smoke-suite --profile public-smoke-watch --jobs 4 --timeout-seconds 60",
         "python3 examples/run-smokes.py --suite full-public --jobs 4 --timeout-seconds 60",
-        "## What Is Safe To Depend On",
+        "## 可安全依赖的内容",
         "loopx doctor",
         "quota should-run",
         "/loopx-global-summary",
-        "benchmark runner behavior, scoring, upload",
-        "## Release Note Checklist",
-        "[release note template](release-note-template.md)",
-        "`## Release Decision`",
-        "`**Who should upgrade:**`",
-        "`**What this release solves:**`",
-        "`**Breaking changes:**`",
-        "`**How to verify:**`",
-        "`**Contributors:**`",
-        "`### 升级决策`",
-        "`**谁需要升级：**`",
-        "`**解决了什么：**`",
-        "`**是否有破坏性变更：**`",
-        "`**如何验证：**`",
-        "`**贡献者：**`",
-        "prominent `## Community Contributors` section",
-        "after the English product groups",
-        "tag-to-tag Git range and merged pull-request metadata",
-        "external or first-time contributors",
-        "没有合格贡献者时,两种语言的分节一并省略。",
-        "founder stewardship is implicit",
-        "Omit the section when the tag range contains no eligible community contribution",
-        "`### 社区贡献者` after the Chinese product groups",
-        "Omit both language sections together",
-        "same people, pull-request links, and concrete contribution scope",
-        "Optional capability activation",
-        "If no persistent switch exists",
-        "final GitHub release body",
+        "benchmark runner 行为、评分、上传",
+        "## 发布说明清单",
+        "[发布说明模板](release-note-template.md)",
+        "`## 发布决策`",
+        "`**谁需要升级:**`",
+        "`**本版本解决了什么:**`",
+        "`**破坏性变更:**`",
+        "`**如何验证:**`",
+        "`**贡献者:**`",
+        "显眼的 `## 社区贡献者` 部分",
+        "在产品分组之后",
+        "从 tag 到 tag 的 Git 范围与合并 PR 元数据",
+        "没有合格贡献者时省略本节。",
+        "没有符合条件的贡献时省略本节",
+        "在产品分组之后、兼容性或校验材料之前添加 `## 社区贡献者`",
+        "每位符合条件的贡献者与其具体贡献范围",
+        "可选能力激活",
+        "若不存在持久开关",
+        "最终 GitHub 发布正文",
         "--release-notes <final-release-body.md>",
         "--expect-no-optional-capability-changes",
-        "**Activation:**",
-        "**Validation:**",
-        "**Disable / rollback:**",
-        "**Authority boundary:**",
-        "**Docs:**",
-        "**启用：**",
-        "**验证：**",
-        "**停用 / 回退：**",
-        "**权限边界：**",
-        "**文档：**",
-        "### Capability Narrative Gate",
-        "**User outcome**",
-        "**Shipped layer**",
-        "**Last-mile boundary**",
-        "A built-in capability is not an optional extension",
-        "Do not overclaim a complete workflow",
-        "public/private scan",
-        "## 中文摘要",
-        "Bilingual releases must preserve these same group boundaries",
-        "mirrors the English group structure and material claims",
+        "公开/私有扫描",
+        "发布必须保留这些分组边界",
+        "**启用:**",
+        "**验证:**",
+        "**停用 / 回退:**",
+        "**权限边界:**",
+        "**文档:**",
     ]:
         assert_contains(doc, required, "release-readiness doc")
 
@@ -478,25 +386,20 @@ def main() -> None:
 
     template = read(TEMPLATE)
     for required in [
-        ENGLISH_DECISION_HEADING,
-        *ENGLISH_DECISION_FIELDS,
-        "## State Kernel & Control Plane",
-        "## Capabilities & Workflows",
-        "## Quality & Testing",
-        "## Benchmarks & Integrations",
-        "## Documentation & Compatibility",
-        "## Community Contributors",
-        ENGLISH_USAGE_HEADING,
-        *ENGLISH_USAGE_FIELDS,
-        ENGLISH_NO_CHANGES,
-        "## Install / Update",
-        "## 中文摘要",
-        CHINESE_DECISION_HEADING,
-        *CHINESE_DECISION_FIELDS,
-        CHINESE_USAGE_HEADING,
-        *CHINESE_USAGE_FIELDS,
-        CHINESE_NO_CHANGES,
-        "### 发布验证",
+        "## 一目了然",
+        DECISION_HEADING,
+        *DECISION_FIELDS,
+        "## 状态内核与控制面",
+        "## 能力与工作流",
+        "## 质量与测试",
+        "## 基准与集成",
+        "## 文档与兼容性",
+        "## 社区贡献者",
+        USAGE_HEADING,
+        *USAGE_FIELDS,
+        NO_CHANGES,
+        "## 安装 / 更新",
+        "## 发布验证",
     ]:
         assert_contains(template, required, "release-note template")
 
