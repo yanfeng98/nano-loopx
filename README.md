@@ -423,27 +423,6 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 
 可选 projection 让状态更易检查，但不会成为新的事实源。
 
-## 当前技术方向
-
-LoopX 当前有三个活跃战略计划和一个架构与研究孵化器。这些内容用于表达方向，
-不是交付承诺；`main`、已发布 artifact 和 stable reference contract 仍然定义真实
-已交付行为。
-
-- **长程 Benchmark 与证据：**在互补 benchmark 环境中建立可复现的能力证据，
-  并开展受控的机制研究。
-- **Operator Surface 与 IM Integration：**建设 operator workspace、session
-  record 与有界协作表面；当前在专用 integration branch 孵化。
-- **Shared Goal Authority 与跨 Host 协作：**为显式共享 goal 提供
-  provider-neutral 协调；NoKV 是尚未晋级的 provider candidate，而不是新的控制面
-  权威。
-- **架构与研究孵化器：**以明确不同的成熟度推进 Effect Program hardening、
-  TypeScript parity migration、hierarchical stride、research exploration、human
-  attention、artifact lifecycle 与 memory utility。
-
-完整阶段、promotion gate、贡献者安全切片和 ownership 边界见
-[当前技术方向地图](docs/project/technical-directions.md)。核心控制面
-可靠性继续作为这些计划共同的底座。
-
 ## 进阶文档
 
 按当前任务选择入口；[完整文档索引](docs/README.md)是权威地图。这里仅保留
