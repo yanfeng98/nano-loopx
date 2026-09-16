@@ -400,19 +400,12 @@ def assert_technical_direction_governance_is_current() -> None:
     rfc_index = read("docs/architecture/rfcs/README.md")
     tasks = read("docs/development/contributor-tasks.md")
 
+    # The page carries the shared-goal and incubator sections only; the former
+    # portfolio table, maturity vocabulary and plan sections are gone.
     for required in (
-        "长程 Benchmark 与证据",
-        "Operator Surface 与 IM Integration",
         "Shared Goal Authority 与跨 Host 协作",
         "架构与研究孵化器",
-        "稳定基础：控制面可靠性",
-        "frontend-control-plane-im-prototype-rfc",
-        "@maxliux5",
         "NoKV 是位于 LoopX authority 之后",
-        "#3243",
-        "#3244",
-        "#3245",
-        "#3246",
     ):
         assert required in direction, required
 
