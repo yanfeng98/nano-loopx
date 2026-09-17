@@ -498,7 +498,8 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 
 公开、可认领的任务见 [Contributor Tasks](docs/development/contributor-tasks.md)。贡献前请读
 [Contributing](CONTRIBUTING.md)，尤其是 public/private 边界、smoke 保留规则和
-benchmark 证据边界。
+benchmark 证据边界。可复现 bug、安装问题与功能建议请提
+[GitHub Issue](https://github.com/yanfeng98/nano-loopx/issues)。
 
 创建者与贡献者归属见 [Authors and Contributors](docs/project/authors.md)，
 关键公开演进见 [Project History](docs/project/history.md)，名称与标识使用见
