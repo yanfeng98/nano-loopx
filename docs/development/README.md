@@ -7,8 +7,8 @@
 ## 从这里开始
 
 1. 先阅读[贡献指南](../../CONTRIBUTING.md)，了解仓库边界和 PR 检查项。
-2. 阅读[当前技术方向](../project/technical-directions.md)，选择活跃计划、了解
-   成熟度并找到对应 tracker。
+2. 阅读[贡献者任务](contributor-tasks.md)，从活跃方向表选择计划、了解阶段并找到
+   对应 tracker。
 3. 按顺序阅读[开发者手册](/loopx/docs/book/)，从控制面基础到项目接入和开发者贡献。
 4. 按顺序学习[控制面开发者 11 讲](control-plane-course/README.md)，沿真实 CLI、
    状态机、核心函数和分层质量门禁建立代码心智模型。
@@ -30,7 +30,7 @@
 
 | 领域 | 文档 |
 | --- | --- |
-| 当前战略方向 | [Technical directions](../project/technical-directions.md) |
+| 活跃方向与有界任务 | [Technical directions and contributor tasks](contributor-tasks.md) |
 | 就地开发闭环 | [Editable dev loop](editable-dev-loop.md) |
 | 开发者学习路径 | [Developer Book](/loopx/docs/book/) |
 | 控制面代码领读 | [Eleven-lecture developer course](control-plane-course/README.md) |

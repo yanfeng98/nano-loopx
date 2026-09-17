@@ -1,40 +1,9 @@
-# 贡献者任务看板
-
-
-这个看板是 LoopX 工作面向贡献者的公开投影。它刻意区别于 `.local` active goal
-state：
-
-- 本文件列出可以在仓库中讨论、认领、审阅和验证的公开工作；
-- `.local`、`.loopx` 和 live `ACTIVE_GOAL_STATE.md` 文件仍是对 maintainer 与自动化
-  而言的本地 runtime 数据；
-- 私有 benchmark trace、verifier 输出、原始 agent session、凭据、内部文档链接和
-  本地机器路径不得复制到这里。
-
-目标是让重要工作可被发现，同时不把仓库变成 maintainer 草稿状态的镜像。
-
-## 状态图例
-
-| Status | 含义 |
-| --- | --- |
-| Available | 已就绪：任何人均可在关联 issue 上评论或开一个小的 PR。 |
-| Claimed | 已有人表示在做，或 maintainer 已指派。 |
-| Maintainer-owned | 活跃工作正发生在 maintainer/本地自动化中；触碰前先询问。 |
-| Needs design | 欢迎讨论，但实现需要先达成一致。 |
-| Blocked | 正在等待决策、依赖或 maintainer writeback。 |
-| Done | 已完成，准备从本看板归档。 |
-
-## 如何认领工作
-
-1. 优先使用关联的 GitHub issue。如果还没有 issue，用贡献者任务模板开一个。
-2. 评论表示你想做这个任务。Maintainer 会把它标记为 `claimed`，或建议更小的切块。
-3. 纯文档 typo 修复或显然很小的清理，直接开 PR 即可。
-4. 已认领任务 14 天没有更新，maintainer 发出一次 ping 后可以把它释放回 `Available`。
-5. 如果任务是 `Maintainer-owned`，不要重复劳动。询问是否存在公开 helper 切块。
+# 贡献者任务
 
 ## 当前技术方向
 
-canonical 的[技术方向地图](../project/technical-directions.md)说明结果、成熟度、
-属主边界与晋级门禁。本看板列出了有界工作，不重新定义那些方向。
+本看板是活跃方向与其有界工作的 canonical 投影：上表说明每个方向当前阶段、
+贡献者入口与属主边界，其下列出可在仓库中讨论、认领、审阅和验证的公开工作。
 
 | 方向 | 当前阶段 | 贡献者入口 | 边界 |
 | --- | --- | --- | --- |

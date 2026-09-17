@@ -157,11 +157,10 @@ Issue、Discussion、PR 或版本化文档。
 
 依次阅读：
 
-1. [Current Technical Directions](/loopx/docs/project/technical-directions/)：方向处于
-   shipped、incubating、research、draft 还是 held；
-2. [Contributor Task Board](/loopx/docs/development/contributor-tasks/)：选择 `Starter / Good First`
-   或已有共识的 bounded task；
-3. [CONTRIBUTING](https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md)：安装、DCO、
+1. [Contributor Task Board](/loopx/docs/development/contributor-tasks/)：先读顶部的活跃
+   方向表，确认方向处于 shipped、incubating、research 还是 draft，再选择
+   `Starter / Good First` 或已有共识的 bounded task；
+2. [CONTRIBUTING](https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md)：安装、DCO、
    public/private boundary 和验证要求。
 
 任务板是动态事实源。本书不会复制“当前可认领任务”列表；如果任务没有关联 Issue，先用

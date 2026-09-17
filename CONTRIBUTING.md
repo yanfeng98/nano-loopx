@@ -24,10 +24,9 @@ huangrt01@163.com；维护者会及时评审每份报告，并在可行范围内
 
 ## 寻找工作
 
-从[当前技术方向](docs/project/technical-directions.md)开始，了解活跃项目及其
-成熟度，然后使用
-[docs/development/contributor-tasks.md](docs/development/contributor-tasks.md)
-寻找有用、可认领且可在仓库中安全讨论的公开工作。
+从 [docs/development/contributor-tasks.md](docs/development/contributor-tasks.md)
+开始：顶部的活跃方向表说明每个方向的结果、当前阶段、属主边界与晋级门禁，其下列出
+有用、可认领且可在仓库中安全讨论的公开工作。
 
 如果没有匹配的任务：
 

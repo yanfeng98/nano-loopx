@@ -8,8 +8,9 @@
 新提案从 [RFC 模板](TEMPLATE.md) 开始。当大规模修订会把稳定设计、当前进度与
 历史证据混在一起时，既有 RFC 应当采用它的维护契约。
 
-[当前技术方向](../../project/technical-directions.md) 页面把 RFC 关联到战略项目、
-贡献路径与晋升关卡。
+当前技术方向及其阶段列在
+[贡献者任务](../../development/contributor-tasks.md)看板上；本索引只按架构职责区
+组织 RFC，不重复定义方向或成熟度。
 
 ## 如何阅读本索引
 

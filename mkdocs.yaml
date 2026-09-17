@@ -138,7 +138,6 @@ nav:
       - Contracts: reference/contracts/README.md
   - Development:
       - development/README.md
-      - Technical Directions: project/technical-directions.md
       - Editable Dev Loop: development/editable-dev-loop.md
       - Testing And Quality: development/testing-and-quality.md
       - Documentation Layout: development/documentation-layout.md

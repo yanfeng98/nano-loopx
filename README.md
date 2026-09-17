@@ -485,7 +485,6 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 
 ### 项目与社区
 
-- [当前技术方向](docs/project/technical-directions.md)
 - [Contributing](CONTRIBUTING.md)与[Contributor Tasks](docs/development/contributor-tasks.md)
 - [Authors and Contributors](docs/project/authors.md)
 - [Project History](docs/project/history.md)
@@ -494,34 +493,6 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 - [ADOPTERS](ADOPTERS.md)：项目与用户自愿维护的采用目录
 - [生态采用清单](docs/community/ecosystem-adoption.md) - 我们观察并持续追踪的
   真实集成、采样借鉴与衍生周边
-
-## 合作伙伴项目
-
-LoopX 欢迎与其他开源项目协作，共建长程 Agent 生态。已确认的合作伙伴包括：
-
-- [OpenViking](https://github.com/volcengine/OpenViking) - 面向 AI Agent 的自进化
-  上下文数据库
-- [NoKV](https://github.com/NoKV-Lab/NoKV) - AI 原生分布式文件系统
-
-## 用户群与反馈
-
-LoopX 已在真实长程 agent 目标上持续运行，并处于活跃迭代期。最需要真实长程
-agent 项目里的反馈：控制面帮到了哪里、哪里太重，哪些 gate、handoff 或 scope
-仍然不够清楚。
-
-- 可复现 bug、安装问题、功能建议：请提
-  [GitHub Issue](https://github.com/yanfeng98/nano-loopx/issues)。
-- 文档修正、showcase 补充、小型 public-safe 示例：欢迎开 PR。
-- 参与社区讨论：可加入 [Discord 社区](https://discord.gg/XmGgQyCFZd)，也可在
-  下方直接加入飞书群或通过微信申请入群。
-
-<p align="center">
-  <a href="docs/assets/loopx-lark-developer-group.png"><img src="docs/assets/loopx-lark-developer-group.png" alt="LoopX 飞书开发群二维码" width="280"></a>
-  <a href="docs/assets/loopx-wechat-contact.png"><img src="docs/assets/loopx-wechat-contact.png" alt="LoopX 微信联系人二维码" width="220"></a>
-</p>
-<p align="center">
-  <sub><strong>飞书：</strong>扫码直接加入<br><strong>微信：<code>huangrt00</code></strong> · 好友申请备注 LoopX</sub>
-</p>
 
 ## 贡献
 
@@ -562,6 +533,6 @@ integration 和进阶路径仍是 optional、default-off 或 experimental。Loop
 获得 credential，不会替用户批准 destructive / production action，不会在未授权时
 公开发布，也不会把未经验证的 run 当成成功证据。
 
-当前投入按[技术方向地图](docs/project/technical-directions.md)组织：长程
-benchmark 证据、operator surface 与 IM integration、shared-goal 跨 host 协作，以及
-明确分阶段的架构与研究孵化器。
+当前投入围绕长程 benchmark 证据、operator surface 与 IM integration、
+shared-goal 跨 host 协作，以及分阶段的架构与研究孵化器展开；活跃方向、当前阶段与
+有界认领入口见 [Contributor Tasks](docs/development/contributor-tasks.md)。

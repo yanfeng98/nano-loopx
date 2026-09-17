@@ -36,8 +36,8 @@ LoopX 正在被其他开源项目采样、集成和再实现。本页是这份�
 - **spoon-core**（XSpoonAi）——计划增加可选的只读控制上下文中间件
   （[issue #285](https://github.com/XSpoonAi/spoon-core/issues/285)）。
   状态：计划中。
-- **OpenViking / NoKV**——已确认合作伙伴；见
-  [README 合作伙伴项目](../../README.md#合作伙伴项目)。
+- **OpenViking / NoKV**——已确认合作伙伴；NoKV 仍是位于 LoopX authority 之后、
+  尚未晋级的可选 provider candidate。
 
 ## 2. 采样与借鉴
 
