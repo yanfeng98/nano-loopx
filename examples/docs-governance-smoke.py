@@ -105,7 +105,6 @@ STABLE_README_DOCS_ENTRY_LINKS = (
     "showcases/README.md",
     "research/README.md",
     "update-notes/README.md",
-    "project/technical-directions.md",
     "development/contributor-tasks.md",
     "project/authors.md",
     "project/history.md",
@@ -396,18 +395,19 @@ def assert_contributor_task_links_are_current() -> None:
 
 
 def assert_technical_direction_governance_is_current() -> None:
-    direction = read("docs/project/technical-directions.md")
     rfc_index = read("docs/architecture/rfcs/README.md")
     tasks = read("docs/development/contributor-tasks.md")
 
-    # The page carries the shared-goal and incubator sections only; the former
-    # portfolio table, maturity vocabulary and plan sections are gone.
-    for required in (
-        "Shared Goal Authority 与跨 Host 协作",
-        "架构与研究孵化器",
-        "NoKV 是位于 LoopX authority 之后",
-    ):
-        assert required in direction, required
+    # The strategy-map page is retired: its live directions moved onto the
+    # contributor board, and no live doc or nav entry may link back to it.
+    assert not (REPO_ROOT / "docs/project/technical-directions.md").exists()
+    stale = [
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in sorted(REPO_ROOT.glob("docs/**/*.md"))
+        + [REPO_ROOT / name for name in ("README.md", "CONTRIBUTING.md", "mkdocs.yaml")]
+        if "technical-directions" in path.read_text(encoding="utf-8")
+    ]
+    assert not stale, stale
 
     for required in (
         "## 控制面内核、状态与迁移",
@@ -464,7 +464,6 @@ def main() -> int:
         "reference/README.md",
         "showcases/README.md",
         "development/testing-and-quality.md",
-        "project/technical-directions.md",
     ]:
         assert required in docs_index, required
 
@@ -496,7 +495,6 @@ def main() -> int:
             "docs/update-notes/README.md",
         ],
         "项目与社区": [
-            "docs/project/technical-directions.md",
             "CONTRIBUTING.md",
             "docs/development/contributor-tasks.md",
             "docs/project/authors.md",
@@ -552,7 +550,6 @@ def main() -> int:
         "docs/research/README.md",
         "docs/showcases/README.md",
         "docs/product/runtimes/codex-cli/codex-cli-tui-loop.md",
-        "docs/project/technical-directions.md",
         "docs/project/brand-guide.md",
     ]:
         assert (REPO_ROOT / path).is_file(), path

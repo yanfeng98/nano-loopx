@@ -62,11 +62,7 @@ def main() -> int:
         "### App 与 Projection",
         '<a id="看几个例子"></a>',
         "## 能力",
-        "## 用户群与反馈",
         "`1.1.x` 已经是一套可用的长程 Agent 本地控制面",
-        "docs/assets/loopx-lark-developer-group.png",
-        "docs/assets/loopx-wechat-contact.png",
-        "微信：<code>huangrt00</code>",
         "loopx configure-goal --goal-id <goal-id>",
         "loopx preset show daily-triage",
     ]:
