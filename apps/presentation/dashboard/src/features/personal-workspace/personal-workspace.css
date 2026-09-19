@@ -227,6 +227,9 @@
 .personal-composer-file-input { position: fixed; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .personal-action-feedback { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 8px; padding: 9px 12px; border: 1px solid var(--pw-line); border-radius: 10px; background: var(--pw-blue-soft); color: var(--pw-blue-ink); font-size: 13px; font-weight: 650; }
 .personal-action-feedback button { display: grid; place-items: center; border: 0; background: transparent; color: inherit; cursor: pointer; }
+/* A decision banner names the change it applied, which can be a whole
+   instruction; keep it a banner instead of a wall of text. */
+.personal-action-feedback span { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow-wrap: anywhere; }
 .personal-refresh-control { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; }
 .personal-refresh-control small { color: var(--pw-muted); font-size: 11px; white-space: nowrap; }
 .personal-refresh-control.is-error small { color: var(--pw-danger); }
