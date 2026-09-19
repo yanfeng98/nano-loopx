@@ -76,6 +76,11 @@ from ..coordination.coordination_state_contract import (
 )
 
 
+# Owner Todo decisions are confirmed from the workspace drawer, where the
+# truncated `text` (limit 500) is not enough to read the whole instruction.
+# Owner todos carry the untruncated form alongside it, bounded so one long
+# Todo cannot dominate the status payload.
+TODO_OWNER_DECISION_TEXT_LIMIT = 2000
 MAX_STATUS_TODOS_PER_ROLE = 12
 MAX_PROJECT_ASSET_TODO_ITEMS = 3
 MAX_PROJECT_ASSET_TODO_BACKLOG_ITEMS = 8
@@ -316,7 +321,8 @@ def structured_todo_item(
     source_section: str | None,
     archive_state: str = "active",
 ) -> dict[str, Any]:
-    text = normalize_todo_text(str(item.get("text") or ""))
+    raw_text = " ".join(str(item.get("text") or "").strip().split())
+    text = normalize_todo_text(raw_text)
     priority, title = todo_priority_parts(text)
     index = item.get("index")
     explicit_status = normalize_todo_status(item.get("status"))
@@ -440,6 +446,9 @@ def structured_todo_item(
     if priority:
         normalized["priority"] = priority
         normalized["title"] = normalize_todo_text(title)
+    owner_text = todo_priority_parts(raw_text)[1]
+    if role == "user" and len(owner_text) > len(title if priority else text):
+        normalized["full_text"] = owner_text[:TODO_OWNER_DECISION_TEXT_LIMIT]
     return normalized
 
 
