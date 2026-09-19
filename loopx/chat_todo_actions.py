@@ -278,8 +278,14 @@ class ChatTodoActionMixin:
                     "next_action": "Use the Later action on the preview, or add a resume condition.",
                 },
             )
-        if decision == "reject" and not is_user_gate:
-            reason = str(note or "").strip() or "Owner rejected this Todo from the LoopX workspace."
+        if decision in {"reject", "cancel"} and not is_user_gate:
+            # Neither decision completes a plain Todo; dropping it is the
+            # canonical verb, exactly as the CLI does it.
+            reason = str(note or "").strip() or (
+                "Owner cancelled this Todo from the LoopX workspace."
+                if decision == "cancel"
+                else "Owner rejected this Todo from the LoopX workspace."
+            )
             payload = supersede_goal_todo(
                 registry_path=self.registry_path,
                 goal_id=goal_id,
