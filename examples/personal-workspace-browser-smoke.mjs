@@ -1178,6 +1178,26 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
       const lifecycleDelayMs = actionKind === "goal.lifecycle" ? state.nextLifecycleApplyDelayMs : 0;
       state.nextLifecycleApplyDelayMs = 0;
       if (lifecycleDelayMs > 0) await new Promise((resolveWait) => setTimeout(resolveWait, lifecycleDelayMs));
+      if (actionKind === "goal.update") {
+        // The canonical write service keeps this protected: the page previews
+        // it and never writes it.
+        await route.fulfill({
+          contentType: "application/json",
+          json: {
+            error: "This action requires a protected canonical LoopX transition.",
+            error_code: "protected_action",
+            gate: {
+              kind: "canonical_authority_required",
+              summary: "goal.update requires a narrower canonical authority contract.",
+              next_action: "Keep this preview and resolve the action through the Goal configuration or Gate lifecycle surface.",
+            },
+            ok: false,
+            write_attempted: false,
+          },
+          status: 409,
+        });
+        return;
+      }
       if (actionKind === "goal.lifecycle" && state.failNextLifecycleApply) {
         state.failNextLifecycleApply = false;
         await route.fulfill({
@@ -2338,6 +2358,14 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     const protectedMerge = api.actionPreviews.find((preview) => preview.action_kind === "goal.update" && preview.summary.includes("PR #123"));
     if (!protectedMerge) throw new Error("A clear Agent semantic proposal did not create the protected typed preview");
     await page.screenshot({ path: resolve(outputDir, "semantic-protected-action-preview.png"), fullPage: false, animations: "disabled" });
+    // A protected action stays a host gate: the page may preview it, but its
+    // confirmation must not write anything.
+    const writesBeforeProtectedApply = api.durableWriteCount;
+    await page.getByRole("button", { name: "确认并应用", exact: true }).click();
+    await page.getByText("需要宿主确认", { exact: true }).waitFor({ state: "visible" });
+    if (api.durableWriteCount !== writesBeforeProtectedApply) throw new Error("A protected action wrote durable state from the page");
+    if (!api.actionApplies.includes(protectedMerge.proposalId)) throw new Error("The protected preview was never sent to the canonical write service");
+    pass(11, "Protected actions stay explicit operator gates: the page previews them, names the host confirmation, and writes nothing.");
     await page.getByRole("button", { name: "关闭", exact: true }).click();
 
     await composer.fill("添加一个「补充回归测试」普通 Todo，并交给 Codex。不要设置 Heartbeat，也不要创建定时检查");
@@ -2628,6 +2656,17 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     await page.getByText("需要你", { exact: true }).last().waitFor({ state: "visible" });
     // The Owner reads the whole instruction before deciding.
     await assertOwnerInstructionReview(page);
+    // Applying the decision reports the command that ran.
+    await page.getByRole("button", { name: "查看影响并决定", exact: true }).click();
+    await page.getByText("确认执行").waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "确认并应用", exact: true }).click();
+    const executedGateCommand = page.locator('[data-testid="personal-proposal-command"]');
+    await executedGateCommand.waitFor({ state: "visible" });
+    if (!(await executedGateCommand.innerText()).includes("loopx todo complete --goal-id")) throw new Error("Applied Gate card did not report the executed command");
+    if (!api.actionApplies.some((applied) => applied.includes("workspace-decision-"))) throw new Error("Gate decision apply was not sent");
+    await page.keyboard.press("Escape");
+    await page.locator(".personal-object-list").first().getByRole("button").first().click();
+    await page.getByText("需要你", { exact: true }).last().waitFor({ state: "visible" });
     await page.getByText("更多决定").click();
     await page.getByRole("button", { name: "稍后决定", exact: true }).click();
     await page.getByText("确认执行").waitFor({ state: "visible" });
@@ -2901,6 +2940,14 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     if (!(await page.locator(".personal-digest-card").isVisible().catch(() => false))) throw new Error("Morning digest card did not render on the manager home");
     pass(17, "Manager home keeps the morning digest while omitting the redundant Agent worker strip.");
     pass(20, "Empty and populated Tasks boards keep identical width and four equal columns at desktop and wide desktop viewports.");
+    // Durable writes happen only where the page confirmed something: an applied
+    // proposal, or the explicit sub-agent configuration apply. Every preview
+    // kind this workspace can write (Goal, Todo, sub-agent, monitor, protected)
+    // was created in this run, and each of its no-write checks had to pass for
+    // the run to reach this line.
+    const confirmedWrites = new Set(api.actionApplies).size + api.goalSubagentWrites.length;
+    if (api.durableWriteCount > confirmedWrites) throw new Error("More durable writes than confirmed applies: something wrote on its own");
+    pass(8, "No Goal, Todo, Agent-binding, or periodic-monitor preview wrote before its confirmation, and every durable write came from an applied proposal.");
     const report = { criteria: Object.fromEntries(results), observations };
     await writeFile(resolve(outputDir, "acceptance-results.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
     console.log(`personal-workspace-browser-smoke (${packaged ? "packaged" : "development"}): ok\npreview=${url}\nscreenshot=${resolve(outputDir, "desktop-first-screen.png")}`);
