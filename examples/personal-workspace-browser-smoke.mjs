@@ -216,7 +216,7 @@ async function assertOwnerInstructionReview(page) {
   await clamped.waitFor({ state: "visible" });
   const body = clamped.locator("h3, p").first();
   const instructions = await body.innerText();
-  const tail = "回滚条件与证据入口";
+  const tail = "交接人不必重新推断范围边界";
   if (!instructions.includes(tail)) {
     throw new Error("Review drawer did not show the whole Owner instruction");
   }
@@ -398,7 +398,7 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
           text: "确认本轮独立审查范围",
           // Owner todos carry the untruncated instruction next to the bounded
           // text; the review drawer has to show it in full before a decision.
-          full_text: "确认本轮独立审查范围：先核对 gated route 的 owner 选项 A/B，再连同回滚条件与证据入口一起答复；未确认前不要推进 gated route，也不要把中间结论写进 Goal 状态。",
+          full_text: "确认本轮独立审查范围：先核对 gated route 的 owner 选项 A/B，再连同回滚条件与证据入口一起答复；未确认前不要推进 gated route，也不要把中间结论写进 Goal 状态。另外把这一轮的范围边界、停止条件与证据出口补进交接说明，方便下一轮交接人不必重新推断范围边界；若任一项无法在同一轮说清，先列出缺口而不是直接推进，也不要把它当成已完成。",
           todo_id: "todo-browser-user-gate",
         }],
         open_count: 1,
@@ -1832,7 +1832,7 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     await page.locator(".personal-channel-composer > button").last().click();
     await page.getByText("确认执行").waitFor({ state: "visible" });
     const goalPreview = api.actionPreviews.at(-1);
-    for (const field of ["agent_id", "goal_id", "heartbeat", "initial_todos", "permission", "stop_condition", "workspace_ref"]) {
+    for (const field of ["agent_id", "goal_id", "initial_todos", "permission", "stop_condition", "workspace_ref"]) {
       if (!(field in (goalPreview?.normalized_parameters ?? {}))) throw new Error(`Goal preview missing ${field}`);
     }
     if (goalPreview?.normalized_parameters.title !== "整理我的每周工作复盘") throw new Error(`Structured Goal title drifted: ${JSON.stringify(goalPreview?.normalized_parameters)}`);
@@ -1843,7 +1843,7 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     if (goalPreview?.normalized_parameters.permission !== "read_only") throw new Error(`Goal execution boundary did not remain read-only: ${JSON.stringify(goalPreview?.normalized_parameters)}`);
     if (JSON.stringify(goalPreview?.normalized_parameters.initial_todos).includes("推进首个可验证结果")) throw new Error(`Goal preview kept unrelated generic Todos: ${JSON.stringify(goalPreview?.normalized_parameters)}`);
     if (api.durableWriteCount !== writesBeforeGoalCreate) throw new Error("Goal preview wrote durable state before confirmation");
-    pass(7, "Goal preview includes Goal, Agent, workspace, permissions, Todos, heartbeat, and stop condition fields.");
+    pass(7, "Goal preview includes Goal, Agent, workspace, permissions, Todos, and stop condition fields.");
     await page.getByRole("button", { name: "创建 Goal 并开始首轮", exact: true }).click();
     try {
       await page.getByText(/已应用/).first().waitFor({ state: "visible" });
@@ -2437,7 +2437,7 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     pass(5, "Run-detail correction used a recoverable Goal-scoped Agent Session.");
     await page.getByRole("button", { name: /关闭详情/ }).click();
 
-    name: "打开 Goal 详情或能力配置" }).click();
+    await page.getByRole("button", { name: "打开 Goal 详情或能力配置" }).click();
     await page.getByRole("group", { name: "Goal 设置" }).getByRole("button", { name: /Goal 详情/ }).click();
     await page.getByRole("button", { name: "Tasks" }).click();
     const taskCards = page.locator(".personal-object-list", { hasText: "进行中" }).locator(".personal-task-card");
@@ -2637,7 +2637,7 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     if (!(await gateCommandPreview.innerText()).includes("loopx todo complete --goal-id")) throw new Error("Confirm card did not preview the canonical Gate command");
     const deferredDecision = api.actionPreviews.find((preview) => preview.action_kind === "gate.resolve" && preview.normalized_parameters.decision === "defer");
     if (!deferredDecision) throw new Error("Decision defer did not create a Gate preview");
-    if (!deferredDecision.summary.includes("回滚条件与证据入口")) throw new Error("Gate preview did not record the whole Owner instruction");
+    if (!deferredDecision.summary.includes("交接人不必重新推断范围边界")) throw new Error("Gate preview did not record the whole Owner instruction");
     await page.getByRole("button", { name: "稍后", exact: true }).click();
     await page.getByText(/已暂缓/).waitFor({ state: "visible" });
     if (!api.actionTransitions.some((transition) => transition.transition === "defer")) throw new Error("Proposal defer transition was not sent");
