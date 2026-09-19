@@ -320,6 +320,28 @@ def todo_priority_parts(text: str) -> tuple[str | None, str]:
     return projection_todo_priority_parts(text)
 
 
+# The continuation and capability fields a Todo carries into its projection.
+# Each normalizer returns a falsy value when the field is absent, so one table
+# keeps the projection from repeating the same three lines per field.
+_TODO_AUTHORITY_FIELDS = (
+    ("continuation_policy", normalize_todo_continuation_policy),
+    ("removed_continuation_policy", normalize_removed_todo_continuation_policy),
+    ("required_write_scopes", normalize_required_write_scopes),
+    ("required_capabilities", normalize_required_capabilities),
+    ("target_capabilities", normalize_target_capabilities),
+    ("explore_result_node_refs", normalize_explore_result_node_refs),
+)
+
+
+def _project_todo_authority_fields(
+    item: dict[str, Any], normalized: dict[str, Any]
+) -> None:
+    for key, normalizer in _TODO_AUTHORITY_FIELDS:
+        value = normalizer(item.get(key))
+        if value:
+            normalized[key] = value
+
+
 def structured_todo_item(
     item: dict[str, Any],
     *,
@@ -375,30 +397,7 @@ def structured_todo_item(
     task_repository = normalize_todo_task_repository(item.get("task_repository"))
     if task_repository:
         normalized["task_repository"] = task_repository
-    continuation_policy = normalize_todo_continuation_policy(
-        item.get("continuation_policy")
-    )
-    if continuation_policy:
-        normalized["continuation_policy"] = continuation_policy
-    removed_continuation_policy = normalize_removed_todo_continuation_policy(
-        item.get("removed_continuation_policy")
-    )
-    if removed_continuation_policy:
-        normalized["removed_continuation_policy"] = removed_continuation_policy
-    required_write_scopes = normalize_required_write_scopes(item.get("required_write_scopes"))
-    if required_write_scopes:
-        normalized["required_write_scopes"] = required_write_scopes
-    required_capabilities = normalize_required_capabilities(item.get("required_capabilities"))
-    if required_capabilities:
-        normalized["required_capabilities"] = required_capabilities
-    target_capabilities = normalize_target_capabilities(item.get("target_capabilities"))
-    if target_capabilities:
-        normalized["target_capabilities"] = target_capabilities
-    explore_result_node_refs = normalize_explore_result_node_refs(
-        item.get("explore_result_node_refs")
-    )
-    if explore_result_node_refs:
-        normalized["explore_result_node_refs"] = explore_result_node_refs
+    _project_todo_authority_fields(item, normalized)
     decision_scope = normalize_todo_decision_scope(item.get("decision_scope"))
     if decision_scope:
         normalized["decision_scope"] = decision_scope
