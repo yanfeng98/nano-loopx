@@ -541,9 +541,6 @@ function workspaceProposal(proposal: TypedActionProposal, t: WorkspaceTranslate)
     } : undefined,
     status: proposalStatus(proposal.status),
     subject: ["gate.resolve", "todo.update"].includes(proposal.action_kind) ? {
-      agentId: typeof parameters.agent_id === "string" ? parameters.agent_id : undefined,
-      decision: typeof parameters.decision === "string" ? parameters.decision : undefined,
-      gateId: typeof parameters.gate_id === "string" ? parameters.gate_id : undefined,
       goalId: typeof parameters.goal_id === "string" ? parameters.goal_id : undefined,
       todoId: typeof parameters.todo_id === "string" ? parameters.todo_id : undefined,
     } : undefined,

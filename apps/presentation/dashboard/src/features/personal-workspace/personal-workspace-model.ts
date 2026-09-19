@@ -232,11 +232,8 @@ export type WorkspaceActionPreview = {
     outcome?: string;
     receiptId?: string;
   };
-  /** The Todo or Goal gate this preview decides, so the drawer can show it live. */
+  /** The Todo this preview decides, so the drawer can show its live text. */
   subject?: {
-    agentId?: string;
-    decision?: string;
-    gateId?: string;
     goalId?: string;
     todoId?: string;
   };
