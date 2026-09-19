@@ -34,6 +34,7 @@ import type {
   WorkspaceTodo,
 } from "./personal-workspace-model";
 import type { LarkGoalConnection } from "../../data/chat";
+import { ClampedText } from "./clamped-text";
 import { localizedAttentionAge, localizedGoalState, localizedSessionStatus, useWorkspaceI18n } from "./i18n";
 import { formatCostUsd, formatDurationMs, formatTokenCount, hasGoalUsage } from "./personal-workspace-model";
 import { todoResumeWhenFromMessage } from "./personal-workspace-router";
@@ -71,6 +72,30 @@ const decisionTransitions = [
 const subagentChildLimits = Array.from({ length: 32 }, (_, index) => index + 1);
 const subagentDomainPattern = /^[a-z][a-z0-9_.-]{0,63}$/u;
 
+const DECISION_SUMMARY_LIMIT = 600;
+// The action store refuses any text that looks like a local path, so a summary
+// carrying one is rejected outright. Keep the whole instruction when it can be
+// stored, fall back to the bounded form, and never fail the preview over it.
+const LOCAL_PATH_LIKE = /(?:^|[\s"'])(?:\/Users\/|\/home\/|\/private\/|\/var\/folders\/|\/tmp\/|~[/\\]|file:\/\/)/iu;
+
+function compactSummaryText(value: string) {
+  return value.replace(/\s+/gu, " ").trim();
+}
+
+function clippedSummaryText(value: string, limit: number) {
+  return value.length <= limit ? value : `${value.slice(0, limit - 1).trimEnd()}…`;
+}
+
+function decisionSummaryText(label: string, text: string) {
+  const full = compactSummaryText(text);
+  for (const candidate of [full, clippedSummaryText(full, 112)]) {
+    if (candidate && !LOCAL_PATH_LIKE.test(candidate)) {
+      return clippedSummaryText(`${label}：${candidate}`, DECISION_SUMMARY_LIMIT);
+    }
+  }
+  return clippedSummaryText(label, DECISION_SUMMARY_LIMIT);
+}
+
 function normalizeSubagentDomain(value: string | null | undefined) {
   const normalized = String(value ?? "").trim().toLowerCase();
   return subagentDomainPattern.test(normalized) ? normalized : null;
@@ -88,8 +113,9 @@ function subagentConfigurationsMatch(
 
 type ContextDrawerSelection = Exclude<WorkspaceDrawerSelection, { kind: "settings" }>;
 
-export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals = [], inspectorExpanded = false, larkConnections = [], onClose, onToggleInspectorSize, readOnly = false, runs = [], selection }: {
+export function ContextDrawer({ agents, attentionLookup, callbacks, goalNotifications = [], goals = [], inspectorExpanded = false, larkConnections = [], onClose, onToggleInspectorSize, readOnly = false, runs = [], selection }: {
   agents: WorkspaceAgentOption[];
+  attentionLookup?: (goalId: string, todoId: string) => WorkspaceAttention | null;
   callbacks: PersonalWorkspaceCallbacks;
   goalNotifications?: WorkspaceGoalNotification[];
   goals?: WorkspaceGoal[];
@@ -264,6 +290,13 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
   );
   const attentionAge = selection.kind === "attention" ? localizedAttentionAge(selection.item.updatedAt, t) : null;
   const normalizedTodoResumeWhen = todoResumeWhenFromMessage(todoResumeWhen);
+  // A stored preview keeps the text it was created with; read the live subject
+  // so a decision is always reviewed against what it will actually write.
+  const proposalSubject = selection.kind === "proposal"
+    && selection.item.subject?.goalId
+    && selection.item.subject.todoId
+    ? attentionLookup?.(selection.item.subject.goalId, selection.item.subject.todoId) ?? null
+    : null;
 
   async function sendCorrection() {
     if (selection.kind !== "run" || !correction.trim()) return;
@@ -299,16 +332,24 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
   }
 
   async function previewDecision(attention: WorkspaceAttention, decision: "approve" | typeof decisionTransitions[number]["resolution"], label: string) {
+    // The preview is the record of what the Owner read, so it carries the whole
+    // instruction rather than the bounded text the dense task lanes show.
+    const gateId = attention.gateId?.trim();
+    const subject = decisionSummaryText(label, attention.textFull ?? attention.text);
     await callbacks.onPreviewAction?.({
       actionKind: "gate.resolve",
-      context: { goal_id: attention.goalId, kind: "todo", todo_id: attention.todoId },
+      context: {
+        goal_id: attention.goalId,
+        kind: gateId ? "goal" : "todo",
+        ...(gateId ? { gate_id: gateId } : { todo_id: attention.todoId }),
+      },
       idempotencyKey: `workspace-decision-${attention.todoId}-${decision}-${Date.now().toString(36)}`,
       normalizedParameters: {
         goal_id: attention.goalId,
         decision,
-        todo_id: attention.todoId,
+        ...(gateId ? { gate_id: gateId } : { todo_id: attention.todoId }),
       },
-      summary: `${label}：${attention.text}`,
+      summary: subject,
     });
   }
 
@@ -476,7 +517,7 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
           <>
             <section className="personal-detail-card is-attention">
               <small>{selection.item.blocking ? t("drawer.attentionBlocking") : t("drawer.attentionWaiting")}</small>
-              <h3>{selection.item.text}</h3>
+              <ClampedText as="h3" testId="personal-attention-full-text" text={selection.item.textFull ?? selection.item.text} />
               <dl>
                 <div><dt>Goal</dt><dd>{selection.item.goalTitle ?? selection.item.goalId}</dd></div>
                 <div><dt>{t("drawer.priority")}</dt><dd>{selection.item.priority ?? "medium"}</dd></div>
@@ -906,31 +947,39 @@ export function ContextDrawer({ agents, callbacks, goalNotifications = [], goals
           <>
             <section className="personal-proposal-card">
               <small>{selection.item.actionKind} · {selection.item.status}</small>
-              <h3>{selection.item.title}</h3>
+              <ClampedText as="h3" testId="personal-proposal-subject" text={proposalSubject ? (proposalSubject.textFull ?? proposalSubject.text) : selection.item.title} />
+              {selection.item.actionKind === "gate.resolve" && selection.item.subject?.todoId && !proposalSubject ? <small data-testid="personal-proposal-subject-missing">{t("drawer.subjectFullTextUnavailable")}</small> : null}
               <p>{selection.item.impact}</p>
               {selection.item.status === "ready" ? <p className="personal-proposal-explainer">{t("drawer.proposalExplainer")}</p> : null}
               <dl>{selection.item.fields.map((field) => <div key={field.key}><dt>{field.label}</dt><dd>{field.value}</dd></div>)}</dl>
             </section>
             {selection.item.status === "applied" ? <p className="personal-proposal-state is-applied"><Check size={16} />{t("drawer.proposalApplied")}</p> : null}
+            {selection.item.receipt?.canonicalCommand ? (
+              <section className="personal-detail-card personal-gate-cli-hint" data-testid="personal-proposal-command">
+                <small>{t("drawer.proposalCommand")}</small>
+                <code>{selection.item.receipt.canonicalCommand}</code>
+                {selection.item.receipt.outcome ? <small>{t("drawer.proposalReceipt", { outcome: selection.item.receipt.outcome })}</small> : null}
+              </section>
+            ) : null}
             {selection.item.status === "applied" && selection.item.goalId ? <button className="personal-primary-action" onClick={() => { const goalId = selection.item.goalId!; onClose(); void callbacks.onOpenGoal?.(goalId); }} type="button"><ExternalLink size={16} />{selection.item.actionKind === "goal.create" ? t("drawer.proposalEnterGoal") : t("drawer.proposalViewGoal")}</button> : null}
             {selection.item.status === "stale" ? <p className="personal-proposal-state is-stale">{t("drawer.proposalStale")}</p> : null}
             {selection.item.status === "error" ? <div className="personal-proposal-state is-error"><span>{t("drawer.proposalApplyFailed")}</span>{selection.item.errorMessage ? <small>{selection.item.errorMessage}</small> : null}<small>{t("drawer.proposalApplyFailedHint")}</small></div> : null}
             {selection.item.status === "rejected" ? <p className="personal-proposal-state is-error">{t("drawer.proposalRejected")}</p> : null}
             {selection.item.status === "deferred" ? <p className="personal-proposal-state is-gated">{t("drawer.proposalDeferred")}</p> : null}
-            {selection.item.status === "gated" ? <div className="personal-proposal-state is-gated"><span><strong>{t("drawer.gateRequiresHost")}</strong>{t("drawer.gateRequiresHostDescription")}</span>{selection.item.gate?.nextAction ? <small>{selection.item.gate.nextAction}</small> : null}</div> : null}
-            {selection.item.status === "gated" && selection.item.actionKind === "gate.resolve" ? (() => {
-              const fieldValue = (key: string) => selection.item.fields.find((field) => field.key === key)?.value;
-              const gateGoalId = fieldValue("goal_id");
-              const gateTodoId = fieldValue("todo_id");
-              if (!gateGoalId || !gateTodoId) return null;
-              return (
-                <section className="personal-detail-card personal-gate-cli-hint">
-                  <small>{t("drawer.gateApproveHint")}</small>
-                  <code>loopx todo complete --goal-id {gateGoalId} --todo-id {gateTodoId} --decision-outcome approve</code>
-                  <small>{t("drawer.gateRejectHint")}</small>
-                </section>
-              );
-            })() : null}
+            {selection.item.status === "gated" ? <div className="personal-proposal-state is-gated"><span><strong>{t("drawer.gateRequiresHost")}</strong>{selection.item.gate?.kind === "gate_actor_required" ? t("drawer.gateActorRequired") : selection.item.gate?.kind === "gate_defer_requires_condition" ? t("drawer.gateDeferHint") : t("drawer.gateRequiresHostDescription")}</span>{selection.item.gate?.nextAction ? <small>{selection.item.gate.nextAction}</small> : null}</div> : null}
+            {selection.item.actionKind === "gate.resolve" && selection.item.status === "gated" && selection.item.canonicalCommand ? (
+              <section className="personal-detail-card personal-gate-cli-hint">
+                <small>{t("drawer.gateApproveHint")}</small>
+                <code>{selection.item.canonicalCommand}</code>
+                <small>{t("drawer.gateRejectHint")}</small>
+              </section>
+            ) : null}
+            {selection.item.actionKind === "gate.resolve" && selection.item.status === "ready" && selection.item.canonicalCommand ? (
+              <section className="personal-detail-card personal-gate-cli-hint" data-testid="personal-proposal-command-preview">
+                <small>{t("drawer.proposalCommandPreview")}</small>
+                <code>{selection.item.canonicalCommand}</code>
+              </section>
+            ) : null}
             {!readOnly && selection.item.workspaceCandidates?.length ? <div className="personal-workspace-candidates" aria-label={t("drawer.workspaceCandidates")}>{selection.item.workspaceCandidates.map((candidate) => <button key={candidate.workspaceRef} onClick={() => void callbacks.onSelectWorkspaceCandidate?.(selection.item, candidate.workspaceRef)} type="button"><strong>{candidate.label}</strong><small>{candidate.workspaceRef}</small></button>)}</div> : null}
             {!readOnly && selection.item.status === "error" ? <button className="personal-primary-action" onClick={() => void callbacks.onTransitionProposal?.(selection.item, "regenerate")} type="button"><RotateCcw size={17} />{t("drawer.proposalRegenerate")}</button> : !readOnly && selection.item.status !== "gated" ? <button className="personal-primary-action" disabled={!['ready', 'deferred'].includes(selection.item.status)} onClick={() => void callbacks.onApplyProposal?.(selection.item)} type="button"><Check size={17} />{selection.item.status === "applying" ? t("drawer.applying") : selection.item.primaryLabel ?? t("drawer.apply")}</button> : null}
             {!readOnly && ["stale", "gated", "rejected"].includes(selection.item.status) ? <button className="personal-secondary-action" onClick={() => void callbacks.onTransitionProposal?.(selection.item, "regenerate")} type="button"><RotateCcw size={16} />{t("drawer.proposalRecheck")}</button> : null}

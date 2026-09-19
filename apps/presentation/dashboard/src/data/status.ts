@@ -67,6 +67,9 @@ export const todoItemSchema = z.object({
   status: z.string().optional().nullable(),
   resume_when: z.string().optional().nullable(),
   priority: z.string().optional().nullable(),
+  // Owner todos carry the untruncated instruction beside the capped `text`, so
+  // a decision can be reviewed in full before it is written.
+  full_text: z.string().optional().nullable(),
   title: z.string().optional().nullable(),
   archive_state: z.string().optional().nullable(),
   source_section: z.string().optional().nullable(),

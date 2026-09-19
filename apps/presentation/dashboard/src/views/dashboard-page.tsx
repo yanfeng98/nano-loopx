@@ -458,9 +458,11 @@ type PersonalGoalItem = {
 type PersonalNeedsYouItem = {
   actionKind?: string | null;
   blocking: boolean;
+  gateId?: string | null;
   goalId: string;
   taskClass?: string | null;
   text: string;
+  textFull?: string | null;
   todoId: string;
   updatedAt?: string | null;
 };
@@ -699,6 +701,21 @@ function personalTodosForQueueItem(item: QueueItem, role: "user" | "agent") {
 
 function personalTodoText(todo: TodoItem) {
   return compactShareText(todo.title ?? todo.text, 112);
+}
+
+/**
+ * The whole Owner instruction, taken from the richest lane of the payload.
+ * The dense task cards keep their bounded `text`; only a decision surface that
+ * the Owner has to read before writing shows this.
+ */
+function personalOwnerTodoFullText(item: QueueItem, todo: TodoItem) {
+  const todoId = todo.todo_id?.trim();
+  const match = todoId
+    ? (item.user_todos?.items ?? []).find((candidate) => candidate.todo_id?.trim() === todoId)
+    : undefined;
+  return cleanShareText(
+    match?.full_text ?? match?.title ?? match?.text ?? todo.full_text ?? todo.title ?? todo.text,
+  );
 }
 
 function personalAgentTodoFromItem(todo: TodoItem, row: GoalDirectoryRow): PersonalAgentTodoItem {
@@ -1160,6 +1177,7 @@ function buildPersonalHomeModel(
         sourceOrder,
         taskClass: todo.task_class ?? null,
         text: personalTodoText(todo),
+        textFull: personalOwnerTodoFullText(item, todo),
         todoId: todo.todo_id?.trim() || `${item.goal_id}:user:${todo.index}`,
         todoOrder,
         updatedAt: todo.updated_at ?? null,
@@ -1168,13 +1186,16 @@ function buildPersonalHomeModel(
   const projectedGoalIds = new Set(projectedUserTodos.map((todo) => todo.goalId));
   const pendingOperatorGates = rows.flatMap((row, rowOrder) => {
     if (stoppedGoalIds.has(row.goal.id) || projectedGoalIds.has(row.goal.id) || !personalGoalHasPendingOperatorGate(row)) return [];
+    const operatorGateText = personalPendingOperatorGateText(row);
     return [{
       actionKind: "gate.resolve",
       blocking: true,
+      gateId: row.latestRun?.operator_gate?.gate ?? null,
       goalId: row.goal.id,
       sourceOrder: payload.attention_queue.items.length + rowOrder,
       taskClass: "user_gate",
-      text: personalPendingOperatorGateText(row),
+      text: operatorGateText,
+      textFull: operatorGateText,
       todoId: `${row.goal.id}:operator-gate`,
       todoOrder: 0,
       updatedAt: row.latestRun?.operator_gate?.recorded_at ?? row.latestRun?.generated_at ?? null,

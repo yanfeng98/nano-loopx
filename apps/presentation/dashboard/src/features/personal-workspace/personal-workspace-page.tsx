@@ -497,8 +497,13 @@ function workspaceProposal(proposal: TypedActionProposal, t: WorkspaceTranslate)
             : proposal.action_kind === "goal.lifecycle"
               ? t("proposal.summary.lifecycleResume", { title })
         : proposal.summary;
+  const receipt = proposal.receipt ?? null;
+  const receiptCommand = receipt && typeof receipt.canonical_command === "string" ? receipt.canonical_command : undefined;
+  const parameters = proposal.normalized_parameters;
   return {
     actionKind: proposal.action_kind,
+    canonicalCommand: receiptCommand
+      ?? (typeof proposal.context.canonical_command === "string" ? proposal.context.canonical_command : undefined),
     fields: proposalFields(proposal.normalized_parameters, t),
     goalId: typeof proposal.normalized_parameters.goal_id === "string" ? proposal.normalized_parameters.goal_id : undefined,
     impact: proposal.action_kind === "goal.create"
@@ -529,7 +534,19 @@ function workspaceProposal(proposal: TypedActionProposal, t: WorkspaceTranslate)
       : proposal.action_kind === "todo.create" && proposal.normalized_parameters.start_execution === true
         ? t("proposal.primary.todoStart")
         : t("proposal.primary.apply"),
+    receipt: receipt ? {
+      canonicalCommand: receiptCommand,
+      outcome: typeof receipt.outcome === "string" ? receipt.outcome : undefined,
+      receiptId: typeof receipt.receipt_id === "string" ? receipt.receipt_id : undefined,
+    } : undefined,
     status: proposalStatus(proposal.status),
+    subject: ["gate.resolve", "todo.update"].includes(proposal.action_kind) ? {
+      agentId: typeof parameters.agent_id === "string" ? parameters.agent_id : undefined,
+      decision: typeof parameters.decision === "string" ? parameters.decision : undefined,
+      gateId: typeof parameters.gate_id === "string" ? parameters.gate_id : undefined,
+      goalId: typeof parameters.goal_id === "string" ? parameters.goal_id : undefined,
+      todoId: typeof parameters.todo_id === "string" ? parameters.todo_id : undefined,
+    } : undefined,
     title: localizedSummary,
   };
 }
@@ -1625,7 +1642,7 @@ export function PersonalWorkspacePage({
 
   return (
     <WorkspaceShell
-      drawer={drawerSelection ? <ContextDrawer agents={agents} callbacks={effectiveDrawerCallbacks} goalNotifications={model.goalNotifications ?? []} goals={workspaceGoals} inspectorExpanded={taskInspectorExpanded} larkConnections={readOnly ? [] : larkConnections} onClose={() => {
+      drawer={drawerSelection ? <ContextDrawer agents={agents} attentionLookup={(goalId, todoId) => model.userTodos.find((attention) => attention.goalId === goalId && attention.todoId === todoId) ?? null} callbacks={effectiveDrawerCallbacks} goalNotifications={model.goalNotifications ?? []} goals={workspaceGoals} inspectorExpanded={taskInspectorExpanded} larkConnections={readOnly ? [] : larkConnections} onClose={() => {
         if (drawerSelection.kind === "proposal"
           && ["applied", "rejected"].includes(drawerSelection.item.status)) {
           setProposals((current) => {

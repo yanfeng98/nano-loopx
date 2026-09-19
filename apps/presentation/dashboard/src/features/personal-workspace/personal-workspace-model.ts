@@ -96,10 +96,14 @@ export type WorkspaceAttention = {
   blocking: boolean;
   evidence?: string | null;
   explanation?: string | null;
+  /** The Goal-level operator gate this item decides, when it is not a Todo. */
+  gateId?: string | null;
   goalId: string;
   goalTitle?: string;
   priority?: "high" | "medium" | "low";
   text: string;
+  /** The untruncated instruction behind `text`, when the projection carries it. */
+  textFull?: string | null;
   todoId: string;
   updatedAt?: string | null;
 };
@@ -206,6 +210,8 @@ export type WorkspaceActionPreview = {
     | "gate.resolve"
     | "run.correct";
   agentLabel?: string;
+  /** The command that reproduces this decision; what applying will run. */
+  canonicalCommand?: string;
   fields: Array<{ key: string; label: string; value: string }>;
   goalId?: string;
   lifecycleOperation?: "stop" | "resume" | "delete";
@@ -220,6 +226,20 @@ export type WorkspaceActionPreview = {
   errorMessage?: string;
   status: "draft" | "ready" | "applying" | "applied" | "gated" | "stale" | "error" | "rejected" | "deferred";
   title: string;
+  /** What applying this preview actually wrote, and the command that reproduces it. */
+  receipt?: {
+    canonicalCommand?: string;
+    outcome?: string;
+    receiptId?: string;
+  };
+  /** The Todo or Goal gate this preview decides, so the drawer can show it live. */
+  subject?: {
+    agentId?: string;
+    decision?: string;
+    gateId?: string;
+    goalId?: string;
+    todoId?: string;
+  };
   sourceRequest?: WorkspaceActionPreviewRequest;
   workspaceCandidates?: Array<{ label: string; workspaceRef: string }>;
 };
