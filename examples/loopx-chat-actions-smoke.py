@@ -170,6 +170,9 @@ def write_registry_fixture(root: Path) -> tuple[Path, Path]:
         "- [ ] Confirm the rollout note\n"
         "  <!-- loopx:todo todo_id=todo_owner_unbound status=open "
         "task_class=user_action -->\n"
+        "- [ ] Confirm the rollback window\n"
+        "  <!-- loopx:todo todo_id=todo_owner_stale status=open "
+        "task_class=user_action -->\n"
         "\n## Agent Todo\n",
         encoding="utf-8",
     )
@@ -1015,6 +1018,25 @@ def assert_http_action_api(root: Path) -> None:
         assert defer_gate["gate"]["kind"] == "gate_defer_requires_condition", defer_gate
         assert defer_gate["write_attempted"] is False, defer_gate
 
+        # A plain Todo has no decision outcome to record, so declining it drops
+        # the Todo through the canonical supersede service rather than
+        # completing it.
+        declined = preview_gate_decision(
+            4, "cancel", todo_id="todo_owner_unbound", agent_id="codex"
+        )
+        code, declined_applied = request_json(
+            f"{base_url}/api/actions/{declined['proposal_id']}/apply", method="POST", body={}
+        )
+        assert code == 200, declined_applied
+        declined_receipt = declined_applied["proposal"]["receipt"]
+        assert declined_receipt["canonical"]["service"] == "todo_supersede", declined_receipt
+        assert declined_receipt["canonical_command"].startswith(
+            "loopx todo supersede --goal-id goal-one --todo-id todo_owner_unbound"
+        ), declined_receipt
+        assert "todo_id=todo_owner_unbound status=open" not in state_path.read_text(
+            encoding="utf-8"
+        ), "declined Todo stayed open"
+
         # A Goal-level operator gate has no Todo behind it, so the decision is
         # recorded against the Goal through the operator-gate service.
         operator_gate = preview_gate_decision(
@@ -1039,6 +1061,31 @@ def assert_http_action_api(root: Path) -> None:
             operator_applied["proposal"]["normalized_parameters"]["gate_id"]
             == "read_only_map_opt_in"
         ), operator_applied
+
+        # A decision previewed against one Goal state must not write after that
+        # state moved: the fingerprint is what stops a stale approval.
+        stale_candidate = preview_gate_decision(
+            5, "approve", todo_id="todo_owner_stale", agent_id="codex"
+        )
+        pinned_state = state_path.read_text(encoding="utf-8")
+        try:
+            state_path.write_text(
+                pinned_state + "\n- [ ] Owner added another step\n", encoding="utf-8"
+            )
+            code, stale_applied = request_json(
+                f"{base_url}/api/actions/{stale_candidate['proposal_id']}/apply",
+                method="POST",
+                body={},
+            )
+            assert code == 409, stale_applied
+            assert stale_applied["proposal"]["status"] == "stale", stale_applied
+            assert stale_applied["write_attempted"] is False, stale_applied
+            assert (
+                "todo_id=todo_owner_stale status=open"
+                in state_path.read_text(encoding="utf-8")
+            ), "stale decision wrote the Todo"
+        finally:
+            state_path.write_text(pinned_state, encoding="utf-8")
 
         persisted_payload = action_store.path.read_text(encoding="utf-8")
         assert str(root) not in persisted_payload, persisted_payload
