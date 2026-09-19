@@ -211,6 +211,31 @@ async function visibleElementCount(locator) {
   }).length);
 }
 
+async function assertOwnerInstructionReview(page) {
+  const clamped = page.locator(".personal-clamped-text").first();
+  await clamped.waitFor({ state: "visible" });
+  const body = clamped.locator("h3, p").first();
+  const instructions = await body.innerText();
+  const tail = "回滚条件与证据入口";
+  if (!instructions.includes(tail)) {
+    throw new Error("Review drawer did not show the whole Owner instruction");
+  }
+  const toggle = clamped.locator(".personal-clamp-toggle").first();
+  if (await toggle.getAttribute("aria-expanded") !== "false") {
+    throw new Error("Owner instruction did not start collapsed");
+  }
+  if (!(await body.evaluate((element) => element.scrollHeight > element.clientHeight + 1))) {
+    throw new Error("Owner instruction was not clamped before expanding");
+  }
+  await toggle.click();
+  if (await toggle.getAttribute("aria-expanded") !== "true") {
+    throw new Error("Owner instruction did not expand");
+  }
+  if (await body.evaluate((element) => element.scrollHeight > element.clientHeight + 1)) {
+    throw new Error("Owner instruction stayed clamped after expanding");
+  }
+}
+
 async function waitForInputValue(locator, expected, timeoutMs = 5_000) {
   const deadline = Date.now() + timeoutMs;
   let actual = await locator.inputValue();
@@ -368,7 +393,14 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
     if (first) {
       first.waiting_on = "user_or_controller";
       first.user_todos = {
-        items: [{ done: false, goal_id: first.goal_id, index: 0, role: "user", text: "确认本轮独立审查范围", todo_id: "todo-browser-user-gate" }],
+        items: [{
+          done: false, goal_id: first.goal_id, index: 0, role: "user",
+          text: "确认本轮独立审查范围",
+          // Owner todos carry the untruncated instruction next to the bounded
+          // text; the review drawer has to show it in full before a decision.
+          full_text: "确认本轮独立审查范围：先核对 gated route 的 owner 选项 A/B，再连同回滚条件与证据入口一起答复；未确认前不要推进 gated route，也不要把中间结论写进 Goal 状态。",
+          todo_id: "todo-browser-user-gate",
+        }],
         open_count: 1,
         source_section: "User Todo",
         total_count: 1,
@@ -1121,7 +1153,15 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
       state.actionPreviews.push({ ...body, proposalId: proposal_id });
       const proposal = {
         schema_version: "loopx_chat_action_proposal_v1", proposal_id, action_kind: body.action_kind,
-        summary: body.summary, normalized_parameters: body.normalized_parameters, context: body.context,
+        summary: body.summary, normalized_parameters: body.normalized_parameters,
+        context: body.action_kind === "gate.resolve"
+          ? {
+              ...body.context,
+              canonical_command: body.normalized_parameters.todo_id
+                ? `loopx todo complete --goal-id ${body.normalized_parameters.goal_id} --todo-id ${body.normalized_parameters.todo_id} --no-follow-up`
+                : `loopx project operator-gate --goal-id ${body.normalized_parameters.goal_id} --gate ${body.normalized_parameters.gate_id ?? "read_only_map_opt_in"} --decision ${body.normalized_parameters.decision}`,
+            }
+          : body.context,
         expected_state_fingerprint: "fixture-r1", permission_classification: "durable_write",
         validation_evidence: ["fixture validation"], available_transitions: ["apply", "cancel"],
         status: "preview_ready", receipt: null, stale: null, created_at: "2026-08-13T01:00:00Z", updated_at: "2026-08-13T01:00:00Z",
@@ -1186,11 +1226,15 @@ async function installApi(page, { goalSubagentConfigurationEnabled = true } = {}
         state.durableResources.add(resourceKey);
         state.durableWriteCount += 1;
       }
+      const appliedParameters = preview?.normalized_parameters ?? {};
+      const appliedCommand = actionKind === "gate.resolve"
+        ? `loopx todo complete --goal-id ${appliedParameters.goal_id ?? "fixture-goal"} --todo-id ${appliedParameters.todo_id ?? "fixture-todo"} --no-follow-up`
+        : undefined;
       const proposal = {
         schema_version: "loopx_chat_action_proposal_v1", proposal_id: apply[1], action_kind: actionKind,
-        summary: "已应用", normalized_parameters: preview?.normalized_parameters ?? {}, context: preview?.context ?? {}, expected_state_fingerprint: "fixture-r1",
+        summary: "已应用", normalized_parameters: appliedParameters, context: preview?.context ?? {}, expected_state_fingerprint: "fixture-r1",
         permission_classification: "durable_write", validation_evidence: [], available_transitions: ["apply", "cancel"],
-        status: "applied", receipt: { projection_verified: true, receipt_id: "fixture-receipt" }, stale: null, created_at: "2026-08-13T01:00:00Z", updated_at: "2026-08-13T01:00:01Z",
+        status: "applied", receipt: { projection_verified: true, receipt_id: "fixture-receipt", canonical_command: appliedCommand }, stale: null, created_at: "2026-08-13T01:00:00Z", updated_at: "2026-08-13T01:00:01Z",
       };
       actionProposals.set(apply[1], proposal);
       await route.fulfill({ contentType: "application/json", json: { ok: true, proposal, turn: acceptedTurn }, status: acceptedTurn ? 202 : 200 });
@@ -2582,11 +2626,18 @@ pass(20, "English Goal and monitor previews stay read-only until confirmation, a
     await page.getByText(needsYouAction, { exact: true }).first().waitFor({ state: "visible" });
     await page.locator(".personal-object-list").first().getByRole("button").first().click();
     await page.getByText("需要你", { exact: true }).last().waitFor({ state: "visible" });
+    // The Owner reads the whole instruction before deciding.
+    await assertOwnerInstructionReview(page);
     await page.getByText("更多决定").click();
     await page.getByRole("button", { name: "稍后决定", exact: true }).click();
     await page.getByText("确认执行").waitFor({ state: "visible" });
+    // The confirm card names the command its decision will run.
+    const gateCommandPreview = page.locator('[data-testid="personal-proposal-command-preview"]');
+    await gateCommandPreview.waitFor({ state: "visible" });
+    if (!(await gateCommandPreview.innerText()).includes("loopx todo complete --goal-id")) throw new Error("Confirm card did not preview the canonical Gate command");
     const deferredDecision = api.actionPreviews.find((preview) => preview.action_kind === "gate.resolve" && preview.normalized_parameters.decision === "defer");
     if (!deferredDecision) throw new Error("Decision defer did not create a Gate preview");
+    if (!deferredDecision.summary.includes("回滚条件与证据入口")) throw new Error("Gate preview did not record the whole Owner instruction");
     await page.getByRole("button", { name: "稍后", exact: true }).click();
     await page.getByText(/已暂缓/).waitFor({ state: "visible" });
     if (!api.actionTransitions.some((transition) => transition.transition === "defer")) throw new Error("Proposal defer transition was not sent");
