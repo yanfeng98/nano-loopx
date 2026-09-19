@@ -32,7 +32,7 @@ excludes(routerSource, 'view: z.enum(["ops", "share"])', "legacy dual-view routi
 excludes(routerSource, 'chatRoute', "legacy standalone chat route removed");
 includes(dashboardSource, 'data-testid="personal-goal-home"', "personal workspace route");
 includes(dashboardSource, "<PersonalWorkspacePage", "personal workspace rendering");
-includes(dashboardSource, "buildPersonalHomeModel(", "public-safe workspace projection");
+includes(dashboardSource, "buildPersonalHomeModel(payload, rows", "public-safe workspace projection");
 includes(dashboardSource, "fetchChatSessions({", "persisted session discovery");
 includes(dashboardSource, "interruptChatTurn", "interruptible Agent turn");
 includes(dashboardSource, "sendChatTurnStreaming", "streaming Agent turn");

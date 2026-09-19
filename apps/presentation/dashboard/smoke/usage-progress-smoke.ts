@@ -109,7 +109,7 @@ excludes(
 );
 
 for (const [snippet, label] of [
-  ["buildPersonalHomeModel(payload, rows)", "personal workspace model assembly"],
+  ["buildPersonalHomeModel(payload, rows", "personal workspace model assembly"],
   ["shareUsageById(payload.usage_summary)", "goal usage projection"],
   ["systemHealth", "system health projection"],
   ["payload.decision_freshness_summary", "decision freshness check"],

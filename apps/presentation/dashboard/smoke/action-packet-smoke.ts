@@ -162,7 +162,7 @@ assert(!platformMigrationNoEvidencePacket.includes("不授权写入或生产动�
 
 const dashboardPageSource = readFileSync("src/views/dashboard-page.tsx", "utf8");
 const workspaceRequiredSource = [
-  "buildPersonalHomeModel(payload, rows)",
+  "buildPersonalHomeModel(payload, rows",
   "todosFromProjectAssetSummary",
   "buildAgentManagementRows",
   "personalGoalState",
