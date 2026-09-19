@@ -20,6 +20,7 @@ from .decision_scope import build_standing_decision_authority
 from .machine_region import TODO_REGION_PREFIX, find_todo_regions
 from .todo_summary import (
     MAX_STATUS_TODOS_PER_ROLE,
+    compact_raw_text,
     compact_todo_group,
     count_advancement_todos,
     normalize_todo_text,
@@ -86,6 +87,10 @@ def parse_active_state_todos(
                 "done": todo_done_for_status(status),
                 "status": status,
                 "text": normalize_todo_text(text),
+                # The bounded `text` is what every projection shows. Keep the
+                # untruncated instruction beside it so an Owner decision can be
+                # reviewed in full; projections decide whether to publish it.
+                "raw_text": compact_raw_text(text),
             }
             if archive_mode:
                 todo["archive_state"] = "archive"
@@ -111,6 +116,9 @@ def parse_active_state_todos(
         if continuation:
             current_todo["text"] = normalize_todo_text(
                 f"{current_todo.get('text', '')} {continuation}"
+            )
+            current_todo["raw_text"] = compact_raw_text(
+                f"{current_todo.get('raw_text', '')} {continuation}"
             )
 
     result: dict[str, Any] = {}

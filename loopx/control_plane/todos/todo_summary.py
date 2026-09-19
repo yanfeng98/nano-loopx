@@ -153,8 +153,14 @@ TASK_ORCHESTRATION_USER_BLOCKER_FIELDS = (
 )
 
 
+def compact_raw_text(text: str | None) -> str:
+    """Whitespace-normalized Todo text, without the display limit."""
+
+    return " ".join(str(text or "").strip().split())
+
+
 def normalize_todo_text(text: str, *, limit: int = 500) -> str:
-    compact = " ".join(str(text or "").strip().split())
+    compact = compact_raw_text(text)
     if len(compact) <= limit:
         return compact
     return compact[: limit - 1].rstrip() + "…"
@@ -321,8 +327,8 @@ def structured_todo_item(
     source_section: str | None,
     archive_state: str = "active",
 ) -> dict[str, Any]:
-    raw_text = " ".join(str(item.get("text") or "").strip().split())
-    text = normalize_todo_text(raw_text)
+    raw_text = compact_raw_text(item.get("raw_text") or item.get("text"))
+    text = normalize_todo_text(str(item.get("text") or ""))
     priority, title = todo_priority_parts(text)
     index = item.get("index")
     explicit_status = normalize_todo_status(item.get("status"))
@@ -335,6 +341,9 @@ def structured_todo_item(
         text=text,
     )
     normalized = project_completion_validation_authority(item)
+    # The untruncated form is re-added below for Owner todos alone, so it must
+    # not ride along on every projected item.
+    normalized.pop("raw_text", None)
     normalized.update(
         {
             "schema_version": TODO_ITEM_SCHEMA_VERSION,
