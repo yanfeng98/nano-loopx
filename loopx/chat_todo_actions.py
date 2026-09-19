@@ -15,7 +15,9 @@ from .todos import complete_goal_todo, supersede_goal_todo, update_goal_todo
 # uses, so the same decision reached from the workspace and from the terminal
 # lands in the same state. These are the decisions each canonical service takes.
 GATE_TODO_DECISION_OUTCOMES = {"approve", "reject", "cancel"}
-_GATE_TODO_SCAN_LIMIT = 200
+# The decision must resolve its target whatever lane budget the Goal's status
+# projection uses, so the lookup parses every Todo rather than a bounded page.
+_GATE_TODO_SCAN_LIMIT: int | None = None
 
 
 def _todo_group_items(group: dict[str, Any]) -> list[dict[str, Any]]:
