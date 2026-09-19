@@ -8,11 +8,7 @@ from typing import Any
 from .agent_registry import registered_agent_ids_for_goal
 from .control_plane.todos.active_state_todo_parser import parse_active_state_todos
 from .control_plane.todos.contract import TODO_TASK_CLASS_USER_GATE
-from .operator_gate import (
-    DEFAULT_OPERATOR_GATE,
-    OPERATOR_GATE_DECISIONS,
-    record_operator_gate,
-)
+from .operator_gate import OPERATOR_GATE_DECISIONS, record_operator_gate
 from .todos import complete_goal_todo, supersede_goal_todo, update_goal_todo
 
 # An Owner decision is written straight through the canonical services the CLI
@@ -223,7 +219,18 @@ class ChatTodoActionMixin:
         decision = str(parameters["decision"])
         note = parameters.get("note")
         if target is None:
-            gate = str(parameters.get("gate_id") or DEFAULT_OPERATOR_GATE)
+            gate = str(parameters.get("gate_id") or "")
+            if not gate:
+                # Neither a current Todo nor a named operator gate: never write
+                # against a guessed target.
+                raise ProtectedActionGate(
+                    "gate.resolve",
+                    gate={
+                        "kind": "gate_target_unresolved",
+                        "summary": "This decision is not linked to a current Todo or operator gate.",
+                        "next_action": "Re-check the Goal status and preview the decision again.",
+                    },
+                )
             if decision not in OPERATOR_GATE_DECISIONS:
                 raise ProtectedActionGate(
                     "gate.resolve",
