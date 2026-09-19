@@ -1,43 +1,7 @@
 # 贡献者任务
 
-## 当前技术方向
-
-本看板是活跃方向与其有界工作的 canonical 投影：上表说明每个方向当前阶段、
-贡献者入口与属主边界，其下列出可在仓库中讨论、认领、审阅和验证的公开工作。
-
-| 方向 | 当前阶段 | 贡献者入口 | 边界 |
-| --- | --- | --- | --- |
-| 长程 Benchmark 与证据 | Active research | #3243 | 工作在公开安全 fixture、treatment integrity、reducer 与文档上；live case 与评分保持 maintainer 专属。 |
-| Operator Surface 与 IM 集成 | 在 `frontend-control-plane-im-prototype-rfc` 上孵化 | #3244 | 说明目标基础分支；UI 仍是投影，晋级 `main` 是分批进行的。 |
-| 共享 Goal 权威与跨 Host 协调 | Stage 2 切块已交付（aggregate head、file provider、`claim_work` executor）；NoKV 仍是未晋级候选 | #3245 | 切块保持 provider-neutral 与 file-backed；不产生第二个 scheduler 或写权威。 |
-| 架构与研究孵化器 | 按 RFC 混合推进 | #3246 | 阅读每个探索方向的阶段；仅一份 RFC 不代表实现可认领。 |
-
-核心控制面可靠性仍是共享的已交付底座。Effect Program hardening、已验证 transition、
-恢复、可观测性、可维护性与贡献者体验，通过下方聚焦行与现有 `control-plane` 标签持续
-推进。
-
-## 优先级队列
-
-| 优先级 | 方向 | 切块 | Issue / PR | 状态 |
-| --- | --- | --- | --- | --- |
-| P0 | Core hardening | remote execution 的 exact-head 审阅与 terminal writeback fencing：fenced journal recovery 吸收进 TypeScript | #3074 | Done |
-| P0 | Core hardening | 把调用方批准的 `validation_command` 接入其余 self-report 入口 | #3082 / #3142 #3291 #3343 | Done |
-| P1 | Benchmark evidence | 拆出一个确定性的 adapter-fidelity 或 treatment-integrity fixture | #3243 | Needs design |
-| P1 | Operator surface / IM | 从孵化分支拆出一个投影或 session-contract 表征单元 | #3244 | Needs design |
-| P1 | Shared coordination | 用 provider-neutral parity fixture 表征已交付的 file-backed `claim_work` executor | #3700 / #3245 | Needs design |
-| P1 | Core hardening | 一个 budget-aware 的 CLI 输出人性化切块 | #2881 | Needs design |
-| P2 | Project docs | 覆盖到 v0.5.4 的 release 文档安装、激活与恢复指引 | GH-C04 | Available |
-| P2 | Maintainability | CLI 属主与 hot-module 抽取 | GH-C06 | Available |
-
 ## 产品管理切口
 
-LoopX 正在从控制面库收敛为长程 agent 工作的管理层表面。产品能力贡献应优先选择那些
-让既有 kernel 对象对用户可理解的切块，而不是再增加一个真相源。
-
-| 产品切片 | 当前底座 | 贡献者规模的下一个切口 |
-| --- | --- | --- |
-| 管理前厅 | Goals、todos、gates、claims、evidence、quota、run history、`goal_channel_projection_v0`、`task_graph_projection_v0`、`issue_fix_outcome_projection_v0`、`agent_management_projection_v0` 以及同源 Explore 视图都已经是紧凑读模型。公开首页、托管文档与本地化 dashboard 现在暴露这些表面。 | 把读模型翻译成稳定的操作者概念，如 work item、owner、decision、evidence、budget、risk 与 next action；保留 lineage，在 drill-down 中保留原始机器字段，不要创建第二套 task 或 case 存储。公开首视口的变更仍属 maintainer preview 工作。 |
-| 对话命令 | 四个 canonical 全局 manager CLI 命令已交付：`/loopx-global-summary`、`/loopx-global-gates`、`/loopx-global-todos` 与 `/loopx-global-risks`；旧的 `/loop-global-*` 形式只是迁移别名。 | 保持它们专注的只读合同与公开安全 smoke 对齐。`/loop-goal-summary` 仍是 host-only，不属于这个贡献者切片；不要发明另一个 manager 命令或别名体系。 |
 | Runtime 连接器模式 | `host_mode_plan_v0` 在连接器目录上选择 visible、isolated-headless、gateway、service 与 hybrid 模式。Host-loop 激活现在覆盖 Codex surfaces、Claude Code、Pi 与 custom agent；一个 scheduler-hint-aware 的外部 worker 演示了一条带签名的 headless 路由。LoopX Turn 仍是单次 request/effect/receipt 事务，而不是循环。 | 为路由保持、skill 交付/readback、continuation 截止、带签名主操作或阶段/receipt 可见性增加一个 provider-neutral parity 切块。把 host wake/进程属主留在 LoopX 核心之外，不要创建第二个 scheduler 或重复控制器。 |
 | Planner-worker 模式 | 实验性 planner-worker 合同现在支持一个有界计划、一个选中的 worker 步骤、一个 allowlist 校验集、clean-worktree 边界与 typed receipt；本地工作区观察与验证支持 provider-neutral adapters。 | 围绕已交付的 fake runtime 增加 provider-neutral 的使用与失败指引。保持模型路由显式、验证由调用方批准，循环调度与广泛的多 agent 编排留在该模式之外。 |
 | 可见治理 | Quota、scheduler hint、权威交互合同、decision scope、user gate、peer claim、可选 task lease、带 pending ledger 的仓库 change-window gate (#3319)、interface budget 与 provider-neutral PR program snapshot 都已存在于机器合同中。共享 goal 权威/state-provider RFC 现在定义下一个协调边界，而不让提案成为 runtime 权威。 | 展示谁可行动、谁必须批准、适用哪种 decision scope、花了多少 budget，以及 pause/override/terminate 决策如何映射回 LoopX state；增加一个 provider-neutral 反例，证明锁定的仓库窗口拒绝写入，且在 merge 或 close 后 pending ledger 行以 typed lifecycle 结清。保持提案状态、claim、lease 与 PR program 观察不成为新的 runtime 层级或写权威。 |
