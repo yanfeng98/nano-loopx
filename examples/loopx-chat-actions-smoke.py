@@ -1015,6 +1015,31 @@ def assert_http_action_api(root: Path) -> None:
         assert defer_gate["gate"]["kind"] == "gate_defer_requires_condition", defer_gate
         assert defer_gate["write_attempted"] is False, defer_gate
 
+        # A Goal-level operator gate has no Todo behind it, so the decision is
+        # recorded against the Goal through the operator-gate service.
+        operator_gate = preview_gate_decision(
+            3, "approve", todo_id=None, gate_id="read_only_map_opt_in"
+        )
+        assert operator_gate["context"]["canonical_command"].startswith(
+            "loopx project operator-gate --goal-id goal-one --gate read_only_map_opt_in"
+        ), operator_gate
+        code, operator_applied = request_json(
+            f"{base_url}/api/actions/{operator_gate['proposal_id']}/apply", method="POST", body={}
+        )
+        assert code == 200, operator_applied
+        assert operator_applied["proposal"]["status"] == "applied", operator_applied
+        operator_receipt = operator_applied["proposal"]["receipt"]
+        assert operator_receipt["outcome"] == "gate_resolved", operator_receipt
+        assert operator_receipt["resource_ids"]["gate_id"] == "read_only_map_opt_in", operator_receipt
+        assert operator_receipt["canonical"]["service"] == "operator_gate", operator_receipt
+        assert operator_receipt["canonical_command"].startswith(
+            "loopx project operator-gate"
+        ), operator_receipt
+        assert (
+            operator_applied["proposal"]["normalized_parameters"]["gate_id"]
+            == "read_only_map_opt_in"
+        ), operator_applied
+
         persisted_payload = action_store.path.read_text(encoding="utf-8")
         assert str(root) not in persisted_payload, persisted_payload
         assert str(project := registry_path.parent.parent) not in persisted_payload, persisted_payload
