@@ -163,7 +163,14 @@ def write_registry_fixture(root: Path) -> tuple[Path, Path]:
     state.write_text(
         "---\nstatus: active\nupdated_at: 2026-01-01T00:00:00Z\n---\n\n"
         "# Active Goal State\n\n## Objective\n\nKeep action writes explicit.\n\n"
-        "## User Todo / Owner Review Reading Queue\n\n## Agent Todo\n",
+        "## User Todo / Owner Review Reading Queue\n\n"
+        "- [ ] Decide the bounded rollout\n"
+        "  <!-- loopx:todo todo_id=todo_owner_gate status=open "
+        "task_class=user_gate bound_agent=codex -->\n"
+        "- [ ] Confirm the rollout note\n"
+        "  <!-- loopx:todo todo_id=todo_owner_unbound status=open "
+        "task_class=user_action -->\n"
+        "\n## Agent Todo\n",
         encoding="utf-8",
     )
     registry = project / ".loopx" / "registry.json"
@@ -907,38 +914,106 @@ def assert_http_action_api(root: Path) -> None:
             )
             assert code == 201, transition_preview
 
-        for index, (action_kind, params) in enumerate(
-            [
-                ("goal.update", {"goal_id": "goal-one", "objective": "A revised objective"}),
-                (
-                    "gate.resolve",
-                    {"goal_id": "goal-one", "todo_id": current_todo_id, "decision": "approve"},
-                ),
-                (
-                    "gate.resolve",
-                    {"goal_id": "goal-one", "todo_id": current_todo_id, "decision": "defer"},
-                ),
-            ]
-        ):
-            code, protected_preview = request_json(
+        # goal.update keeps its own canonical authority contract: the workspace
+        # previews it but never writes it.
+        code, protected_preview = request_json(
+            f"{base_url}/api/actions/preview",
+            method="POST",
+            body={
+                "action_kind": "goal.update",
+                "summary": "Preview goal.update",
+                "normalized_parameters": {
+                    "goal_id": "goal-one",
+                    "objective": "A revised objective",
+                },
+                "context": {"kind": "goal", "goal_id": "goal-one"},
+                "idempotency_key": "http-protected-goal-update",
+            },
+        )
+        assert code == 201, protected_preview
+        code, protected_gate = request_json(
+            f"{base_url}/api/actions/{protected_preview['proposal']['proposal_id']}/apply",
+            method="POST",
+            body={},
+        )
+        assert code == 409, protected_gate
+        assert protected_gate["gate"]["kind"] == "canonical_authority_required", protected_gate
+        assert protected_gate["write_attempted"] is False, protected_gate
+
+        def preview_gate_decision(index: int, decision: str, **extra: object) -> dict:
+            code, payload = request_json(
                 f"{base_url}/api/actions/preview",
                 method="POST",
                 body={
-                    "action_kind": action_kind,
-                    "summary": f"Preview {action_kind}",
-                    "normalized_parameters": params,
+                    "action_kind": "gate.resolve",
+                    "summary": f"Preview gate.resolve {decision}",
+                    "normalized_parameters": {
+                        "goal_id": "goal-one",
+                        "todo_id": extra.pop("todo_id", "todo_owner_gate"),
+                        "decision": decision,
+                        **extra,
+                    },
                     "context": {"kind": "goal", "goal_id": "goal-one"},
-                    "idempotency_key": f"http-protected-{index}",
+                    "idempotency_key": f"http-gate-decision-{index}",
                 },
             )
-            assert code == 201, protected_preview
-            code, protected_gate = request_json(
-                f"{base_url}/api/actions/{protected_preview['proposal']['proposal_id']}/apply",
-                method="POST",
-                body={},
-            )
-            assert code == 409, protected_gate
-            assert protected_gate["gate"]["kind"] == "canonical_authority_required", protected_gate
+            assert code == 201, payload
+            return payload["proposal"]
+
+        # Two Agents are registered on this Goal, so a Todo that names no Agent
+        # cannot be written on its behalf from here.
+        unbound = preview_gate_decision(0, "approve", todo_id="todo_owner_unbound")
+        code, actor_gate = request_json(
+            f"{base_url}/api/actions/{unbound['proposal_id']}/apply", method="POST", body={}
+        )
+        assert code == 409, actor_gate
+        assert actor_gate["gate"]["kind"] == "gate_actor_required", actor_gate
+        assert actor_gate["write_attempted"] is False, actor_gate
+
+        # An approved Owner gate completes through the canonical Todo service and
+        # shows the command that reproduces the write.
+        approved = preview_gate_decision(1, "approve")
+        assert approved["context"]["canonical_command"] == (
+            "loopx todo complete --goal-id goal-one --todo-id todo_owner_gate "
+            "--agent-id codex --decision-outcome approve --no-follow-up"
+        ), approved
+        assert approved["validation_evidence"] == [
+            "Canonical LoopX dry-run validated the owner decision."
+        ], approved
+        code, approved_applied = request_json(
+            f"{base_url}/api/actions/{approved['proposal_id']}/apply", method="POST", body={}
+        )
+        assert code == 200, approved_applied
+        assert approved_applied["proposal"]["status"] == "applied", approved_applied
+        approved_receipt = approved_applied["proposal"]["receipt"]
+        assert approved_receipt["outcome"] == "gate_resolved", approved_receipt
+        assert approved_receipt["projection_verified"] is True, approved_receipt
+        assert approved_receipt["resource_ids"] == {
+            "goal_id": "goal-one",
+            "decision": "approve",
+            "todo_id": "todo_owner_gate",
+            "actor_agent_id": "codex",
+        }, approved_receipt
+        assert approved_receipt["canonical_command"].startswith(
+            "loopx todo complete --goal-id goal-one --todo-id todo_owner_gate"
+        ), approved_receipt
+        owner_gate_state = state_path.read_text(encoding="utf-8")
+        assert "todo_id=todo_owner_gate status=done" in owner_gate_state, owner_gate_state
+        assert "decision_outcome=approve" in owner_gate_state, owner_gate_state
+        code, approved_repeat = request_json(
+            f"{base_url}/api/actions/{approved['proposal_id']}/apply", method="POST", body={}
+        )
+        assert code == 200 and approved_repeat["proposal"] == approved_applied["proposal"], approved_repeat
+
+        # Deferring needs an evaluable resume condition; that stays with the
+        # preview's Later action instead of a silent write.
+        deferred = preview_gate_decision(2, "defer")
+        code, defer_gate = request_json(
+            f"{base_url}/api/actions/{deferred['proposal_id']}/apply", method="POST", body={}
+        )
+        assert code == 409, defer_gate
+        assert defer_gate["gate"]["kind"] == "gate_defer_requires_condition", defer_gate
+        assert defer_gate["write_attempted"] is False, defer_gate
 
         persisted_payload = action_store.path.read_text(encoding="utf-8")
         assert str(root) not in persisted_payload, persisted_payload

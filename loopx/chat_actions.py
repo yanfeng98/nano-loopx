@@ -272,12 +272,16 @@ class ChatActionService(
             },
         )
 
-    def _goal_state_fingerprint(self, goal_id: str) -> str:
+    def _goal_state_path(self, goal_id: str) -> Path:
         goal = self._goal(goal_id)
         project = Path(str(goal.get("repo") or "")).expanduser().resolve()
         state_file = Path(str(goal.get("state_file") or ""))
         if not state_file.is_absolute():
             state_file = project / state_file
+        return state_file
+
+    def _goal_state_fingerprint(self, goal_id: str) -> str:
+        state_file = self._goal_state_path(goal_id)
         try:
             state_digest = hashlib.sha256(state_file.read_bytes()).hexdigest()
         except OSError as exc:
@@ -587,18 +591,22 @@ class ChatActionService(
         if action_kind == "gate.resolve":
             values = self._allowed_parameters(
                 parameters,
-                allowed={"goal_id", "todo_id", "decision", "note", "agent_id"},
+                allowed={"goal_id", "todo_id", "gate_id", "decision", "note", "agent_id"},
             )
             goal_id = _opaque(values.get("goal_id"), field="goal_id")
             self._goal(goal_id)
             decision = str(values.get("decision") or "").strip().lower()
             if decision not in {"approve", "reject", "cancel", "defer"}:
                 raise ValueError("gate decision must be approve, reject, cancel, or defer")
-            result = {
-                "goal_id": goal_id,
-                "todo_id": _opaque(values.get("todo_id"), field="todo_id"),
-                "decision": decision,
-            }
+            todo_id = _opaque(values.get("todo_id"), field="todo_id") if values.get("todo_id") else None
+            gate_id = _opaque(values.get("gate_id"), field="gate_id") if values.get("gate_id") else None
+            if bool(todo_id) == bool(gate_id):
+                raise ValueError("gate.resolve requires exactly one of todo_id or gate_id")
+            result = {"goal_id": goal_id, "decision": decision}
+            if todo_id:
+                result["todo_id"] = todo_id
+            if gate_id:
+                result["gate_id"] = gate_id
             if values.get("note"):
                 result["note"] = _text(values["note"], field="note", limit=600)
             if values.get("agent_id"):
@@ -1095,6 +1103,7 @@ class ChatActionService(
             eligibility = self._agent_eligibility(agent_id, project=project)
         else:
             eligibility = None
+        gate_command = ""
         if action_kind == "todo.create":
             canonical_preview = build_todo_review_preview(
                 registry_path=self.registry_path,
@@ -1140,6 +1149,37 @@ class ChatActionService(
                 else "Canonical LoopX Todo state validated the requested transition."
             ]
             permission = "durable_write"
+        elif action_kind == "gate.resolve":
+            # A gate decision is written against the Goal's own Todo state, so it
+            # is fingerprinted the same way as any other Todo transition instead
+            # of the coarser registry digest.
+            goal_id = str(normalized["goal_id"])
+            fingerprint = self._goal_state_fingerprint(goal_id)
+            target = self._gate_target_todo(goal_id, normalized.get("todo_id"))
+            if target is not None or normalized.get("gate_id"):
+                try:
+                    canonical_preview = self._run_gate_resolve(
+                        normalized, target, dry_run=True
+                    )
+                except ProtectedActionGate:
+                    # The preview stays reviewable; the write is refused with the
+                    # same gate when the Owner applies it.
+                    canonical_preview = None
+                if canonical_preview is None:
+                    evidence = ["This decision previews a write that needs an explicit follow-up."]
+                elif canonical_preview.get("ok") is not True:
+                    raise ValueError(
+                        str(
+                            canonical_preview.get("error")
+                            or "Gate decision failed canonical dry-run validation"
+                        )
+                    )
+                else:
+                    gate_command = str(canonical_preview.get("canonical_command") or "")
+                    evidence = ["Canonical LoopX dry-run validated the owner decision."]
+            else:
+                evidence = ["The gate target is not resolvable in the current Goal state."]
+            permission = "durable_write"
         else:
             fingerprint = self._registry_fingerprint()
             evidence = ["Canonical LoopX contracts validated the bounded request shape."]
@@ -1151,6 +1191,10 @@ class ChatActionService(
                     "The selected Agent trust scope and workspace route are compatible.",
                 ]
             )
+        if gate_command:
+            # The review surface prints this instead of rebuilding the command,
+            # so what the Owner reads is what applying will run.
+            context = {**dict(context), "canonical_command": gate_command}
         proposal = self.store.create_preview(
             action_kind=action_kind,
             summary=_text(request.get("summary"), field="summary", limit=600),
@@ -1220,7 +1264,9 @@ class ChatActionService(
             return self._apply_todo_update(proposal_id, proposal, parameters)
         if action_kind == "monitor.update":
             return self._apply_monitor_update(proposal_id, proposal, parameters)
-        if action_kind in {"goal.update", "gate.resolve"}:
+        if action_kind == "gate.resolve":
+            return self._apply_gate_resolve(proposal_id, proposal, parameters)
+        if action_kind == "goal.update":
             raise ProtectedActionGate(
                 action_kind,
                 gate={
