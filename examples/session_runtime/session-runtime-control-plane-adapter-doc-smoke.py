@@ -11,7 +11,6 @@ DOC = REPO_ROOT / "docs" / "integrations" / "session-runtime-control-plane-adapt
 DOCS_INDEX = REPO_ROOT / "docs" / "README.md"
 INTEGRATIONS_INDEX = REPO_ROOT / "docs" / "integrations" / "README.md"
 ARCHITECTURE = REPO_ROOT / "docs" / "architecture.md"
-CONTRIBUTOR_TASKS = REPO_ROOT / "docs/development/contributor-tasks.md"
 
 def require(text: str, snippets: list[str], *, source: Path) -> None:
     missing = [snippet for snippet in snippets if snippet not in text]
@@ -23,7 +22,6 @@ def main() -> int:
     docs_index = DOCS_INDEX.read_text(encoding="utf-8")
     integrations_index = INTEGRATIONS_INDEX.read_text(encoding="utf-8")
     architecture = ARCHITECTURE.read_text(encoding="utf-8")
-    contributor_tasks = CONTRIBUTOR_TASKS.read_text(encoding="utf-8")
 
     require(
         doc,
@@ -57,15 +55,6 @@ def main() -> int:
             "session-runtime-control-plane-adapter.md",
         ],
         source=ARCHITECTURE,
-    )
-    require(
-        contributor_tasks,
-        [
-            "GH-C35",
-            "provider-neutral 外部 host adapter",
-            "原始转写、凭据、计费、权限",
-        ],
-        source=CONTRIBUTOR_TASKS,
     )
 
     print("session-runtime-control-plane-adapter-doc-smoke: ok")

@@ -131,7 +131,7 @@ def assert_community_casebook() -> None:
             protocol_map_zh,
             "signal-to-bounded-work",
             (
-                "https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md",
+                "https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md",
             ),
             (),
         ),

@@ -62,7 +62,6 @@ MOVED_PATHS = {
     "docs/project-skill-delivery.md": (
         "loopx/capabilities/project_skill_delivery/README.md"
     ),
-    "CONTRIBUTOR_TASKS.md": "docs/development/contributor-tasks.md",
     "DESIGN.md": "docs/development/design.md",
     "AUTHORS.md": "docs/project/authors.md",
     "TRADEMARKS.md": "docs/project/trademarks.md",
@@ -75,9 +74,9 @@ DOCS_INDEX_NAV_ALLOWLIST: dict[str, str] = {}
 # docs/README.md catalog .md targets that stay outside mkdocs top nav on purpose.
 DOCS_CATALOG_NAV_ALLOWLIST = {
     "architecture/README.md": "architecture tree index; RFCs linked from Reference nav",
+    "architecture/rfcs/README.md": "RFC index; reachable from the architecture tree, not a top-nav primary",
     "archive/README.md": "excluded from hosted site via exclude_docs",
     "community/open-strategy-reviews.md": "community process; catalog-only entry",
-    "development/contributor-tasks.md": "contributor board; not a hosted docs primary page",
     "project/authors.md": "project meta linked from README community section",
     "project/brand-guide.md": "project meta linked from README community section",
     "project/history.md": "project meta linked from README community section",
@@ -105,7 +104,6 @@ STABLE_README_DOCS_ENTRY_LINKS = (
     "showcases/README.md",
     "research/README.md",
     "update-notes/README.md",
-    "development/contributor-tasks.md",
     "project/authors.md",
     "project/history.md",
     "project/trademarks.md",
@@ -341,65 +339,47 @@ def assert_effect_interpreter_docs_are_canonical() -> None:
         assert fragment in lecture, fragment
 
 
-def assert_contributor_task_board_is_current() -> None:
-    tasks = compact(read("docs/development/contributor-tasks.md"))
-    for required in (
-        "四个 canonical 全局 manager CLI 命令已交付",
-        "`/loop-goal-summary` 仍是 host-only，不属于这个贡献者切片",
-        "共用的 typed Effect Program 驱动 quota、Turn、task-lease 与 todo-completion settlement",
-        "Scheduler 仍在 settlement 之外",
-        "M7 parity fixture 外加只读 journal 检查/`interpret_turn_journal` lens 已交付",
-        "在两个 adapter 共享执行属主之前不要抽取共用 executor",
-    ):
-        assert required in tasks, required
-    for stale in (
-        "Implement `/loopx-global-todos` or `/loopx-global-risks` next",
-        "Implement `/loopx-global-risks` next",
-        "Implement the remaining canonical `/loopx-global-risks` command",
-        "global risks and goal summary stay host-only",
-        "Add one negative fixture proving fail-closed legacy upgrade",
-        "| GH-C82 |",
-        "| GH-C59 |",
-        "| GH-C61 |",
-        "| GH-C83 |",
-        "| GH-C84 |",
-        "| GH-C92 |",
-        "| GH-C93 |",
-        "| GH-C49 |",
-        "| GH-C60 |",
-        "| GH-C62 |",
-        "| GH-C64 |",
-        "| GH-C71 |",
-        "| GH-C74 |",
-        "| GH-C75 |",
-        "| GH-C76 |",
-        "| GH-C80 |",
-        "| GH-C85 |",
-        "| GH-C95 |",
-        "| GH-C97 |",
-    ):
-        assert stale not in tasks, stale
+def assert_contributor_board_is_retired() -> None:
+    """Pin the retired contributor board so it cannot be restored silently.
 
+    The board duplicated direction, stage, and owner prose that the RFC index
+    already owns, so it drifted on every refresh. Live contribution entry
+    points are CONTRIBUTING.md plus the public issue tracker; this guard keeps
+    the retired page and its label out of the live doc surfaces.
+    """
+    assert not (REPO_ROOT / "docs/development/contributor-tasks.md").exists()
+    retired_token = "contributor-tasks"
+    stale = [
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in sorted(REPO_ROOT.glob("docs/**/*.md"))
+        + [REPO_ROOT / name for name in ("README.md", "CONTRIBUTING.md", "mkdocs.yaml")]
+        if retired_token in path.read_text(encoding="utf-8")
+    ]
+    assert not stale, stale
 
-def assert_contributor_task_links_are_current() -> None:
     for path in (
-        "docs/book/chapters/source-protocol-map.md",
-        "docs/book/chapters/source-validation-to-pr.md",
+        "loopx/canary/premerge.py",
+        "loopx/control_plane/turn_driver/loop_controller.py",
     ):
-        # The book links out to this repository's own blob path: a relative link
-        # would escape the Developer Book's docs_dir and break its MkDocs build.
-        assert (
-            "https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md"
-            in read(path)
-        ), path
+        assert retired_token not in read(path), path
+
+    for path in (
+        "README.md",
+        "CONTRIBUTING.md",
+        "docs/README.md",
+        "docs/development/README.md",
+    ):
+        assert "Contributor Task" not in read(path), path
+    for book_path in sorted((DOCS / "book").rglob("*.md")):
+        assert "Contributor Task" not in book_path.read_text(encoding="utf-8"), book_path
 
 
 def assert_technical_direction_governance_is_current() -> None:
     rfc_index = read("docs/architecture/rfcs/README.md")
-    tasks = read("docs/development/contributor-tasks.md")
 
-    # The strategy-map page is retired: its live directions moved onto the
-    # contributor board, and no live doc or nav entry may link back to it.
+    # The strategy-map page is retired, and the contributor board that briefly
+    # took over its live directions is retired too. The RFC index is the only
+    # canonical statement of the current technical directions now.
     assert not (REPO_ROOT / "docs/project/technical-directions.md").exists()
     stale = [
         path.relative_to(REPO_ROOT).as_posix()
@@ -419,14 +399,6 @@ def assert_technical_direction_governance_is_current() -> None:
     ):
         assert required in rfc_index, required
     assert "## Status matrix" not in rfc_index
-
-    for required in (
-        "长程 Benchmark 与证据",
-        "Operator Surface 与 IM 集成",
-        "共享 Goal 权威与跨 Host 协调",
-        "架构与研究孵化器",
-    ):
-        assert required in tasks, required
 
 
 def main() -> int:
@@ -496,7 +468,6 @@ def main() -> int:
         ],
         "项目与社区": [
             "CONTRIBUTING.md",
-            "docs/development/contributor-tasks.md",
             "docs/project/authors.md",
             "docs/project/history.md",
             "docs/project/trademarks.md",
@@ -588,8 +559,7 @@ def main() -> int:
     assert_local_doc_links_resolve()
     assert_hosted_docs_nav_parity()
     assert_effect_interpreter_docs_are_canonical()
-    assert_contributor_task_board_is_current()
-    assert_contributor_task_links_are_current()
+    assert_contributor_board_is_retired()
     assert_technical_direction_governance_is_current()
 
     collaboration_rfc = read(
@@ -618,7 +588,6 @@ def main() -> int:
     combined_public_indexes = "\n".join(
         [
             read("README.md"),
-            read("docs/development/contributor-tasks.md"),
             read("docs/README.md"),
             read("docs/archive/README.md"),
             read("docs/product/README.md"),
