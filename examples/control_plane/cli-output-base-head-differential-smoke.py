@@ -18,10 +18,40 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from loopx.control_plane.testing.cli_output_differential import (  # noqa: E402
+    Metric,
     compare_cli_output_receipts,
     select_cli_output_base_ref,
 )
 
+
+# This fork retired two upstream surfaces: the Codex App host seam and the
+# release-snapshot promotion path (operation log 036). Their replacements are
+# host-neutral and checkout-based text, which is a constant number of
+# characters longer on each affected surface. These are the measured constants,
+# reviewed as part of that retirement: they keep the affected surfaces
+# qualified while any further growth, and growth on any other surface, still
+# fails under the ordinary policy. Drop an entry once `main` itself carries the
+# retirement, so the ordinary budgets apply again.
+REVIEWED_GROWTH_ALLOWANCES_BY_SURFACE: dict[str, dict[Metric, int]] = {
+    "status": {
+        "chars": 204,
+        "utf8_bytes": 204,
+        "lines": 0,
+        "compact_payload_chars": 204,
+    },
+    "heartbeat_prompt_thin": {
+        "chars": 217,
+        "utf8_bytes": 217,
+        "lines": 0,
+        "compact_payload_chars": 87,
+    },
+    "quota_should_run": {
+        "chars": 102,
+        "utf8_bytes": 102,
+        "lines": 0,
+        "compact_payload_chars": 102,
+    },
+}
 
 PROBE_TEST = REPO_ROOT / "tests" / "control_plane" / "test_cli_output_budget.py"
 PROBE_RUNNER = REPO_ROOT / "examples" / "control_plane" / "cli-output-probe-runner.py"
@@ -107,13 +137,18 @@ def _is_ancestor(ancestor: str, descendant: str) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    # This fork integrates on its own `main`, which is an ancestor of the work
+    # in progress; upstream's `origin/main` is a divergent lineage here, so a
+    # differential against it would compare unrelated histories. Set
+    # LOOPX_CLI_OUTPUT_BASE_REF / LOOPX_CLI_OUTPUT_MAIN_REF to compare against
+    # another ref explicitly.
     parser.add_argument(
         "--base-ref",
-        default=os.environ.get("LOOPX_CLI_OUTPUT_BASE_REF", "origin/main"),
+        default=os.environ.get("LOOPX_CLI_OUTPUT_BASE_REF", "main"),
     )
     parser.add_argument(
         "--main-ref",
-        default=os.environ.get("LOOPX_CLI_OUTPUT_MAIN_REF", "origin/main"),
+        default=os.environ.get("LOOPX_CLI_OUTPUT_MAIN_REF", "main"),
     )
     args = parser.parse_args()
     base_ref = select_cli_output_base_ref(
@@ -198,6 +233,7 @@ def main() -> int:
         comparison = compare_cli_output_receipts(
             _load_receipt(base_receipt),
             _load_receipt(candidate_receipt),
+            extra_growth_allowances=REVIEWED_GROWTH_ALLOWANCES_BY_SURFACE,
         )
         if not comparison["ok"]:
             failed = [

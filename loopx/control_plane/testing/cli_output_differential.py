@@ -429,7 +429,12 @@ def _schema_migration_state(
     )
 
 
-def _compare_row(base: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
+def _compare_row(
+    base: dict[str, Any],
+    candidate: dict[str, Any],
+    *,
+    extra_growth_allowances: dict[str, dict[Metric, int]] | None = None,
+) -> dict[str, Any]:
     row_id = str(base["row_id"])
     failures: list[str] = []
     review_signals: list[str] = []
@@ -492,6 +497,10 @@ def _compare_row(base: dict[str, Any], candidate: dict[str, Any]) -> dict[str, A
                 allowance,
                 runtime_root_route_allowances[metric],
             )
+        if extra_growth_allowances:
+            declared = extra_growth_allowances.get(str(base.get("surface_id") or ""))
+            if declared:
+                allowance = max(allowance, declared[metric])
         deltas[metric] = delta
         allowances[metric] = allowance
         if delta > allowance:
@@ -572,7 +581,18 @@ def _compare_row(base: dict[str, Any], candidate: dict[str, Any]) -> dict[str, A
 def compare_cli_output_receipts(
     base_receipt: dict[str, Any],
     candidate_receipt: dict[str, Any],
+    *,
+    extra_growth_allowances: dict[str, dict[Metric, int]] | None = None,
 ) -> dict[str, Any]:
+    """Compare two probe receipts row by row.
+
+    ``extra_growth_allowances`` lets a caller declare additional reviewed,
+    bounded, per-surface growth (for example a retirement that replaces short
+    product text with a longer explanation). Each entry maps a surface id to
+    the largest reviewed delta per metric: rows on undeclared surfaces, and
+    growth above a declared bound, still fail under the ordinary policy.
+    """
+
     base_rows = _rows_by_id(base_receipt)
     candidate_rows = _rows_by_id(candidate_receipt)
     results: list[dict[str, Any]] = []
@@ -602,7 +622,13 @@ def compare_cli_output_receipts(
                 }
             )
         else:
-            results.append(_compare_row(base, candidate))
+            results.append(
+                _compare_row(
+                    base,
+                    candidate,
+                    extra_growth_allowances=extra_growth_allowances,
+                )
+            )
 
     failed_rows = [row for row in results if row["status"] == "failed"]
     review_rows = [row for row in results if row["review_signals"]]

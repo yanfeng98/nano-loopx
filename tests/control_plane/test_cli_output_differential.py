@@ -685,3 +685,53 @@ def test_fixture_contract_mismatch_fails_closed() -> None:
     candidate["fixture_contract_version"] = "different"
     with pytest.raises(ValueError, match="fixture_contract_version"):
         compare_cli_output_receipts(_receipt(_row()), candidate)
+
+
+def test_declared_growth_allowance_is_opt_in_bounded_and_surface_scoped() -> None:
+    declared = {
+        "status": {
+            "chars": 204,
+            "utf8_bytes": 204,
+            "lines": 0,
+            "compact_payload_chars": 204,
+        }
+    }
+    base = _row()
+    reviewed = _row(chars=40_204, utf8_bytes=40_204, compact_payload_chars=20_204)
+
+    opt_in = compare_cli_output_receipts(
+        _receipt(base),
+        _receipt(reviewed),
+        extra_growth_allowances=declared,
+    )
+    assert opt_in["ok"] is True, opt_in["rows"][0]
+    assert opt_in["rows"][0]["allowances"]["chars"] == 204
+
+    # Without the declaration the same growth still fails: the caller opts in.
+    opt_out = compare_cli_output_receipts(_receipt(base), _receipt(reviewed))
+    assert opt_out["ok"] is False
+
+    # Growth above the declared bound fails under the ordinary policy.
+    beyond = _row(chars=40_205, utf8_bytes=40_205, compact_payload_chars=20_205)
+    above = compare_cli_output_receipts(
+        _receipt(base),
+        _receipt(beyond),
+        extra_growth_allowances=declared,
+    )
+    assert above["ok"] is False
+    assert "chars grew by 205; allowance is 204" in above["rows"][0]["failures"]
+
+    # A surface the caller did not declare inherits nothing.
+    scoped = compare_cli_output_receipts(
+        _receipt(_row(surface_id="diagnose")),
+        _receipt(
+            _row(
+                surface_id="diagnose",
+                chars=40_204,
+                utf8_bytes=40_204,
+                compact_payload_chars=20_204,
+            )
+        ),
+        extra_growth_allowances=declared,
+    )
+    assert scoped["ok"] is False
