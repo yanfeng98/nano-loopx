@@ -50,7 +50,15 @@ def candidate_files() -> list[Path]:
         for path in root.rglob("*"):
             if not path.is_file() or "archive" in path.parts:
                 continue
-            if path.suffix.lower() not in {".py", ".md", ".json", ".html", ".ts", ".tsx", ".mjs"}:
+            if path.suffix.lower() not in {
+                ".py",
+                ".md",
+                ".json",
+                ".html",
+                ".ts",
+                ".tsx",
+                ".mjs",
+            }:
                 continue
             files.append(path)
     return sorted(set(files))
@@ -79,9 +87,12 @@ def main() -> int:
             for identifier in LEGACY_STABLE_IDENTIFIERS:
                 scan_line = scan_line.replace(identifier, "")
             if LEGACY_PATTERN.search(scan_line):
-                violations.append(f"{path.relative_to(REPO_ROOT)}:{line_number}: {line.strip()}")
-    assert not violations, "legacy agent hierarchy escaped migration boundary:\n" + "\n".join(
-        violations[:40]
+                violations.append(
+                    f"{path.relative_to(REPO_ROOT)}:{line_number}: {line.strip()}"
+                )
+    assert not violations, (
+        "legacy agent hierarchy escaped migration boundary:\n"
+        + "\n".join(violations[:40])
     )
     print("peer-agent-hard-cut-boundary-smoke ok")
     return 0

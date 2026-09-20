@@ -130,9 +130,7 @@ def assert_community_casebook() -> None:
         (
             protocol_map_zh,
             "signal-to-bounded-work",
-            (
-                "https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md",
-            ),
+            ("https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md",),
             (),
         ),
         (
@@ -172,9 +170,7 @@ def validate_rendered_site(site_dir: Path) -> None:
             "Dev Book 与 Control-Plane Course 如何配合",
             "/loopx/docs/development/control-plane-course/06-quota-decision-kernel/",
         ),
-        "chapters/01-from-session-to-loop/index.html": (
-            "从一次会话到长程任务",
-        ),
+        "chapters/01-from-session-to-loop/index.html": ("从一次会话到长程任务",),
         "chapters/05-connect-existing-project/index.html": (
             "快速阅读路线",
             "让 Agent 帮你接入",
@@ -182,14 +178,22 @@ def validate_rendered_site(site_dir: Path) -> None:
     }
     for relative_path, markers in routes.items():
         target = site_dir / relative_path
-        assert target.is_file(), f"missing rendered Developer Book route: {relative_path}"
+        assert target.is_file(), (
+            f"missing rendered Developer Book route: {relative_path}"
+        )
         html = read(target)
         for marker in markers:
             assert marker in html, f"{relative_path}: missing rendered marker {marker}"
-        assert ":::: tip" not in html, f"{relative_path}: unrendered VitePress container"
-        assert 'data-md-color-scheme="slate"' in html, f"{relative_path}: not dark by default"
+        assert ":::: tip" not in html, (
+            f"{relative_path}: unrendered VitePress container"
+        )
+        assert 'data-md-color-scheme="slate"' in html, (
+            f"{relative_path}: not dark by default"
+        )
         if relative_path == "index.html":
-            chapter_links = set(re.findall(r'href="[^"]*chapters/[^"#?]+/?(?:index\.html)?"', html))
+            chapter_links = set(
+                re.findall(r'href="[^"]*chapters/[^"#?]+/?(?:index\.html)?"', html)
+            )
             assert len(chapter_links) == len(CHAPTERS), (
                 f"{relative_path}: expected {len(CHAPTERS)} Chinese chapter links, "
                 f"found {len(chapter_links)}"
@@ -203,7 +207,9 @@ def validate_rendered_site(site_dir: Path) -> None:
 
     main_docs_dir = site_dir.parent
     for page in COURSE_PAGES:
-        target = main_docs_dir / "development" / "control-plane-course" / page / "index.html"
+        target = (
+            main_docs_dir / "development" / "control-plane-course" / page / "index.html"
+        )
         assert target.is_file(), f"missing rendered Control-Plane Course route: {page}"
 
 
@@ -270,7 +276,9 @@ def main() -> int:
     assert "/loopx/docs/book/" in book_index
     assert "/loopx/docs/book/en/" not in book_index
 
-    project_version = tomllib.loads(read(REPO_ROOT / "pyproject.toml"))["project"]["version"]
+    project_version = tomllib.loads(read(REPO_ROOT / "pyproject.toml"))["project"][
+        "version"
+    ]
     release_tag = f"v{project_version}"
     # Historical migration milestones must not move with the package version.
     migration_baseline_tag = "v0.5.4"
@@ -287,20 +295,22 @@ def main() -> int:
     for relative_path, markers in release_markers.items():
         text = read(BOOK / relative_path)
         for marker in markers:
-            assert marker in text, f"{relative_path}: missing release-baseline marker {marker}"
+            assert marker in text, (
+                f"{relative_path}: missing release-baseline marker {marker}"
+            )
 
     for page in COURSE_PAGES:
         assert (CONTROL_PLANE_COURSE / f"{page}.md").is_file(), page
 
     assert_community_casebook()
 
-    reading_guides = (
-        read(BOOK / "chapters" / "00-reading-guide.md"),
-    )
+    reading_guides = (read(BOOK / "chapters" / "00-reading-guide.md"),)
     for guide in reading_guides:
         assert "/loopx/docs/development/control-plane-course/" in guide
         for page in COURSE_PAGES:
-            assert f"/loopx/docs/development/control-plane-course/{page}/" in guide, page
+            assert f"/loopx/docs/development/control-plane-course/{page}/" in guide, (
+                page
+            )
 
     assert_zh_concepts(
         "index.md",
@@ -422,11 +432,11 @@ def main() -> int:
     for relative_path, markers in integrated_mechanisms.items():
         chapter = read(BOOK / relative_path)
         for marker in markers:
-            assert marker in chapter, f"{relative_path}: missing integrated mechanism {marker}"
+            assert marker in chapter, (
+                f"{relative_path}: missing integrated mechanism {marker}"
+            )
 
-    all_markdown = "\n".join(
-        read(path) for path in BOOK.rglob("*.md")
-    )
+    all_markdown = "\n".join(read(path) for path in BOOK.rglob("*.md"))
     for forbidden in (
         "cocolord.github.io/loopx-book",
         "cocolord/loopx-book-labs",

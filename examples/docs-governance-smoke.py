@@ -113,7 +113,6 @@ STABLE_README_DOCS_ENTRY_LINKS = (
 MD_LINK_RE = re.compile(r"(?<!!)\[[^\]]*\]\((<[^>]+>|[^)\s]+)")
 
 
-
 def read(path: str) -> str:
     return (REPO_ROOT / path).read_text(encoding="utf-8")
 
@@ -371,7 +370,9 @@ def assert_contributor_board_is_retired() -> None:
     ):
         assert "Contributor Task" not in read(path), path
     for book_path in sorted((DOCS / "book").rglob("*.md")):
-        assert "Contributor Task" not in book_path.read_text(encoding="utf-8"), book_path
+        assert "Contributor Task" not in book_path.read_text(encoding="utf-8"), (
+            book_path
+        )
 
 
 def assert_technical_direction_governance_is_current() -> None:
@@ -547,9 +548,7 @@ def main() -> int:
     root_markdown = {path.name for path in DOCS.glob("*.md")}
     assert root_markdown == ROOT_DOCS, sorted(root_markdown)
 
-    product_root_markdown = {
-        path.name for path in (DOCS / "product").glob("*.md")
-    }
+    product_root_markdown = {path.name for path in (DOCS / "product").glob("*.md")}
     assert product_root_markdown == PRODUCT_ROOT_DOCS, sorted(product_root_markdown)
 
     assert not (DOCS / "outreach").exists(), (

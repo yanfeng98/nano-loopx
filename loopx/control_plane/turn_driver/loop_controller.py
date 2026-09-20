@@ -187,7 +187,10 @@ class ValidatedTurnReceipt:
                 f"{LOOPX_TURN_EXECUTION_SCHEMA_VERSION}"
             )
         receipt = _mapping(execution.get("receipt"))
-        if receipt.get("schema_version") != LOOPX_TURN_RECEIPT_VALIDATION_SCHEMA_VERSION:
+        if (
+            receipt.get("schema_version")
+            != LOOPX_TURN_RECEIPT_VALIDATION_SCHEMA_VERSION
+        ):
             raise ValueError(
                 "validated turn receipt requires schema_version="
                 f"{LOOPX_TURN_RECEIPT_VALIDATION_SCHEMA_VERSION}"
@@ -256,11 +259,7 @@ class ValidatedTurnReceipt:
             "lineage": dict(self.lineage),
             "turn_key": self.turn_key,
             "settlement_effect_id": self.settlement_effect_id,
-            **(
-                {"host_failure": dict(self.host_failure)}
-                if self.host_failure
-                else {}
-            ),
+            **({"host_failure": dict(self.host_failure)} if self.host_failure else {}),
             **(
                 {"todo_completion": dict(self.todo_completion)}
                 if self.todo_completion
@@ -289,7 +288,9 @@ def _qualified_material_effect_id(
         )
     effect_ids = {str(item.get("effect_id") or "") for item in receipts}
     if "" in effect_ids or len(effect_ids) != 1:
-        raise ValueError("material Turn settlement receipts must share one effect identity")
+        raise ValueError(
+            "material Turn settlement receipts must share one effect identity"
+        )
     effect_id = next(iter(effect_ids))
     if not expected_effect_id or expected_effect_id != effect_id:
         raise ValueError(
@@ -298,11 +299,16 @@ def _qualified_material_effect_id(
     if any(item.get("status") != "committed" for item in receipts):
         raise ValueError("material Turn settlement receipts must be committed")
     effects = _mapping(execution.get("effects"))
-    if effects.get("state_written") is not True or effects.get("quota_spent") is not True:
+    if (
+        effects.get("state_written") is not True
+        or effects.get("quota_spent") is not True
+    ):
         raise ValueError("material Turn execution is missing durable effect evidence")
     scheduler = _mapping(execution.get("scheduler"))
     if scheduler.get("completed") is not True:
-        raise ValueError("material Turn execution is missing completed scheduler handoff")
+        raise ValueError(
+            "material Turn execution is missing completed scheduler handoff"
+        )
     return effect_id
 
 
@@ -331,9 +337,7 @@ class BoundedTurnBudget:
         if completed_turns < 0:
             raise ValueError("bounded turn budget completed_turns must be >= 0")
         if completed_turns > max_turns:
-            raise ValueError(
-                "bounded turn budget completed_turns must be <= max_turns"
-            )
+            raise ValueError("bounded turn budget completed_turns must be <= max_turns")
         self.lineage = {
             "goal_id": str(lineage.get("goal_id") or ""),
             "agent_id": str(lineage.get("agent_id") or ""),
@@ -456,7 +460,9 @@ def _completion_disposition(
             raise ValueError(
                 "stale_receipt: fresh decision is not a declared completion successor"
             )
-    elif continuation == "active_goal" and selected_todo_id == receipt.lineage["todo_id"]:
+    elif (
+        continuation == "active_goal" and selected_todo_id == receipt.lineage["todo_id"]
+    ):
         raise ValueError(
             "stale_receipt: active Goal continuation reselected the completed Todo"
         )
@@ -509,9 +515,7 @@ def decide_loop_disposition(
     route = _envelope_route(quota_decision)
     decision_lineage = _decision_lineage(quota_decision)
     if not decision_lineage["goal_id"] or not decision_lineage["agent_id"]:
-        raise ValueError(
-            "fresh quota decision is missing goal/agent lineage"
-        )
+        raise ValueError("fresh quota decision is missing goal/agent lineage")
 
     if turn_receipt is None:
         if str(quota_decision.get("effective_action") or "") == "terminal_no_followup":
@@ -529,7 +533,9 @@ def decide_loop_disposition(
             LoopDisposition.WAIT,
             LoopDisposition.USER_ACTION_REQUIRED,
         }:
-            raise ValueError("executable quota decision is missing selected Todo lineage")
+            raise ValueError(
+                "executable quota decision is missing selected Todo lineage"
+            )
         if disposition is LoopDisposition.REPLAN:
             return _replan_disposition(
                 reason="fresh decision requires replan",
@@ -569,12 +575,13 @@ def decide_loop_disposition(
             receipt_lineage=turn_receipt.lineage,
             decision_lineage=decision_lineage,
         )
-    elif (
-        result_kind is LoopXTurnResultKind.VALIDATED_PROGRESS
-        and route
-        not in {LoopXTurnRoute.USER_ACTION_REQUIRED, LoopXTurnRoute.WAIT}
-    ):
-        raise ValueError("receipt-backed executable decision is missing selected Todo lineage")
+    elif result_kind is LoopXTurnResultKind.VALIDATED_PROGRESS and route not in {
+        LoopXTurnRoute.USER_ACTION_REQUIRED,
+        LoopXTurnRoute.WAIT,
+    }:
+        raise ValueError(
+            "receipt-backed executable decision is missing selected Todo lineage"
+        )
     else:
         # A valid user gate or quiet wait may intentionally have no runnable
         # selected Todo. Preserve the committed predecessor lineage for that

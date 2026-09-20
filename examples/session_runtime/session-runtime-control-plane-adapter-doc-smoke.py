@@ -12,6 +12,7 @@ DOCS_INDEX = REPO_ROOT / "docs" / "README.md"
 INTEGRATIONS_INDEX = REPO_ROOT / "docs" / "integrations" / "README.md"
 ARCHITECTURE = REPO_ROOT / "docs" / "architecture.md"
 
+
 def require(text: str, snippets: list[str], *, source: Path) -> None:
     missing = [snippet for snippet in snippets if snippet not in text]
     assert not missing, f"{source}: missing {missing}"
