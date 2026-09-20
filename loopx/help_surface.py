@@ -397,6 +397,8 @@ def render_concise_help(program: str = "loopx") -> str:
             "",
             "Daily operator commands:",
             "  loopx status                   Show current goals, gates, and next action.",
+            "  loopx dashboard                Start the local dashboard, status, and Chat services.",
+            "  loopx chat --goal-id ID        Open Goal Studio and review Agent-proposed Todos.",
             "  loopx diagnose --goal-id ID    Build a compact evidence packet.",
             "  loopx evidence-log --goal-id ID --agent-id AGENT --thin",
             "                                  Read this agent's thin ledger before replan.",

@@ -267,6 +267,7 @@ CONTROL_PLANE_QUALIFICATION_PROFILES: tuple[dict[str, Any], ...] = (
             "cli output qualification",
             "loopx/cli.py",
             "loopx/help_surface.py",
+            "man/loopx.1",
             "loopx/cli_commands/",
             "loopx/project_prompt.py",
             "loopx/quota.py",
@@ -285,6 +286,7 @@ CONTROL_PLANE_QUALIFICATION_PROFILES: tuple[dict[str, Any], ...] = (
             "examples/control_plane/cli-output-probe-runner.py",
             "examples/control_plane/cli-output-base-head-differential-smoke.py",
             "examples/control_plane/cli-output-budget-regression-smoke.py",
+            "examples/cli-help-manpage-smoke.py",
             ".github/workflows/python-tests.yml",
             "docs/reference/contracts/interface-budget-contract.md",
         ),
@@ -296,6 +298,14 @@ CONTROL_PLANE_QUALIFICATION_PROFILES: tuple[dict[str, Any], ...] = (
                     "invokes the real CLI across declared JSON/Markdown surfaces, modes, "
                     "fixture scales, semantic anchors, command classifications, and a "
                     "same-fixture base/head structural and growth differential"
+                ),
+            },
+            {
+                "command": "python3 examples/cli-help-manpage-smoke.py",
+                "tier": "default",
+                "reason": (
+                    "guards the concise help line budget and command list, checked-in "
+                    "manpage equality, and fail-closed top-level command classification"
                 ),
             },
             {

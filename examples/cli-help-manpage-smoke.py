@@ -42,6 +42,10 @@ def assert_concise_default_help(output: str) -> None:
     assert "slash-commands --install" in output, output
     assert "ready-score --goal-id ID" in output, output
     assert "start-goal --guided" in output, output
+    for command in ("loopx dashboard", "loopx chat"):
+        assert any(
+            line.startswith(f"  {command} ") for line in output.splitlines()
+        ), f"missing command entry {command!r}:\n{output}"
     assert "Run the loop:" in output, output
     assert "Claude Code" in output, output
     assert "loopx commands" in output, output

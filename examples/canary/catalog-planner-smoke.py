@@ -551,7 +551,8 @@ def assert_pr_release_and_refactor_profiles_select() -> None:
         for check in output_budget_profiles["agent-facing-cli-output-budget"]["checks"]
     ]
     assert output_budget_checks == [
-        "python3 examples/control_plane/cli-output-budget-regression-smoke.py"
+        "python3 examples/control_plane/cli-output-budget-regression-smoke.py",
+        "python3 examples/cli-help-manpage-smoke.py",
     ], output_budget_profiles["agent-facing-cli-output-budget"]
 
     todo_payload = build_catalog_canary_plan(
