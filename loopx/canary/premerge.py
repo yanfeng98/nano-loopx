@@ -53,7 +53,6 @@ DOC_CONTENT_TOKENS = (
     "docs/",
     "README",
     "AGENTS.md",
-    "docs/development/contributor-tasks.md",
     "examples/project/",
     "loopx/capabilities/content_ops/",
 )

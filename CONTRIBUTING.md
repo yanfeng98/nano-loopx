@@ -24,15 +24,14 @@ huangrt01@163.com；维护者会及时评审每份报告，并在可行范围内
 
 ## 寻找工作
 
-从 [docs/development/contributor-tasks.md](docs/development/contributor-tasks.md)
-开始：顶部的活跃方向表说明每个方向的结果、当前阶段、属主边界与晋级门禁，其下列出
-有用、可认领且可在仓库中安全讨论的公开工作。
+从 [架构 RFC 索引](docs/architecture/rfcs/README.md)开始：每个职责区列出当前技术方向，
+每份 RFC 自标其状态与当前边界。可认领的公开工作以 GitHub Issue 和仓库中可讨论的最小切片
+为准。
 
-如果没有匹配的任务：
+如果没有匹配的 Issue：
 
-1. 用贡献者任务模板打开 GitHub issue；
-2. 说明问题、提议范围、触及的文件与验证命令；
-3. 在开始大型或行为变更工作前等待维护者反馈。
+1. 打开 GitHub issue，说明问题、提议范围、触及的文件与验证命令；
+2. 在开始大型或行为变更工作前等待维护者反馈。
 
 小型文档错别字修复与明显安全的清理可以直接进入 pull request。
 
@@ -55,7 +54,6 @@ LoopX 协调本地 agent 状态，因此某些文件是运行时数据，必须�
 loopx check \
   --scan-path README.md \
   --scan-path CONTRIBUTING.md \
-  --scan-path docs/development/contributor-tasks.md \
   --scan-path docs/ \
   --scan-path examples/
 ```
@@ -167,7 +165,7 @@ todo_id)` 前沿。不透明的可恢复宿主会话是恢复元数据，不是�
 - fixture 不含原始提示词、transcript、凭据、私有状态或宿主本地路径。
 
 阶段性控制器计划参见 [LoopX Turn 协议](docs/reference/protocols/loopx-turn-v0.md)
-与[贡献者任务板](docs/development/contributor-tasks.md)。
+与 [Turn Loop Controller 契约](docs/reference/protocols/turn-loop-controller-v0.md)。
 
 ## 治理与归属
 

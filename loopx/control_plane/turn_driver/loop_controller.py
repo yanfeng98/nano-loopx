@@ -5,7 +5,8 @@ Turn receipt plus a fresh quota/scheduler decision. It is a pure function: it
 never invokes a model, sleeps, mutates a host scheduler, writes state, or
 spends quota. `loopx turn run-once` remains the only delivery transaction;
 scheduler process management, host wake APIs, and operator presentation belong
-to later adapters (see the Turn Loop Controller plan in docs/development/contributor-tasks).
+to later adapters (see the Turn Loop Controller contract in
+`docs/reference/protocols/turn-loop-controller-v0.md`).
 
 The transition output space is exactly six dispositions:
 ``run_now | wait | user_action_required | repair | replan | terminal``.

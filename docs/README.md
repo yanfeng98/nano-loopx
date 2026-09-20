@@ -16,7 +16,7 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 | 运行或恢复一个长寿命目标 | [运维](operations/README.md) | [集成指南](integration.md) |
 | 理解控制面 | [架构](architecture.md) | [核心概念](concepts/README.md) |
 | 接入 Agent 运行时或 provider | [集成](integrations/README.md) | [扩展与能力](reference/extensions.md) |
-| 看看贡献者现在在构建什么 | [贡献者任务](development/contributor-tasks.md) | [开放策略评审](community/open-strategy-reviews.md) |
+| 看看贡献者现在在构建什么 | [开放策略评审](community/open-strategy-reviews.md) | [架构 RFC](architecture/rfcs/README.md) |
 | 构建或评审 LoopX | [开发者指南](development/README.md) | [测试与质量](development/testing-and-quality.md) |
 | 检查真实结果 | [展示案例](showcases/README.md) | [研究与证据](research/README.md) |
 
@@ -58,7 +58,6 @@ LoopX 是长时 Agent 工作的控制面。使用本文档主页为你想做的�
 - [开放策略评审](community/open-strategy-reviews.md)
   
 - [贡献指南](../CONTRIBUTING.md)
-- [贡献者任务](development/contributor-tasks.md)
 - [作者与贡献者](project/authors.md)
 - [项目历史](project/history.md)
 - [名称与商标](project/trademarks.md)

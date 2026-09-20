@@ -28,7 +28,7 @@ loopx canary smoke-suite --suite full-public --module session-runtime --timeout-
 | 脚本 | 默认发布 | 源工作树 | 负责界面 | 分类 | 优先级 | 下一步修复 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `examples/control_plane/active-state-interface-budget-smoke.py` | 红 | 绿 | release snapshot smoke 上下文 | 打包/runner 上下文缺口。安装的发布不是 git checkout,但 smoke 通过 shell 调用 `git ls-files`。 | P2 | 让 smoke 容忍发布快照,或只在 checkout 中运行 git 专属断言。 |
-| `examples/session_runtime/session-runtime-control-plane-adapter-doc-smoke.py` | 红 | 绿 | 发布打包 / 文档依赖 | 打包缺口。安装的发布不包含 `docs/development/contributor-tasks.md`,而源 checkout 包含。 | P2 | 要么随发布快照安装贡献者任务文档,要么让 smoke 使用随附的发布文档。 |
+| `examples/session_runtime/session-runtime-control-plane-adapter-doc-smoke.py` | 红 | 绿 | 发布打包 / 文档依赖 | 打包缺口。安装的发布不包含当时的贡献者看板文档,而源 checkout 包含。 | P2 | 已收口:看板已退役,该 smoke 也不再要求该文档,打包缺口随之消失。 |
 | `examples/blocker-push-runtime-smoke.py` | 红 | 红 | 配额/状态 blocker-push 运行时 | 产品/契约回归。Blocker-push 路径现在包含 fixture 未接受的公开安全省略警告与投影元数据。 | P1 | 检查新警告字段是否有意为之;然后更新运行时契约或 fixture 期望。 |
 | `examples/derived-state-boundary-smoke.py` | 红 | 红 | 状态/项目资产 todo 投影 | 产品/契约回归。有界派生 state 可见性计数与认领 todo 车道相对文档化投影预算发生了变化。 | P1 | 在广泛的配额/状态重构前,把 `project_asset_todo_summary` 与有界派生 state 契约调和。 |
 | `examples/protocol/protocol-action-packet-router-comparison-smoke.py` | 红 | 红 | 协议动作包 / router 比较 | 契约或陈旧 fixture 不匹配。确定性比较不再在全部场景中保留所有必需事实/动作清晰度。 | P2 | 决定该冷路径比较是否仍是当前契约;若是,修复 router fixture 或包投影。 |

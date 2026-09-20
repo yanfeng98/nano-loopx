@@ -28,7 +28,7 @@ Capability 与 Domain State、Provider、Host/Runner、Projection、Dashboard、
 - 把协议级任务归入状态、工作图、Turn/Host 或证据恢复协议族；
 - 区分 canonical contract、read model、host adapter 与 renderer；
 - 根据 change reason 选择 bounded context，而不是根据文件名猜位置；
-- 从公开 Contributor Task、Issue 和协议文档形成可审阅的最小切片；
+- 从公开 Issue、Contributor 协议文档与 fixture 形成可审阅的最小切片；
 - 用协议、不变量和验证描述改动，而不是提交一份函数清单。
 
 ## 先写一张协议卡
@@ -322,9 +322,11 @@ contract。`loopx/extensions/` 也不是“所有外部集成”的收纳箱：�
 
 外部开发者不应从本地 maintainer state 猜工作。公开入口是：
 
-1. 阅读
-   [Contributor Task Board](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md)；
-2. 选择 `Starter`、`Focused` 或已达成设计共识的任务；
+1. 阅读 [Contributing](https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md)
+   与[架构 RFC 索引](https://github.com/yanfeng98/nano-loopx/blob/main/docs/architecture/rfcs/README.md)，
+   了解当前技术方向与贡献契约；
+2. 在 [GitHub Issue](https://github.com/yanfeng98/nano-loopx/issues) 中找到或提出一个
+   有边界的最小切片；
 3. 阅读任务涉及的协议和 validation；
 4. 在关联 Issue 中声明准备处理的最小切片；
 5. 等待 behavior-changing 或大范围任务获得 maintainer 反馈；
@@ -380,8 +382,8 @@ Pi `task_lease_v0` 任务
 
 这些记录只是学习样本，不是当前任务状态的副本。准备参与时仍要重新打开 Issue，确认它尚未被
 关闭、改向或认领，并以
-[Contributor Task Board](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md)
-为当前公开入口；`Maintainer-owned` 工作只能请求独立 helper slice，不能平行复刻。
+[Contributing](https://github.com/yanfeng98/nano-loopx/blob/main/CONTRIBUTING.md)
+与公开 Issue 为当前入口；`Maintainer-owned` 工作只能请求独立 helper slice，不能平行复刻。
 <!-- community-casebook:signal-to-bounded-work:end -->
 
 ### RFC Review Lab：先判状态，再谈实现

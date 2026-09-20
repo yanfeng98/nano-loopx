@@ -485,7 +485,7 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 
 ### 项目与社区
 
-- [Contributing](CONTRIBUTING.md)与[Contributor Tasks](docs/development/contributor-tasks.md)
+- [Contributing](CONTRIBUTING.md)
 - [Authors and Contributors](docs/project/authors.md)
 - [Project History](docs/project/history.md)
 - [Name and Marks](docs/project/trademarks.md)
@@ -496,7 +496,7 @@ treatment 和 guardrail 的任务，不替代生产审批。先读
 
 ## 贡献
 
-公开、可认领的任务见 [Contributor Tasks](docs/development/contributor-tasks.md)。贡献前请读
+贡献前请读
 [Contributing](CONTRIBUTING.md)，尤其是 public/private 边界、smoke 保留规则和
 benchmark 证据边界。可复现 bug、安装问题与功能建议请提
 [GitHub Issue](https://github.com/yanfeng98/nano-loopx/issues)。
@@ -535,5 +535,5 @@ integration 和进阶路径仍是 optional、default-off 或 experimental。Loop
 公开发布，也不会把未经验证的 run 当成成功证据。
 
 当前投入围绕长程 benchmark 证据、operator surface 与 IM integration、
-shared-goal 跨 host 协作，以及分阶段的架构与研究孵化器展开；活跃方向、当前阶段与
-有界认领入口见 [Contributor Tasks](docs/development/contributor-tasks.md)。
+shared-goal 跨 host 协作，以及分阶段的架构与研究孵化器展开；活跃方向与当前阶段见
+[架构 RFC 索引](docs/architecture/rfcs/README.md)，有界认领入口见 [Contributing](CONTRIBUTING.md)。

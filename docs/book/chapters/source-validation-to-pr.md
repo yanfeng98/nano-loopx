@@ -433,9 +433,7 @@ What remains owner-held?
 
 ## 关联 Issue 与公开任务
 
-非 trivial 工作优先关联
-[Contributor Task Board](https://github.com/yanfeng98/nano-loopx/blob/main/docs/development/contributor-tasks.md)
-或 GitHub Issue：
+非 trivial 工作优先关联一个 GitHub Issue 或已达成设计共识的 RFC：
 
 - 在开始大改前声明准备处理的 slice；
 - 保持 scope 接近已认领任务；

@@ -7,7 +7,7 @@ LoopX Open Strategy Review 是面向用户、贡献者和 maintainer 的阶段�
 
 它不是 roadmap 投票、交付承诺或第二套治理路径。真实已交付行为仍由 `main`、release
 artifact 与稳定契约定义；
-[贡献者任务](../development/contributor-tasks.md)顶部的活跃方向表是当前 portfolio，
+[架构 RFC 索引](../architecture/rfcs/README.md)与每份 RFC 自标的状态是当前 portfolio，
 每份 RFC 的效力以其自身标注的状态为准。
 
 ## 何时召开
@@ -22,7 +22,7 @@ artifact 与稳定契约定义；
 ## 会前准备
 
 在 GitHub **General** 分类创建一个 Discussion，作为本期公开议程与记录。它必须链接
-贡献者任务看板上的活跃方向，以及所有必要的 RFC、tracker、issue 或 prototype pre-read。
+本期方向对应的 RFC，以及所有必要的 tracker、issue 或 prototype pre-read。
 
 最终议程最多保留四个方向。候选议题使用以下卡片：
 

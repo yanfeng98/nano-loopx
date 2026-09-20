@@ -15,7 +15,7 @@ LoopX 使用 GitHub 标签，让维护者、贡献者和 Agent monitor 能够按
 | `triage` | Issue 模板 | 工作开始前需要维护者分类或路由。 |
 | `duplicate` / `question` / `invalid` / `wontfix` | 维护者分类 | 标准 GitHub 生命周期状态。 |
 | `good first issue` / `help wanted` | 维护者分类 | 贡献者上手信号。 |
-| `workflow-audit` | 贡献者任务板 | 供 LoopX 审计的公开或合成 Agent 工作流。 |
+| `workflow-audit` | 维护者分类 | 供 LoopX 审计的公开或合成 Agent 工作流。 |
 
 ## 领域标签
 
